@@ -1,10 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {
@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var portPathOrId = ParsePortPathOrId();
             var databaseName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _databaseNameKeys)?.Value;
 
-            return new ConnectionInfo(DatastoreVendor.IBMDB2.ToKnownName(), host, portPathOrId, databaseName);
+            return new ConnectionInfo(host, portPathOrId, databaseName);
         }
 
         private string ParseHost()
@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (host == null) return null;
 
-            var endOfHostname = host.IndexOf(':');
+            var endOfHostname = host.IndexOf(StringSeparators.ColonChar);
             return endOfHostname == -1 ? host : host.Substring(0, endOfHostname);
         }
 
@@ -44,8 +44,8 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (host == null) return null;
 
-            if (host.Contains(':'))
-                return host.Substring(host.IndexOf(':') + 1);
+            if (host.Contains(StringSeparators.ColonChar))
+                return host.Substring(host.IndexOf(StringSeparators.ColonChar) + 1);
 
             return "default";
         }

@@ -9,11 +9,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
-    [NetCoreTest]
     public class AspNetCoreMvcBasicRequestsTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
@@ -106,15 +104,15 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
         private readonly List<Assertions.ExpectedMetric> _generalMetrics = new List<Assertions.ExpectedMetric>
         {
             new Assertions.ExpectedMetric { metricName = @"Supportability/OS/Linux", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = ExpectedTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = ExpectedTransactionCount },
             new Assertions.ExpectedMetric { metricName = @"Apdex"},
             new Assertions.ExpectedMetric { metricName = @"ApdexAll"},
-            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = ExpectedTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = ExpectedTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", CallCountAllHarvests = ExpectedTransactionCount },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", callCount = ExpectedTransactionCount }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", CallCountAllHarvests = ExpectedTransactionCount }
         };
 
         private readonly List<Assertions.ExpectedMetric> _indexMetrics = new List<Assertions.ExpectedMetric>

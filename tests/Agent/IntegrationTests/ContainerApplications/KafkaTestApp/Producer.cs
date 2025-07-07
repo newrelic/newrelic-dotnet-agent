@@ -64,8 +64,7 @@ namespace KafkaTestApp
             var user = "asyncTestUser";
             var item = "asyncTestItem";
 
-            _ = _producer.ProduceAsync(_topic, new Message<string, string> { Key = user, Value = item }).Result;
-            await Task.CompletedTask;
+            await _producer.ProduceAsync(_topic, new Message<string, string> { Key = user, Value = item });
         }
     }
 }

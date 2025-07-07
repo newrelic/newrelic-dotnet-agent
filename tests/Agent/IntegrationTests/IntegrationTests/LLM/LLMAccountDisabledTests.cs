@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.LLM
 {
@@ -37,16 +36,16 @@ where TFixture : ConsoleDynamicMethodFixture
                 }
             );
 
-            _fixture.AddCommand($"LLMExerciser InvokeModel {_model} {LLMHelpers.ConvertToBase64(_prompt)}");
+            _fixture.AddCommand($"BedrockExerciser InvokeModel {_model} {LLMHelpers.ConvertToBase64(_prompt)}");
 
             _fixture.Initialize();
         }
 
-        [Fact]
+        //[Fact] // The model we were using that was marked as disabled is deprecated, so the test no longer works
         public void BedrockDisabledTest()
         {
             // Make sure it actually got called
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.LLMExerciser/InvokeModel");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.BedrockExerciser/InvokeModel");
             Assert.NotNull(transactionEvent);
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
@@ -61,7 +60,6 @@ where TFixture : ConsoleDynamicMethodFixture
 
         }
     }
-    [NetCoreTest]
     public class LlmAccountDisabledTest_CoreLatest : LlmAccountDisabledTestsBase<ConsoleDynamicMethodFixtureCoreLatestAIM>
     {
         public LlmAccountDisabledTest_CoreLatest(ConsoleDynamicMethodFixtureCoreLatestAIM fixture, ITestOutputHelper output)
@@ -70,7 +68,6 @@ where TFixture : ConsoleDynamicMethodFixture
         }
     }
 
-    [NetFrameworkTest]
     public class LlmAccountDisabledTest_FWLatest : LlmAccountDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatestAIM>
     {
         public LlmAccountDisabledTest_FWLatest(ConsoleDynamicMethodFixtureFWLatestAIM fixture, ITestOutputHelper output)

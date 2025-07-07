@@ -92,6 +92,9 @@ namespace NewRelic.Agent.Api
         /// <param name="messagingSystemName"></param>
         /// <param name="cloudAccountId"></param>
         /// <param name="cloudRegion"></param>
+        /// <param name="serverAddress"></param>
+        /// <param name="serverPort"></param>
+        /// <param name="routingKey"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <returns>an opaque object that will be needed when you want to end the segment.</returns>
         ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
@@ -165,6 +168,10 @@ namespace NewRelic.Agent.Api
         /// <summary>
         /// Detatches the transaction from each non-async active context storage. This is necessary when async tracking needs to continue but
         /// the primary context(s) the transaction may be stored can continue to persist, such as thread static or thread local storgage.
+        /// <para>
+        /// <b>Warning:</b> This method should only be called at the start of the transaction, before any other segments are created.
+        /// If called partway through the transaction, this can result in "Transaction was garbage collected without ever ending" errors.
+        /// </para>
         /// </summary>
         void DetachFromPrimary();
 
@@ -185,6 +192,15 @@ namespace NewRelic.Agent.Api
         /// Allows transaction to end.
         /// </summary>
         void Release();
+
+        /// <summary>
+        /// Sets the name of the current transaction to a name in the WebTransaction namespace. Does nothing if there is no current transaction.
+        /// </summary>
+        /// <param name="type">The type of web transaction.</param>
+        /// <param name="name">The name of the transaction. Must not be null.</param>
+        /// <param name="priority">The priority of the name being set. Higher priority names override lower priority names.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        void SetWebTransactionName(string type, string name, TransactionNamePriority priority);
 
         /// <summary>
         /// Sets the name of the current transaction to a name in the WebTransaction namespace. Does nothing if there is no current transaction.
@@ -311,5 +327,6 @@ namespace NewRelic.Agent.Api
         void AddLambdaAttribute(string name, object value);
 
         void AddFaasAttribute(string name, object value);
+        object GetFaasAttribute(string name);
     }
 }

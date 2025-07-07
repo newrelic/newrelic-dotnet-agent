@@ -31,18 +31,24 @@ namespace MemcachedTestApp.Controllers
         {
             FlushAll();
             await GetValueOrCreateAsync();
+#pragma warning disable VSTHRD103
             Get();
+#pragma warning restore VSTHRD103
             GetGen();
             await GetAsync();
             await GetAsyncGen();
             Increment();
             Decrement();
-#if NET8_0
+#if NET9_0
             await TouchAsync();
 #endif
+#pragma warning disable VSTHRD103
             GetMany();
+#pragma warning restore VSTHRD103
             await GetManyAsync();
+#pragma warning disable VSTHRD103
             Remove();
+#pragma warning restore VSTHRD103
             await RemoveAsync();
 
             return "Complete";
@@ -85,11 +91,11 @@ namespace MemcachedTestApp.Controllers
         private async Task GetAsync()
         {
             var value = _blogPostService.GetRecent(2);
-            _memcachedClient.Add("GetAsync", value, 600);
+            await _memcachedClient.AddAsync("GetAsync", value, 600);
 #pragma warning disable CS0618 // Type or member is obsolete
-#if NET6_0
+#if NET8_0
             var posts = await _memcachedClient.GetAsync<object>("GetAsync");
-#elif NET8_0
+#elif NET9_0
             var posts = await _memcachedClient.GetAsync("GetAsync");
 #endif
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -98,7 +104,7 @@ namespace MemcachedTestApp.Controllers
         private async Task GetAsyncGen()
         {
             var value = _blogPostService.GetRecent(2);
-            _memcachedClient.Add("GetAsyncGen", value, 600);
+            await _memcachedClient.AddAsync("GetAsyncGen", value, 600);
 
             var posts = await _memcachedClient.GetAsync<object>("GetAsyncGen");
         }
@@ -119,11 +125,11 @@ namespace MemcachedTestApp.Controllers
             var posts = _memcachedClient.Decrement("Decrement", 1, 1, 1);
         }
 
-#if NET8_0
+#if NET9_0
         private async Task TouchAsync()
         {
             var value = _blogPostService.GetRecent(2);
-            _memcachedClient.Add("TouchAsync", value, 600);
+            await _memcachedClient.AddAsync("TouchAsync", value, 600);
 
             var posts = await _memcachedClient.TouchAsync("TouchAsync", DateTime.Now.AddDays(5));
         }
@@ -142,7 +148,7 @@ namespace MemcachedTestApp.Controllers
         private async Task GetManyAsync()
         {
             var value = _blogPostService.GetRecent(2);
-            _memcachedClient.Add("GetManyAsync", value, 600);
+            await _memcachedClient.AddAsync("GetManyAsync", value, 600);
 
             var keys = new List<string> { "GetManyAsync" };
             var posts = await _memcachedClient.GetAsync<object>(keys);
@@ -159,7 +165,7 @@ namespace MemcachedTestApp.Controllers
         private async Task RemoveAsync()
         {
             var value = _blogPostService.GetRecent(2);
-            _memcachedClient.Add("RemoveAsync", value, 600);
+            await _memcachedClient.AddAsync("RemoveAsync", value, 600);
 
             var posts = await _memcachedClient.RemoveAsync("RemoveAsync");
         }

@@ -96,7 +96,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(internalTransaction));
 
-            Mock.Assert(() => internalTransaction.ForceChangeDuration(TimeSpan.FromMilliseconds(1)));
+            var expectedTimeSpan = TimeSpan.FromMilliseconds(1);
+            Mock.Assert(() => internalTransaction.ForceChangeDuration(expectedTimeSpan));
         }
 
         [Test]
@@ -201,13 +202,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var mockedTransaction = Mock.Create<IInternalTransaction>();
             Mock.Arrange(() => mockedTransaction.Finish()).Returns(true);
             Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
+            Mock.Arrange(() => mockedTransaction.Guid).Returns("TestGuid");
 
             var transactionMetricName = new TransactionMetricName("c", "d");
             Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
 
             EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
 
-            Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(transactionMetricName, Arg.IsAny<string>(), Arg.IsAny<string>()));
+            Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(mockedTransaction.Guid,transactionMetricName, Arg.IsAny<string>(), Arg.IsAny<string>()));
         }
 
         [Test]
@@ -224,13 +226,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var mockedTransaction = Mock.Create<IInternalTransaction>();
             Mock.Arrange(() => mockedTransaction.Finish()).Returns(false);
             Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
+            Mock.Arrange(() => mockedTransaction.Guid).Returns("TestGuid");
 
             var transactionMetricName = new TransactionMetricName("c", "d");
             Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
 
             EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
 
-            Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(transactionMetricName, Arg.IsAny<string>(), Arg.IsAny<string>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(mockedTransaction.Guid, transactionMetricName, Arg.IsAny<string>(), Arg.IsAny<string>()), Occurs.Never());
         }
 
         [Test]

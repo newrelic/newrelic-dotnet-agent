@@ -8,11 +8,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.AutoInstrumentation;
 
-[NetCoreTest]
 public abstract class AwsLambdaAPIGatewayRequestAutoInstrumentationTest<T> : NewRelicIntegrationTest<T> where T : AspNetCoreWebApiLambdaFixtureBase
 {
     private readonly T _fixture;
@@ -91,9 +89,9 @@ public abstract class AwsLambdaAPIGatewayRequestAutoInstrumentationTest<T> : New
     }
 }
 
-public class AwsLambdaAPIGatewayRequestAutoInstrumentationTestTestNet8 : AwsLambdaAPIGatewayRequestAutoInstrumentationTest<LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureNet8>
+public class AwsLambdaAPIGatewayRequestAutoInstrumentationTestTestCoreOldest : AwsLambdaAPIGatewayRequestAutoInstrumentationTest<LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreOldest>
 {
-    public AwsLambdaAPIGatewayRequestAutoInstrumentationTestTestNet8(LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureNet8 fixture, ITestOutputHelper output)
+    public AwsLambdaAPIGatewayRequestAutoInstrumentationTestTestCoreOldest(LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, "WebTransaction/MVC/Values/Get")
     {
     }

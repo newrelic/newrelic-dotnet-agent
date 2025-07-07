@@ -8,11 +8,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 {
-    [NetCoreTest]
     public abstract class AwsLambdaMultipleInvocationsTest<T> : NewRelicIntegrationTest<T> where T : LambdaCustomEventsTriggerFixtureBase
     {
         private readonly LambdaCustomEventsTriggerFixtureBase _fixture;
@@ -68,17 +66,17 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         }
     }
 
-    public class AwsLambdaMultipleInvocationsTestNet6 : AwsLambdaMultipleInvocationsTest<LambdaCustomEventsTriggerFixtureNet6>
+    public class AwsLambdaMultipleInvocationsTestCoreOldest : AwsLambdaMultipleInvocationsTest<LambdaCustomEventsTriggerFixtureCoreOldest>
     {
-        public AwsLambdaMultipleInvocationsTestNet6(LambdaCustomEventsTriggerFixtureNet6 fixture, ITestOutputHelper output)
+        public AwsLambdaMultipleInvocationsTestCoreOldest(LambdaCustomEventsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class AwsLambdaMultipleInvocationsTestNet8 : AwsLambdaMultipleInvocationsTest<LambdaCustomEventsTriggerFixtureNet8>
+    public class AwsLambdaMultipleInvocationsTestCoreLatest : AwsLambdaMultipleInvocationsTest<LambdaCustomEventsTriggerFixtureCoreLatest>
     {
-        public AwsLambdaMultipleInvocationsTestNet8(LambdaCustomEventsTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaMultipleInvocationsTestCoreLatest(LambdaCustomEventsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

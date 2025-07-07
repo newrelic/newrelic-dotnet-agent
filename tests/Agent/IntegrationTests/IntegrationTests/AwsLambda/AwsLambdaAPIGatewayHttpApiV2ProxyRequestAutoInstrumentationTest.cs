@@ -8,11 +8,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.AutoInstrumentation;
 
-[NetCoreTest]
 public abstract class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTest<T> : NewRelicIntegrationTest<T> where T : AspNetCoreWebApiLambdaFixtureBase
 {
     private readonly T _fixture;
@@ -77,9 +75,9 @@ public abstract class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentatio
     }
 }
 
-public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestTestNet8 : AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTest<LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureNet8>
+public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestCoreOldest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTest<LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreOldest>
 {
-    public AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestTestNet8(LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureNet8 fixture, ITestOutputHelper output)
+    public AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestCoreOldest(LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, "WebTransaction/MVC/Values/Get")
     {
     }

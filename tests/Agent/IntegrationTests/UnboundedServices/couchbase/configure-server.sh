@@ -1,86 +1,79 @@
-set -m
- 
+#!/bin/sh
+set -e 
 /entrypoint.sh couchbase-server &
- 
-sleep 20
- 
-echo "Creating node" 
-curl http://127.0.0.1:8091/pools/default -d memoryQuota=512 -d indexMemoryQuota=512 -d ftsMemoryQuota=512
- 
-echo "Setting up services"
-curl http://127.0.0.1:8091/node/controller/setupServices -d services=kv%2cn1ql%2Cindex%2cfts
- 
-echo "Setting admin user and password" 
-curl http://127.0.0.1:8091/settings/web -d port=8091 -d username=$COUCHBASE_ADMINISTRATOR_USERNAME -d password=$COUCHBASE_ADMINISTRATOR_PASSWORD
- 
-echo "Setting index storge mode" 
-curl -u $COUCHBASE_ADMINISTRATOR_USERNAME:$COUCHBASE_ADMINISTRATOR_PASSWORD -X POST http://127.0.0.1:8091/settings/indexes -d 'storageMode=memory_optimized'
 
-# Check to see if the travel-sample bucket already exists and if it does, skip the rest of setup
+if [ ! -f /nr-container-configured ]; then
 
-travelSampleBucketNotInstalled=$(curl -u $COUCHBASE_ADMINISTRATOR_USERNAME:$COUCHBASE_ADMINISTRATOR_PASSWORD http://127.0.0.1:8091/pools/default/buckets/travel-sample |grep -c "Requested resource not found")
+  # wait for the server to be up and running
+  # when the file /opt/couchbase/var/lib/couchbase/container-configured exists, the server is ready
+  while [ ! -f /opt/couchbase/var/lib/couchbase/container-configured ]; do
+    sleep 1
+  done
 
-if [ "$travelSampleBucketNotInstalled" -eq 1 ]; then
+  echo "Waiting a bit longer for the server to be ready..."
+  sleep 15s
 
-    echo "Installing travel-sample bucket" 
-    curl -X POST -u $COUCHBASE_ADMINISTRATOR_USERNAME:$COUCHBASE_ADMINISTRATOR_PASSWORD http://127.0.0.1:8091/sampleBuckets/install -d '["travel-sample"]'
- 
-    sleep 15
+  # use the couchbase cli to change the administrator password
+  echo "Changing administrator password"
+  /opt/couchbase/bin/couchbase-cli reset-admin-password --new-password ${COUCHBASE_ADMINISTRATOR_PASSWORD} || { echo "Error: Failed to reset administrator password"; exit 1; }
 
-    # Get UUID of travel-sample bucket
-    uuid=$(curl -u $COUCHBASE_ADMINISTRATOR_USERNAME:$COUCHBASE_ADMINISTRATOR_PASSWORD http://127.0.0.1:8091/pools/default/buckets/travel-sample |jq '. | .uuid ')
+  # Get UUID of travel-sample bucket
+  uuid=$(curl -u Administrator:${COUCHBASE_ADMINISTRATOR_PASSWORD} http://127.0.0.1:8091/pools/default/buckets/travel-sample | jq '. | .uuid') || { echo "Error: Failed to retrieve UUID"; exit 1; }
 
-    echo "Create a full text search index on travel-sample"
-    curl -X PUT -u $COUCHBASE_ADMINISTRATOR_USERNAME:$COUCHBASE_ADMINISTRATOR_PASSWORD -H "Content-Type: application/json" \
-    http://localhost:8094/api/index/idx_travel_content \
-    -d '{
-    "type": "fulltext-index",
-    "name": "idx_travel_content",
-    "sourceType": "couchbase",
-    "sourceName": "travel-sample",
-    "sourceUUID": '${uuid}',
-    "planParams": {
-        "maxPartitionsPerPIndex": 32,
-        "numReplicas": 0,
-        "hierarchyRules": null,
-        "nodePlanParams": null,
-        "pindexWeights": null,
-        "planFrozen": false
+  echo "Creating a full text search index on the hotel collection in the inventory scope"
+                      
+  curl -XPUT -H "Content-Type: application/json" -u Administrator:${COUCHBASE_ADMINISTRATOR_PASSWORD} \
+  http://localhost:8094/api/bucket/travel-sample/scope/inventory/index/index-hotel-description \
+  -d '{
+  "name": "index-hotel-description",
+  "type": "fulltext-index",
+  "params": {
+    "mapping": {
+    "types": {
+      "inventory.hotel": {
+      "dynamic": true,
+      "enabled": true
+      }
     },
-    "params": {
-        "mapping": {
-        "byte_array_converter": "json",
-        "default_analyzer": "standard",
-        "default_datetime_parser": "dateTimeOptional",
-        "default_field": "_all",
-        "default_mapping": {
-            "display_order": "0",
-            "dynamic": true,
-            "enabled": true
-        },
-        "default_type": "_default",
-        "index_dynamic": true,
-        "store_dynamic": false,
-        "type_field": "type"
-        },
-        "store": {
-        "kvStoreName": "forestdb"
-        }
+    "default_mapping": {
+      "enabled": false,
+      "dynamic": true
     },
-    "sourceParams": {
-        "clusterManagerBackoffFactor": 0,
-        "clusterManagerSleepInitMS": 0,
-        "clusterManagerSleepMaxMS": 2000,
-        "dataManagerBackoffFactor": 0,
-        "dataManagerSleepInitMS": 0,
-        "dataManagerSleepMaxMS": 2000,
-        "feedBufferAckThreshold": 0,
-        "feedBufferSizeBytes": 0
+    "default_type": "_default",
+    "default_analyzer": "standard",
+    "default_datetime_parser": "dateTimeOptional",
+    "default_field": "_all",
+    "store_dynamic": false,
+    "index_dynamic": true,
+    "docvalues_dynamic": false
+    },
+    "store": {
+    "indexType": "scorch",
+    "kvStoreName": ""
+    },
+    "doc_config": {
+    "docid_prefix_delim": "",
+    "docid_regexp": "",
+    "mode": "scope.collection.type_field",
+    "type_field": "type"
     }
-    }'
-else
-    echo "travel-sample bucket already installed"
-fi 
+  },
+  "sourceType": "couchbase",
+  "sourceName": "travel-sample",
+  "sourceUUID": '${uuid}',
+  "sourceParams": {},
+  "planParams": {
+    "maxPartitionsPerPIndex": 1024,
+    "numReplicas": 0,
+    "indexPartitions": 1
+  },
+  "uuid": ""
+  }' || { echo "Error: Failed to create full text search index"; exit 1; }
 
-fg 1
-echo "Couchbase server is ready"
+  touch /nr-container-configured
+fi
+
+echo "Couchbase server is running"
+
+# required to keep the container running
+tail -f /dev/null

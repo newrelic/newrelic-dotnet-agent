@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         void ReportSqlTracesSent(int count);
 
-        void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName);
+        void ReportTransactionGarbageCollected(string transactionGuid, TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName);
 
         void ReportWrapperShutdown(IWrapper wrapper, Method method);
 
@@ -152,5 +152,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportLogForwardingEnabledWithFramework(string logFramework);
         void ReportByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null);
         void ReportLoggingEventsEmpty(int count = 1);
+        void SetAgentControlStatus((bool IsHealthy, string Code, string Status) healthStatus, params string[] statusParams);
+        void PublishAgentControlHealthCheck();
     }
 }

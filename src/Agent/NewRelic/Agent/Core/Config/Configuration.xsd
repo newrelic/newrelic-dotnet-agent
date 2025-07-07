@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 New Relic, Inc. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 <!-- The documentation in here must be kept up to date with that embedded in comments in newrelic.config -->
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:tns="urn:newrelic-config" targetNamespace="urn:newrelic-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:nr="Configuration.xsd">
 
@@ -43,6 +45,32 @@
             </xs:element>
         </xs:sequence>
     </xs:complexType>
+
+    <xs:simpleType name="RemoteParentSampledBehaviorType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="default">
+                <xs:annotation>
+                    <xs:documentation>
+                        Default behavior. The agent will use New Relic adaptive sampling logic.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="alwaysOn">
+                <xs:annotation>
+                    <xs:documentation>
+                        The agent will sample spans.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="alwaysOff">
+                <xs:annotation>
+                    <xs:documentation>
+                        The agent will NOT sample spans.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
 
     <xs:element name="configuration">
         <xs:complexType>
@@ -1214,6 +1242,26 @@
                         </xs:documentation>
                     </xs:annotation>
                     <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="sampler" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:attribute name="remoteParentSampled" type="tns:RemoteParentSampledBehaviorType" default="default">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Controls span sampling behavior when the trace parent was sampled.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                    <xs:attribute name="remoteParentNotSampled" type="tns:RemoteParentSampledBehaviorType" default="default">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Controls span sampling behavior when the trace parent was not sampled.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
                         <xs:attribute name="enabled" type="xs:boolean" default="false">
                             <xs:annotation>
                                 <xs:documentation>
@@ -1722,7 +1770,7 @@
                                     </xs:attribute>
                                 </xs:complexType>
                             </xs:element>
-                            
+
                             <xs:element name="recordContent" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -1741,7 +1789,7 @@
                                 </xs:complexType>
                             </xs:element>
                         </xs:sequence>
-                        
+
                         <xs:attribute name="enabled" type="xs:boolean" default="false">
                             <xs:annotation>
                                 <xs:documentation>
@@ -1753,7 +1801,7 @@
                         </xs:attribute>
                     </xs:complexType>
                 </xs:element>
-                
+
                 <xs:element name="applicationLogging" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>
@@ -1811,6 +1859,29 @@
                                                     <xs:annotation>
                                                         <xs:documentation>
                                                             A comma-separated list of case-sensitive strings that define the context attributes that should NOT be added to the log record. "exclude" wins over "include".
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="labels" minOccurs="0" maxOccurs="1">
+                                            <xs:annotation>
+                                                <xs:documentation>
+                                                    Include configured labels with log records.
+                                                </xs:documentation>
+                                            </xs:annotation>
+                                            <xs:complexType>
+                                                <xs:attribute name="enabled" type="xs:boolean" default="false">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            Controls whether or not labels are included with log records. Defaults to false.
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                                <xs:attribute name="exclude" type="xs:string" default="">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            A comma-separated list of case-insensitive strings that define the labels that should NOT be added to log records.
                                                         </xs:documentation>
                                                     </xs:annotation>
                                                 </xs:attribute>
@@ -1969,6 +2040,14 @@
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>
+
+                        <xs:attribute name="detectAzureAppService" type="xs:boolean" default="true"  use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    This attribute controls whether to look for Azure AppService environment variables (optional). The default is true.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
                         <xs:attribute name="logicalProcessors" type="xs:int" use="optional">
                             <xs:annotation>
                                 <xs:documentation>
@@ -2023,6 +2102,30 @@
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="cloud" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Provide linking data needed for certain cloud services.
+                        </xs:documentation>
+                    </xs:annotation>
+
+                    <xs:complexType>
+                        <xs:all>
+                            <xs:element name="aws" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:attribute name="accountId" type="xs:string">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                The AWS Account ID used by this application.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:all>
                     </xs:complexType>
                 </xs:element>
             </xs:all>

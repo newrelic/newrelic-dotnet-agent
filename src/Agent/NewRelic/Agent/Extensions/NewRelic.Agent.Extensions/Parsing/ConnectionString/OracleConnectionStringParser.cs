@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using NewRelic.Agent.Helpers;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {
@@ -29,14 +28,14 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var portStr = ParsePortString();
             if (string.IsNullOrEmpty(portStr))
             {
-                return new ConnectionInfo(DatastoreVendor.Oracle.ToKnownName(), host, "default", null);
+                return new ConnectionInfo(host, "default", null);
             }
             int port;
             if (!int.TryParse(portStr, out port))
             {
                 port = -1;
             }
-            return new ConnectionInfo(DatastoreVendor.Oracle.ToKnownName(), host, port, null);
+            return new ConnectionInfo(host, port, null);
         }
 
         private string ParseHost()

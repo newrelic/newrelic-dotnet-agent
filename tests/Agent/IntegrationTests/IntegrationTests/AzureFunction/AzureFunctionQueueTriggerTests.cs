@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AzureFunction;
 
@@ -58,9 +57,9 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
         {
             { "faas.coldStart", true},
             //new("faas.invocation_id", "test_invocation_id"), This one is a random guid, not something we can specifically look for
-            { "faas.name", "QueueTriggerFunction" },
+            { "faas.name", $"{_fixture.RemoteApplication.AppName}/QueueTriggerFunction" },
             { "faas.trigger", "datasource" },
-            { "cloud.resource_id", "/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/QueueTriggerFunction" }
+            { "cloud.resource_id", $"/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/{_fixture.RemoteApplication.AppName}/functions/QueueTriggerFunction" }
         };
 
         var transactionName = "OtherTransaction/AzureFunction/QueueTriggerFunction";
@@ -70,7 +69,6 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
             new() {metricName = "DotNet/QueueTriggerFunction", metricScope = transactionName, callCount = 1},
             new() {metricName = transactionName, callCount = 1},
         };
-
 
         var transactionSample = _fixture.AgentLog.TryGetTransactionSample(transactionName);
 
@@ -82,6 +80,15 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
         {
             Assertions.MetricsExist(expectedMetrics, metrics);
 
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
+            {
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/enabled" },
+                new() { metricName = "Supportability/Dotnet/AzureFunction/Worker/Isolated" },
+                new() { metricName = "Supportability/Dotnet/AzureFunction/Trigger/Queue" }
+            };
+
+            Assertions.MetricsExist(supportabilityMetrics, metrics);
+
             Assert.NotNull(transactionSample);
             Assert.NotNull(transaction);
 
@@ -90,15 +97,20 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
             Assertions.TransactionEventHasAttributes(transactionExpectedTransactionEventIntrinsicAttributes, Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Intrinsic, transaction);
 
             Assert.True(transaction.IntrinsicAttributes.TryGetValue("cloud.resource_id", out var cloudResourceIdValue));
-            Assert.Equal("/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/QueueTriggerFunction", cloudResourceIdValue);
+            Assert.Equal($"/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/{_fixture.RemoteApplication.AppName}/functions/QueueTriggerFunction", cloudResourceIdValue);
             Assert.True(transaction.IntrinsicAttributes.TryGetValue("faas.name", out var faasNameValue));
-            Assert.Equal("QueueTriggerFunction", faasNameValue);
+            Assert.Equal($"{_fixture.RemoteApplication.AppName}/QueueTriggerFunction", faasNameValue);
             Assert.True(transaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
             Assert.Equal("datasource", faasTriggerValue);
         }
         else
         {
             Assertions.MetricsDoNotExist(expectedMetrics, metrics);
+            var supportabilityMetrics = new List<Assertions.ExpectedMetric>()
+            {
+                new() { metricName = "Supportability/Dotnet/AzureFunctionMode/disabled" }
+            };
+            Assertions.MetricsExist(supportabilityMetrics, metrics);
             Assert.Null(transactionSample);
 
             Assert.Null(transaction);
@@ -112,7 +124,6 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
     }
 }
 
-[NetCoreTest]
 public class AzureFunctionQueueTriggerTestsCoreOldest : AzureFunctionQueueTriggerTestsBase<AzureFunctionApplicationFixtureQueueTriggerCoreOldest>
 {
     public AzureFunctionQueueTriggerTestsCoreOldest(AzureFunctionApplicationFixtureQueueTriggerCoreOldest fixture, ITestOutputHelper output)
@@ -121,7 +132,6 @@ public class AzureFunctionQueueTriggerTestsCoreOldest : AzureFunctionQueueTrigge
     }
 }
 
-[NetCoreTest]
 public class AzureFunctionQueueTriggerTestsCoreLatest : AzureFunctionQueueTriggerTestsBase<AzureFunctionApplicationFixtureQueueTriggerCoreLatest>
 {
     public AzureFunctionQueueTriggerTestsCoreLatest(AzureFunctionApplicationFixtureQueueTriggerCoreLatest fixture, ITestOutputHelper output)
@@ -129,3 +139,4 @@ public class AzureFunctionQueueTriggerTestsCoreLatest : AzureFunctionQueueTrigge
     {
     }
 }
+

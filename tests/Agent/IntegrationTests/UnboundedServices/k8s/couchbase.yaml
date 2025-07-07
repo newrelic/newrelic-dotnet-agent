@@ -1,0 +1,82 @@
+# Standard License Header
+# Kubernetes Deployment and Service for Couchbase
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: couchbase
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: couchbase
+  template:
+    metadata:
+      labels:
+        app: couchbase
+    spec:
+      containers:
+      - name: couchbase
+        image: dotnetunboundedservicesregistry.azurecr.io/couchbase
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8091
+        - containerPort: 8092
+        - containerPort: 8093
+        - containerPort: 8094
+        - containerPort: 8095
+        - containerPort: 11210
+        env:
+        - name: COUCHBASE_ADMINISTRATOR_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: COUCHBASE_ADMINISTRATOR_PASSWORD
+        # livenessProbe:
+        #   exec:
+        #     command:
+        #     - /bin/sh
+        #     - -c
+        #     - "couchbase-cli server-info -c localhost:8091 -u Administrator -p $COUCHBASE_ADMINISTRATOR_PASSWORD | grep -q '\"status\": \"healthy\"' || exit 1"
+        #   initialDelaySeconds: 120 # wait a while because couchbase takes time to start
+        #   periodSeconds: 60
+        #   timeoutSeconds: 5
+        #   failureThreshold: 3
+        # resources:
+        #   requests:
+        #     memory: "8Gi"
+        #   limits:
+        #     memory: "8Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: couchbase
+  namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: ${RESOURCE_GROUP}
+    service.beta.kubernetes.io/azure-pip-name: ${PUBLIC_IP_NAME}
+spec:
+  type: LoadBalancer
+  loadBalancerIP: ${PUBLIC_IP}
+  ports:
+    - port: 8091
+      targetPort: 8091
+      name: web
+    - port: 8092
+      targetPort: 8092
+      name: views
+    - port: 8093
+      targetPort: 8093
+      name: query
+    - port: 8094
+      targetPort: 8094
+      name: fts
+    - port: 8095
+      targetPort: 8095
+      name: analytics
+    - port: 11210
+      targetPort: 11210
+      name: data
+  selector:
+    app: couchbase

@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 using System;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
@@ -56,7 +55,7 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "External/all", callCount = 4 },
+                new Assertions.ExpectedMetric { metricName = "External/all", CallCountAllHarvests = 4 },
                 new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/PUT", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/POST", callCount = 1 },
@@ -92,7 +91,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationAsyncAwaitCATFWLatest : RestSharpInstrumentationAsyncAwaitCATBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public RestSharpInstrumentationAsyncAwaitCATFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -101,7 +99,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationAsyncAwaitCATFW48 : RestSharpInstrumentationAsyncAwaitCATBase<ConsoleDynamicMethodFixtureFW48>
     {
         public RestSharpInstrumentationAsyncAwaitCATFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -110,7 +107,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationAsyncAwaitCATFW471 : RestSharpInstrumentationAsyncAwaitCATBase<ConsoleDynamicMethodFixtureFW471>
     {
         public RestSharpInstrumentationAsyncAwaitCATFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -119,7 +115,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationAsyncAwaitCATFW462 : RestSharpInstrumentationAsyncAwaitCATBase<ConsoleDynamicMethodFixtureFW462>
     {
         public RestSharpInstrumentationAsyncAwaitCATFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

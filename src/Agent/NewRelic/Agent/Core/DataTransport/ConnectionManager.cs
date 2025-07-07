@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.IO;
-using System.Linq;
 using System.Net;
+using System.Threading;
+
 #if !NETFRAMEWORK
 using System.Net.Http;
 #endif
@@ -38,14 +38,13 @@ namespace NewRelic.Agent.Core.DataTransport
         private readonly IScheduler _scheduler;
         private int _connectionAttempt = 0;
         private bool _started;
-        private readonly object _syncObject = new object();
+        private readonly SemaphoreSlim _lockSemaphore = new SemaphoreSlim(1, 1);
         private bool _runtimeConfigurationUpdated = false;
 
         public ConnectionManager(IConnectionHandler connectionHandler, IScheduler scheduler)
         {
             _connectionHandler = connectionHandler;
             _scheduler = scheduler;
-
             _subscriptions.Add<StartAgentEvent>(OnStartAgent);
             _subscriptions.Add<RestartAgentEvent>(OnRestartAgent);
 
@@ -70,7 +69,8 @@ namespace NewRelic.Agent.Core.DataTransport
             if (_started)
                 return;
 
-            lock (_syncObject)
+            _lockSemaphore.Wait();
+            try
             {
                 // Second, a thread-safe check inside the blocking code block that ensures we'll never start more than once
                 if (_started)
@@ -79,21 +79,36 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
                     Connect();
                 else
-                    _scheduler.ExecuteOnce(Connect, TimeSpan.Zero);
+                    _scheduler.ExecuteOnce(LockAndConnect, TimeSpan.Zero);
 
                 _started = true;
             }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
         }
 
+        private void LockAndConnect()
+        {
+            _lockSemaphore.Wait();
+            try
+            {
+                Connect();
+            }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
+        }
+
+        // This method does not acquire the semaphore. Be certain it is only called from within a semaphore block.
         private void Connect()
         {
             try
             {
-                lock (_syncObject)
-                {
-                    _runtimeConfigurationUpdated = false;
-                    _connectionHandler.Connect();
-                }
+                _runtimeConfigurationUpdated = false;
+                _connectionHandler.Connect();
 
                 // If the runtime configuration has changed, the app names have updated, so we schedule a restart
                 // This uses the existing ScheduleRestart logic so the current Connect can finish and we follow the backoff pattern and don't spam reconnect attempts.
@@ -103,105 +118,131 @@ namespace NewRelic.Agent.Core.DataTransport
                     ScheduleRestart();
                 }
             }
-            // This exception is thrown when the agent receives an unexpected HTTP error
-            // This is also the parent type of some of the more specific HTTP errors that we handle
-            catch (HttpException ex)
-            {
-                HandleHttpErrorResponse(ex);
-            }
-#if !NETFRAMEWORK // Only available in System.Net.Http
-            // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
-            // issue such as network connectivity, DNS failure, server certificate validation or timeout.
-            catch (HttpRequestException)
-            {
-                ScheduleRestart();
-            }
-#endif
-            // Occurs when the agent connects to APM but the connection gets aborted by the collector
-            catch (SocketException)
-            {
-                ScheduleRestart();
-            }
-            // Occurs when the agent is unable to read data from the transport connection (this might occur when a socket exception happens - in that case the exception will be caught above)
-            catch (IOException)
-            {
-                ScheduleRestart();
-            }
-            // Occurs when no network connection is available, DNS unavailable, etc.
-            catch (WebException)
-            {
-                ScheduleRestart();
-            }
-            // Usually occurs when a request times out but did not get far enough along to trigger a timeout exception
-            catch (OperationCanceledException)
-            {
-                ScheduleRestart();
-            }
-            // This catch all is in place so that we avoid doing harm for all of the potentially destructive things that could happen during a connect.
-            // We want to error on the side of doing no harm to our customers
             catch (Exception ex)
             {
-                ImmediateShutdown(ex.Message);
+                HandleConnectionException(ex);
             }
         }
 
+        private void HandleConnectionException(Exception ex)
+        {
+            bool shouldRestart = true;
+
+            switch (ex)
+            {
+#if !NETFRAMEWORK
+                // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
+                // issue such as network connectivity, DNS failure, server certificate validation or timeout.
+                case HttpRequestException:
+#endif
+                // Occurs when the agent connects to APM but the connection gets aborted by the collector
+                case SocketException:
+                // Occurs when the agent is unable to read data from the transport connection (this might occur when a socket exception happens - in that case the exception will be caught above)
+                case IOException:
+                // Occurs when no network connection is available, DNS unavailable, etc.
+                case WebException:
+                // Usually occurs when a request times out but did not get far enough along to trigger a timeout exception
+                // OperationCanceledException is a base class for TaskCanceledException, which can be thrown by HttpClient.SendAsync in .NET 6+
+                case OperationCanceledException:
+                    Log.Info("Connection failed: {0}", ex.Message);
+                    break;
+
+                // This exception is thrown when the agent receives an unexpected HTTP error
+                // This is also the parent type of some of the more specific HTTP errors that we handle
+                case HttpException httpEx:
+                    if (httpEx.StatusCode == HttpStatusCode.Gone) // per the collector response handling spec, the agent should shut down on a 410 response
+                    {
+                        Log.Info("401 GONE response received from the collector.");
+                        shouldRestart = false;
+                    }
+                    else if (httpEx.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        Log.Warn("Connection failed: Potential issue with license key based on HTTP status code 401 - Unauthorized.\n\tPlease verify the license key.");
+                    }
+                    else
+                        Log.Info("Connection failed: {0}", ex.Message);
+                    break;
+
+                // This catch-all is in place so that we avoid doing harm for all the potentially destructive things that could happen during connect.
+                // We want to error on the side of doing no harm to our customers
+                default:
+                    Log.Error(ex, "Connection failed due to an unexpected exception.");
+                    shouldRestart = false;
+                    break;
+            }
+
+            if (shouldRestart)
+                ScheduleRestart();
+            else
+                ImmediateShutdown();
+        }
+
+        // This method does not acquire the semaphore. Be certain it is only called from within a semaphore block.
         private void Disconnect()
         {
-            lock (_syncObject)
+            _connectionHandler.Disconnect();
+        }
+
+        private void LockAndDisconnect()
+        {
+            _lockSemaphore.Wait();
+            try
             {
-                _connectionHandler.Disconnect();
+                Disconnect();
+            }
+            finally
+            {
+                _lockSemaphore.Release();
             }
         }
+
 
         private void Reconnect()
         {
             EventBus<StopHarvestEvent>.Publish(new StopHarvestEvent());
 
-            lock (_syncObject)
+            _lockSemaphore.Wait();
+            try
             {
                 Disconnect();
                 Connect();
+            }
+            finally
+            {
+                _lockSemaphore.Release();
             }
         }
 
         public T SendDataRequest<T>(string method, params object[] data)
         {
-            lock (_syncObject)
+            _lockSemaphore.Wait();
+            try
             {
                 return _connectionHandler.SendDataRequest<T>(method, data);
             }
+            finally
+            {
+                _lockSemaphore.Release();
+            }
         }
 
-#endregion Synchronized methods
+        #endregion Synchronized methods
 
         #region Helper methods
 
-        private static void ImmediateShutdown(string message)
+        private static void ImmediateShutdown()
         {
-            Log.Info("Shutting down: {0}", message);
+            Log.Info("Shutting down the agent.");
             EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
         }
 
         private void ScheduleRestart()
         {
-            var _retryTime = ConnectionRetryBackoffSequence[_connectionAttempt];
-            Log.Info("Will attempt to reconnect in {0} seconds", _retryTime.TotalSeconds);
-            _scheduler.ExecuteOnce(Connect, _retryTime);
+            var retryTime = ConnectionRetryBackoffSequence[_connectionAttempt];
+            Log.Info("Will attempt to reconnect in {0} seconds", retryTime.TotalSeconds);
+            _scheduler.ExecuteOnce(LockAndConnect, retryTime);
 
             _connectionAttempt = Math.Min(_connectionAttempt + 1, ConnectionRetryBackoffSequence.Length - 1);
-        }
-
-        private void HandleHttpErrorResponse(HttpException ex)
-        {
-            switch (ex.StatusCode)
-            {
-                case HttpStatusCode.Gone:
-                    ImmediateShutdown(ex.Message);
-                    break;
-                default:
-                    ScheduleRestart();
-                    break;
-            }
         }
 
         #endregion
@@ -249,9 +290,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private void OnCleanShutdown(CleanShutdownEvent eventData)
         {
-            Disconnect();
+            LockAndDisconnect();
         }
-
         #endregion Event handlers
     }
 }

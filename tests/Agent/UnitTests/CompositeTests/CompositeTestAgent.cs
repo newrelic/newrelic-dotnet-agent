@@ -133,7 +133,7 @@ namespace CompositeTests
         {
         }
 
-        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false)
+        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false, bool enableGCSamplerV2 = false, RemoteParentSampledBehavior remoteParentSampledBehavior = RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior remoteParentNotSampledBehavior = RemoteParentSampledBehavior.Default)
         {
             Log.Initialize(new Logger());
 
@@ -179,7 +179,7 @@ namespace CompositeTests
 
             // Construct services
             _container = AgentServices.GetContainer();
-            AgentServices.RegisterServices(_container, enableServerlessMode);
+            AgentServices.RegisterServices(_container, enableServerlessMode, enableGCSamplerV2);
 
             // Replace existing registrations with mocks before resolving any services
             _container.ReplaceInstanceRegistration(mockEnvironment);
@@ -220,14 +220,14 @@ namespace CompositeTests
             InstrumentationService = _container.Resolve<IInstrumentationService>();
             InstrumentationWatcher = _container.Resolve<InstrumentationWatcher>();
 
-            AgentServices.StartServices(_container, false);
+            AgentServices.StartServices(_container, false, enableGCSamplerV2);
 
             DisableAgentInitializer();
             InternalApi.SetAgentApiImplementation(_container.Resolve<IAgentApi>());
             AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
             // Update configuration (will also start services)
-            LocalConfiguration = GetDefaultTestLocalConfiguration();
+            LocalConfiguration = GetDefaultTestLocalConfiguration(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
             ServerConfiguration = GetDefaultTestServerConfiguration();
             SecurityConfiguration = GetDefaultSecurityPoliciesConfiguration();
             InstrumentationWatcher.Start();
@@ -410,12 +410,14 @@ namespace CompositeTests
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
         }
 
-        private static configuration GetDefaultTestLocalConfiguration()
+        private static configuration GetDefaultTestLocalConfiguration(RemoteParentSampledBehavior remoteParentSampledBehavior, RemoteParentSampledBehavior remoteParentNotSampledBehavior)
         {
             var configuration = new configuration();
 
             // Distributed tracing is disabled by default. However, we have fewer tests that need it disabled than we do that need it enabled.
             configuration.distributedTracing.enabled = true;
+            configuration.distributedTracing.sampler.remoteParentSampled = remoteParentSampledBehavior.ToRemoteParentSampledBehaviorType();
+            configuration.distributedTracing.sampler.remoteParentNotSampled = remoteParentNotSampledBehavior.ToRemoteParentSampledBehaviorType();
 
             return configuration;
         }

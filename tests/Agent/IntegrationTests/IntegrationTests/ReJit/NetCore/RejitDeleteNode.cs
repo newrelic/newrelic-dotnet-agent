@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
 {
@@ -19,7 +18,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Logging: finest
     /// Files: Integration.Testing.DeleteNodeTest.xml 
     /// </summary>
-    [NetCoreTest]
     public abstract class RejitDeleteNodeBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : AspNetCoreReJitMvcApplicationFixture
     {
@@ -75,18 +73,18 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
             {
                 //transactions
                 new Assertions.ExpectedMetric {metricName = @"WebTransaction/MVC/Home/Index", callCount = 1},
-                new Assertions.ExpectedMetric {metricName = @"WebTransaction/Custom/MyCustomDeleteMetricName", callCount = 3},
+                new Assertions.ExpectedMetric {metricName = @"WebTransaction/Custom/MyCustomDeleteMetricName", CallCountAllHarvests = 3},
                 new Assertions.ExpectedMetric {metricName = @"WebTransaction/MVC/Rejit/GetDeleteNode/{id}", callCount = 1},
 
                 // Unscoped
                 new Assertions.ExpectedMetric {metricName = @"DotNet/HomeController/Index", callCount = 1},
-                new Assertions.ExpectedMetric {metricName = @"Custom/MyCustomDeleteMetricName", callCount = 3},
-                new Assertions.ExpectedMetric {metricName = @"DotNet/RejitController/GetDeleteNode", callCount = 4},
+                new Assertions.ExpectedMetric {metricName = @"Custom/MyCustomDeleteMetricName", CallCountAllHarvests = 3},
+                new Assertions.ExpectedMetric {metricName = @"DotNet/RejitController/GetDeleteNode", CallCountAllHarvests = 4},
 
                 // Scoped
                 new Assertions.ExpectedMetric {metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1},
-                new Assertions.ExpectedMetric {metricName = @"Custom/MyCustomDeleteMetricName", metricScope = "WebTransaction/Custom/MyCustomDeleteMetricName", callCount = 3},
-                new Assertions.ExpectedMetric {metricName = @"DotNet/RejitController/GetDeleteNode", metricScope = "WebTransaction/MVC/Rejit/GetDeleteNode/{id}", callCount = 1}
+                new Assertions.ExpectedMetric {metricName = @"Custom/MyCustomDeleteMetricName", metricScope = "WebTransaction/Custom/MyCustomDeleteMetricName", CallCountAllHarvests = 3},
+                new Assertions.ExpectedMetric {metricName = @"DotNet/RejitController/GetDeleteNode", metricScope = "WebTransaction/MVC/Rejit/GetDeleteNode/{id}", CallCountAllHarvests = 1}
             };
 
             var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);

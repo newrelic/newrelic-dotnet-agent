@@ -379,6 +379,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool UtilizationDetectAzureFunction => true;
 
+        public bool UtilizationDetectAzureAppService => true;
+
         public int? UtilizationLogicalProcessors => 22;
 
         public int? UtilizationTotalRamMib => 33;
@@ -415,6 +417,9 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool ExcludeNewrelicHeader => true;
 
+        public RemoteParentSampledBehavior RemoteParentSampledBehavior => RemoteParentSampledBehavior.Default;
+        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => RemoteParentSampledBehavior.Default;
+
         public bool ApplicationLoggingEnabled => true;
 
         public bool LogMetricsCollectorEnabled => true;
@@ -445,6 +450,10 @@ namespace NewRelic.Agent.Core.DataTransport
             new Dictionary<string, string> { { "assemblyName", "AssemblyToIgnore1" } },
             new Dictionary<string, string> { { "assemblyName", "AssemblyToIgnore2" }, { "className", "ClassNameToIgnore" } }
         };
+
+        public bool LabelsEnabled => true;
+
+        public IEnumerable<string> LabelsExclude => new[] { "label1", "label2" };
 
         public bool DisableFileSystemWatcher => false;
 
@@ -489,9 +498,21 @@ namespace NewRelic.Agent.Core.DataTransport
         public string AzureFunctionResourceGroupName => "AzureFunctionResourceGroupName";
         public string AzureFunctionRegion => "AzureFunctionRegion";
         public string AzureFunctionSubscriptionId => "AzureFunctionSubscriptionId";
-        public string AzureFunctionServiceName => "AzureFunctionServiceName";
+        public string AzureFunctionAppName => "AzureFunctionServiceName";
         public string AzureFunctionResourceIdWithFunctionName(string functionName) => $"AzureFunctionResourceId/{functionName}";
 
         public string LoggingLevel => "info";
+
+        public string AwsAccountId => "";
+        public bool GCSamplerV2Enabled => true;
+
+        public bool AgentControlEnabled => true;
+        public string HealthDeliveryLocation => "file:///tmp/health";
+        public int HealthFrequency => 5;
+
+        public bool AwsLambdaApmModeEnabled => true;
+        public List<string> IncludedActivitySources => ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"];
+        public List<string> ExcludedActivitySources => ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"];
+        public bool OpenTelemetryBridgeEnabled => true;
     }
 }

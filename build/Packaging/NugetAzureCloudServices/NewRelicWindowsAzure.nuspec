@@ -10,19 +10,8 @@
     <repository type="git" url="https://github.com/newrelic/newrelic-dotnet-agent" />
     <icon>images\icon.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Make sure you go to New Relic first to sign up and get your key at https://newrelic.com. Performance monitoring will never be the same after you do!  
-            The package is available through your NuGet package manager and on the web at https://nuget.org/packages/NewRelicWindowsAzure  
-
-            Set up:  
-            1. install-package NewRelicWindowsAzure  
-            2. The Package installer will prompt you for your NewRelic.AppName and your New Relic license key  
-
-            Note: If you want to instrument more than one project in your solution, simply change the "Default project" in the package manager console and install the package 
-
-            Visit https://one.newrelic.com after your package deploy is complete to see your performance metrics.  
-
-            For more information on what this package is doing go to: https://docs.newrelic.com/docs/apm/agents/net-agent/azure-installation/install-net-agent-azure-cloud-services/</description>
-    <summary>Includes the latest New Relic x64 installer, so that you can easily include New Relic in your Azure deployment.</summary>
+    <readme>README.md</readme>
+    <description>This package adds the New Relic .NET Agent to Azure Cloud Services ("classic"): https://learn.microsoft.com/en-us/previous-versions/azure/cloud-services/cloud-services-choose-me</description>
     <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/</releaseNotes>
   </metadata>
   <files>
@@ -30,5 +19,6 @@
     <file src="lib\**" target="lib" />
     <file src="tools\**" target="tools" />
     <file src="..\..\icon.png" target="images\" />
+    <file src="README.md" target="." />
   </files>
 </package>

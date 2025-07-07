@@ -49,6 +49,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected void InternalHarvest(string transactionId = null)
         {
+            Log.Finest("Transaction Trace harvest starting.");
+
             var traceSamples = _transactionCollectors
                 .Where(t => t != null)
                 .SelectMany(t => t.GetCollectedSamples())
@@ -59,13 +61,17 @@ namespace NewRelic.Agent.Core.Aggregators
                 .Select(t => t.CreateWireModel())
                 .ToList();
 
-            if (!traceWireModels.Any())
-                return;
+            // if we don't have any traces to publish then don't
+            var traceCount = traceWireModels.Count;
+            if (traceCount > 0)
+            {
+                LogUnencodedTraceData(traceWireModels);
 
-            LogUnencodedTraceData(traceWireModels);
+                var responseStatus = DataTransportService.Send(traceWireModels, transactionId);
+                HandleResponse(responseStatus, traceSamples);
+            }
 
-            var responseStatus = DataTransportService.Send(traceWireModels, transactionId);
-            HandleResponse(responseStatus, traceSamples);
+            Log.Finest("Transaction Trace harvest finished.");
         }
 
         private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<TransactionTraceWireModelComponents> traceSamples)
@@ -81,12 +87,13 @@ namespace NewRelic.Agent.Core.Aggregators
                     {
                         Collect(traceSample);
                     }
+                    Log.Debug("Retaining {count} transaction traces.", traceSamples.Count);
                     break;
 
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                 case DataTransportResponseStatus.Discard:
                 default:
-                    Log.Warn($"Discarding {traceSamples.Count} transaction traces due to collector response.");
+                    Log.Warn("Discarding {count} transaction traces.", traceSamples.Count);
                     break;
             }
         }

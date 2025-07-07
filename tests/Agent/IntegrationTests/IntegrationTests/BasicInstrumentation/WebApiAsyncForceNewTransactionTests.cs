@@ -10,11 +10,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-    [NetFrameworkTest]
     public class WebApiAsyncForceNewTransactionTests_Instrumented : WebApiAsyncForceNewTransactionTests
     {
         private const decimal ExpectedWebTransactionCount = 6;
@@ -58,15 +56,15 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 
         private readonly List<Assertions.ExpectedMetric> _generalMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = ExpectedTransactionCount},
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = ExpectedTransactionCount},
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = ExpectedTransactionCount },
             new Assertions.ExpectedMetric { metricName = @"Apdex"},
             new Assertions.ExpectedMetric { metricName = @"ApdexAll"},
-            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = ExpectedWebTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = ExpectedWebTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = ExpectedWebTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all", callCount = ExpectedOtherTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime", callCount = ExpectedOtherTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = ExpectedWebTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = ExpectedWebTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", CallCountAllHarvests = ExpectedWebTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all", CallCountAllHarvests = ExpectedOtherTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime", CallCountAllHarvests = ExpectedOtherTransactionCount },
         };
 
         private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Async_AwaitedAsync = new List<Assertions.ExpectedMetric>
@@ -109,7 +107,6 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 
     }
 
-    [NetFrameworkTest]
     public class WebApiAsyncForceNewTransactionTests_NotInstrumented : WebApiAsyncForceNewTransactionTests
     {
         private const decimal ExpectedWebTransactionCount = 6;
@@ -128,13 +125,13 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 
         private readonly List<Assertions.ExpectedMetric> _generalMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = ExpectedTransactionCount},
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = ExpectedTransactionCount},
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = ExpectedTransactionCount },
             new Assertions.ExpectedMetric { metricName = @"Apdex"},
             new Assertions.ExpectedMetric { metricName = @"ApdexAll"},
-            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = ExpectedWebTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = ExpectedWebTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = ExpectedWebTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = ExpectedWebTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = ExpectedWebTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", CallCountAllHarvests = ExpectedWebTransactionCount },
         };
 
         private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Async_AwaitedAsync = new List<Assertions.ExpectedMetric>

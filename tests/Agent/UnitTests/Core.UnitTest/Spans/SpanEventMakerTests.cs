@@ -29,6 +29,8 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Spans.UnitTest
 {
@@ -101,7 +103,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         private ServerConfiguration _serverConfig;
         private IBootstrapConfiguration _bootstrapConfiguration;
         private configuration _localConfig;
-
+        private IAgentHealthReporter _agentHealthReporter;
 
         private void SetLocalConfigurationDefaults()
         {
@@ -123,7 +125,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
         private void PublishConfig()
         {
-            var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
             _config = config;
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_config, ConfigurationUpdateSource.Local));
         }
@@ -138,7 +140,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             _dnsStatic = Mock.Create<IDnsStatic>();
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
             _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
-            
+            _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _runTimeConfiguration = new RunTimeConfiguration();
             _serverConfig = new ServerConfiguration();
 
@@ -177,7 +179,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             _childGenericSegment.SetSegmentData(new SimpleSegmentData(SegmentName));
 
             // Datastore Segments
-            _connectionInfo = new ConnectionInfo(DatastoreVendor.MSSQL.ToKnownName(), "localhost", 1234, "default", "maininstance");
+            _connectionInfo = new ConnectionInfo("localhost", 1234, "default", "maininstance");
             _parsedSqlStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, System.Data.CommandType.Text, ShortQuery);
 
             _obfuscatedSql = _databaseService.GetObfuscatedSql(ShortQuery, DatastoreVendor.MSSQL);
@@ -648,7 +650,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var testSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
             testSegment.SetSegmentData(new DatastoreSegmentData(_databaseService,
                 parsedSqlStatement: new ParsedSqlStatement(DatastoreVendor.CosmosDB, string.Empty, "ReadDatabase"),
-                connectionInfo: new ConnectionInfo("none", "localhost", "1234", "default", "maininstance")));
+                connectionInfo: new ConnectionInfo("localhost", "1234", "default", "maininstance")));
 
             // ARRANGE
             var segments = new List<Segment>()
@@ -946,7 +948,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
                 _baseHttpSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
             };
             var externalSegmentData = segments[0].Data as ExternalSegmentData;
-            externalSegmentData.SetHttpStatusCode(200);
+            externalSegmentData.SetHttpStatus(200, "OK");
 
             var immutableTransaction = BuildTestTransaction(segments, true, false);
             var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
@@ -959,6 +961,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             // ASSERT
             Assert.That(spanEvent.AgentAttributes()["http.statusCode"], Is.EqualTo(200));
+            Assert.That(spanEvent.AgentAttributes()["http.statusText"], Is.EqualTo("OK"));
         }
 
         #endregion

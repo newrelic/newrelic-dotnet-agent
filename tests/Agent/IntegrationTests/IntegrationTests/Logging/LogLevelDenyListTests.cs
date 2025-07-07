@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 {
@@ -64,12 +63,12 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "WARN"), callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), callCount = 1 },
 
-                new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines", CallCountAllHarvests = 2 },
 
                 new Assertions.ExpectedMetric { metricName = "Logging/denied/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = "Logging/denied/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), callCount = 1 },
 
-                new Assertions.ExpectedMetric { metricName = "Logging/denied", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = "Logging/denied", CallCountAllHarvests = 2 },
             };
             var notExpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -85,7 +84,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
     }
     #region log4net
 
-    [NetFrameworkTest]
     public class Log4NetLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public Log4NetLogLevelDenyListTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -94,7 +92,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class Log4NetLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public Log4NetLogLevelDenyListTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -103,7 +100,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class Log4NetLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public Log4NetLogLevelDenyListTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -112,7 +108,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class Log4NetLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public Log4NetLogLevelDenyListTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -121,7 +116,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class Log4NetLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public Log4NetLogLevelDenyListTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -133,7 +127,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     #region MEL
 
-    [NetCoreTest]
     public class MELLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MELLogLevelDenyListTestsNetCoreLatestTests(
@@ -143,7 +136,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class
         MELLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
@@ -154,7 +146,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class
     MELLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
@@ -169,7 +160,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     #region Serilog
 
-    [NetFrameworkTest]
     public class
         SerilogLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFWLatest>
@@ -181,7 +171,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class
         SerilogLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFW471>
@@ -193,7 +182,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class
         SerilogLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFW462>
@@ -205,7 +193,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class
         SerilogLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureCoreLatest>
@@ -217,7 +204,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class
         SerilogLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureCoreOldest>
@@ -233,7 +219,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     #region NLog
 
-    [NetFrameworkTest]
     public class
         NLogLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFWLatest>
@@ -245,7 +230,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class
         NLogLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFW471>
@@ -257,7 +241,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class
         NLogLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFW462>
@@ -269,7 +252,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class
         NLogLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureCoreLatest>
@@ -281,7 +263,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class
         NLogLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureCoreOldest>

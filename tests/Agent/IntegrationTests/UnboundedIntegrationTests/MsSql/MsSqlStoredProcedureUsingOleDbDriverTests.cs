@@ -10,7 +10,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
@@ -25,8 +25,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
         public MsSqlStoredProcedureUsingOleDbDriverTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName) : base(fixture)
         {
-            MsSqlWarmupHelper.WarmupMsSql();
-
             _fixture = fixture;
             _fixture.TestLogger = output;
             _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlParameterizedStoredProcedureUsingOleDbDriver";
@@ -133,7 +131,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
     // Only tests for System.Data in .NET Framework for OleDb, since the OleDbCommandWrapper is .NET Framework only,
     // and the instrumentation.xml only matches System.Data as of 2022-10-20
-    [NetFrameworkTest]
     public class MsSqlStoredProcedureUsingOleDbDriverTests : MsSqlStoredProcedureUsingOleDbDriverTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsSqlStoredProcedureUsingOleDbDriverTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

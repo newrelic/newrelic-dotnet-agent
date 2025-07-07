@@ -40,6 +40,9 @@ using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
+using NewRelic.Agent.Core.Labels;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.Database.UnitTest;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
@@ -86,7 +89,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private ILogContextDataFilter _logContextDataFilter;
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
-
+        private ILabelsService _labelsService;
         private Action _harvestAction;
         private TimeSpan? _harvestCycle;
 
@@ -100,6 +103,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private const string ReferrerProcessId = "referrerProcessId";
 
         private ICustomEventTransformer _customEventTransformer;
+        private IDatabaseService _databaseService;
 
         [SetUp]
         public void SetUp()
@@ -147,16 +151,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _traceMetadataFactory = Mock.Create<ITraceMetadataFactory>();
             _errorService = new ErrorService(_configurationService);
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+            _labelsService = Mock.Create<ILabelsService>();
 
             var scheduler = Mock.Create<IScheduler>();
             Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
                 .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
-            _logEventAggregator = new LogEventAggregator(Mock.Create<IDataTransportService>(), scheduler, Mock.Create<IProcessStatic>(), _agentHealthReporter);
+            _logEventAggregator = new LogEventAggregator(Mock.Create<IDataTransportService>(), scheduler, Mock.Create<IProcessStatic>(), _agentHealthReporter, _labelsService);
             _logContextDataFilter = new LogContextDataFilter(_configurationService);
 
             _customEventTransformer = Mock.Create<ICustomEventTransformer>();
+            _databaseService = Mock.Create<IDatabaseService>();
 
-            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService, _customEventTransformer);
+            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService, _customEventTransformer, new NewRelicActivitySourceProxy(), _databaseService);
         }
 
         [TearDown]
@@ -166,6 +172,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _logEventAggregator.Dispose();
             _logContextDataFilter.Dispose();
             _attribDefSvc.Dispose();
+            _labelsService.Dispose();
+            _databaseService.Dispose();
         }
 
         private class CallStackManagerFactory : ICallStackManagerFactory
@@ -671,7 +679,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         public void AcceptDistributedTraceHeaders__ReportsSupportabilityMetric_NullPayload()
         {
             _distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, new AdaptiveSampler());
-            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService, _customEventTransformer);
+            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService, _customEventTransformer, new NewRelicActivitySourceProxy(), _databaseService);
             SetupTransaction();
 
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);

@@ -4,6 +4,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.SharedInterfaces
 {
@@ -17,6 +19,15 @@ namespace NewRelic.Agent.Core.SharedInterfaces
         public string GetEnvironmentVariable(string variable)
         {
             return System.Environment.GetEnvironmentVariable(variable);
+        }
+
+        public string GetEnvironmentVariableFromList(params string[] variables)
+        {
+            var envValue = (variables ?? Enumerable.Empty<string>())
+                .Select(GetEnvironmentVariable)
+                .FirstOrDefault(value => value != null);
+
+            return envValue == string.Empty ? null : envValue;
         }
 
         public string GetEnvironmentVariable(string variable, EnvironmentVariableTarget environmentVariableTarget)

@@ -17,7 +17,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using Newtonsoft.Json;
+#if NETFRAMEWORK
 using System.Web;
+#endif
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -47,8 +50,9 @@ namespace NewRelic.Agent.Core.DataTransport
         private readonly Environment _environment;
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IEnvironment _environmentVariableHelper;
+        private readonly IFileWrapper _fileWrapper;
 
-        public ConnectionHandler(ISerializer serializer, ICollectorWireFactory collectorWireFactory, IProcessStatic processStatic, IDnsStatic dnsStatic, ILabelsService labelsService, Environment environment, ISystemInfo systemInfo, IAgentHealthReporter agentHealthReporter, IEnvironment environmentVariableHelper)
+        public ConnectionHandler(ISerializer serializer, ICollectorWireFactory collectorWireFactory, IProcessStatic processStatic, IDnsStatic dnsStatic, ILabelsService labelsService, Environment environment, ISystemInfo systemInfo, IAgentHealthReporter agentHealthReporter, IEnvironment environmentVariableHelper, IFileWrapper fileWrapper, ICollectorWire dataRequestWire = null)
         {
             _serializer = serializer;
             _collectorWireFactory = collectorWireFactory;
@@ -59,9 +63,10 @@ namespace NewRelic.Agent.Core.DataTransport
             _systemInfo = systemInfo;
             _agentHealthReporter = agentHealthReporter;
             _environmentVariableHelper = environmentVariableHelper;
+            _fileWrapper = fileWrapper;
 
             _connectionInfo = new ConnectionInfo(_configuration);
-            _dataRequestWire = new NoOpCollectorWire();
+            _dataRequestWire = dataRequestWire ??  new NoOpCollectorWire();
         }
 
         #region Public API
@@ -105,6 +110,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
                 Log.Info("Agent fully connected.");
+                _agentHealthReporter.SetAgentControlStatus(HealthCodes.Healthy);
             }
 
             catch (Exception e)
@@ -310,7 +316,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 identifier,
                 _labelsService.Labels,
                 metadata ?? new Dictionary<string, string>(),
-                new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter).GetUtilizationSettings(),
+                new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter, _fileWrapper).GetUtilizationSettings(),
                 _configuration.CollectorSendEnvironmentInfo ? _environment : null,
                 _configuration.SecurityPoliciesTokenExists ? new SecurityPoliciesSettingsModel(_configuration) : null,
                 new EventHarvestConfigModel(_configuration),
@@ -323,7 +329,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var appNames = string.Join(":", _configuration.ApplicationNames.ToArray());
 
 #if NETSTANDARD2_0
-			return $"{Path.GetFileName(_processStatic.GetCurrentProcess().MainModuleFileName)}{appNames}";
+            return $"{Path.GetFileName(_processStatic.GetCurrentProcess().MainModuleFileName)}{appNames}";
 #else
 
             return HttpRuntime.AppDomainAppId != null
@@ -420,35 +426,72 @@ namespace NewRelic.Agent.Core.DataTransport
         private T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
         {
             var requestGuid = Guid.NewGuid();
+            string serializedData;
             try
             {
-                var serializedData = _serializer.Serialize(data);
-                try
-                {
-                    var responseBody = wire.SendData(method, _connectionInfo, serializedData, requestGuid);
-                    return ParseResponse<T>(responseBody);
-                }
-                catch (DataTransport.HttpException ex)
-                {
-                    Log.Debug(ex, "Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
+                serializedData = _serializer.Serialize(data);
+            }
+            catch (JsonSerializationException ex)
+            {
+                Log.Debug("Request({0}): Exception occurred serializing request data: {1}", requestGuid, ex); // log message only since exception is rethrown
+                throw;
+            }
 
-                    if (ex.StatusCode == HttpStatusCode.Gone)
-                    {
-                        Log.Info(ex, "Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
-                    }
+            try
+            {
+                var responseBody = wire.SendData(method, _connectionInfo, serializedData, requestGuid);
+                return ParseResponse<T>(responseBody);
+            }
+            catch (DataTransport.HttpException ex)
+            {
+                Log.Debug("Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
 
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    Log.Debug(ex, "Request({0}): An error occurred invoking method \"{1}\" with payload \"{2}\": {3}", requestGuid, method, serializedData, ex);
-                    throw;
-                }
+                if (ex.StatusCode == HttpStatusCode.Gone)
+                    Log.Info(ex, "Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
+
+                SetAgentControlStatus(requestGuid, method, ex);
+
+                throw;
             }
             catch (Exception ex)
             {
-                Log.Debug(ex, "Request({0}): Exception occurred serializing request data: {1}", requestGuid, ex);
+                Log.Debug("Request({0}): An error occurred invoking method \"{1}\" with payload \"{2}\": {3}", requestGuid, method, serializedData, ex); // log message only since exception is rethrown
+
+                SetAgentControlStatus(requestGuid, method, null);
+
                 throw;
+            }
+        }
+
+        private void SetAgentControlStatus(Guid requestGuid, string method, HttpException httpException)
+        {
+            if (method.Equals("connect"))
+            {
+                _agentHealthReporter.SetAgentControlStatus(HealthCodes.FailedToConnect);
+            }
+            else
+            {
+                if (httpException == null) // this shouldn't happen, but...
+                {
+                    _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpError, "unknown", method);
+                    return;
+                }
+
+                switch (httpException.StatusCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.LicenseKeyInvalid);
+                        break;
+                    case HttpStatusCode.Gone:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.ForceDisconnect);
+                        break;
+                    case HttpStatusCode.ProxyAuthenticationRequired:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpProxyError, httpException.StatusCode.ToString());
+                        break;
+                    default:
+                        _agentHealthReporter.SetAgentControlStatus(HealthCodes.HttpError, httpException.StatusCode.ToString(), method);
+                        break;
+                }
             }
         }
 

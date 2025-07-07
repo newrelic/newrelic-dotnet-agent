@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -25,6 +25,7 @@ namespace NewRelic.Agent.Core.JsonConverters
         private const string ErrorMessage = "error.message";
         private const string ErrorClass = "error.class";
         private const string Context = "context";
+        private const string LabelPrefix = "tags.";
 
         public override LogEventWireModelCollection ReadJson(JsonReader reader, Type objectType, LogEventWireModelCollection existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
@@ -50,6 +51,16 @@ namespace NewRelic.Agent.Core.JsonConverters
             jsonWriter.WriteValue(value.EntityGuid);
             jsonWriter.WritePropertyName(Hostname);
             jsonWriter.WriteValue(value.Hostname);
+
+            if (value.Labels != null)
+            {
+                foreach (var label in value.Labels)
+                {
+                    jsonWriter.WritePropertyName(LabelPrefix + label.Type);
+                    jsonWriter.WriteValue(label.Value);
+                }
+            }
+
             jsonWriter.WriteEndObject();
             jsonWriter.WriteEndObject();
 

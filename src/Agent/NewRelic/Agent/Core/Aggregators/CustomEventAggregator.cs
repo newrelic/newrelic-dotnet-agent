@@ -89,12 +89,13 @@ namespace NewRelic.Agent.Core.Aggregators
             var customEvents = originalCustomEvents.Where(node => node != null).Select(node => node.Data).ToList();
 
             // if we don't have any events to publish then don't
-            if (customEvents.Count <= 0)
-                return;
+            var eventCount = customEvents.Count;
+            if (eventCount > 0)
+            {
+                var responseStatus = DataTransportService.Send(customEvents, transactionId);
 
-            var responseStatus = DataTransportService.Send(customEvents, transactionId);
-
-            HandleResponse(responseStatus, customEvents);
+                HandleResponse(responseStatus, customEvents);
+            }
 
             Log.Finest("Custom Event harvest finished.");
         }
@@ -121,14 +122,17 @@ namespace NewRelic.Agent.Core.Aggregators
                     break;
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(customEvents);
+                    Log.Debug("Retaining {count} custom events.", customEvents.Count);
                     break;
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                     var newSize = (int)(customEvents.Count * ReservoirReductionSizeMultiplier);
                     ReduceReservoirSize(newSize);
                     RetainEvents(customEvents);
+                    Log.Debug("Reservoir size reduced. Retaining {count} custom events.", customEvents.Count);
                     break;
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Debug("Discarding {count} custom events.", customEvents.Count);
                     break;
             }
         }

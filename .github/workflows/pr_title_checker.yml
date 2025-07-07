@@ -1,0 +1,32 @@
+name: Ensure PR title has a valid prefix
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - labeled
+      - unlabeled
+    branches:
+      - main
+
+permissions:
+  read-all
+
+jobs:
+  check:
+    name: Ensure PR title has a valid prefix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          disable-sudo: true
+          egress-policy: audit
+      - name: Check PR title    
+        uses: thehanimo/pr-title-checker@7fbfe05602bdd86f926d3fb3bccb6f3aed43bc70 # v1.4.3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          pass_on_octokit_error: false
+          configuration_path: .github/workflows/pr-title-checker-config.json

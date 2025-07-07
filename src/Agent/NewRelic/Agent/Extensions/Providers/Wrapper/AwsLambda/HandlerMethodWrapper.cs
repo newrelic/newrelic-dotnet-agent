@@ -193,10 +193,9 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 {
                     agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Supported Event Type found: {_functionDetails.EventType}");
                 }
-                else if (!_unsupportedInputTypes.Contains(name))
+                else if (_unsupportedInputTypes.TryAdd(name))
                 {
                     agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unsupported input object type: {name}. Unable to provide additional instrumentation.");
-                    _unsupportedInputTypes.Add(name);
                 }
             }
 
@@ -245,10 +244,14 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
             string requestId = _functionDetails.GetRequestId(instrumentedMethodCall);
             var inputObject = _functionDetails.GetInputObject(instrumentedMethodCall);
 
+            // create a transaction for the function invocation if AwsLambdaApmModeEnabled is enabled then based on spec WebTransaction/Function/APIGATEWAY myFunction
+            // else WebTransaction/Function/myFunction
             transaction = agent.CreateTransaction(
                 isWeb: _functionDetails.EventType.IsWebEvent(),
-                category: "Lambda",
-                transactionDisplayName: _functionDetails.FunctionName,
+                category: agent.Configuration.AwsLambdaApmModeEnabled ? "Function" : "Lambda",
+                transactionDisplayName: agent.Configuration.AwsLambdaApmModeEnabled
+                                        ? _functionDetails.EventType.ToEventTypeString().ToUpper() + " " + _functionDetails.FunctionName
+                                        : _functionDetails.FunctionName,
                 doNotTrackAsUnitOfWork: true);
 
             if (isAsync)
@@ -344,10 +347,9 @@ namespace NewRelic.Providers.Wrapper.AwsLambda
                 ||
                 (_functionDetails.EventType == AwsLambdaEventType.ApplicationLoadBalancerRequest && responseType != "Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerResponse"))
             {
-                if (!_unexpectedResponseTypes.Contains(responseType))
+                if (_unexpectedResponseTypes.TryAdd(responseType))
                 {
                     agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unexpected response type {responseType} for request event type {_functionDetails.EventType}. Not capturing any response data.");
-                    _unexpectedResponseTypes.Add(responseType);
                 }
 
                 return;

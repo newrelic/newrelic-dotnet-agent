@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
 {
@@ -19,7 +18,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Logging: finest
     /// Files: Integration.Testing.DeleteAttributeTest.xml
     /// </summary>
-    [NetCoreTest]
     public abstract class RejitDeleteAttributeBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture: AspNetCoreReJitMvcApplicationFixture
     {
@@ -67,7 +65,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
                 // Unscoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomDeleteMetricName", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetDeleteAttribute", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetDeleteAttribute", CallCountAllHarvests = 2 },
 
                 // Scoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },

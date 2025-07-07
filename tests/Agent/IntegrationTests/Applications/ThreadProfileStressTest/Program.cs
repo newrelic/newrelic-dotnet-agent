@@ -19,12 +19,13 @@ namespace ThreadProfileStressTest
 
         static void Main(string[] args)
         {
+#if !NET9_0_OR_GREATER
             ServicePointManager.ServerCertificateValidationCallback = delegate
             {
                 //force trust on all certificates for simplicity
                 return true;
             };
-
+#endif
             _applicationName =
                 Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
 

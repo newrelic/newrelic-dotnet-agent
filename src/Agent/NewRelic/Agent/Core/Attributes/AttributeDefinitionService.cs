@@ -63,6 +63,7 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> HostDisplayName { get; }
         AttributeDefinition<string, string> HttpMethod { get; }
         AttributeDefinition<long?, long> HttpStatusCode { get; }
+        AttributeDefinition<string, string> HttpStatusText { get; }
         AttributeDefinition<Uri, string> HttpUrl { get; }
         AttributeDefinition<bool, bool> IsError { get; }
         AttributeDefinition<string, string> NameForSpan { get; }
@@ -126,6 +127,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         AttributeDefinition<object, object> GetLambdaAttribute(string name);
         AttributeDefinition<object, object> GetFaasAttribute(string name);
+        AttributeDefinition<object, object> GetCloudSdkAttribute(string name);
 
         AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName);
 
@@ -146,7 +148,6 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> MessagingRabbitMqDestinationRoutingKey { get; }
         AttributeDefinition<string, string> MessagingDestinationPublishName { get; }
     }
-
 
     public class AttributeDefinitionService : ConfigurationBasedService, IAttributeDefinitionService
     {
@@ -190,6 +191,7 @@ namespace NewRelic.Agent.Core.Attributes
         private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestHeadersAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _lambdaAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _faasAttributes = new();
+        private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _cloudSdkAttributes = new();
 
         private readonly ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>> _typeAttributes = new ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>>();
 
@@ -281,6 +283,20 @@ namespace NewRelic.Agent.Core.Attributes
         }
 
 
+        private AttributeDefinition<object, object> CreateCloudSdkAttribute(string attribName)
+        {
+            return AttributeDefinitionBuilder
+                .Create<object, object>(attribName, AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithConvert(x => x)
+                .Build(_attribFilter);
+        }
+
+        public AttributeDefinition<object, object> GetCloudSdkAttribute(string name)
+        {
+            return _cloudSdkAttributes.GetOrAdd(name, CreateCloudSdkAttribute);
+        }
         public AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name)
         {
             return _trxCustomAttributes.GetOrAdd(name, CreateCustomAttributeForTransaction);
@@ -423,6 +439,17 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.TransactionTrace)
                 .WithConvert(x => x.GetValueOrDefault())                //This is ok b/c we check for null input earlier
                 .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _httpStatusText;
+        public AttributeDefinition<string, string> HttpStatusText => _httpStatusText ??=
+            AttributeDefinitionBuilder.CreateString("http.statusText", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.ErrorEvent)
+                .AppliesTo(AttributeDestinations.ErrorTrace)
+                .AppliesTo(AttributeDestinations.TransactionEvent)
+                .AppliesTo(AttributeDestinations.ErrorEvent)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
+                .Build(_attribFilter);
 
         private AttributeDefinition<string, string> _clientCrossProcessId;
         public AttributeDefinition<string, string> ClientCrossProcessId => _clientCrossProcessId ?? (_clientCrossProcessId =

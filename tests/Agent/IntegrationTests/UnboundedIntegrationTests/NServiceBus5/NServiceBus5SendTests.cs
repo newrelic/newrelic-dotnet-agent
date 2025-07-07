@@ -9,7 +9,7 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
 {
@@ -76,7 +76,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
         }
     }
 
-    [NetFrameworkTest]
     public class NServiceBus5SendOnFW462Tests : NServiceBus5SendTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public NServiceBus5SendOnFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)

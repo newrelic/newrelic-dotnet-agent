@@ -1,15 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
-    <PackageReference Include="EnyimMemcachedCore" Version="2.1.9" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="EnyimMemcachedCore" Version="3.2.2" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="EnyimMemcachedCore" Version="3.4.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="EnyimMemcachedCore" Version="3.4.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.13.61">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
-
 </Project>

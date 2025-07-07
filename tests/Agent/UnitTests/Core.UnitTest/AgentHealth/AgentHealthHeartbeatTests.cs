@@ -1,9 +1,10 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -49,7 +50,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void HeartbeatTest()
         {
             var scheduler = new FakeScheduler();
-            var reporter = new AgentHealthReporter(GetSimpleMetricBuilder(), scheduler);
+            var reporter = new AgentHealthReporter(GetSimpleMetricBuilder(), scheduler, Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
             using (var logger = new TestUtilities.Logging())
             {
                 // Make sure all the event types get seen in the log

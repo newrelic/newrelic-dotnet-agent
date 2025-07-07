@@ -53,16 +53,22 @@ namespace NewRelic.Agent.Core.Utilization
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IEnvironment _environment;
         private readonly VendorHttpApiRequestor _vendorHttpApiRequestor;
+        private readonly IFileWrapper _fileWrapper;
 
         private const string GetMethod = "GET";
         private const string PutMethod = "PUT";
 
-        public VendorInfo(IConfiguration configuration, IAgentHealthReporter agentHealthReporter, IEnvironment environment, VendorHttpApiRequestor vendorHttpApiRequestor)
+        private const string AzureWebsiteOwnerName = "WEBSITE_OWNER_NAME";
+        private const string AzureWebsiteResourceGroup = "WEBSITE_RESOURCE_GROUP";
+        private const string AzureWebsiteSiteName = "WEBSITE_SITE_NAME";
+
+        public VendorInfo(IConfiguration configuration, IAgentHealthReporter agentHealthReporter, IEnvironment environment, VendorHttpApiRequestor vendorHttpApiRequestor, IFileWrapper fileWrapper)
         {
             _configuration = configuration;
             _agentHealthReporter = agentHealthReporter;
             _environment = environment;
             _vendorHttpApiRequestor = vendorHttpApiRequestor;
+            _fileWrapper = fileWrapper;
         }
 
         public IDictionary<string, IVendorModel> GetVendors()
@@ -100,6 +106,10 @@ namespace NewRelic.Agent.Core.Utilization
             {
                 vendorMethods.Add(GetAzureFunctionVendorInfo);
             }
+            if (_configuration.UtilizationDetectAzureAppService)
+            {
+                vendorMethods.Add(GetAzureAppServiceVendorInfo);
+            }
 
             foreach (var vendorMethod in vendorMethods)
             {
@@ -117,7 +127,7 @@ namespace NewRelic.Agent.Core.Utilization
             // If we get AWS ECS info, we don't need to check Docker.
             if (_configuration.UtilizationDetectDocker && !vendors.ContainsKey(EcsName))
             {
-                var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper(), IsLinux());
+                var dockerVendorInfo = GetDockerVendorInfo(_fileWrapper, IsLinux());
                 if (dockerVendorInfo != null)
                 {
                     vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
@@ -138,7 +148,8 @@ namespace NewRelic.Agent.Core.Utilization
 
         public IVendorModel GetAzureFunctionVendorInfo()
         {
-            if (!(_configuration.AzureFunctionModeDetected && _configuration.AzureFunctionModeEnabled))
+            // per the spec, only report Azure Function metadata if the agent is running in an Azure Function mode and instrumentation is enabled
+            if (!(_configuration.AzureFunctionModeEnabled &&_configuration.AzureFunctionModeDetected))
                 return null;
 
             var appName = _configuration.AzureFunctionResourceId;
@@ -150,6 +161,40 @@ namespace NewRelic.Agent.Core.Utilization
             }
 
             return new AzureFunctionVendorModel(appName, cloudRegion);
+        }
+
+        public IVendorModel GetAzureAppServiceVendorInfo()
+        {
+            // WEBSITE_OWNER_NAME should container the subscription ID and the resource group name, separated by a '+' sign.
+            var candidateSubscriptionId = GetProcessEnvironmentVariable(AzureWebsiteOwnerName);
+            if (string.IsNullOrWhiteSpace(candidateSubscriptionId) || !candidateSubscriptionId.Contains('+'))
+            {
+                return null;
+            }
+
+            var subscriptionId = candidateSubscriptionId.Split('+')[0];
+            var resourceGroupName = GetProcessEnvironmentVariable(AzureWebsiteResourceGroup);
+            var siteName = GetProcessEnvironmentVariable(AzureWebsiteSiteName);
+
+            if (!IsValidAndLog(subscriptionId, AzureWebsiteOwnerName)
+                || !IsValidAndLog(resourceGroupName, AzureWebsiteResourceGroup)
+                || !IsValidAndLog(siteName, AzureWebsiteSiteName))
+            {
+                return null;
+            }
+
+            return new AzureAppServiceVendorModel($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}");
+
+            bool IsValidAndLog(string value, string valueSource)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    Log.Finest($"When building Azure App Service resource id, {valueSource} was null.");
+                    return false;
+                }
+
+                return true;
+            }
         }
 
         private IVendorModel GetAwsVendorInfo()
@@ -308,7 +353,7 @@ namespace NewRelic.Agent.Core.Utilization
             }
         }
 
-        public IVendorModel GetDockerVendorInfo(IFileReaderWrapper fileReaderWrapper, bool isLinux)
+        public IVendorModel GetDockerVendorInfo(IFileWrapper fileReaderWrapper, bool isLinux)
         {
             IVendorModel vendorModel = null;
             if (isLinux)
@@ -504,20 +549,6 @@ namespace NewRelic.Agent.Core.Utilization
 #else
             return false; // No Linux on .NET Framework
 #endif
-        }
-    }
-
-    // needed for unit testing only
-    public interface IFileReaderWrapper
-    {
-        string ReadAllText(string fileName);
-    }
-
-    public class FileReaderWrapper : IFileReaderWrapper
-    {
-        public string ReadAllText(string fileName)
-        {
-            return File.ReadAllText(fileName);
         }
     }
 }

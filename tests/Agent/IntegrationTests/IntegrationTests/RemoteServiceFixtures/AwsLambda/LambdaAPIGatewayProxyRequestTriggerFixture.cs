@@ -181,43 +181,43 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
         }
     }
 
-    public class LambdaAPIGatewayProxyRequestTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    public class LambdaAPIGatewayProxyRequestTriggerFixtureCoreOldest : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public LambdaAPIGatewayProxyRequestTriggerFixtureNet6() : base("net6.0", false, false) { }
+        public LambdaAPIGatewayProxyRequestTriggerFixtureCoreOldest() : base(CoreOldestTFM, false, false) { }
     }
 
-    public class AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    public class AsyncLambdaAPIGatewayProxyRequestTriggerFixtureCoreOldest : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet6() : base("net6.0", true, false) { }
+        public AsyncLambdaAPIGatewayProxyRequestTriggerFixtureCoreOldest() : base(CoreOldestTFM, true, false) { }
     }
 
-    public class LambdaAPIGatewayProxyRequestTriggerFixtureNet8 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    public class LambdaAPIGatewayProxyRequestTriggerFixtureCoreLatest : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public LambdaAPIGatewayProxyRequestTriggerFixtureNet8() : base("net8.0", false, false) { }
+        public LambdaAPIGatewayProxyRequestTriggerFixtureCoreLatest() : base(CoreLatestTFM, false, false) { }
     }
 
-    public class AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet8 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    public class AsyncLambdaAPIGatewayProxyRequestTriggerFixtureCoreLatest : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public AsyncLambdaAPIGatewayProxyRequestTriggerFixtureNet8() : base("net8.0", true, false) { }
+        public AsyncLambdaAPIGatewayProxyRequestTriggerFixtureCoreLatest() : base(CoreLatestTFM, true, false) { }
     }
 
-    public class LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    public class LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreOldest : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6() : base("net6.0", false, true) { }
+        public LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreOldest() : base(CoreOldestTFM, false, true) { }
     }
 
-    public class AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    public class AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreOldest : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet6() : base("net6.0", true, true) { }
+        public AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreOldest() : base(CoreOldestTFM, true, true) { }
     }
 
-    public class LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    public class LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreLatest : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8() : base("net8.0", false, true) { }
+        public LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreLatest() : base(CoreLatestTFM, false, true) { }
     }
 
-    public class AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8 : LambdaAPIGatewayProxyRequestTriggerFixtureBase
+    public class AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreLatest : LambdaAPIGatewayProxyRequestTriggerFixtureBase
     {
-        public AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureNet8() : base("net8.0", true, true) { }
+        public AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreLatest() : base(CoreLatestTFM, true, true) { }
     }
 }

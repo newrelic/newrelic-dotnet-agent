@@ -145,23 +145,45 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
     }
 
 
-    public class LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureNet8 : AspNetCoreWebApiLambdaFixtureBase
+    public class LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreOldest : AspNetCoreWebApiLambdaFixtureBase
     {
-        public LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureNet8() : base("net8.0")
+        public LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreOldest() : base(CoreOldestTFM)
         {
             CommandLineArguments = "--handler APIGatewayProxyFunctionEntryPoint";
         }
     }
-    public class LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureNet8 : AspNetCoreWebApiLambdaFixtureBase
+    public class LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreOldest : AspNetCoreWebApiLambdaFixtureBase
     {
-        public LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureNet8() : base("net8.0")
+        public LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreOldest() : base(CoreOldestTFM)
         {
             CommandLineArguments = "--handler APIGatewayHttpApiV2ProxyFunctionEntryPoint";
         }
     }
-    public class LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureNet8 : AspNetCoreWebApiLambdaFixtureBase
+    public class LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreOldest : AspNetCoreWebApiLambdaFixtureBase
     {
-        public LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureNet8() : base("net8.0")
+        public LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreOldest() : base(CoreOldestTFM)
+        {
+            CommandLineArguments = "--handler ApplicationLoadBalancerFunctionEntryPoint";
+        }
+    }
+    public class LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreLatest : AspNetCoreWebApiLambdaFixtureBase
+    {
+        public LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreLatest() : base(CoreLatestTFM)
+        {
+            CommandLineArguments = "--handler APIGatewayProxyFunctionEntryPoint";
+        }
+    }
+
+    public class LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreLatest : AspNetCoreWebApiLambdaFixtureBase
+    {
+        public LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreLatest() : base(CoreLatestTFM)
+        {
+            CommandLineArguments = "--handler APIGatewayHttpApiV2ProxyFunctionEntryPoint";
+        }
+    }
+    public class LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreLatest : AspNetCoreWebApiLambdaFixtureBase
+    {
+        public LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreLatest() : base(CoreLatestTFM)
         {
             CommandLineArguments = "--handler ApplicationLoadBalancerFunctionEntryPoint";
         }

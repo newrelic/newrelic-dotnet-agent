@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
 {
@@ -19,7 +18,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
     /// Logging: finest
     /// Files: Integration.Testing.AddAttributeTest.xml
     /// </summary>
-    [NetFrameworkTest]
     public class RejitAddAttribute : NewRelicIntegrationTest<AspNetFrameworkReJitMvcApplicationFixture>
     {
         private readonly AspNetFrameworkReJitMvcApplicationFixture _fixture;

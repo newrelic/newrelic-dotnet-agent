@@ -190,6 +190,10 @@ namespace NewRelic.Agent.Configuration
         bool ForceSynchronousTimingCalculationHttpClient { get; }
         bool EnableAspNetCore6PlusBrowserInjection { get; }
         bool ExcludeNewrelicHeader { get; }
+
+        RemoteParentSampledBehavior RemoteParentSampledBehavior { get; }
+        RemoteParentSampledBehavior RemoteParentNotSampledBehavior { get; }
+
         bool ApplicationLoggingEnabled { get; }
         bool LogMetricsCollectorEnabled { get; }
         bool LogEventCollectorEnabled { get; }
@@ -198,8 +202,10 @@ namespace NewRelic.Agent.Configuration
         bool LogDecoratorEnabled { get; }
         HashSet<string> LogLevelDenyList { get; }
         bool ContextDataEnabled { get; }
+        bool LabelsEnabled { get; }
         IEnumerable<string> ContextDataInclude { get; }
         IEnumerable<string> ContextDataExclude { get; }
+        IEnumerable<string> LabelsExclude { get; }
         bool AppDomainCachingDisabled { get; }
         bool ForceNewTransactionOnNewThread { get; }
         bool CodeLevelMetricsEnabled { get; }
@@ -227,9 +233,25 @@ namespace NewRelic.Agent.Configuration
         string AzureFunctionResourceGroupName { get; }
         string AzureFunctionRegion { get; }
         string AzureFunctionSubscriptionId { get; }
-        string AzureFunctionServiceName { get; }
+        string AzureFunctionAppName { get; }
         string AzureFunctionResourceIdWithFunctionName(string functionName);
 
         bool UtilizationDetectAzureFunction { get; }
+
+        bool UtilizationDetectAzureAppService { get; }
+
+        string AwsAccountId { get; }
+        bool GCSamplerV2Enabled { get; }
+
+        bool AgentControlEnabled { get; }
+        string HealthDeliveryLocation { get; }
+        int HealthFrequency { get; }
+
+        bool AwsLambdaApmModeEnabled { get; }
+
+        List<string> IncludedActivitySources { get; }
+        List<string> ExcludedActivitySources { get; }
+
+        bool OpenTelemetryBridgeEnabled { get; }
     }
 }

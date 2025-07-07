@@ -7,11 +7,9 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
 {
-    [NetCoreTest]
     public abstract class AwsLambdaCustomEventsTest<T> : NewRelicIntegrationTest<T> where T : LambdaCustomEventsTriggerFixtureBase
     {
         private readonly LambdaCustomEventsTriggerFixtureBase _fixture;
@@ -47,17 +45,17 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
         }
     }
 
-    public class AwsLambdaCustomEventsTestNet6 : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureNet6>
+    public class AwsLambdaCustomEventsTestCoreOldest : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureCoreOldest>
     {
-        public AwsLambdaCustomEventsTestNet6(LambdaCustomEventsTriggerFixtureNet6 fixture, ITestOutputHelper output)
+        public AwsLambdaCustomEventsTestCoreOldest(LambdaCustomEventsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class AwsLambdaCustomEventsTestNet8 : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureNet8>
+    public class AwsLambdaCustomEventsTestCoreLatest : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureCoreLatest>
     {
-        public AwsLambdaCustomEventsTestNet8(LambdaCustomEventsTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaCustomEventsTestCoreLatest(LambdaCustomEventsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

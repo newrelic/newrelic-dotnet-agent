@@ -10,11 +10,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
-    [NetFrameworkTest]
     public class ConsoleAsyncForceNewTransactionTests_Instrumented : ConsoleAsyncForceNewTransactionTests
     {
         private const decimal ExpectedTransactionCount = 10;
@@ -59,10 +57,10 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 
         private readonly List<Assertions.ExpectedMetric> _generalMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = ExpectedTransactionCount},
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = ExpectedTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all", callCount = ExpectedTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime", callCount = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = ExpectedTransactionCount},
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all", CallCountAllHarvests = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime", CallCountAllHarvests = ExpectedTransactionCount },
         };
 
         private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Async_AwaitedAsync = new List<Assertions.ExpectedMetric>
@@ -105,7 +103,6 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 
     }
 
-    [NetFrameworkTest]
     public class ConsoleAsyncForceNewTransactionTests_NotInstrumented : ConsoleAsyncForceNewTransactionTests
     {
         private const decimal ExpectedTransactionCount = 6;
@@ -149,10 +146,10 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 
         private readonly List<Assertions.ExpectedMetric> _generalMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = ExpectedTransactionCount},
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = ExpectedTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all", callCount = ExpectedTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime", callCount = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = ExpectedTransactionCount},
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all", CallCountAllHarvests = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime", CallCountAllHarvests = ExpectedTransactionCount },
         };
 
         private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Async_AwaitedAsync = new List<Assertions.ExpectedMetric>

@@ -1,0 +1,71 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+
+namespace NewRelic.Providers.Wrapper.AzureServiceBus;
+
+public class AzureServiceBusSendWrapper : AzureServiceBusWrapperBase
+{
+    public override CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
+    {
+        var canWrap = instrumentedMethodInfo.RequestedWrapperName.Equals(nameof(AzureServiceBusSendWrapper));
+        return new CanWrapResponse(canWrap);
+    }
+
+    public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        dynamic serviceBusReceiver = instrumentedMethodCall.MethodCall.InvocationTarget;
+        string queueOrTopicName = serviceBusReceiver.EntityPath; // some-queue|topic-name
+        string fqns = serviceBusReceiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net   
+
+        // determine message broker action based on method name
+        MessageBrokerAction action =
+            instrumentedMethodCall.MethodCall.Method.MethodName switch
+            {
+                "SendMessagesAsync" => MessageBrokerAction.Produce,
+                "ScheduleMessagesAsync" => MessageBrokerAction.Produce,
+                "CancelScheduledMessagesAsync" => MessageBrokerAction.Cancel,
+                _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodCall.MethodCall.Method.MethodName}")
+            };
+
+        if (instrumentedMethodCall.IsAsync)
+        {
+            transaction.AttachToAsync();
+        }
+
+        // start a message broker segment
+        var segment = transaction.StartMessageBrokerSegment(
+            instrumentedMethodCall.MethodCall,
+            MessageBrokerDestinationType.Queue, // ASB doesn't differentiate between queue or topic when sending, so we default to Queue which has more features.
+            action,
+            BrokerVendorName,
+            queueOrTopicName,
+            serverAddress: fqns);
+
+        if (action == MessageBrokerAction.Produce)
+        {
+            dynamic messages = instrumentedMethodCall.MethodCall.MethodArguments[0];
+
+            // For more details on DT for this library see: https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/TROUBLESHOOTING.md#distributed-tracing
+            // iterate all messages that are being sent,
+            // insert DT headers into each message
+            foreach (var message in messages)
+            {
+                if (message.ApplicationProperties is IDictionary<string, object> applicationProperties)
+                    transaction.InsertDistributedTraceHeaders(applicationProperties, ProcessHeaders);
+            }
+
+            void ProcessHeaders(IDictionary<string, object> applicationProperties, string key, string value)
+            {
+                applicationProperties.Add(key, value);
+            }
+        }
+
+        return instrumentedMethodCall.IsAsync ? Delegates.GetAsyncDelegateFor<Task>(agent, segment) : Delegates.GetDelegateFor(segment);
+    }
+}

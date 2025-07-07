@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Config
 {
@@ -21,6 +24,11 @@ namespace NewRelic.Agent.Core.Config
         string ServerlessFunctionName { get; }
         string ServerlessFunctionVersion { get; }
         bool AzureFunctionModeDetected { get; }
+        bool GCSamplerV2Enabled { get; }
+
+        bool AgentControlEnabled { get; }
+        string HealthDeliveryLocation { get; }
+        int HealthFrequency { get; }
     }
 
     /// <summary>
@@ -64,6 +72,7 @@ namespace NewRelic.Agent.Core.Config
         public BootstrapConfiguration(configuration localConfiguration, string configurationFileName, Func<string, ValueWithProvenance<string>> getWebConfigSettingWithProvenance, IConfigurationManagerStatic configurationManagerStatic, IProcessStatic processStatic, Predicate<string> checkDirectoryExists, Func<string, string> getFullPath)
         {
             ServerlessModeEnabled = CheckServerlessModeEnabled(localConfiguration);
+            GCSamplerV2Enabled = CheckGCSamplerV2Enabled(TryGetAppSettingAsBoolWithDefault(localConfiguration, "GCSamplerV2Enabled", false));
             DebugStartupDelaySeconds = localConfiguration.debugStartupDelaySeconds;
             ConfigurationFileName = configurationFileName;
             LogConfig = new BootstrapLogConfig(localConfiguration.log, processStatic, checkDirectoryExists, getFullPath);
@@ -133,6 +142,19 @@ namespace NewRelic.Agent.Core.Config
 
         public bool AzureFunctionModeDetected => ConfigLoaderHelpers.GetEnvironmentVar("FUNCTIONS_WORKER_RUNTIME") != null;
 
+        public bool GCSamplerV2Enabled { get; private set;}
+        public bool AgentControlEnabled => ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_AGENT_CONTROL_ENABLED").TryToBoolean(out var enabled) && enabled;
+        public string HealthDeliveryLocation => ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_AGENT_CONTROL_HEALTH_DELIVERY_LOCATION");
+
+        public int HealthFrequency
+        {
+            get
+            {
+                var healthFrequencyString = ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_AGENT_CONTROL_HEALTH_FREQUENCY");
+                return int.TryParse(healthFrequencyString, out var healthFrequency) ? healthFrequency : 5;
+            }
+        }
+
         private bool CheckServerlessModeEnabled(configuration localConfiguration)
         {
             // We may need these later even if we don't use it now.
@@ -152,6 +174,11 @@ namespace NewRelic.Agent.Core.Config
 
             // fall back to config file
             return localConfiguration.serverlessModeEnabled;
+        }
+
+        private bool CheckGCSamplerV2Enabled(bool localConfigurationGcSamplerV2Enabled)
+        {
+            return localConfigurationGcSamplerV2Enabled || (ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_GC_SAMPLER_V2_ENABLED").TryToBoolean(out var enabledViaEnvVariable) && enabledViaEnvVariable);
         }
 
         private void SetAgentEnabledValues()
@@ -203,6 +230,30 @@ namespace NewRelic.Agent.Core.Config
 
             return null;
         }
+
+        private Dictionary<string, string> TransformAppSettings(configuration localConfiguration)
+        {
+            if (localConfiguration.appSettings == null)
+                return new Dictionary<string, string>();
+
+            return localConfiguration.appSettings
+                .Where(setting => setting != null)
+                .Select(setting => new KeyValuePair<string, string>(setting.key, setting.value))
+                .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
+        }
+
+        private bool TryGetAppSettingAsBoolWithDefault(configuration localConfiguration, string key, bool defaultValue)
+        {
+            var value = TransformAppSettings(localConfiguration).GetValueOrDefault(key);
+
+            bool parsedBool;
+            var parsedSuccessfully = bool.TryParse(value, out parsedBool);
+            if (!parsedSuccessfully)
+                return defaultValue;
+
+            return parsedBool;
+        }
+
 
         private class BootstrapLogConfig : ILogConfig
         {
@@ -284,7 +335,7 @@ namespace NewRelic.Agent.Core.Config
 
             private string GetNewRelicLogDirectory()
             {
-                var newRelicLogDirectory = ConfigLoaderHelpers.GetEnvironmentVar("NEWRELIC_LOG_DIRECTORY");
+                var newRelicLogDirectory = ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_LOG_DIRECTORY", "NEWRELIC_LOG_DIRECTORY");
                 if (newRelicLogDirectory != null && _checkDirectoryExists(newRelicLogDirectory)) return _getFullPath(newRelicLogDirectory);
 
                 return newRelicLogDirectory;

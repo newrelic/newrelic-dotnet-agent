@@ -10,7 +10,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures
         private const string Dockerfile = "SmokeTestApp/Dockerfile";
         private const string DockerComposeServiceName = "LinuxUnicodeLogfileTestApp";
         private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-        private const string DistroTag = "jammy";
+        private const string DistroTag = "noble";
 
         public LinuxUnicodeLogFileTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
     }

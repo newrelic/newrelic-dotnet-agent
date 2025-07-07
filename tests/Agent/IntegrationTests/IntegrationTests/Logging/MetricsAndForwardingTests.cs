@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 {
@@ -107,12 +106,12 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             var loggingMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "WARN"), callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), callCount = 6 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), CallCountAllHarvests = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "WARN"), CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), CallCountAllHarvests = 6 },
 
-                new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 17 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines", CallCountAllHarvests = 17 },
             };
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();
@@ -157,9 +156,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             Assert.NotNull(logEventData);
             Assert.NotNull(logEventData.Common);
             Assert.NotNull(logEventData.Common.Attributes);
-            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.EntityGuid));
-            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.EntityName));
-            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.Hostname));
+            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes["entity.guid"].ToString()));
+            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes["entity.name"].ToString()));
+            Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes["hostname"].ToString()));
 
             var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
             Assert.Equal(17, logLines.Length);
@@ -336,7 +335,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     #region log4net
 
-    [NetFrameworkTest]
     public class Log4NetMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public Log4NetMetricsAndForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -345,7 +343,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class Log4NetMetricsAndForwardingTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public Log4NetMetricsAndForwardingTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -354,7 +351,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class Log4NetMetricsAndForwardingTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public Log4NetMetricsAndForwardingTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -363,7 +359,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class Log4NetMetricsAndForwardingTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public Log4NetMetricsAndForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -372,7 +367,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class Log4NetMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public Log4NetMetricsAndForwardingTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -384,7 +378,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     #region MEL
 
-    [NetCoreTest]
     public class MELMetricsAndForwardingTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MELMetricsAndForwardingTestsNetCoreLatestTests(
@@ -394,7 +387,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class
         MELMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
@@ -405,7 +397,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class
     MELMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
@@ -420,7 +411,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     #region Serilog
 
-    [NetFrameworkTest]
     public class
         SerilogMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<
             ConsoleDynamicMethodFixtureFWLatest>
@@ -432,7 +422,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class
         SerilogMetricsAndForwardingTestsFW471Tests : MetricsAndForwardingTestsBase<
             ConsoleDynamicMethodFixtureFW471>
@@ -444,7 +433,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class
         SerilogMetricsAndForwardingTestsFW462Tests : MetricsAndForwardingTestsBase<
             ConsoleDynamicMethodFixtureFW462>
@@ -456,7 +444,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class
         SerilogMetricsAndForwardingTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
             ConsoleDynamicMethodFixtureCoreLatest>
@@ -468,7 +455,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class
         SerilogMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<
             ConsoleDynamicMethodFixtureCoreOldest>
@@ -484,7 +470,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     #region NLog
 
-    [NetFrameworkTest]
     public class
         NLogMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<
             ConsoleDynamicMethodFixtureFWLatest>
@@ -496,7 +481,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class
         NLogMetricsAndForwardingTestsFW471Tests : MetricsAndForwardingTestsBase<
             ConsoleDynamicMethodFixtureFW471>
@@ -508,7 +492,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetFrameworkTest]
     public class
         NLogMetricsAndForwardingTestsFW462Tests : MetricsAndForwardingTestsBase<
             ConsoleDynamicMethodFixtureFW462>
@@ -520,7 +503,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class
         NLogMetricsAndForwardingTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
             ConsoleDynamicMethodFixtureCoreLatest>
@@ -532,7 +514,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
     }
 
-    [NetCoreTest]
     public class
         NLogMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<
             ConsoleDynamicMethodFixtureCoreOldest>

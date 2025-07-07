@@ -9,13 +9,11 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 using System.IO;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.Owin
 {
-    [NetFrameworkTest]
     public abstract class OwinWebApiAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : OwinWebApiFixture
     {
@@ -87,7 +85,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 new Assertions.ExpectedMetric { metricName = @"ApdexAll"},
                 new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = ExpectedTransactionCount },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = ExpectedTransactionCount },
-                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = ExpectedTransactionCount },
+                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", CallCountAllHarvests = ExpectedTransactionCount },
 
                 new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", CallCountAllHarvests = ExpectedTransactionCount },
             };

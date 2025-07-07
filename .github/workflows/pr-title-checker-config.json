@@ -1,0 +1,13 @@
+{
+    "LABEL": {
+      "name": ""
+    },
+    "CHECKS": {
+      "prefixes": ["fix: ", "feat: ", "security: ", "notice: ", "chore: ", "chore(deps): ", "chore(main): ", "ci: ", "docs: ", "test: "]
+    },
+    "MESSAGES": {
+      "success": "Pull request title is properly formatted.",
+      "failure": "Pull request title must begin with a valid prefix (e.g. 'feat: ')",
+      "notice": ""
+    }
+  }

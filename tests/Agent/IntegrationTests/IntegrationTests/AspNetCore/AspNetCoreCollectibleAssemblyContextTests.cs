@@ -7,11 +7,9 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
-    [NetCoreTest]
     public class AspNetCoreCollectibleAssemblyContextTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCoreFeaturesFixture _fixture;
@@ -69,14 +67,14 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
 
         private readonly List<Assertions.ExpectedMetric> _generalMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/CurrentTransaction", callCount = ExpectedTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/InsertDistributedTraceHeaders", callCount = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/CurrentTransaction", CallCountAllHarvests = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/InsertDistributedTraceHeaders", CallCountAllHarvests = ExpectedTransactionCount },
         };
 
         private readonly List<Assertions.ExpectedMetric> _collectibleMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"DotNet/CollectibleController/AccessCollectible", callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/CollectibleController/AccessCollectible", metricScope = @"WebTransaction/MVC/Collectible/AccessCollectible", callCount = 2 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/CollectibleController/AccessCollectible", CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/CollectibleController/AccessCollectible", metricScope = @"WebTransaction/MVC/Collectible/AccessCollectible", CallCountAllHarvests = 2 },
         };
     }
 }

@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System.Data.Common;
 
@@ -35,7 +34,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
                 portNum = -1;
             }
 
-            return new ConnectionInfo(DatastoreVendor.Postgres.ToKnownName(), host, portNum, databaseName);
+            return new ConnectionInfo(host, portNum, databaseName);
         }
     }
 }

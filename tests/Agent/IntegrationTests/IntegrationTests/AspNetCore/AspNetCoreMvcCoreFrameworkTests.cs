@@ -8,11 +8,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
-    [NetFrameworkTest]
     public class AspNetCoreMvcCoreFrameworkTests : NewRelicIntegrationTest<AspNetCoreMvcCoreFrameworkFixture>
     {
         private readonly AspNetCoreMvcCoreFrameworkFixture _fixture;
@@ -45,13 +43,13 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Values/Get", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/Values/Get", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/ValuesController/Get", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/ValuesController/Get", metricScope = @"WebTransaction/MVC/Values/Get", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Values/Get", CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/Values/Get", CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ValuesController/Get", CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ValuesController/Get", metricScope = @"WebTransaction/MVC/Values/Get", CallCountAllHarvests = 2 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();

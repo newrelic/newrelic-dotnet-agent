@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
 {
@@ -19,7 +18,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Logging: finest
     /// Files: Integration.Testing.RenameOriginalXmlFileTest.xml, Integration.Testing.RenameTargetXmlFileTest.xml
     /// </summary>
-    [NetCoreTest]
     public abstract class RejitRenameFileBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture:AspNetCoreReJitMvcApplicationFixture
     {
@@ -64,16 +62,16 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
             {
                 //transactions
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomRenameMetricName", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomRenameMetricName", CallCountAllHarvests = 2 },
 
                 // Unscoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenameMetricName", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetRenameFile", callCount = 2},
+                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenameMetricName", CallCountAllHarvests = 2 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetRenameFile", CallCountAllHarvests = 2},
 
                 // Scoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenameMetricName", metricScope = "WebTransaction/Custom/MyCustomRenameMetricName", callCount = 2 }
+                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenameMetricName", metricScope = "WebTransaction/Custom/MyCustomRenameMetricName", CallCountAllHarvests = 2 }
             };
 
             var notExpectedMetrics = new List<Assertions.ExpectedMetric>

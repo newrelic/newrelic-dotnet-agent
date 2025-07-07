@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
@@ -17,7 +16,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
     ///		with prefix "WebTransaction/WebAPI" and whitelist terms "Values Sleep UrlRule".
     ///		Can be found at https://[staging|rpm].newrelic.com/accounts/{accountId}/applications/{applicationId}/segment_terms
     /// </summary>
-    [NetFrameworkTest]
     public class Rules : NewRelicIntegrationTest<RulesWebApi>
     {
         private readonly RulesWebApi _fixture;

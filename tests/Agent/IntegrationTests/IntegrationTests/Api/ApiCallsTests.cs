@@ -7,11 +7,9 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Api
 {
-    [NetFrameworkTest]
     public class ApiCallsTestsFWLatest : ApiCallsTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ApiCallsTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -20,7 +18,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetCoreTest]
     public class ApiCallsTestsCoreLatest : ApiCallsTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ApiCallsTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -71,7 +68,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
             {
                 new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/TraceMetadata" },
                 new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/GetLinkingMetadata"},
-                new Assertions.ExpectedMetric(){ callCount = 2, metricName = "Supportability/ApiInvocation/StartDatastoreSegment"}
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests = 2, metricName = "Supportability/ApiInvocation/StartDatastoreSegment"}
             };
 
             var actualMetrics = Fixture.AgentLog.GetMetrics().ToList();

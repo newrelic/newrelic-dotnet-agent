@@ -6,6 +6,8 @@ using NewRelic.Agent.Core.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
@@ -14,7 +16,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
         // not valid for this enum, but will be replaced on first call to Type
         private DistributedTracingParentType _type = (DistributedTracingParentType)(-2);
         private DateTime _timestamp;
-        private bool? _sampled;
         private bool _validTracestateWasAccepted = false;
         private DateTime _transactionStartTime;
 
@@ -109,7 +110,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                     return _timestamp = _newRelicPayload.Timestamp;
                 }
 
-                return _timestamp = (DateTime)default; // default is same as new.
+                return _timestamp = default(DateTime); // default is same as new.
             }
         }
 
@@ -148,44 +149,40 @@ namespace NewRelic.Agent.Core.DistributedTracing
             }
         }
 
+        private bool? _sampled;
         public bool? Sampled
         {
             get
             {
-                if (_sampled != null && _sampled.HasValue)
-                {
+                if (_sampled is not null)
                     return _sampled;
-                }
 
-                if (_traceContext?.Tracestate != null && _traceContext.Tracestate.Sampled.HasValue)
-                {
+                if (_traceContext?.Tracestate is { Sampled: not null })
                     return _sampled = Convert.ToBoolean(_traceContext.Tracestate.Sampled);
-                }
 
-                if (_newRelicPayload?.Sampled != null && _newRelicPayload.Sampled.HasValue)
-                {
+                if (_newRelicPayload?.Sampled is not null)
                     return _sampled = _newRelicPayload.Sampled;
-                }
 
                 return null;
             }
         }
 
+        private float? _priority;
         public float? Priority
         {
             get
             {
-                if (_traceContext?.Tracestate != null)
+                if (_priority != null)
+                {
+                    return _priority;
+                }
+
+                if (_traceContext?.Tracestate is { Priority: not null })
                 {
                     return _traceContext.Tracestate.Priority;
                 }
 
-                if (_newRelicPayload?.Priority != null && _newRelicPayload.Priority.HasValue)
-                {
-                    return _newRelicPayload.Priority;
-                }
-
-                return null;
+                return _newRelicPayload?.Priority;
             }
         }
 
@@ -204,7 +201,14 @@ namespace NewRelic.Agent.Core.DistributedTracing
         private DistributedTracePayload _newRelicPayload;
         private W3CTraceContext _traceContext;
 
-        public static ITracingState AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType, string agentTrustKey, DateTime transactionStartTime)
+        public static ITracingState AcceptDistributedTraceHeaders<T>(
+            T carrier,
+            Func<T, string, IEnumerable<string>> getter,
+            TransportType transportType,
+            string agentTrustKey,
+            DateTime transactionStartTime,
+            RemoteParentSampledBehavior remoteParentSampledBehavior,
+            RemoteParentSampledBehavior remoteParentNotSampledBehavior)
         {
             var tracingState = new TracingState();
             var errors = new List<IngestErrorType>();
@@ -217,6 +221,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null ? true : false;
 
+            tracingState.ApplyRemoteParentSampledBehavior(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
 
             // newrelic 
             // if traceparent was present (regardless if valid), ignore newrelic header
@@ -253,6 +258,50 @@ namespace NewRelic.Agent.Core.DistributedTracing
             tracingState.TransportType = transportType;
 
             return tracingState;
+        }
+
+        /// <summary>
+        /// Use remote parent sampled behavior configuration in conjunction with the traceparent sampled flag to determine
+        /// if the transaction should be sampled.
+        /// </summary>
+        private void ApplyRemoteParentSampledBehavior(
+            RemoteParentSampledBehavior remoteParentSampledBehavior,
+            RemoteParentSampledBehavior remoteParentNotSampledBehavior)
+        {
+            // don't do anything if the traceparent is not present or if behavior is configured to default
+            if (!_traceContext.TraceparentPresent ||
+                (remoteParentNotSampledBehavior == RemoteParentSampledBehavior.Default &&
+                 remoteParentSampledBehavior == RemoteParentSampledBehavior.Default))
+            {
+                return;
+            }
+
+            var sampledBehavior = _traceContext.Traceparent.Sampled
+                ? remoteParentSampledBehavior
+                : remoteParentNotSampledBehavior;
+
+            switch (sampledBehavior)
+            {
+                case RemoteParentSampledBehavior.AlwaysOn:
+                    _priority = 2.0f; // per the spec, set priority high so that this sample is always kept
+                    _sampled = true;
+                    break;
+                case RemoteParentSampledBehavior.AlwaysOff:
+                    _priority = 0.0f; // set lowest possible priority
+                    _sampled = false;
+                    break;
+                // don't need a case for Default, as it is handled above
+                default:
+                    throw new ArgumentException($"Invalid {(_traceContext.Traceparent.Sampled ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")} value: {sampledBehavior}.");
+            }
+
+            Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext.Traceparent.Sampled={SampledValue}, {ParentType}SampledBehavior: {SampledBehavior} ==> Sampled: {Sampled}, Priority: {Priority}",
+                    _traceContext.Traceparent.Sampled,
+                    _sampled.Value ? "remoteParent" : "remoteParentNot",
+                    sampledBehavior,
+                    Sampled,
+                    Priority
+                );
         }
     }
 }

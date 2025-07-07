@@ -8,7 +8,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVariables
 {
@@ -26,6 +25,16 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
             _fixture.TestLogger = output;
             _fixture.Actions
             (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
+                    configModifier.SetAllowAllHeaders(true)
+                        .EnableDistributedTrace().ForceTransactionTraces();
+                },
                 exerciseApplication: () =>
                 {
                     var customRequestHeaders = new Dictionary<string, string>
@@ -37,7 +46,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
                     };
 
                     _fixture.PostWithTestHeaders(customRequestHeaders);
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
         }
@@ -63,7 +72,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
         }
     }
 
-    [NetFrameworkTest]
     public class EnvironmentVariableAllowAllHeadersEnabledTests_Defaults : EnvironmentVariableAllowAllHeadersEnabledTests_Base
     {
         public EnvironmentVariableAllowAllHeadersEnabledTests_Defaults(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -110,7 +118,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
         }
     }
 
-    [NetFrameworkTest]
     public class EnvironmentVariableAllowAllHeadersEnabledTests_Includes_CommaDelimited : EnvironmentVariableAllowAllHeadersEnabledTests_Base
     {
         public EnvironmentVariableAllowAllHeadersEnabledTests_Includes_CommaDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -158,7 +165,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
         }
     }
 
-    [NetFrameworkTest]
     public class EnvironmentVariableAllowAllHeadersEnabledTests_Includes_CommaSpaceDelimited : EnvironmentVariableAllowAllHeadersEnabledTests_Base
     {
         public EnvironmentVariableAllowAllHeadersEnabledTests_Includes_CommaSpaceDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -205,7 +211,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
         }
     }
 
-    [NetFrameworkTest]
     public class EnvironmentVariableAllowAllHeadersEnabledTests_Excludes_CommaDelimited : EnvironmentVariableAllowAllHeadersEnabledTests_Base
     {
         public EnvironmentVariableAllowAllHeadersEnabledTests_Excludes_CommaDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -251,7 +256,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
         }
     }
 
-    [NetFrameworkTest]
     public class EnvironmentVariableAllowAllHeadersEnabledTests_Excludes_CommaSpaceDelimited : EnvironmentVariableAllowAllHeadersEnabledTests_Base
     {
         public EnvironmentVariableAllowAllHeadersEnabledTests_Excludes_CommaSpaceDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)

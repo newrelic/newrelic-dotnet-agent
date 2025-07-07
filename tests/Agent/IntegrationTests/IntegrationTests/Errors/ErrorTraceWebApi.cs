@@ -9,11 +9,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Errors
 {
-    [NetFrameworkTest]
     public class ErrorTraceWebApi : NewRelicIntegrationTest<RemoteServiceFixtures.OwinWebApiFixture>
     {
         private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
@@ -61,7 +59,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all", callCount = 5 },
+                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all", CallCountAllHarvests = 5 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();

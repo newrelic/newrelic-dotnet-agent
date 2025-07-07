@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
-using AwsSdkTestApp.AwsSdkExerciser;
+using AwsSdkTestApp.AwsSdkExercisers;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NewRelic.Api.Agent;
@@ -56,10 +56,10 @@ namespace AwsSdkTestApp.SQSBackgroundService
         private async Task<IEnumerable<Message>> ProcessRequestAsync(string queueUrl)
         {
             _logger.LogInformation("Received a request to receive a message from {Queue}", queueUrl);
-            using var awsSdkExerciser = new AwsSdkExerciser.AwsSdkExerciser(AwsSdkTestType.SQS);
-            awsSdkExerciser.SQS_SetQueueUrl(queueUrl);
+            using var awsSdkSQSExerciser = new AwsSdkSQSExerciser();
+            awsSdkSQSExerciser.SQS_SetQueueUrl(queueUrl);
             _logger.LogInformation("Receiving a message from {Queue}", queueUrl);
-            var messages = await awsSdkExerciser.SQS_ReceiveMessageAsync();
+            var messages = await awsSdkSQSExerciser.SQS_ReceiveMessageAsync();
             _logger.LogInformation("Received a message from {Queue}; queuing a response", queueUrl);
             await _responseQueue.QueueResponseAsync(messages);
             _logger.LogInformation("Finished processing request for {Queue}", queueUrl);

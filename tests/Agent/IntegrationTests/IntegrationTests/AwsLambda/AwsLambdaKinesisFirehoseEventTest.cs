@@ -8,11 +8,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
 {
-    [NetCoreTest]
     public abstract class AwsLambdaKinesisFirehoseEventTest<T> : NewRelicIntegrationTest<T> where T : LambdaKinesisFirehoseEventTriggerFixtureBase
     {
         private readonly LambdaKinesisFirehoseEventTriggerFixtureBase _fixture;
@@ -79,33 +77,33 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
         }
     }
 
-    public class AwsLambdaKinesisFirehoseEventTestNet6 : AwsLambdaKinesisFirehoseEventTest<LambdaKinesisFirehoseEventTriggerFixtureNet6>
+    public class AwsLambdaKinesisFirehoseEventTestCoreOldest : AwsLambdaKinesisFirehoseEventTest<LambdaKinesisFirehoseEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaKinesisFirehoseEventTestNet6(LambdaKinesisFirehoseEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
+        public AwsLambdaKinesisFirehoseEventTestCoreOldest(LambdaKinesisFirehoseEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/KinesisFirehoseEvent")
         {
         }
     }
 
-    public class AwsLambdaAsyncKinesisFirehoseEventTestNet6 : AwsLambdaKinesisFirehoseEventTest<AsyncLambdaKinesisFirehoseEventTriggerFixtureNet6>
+    public class AwsLambdaAsyncKinesisFirehoseEventTestCoreOldest : AwsLambdaKinesisFirehoseEventTest<AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaAsyncKinesisFirehoseEventTestNet6(AsyncLambdaKinesisFirehoseEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncKinesisFirehoseEventTestCoreOldest(AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/KinesisFirehoseEventAsync")
         {
         }
     }
 
-    public class AwsLambdaKinesisFirehoseEventTestNet8 : AwsLambdaKinesisFirehoseEventTest<LambdaKinesisFirehoseEventTriggerFixtureNet8>
+    public class AwsLambdaKinesisFirehoseEventTestCoreLatest : AwsLambdaKinesisFirehoseEventTest<LambdaKinesisFirehoseEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaKinesisFirehoseEventTestNet8(LambdaKinesisFirehoseEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaKinesisFirehoseEventTestCoreLatest(LambdaKinesisFirehoseEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/KinesisFirehoseEvent")
         {
         }
     }
 
-    public class AwsLambdaAsyncKinesisFirehoseEventTestNet8 : AwsLambdaKinesisFirehoseEventTest<AsyncLambdaKinesisFirehoseEventTriggerFixtureNet8>
+    public class AwsLambdaAsyncKinesisFirehoseEventTestCoreLatest : AwsLambdaKinesisFirehoseEventTest<AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaAsyncKinesisFirehoseEventTestNet8(AsyncLambdaKinesisFirehoseEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
+        public AwsLambdaAsyncKinesisFirehoseEventTestCoreLatest(AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, "OtherTransaction/Lambda/KinesisFirehoseEventAsync")
         {
         }

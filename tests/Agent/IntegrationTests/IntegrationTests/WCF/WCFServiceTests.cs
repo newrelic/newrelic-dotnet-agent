@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NETFRAMEWORK
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Testing.Assertions;
@@ -10,7 +9,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
@@ -25,7 +23,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
             WCFInvocationMethod.TAPAsync
         };
 
-        public WCFServiceTestBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, WCFBindingType bindingToTest, TracingTestOption tracingTestOption, HostingModel hostingModelOption, ASPCompatibilityMode aspCompatModeOption, IWCFLogHelpers logHelpersImpl)
+        public WCFServiceTestBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, WCFBindingType bindingToTest, WCFLegacyTracingTestOption tracingTestOption, HostingModel hostingModelOption, ASPCompatibilityMode aspCompatModeOption, IWCFLogHelpers logHelpersImpl)
             : base(fixture, output, bindingToTest, new[] { WCFInvocationMethod.Sync }, _instrumentedSvcInvocMethods, tracingTestOption, hostingModelOption, aspCompatModeOption, logHelpersImpl)
         {
         }
@@ -144,14 +142,14 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric(){ callCount = expectedTrxCount, metricName = "WebTransaction" },
-                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * 2, metricName="Supportability/Events/TransactionError/Seen"},
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests = expectedTrxCount, metricName = "WebTransaction" },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests = _countServiceInvocationMethodsToTest * 2, metricName="Supportability/Events/TransactionError/Seen"},
 
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
 
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
 
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart" },
@@ -165,19 +163,19 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncThrowExceptionAtEnd" },
 
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException" },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException" },
 
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException" },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException" },
 
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException"  },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException"  },
 
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
 
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart" },
 
                 new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
@@ -193,7 +191,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
         [Fact]
         public override void DistributedTracing_Metrics()
         {
-            if (_tracingTestOption != TracingTestOption.DT)
+            if (_tracingTestOption != WCFLegacyTracingTestOption.DT)
             {
                 return;
             }
@@ -220,26 +218,26 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"DurationByCaller/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/all" },
-                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"DurationByCaller/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/allWeb" },
-                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"TransportDuration/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/all" },
-                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"TransportDuration/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/allWeb" },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"DurationByCaller/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/all" },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"DurationByCaller/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/allWeb" },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"TransportDuration/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/all" },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"TransportDuration/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/allWeb" },
 
                 new Assertions.ExpectedMetric(){ metricName = "Supportability/DistributedTrace/CreatePayload/Success",
-                    callCount =     (_countServiceInvocationMethodsToTest * COUNT_SVC_METHODS)		//Each Client Call
+                    CallCountAllHarvests =     (_countServiceInvocationMethodsToTest * COUNT_SVC_METHODS)		//Each Client Call
 								+   _countServiceInvocationMethodsToTest							//Covering the HTTP call in GetData
 								+   1																//Covering the HTTP call in AsyncThrowExceptionAtEnd (it call DoWork which does an HTTP Request)
 				},
 
                 new Assertions.ExpectedMetric(){ metricName = "Supportability/TraceContext/Create/Success",
-                    callCount =     (_countServiceInvocationMethodsToTest * COUNT_SVC_METHODS)		//Each Client Call
+                    CallCountAllHarvests =     (_countServiceInvocationMethodsToTest * COUNT_SVC_METHODS)		//Each Client Call
 								+   _countServiceInvocationMethodsToTest							//Covering the HTTP call in GetData
 								+   1																//Covering the HTTP call in AsyncThrowExceptionAtEnd (it call DoWork which does an HTTP Request)
 				},
 				//In IIS Hosted Scenarios with ASPCompatibility Disabled, the ignore transaction wrapper is used on the ASP.Pipeline hit.
 				//However, before this occurs, an accept has occurred, which doubles the number of accepts.
 				new Assertions.ExpectedMetric(){ metricName = "Supportability/TraceContext/Accept/Success",
-                        callCount = _hostingModelOption == HostingModel.Self || _aspCompatibilityOption == ASPCompatibilityMode.Enabled
+                        CallCountAllHarvests = _hostingModelOption == HostingModel.Self || _aspCompatibilityOption == ASPCompatibilityMode.Enabled
                             ? _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS
                             : _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS * 2
                 },
@@ -269,12 +267,12 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"ClientApplication/{CATCrossProcessID_Client}/all" },
+                new Assertions.ExpectedMetric(){ CallCountAllHarvests = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"ClientApplication/{CATCrossProcessID_Client}/all" },
 
-                new Assertions.ExpectedMetric(){ metricName = "Supportability/CrossApplicationTracing/Request/Create/Success" , callCount = countExpectedCreate },
-                new Assertions.ExpectedMetric(){ metricName = "Supportability/CrossApplicationTracing/Request/Accept/Success", callCount = countExpectedAccept},
-                new Assertions.ExpectedMetric(){ metricName = "Supportability/CrossApplicationTracing/Response/Create/Success", callCount = countExpectedResponse },
-                new Assertions.ExpectedMetric(){ metricName = "Supportability/CrossApplicationTracing/Response/Accept/Success", callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS },
+                new Assertions.ExpectedMetric(){ metricName = "Supportability/CrossApplicationTracing/Request/Create/Success" , CallCountAllHarvests = countExpectedCreate },
+                new Assertions.ExpectedMetric(){ metricName = "Supportability/CrossApplicationTracing/Request/Accept/Success", CallCountAllHarvests = countExpectedAccept},
+                new Assertions.ExpectedMetric(){ metricName = "Supportability/CrossApplicationTracing/Response/Create/Success", CallCountAllHarvests = countExpectedResponse },
+                new Assertions.ExpectedMetric(){ metricName = "Supportability/CrossApplicationTracing/Response/Accept/Success", CallCountAllHarvests = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS },
             };
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
@@ -292,7 +290,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
 
 
 
-            if (_tracingTestOption == TracingTestOption.CAT)
+            if (_tracingTestOption == WCFLegacyTracingTestOption.CAT)
             {
                 NrAssert.Multiple(
                     () => Assertions.MetricsExist(expectedMetrics, LogHelpers.MetricValues),
@@ -347,7 +345,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
         [Fact]
         public override void DistributedTracing_SpanEvents()
         {
-            if (_tracingTestOption != TracingTestOption.DT)
+            if (_tracingTestOption != WCFLegacyTracingTestOption.DT)
             {
                 return;
             }
@@ -365,11 +363,11 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
 
             // In debug we consistently get 10 extra ASP pipeline events, in Release we consistently get 9.
             // We do not see spans for 'PreExecuteRequestHandler' in Release, but we do in Debug.
-            #if DEBUG
+#if DEBUG
                 const int COUNT_ASP_PIPELINE_EVENTS = 10;
-            #else
+#else
                 const int COUNT_ASP_PIPELINE_EVENTS = 9;
-            #endif
+#endif
 
             foreach (var svcTrxName in svcTrxNames)
             {
@@ -485,4 +483,3 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
 
     }
 }
-#endif

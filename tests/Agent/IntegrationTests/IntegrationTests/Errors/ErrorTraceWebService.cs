@@ -8,11 +8,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Errors
 {
-    [NetFrameworkTest]
     public class ErrorTraceWebService : NewRelicIntegrationTest<RemoteServiceFixtures.BasicWebService>
     {
         private const string ExpectedExceptionType = "System.Exception";
@@ -53,14 +51,14 @@ namespace NewRelic.Agent.IntegrationTests.Errors
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 // error metrics
-                new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 2},
-                new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", callCount = 2},
-                new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/WebService/BasicWebService.TestWebService.ThrowException", callCount = 2},
+                new Assertions.ExpectedMetric {metricName = @"Errors/all", CallCountAllHarvests = 2},
+                new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", CallCountAllHarvests = 2},
+                new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/WebService/BasicWebService.TestWebService.ThrowException", CallCountAllHarvests = 2},
 
                 // other
-                new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebService/BasicWebService.TestWebService.ThrowException", callCount = 2},
-                new Assertions.ExpectedMetric {metricName = @"DotNet/BasicWebService.TestWebService.ThrowException", callCount = 2},
-                new Assertions.ExpectedMetric {metricName = @"DotNet/BasicWebService.TestWebService.ThrowException", metricScope = "WebTransaction/WebService/BasicWebService.TestWebService.ThrowException", callCount = 2}
+                new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebService/BasicWebService.TestWebService.ThrowException", CallCountAllHarvests = 2},
+                new Assertions.ExpectedMetric {metricName = @"DotNet/BasicWebService.TestWebService.ThrowException", CallCountAllHarvests = 2},
+                new Assertions.ExpectedMetric {metricName = @"DotNet/BasicWebService.TestWebService.ThrowException", metricScope = "WebTransaction/WebService/BasicWebService.TestWebService.ThrowException", CallCountAllHarvests = 2}
             };
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>

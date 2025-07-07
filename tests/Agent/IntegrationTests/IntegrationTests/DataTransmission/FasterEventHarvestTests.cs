@@ -7,11 +7,9 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.DataTransmission
 {
-    [NetFrameworkTest]
     public class FasterEventHarvestNetFrameworkTests : FasterEventHarvestTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public FasterEventHarvestNetFrameworkTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -19,7 +17,6 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
         }
     }
 
-    [NetCoreTest]
     public class FasterEventHarvestNetCoreTests : FasterEventHarvestTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public FasterEventHarvestNetCoreTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)

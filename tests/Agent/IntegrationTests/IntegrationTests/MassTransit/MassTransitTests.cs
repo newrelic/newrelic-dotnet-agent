@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
-using Xunit.Abstractions;
 using System;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
@@ -74,12 +73,12 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, callCount = 4, IsRegexName = true},
-                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, callCount = 4, IsRegexName = true},
+                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true},
+                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true},
 
-                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, callCount = 4, IsRegexName = true, metricScope = @"OtherTransaction\/Message\/MassTransit\/Queue\/" + queueNameRegex, IsRegexScope = true},
-                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, callCount = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
-                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, callCount = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Send"},
+                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true, metricScope = @"OtherTransaction\/Message\/MassTransit\/Queue\/" + queueNameRegex, IsRegexScope = true},
+                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
+                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Send"},
             };
 
             Assertions.MetricsExist(expectedMetrics, metrics);
@@ -91,7 +90,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
     }
 
     // Tests using StartHost (hosted service configuration method)
-    [NetFrameworkTest]
     public class MassTransitTests_StartHost_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MassTransitTests_StartHost_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -99,7 +97,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         {
         }
     }
-    [NetFrameworkTest]
     public class MassTransitTests_StartHost_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MassTransitTests_StartHost_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -107,15 +104,13 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         {
         }
     }
-    [NetCoreTest]
-    public class MassTransitTests_StartHost_Core60 : MassTransitTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class MassTransitTests_StartHost_CoreOldest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MassTransitTests_StartHost_Core60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public MassTransitTests_StartHost_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, false)
         {
         }
     }
-    [NetCoreTest]
     public class MassTransitTests_StartHost_CoreLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MassTransitTests_StartHost_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -125,7 +120,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
     }
 
     // Tests using StartBus (bus factory configuration method)
-    [NetFrameworkTest]
     public class MassTransitTests_StartBus_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MassTransitTests_StartBus_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -133,7 +127,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         {
         }
     }
-    [NetFrameworkTest]
     public class MassTransitTests_StartBus_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MassTransitTests_StartBus_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -141,15 +134,13 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         {
         }
     }
-    [NetCoreTest]
-    public class MassTransitTests_StartBus_Core60 : MassTransitTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class MassTransitTests_StartBus_CoreOldest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MassTransitTests_StartBus_Core60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public MassTransitTests_StartBus_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, true)
         {
         }
     }
-    [NetCoreTest]
     public class MassTransitTests_StartBus_CoreLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MassTransitTests_StartBus_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

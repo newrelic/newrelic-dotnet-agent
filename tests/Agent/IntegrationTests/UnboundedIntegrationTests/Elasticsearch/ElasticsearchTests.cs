@@ -11,7 +11,7 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 {
@@ -90,31 +90,31 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.Initialize();
         }
 
-        [SkippableFact]
+        [Fact]
         public void Index()
         {
-            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            Assert.SkipUnless(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("Index");
         }
 
-        [SkippableFact]
+        [Fact]
         public void Search()
         {
-            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            Assert.SkipUnless(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("Search");
         }
 
-        [SkippableFact]
+        [Fact]
         public void IndexMany()
         {
-            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            Assert.SkipUnless(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("IndexMany");
         }
 
-        [SkippableFact]
+        [Fact]
         public void MultiSearch()
         {
-            Skip.IfNot(_syncMethodsOk, SyncMethodSkipReason);
+            Assert.SkipUnless(_syncMethodsOk, SyncMethodSkipReason);
             ValidateOperation("MultiSearch");
         }
 
@@ -248,7 +248,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     }
 
     #region NEST
-    [NetFrameworkTest]
     public class ElasticsearchNestTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ElasticsearchNestTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -257,7 +256,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
     }
 
-    [NetFrameworkTest]
     public class ElasticsearchNestTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public ElasticsearchNestTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -266,7 +264,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
     }
 
-    [NetCoreTest]
     public class ElasticsearchNestTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ElasticsearchNestTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -275,7 +272,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
     }
 
-    [NetCoreTest]
     public class ElasticsearchNestTestsCoreOldest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public ElasticsearchNestTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -287,7 +283,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     #endregion NEST
 
     #region ElasticsearchNet
-    [NetFrameworkTest]
     public class ElasticsearchNetTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ElasticsearchNetTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -296,7 +291,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
     }
 
-    [NetFrameworkTest]
     public class ElasticsearchNetTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public ElasticsearchNetTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -306,7 +300,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
     }
 
-    [NetCoreTest]
     public class ElasticsearchNetTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ElasticsearchNetTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -315,7 +308,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
     }
 
-    [NetCoreTest]
     public class ElasticsearchNetTestsCoreOldest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public ElasticsearchNetTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -326,7 +318,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     #endregion ElasticsearchNet
 
     #region ElasticClients
-    [NetFrameworkTest]
     public class ElasticsearchElasticClientTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ElasticsearchElasticClientTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -335,7 +326,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
     }
 
-    [NetFrameworkTest]
     public class ElasticsearchElasticClientTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public ElasticsearchElasticClientTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -344,7 +334,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
     }
 
-    [NetCoreTest]
     public class ElasticsearchElasticClientTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ElasticsearchElasticClientTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -353,7 +342,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
     }
 
-    [NetCoreTest]
     public class ElasticsearchElasticClientTestsCoreOldest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public ElasticsearchElasticClientTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

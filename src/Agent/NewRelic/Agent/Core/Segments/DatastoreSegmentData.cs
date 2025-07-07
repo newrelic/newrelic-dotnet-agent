@@ -17,6 +17,7 @@ using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using NewRelic.Agent.Extensions.Collections;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Segments
@@ -31,7 +32,6 @@ namespace NewRelic.Agent.Core.Segments
         public DatastoreVendor DatastoreVendorName => _parsedSqlStatement.DatastoreVendor;
         public string Model => _parsedSqlStatement.Model;
         public string CommandText { get; set; }
-        public string Vendor => _connectionInfo.Vendor;
         public string Host => _connectionInfo.Host;
         public int? Port => _connectionInfo.Port;
         public string PathOrId => _connectionInfo.PathOrId;
@@ -52,8 +52,17 @@ namespace NewRelic.Agent.Core.Segments
         public ExplainPlan ExplainPlan => _explainPlan;
 
         private readonly IDatabaseService _databaseService;
+        private static CacheByDatastoreVendor<string, string> _failedExplainPlanQueryCacheByDatastoreVendor;
 
-        public DatastoreSegmentData(IDatabaseService databaseService, ParsedSqlStatement parsedSqlStatement, string commandText = null, ConnectionInfo connectionInfo = null, IDictionary<string, IConvertible> queryParameters = null)
+        static DatastoreSegmentData()
+        {
+            _failedExplainPlanQueryCacheByDatastoreVendor = new CacheByDatastoreVendor<string, string>("FailedExplainPlanQueryCache");
+            _failedExplainPlanQueryCacheByDatastoreVendor.SetCapacity(1000);
+        }
+
+        public DatastoreSegmentData(IDatabaseService databaseService,
+            ParsedSqlStatement parsedSqlStatement, string commandText = null, ConnectionInfo connectionInfo = null,
+            IDictionary<string, IConvertible> queryParameters = null)
         {
             _databaseService = databaseService;
             _connectionInfo = connectionInfo ?? EmptyConnectionInfo;
@@ -121,11 +130,15 @@ namespace NewRelic.Agent.Core.Segments
         }
 
 
-        public void ExecuteExplainPlan(SqlObfuscator obfuscator)
+        public bool ExecuteExplainPlan(SqlObfuscator obfuscator)
         {
+            // don't attempt to generate an explain plan if this query has failed previously
+            if (_failedExplainPlanQueryCacheByDatastoreVendor.Contains(DatastoreVendorName, CommandText))
+                return false;
+
             // Don't re-run an explain plan if one already exists
             if (_explainPlan != null)
-                return;
+                return false;
 
             try
             {
@@ -146,10 +159,15 @@ namespace NewRelic.Agent.Core.Segments
                         _explainPlan = new ExplainPlan(explainPlan.ExplainPlanHeaders, explainPlan.ExplainPlanDatas, explainPlan.ObfuscatedHeaders);
                     }
                 }
+
+                return true;
             }
             catch (Exception exception)
             {
-                Log.Debug(exception, "Unable to execute explain plan");
+                Log.Debug(exception, "Unable to execute explain plan for query: {Query}. This query will be ignored for future explain plan execution.",
+                    obfuscator.GetObfuscatedSql(CommandText, DatastoreVendorName) ?? "[redacted]");
+                _failedExplainPlanQueryCacheByDatastoreVendor.TryAdd(DatastoreVendorName, CommandText, () => string.Empty); // all we really want to cache is the query text
+                return false;
             }
         }
 
@@ -222,7 +240,7 @@ namespace NewRelic.Agent.Core.Segments
                 AttribDefs.DbCollection.TrySetValue(attribVals, _parsedSqlStatement.Model);
             }
 
-            AttribDefs.DbSystem.TrySetValue(attribVals, Vendor);
+            AttribDefs.DbSystem.TrySetValue(attribVals, DatastoreVendorName.ToKnownName());
             AttribDefs.DbInstance.TrySetValue(attribVals, DatabaseName);
             AttribDefs.DbOperation.TrySetValue(attribVals, Operation);
             AttribDefs.PeerAddress.TrySetValue(attribVals, $"{Host}:{PortPathOrId}");
@@ -239,6 +257,22 @@ namespace NewRelic.Agent.Core.Segments
         public void SetConnectionInfo(ConnectionInfo connInfo)
         {
             _connectionInfo = connInfo;
+        }
+
+        /// <summary>
+        /// FOR UNIT TESTING ONLY
+        /// </summary>
+        public static void ClearFailedExplainPlanCache()
+        {
+            _failedExplainPlanQueryCacheByDatastoreVendor.Reset();
+        }
+
+        /// <summary>
+        /// FOR UNIT TESTING ONLY
+        /// </summary>
+        public CacheByDatastoreVendor<string, string> GetFailedExplainPlanCache()
+        {
+            return _failedExplainPlanQueryCacheByDatastoreVendor;
         }
     }
 }

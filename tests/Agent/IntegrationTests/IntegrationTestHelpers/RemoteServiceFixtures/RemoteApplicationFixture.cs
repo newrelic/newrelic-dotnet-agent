@@ -4,16 +4,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
-using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Newtonsoft.Json;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
@@ -225,6 +223,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             return exitCode.Value.ToString("X8");
         }
 
+        /// <summary>
+        /// Adds or replaces known problems. This is used to check for things like transaction garbage collected.
+        /// Add an empty/null string[] with keepDefaults = false to clear the defaults.
+        ///
+        /// Includes by default:
+        /// - AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx
+        /// </summary>
+        /// <param name="keepDefaults">If true, the default problems will be kept. If false, the default problems will be cleared.</param>
+        /// <param name="problems">Regex values to check for from AgentLogBase.</param>
+        public void SetKnownProblems(bool keepDefaults = true, params string[] problems)
+        {
+            _problemsToCheck = keepDefaults ? _problemsToCheck.Concat(problems).ToList() : new List<string>(problems);
+        }
+
+        private List<string> _problemsToCheck = new List<string>
+        {
+            AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx
+        };
+
         public virtual void Initialize()
         {
             lock (_initializeLock)
@@ -240,12 +257,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
 
                 var numberOfTries = 0;
+                var applicationHadNonZeroExitCode = false;
 
                 try
                 {
                     var retryTest = false;
                     var retryMessage = "";
-                    var applicationHadNonZeroExitCode = false;
 
                     do
                     {
@@ -351,6 +368,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 catch (Exception ex)
                 {
                     TestLogger?.WriteLine("Exception occurred in Initialize: " + ex.ToString());
+                    AgentLogExpected = false;
                     throw;
                 }
                 finally
@@ -367,6 +385,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                             TestLogger?.WriteLine("No log file found.");
                         }
                         TestLogger?.WriteLine("----- End of Agent log file -----");
+
+                        if (!applicationHadNonZeroExitCode)
+                        {
+                            TestForKnownProblems();
+                        }
                     }
                 }
             }
@@ -379,7 +402,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public virtual void Dispose()
         {
-            RemoteApplication.Shutdown();
+            RemoteApplication.Shutdown(true);
             RemoteApplication.Dispose();
         }
 
@@ -565,77 +588,51 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
 
-        protected void PostJson(string address, string payload)
+        protected void PostJson(string address, string payload, List<KeyValuePair<string, string>> headers = null)
         {
             var content = new StringContent(payload);
 
             content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            if (headers != null && headers.Any())
+            {
+                foreach(var header in headers)
+                {
+                    content.Headers.Add(header.Key, header.Value);
+                }
+            }
 
             var result = _httpClient.PostAsync(address, content).GetAwaiter().GetResult();
 
             Assert.True(result.IsSuccessStatusCode);
         }
 
-    }
-
-
-    // borrowed from XUnit.Sdk.ExecutionTimer, as using their implementation caused a runtime error looking for xunit.execution.dotnet.dll
-    /// <summary>
-    /// Measures and aggregates execution time of one or more actions.
-    /// </summary>
-    public class ExecutionTimer
-    {
-        TimeSpan total;
-
-        /// <summary>
-        /// Returns the total time aggregated across all the actions.
-        /// </summary>
-        public decimal Total
+        // Tests for things like transaction garbage collected and other errors.
+        // Works best when logging is at FINEST.
+        private void TestForKnownProblems()
         {
-            get { return (decimal)total.TotalSeconds; }
-        }
+            // Using AgentLog when the file doesn't exist results in a 3 minute wait - manually checking is faster.
+            if (!Directory.Exists(DestinationNewRelicLogFileDirectoryPath) ||
+                !File.Exists(AgentLog.FilePath))
+            {
+                return;
+            }
 
-        /// <summary>
-        /// Executes an action and aggregates its run time into the total.
-        /// </summary>
-        /// <param name="action">The action to measure.</param>
-        public void Aggregate(Action action)
-        {
-            var stopwatch = Stopwatch.StartNew();
             try
             {
-                action();
+                Assert.Multiple(
+                    _problemsToCheck.Select(problem => (Action)(
+                        () => Assert.Null(
+                            AgentLog.WaitForLogLines(problem, TimeSpan.FromSeconds(5), 0).FirstOrDefault())
+                    )).ToArray()
+                );
             }
-            finally
+            catch
             {
-                total += stopwatch.Elapsed;
+                TestLogger?.WriteLine("WARNING: Found one or more known problems!");
+                throw;
             }
-        }
 
-        /// <summary>
-        /// Executes an asynchronous action and aggregates its run time into the total.
-        /// </summary>
-        /// <param name="asyncAction">The action to measure.</param>
-        public async Task AggregateAsync(Func<Task> asyncAction)
-        {
-            var stopwatch = Stopwatch.StartNew();
-            try
-            {
-                await asyncAction();
-            }
-            finally
-            {
-                total += stopwatch.Elapsed;
-            }
-        }
-
-        /// <summary>
-        /// Aggregates a time span into the total time.
-        /// </summary>
-        /// <param name="time">The time to add.</param>
-        public void Aggregate(TimeSpan time)
-        {
-            total += time;
+            TestLogger?.WriteLine("Finished known problems check.");
         }
     }
 }

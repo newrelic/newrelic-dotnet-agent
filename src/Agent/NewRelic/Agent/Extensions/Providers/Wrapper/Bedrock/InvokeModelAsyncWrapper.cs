@@ -13,6 +13,7 @@ using System.Net;
 using System.IO;
 using NewRelic.Agent.Extensions.JsonConverters;
 using NewRelic.Agent.Extensions.JsonConverters.BedrockPayloads;
+using NewRelic.Agent.Extensions.Llm.Bedrock;
 
 namespace NewRelic.Providers.Wrapper.Bedrock
 {
@@ -23,6 +24,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
         private static ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
         private static ConcurrentDictionary<string, string> _libraryVersions  = new();
         private const string WrapperName = "BedrockInvokeModelAsync";
+        private const string VendorName = "Bedrock";
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -40,19 +42,19 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             if (instrumentedMethodCall.IsAsync)
             {
                 transaction.AttachToAsync();
-                transaction.DetachFromPrimary(); //Remove from thread-local type storage
             }
 
             dynamic invokeModelRequest = instrumentedMethodCall.MethodCall.MethodArguments[0];
+            SupportabilityHelpers.CreateModelIdSupportabilityMetricsForBedrock((string)invokeModelRequest.ModelId, agent);
             var operationType = invokeModelRequest.ModelId.Contains("embed") ? "embedding" : "completion";
             var segment = transaction.StartCustomSegment(
                 instrumentedMethodCall.MethodCall,
-                "Llm/" + operationType + "/Bedrock/" + instrumentedMethodCall.MethodCall.Method.MethodName
+                $"Llm/{operationType}/{VendorName}/{instrumentedMethodCall.MethodCall.Method.MethodName}"
             );
 
             // required per spec
             var version = GetOrAddLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
-            agent.RecordSupportabilityMetric("DotNet/ML/Bedrock/" + version);
+            agent.RecordSupportabilityMetric($"DotNet/ML/{VendorName}/{version}");
 
             return Delegates.GetAsyncDelegateFor<Task>(
                 agent,
@@ -120,7 +122,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             }
 
             // Embedding - does not create the other events
-            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.TitanEmbedded)
+            if (((string)invokeModelRequest.ModelId).FromBedrockModelId() == BedrockLlmModelType.TitanEmbedded)
             {
                 EventHelper.CreateEmbeddingEvent(
                     agent,
@@ -129,7 +131,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     requestPayload.Prompt,
                     invokeModelRequest.ModelId,
                     invokeModelRequest.ModelId,
-                    "bedrock",
+                    VendorName,
                     false,
                     null, // not available in AWS
                     null
@@ -148,7 +150,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 invokeModelRequest.ModelId,
                 1 + responsePayload.Responses.Length,
                 responsePayload.StopReason,
-                "bedrock",
+                VendorName,
                 false,
                 null,  // not available in AWS
                 null
@@ -159,12 +161,14 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     agent,
                     segment,
                     invokeModelResponse.ResponseMetadata.RequestId,
+                    null,
                     invokeModelRequest.ModelId,
                     requestPayload.Prompt,
                     "user",
                     0,
                     completionId,
-                    false);
+                    false,
+                    VendorName);
 
             // Responses
             for (var i = 0; i < responsePayload.Responses.Length; i++)
@@ -173,12 +177,14 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     agent,
                     segment,
                     invokeModelResponse.ResponseMetadata.RequestId,
+                    null,
                     invokeModelRequest.ModelId,
                     responsePayload.Responses[i].Content,
                     "assistant",
                     i + 1,
                     completionId,
-                    true);
+                    true,
+                    VendorName);
             }
         }
 
@@ -213,7 +219,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                 ErrorMessage = errorMessage
             };
 
-            if (((string)invokeModelRequest.ModelId).FromModelId() == LlmModelType.TitanEmbedded)
+            if (((string)invokeModelRequest.ModelId).FromBedrockModelId() == BedrockLlmModelType.TitanEmbedded)
             {
                 EventHelper.CreateEmbeddingEvent(
                     agent,
@@ -222,7 +228,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     requestPayload.Prompt,
                     invokeModelRequest.ModelId,
                     null,
-                    "bedrock",
+                    VendorName,
                     true,
                     null,
                     errorData);
@@ -239,7 +245,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                     null,
                     0,
                     null,
-                    "bedrock",
+                    VendorName,
                     true,
                     null,
                     errorData);
@@ -249,18 +255,20 @@ namespace NewRelic.Providers.Wrapper.Bedrock
                         agent,
                         segment,
                         requestId,
+                        null,
                         invokeModelRequest.ModelId,
                         requestPayload.Prompt,
                         "user",
                         0,
                         completionId,
-                        false);
+                        false,
+                        VendorName);
             }
         }
 
         private static IRequestPayload GetRequestPayload(dynamic invokeModelRequest)
         {
-            var model = ((string)invokeModelRequest.ModelId).FromModelId();
+            var model = ((string)invokeModelRequest.ModelId).FromBedrockModelId();
             MemoryStream bodyStream = invokeModelRequest.Body;
             var curPos = bodyStream.Position;
             bodyStream.Position = 0;
@@ -272,16 +280,16 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             {
                 // We're using a helper method in NewRelic.Core because it has Newtonsoft.Json ILRepacked into it
                 // This avoids depending on Newtonsoft.Json being available in the customer application
-                case LlmModelType.Llama2:
+                case BedrockLlmModelType.Llama2:
                     return WrapperHelpers.DeserializeObject<Llama2RequestPayload>(utf8Json);
-                case LlmModelType.CohereCommand:
+                case BedrockLlmModelType.CohereCommand:
                     return WrapperHelpers.DeserializeObject<CohereCommandRequestPayload>(utf8Json);
-                case LlmModelType.Claude:
+                case BedrockLlmModelType.Claude:
                     return WrapperHelpers.DeserializeObject<ClaudeRequestPayload>(utf8Json);
-                case LlmModelType.Titan:
-                case LlmModelType.TitanEmbedded:
+                case BedrockLlmModelType.Titan:
+                case BedrockLlmModelType.TitanEmbedded:
                     return WrapperHelpers.DeserializeObject<TitanRequestPayload>(utf8Json);
-                case LlmModelType.Jurassic:
+                case BedrockLlmModelType.Jurassic:
                     return WrapperHelpers.DeserializeObject<JurassicRequestPayload>(utf8Json);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
@@ -290,7 +298,7 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
         private static IResponsePayload GetResponsePayload(string modelId, dynamic invokeModelResponse)
         {
-            var model = modelId.FromModelId();
+            var model = modelId.FromBedrockModelId();
             MemoryStream bodyStream = invokeModelResponse.Body;
             var curPos = bodyStream.Position;
             bodyStream.Position = 0;
@@ -300,66 +308,21 @@ namespace NewRelic.Providers.Wrapper.Bedrock
 
             switch (model)
             {
-                case LlmModelType.Llama2:
+                case BedrockLlmModelType.Llama2:
                     return WrapperHelpers.DeserializeObject<Llama2ResponsePayload>(utf8Json);
-                case LlmModelType.CohereCommand:
+                case BedrockLlmModelType.CohereCommand:
                     return WrapperHelpers.DeserializeObject<CohereCommandResponsePayload>(utf8Json);
-                case LlmModelType.Claude:
+                case BedrockLlmModelType.Claude:
                     return WrapperHelpers.DeserializeObject<ClaudeResponsePayload>(utf8Json);
-                case LlmModelType.Titan:
+                case BedrockLlmModelType.Titan:
                     return WrapperHelpers.DeserializeObject<TitanResponsePayload>(utf8Json);
-                case LlmModelType.TitanEmbedded:
+                case BedrockLlmModelType.TitanEmbedded:
                     return WrapperHelpers.DeserializeObject<TitanEmbeddedResponsePayload>(utf8Json);
-                case LlmModelType.Jurassic:
+                case BedrockLlmModelType.Jurassic:
                     return WrapperHelpers.DeserializeObject<JurassicResponsePayload>(utf8Json);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(model), model, "Unexpected LlmModelType");
             }
-        }
-    }
-
-    /// <summary>
-    /// The set of models supported by the Bedrock wrapper.
-    /// </summary>
-    public enum LlmModelType
-    {
-        Llama2,
-        CohereCommand,
-        Claude,
-        Titan,
-        TitanEmbedded,
-        Jurassic
-    }
-
-    public static class LlmModelTypeExtensions
-    {
-        /// <summary>
-        /// Converts a modelId to an LlmModelType. Throws an exception if the modelId is unknown.
-        /// </summary>
-        /// <param name="modelId"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public static LlmModelType FromModelId(this string modelId)
-        {
-            if (modelId.StartsWith("meta.llama2"))
-                return LlmModelType.Llama2;
-
-            if (modelId.StartsWith("cohere.command"))
-                return LlmModelType.CohereCommand;
-
-            if (modelId.StartsWith("anthropic.claude"))
-                return LlmModelType.Claude;
-
-            if (modelId.StartsWith("amazon.titan-text"))
-                return LlmModelType.Titan;
-
-            if (modelId.StartsWith("amazon.titan-embed-text"))
-                return LlmModelType.TitanEmbedded;
-
-            if (modelId.StartsWith("ai21.j2"))
-                return LlmModelType.Jurassic;
-
-            throw new Exception($"Unknown model: {modelId}");
         }
     }
 }

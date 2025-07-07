@@ -409,6 +409,8 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         void ResetStdLog()
         {
             StdLog.get_dest().str(L"");
+            StdLog.SetAzureFunctionMode(false);
+            StdLog.SetAzureFunctionLogLevelOverride(false);
         }
 
         MessageList GetMessages()

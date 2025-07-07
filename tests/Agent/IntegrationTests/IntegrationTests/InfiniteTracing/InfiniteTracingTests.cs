@@ -1,11 +1,11 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
 using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
 {
@@ -57,8 +57,8 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
 
             var actualMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", callCount = expectedSeenCount },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", callCount = ExpectedSentCount },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", CallCountAllHarvests = expectedSeenCount },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", CallCountAllHarvests = ExpectedSentCount },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics();
@@ -66,7 +66,6 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         }
     }
 
-    [NetFrameworkTest]
     public class InfiniteTracingFWLatestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public InfiniteTracingFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -76,7 +75,6 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
     }
 
 
-    [NetFrameworkTest]
     public class InfiniteTracingFW471Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public InfiniteTracingFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -85,7 +83,6 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         }
     }
 
-    [NetFrameworkTest]
     public class InfiniteTracingFW462Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public InfiniteTracingFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -94,7 +91,6 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         }
     }
 
-    [NetCoreTest]
     public class InfiniteTracingNetCoreLatestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public InfiniteTracingNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -103,7 +99,6 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         }
     }
 
-    [NetCoreTest]
     public class InfiniteTracingNetCoreOldestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public InfiniteTracingNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

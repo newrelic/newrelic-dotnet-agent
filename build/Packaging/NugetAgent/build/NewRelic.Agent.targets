@@ -1,0 +1,25 @@
+<!-- 
+ Copyright 2020 New Relic Corporation. All rights reserved.
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<!-- This MSBuild target file is used during publish of an Azure In-Process function 
+     to move the NewRelic .NET agent assemblies back to the root of the publish directory
+     after the _GenerateFunctionsAndCopyContentFiles task blindly moves all .DLLs to the bin folder. 
+     This target applies to Azure Function In-Process apps only -->
+<Project ToolsVersion="14.0"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Target Name="MoveNewRelicFiles" 
+            AfterTargets="_GenerateFunctionsAndCopyContentFiles"
+            Condition="Exists('$(PublishDir)bin\newrelic\')">
+        <ItemGroup>
+            <NewRelicAgentAssemblies Include="$(PublishDir)bin\newrelic\**\*"/>
+        </ItemGroup>
+        <Move SourceFiles="@(NewRelicAgentAssemblies)"
+              DestinationFiles="$(PublishDir)newrelic\%(RecursiveDir)%(Filename)%(Extension)"
+              OverwriteReadOnlyFiles="true" />
+        <RemoveDir Directories="$(PublishDir)bin\newrelic\" 
+                   Condition="Exists('$(PublishDir)bin\newrelic\')" />
+        <Message Importance="high" Text="Moved NewRelic agent assemblies to $(PublishDir)newrelic\"/>
+    </Target>
+</Project>

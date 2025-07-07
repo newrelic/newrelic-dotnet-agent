@@ -1,21 +1,22 @@
 services:
 
-    cosmosdb:
-        build: ./cosmosdb
-        ports:
-            - "8081:8081"
-            - "10251-10254:10251-10254"
-        environment:
-            - AZURE_COSMOS_EMULATOR_KEY=${AZURE_COSMOS_EMULATOR_KEY:-C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==}
-            - AZURE_COSMOS_EMULATOR_PARTITION_COUNT=${AZURE_COSMOS_EMULATOR_PARTITION_COUNT:-25}
-            - AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE=${AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE:-false}
-            - AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE=${AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE:-127.0.0.1}
-        container_name: CosmosDbServer
-        deploy:
-            resources:
-                limits:
-                    cpus: '2.0'
-                    memory: 3g
+    # Cosmos is running on Azure; save in case we come back to using the emulator in Docker
+    # cosmosdb:
+    #     build: ./cosmosdb
+    #     ports:
+    #         - "8081:8081"
+    #         - "10251-10254:10251-10254"
+    #     environment:
+    #         - AZURE_COSMOS_EMULATOR_KEY=${AZURE_COSMOS_EMULATOR_KEY:-C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==}
+    #         - AZURE_COSMOS_EMULATOR_PARTITION_COUNT=${AZURE_COSMOS_EMULATOR_PARTITION_COUNT:-25}
+    #         - AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE=${AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE:-false}
+    #         - AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE=${AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE:-127.0.0.1}
+    #     container_name: CosmosDbServer
+    #     deploy:
+    #         resources:
+    #             limits:
+    #                 cpus: '2.0'
+    #                 memory: 3g
 
     rabbitmq:
         build: ./rabbitmq
@@ -56,13 +57,11 @@ services:
     couchbase:
         build: ./couchbase
         ports:
-            - "8092-8094:8092-8094"
+            - "8091-8095:8091-8095"
             - "11210:11210"
         environment:
-            # These credentials are only used to configure the Couchbase container 
-            # for use by the integration tests. You can change these to any value 
-            # you wish before running the container for the first time
-            - COUCHBASE_ADMINISTRATOR_USERNAME=${COUCHBASE_ADMINISTRATOR_USERNAME:-CouchbaseUser}
+            # These credentials are used to configure the Couchbase container 
+            # for use by the integration tests.
             - COUCHBASE_ADMINISTRATOR_PASSWORD=${COUCHBASE_ADMINISTRATOR_PASSWORD:-CouchbasePassword}
         container_name: CouchbaseServer
 
@@ -95,7 +94,7 @@ services:
         container_name: MssqlServer
 
     oracle:
-        image: container-registry.oracle.com/database/free:23.4.0.0-lite
+        build: ./oracle
         shm_size: 1g
         ports:
             - "1521:1521"
@@ -118,14 +117,11 @@ services:
         container_name: MySqlServer
 
     elastic:
-        image: elasticsearch:8.6.2
+        build: ./elastic
         ports:
             - 9200:9200
         environment:
-            - discovery.type=single-node
             - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
-            - xpack.security.enabled=true
-            - xpack.security.http.ssl.enabled=false
         ulimits:
             memlock:
                 soft: -1
@@ -137,14 +133,11 @@ services:
         container_name: ElasticServer
 
     elastic7:
-        image: elasticsearch:7.17.10
+        build: ./elastic7
         ports:
             - 9201:9200
         environment:
-            - discovery.type=single-node
             - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
-            - xpack.security.enabled=true
-            - xpack.security.http.ssl.enabled=false
         ulimits:
             memlock:
                 soft: -1

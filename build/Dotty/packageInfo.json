@@ -1,0 +1,182 @@
+[
+    {
+        "packageName": "amazon.lambda.apigatewayevents"
+    },
+    {
+        "packageName": "amazon.lambda.applicationloadbalancerevents"
+    },
+    {
+        "packageName": "amazon.lambda.cloudwatchevents"
+    },
+    {
+        "packageName": "amazon.lambda.dynamodbevents"
+    },
+    {
+        "packageName": "amazon.lambda.kinesisevents",
+        "ignoreTFMs" : "net8.0",
+        "ignoreReason": "net8.0 tests 2.x.x version"
+    },
+    {
+        "packageName": "amazon.lambda.kinesisfirehoseevents"
+    },
+    {
+        "packageName": "amazon.lambda.s3events"
+    },
+    {
+        "packageName": "amazon.lambda.simpleemailevents"
+    },
+    {
+        "packageName": "amazon.lambda.snsevents"
+    },
+    {
+        "packageName": "amazon.lambda.sqsevents"
+    },
+    {
+        "packageName": "awssdk.bedrockruntime"
+    },
+    {
+        "packageName": "awssdk.kinesis"
+    },
+    {
+        "packageName": "awssdk.kinesisfirehose"
+    },
+    {
+        "packageName": "awssdk.s3"
+    },
+    {
+        "packageName": "awssdk.securitytoken"
+    },
+    {
+        "packageName": "awssdk.sqs"
+    },
+    {
+        "packageName": "awssdk.dynamodbv2"
+    },
+    {
+        "packageName": "azure.ai.openai"
+    },
+    {
+        "packageName": "confluent.kafka"
+    },
+    {
+        "packageName": "elasticsearch.net"
+    },
+    {
+        "packageName": "elastic.clients.elasticsearch",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "Breaking since 8.16.0. See https://new-relic.atlassian.net/browse/NR-356677"
+    },
+    {
+        "packageName": "enyimmemcachedcore"
+    },
+    {
+        "packageName": "log4net"
+    },
+    {
+        "packageName": "masstransit"
+    },
+    {
+        "packageName": "microsoft.azure.cosmos"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.extensions.http"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.extensions.http.aspnetcore"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.extensions.storage.queues"
+    },
+    {
+        "packageName": "microsoft.azure.functions.worker.sdk"
+    },
+    {
+        "packageName": "microsoft.extensions.logging"
+    },
+    {
+        "packageName": "microsoft.extensions.logging.configuration"
+    },
+    {
+        "packageName": "microsoft.extensions.logging.console"
+    },
+    {
+        "packageName": "microsoft.data.sqlclient"
+    },
+    {
+        "packageName": "microsoft.net.http"
+    },
+    {
+        "packageName": "mongodb.driver"
+    },
+    {
+        "packageName": "mysql.data"
+    },
+    {
+        "packageName": "mysqlconnector"
+    },
+    {
+        "packageName": "nest"
+    },
+    {
+        "packageName": "newrelic.agent.api"
+    },
+    {
+        "packageName": "nlog"
+    },
+    {
+        "packageName": "nlog.extensions.logging"
+    },
+    {
+        "packageName": "nservicebus",
+        "ignoreTFMs": "net481",
+        "ignoreReason": "net481 doesn't support v9.x"
+    },
+    {
+        "packageName": "openai"
+    },
+    {
+        "packageName": "opensearch.client"
+    },
+    {
+        "packageName": "oracle.manageddataaccess"
+    },
+    {
+        "packageName": "oracle.manageddataaccess.core"
+    },
+    {
+        "packageName": "rabbitmq.client",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "Breaking major update. See https://github.com/newrelic/newrelic-dotnet-agent/issues/2885"
+    },
+    {
+        "packageName": "restsharp"
+    },
+    {
+        "packageName": "serilog"
+    },
+    {
+        "packageName": "serilog.extensions.logging"
+    },
+    {
+        "packageName": "serilog.aspnetcore"
+    },
+    {
+        "packageName": "serilog.sinks.file"
+    },
+    {
+        "packageName": "serilog.sinks.console"
+    },
+    {
+        "packageName": "stackexchange.redis"
+    },
+    {
+        "packageName": "system.data.odbc"
+    }
+]

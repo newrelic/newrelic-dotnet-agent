@@ -6,20 +6,20 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
 {
-    [NetCoreTest]
     public abstract class AwsLambdaSmokeTestBase<T> : NewRelicIntegrationTest<T> where T : LambdaSnsEventTriggerFixtureBase
     {
         private readonly LambdaSnsEventTriggerFixtureBase _fixture;
         private readonly string _expectedTransactionName;
+        private readonly bool _awsLambdaApmModeEnabled;
 
-        protected AwsLambdaSmokeTestBase(string expectedTransactionName, T fixture, ITestOutputHelper output)
+        protected AwsLambdaSmokeTestBase(string expectedTransactionName, T fixture, ITestOutputHelper output, bool awsLambdaApmModeEnabled)
             : base(fixture)
         {
             _expectedTransactionName = expectedTransactionName;
+            _awsLambdaApmModeEnabled = awsLambdaApmModeEnabled;
 
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -29,6 +29,10 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces();
+                if (_awsLambdaApmModeEnabled)
+                {
+                    configModifier.EnableAwsLambdaAPMMode(true);
+                }
             };
 
             _fixture.Actions(
@@ -73,66 +77,73 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         }
     }
 
-    public class AwsLambdaSmokeTest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureNet6>
+    public class AwsLambdaSmokeTestCoreOldest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaSmokeTest(LambdaSnsEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output)
+        public AwsLambdaSmokeTestCoreOldest(LambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+            : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
         {
         }
     }
 
-    public class AwsLambdaAsyncSmokeTestNet6 : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureNet6>
+    public class AwsLambdaAsyncSmokeTestCoreOldest : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureCoreOldest>
     {
-        public AwsLambdaAsyncSmokeTestNet6(AsyncLambdaSnsEventTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output)
+        public AwsLambdaAsyncSmokeTestCoreOldest(AsyncLambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output,false)
         {
         }
     }
 
-    public class AwsLambdaHandlerOnlySmokeTestNet6 : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureNet6>
+    public class AwsLambdaHandlerOnlySmokeTestCoreOldest : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureCoreOldest>
     {
-        public AwsLambdaHandlerOnlySmokeTestNet6(LambdaHandlerOnlySnsTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output)
+        public AwsLambdaHandlerOnlySmokeTestCoreOldest(LambdaHandlerOnlySnsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+            : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
         {
         }
     }
 
-    public class AwsLambdaHandlerOnlyAsyncSmokeTestNet6 : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureNet6>
+    public class AwsLambdaHandlerOnlyAsyncSmokeTestCoreOldest : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest>
     {
-        public AwsLambdaHandlerOnlyAsyncSmokeTestNet6(AsyncLambdaHandlerOnlySnsTriggerFixtureNet6 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output)
+        public AwsLambdaHandlerOnlyAsyncSmokeTestCoreOldest(AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output, false)
         {
         }
     }
 
-    public class AwsLambdaSmokeTestNet8 : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureNet8>
+    public class AwsLambdaSmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaSmokeTestNet8(LambdaSnsEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output)
+        public AwsLambdaSmokeTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base("OtherTransaction/Lambda/SnsHandler", fixture, output,false)
         {
         }
     }
 
-    public class AwsLambdaAsyncSmokeTestNet8 : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureNet8>
+    public class AwsLambdaAsyncSmokeTestCoreLatest : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureCoreLatest>
     {
-        public AwsLambdaAsyncSmokeTestNet8(AsyncLambdaSnsEventTriggerFixtureNet8 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output)
+        public AwsLambdaAsyncSmokeTestCoreLatest(AsyncLambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output, false)
         {
         }
     }
 
-    public class AwsLambdaHandlerOnlySmokeTestNet8 : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureNet8>
+    public class AwsLambdaHandlerOnlySmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureCoreLatest>
     {
-        public AwsLambdaHandlerOnlySmokeTestNet8(LambdaHandlerOnlySnsTriggerFixtureNet8 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output)
+        public AwsLambdaHandlerOnlySmokeTestCoreLatest(LambdaHandlerOnlySnsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
         {
         }
     }
 
-    public class AwsLambdaHandlerOnlyAsyncSmokeTestNet8 : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureNet8>
+    public class AwsLambdaHandlerOnlyAsyncSmokeTestCoreLatest : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest>
     {
-        public AwsLambdaHandlerOnlyAsyncSmokeTestNet8(AsyncLambdaHandlerOnlySnsTriggerFixtureNet8 fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output)
+        public AwsLambdaHandlerOnlyAsyncSmokeTestCoreLatest(AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output,false)
+        {
+        }
+    }
+    public class AwsLambdaServerlessModeSmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreLatest>
+    {
+        public AwsLambdaServerlessModeSmokeTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base("OtherTransaction/Function/SNS SnsHandler", fixture, output, true) // Enable AWS Lambda APM mode
         {
         }
     }

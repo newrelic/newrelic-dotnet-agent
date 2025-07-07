@@ -7,40 +7,33 @@ Instructions for building a set of custom base images, used by the Container Int
 https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/
 https://docs.docker.com/engine/reference/commandline/buildx_build/
 
+* The container registry name is kept in a Github secret and is also accessible via 1Password.
+* The `dotnet-agent-acr-token` password is accessible in 1Password
 
 ## Azure container registry login via Docker
 From a Powershell command prompt in the same folder as this README file:
-1. Log in to the DotNetReg container repository
-`docker login -u dotnet-agent-token -p {insert password here} dotnetreg.azurecr.io`
+0. Set the container registry name in a variable
+`$acrName="{container registry name}"`
+1. Log in to the container repository
+`docker login -u dotnet-agent-acr-token -p {password} $acrName`
 2. Configure buildx in Docker Desktop
 `docker buildx create --use`
-3. Build the base images. The images will be pushed to the DotNetReg container registry with tags per .NET version
+3. Build the base images. The images will be pushed to the container registry with tags per .NET version
 
 ```
-docker buildx  build --build-arg DOTNET_VERSION="6.0" -f Dockerfile.AmazonBaseImage --tag dotnetreg.azurecr.io/amazonlinux-aspnet:6.0 --platform linux/amd64,linux/arm64/v8 --push .
-docker buildx  build --build-arg DOTNET_VERSION="8.0" -f Dockerfile.AmazonBaseImage --tag dotnetreg.azurecr.io/amazonlinux-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 --push .
+docker buildx  build --build-arg DOTNET_VERSION="8.0" -f Dockerfile.AmazonBaseImage --tag $acrName/amazonlinux-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 --push .
+docker buildx  build --build-arg DOTNET_VERSION="9.0" -f Dockerfile.AmazonBaseImage --tag $acrName/amazonlinux-aspnet:9.0 --platform linux/amd64,linux/arm64/v8 --push .
 
-docker buildx  build --build-arg DOTNET_VERSION="6.0" -f Dockerfile.FedoraBaseImage --tag fedora-aspnet:6.0 --platform linux/amd64,linux/arm64/v8 -push .
-docker buildx  build --build-arg DOTNET_VERSION="8.0" -f Dockerfile.FedoraBaseImage --tag fedora-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 -push .
+docker buildx  build --build-arg DOTNET_VERSION="8.0" -f Dockerfile.FedoraBaseImage --tag $acrName/fedora-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 --push .
+docker buildx  build --build-arg DOTNET_VERSION="9.0" -f Dockerfile.FedoraBaseImage --tag $acrName/fedora-aspnet:9.0 --platform linux/amd64,linux/arm64/v8 --push .
 ```
 
 4. Disable buildx in Docker Desktop
 `docker buildx rm`
 
-5. Log out of the DotNetReg container repository
-`docker logout dotnetreg.azurecr.io`
+5. Log out of the {container registry name} container repository
+`docker logout $acrName`
 
-### Azure Container Registry Changes:
-The DotNetReg container registry was originally created on the Basic SKU. The only way to enable anonymous pull from the container registry is to upgrade to the Standard SKU. For reference, this is the process that was followed:
+# Enabling Anonymous Pull Access
 
-#### Prerequisites:
-* [Azure CLI (32 bit)](https://aka.ms/installazurecliwindows)
-
-#### Azure login
-1. Open a Powershell command prompt
-2. Run `az login <your_azure_login_email` and follow the authentication instructions
-3. Run the following:
-```
-  az acr update --name dotnetreg --sku Standard  # sku was Basic
-  az acr update --name dotnetreg --anonymous-pull-enabled
-```
+By default, anonymous pull access is disabled but is required for the container integration tests workflow. See [Configure anonymous pull access](https://learn.microsoft.com/en-us/azure/container-registry/anonymous-pull-access) for details. 

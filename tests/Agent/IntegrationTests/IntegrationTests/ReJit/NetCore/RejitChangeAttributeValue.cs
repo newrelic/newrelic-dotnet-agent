@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
 {
@@ -19,7 +18,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Logging: finest
     /// Files: Integration.Testing.ChangeAttributeTest.xml
     /// </summary>
-    [NetCoreTest]
     public abstract class RejitChangeAttributeValueBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : AspNetCoreReJitMvcApplicationFixture
     {
@@ -68,7 +66,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomChangeMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenamedMetricName", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetChangeAttributeValue", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetChangeAttributeValue", CallCountAllHarvests = 2 },
 
                 // Scoped
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },

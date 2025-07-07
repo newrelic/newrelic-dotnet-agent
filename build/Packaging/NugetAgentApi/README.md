@@ -1,0 +1,3 @@
+## New Relic .NET Agent API Package
+
+The New Relic .NET Agent API supports custom error and metric reporting, custom transaction parameters, custom instrumentation of methods with attributes, and more. If the agent is not installed or is disabled, method invocations of this API will have no effect. You can find more information about the API at https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/guide-using-net-agent-api.

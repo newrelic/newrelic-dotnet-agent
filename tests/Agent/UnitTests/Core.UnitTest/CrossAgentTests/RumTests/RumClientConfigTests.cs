@@ -29,6 +29,7 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 {
@@ -54,6 +55,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         private IProcessStatic _processStatic;
         private IConfigurationManagerStatic _configurationManagerStatic;
         private IDnsStatic _dnsStatic;
+        private IAgentHealthReporter _agentHealthReporter;
 
         private ConfigurationAutoResponder _configAutoResponder;
 
@@ -88,6 +90,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             _dnsStatic = Mock.Create<IDnsStatic>();
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
             _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
+            _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
             _runTimeConfiguration = new RunTimeConfiguration();
             _serverConfig = new ServerConfiguration();
@@ -107,7 +110,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             _serverConfig.RumSettingsApplicationId = testCase.ConnectReply.ApplicationId;
             _localConfig.browserMonitoring.attributes.enabled = testCase.BrowserMonitoringAttributesEnabled;
 
-            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
             _configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 

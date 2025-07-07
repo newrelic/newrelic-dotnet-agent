@@ -1,15 +1,18 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-// Several methods exercised here do not exist in MongoDB.Driver version 2.3 which is the oldest we support on .NET Framework. It is bound to the net462 TFM in MultiFunctionApplicationHelpers.csproj
-#if NET462
+// Several methods exercised here do not exist in MongoDB.Driver version 2.3 which is the oldest we support on .NET Framework. It is bound to the net471 TFM in MultiFunctionApplicationHelpers.csproj
+#if NET471
 #define MONGODRIVER2_3
 #endif
 
 // Some methods exercised here do not exist in MongoDB.Driver version 2.8.1 which is the oldest we support on .NET Core. It is bound to the net6.0 TFM in MultiFunctionApplicationHelpers.csproj
-#if NET6_0
+#if NET8_0
 #define MONGODRIVER2_8_1
 #endif
+
+// net462 has the legacy MongoDB client
+#if !NET462
 
 using System.Collections.Generic;
 using System.Linq;
@@ -561,7 +564,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 #pragma warning restore CS0618 // Type or member is obsolete
 #endif
 
-        // CountDocuments{Async} did not exist in driver version 2.3 which is bound to net462 in MultiFunctionApplicationHelpers.csproj
+        // CountDocuments{Async} did not exist in driver version 2.3 which is bound to net471 in MultiFunctionApplicationHelpers.csproj
 #if !MONGODRIVER2_3
         [LibraryMethod]
         [Transaction]
@@ -610,7 +613,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return await Collection.DistinctAsync<string>("Name", filter);
         }
 
-// EstimatedDocumentCount{Async} did not exist in driver version 2.3 which is bound to net462 in MultiFunctionApplicationHelpers.csproj
+// EstimatedDocumentCount{Async} did not exist in driver version 2.3 which is bound to net471 in MultiFunctionApplicationHelpers.csproj
 #if !MONGODRIVER2_3
         [LibraryMethod]
         [Transaction]
@@ -1048,7 +1051,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
             Collection.InsertOne(document);
-#if NET462
+#if MONGODRIVER2_3
             Collection.Indexes.CreateOne(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name));
 #else
             Collection.Indexes.CreateOne(new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)));
@@ -1063,7 +1066,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
             await Collection.InsertOneAsync(document);
-#if NET462
+#if MONGODRIVER2_3
             await Collection.Indexes.CreateOneAsync(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name));
 #else
             await Collection.Indexes.CreateOneAsync(new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)));
@@ -1256,3 +1259,5 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
     }
 
 }
+
+#endif

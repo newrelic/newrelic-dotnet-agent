@@ -33,10 +33,12 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Extensions.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transactions
 {
-    public class Transaction : IInternalTransaction, ITransactionSegmentState
+    public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybridAgentTransaction
     {
         private static readonly int MaxSegmentLength = 255;
 
@@ -78,7 +80,27 @@ namespace NewRelic.Agent.Core.Transactions
 
         public string TraceId
         {
-            get => (TracingState != null && TracingState.TraceId != null) ? TracingState.TraceId : _traceId;
+            get
+            {
+                if (TracingState != null && TracingState.TraceId != null)
+                {
+                    return TracingState.TraceId;
+                }
+                else if (Segments.Count > 1)
+                {
+                    // Only try to grab the trace id from the first segment if we have more than one segment
+                    // otherwise we might be trying to grab the trace id for the first segment and we might be
+                    // in the middle of creating the activity for that segment. The first segment will need a new
+                    // trace id anyways.
+                    var firstSegment = Segments[0];
+                    var activityTraceId = firstSegment?.TryGetActivityTraceId();
+                    if (activityTraceId != null)
+                    {
+                        return activityTraceId;
+                    }
+                }
+                return _traceId;
+            }
 
             internal set => _traceId = value;
         }
@@ -197,11 +219,35 @@ namespace NewRelic.Agent.Core.Transactions
             return segment;
         }
 
-        private Segment StartSegmentImpl(MethodCall methodCall)
+        private Segment StartSegmentImpl(MethodCall methodCall, INewRelicActivity activity = null)
         {
             var methodCallData = GetMethodCallData(methodCall);
+            var segment = new Segment(this, methodCallData);
 
-            return new Segment(this, methodCallData);
+            // We should only do this if the segment was not created from an activity
+            bool shouldStartActivity = false;
+            if (activity == null)
+            {
+                // We cannot start the new Activity until the segment and activity are associated with each other
+                activity = Agent.ActivitySourceProxy.TryCreateActivity(ActivityBridge.TemporarySegmentName, ActivityKind.Internal);
+
+                // Delay starting the activity until the segment is associated with it
+                shouldStartActivity = true;
+            }
+
+            // Associate the segment and activity with each other
+            if (activity != null)
+            {
+                segment.SetActivity(activity);
+                activity.SetSegment(segment);
+
+                if (shouldStartActivity)
+                {
+                    activity.Start();
+                }
+            }
+
+            return segment;
         }
 
         // Used for StackExchange.Redis since we will not be instrumenting any methods when creating the many DataStore segments
@@ -210,6 +256,20 @@ namespace NewRelic.Agent.Core.Transactions
             var methodCallData = GetMethodCallData(typeName, methodName, invocationTargetHashCode);
 
             return new Segment(this, methodCallData, relativeStartTime, relativeEndTime);
+        }
+
+        public ISegment StartActivitySegment(MethodCall methodCall, INewRelicActivity activity)
+        {
+            var segment = StartSegmentImpl(methodCall, activity);
+
+            // create a simple segment data with the activity's display name
+            // this will likely get replaced with a more specific segment data when the activity is stopped
+            var simpleSegmentData = new SimpleSegmentData(activity.DisplayName);
+            segment.SetSegmentData(simpleSegmentData);
+
+            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+
+            return segment;
         }
 
         public ISegment StartCustomSegment(MethodCall methodCall, string segmentName)
@@ -414,6 +474,12 @@ namespace NewRelic.Agent.Core.Transactions
                     return MetricNames.MessageBrokerAction.Produce;
                 case MessageBrokerAction.Purge:
                     return MetricNames.MessageBrokerAction.Purge;
+                case MessageBrokerAction.Process:
+                    return MetricNames.MessageBrokerAction.Process;
+                case MessageBrokerAction.Settle:
+                    return MetricNames.MessageBrokerAction.Settle;
+                case MessageBrokerAction.Cancel:
+                    return MetricNames.MessageBrokerAction.Cancel;
                 default:
                     throw new InvalidOperationException("Unexpected enum value: " + wrapper);
             }
@@ -659,6 +725,11 @@ namespace NewRelic.Agent.Core.Transactions
         {
             if (_configuration.DistributedTracingEnabled)
             {
+                if (Segments.Any())
+                {
+                    Log.Finest($"Trx {Guid}: AcceptDistributedTraceHeaders should usually be called before any segments are started.");
+                }
+
                 // Headers have already been received, do not allow multiple calls to AcceptDistributedTraceHeaders
                 if (TracingState != null)
                 {
@@ -708,7 +779,7 @@ namespace NewRelic.Agent.Core.Transactions
                 var errorData = _errorService.FromException(exception);
 
                 TransactionMetadata.TransactionErrorState.AddExceptionData(errorData);
-                TryNoticeErrorOnCurrentSpan(errorData);
+                TryNoticeErrorOnSegment(errorData, CurrentSegment);
             }
             else
             {
@@ -718,20 +789,37 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void NoticeError(ErrorData errorData)
         {
-
-            TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
-            TryNoticeErrorOnCurrentSpan(errorData);
+            NoticeErrorOnTransactionAndSegment(errorData, CurrentSegment);
         }
 
-        private void TryNoticeErrorOnCurrentSpan(ErrorData errorData)
+        public void NoticeErrorOnTransactionAndSegment(ErrorData errorData, ISegment segment)
         {
-            var currentSpan = CurrentSegment as IInternalSpan;
-            if (currentSpan != null) currentSpan.ErrorData = errorData;
+            TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
+            TryNoticeErrorOnSegment(errorData, segment);
+        }
+
+        private void TryNoticeErrorOnSegment(ErrorData errorData, ISegment segment)
+        {
+            var internalSpan = segment as IInternalSpan;
+            if (internalSpan != null) internalSpan.ErrorData = errorData;
         }
 
         public void SetHttpResponseStatusCode(int statusCode, int? subStatusCode = null)
         {
             TransactionMetadata.SetHttpResponseStatusCode(statusCode, subStatusCode, _errorService);
+        }
+
+        public bool TryGetTraceFlagsAndState(out bool sampled, out string traceStateString)
+        {
+            if (!_configuration.DistributedTracingEnabled)
+            {
+                sampled = false;
+                traceStateString = null;
+                return false;
+            }
+
+            _distributedTracePayloadHandler.GetTraceFlagsAndState(this, out sampled, out traceStateString);
+            return true;
         }
 
         public void AttachToAsync()
@@ -798,6 +886,12 @@ namespace NewRelic.Agent.Core.Transactions
         private void SetTransactionName(ITransactionName transactionName, TransactionNamePriority priority)
         {
             CandidateTransactionName.TrySet(transactionName, priority);
+        }
+
+        public void SetWebTransactionName(string type, string name, TransactionNamePriority priority)
+        {
+            var trxName = TransactionName.ForWebTransaction(type, name);
+            SetTransactionName(trxName, priority);
         }
 
         public void SetWebTransactionName(WebTransactionType type, string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
@@ -1066,7 +1160,7 @@ namespace NewRelic.Agent.Core.Transactions
                 var transactionName = CandidateTransactionName.CurrentTransactionName;
                 var transactionMetricName = Agent?._transactionMetricNameMaker?.GetTransactionMetricName(transactionName);
                 var stackTrace = new StackTrace();
-                Log.Finest($"Transaction \"{transactionMetricName}\" is being ignored from {stackTrace}");
+                Log.Finest($"Transaction {Guid} \"{transactionMetricName}\" is being ignored from {stackTrace}");
             }
         }
 
@@ -1374,7 +1468,7 @@ namespace NewRelic.Agent.Core.Transactions
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                Log.Debug($"AddLambdaAttribute - Unable to set Lambda value on transaction because the key is null/empty");
+                Log.Debug($"AddLambdaAttribute - Name cannot be null/empty");
                 return;
             }
 
@@ -1386,12 +1480,26 @@ namespace NewRelic.Agent.Core.Transactions
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                Log.Debug($"AddFaasAttribute - Unable to set FaaS value on transaction because the key is null/empty");
+                Log.Debug($"AddFaasAttribute - Name cannot be null/empty");
                 return;
             }
 
             var faasAttrib = _attribDefs.GetFaasAttribute(name);
             TransactionMetadata.UserAndRequestAttributes.TrySetValue(faasAttrib, value);
         }
+
+        public object GetFaasAttribute(string name)
+        {
+            var faasAttrib = _attribDefs.GetFaasAttribute(name);
+            return TransactionMetadata.UserAndRequestAttributes.GetAttributeValues(AttributeClassification.Intrinsics).FirstOrDefault(v => v.AttributeDefinition == faasAttrib)?.Value;
+        }
+    }
+
+    // TODO: Find a better name for this interface or add the members to an existing interface.
+    public interface IHybridAgentTransaction
+    {
+        string TraceId { get; }
+        void NoticeErrorOnTransactionAndSegment(ErrorData errorData, ISegment segment);
+        bool TryGetTraceFlagsAndState(out bool sampled, out string traceStateString);
     }
 }

@@ -7,13 +7,11 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
-    [NetFrameworkTest]
     public class AttributeInstrumentationTestsFW462 : AttributeInstrumentationTests<ConsoleDynamicMethodFixtureFW462>
     {
         public AttributeInstrumentationTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -22,7 +20,6 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         }
     }
 
-    [NetCoreTest]
     public class AttributeInstrumentationTestsCoreOldest : AttributeInstrumentationTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public AttributeInstrumentationTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -78,12 +75,12 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric {metricName = $"WebTransaction", callCount = 2},
-                new Assertions.ExpectedMetric {metricName = $"OtherTransaction/all", callCount = 4},
+                new Assertions.ExpectedMetric {metricName = $"WebTransaction", CallCountAllHarvests = 2},
+                new Assertions.ExpectedMetric {metricName = $"OtherTransaction/all", CallCountAllHarvests = 4},
 
-                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWork", callCount = 3},
-                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWorkAsync", callCount = 2},
-                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeMoreWorkAsync", callCount = 2},
+                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWork", CallCountAllHarvests = 3},
+                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWorkAsync", CallCountAllHarvests = 2},
+                new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeMoreWorkAsync", CallCountAllHarvests = 2},
 
                 new Assertions.ExpectedMetric {metricName = $"WebTransaction/Custom/{LibraryClassName}/MakeWebTransaction", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeWebTransaction", callCount = 1},

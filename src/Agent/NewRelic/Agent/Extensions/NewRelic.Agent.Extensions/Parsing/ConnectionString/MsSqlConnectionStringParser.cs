@@ -1,10 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {
@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var portPathOrId = ParsePortPathOrId();
             var databaseName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _databaseNameKeys)?.Value;
             var instanceName = ParseInstanceName();
-            return new ConnectionInfo(DatastoreVendor.MySQL.ToKnownName(), host, portPathOrId, databaseName, instanceName);
+            return new ConnectionInfo(host, portPathOrId, databaseName, instanceName);
         }
 
         private string ParseHost()
@@ -36,16 +36,9 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             if (host == null) return null;
 
             // Example of want we would need to process: win-database.pdx.vm.datanerd.us,1433\SQLEXPRESS
-            try
-            {
-                var splitIndex = host.IndexOf(',');
-                if (splitIndex == -1) splitIndex = host.IndexOf('\\');
-                host = splitIndex == -1 ? host : host.Substring(0, splitIndex);
-            }
-            catch
-            {
-                return null;
-            }
+            var splitIndex = host.IndexOf(StringSeparators.CommaChar);
+            if (splitIndex == -1) splitIndex = host.IndexOf(StringSeparators.BackslashChar);
+            host = splitIndex == -1 ? host : host.Substring(0, splitIndex);
             return host;
         }
 
@@ -54,20 +47,13 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var portPathOrId = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (portPathOrId == null) return null;
 
-            try
+            if (portPathOrId.IndexOf(StringSeparators.CommaChar) != -1)
             {
-                if (portPathOrId.IndexOf(',') != -1)
-                {
-                    var startOfValue = portPathOrId.IndexOf(',') + 1;
-                    var endOfValue = portPathOrId.Contains('\\')
-                        ? portPathOrId.IndexOf('\\')
-                        : portPathOrId.Length;
-                    return (startOfValue > 0) ? portPathOrId.Substring(startOfValue, endOfValue - startOfValue) : null;
-                }
-            }
-            catch
-            {
-                return null;
+                var startOfValue = portPathOrId.IndexOf(StringSeparators.CommaChar) + 1;
+                var endOfValue = portPathOrId.Contains(StringSeparators.BackslashChar)
+                    ? portPathOrId.IndexOf(StringSeparators.BackslashChar)
+                    : portPathOrId.Length;
+                return portPathOrId.Substring(startOfValue, endOfValue - startOfValue);
             }
 
             return "default";
@@ -78,18 +64,11 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var instanceName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (instanceName == null) return null;
 
-            try
+            if (instanceName.IndexOf(StringSeparators.BackslashChar) != -1)
             {
-                if (instanceName.IndexOf('\\') != -1)
-                {
-                    var startOfValue = instanceName.IndexOf('\\') + 1;
-                    var endOfValue = instanceName.Length;
-                    return (startOfValue > 0) ? instanceName.Substring(startOfValue, endOfValue - startOfValue) : null;
-                }
-            }
-            catch
-            {
-                return null;
+                var startOfValue = instanceName.IndexOf(StringSeparators.BackslashChar) + 1;
+                var endOfValue = instanceName.Length;
+                return instanceName.Substring(startOfValue, endOfValue - startOfValue);
             }
 
             return null;

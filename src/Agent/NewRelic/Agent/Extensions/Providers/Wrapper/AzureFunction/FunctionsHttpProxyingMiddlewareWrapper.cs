@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
+using Microsoft.Extensions.Primitives;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -8,13 +10,11 @@ namespace NewRelic.Providers.Wrapper.AzureFunction;
 
 public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
 {
-    private const string WrapperName = "FunctionsHttpProxyingMiddlewareWrapper";
-
     public bool IsTransactionRequired => false;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+        return new CanWrapResponse(nameof(FunctionsHttpProxyingMiddlewareWrapper).Equals(methodInfo.RequestedWrapperName));
     }
 
     /// <summary>
@@ -23,7 +23,7 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
     /// </summary>
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
-        if (agent.Configuration.AzureFunctionModeEnabled)
+        if (agent.Configuration.AzureFunctionModeDetected && agent.Configuration.AzureFunctionModeEnabled)
         {
             dynamic httpContext;
             switch (instrumentedMethodCall.MethodCall.Method.MethodName)
@@ -33,6 +33,10 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
 
                     agent.CurrentTransaction.SetRequestMethod(httpContext.Request.Method);
                     agent.CurrentTransaction.SetUri(httpContext.Request.Path);
+
+                    // Only need to accept DT headers from incoming request.
+                    var headers = httpContext.Request.Headers as IDictionary<string, StringValues>;
+                    transaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.HTTP);
                     break;
                 case "TryHandleHttpResult":
                     if (!agent.CurrentTransaction.HasHttpResponseStatusCode) // these handlers seem to get called more than once; only set the status code one time
@@ -52,5 +56,13 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
         }
 
         return Delegates.NoOp;
+
+        static IEnumerable<string> GetHeaderValue(IDictionary<string, StringValues> headers, string key)
+        {
+            if (!headers.ContainsKey(key))
+                return [];
+
+            return headers[key].ToArray();
+        }
     }
 }

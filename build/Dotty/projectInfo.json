@@ -1,0 +1,23 @@
+[
+    {
+        "projectFile": "tests/Agent/IntegrationTests/SharedApplications/Common/MFALatestPackages/MFALatestPackages.csproj"
+    },
+    {
+        "projectFile": "tests/Agent/IntegrationTests/Applications/AzureFunctionApplication/AzureFunctionApplication.csproj"
+    },
+    {
+        "projectFile": "tests/Agent/IntegrationTests/Applications/LambdaSelfExecutingAssembly/LambdaSelfExecutingAssembly.csproj"
+    },
+    {
+        "projectFile": "tests/Agent/IntegrationTests/ContainerApplications/AwsSdkTestApp/AwsSdkTestApp.csproj"
+    },
+    {
+        "projectFile": "tests/Agent/IntegrationTests/ContainerApplications/KafkaTestApp/KafkaTestApp.csproj"
+    },
+    {
+        "projectFile": "tests/Agent/IntegrationTests/ContainerApplications/MemcachedTestApp/MemcachedTestApp.csproj"
+    },
+    {
+        "projectFile": "tests/Agent/IntegrationTests/ContainerApplications/SmokeTestApp/SmokeTestApp.csproj"
+    }
+]

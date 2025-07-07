@@ -7,11 +7,9 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-    [NetFrameworkTest]
     public class ServiceStackRedisTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
 
@@ -36,8 +34,8 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>()
             {
-                new Assertions.ExpectedMetric {metricName = "Datastore/all", callCount = 3},
-                new Assertions.ExpectedMetric {metricName = "Datastore/Redis/all", callCount = 3},
+                new Assertions.ExpectedMetric {metricName = "Datastore/all", CallCountAllHarvests = 3},
+                new Assertions.ExpectedMetric {metricName = "Datastore/Redis/all", CallCountAllHarvests = 3},
 
                 new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.SaveAsync, callCount = 1},
                 new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.SaveAsync, metricScope = "WebTransaction/MVC/RedisController/Get", callCount = 1},

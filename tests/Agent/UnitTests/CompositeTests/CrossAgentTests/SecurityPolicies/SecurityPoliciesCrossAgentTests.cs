@@ -46,17 +46,18 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             var systemInfo = Mock.Create<ISystemInfo>();
             var processStatic = Mock.Create<IProcessStatic>();
             var configurationService = Mock.Create<IConfigurationService>();
+            var fileWrapper = Mock.Create<IFileWrapper>();
             var agentEnvironment = new NewRelic.Agent.Core.Environment(systemInfo, processStatic, configurationService);
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
             Mock.Arrange(() => collectorWireFactory.GetCollectorWire(null, Arg.IsAny<IAgentHealthReporter>())).IgnoreArguments().Returns(_collectorWire);
-            Mock.Arrange(() => environment.GetEnvironmentVariable("NEW_RELIC_SECURITY_POLICIES_TOKEN")).Returns("ffff-fbff-ffff-ffff");
+            Mock.Arrange(() => environment.GetEnvironmentVariableFromList("NEW_RELIC_SECURITY_POLICIES_TOKEN")).Returns("ffff-fbff-ffff-ffff");
 
             _connectRawData = string.Empty;
             _receivedSecurityPoliciesException = false;
 
             _connectionHandler = new ConnectionHandler(new JsonSerializer(), collectorWireFactory, Mock.Create<IProcessStatic>(), Mock.Create<IDnsStatic>(),
-                Mock.Create<ILabelsService>(), agentEnvironment, systemInfo, _agentHealthReporter, Mock.Create<IEnvironment>());
+                Mock.Create<ILabelsService>(), agentEnvironment, systemInfo, _agentHealthReporter, Mock.Create<IEnvironment>(), fileWrapper);
         }
 
         [TearDown]

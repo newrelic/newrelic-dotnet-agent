@@ -12,7 +12,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -24,8 +24,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string ErrorLogLinePrefixRegex = @"^.*?NewRelic\s+ERROR: " + LogLineContextDataRegex;
         public const string FinestLogLinePrefixRegex = @"^.*?NewRelic\s+FINEST: " + LogLineContextDataRegex;
         public const string WarnLogLinePrefixRegex = @"^.*?NewRelic\s+WARN: " + LogLineContextDataRegex;
-        public const string HarvestLogLineRegex = InfoLogLinePrefixRegex + @"Harvest starting";
-        public const string HarvestFinishedLogLineRegex = DebugLogLinePrefixRegex + @"Metric harvest finished.";
         public const string AgentReportingToLogLineRegex = InfoLogLinePrefixRegex + @"Reporting to: (.*)";
         public const string AgentConnectedLogLineRegex = InfoLogLinePrefixRegex + @"Agent fully connected.";
 
@@ -44,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string CustomEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""custom_event_data"" with : (.*)";
 
         // Collector responses
-        public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":{""agent_run_id""(.*)";
+        public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":(.*)";
         public const string ErrorResponseLogLinePrefixRegex = ErrorLogLinePrefixRegex + @"Request\(.{36}\): ";
 
         public const string ThreadProfileStartingLogLineRegex = InfoLogLinePrefixRegex + @"Starting a thread profiling session";
@@ -56,6 +54,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string ConfigFileChangeDetected = DebugLogLinePrefixRegex + @"newrelic.config file changed, reloading.";
         public const string ShutdownLogLineRegex = InfoLogLinePrefixRegex + @"The New Relic .NET Agent v.* has shutdown";
         public const string TransactionTransformCompletedLogLineRegex = FinestLogLinePrefixRegex + @"Transaction (.*) \((.*)\) transform completed.";
+
+        // Problems
         public const string TransactionEndedByGCFinalizerLogLineRegEx = DebugLogLinePrefixRegex + @"Transaction was garbage collected without ever ending(.*)";
         public const string TransactionHasAlreadyCapturedResponseTimeLogLineRegEx = FinestLogLinePrefixRegex + @"Transaction has already captured the response time(.*)";
 
@@ -72,6 +72,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         // Transactions (either with an ID or "noop")
         public const string TransactionLinePrefix = FinestLogLinePrefixRegex + @"Trx ([a-fA-F0-9]*|Noop): ";
+        public const string TransactionAlreadyEndedLogLineRegex = TransactionLinePrefix + "Transaction has already ended(.*)";
 
         // Serverless payloads
         public const string ServerlessPayloadLogLineRegex = FinestLogLinePrefixRegex + @"Serverless payload: (.*)";
@@ -81,6 +82,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         // azure function mode disabled
         public const string AzureFunctionModeDisabledLogLineRegex = InfoLogLinePrefixRegex + "Azure Function mode is not enabled; Azure Functions will not be instrumented.(.*)";
+
+        // wrapper exceptions and application errors
+        public const string WrapperExceptionLogLineRegex = ErrorLogLinePrefixRegex + "An exception occurred in a wrapper";
+        public const string ApplicationErrorLogLineRegex = DebugLogLinePrefixRegex + "Noticed application error";
+
+        // explain plan failure
+        public const string ExplainPlainFailureLogLineRegex = DebugLogLinePrefixRegex + "Unable to execute explain plan for query: (.*)";
 
         public AgentLogBase(ITestOutputHelper testLogger)
         {
@@ -492,7 +500,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             foreach (var match in matches)
             {
-                var json = "{ \"agent_run_id\"" + match;
+                var json = match;
                 json = json?.Trim('[', ']');
                 json = json.Remove(json.Length - 1); // remove the extra }
 
@@ -593,6 +601,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Select(match => TryExtractJson(match, 1))
                 .SelectMany(json => TryExtractFromJsonArray<CustomEventData>(json, 1))
                 .Where(transactionEvent => transactionEvent != null);
+        }
+
+        #endregion
+
+        #region Exceptions
+
+        public int GetWrapperExceptionLineCount()
+        {
+            return TryGetLogLines(WrapperExceptionLogLineRegex).Count();
+        }
+        public int GetApplicationErrorLineCount()
+        {
+            return TryGetLogLines(ApplicationErrorLogLineRegex).Count();
         }
 
         #endregion

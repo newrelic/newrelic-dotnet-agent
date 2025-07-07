@@ -19,6 +19,7 @@ using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -118,7 +119,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 txSegmentState = TransactionSegmentStateHelpers.GetItransactionSegmentState();
 
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
-            var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, null), commandText, new ConnectionInfo("none", host, portPathOrId, databaseName));
+            var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, null), commandText, new ConnectionInfo(host, portPathOrId, databaseName));
             var segment = new Segment(txSegmentState, methodCallData);
             segment.SetSegmentData(data);
 

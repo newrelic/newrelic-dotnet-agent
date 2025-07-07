@@ -10,7 +10,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
 {
@@ -55,8 +54,8 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"External/all", callCount = 3 },
-                new Assertions.ExpectedMetric { metricName = @"External/allOther", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = @"External/all", CallCountAllHarvests = 3 },
+                new Assertions.ExpectedMetric { metricName = @"External/allOther", CallCountAllHarvests = 3 },
                 new Assertions.ExpectedMetric { metricName = @"External/www.google.com/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/Get", callCount = 1 },
@@ -124,7 +123,6 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
         }
     }
 
-    [NetCoreTest]
     public class HttpClientInstrumentationTests_NetCoreOldest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         protected override string ExpectedClassName { get { return CLASS_NAME; } }
@@ -136,7 +134,6 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
         }
     }
 
-    [NetCoreTest]
     public class HttpClientInstrumentationTests_NetCoreLatest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         protected override string ExpectedClassName { get { return CLASS_NAME; } }
@@ -148,7 +145,6 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
         }
     }
 
-    [NetFrameworkTest]
     public class HttpClientInstrumentationTests_FW462 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -160,7 +156,6 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
         }
     }
 
-    [NetFrameworkTest]
     public class HttpClientInstrumentationTests_FW471 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -172,7 +167,6 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
         }
     }
 
-    [NetFrameworkTest]
     public class HttpClientInstrumentationTests_FW48 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -184,7 +178,6 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
         }
     }
 
-    [NetFrameworkTest]
     public class HttpClientInstrumentationTests_FWLatest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }

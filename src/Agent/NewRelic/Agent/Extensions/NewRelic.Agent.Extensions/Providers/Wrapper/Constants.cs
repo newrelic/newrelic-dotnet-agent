@@ -59,6 +59,9 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         Consume,
         Peek,
         Purge,
+        Process,
+        Settle,
+        Cancel
     }
 
     ///<summary>This enum must be a sequence of values starting with 0 and incrementing by 1. See MetricNames.GetEnumerationFunc</summary>
@@ -80,6 +83,9 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         //SQLite,
         CosmosDB,
         Elasticsearch,
+        OpenSearch,
+        DynamoDB,
+        ODBC,
         Other
     }
 

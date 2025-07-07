@@ -3,6 +3,7 @@
 
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
@@ -19,6 +20,7 @@ using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -80,6 +82,7 @@ namespace NewRelic.Agent.Core
         private IConfiguration Configuration { get { return _configurationSubscription.Configuration; } }
         private ThreadProfilingService _threadProfilingService;
         private readonly IWrapperService _wrapperService;
+        private readonly IAgentHealthReporter _agentHealthReporter;
 
         private volatile bool _shutdownEventReceived;
         private volatile bool _isInitialized;
@@ -114,7 +117,7 @@ namespace NewRelic.Agent.Core
             }
 
             _container = AgentServices.GetContainer();
-            AgentServices.RegisterServices(_container, bootstrapConfig.ServerlessModeEnabled);
+            AgentServices.RegisterServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
 
             // Resolve IConfigurationService (so that it starts listening to config change events) and then publish the serialized event
             _container.Resolve<IConfigurationService>();
@@ -153,6 +156,12 @@ namespace NewRelic.Agent.Core
             var agentApi = _container.Resolve<IAgentApi>();
             _wrapperService = _container.Resolve<IWrapperService>();
 
+            // Start the AgentHealthReporter early so that we can potentially report health issues during startup
+            _agentHealthReporter = _container.Resolve<IAgentHealthReporter>();
+
+            if (Configuration.OpenTelemetryBridgeEnabled)
+                _container.Resolve<OpenTelemetryBridge.ActivityBridge>().Start();
+
             // Attempt to auto start the agent once all services have resolved, except in serverless mode
             if (!bootstrapConfig.ServerlessModeEnabled)
                 _container.Resolve<IConnectionManager>().AttemptAutoStart();
@@ -161,7 +170,7 @@ namespace NewRelic.Agent.Core
                 Log.Info("The New Relic agent is operating in serverless mode.");
             }
 
-            AgentServices.StartServices(_container, bootstrapConfig.ServerlessModeEnabled);
+            AgentServices.StartServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
 
             // Setup the internal API first so that AgentApi can use it.
             InternalApi.SetAgentApiImplementation(agentApi);
@@ -217,7 +226,7 @@ namespace NewRelic.Agent.Core
                 List<string> environmentVariables = new List<string> {
                     "CORECLR_ENABLE_PROFILING",
                     "CORECLR_PROFILER",
-                    "CORECLR_NEWRELIC_HOME",
+                    "CORECLR_NEW_RELIC_HOME",
                     "CORECLR_PROFILER_PATH",
                     "CORECLR_PROFILER_PATH_32",
                     "CORECLR_PROFILER_PATH_64",
@@ -226,8 +235,8 @@ namespace NewRelic.Agent.Core
                     "COR_PROFILER_PATH",
                     "COR_PROFILER_PATH_32",
                     "COR_PROFILER_PATH_64",
-                    "NEWRELIC_HOME",
-                    "NEWRELIC_INSTALL_PATH",
+                    "NEW_RELIC_HOME",
+                    "NEW_RELIC_INSTALL_PATH",
                     "NEW_RELIC_APP_NAME",
                     "RoleName",
                     "IISEXPRESS_SITENAME",
@@ -246,8 +255,9 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_PROCESS_HOST_DISPLAY_NAME",
                     "NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG",
                     "NEW_RELIC_LOG",
-                    "NEWRELIC_PROFILER_LOG_DIRECTORY",
-                    "NEWRELIC_LOG_LEVEL",
+                    "NEW_RELIC_LOG_DIRECTORY",
+                    "NEW_RELIC_PROFILER_LOG_DIRECTORY",
+                    "NEW_RELIC_LOG_LEVEL",
                     "NEW_RELIC_LOG_ENABLED",
                     "NEW_RELIC_LOG_CONSOLE",
                     "NEW_RELIC_LABELS",
@@ -285,7 +295,11 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_CODE_LEVEL_METRICS_ENABLED",
                     "NEW_RELIC_SEND_DATA_ON_EXIT",
                     "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS",
-                    "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"
+                    "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED",
+                    "NEW_RELIC_AGENT_CONTROL_ENABLED",
+                    "NEW_RELIC_AGENT_CONTROL_HEALTH_DELIVERY_LOCATION",
+                    "NEW_RELIC_AGENT_CONTROL_HEALTH_FREQUENCY",
+                    "NEW_RELIC_APM_LAMBDA_MODE"
                 };
 
                 List<string> environmentVariablesSensitive = new List<string> {
@@ -297,6 +311,24 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_CONFIG_OBSCURING_KEY",
                     "NEW_RELIC_PROXY_PASS_OBFUSCATED"
                 };
+
+                List<(string,string)> environmentVariablesDeprecated = new List<(string, string)>
+                {
+                    ("CORECLR_NEWRELIC_HOME","CORECLR_NEW_RELIC_HOME"),
+                    ("NEWRELIC_HOME", "NEW_RELIC_HOME"),
+                    ("NEWRELIC_INSTALL_PATH", "NEW_RELIC_INSTALL_PATH"),
+                    ("NEWRELIC_LOG_DIRECTORY", "NEW_RELIC_LOG_DIRECTORY"),
+                    ("NEWRELIC_LOG_LEVEL", "NEW_RELIC_LOG_LEVEL"),
+                    ("NEWRELIC_PROFILER_LOG_DIRECTORY", "NEW_RELIC_PROFILER_LOG_DIRECTORY"),
+                    ("NEWRELIC_FORCE_PROFILING", "NEW_RELIC_FORCE_PROFILING"),
+                    ("NEWRELIC_AGENT_VERSION_OVERRIDE", "NEW_RELIC_AGENT_VERSION_OVERRIDE")
+                };
+
+                // so we can report the values as usual
+                environmentVariables.AddRange(environmentVariablesDeprecated.Select(tuple => tuple.Item1));
+
+                // Add this one separately so we can report the deprecated name but not log the value
+                environmentVariablesDeprecated.Add(("NEWRELIC_LICENSEKEY", "NEW_RELIC_LICENSE_KEY")); 
 
                 foreach (var ev in environmentVariables)
                 {
@@ -314,7 +346,19 @@ namespace NewRelic.Agent.Core
                     }
                 }
 
+                foreach (var ev in environmentVariablesDeprecated)
+                {
+                    if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(ev.Item1)))
+                    {
+                        Log.Warn("Environment Variable {OldName} is deprecated and may be removed in a future major version. Please use {NewName} instead.", ev.Item1, ev.Item2);
+                    }
+                }
+
+#if NETSTANDARD
                 Log.Debug($".NET Runtime Version: {RuntimeInformation.FrameworkDescription}");
+#else
+                Log.Debug($".NET Runtime Version: {AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName}");
+#endif
             }
 
 #if NETFRAMEWORK
@@ -325,7 +369,7 @@ namespace NewRelic.Agent.Core
 #else
             if (DotnetVersion.IsUnsupportedDotnetCoreVersion(AgentInstallConfiguration.DotnetCoreVersion))
             {
-                Log.Warn("Unsupported .NET version {0} detected. Please use net6 or net8 or newer.", AgentInstallConfiguration.DotnetCoreVersion);
+                Log.Warn(".NET version {0} has reached EOL, and support will be removed in the next major release of the .NET Agent. Please use net8 or newer.", AgentInstallConfiguration.DotnetCoreVersion);
             }
 #endif
         }
@@ -380,7 +424,7 @@ namespace NewRelic.Agent.Core
         private void ProcessExit(object sender, EventArgs e)
         {
             Log.Debug("Received a ProcessExit CLR event for the application domain. About to shut down the .NET Agent...");
-
+            
             Shutdown(true);
         }
 
@@ -408,13 +452,16 @@ namespace NewRelic.Agent.Core
 
                 Log.Debug("Shutting down public agent services...");
                 StopServices();
+                _agentHealthReporter?.SetAgentControlStatus(HealthCodes.AgentShutdownHealthy);
             }
             catch (Exception e)
             {
+                _agentHealthReporter?.SetAgentControlStatus(HealthCodes.AgentShutdownError, e.Message);
                 Log.Info(e, "Unexpected exception during agent shutdown");
             }
             finally
             {
+                _agentHealthReporter?.PublishAgentControlHealthCheck();
                 Log.Debug("Shutting down internal agent services...");
                 Dispose();
 

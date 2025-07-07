@@ -31,6 +31,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Telerik.JustMock;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -57,12 +59,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private IProcessStatic _processStatic;
         private IConfigurationManagerStatic _configurationManagerStatic;
         private IDnsStatic _dnsStatic;
+        private IAgentHealthReporter _agentHealthReporter;
 
         private ConfigurationAutoResponder _configAutoResponder;
 
         private void UpdateConfiguration()
         {
-            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
         }
@@ -78,7 +81,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
             _configurationService = Mock.Create<IConfigurationService>();
             _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
-
+            _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _runTimeConfiguration = new RunTimeConfiguration();
             _serverConfig = new ServerConfiguration();
             _localConfig = new configuration();
@@ -1669,12 +1672,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
             var dnsStatic = Mock.Create<IDnsStatic>();
             var bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
+            var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
-            _configuration = new TestableDefaultConfiguration(environment, localConfig, serverConfig, runTimeConfig, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic);
+            _configuration = new TestableDefaultConfiguration(environment, localConfig, serverConfig, runTimeConfig, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic, agentHealthReporter);
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 
             Mock.Arrange(() => dnsStatic.GetHostName()).Returns("coconut");
-            Mock.Arrange(() => environment.GetEnvironmentVariable("NEW_RELIC_PROCESS_HOST_DISPLAY_NAME")).Returns(environmentVariableValue);
+            Mock.Arrange(() => environment.GetEnvironmentVariableFromList("NEW_RELIC_PROCESS_HOST_DISPLAY_NAME")).Returns(environmentVariableValue);
             localConfig.processHost.displayName = localConfigurationValue;
 
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Unknown));

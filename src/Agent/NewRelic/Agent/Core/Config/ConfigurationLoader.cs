@@ -8,6 +8,7 @@ using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Core.SharedInterfaces;
 using System;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -64,6 +65,8 @@ namespace NewRelic.Agent.Core.Config
 #endif
 
         public static Func<string, bool> FileExists = File.Exists;
+        public static Func<string, string> FileReadAllText = File.ReadAllText;
+
         public static Func<string, string> PathGetDirectoryName = Path.GetDirectoryName;
         public static Func<string, string> GetEnvironmentVar = System.Environment.GetEnvironmentVariable;
 
@@ -163,7 +166,7 @@ namespace NewRelic.Agent.Core.Config
             try
             {
                 var fileName = AppSettingsConfigResolveWhenUsed.GetAppSetting(Constants.AppSettingsConfigFile);
-                if (!File.Exists(fileName))
+                if (!FileExists(fileName))
                 {
                     return null;
                 }
@@ -207,7 +210,7 @@ namespace NewRelic.Agent.Core.Config
                 {
                     var directory = Path.GetDirectoryName(entryAssembly.Location);
                     filename = Path.Combine(directory, NewRelicConfigFileName);
-                    if (File.Exists(filename))
+                    if (FileExists(filename))
                     {
                         Log.Info("Configuration file found in app/web root directory: {0}", filename);
                         return filename;
@@ -216,7 +219,7 @@ namespace NewRelic.Agent.Core.Config
 
                 var currentDirectory = Directory.GetCurrentDirectory();
                 filename = Path.Combine(currentDirectory, NewRelicConfigFileName);
-                if (File.Exists(filename))
+                if (FileExists(filename))
                 {
                     Log.Info("Configuration file found in app/web root directory: {0}", filename);
                     return filename;
@@ -481,7 +484,7 @@ namespace NewRelic.Agent.Core.Config
             {
                 var home = AgentInstallConfiguration.NewRelicHome;
                 var xsdFile = Path.Combine(home, "newrelic.xsd");
-                configSchemaContents = File.ReadAllText(xsdFile);
+                configSchemaContents = FileReadAllText(xsdFile);
             }
             catch (Exception ex)
             {
@@ -569,9 +572,14 @@ namespace NewRelic.Agent.Core.Config
         // configuration logic to use the same environment variable logic.
         public static IEnvironment EnvironmentVariableProxy = new SharedInterfaces.Environment();
 
-        public static string GetEnvironmentVar(string name)
+        public static string GetEnvironmentVar(params string[] environmentVariableNames)
         {
-            return EnvironmentVariableProxy.GetEnvironmentVariable(name);
+            var result = (environmentVariableNames ?? Enumerable.Empty<string>())
+                .Select(EnvironmentVariableProxy.GetEnvironmentVariable)
+                .FirstOrDefault(value => value != null);
+
+            // needs to return null instead of empty string
+            return result == string.Empty ? null : result;
         }
 
         public static string GetOverride(string name, string fallback)

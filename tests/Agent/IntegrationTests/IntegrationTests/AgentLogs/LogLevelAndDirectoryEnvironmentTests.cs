@@ -7,7 +7,6 @@ using System.IO;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentLogs
 {
@@ -34,9 +33,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
                     _fixture.RemoteApplication.NewRelicConfig.SetLogLevel(_configLogLevel);
                     _fixture.RemoteApplication.NewRelicConfig.SetLogDirectory(_configLogDirectory);
 
-                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEWRELIC_LOG_LEVEL", _envLogLevel);
-                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEWRELIC_LOG_DIRECTORY", _generalEnvLogDirectory);
-                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEWRELIC_PROFILER_LOG_DIRECTORY", _profilerEnvLogDirectory);
+                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_LOG_LEVEL", _envLogLevel);
+                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_LOG_DIRECTORY", _generalEnvLogDirectory);
+                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_PROFILER_LOG_DIRECTORY", _profilerEnvLogDirectory);
 
                     _fixture.AddCommand("HttpClientDriver Get");
                 }
@@ -77,21 +76,18 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         }
     }
 
-    [NetFrameworkTest]
     public class LogLevelAndDirectoryEnvironmentTestsFrameworkLatest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public LogLevelAndDirectoryEnvironmentTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output) { }
     }
 
-    [NetCoreTest]
     public class LogLevelAndDirectoryEnvironmentTestsCoreOldest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public LogLevelAndDirectoryEnvironmentTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output) { }
     }
 
-    [NetCoreTest]
     public class LogLevelAndDirectoryEnvironmentTestsCoreLatest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public LogLevelAndDirectoryEnvironmentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

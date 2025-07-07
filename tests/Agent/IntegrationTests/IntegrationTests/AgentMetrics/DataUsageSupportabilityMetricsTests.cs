@@ -7,12 +7,10 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using System;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 {
 
-    [NetFrameworkTest]
     public class DataUsageSupportabilityMetricsTestsFW : DataUsageSupportabilityMetricsTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public DataUsageSupportabilityMetricsTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -21,7 +19,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         }
     }
 
-    [NetCoreTest]
     public class DataUsageSupportabilityMetricsTestsCoreOldest : DataUsageSupportabilityMetricsTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public DataUsageSupportabilityMetricsTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -30,7 +27,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         }
     }
 
-    [NetCoreTest]
     public class DataUsageSupportabilityMetricsTestsCoreLatest : DataUsageSupportabilityMetricsTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public DataUsageSupportabilityMetricsTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
