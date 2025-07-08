@@ -260,7 +260,7 @@ namespace NewRelic.Agent.Core.Wrapper
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to generate Supportability Metrics for {instrumentedMethodInfo.ToString()} : exception: {ex}");
+                Log.Error(ex, $"Failed to generate Supportability Metrics for {instrumentedMethodInfo}");
             }
         }
     }
