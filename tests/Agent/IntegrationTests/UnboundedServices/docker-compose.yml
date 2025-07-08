@@ -81,16 +81,13 @@ services:
     mssql:
         build:
             context: ./mssql
-            args:
-                SA_PASS: ${SA_PASSWORD:-MssqlPassw0rd}
         ports:
             - "1433:1433"
         environment:
             # The password set here must match the password set in the connection
-            # string being used by the MS SQL tests, and also match what is set in the
-            # "SA_PASS" container build arg above.  If this password is changed, the container
-            # must be rebuilt.
-            - SA_PASSWORD=${SA_PASSWORD:-MssqlPassw0rd}
+            # string being used by the MS SQL unbounded integration tests.
+            - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-MssqlPassw0rd}
+            - ACCEPT_EULA=Y
         container_name: MssqlServer
 
     oracle:
