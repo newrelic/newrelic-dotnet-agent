@@ -49,6 +49,8 @@ namespace NewRelic.Agent.Core.WireModels
 
         MetricWireModel TryBuildLibraryVersionMetric(string assemblyName, string assemblyVersion);
 
+        MetricWireModel TryBuildCustomInstrumentationMetric(string assemblyName, string className, string method);
+
         MetricWireModel TryBuildMetricHarvestAttemptMetric();
 
         MetricWireModel TryBuildTransactionEventReservoirResizedMetric();

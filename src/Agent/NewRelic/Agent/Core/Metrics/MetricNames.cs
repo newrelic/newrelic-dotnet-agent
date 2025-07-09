@@ -200,7 +200,7 @@ namespace NewRelic.Agent.Core.Metrics
                 });
         }
 
-        
+
         public static MetricName GetCustom(string suffix)
         {
             return MetricName.Create(Custom, suffix);
@@ -630,6 +630,14 @@ namespace NewRelic.Agent.Core.Metrics
         {
             return SupportabilityLibraryVersionPs + assemblyName + PathSeparator + assemblyVersion;
         }
+
+        private const string SupportabilityCustomInstrumentationPs = SupportabilityPs + "CustomInst" + PathSeparator;
+        public static string GetSupportabilityCustomInstrumentation(string assemblyName, string className, string method)
+        {
+            return SupportabilityCustomInstrumentationPs + assemblyName + PathSeparator + className + PathSeparator + method;
+        }
+
+        public static string SupportabilityCustomInstrumentationCount => SupportabilityCustomInstrumentationPs + "Count";
 
         // Utilization
         private const string SupportabilityUtilizationPs = SupportabilityPs + "utilization" + PathSeparator;

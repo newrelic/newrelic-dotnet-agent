@@ -2739,6 +2739,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool OpenTelemetryBridgeEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("OpenTelemetry.Enabled", false), "NEW_RELIC_OPEN_TELEMETRY_BRIDGE_ENABLED");
 
+        public int MaxCustomInstrumentationSupportabilityMetrics => 25; // in case we want to make this configurable in the future
+
         #endregion
 
         public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)

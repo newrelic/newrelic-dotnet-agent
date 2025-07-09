@@ -13,6 +13,7 @@ namespace CompositeTests
     {
         private static CompositeTestAgent _compositeTestAgent;
         private IAgent _agent;
+        private const uint AttributeInstrumentation = 1 << 20;
 
         [SetUp]
         public void SetUp()
@@ -43,7 +44,7 @@ namespace CompositeTests
             using (var logging = new Logging())
             {
                 var wrapperService = _compositeTestAgent.GetWrapperService();
-                var afterWrappedMethod = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, 0, 0);
+                var afterWrappedMethod = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AttributeInstrumentation, 0);
 
                 Assert.Multiple(() =>
                 {

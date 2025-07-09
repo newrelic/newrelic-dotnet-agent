@@ -19,6 +19,7 @@ namespace NewRelic.Agent.Core.Wrapper
     {
         private const uint EmptyTracerArgs = 0;
         private const uint AsyncTracerArgs = 1 << 23;
+        private const uint AttributeInstrumentation = 1 << 20;
 
         private WrapperService _wrapperService;
 
@@ -68,13 +69,15 @@ namespace NewRelic.Agent.Core.Wrapper
             const string tracerFactoryName = "MyTracer";
             var target = new object();
             var arguments = new object[0];
-            _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+            _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AttributeInstrumentation, 0);
 
             var method = new Method(type, methodName, string.Empty);
             var expectedMethodCall = new MethodCall(method, target, arguments, false);
             var instrumetedMethodInfo = new InstrumentedMethodInfo(0, expectedMethodCall.Method, tracerFactoryName, false, null, null, false);
 
             Mock.Assert(() => _wrapperMap.Get(instrumetedMethodInfo));
+            Mock.Assert(() => _agentHealthReporter.ReportLibraryVersion(Arg.IsAny<string>(), Arg.IsAny<string>()), Occurs.Once());
+            Mock.Assert(() => _agentHealthReporter.ReportCustomInstrumentation(Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<string>()), Occurs.Once());
         }
 
         [Test]
