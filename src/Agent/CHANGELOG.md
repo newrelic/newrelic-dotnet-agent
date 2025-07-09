@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.43.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.42.0...v10.43.0) (2025-07-09)
+
+
+### New features
+
+* Add support for topics to Azure Service Bus. ([#3179](https://github.com/newrelic/newrelic-dotnet-agent/issues/3179)) ([d6610a1](https://github.com/newrelic/newrelic-dotnet-agent/commit/d6610a19a862570b2a15b8c7f0f5156fee0fa805))
+* Supportability metrics for custom instrumentation. Reports the first 25 custom instrumentation methods seen, and a count of the total number of custom instrumentation methods seen. (https://github.com/newrelic/newrelic-dotnet-agent/pull/2797) ([99c6256](https://github.com/newrelic/newrelic-dotnet-agent/commit/99c625659f0739c3453692a9bdf676e2b55a6658))
+
+
+### Fixes
+
+* Profiler doesn't handle wide-character files correctly ([#3172](https://github.com/newrelic/newrelic-dotnet-agent/issues/3172)) ([75ddd6b](https://github.com/newrelic/newrelic-dotnet-agent/commit/75ddd6b4aa55e3a5fb8501800bb6cc5b0e81e08c))
+
 ## [10.42.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.41.0...v10.42.0) (2025-06-24)
 
 
