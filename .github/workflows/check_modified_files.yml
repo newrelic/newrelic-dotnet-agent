@@ -3,8 +3,8 @@ name: Check for Modified Source Files
 on: 
     workflow_call:
         outputs:
-            non-workflow-files-changed:
-                value: ${{ jobs.check-modified-files.outputs.non-workflow-files-changed }}
+            source-files-changed:
+                value: ${{ jobs.check-modified-files.outputs.source-files-changed }}
   
 permissions:
     contents: read
@@ -19,7 +19,7 @@ jobs:
         # don't run if triggered by a release or manual execution, as we're going to do the full build in those cases anyway
         if: github.actor != 'dependabot[bot]' || !(github.event.release || github.event_name == 'workflow_dispatch')
         outputs:
-          non-workflow-files-changed: ${{ steps.filter.outputs.non-workflow-files-changed }}
+          source-files-changed: ${{ steps.filter.outputs.source-files-changed }}
         steps:
           - name: Harden Runner
             uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
@@ -35,9 +35,12 @@ jobs:
             id: filter
             with:
               base: ${{ github.ref }}
+              # Look for source files that were modified, excluding workflow files and unbounded services
+              predicate-quantifier: 'every'             
               filters: |
-                non-workflow-files-changed:
+                source-files-changed:
+                  - '**'
                   - '!.github/**'
                   - '!tests/Agent/IntegrationTests/UnboundedServices/**'
               list-files: 'csv'
-    
+
