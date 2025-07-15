@@ -5,25 +5,12 @@ on:
     branches:
       - main
       - "feature/**"
-    paths-ignore:
-      - ".github/**" # skip changes to the .github folder (workflows, etc.)
 
   # needs to run on every push to main to keep CodeCov in sync
   push:
     branches:
       - main
-    paths-ignore:
-      - ".github/**" # skip changes to the .github folder (workflows, etc.)
       
-  # this workflow can be called from another workflow
-  workflow_call:
-    inputs:
-      deploy:
-        description: 'Deploy NuGet Package'
-        required: true
-        default: false
-        type: boolean
-  
   # this workflow can be invoked manually
   workflow_dispatch:
     inputs:
@@ -47,9 +34,19 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
+  check-modified-files:
+    name: Check for source file changes
+    uses: ./.github/workflows/check_modified_files.yml
+    permissions:
+      contents: read
+      pull-requests: read
+
   build-windows-profiler:
     name: Build Windows Profiler & Run Unit Tests / Code Coverage
     runs-on: windows-latest
+    needs: check-modified-files
+    # only run this job if source files were modified, or if triggered by a manual execution
+    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
 
     env:
       tests_base_path: ${{ github.workspace }}\src\Agent\NewRelic
@@ -131,6 +128,9 @@ jobs:
   build-linux-x64-profiler:
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
+    needs: check-modified-files
+    # only run this job if source files were modified, or if triggered by a manual execution
+    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: read
 
@@ -182,6 +182,9 @@ jobs:
   build-linux-arm64-profiler:
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
+    needs: check-modified-files
+    # only run this job if source files were modified, or if triggered by a manual execution
+    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: read # for actions/checkout to fetch code
       packages: write # for uraimo/run-on-arch-action to cache docker images
