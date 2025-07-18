@@ -686,13 +686,13 @@
             ],
             "spans": [
                 {
-                    "name": "Datastore/statement/Elasticsearch/flights/search",
+                    "name": "Datastore/statement/Elasticsearch/flights/Search",
                     "parentName": "Foo",
                     "category": "datastore",
                     "attributes": {
                         "db.collection": "flights",
                         "db.instance": "unknown",
-                        "db.operation": "search",
+                        "db.operation": "Search",
                         "db.system": "elasticsearch",
                         "peer.address": "localhost:9200",
                         "peer.hostname": "localhost",
@@ -848,7 +848,7 @@
                     "attributes": {
                         "db.collection": "Unknown",
                         "db.instance": "unknown",
-                        "db.operation": "ping",
+                        "db.operation": "Ping",
                         "db.system": "elasticsearch",
                         "peer.address": "localhost:9200",
                         "peer.hostname": "localhost",
