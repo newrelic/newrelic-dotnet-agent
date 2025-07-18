@@ -2693,7 +2693,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Otel Bridge
 
-        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent"];
+        // The activity sources we listen to by default - these are the sources that we will automatically instrument
+        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent", "Elastic.Transport"];
 
         private List<string> _includedActivitySources;
         public List<string> IncludedActivitySources
