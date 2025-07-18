@@ -14,6 +14,7 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Extensions.SystemExtensions;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
@@ -181,6 +182,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 Log.Finest($"Elasticsearch {activityLogPrefix} is missing required tag for operation. Not creating a DatastoreSegmentData.");
                 return null;
             }
+            operation = operation.CapitalizeEachWord('_'); // Normalize the operation name to be more consistent with other datastore operations.
 
             // model can be found in db.elasticsearch.path_parts.index if it exists, otherwise it can be found in the first component of the path.
             tags.TryGetAndRemoveTag<string>(["db.elasticsearch.path_parts.index"], out var model);
