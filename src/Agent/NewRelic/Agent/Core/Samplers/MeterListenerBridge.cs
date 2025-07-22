@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Http;
 using System.Reflection;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -65,7 +66,6 @@ namespace NewRelic.Agent.Core.Samplers
     public class MeterListenerBridge : ConfigurationBasedService
     {
         private dynamic _meterListener;
-        private static Meter NewRelicBridgeMeter = new Meter("NewRelicOTelBridgeMeter");
         private static ConcurrentDictionary<string, Meter> _bridgedMeters = new ConcurrentDictionary<string, Meter>();
         private static ConcurrentDictionary<Type, object> _createInstrumentDelegates = new ConcurrentDictionary<Type, object>();
         private static ConcurrentDictionary<Type, object> _bridgeMeasurementDelegates = new ConcurrentDictionary<Type, object>();
@@ -74,6 +74,22 @@ namespace NewRelic.Agent.Core.Samplers
         private OpenTelemetrySDKLogger _sdkLogger;
         private MeterProvider _meterProvider;
         private IConnectionInfo _connectionInfo;
+
+        // Configuration constants for OTLP export
+        private const int DefaultOtlpTimeoutSeconds = 10;
+        private const int DefaultOtlpExportIntervalSeconds = 5;
+
+        // Constants for expression tree parameter names
+        private const string InstrumentParameterName = "instrument";
+        private const string ListenerParameterName = "listener";
+        private const string StateParameterName = "state";
+        private const string MeasurementParameterName = "measurement";
+        private const string TagsParameterName = "tags";
+
+        // Constants for instrumentation name filtering
+        private const string NewRelicInstrumentationPrefix = "NewRelic";
+        private const string OpenTelemetryInstrumentationPrefix = "OpenTelemetry";
+        private const string SystemDiagnosticsInstrumentationPrefix = "System.Diagnostics";
 
         public MeterListenerBridge()
         {
@@ -99,6 +115,10 @@ namespace NewRelic.Agent.Core.Samplers
             // The real work will start once the agent is connected.
         }
 
+        /// <summary>
+        /// Starts the meter listener bridge to begin collecting and forwarding metrics.
+        /// Initializes the OpenTelemetry SDK, configures OTLP export, and sets up the MeterListener.
+        /// </summary>
         public void Start()
         {
             if (_sdkLogger == null)
@@ -110,7 +130,10 @@ namespace NewRelic.Agent.Core.Samplers
             {
                 var uriBuilder = new UriBuilder(_connectionInfo.HttpProtocol, _connectionInfo.Host, _connectionInfo.Port, "/v1/metrics");
 
+
+
                 var providerBuilder = Sdk.CreateMeterProviderBuilder()
+
                 .ConfigureResource(r => r
                     .AddService(_configuration.ApplicationNames.First())
                     .AddTelemetrySdk()
@@ -120,7 +143,7 @@ namespace NewRelic.Agent.Core.Samplers
                 {
                     exporterOptions.Targets = ConsoleExporterOutputTargets.Console;
 
-                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000 * 5;
+                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = DefaultOtlpExportIntervalSeconds * 1000;
                     metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
                 })
                 .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
@@ -129,9 +152,16 @@ namespace NewRelic.Agent.Core.Samplers
                     exporterOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
                     exporterOptions.Headers = $"api-key={_configuration.AgentLicenseKey}";
 
-                    // TODO: configure exponential histograms and other metric settings
-                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000 * 5;
+                    // Configure HttpClient factory with proxy and retry logic
+                    exporterOptions.HttpClientFactory = CreateHttpClientWithProxyAndRetry;
+
+#if NETSTANDARD2_0_OR_GREATER
+                    // Additional .NET Standard specific configurations can go here if needed
+#endif
+                    // Configure metric collection and export settings
+                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = DefaultOtlpExportIntervalSeconds * 1000;
                     metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
+
                 });
 
                 _meterProvider = providerBuilder.Build();
@@ -151,6 +181,64 @@ namespace NewRelic.Agent.Core.Samplers
             }
         }
 
+        /// <summary>
+        /// Creates an HttpClient configured with proxy settings and retry logic appropriate for the target framework.
+        /// </summary>
+        /// <returns>HttpClient configured for OTLP export</returns>
+        private HttpClient CreateHttpClientWithProxyAndRetry()
+        {
+            try
+            {
+                // Create base HttpClientHandler with proxy configuration
+                var httpClientHandler = new HttpClientHandler();
+
+                // Configure proxy if available
+                if (_connectionInfo?.Proxy != null)
+                {
+                    Log.Debug($"Configuring OTLP exporter with proxy: {_connectionInfo.Proxy}");
+                    httpClientHandler.Proxy = _connectionInfo.Proxy;
+                    httpClientHandler.UseProxy = true;
+                }
+                else
+                {
+                    Log.Debug("No proxy configured for OTLP exporter");
+                    httpClientHandler.UseProxy = false;
+                }
+
+#if NETSTANDARD2_0_OR_GREATER
+                // For .NET Standard 2.0+: Add retry logic with exponential backoff
+                var retryHandler = new CustomRetryHandler
+                {
+                    InnerHandler = httpClientHandler
+                };
+
+                var httpClient = new HttpClient(retryHandler);
+#else
+                // For .NET Framework: Direct HttpClient without retry wrapper
+                // (CustomRetryHandler uses async/await patterns that work better in .NET Standard)
+                var httpClient = new HttpClient(httpClientHandler);
+#endif
+
+                // Configure timeout (OTEL default is 10 seconds)
+                httpClient.Timeout = TimeSpan.FromSeconds(DefaultOtlpTimeoutSeconds);
+
+                // Add User-Agent for New Relic identification
+                httpClient.DefaultRequestHeaders.Add("User-Agent",
+                    $"NewRelic-DotNet-Agent/{AgentInstallConfiguration.AgentVersion ?? "Unknown"}");
+
+                return httpClient;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to create HttpClient for OTLP exporter. Falling back to default HttpClient.");
+                return new HttpClient();
+            }
+        }
+
+        /// <summary>
+        /// Stops the meter listener bridge and disposes of all resources.
+        /// Cleans up the MeterListener, MeterProvider, and SDK logger.
+        /// </summary>
         public void Stop()
         {
             _meterListener?.Dispose();
@@ -177,9 +265,23 @@ namespace NewRelic.Agent.Core.Samplers
         private void TryCreateMeterListener()
         {
             var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
+            if (assembly == null)
+            {
+                Log.Warn("System.Diagnostics.DiagnosticSource assembly not found. Cannot create MeterListener.");
+                return;
+            }
+
             var meterListenerType = assembly.GetType("System.Diagnostics.Metrics.MeterListener", throwOnError: false);
             var instrumentType = assembly.GetType("System.Diagnostics.Metrics.Instrument", throwOnError: false);
-            if (meterListenerType != null && instrumentType != null)
+
+            if (meterListenerType == null || instrumentType == null)
+            {
+                Log.Warn("Required types not found in DiagnosticSource assembly. MeterListener: {0}, Instrument: {1}",
+                    meterListenerType != null, instrumentType != null);
+                return;
+            }
+
+            try
             {
                 _meterListener = Activator.CreateInstance(meterListenerType);
 
@@ -194,6 +296,15 @@ namespace NewRelic.Agent.Core.Samplers
                 SubscribeToMeasurementUpdates<decimal>(meterListenerType, instrumentType);
 
                 SubscribeToMeasurementCompletedEvent(meterListenerType, instrumentType);
+
+                Log.Debug("Successfully created and configured MeterListener for OpenTelemetry bridging");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to configure MeterListener subscriptions");
+                _meterListener?.Dispose();
+                _meterListener = null;
+                throw;
             }
         }
 
@@ -214,8 +325,8 @@ namespace NewRelic.Agent.Core.Samplers
         {
             var instrumentPublishProperty = meterListenerType.GetProperty("InstrumentPublished");
 
-            var instrumentParameter = Expression.Parameter(instrumentType, "instrument");
-            var listenerParameter = Expression.Parameter(meterListenerType, "listener");
+            var instrumentParameter = Expression.Parameter(instrumentType, InstrumentParameterName);
+            var listenerParameter = Expression.Parameter(meterListenerType, ListenerParameterName);
 
             var meterNameProperty = Expression.Property(Expression.Property(instrumentParameter, "Meter"), "Name");
 
@@ -253,10 +364,10 @@ namespace NewRelic.Agent.Core.Samplers
             var setMeasurementEventCallbackMethodInfo = meterListenerType.GetMethod("SetMeasurementEventCallback").MakeGenericMethod(typeof(T));
             var callbackDelegateType = setMeasurementEventCallbackMethodInfo.GetParameters()[0].ParameterType;
 
-            var instrumentParameter = Expression.Parameter(instrumentType, "instrument");
-            var measurementParameter = Expression.Parameter(typeof(T), "measurement");
-            var tagsParameter = Expression.Parameter(typeof(ReadOnlySpan<KeyValuePair<string, object>>), "tags");
-            var stateParameter = Expression.Parameter(typeof(object), "state");
+            var instrumentParameter = Expression.Parameter(instrumentType, InstrumentParameterName);
+            var measurementParameter = Expression.Parameter(typeof(T), MeasurementParameterName);
+            var tagsParameter = Expression.Parameter(typeof(ReadOnlySpan<KeyValuePair<string, object>>), TagsParameterName);
+            var stateParameter = Expression.Parameter(typeof(object), StateParameterName);
 
             var methodCall = Expression.Call(
                 typeof(MeterListenerBridge),
@@ -288,8 +399,8 @@ namespace NewRelic.Agent.Core.Samplers
         {
             var measurementsCompletedProperty = meterListenerType.GetProperty("MeasurementsCompleted");
 
-            var instrumentParameter = Expression.Parameter(instrumentType, "instrument");
-            var stateParameter = Expression.Parameter(typeof(object), "state");
+            var instrumentParameter = Expression.Parameter(instrumentType, InstrumentParameterName);
+            var stateParameter = Expression.Parameter(typeof(object), StateParameterName);
 
             var disableBridgedInstrumentMethod = typeof(MeterListenerBridge).GetMethod(nameof(DisableBridgedInstrument), BindingFlags.NonPublic | BindingFlags.Static);
             var disableBridgedInstrumentCall = Expression.Call(null, disableBridgedInstrumentMethod, stateParameter);
@@ -322,7 +433,7 @@ namespace NewRelic.Agent.Core.Samplers
             {
                 var meterName = bridgedMeter.Name;
                 bridgedMeter.Dispose();
-                Console.WriteLine("Disposed bridged meter: " + meterName);
+                Log.Debug($"Disposed bridged meter: {meterName}");
             }
         }
 
@@ -331,6 +442,21 @@ namespace NewRelic.Agent.Core.Samplers
         {
             // TODO: If the agent ever targets .net 9 the .net 9 build of the agent will not need to bridge the runtime metrics meter that is
             // built into the diagnostics source library. This check will need to be updated to not bridge the runtime metrics meter.
+
+            // Skip internal diagnostic meters to avoid potential recursion
+            if (string.IsNullOrEmpty(meterName))
+            {
+                return false;
+            }
+
+            // Filter out internal infrastructure meters that could cause recursion
+            if (meterName.StartsWith(NewRelicInstrumentationPrefix, StringComparison.OrdinalIgnoreCase) ||
+                meterName.StartsWith(OpenTelemetryInstrumentationPrefix, StringComparison.OrdinalIgnoreCase) ||
+                meterName.StartsWith(SystemDiagnosticsInstrumentationPrefix + ".Metrics", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -491,11 +617,8 @@ namespace NewRelic.Agent.Core.Samplers
                 return null;
             }
 
-            var originalMeasurementParameter =  Expression.Parameter(typeof(object), "originalMeasurement");
+            var originalMeasurementParameter = Expression.Parameter(typeof(object), "originalMeasurement");
             var typedOriginalMeasurement = Expression.Convert(originalMeasurementParameter, originalMeasurementType);
-
-            var valueProperty = originalMeasurementType.GetProperty("Value");
-            var tagsProperty = originalMeasurementType.GetProperty("Tags");
 
             var valuePropertyAccess = Expression.Property(typedOriginalMeasurement, originalMeasurementType, "Value");
             var tagsPropertyAccess = Expression.Property(typedOriginalMeasurement, originalMeasurementType, "Tags");
@@ -519,7 +642,9 @@ namespace NewRelic.Agent.Core.Samplers
                 "Counter`1" => "CreateCounter",
                 "Histogram`1" => "CreateHistogram",
                 "UpDownCounter`1" => "CreateUpDownCounter",
-                // TODO: Add gauge support with .net 9 (needs corresponding otel sdk update)
+#if NET8_0_OR_GREATER
+                "Gauge`1" => "CreateGauge",
+#endif
                 _ => null
             };
 
@@ -590,33 +715,41 @@ namespace NewRelic.Agent.Core.Samplers
         private static void OnMeasurementRecorded<T>(object instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
             where T : struct
         {
-            dynamic dynamicInstrument = instrument;
-            Console.WriteLine($"{dynamicInstrument.Name} recorded measurement {measurement}");
-
-            if (state == null)
+            try
             {
-                return;
+                if (state == null)
+                {
+                    return;
+                }
+
+                switch (state)
+                {
+                    case Counter<T> counter:
+                        counter.Add(measurement, tags);
+                        Log.Finest($"Bridged measurement {measurement} to counter {counter.Meter.Name}.{counter.Name}");
+                        break;
+                    case Histogram<T> histogram:
+                        histogram.Record(measurement, tags);
+                        Log.Finest($"Bridged measurement {measurement} to histogram {histogram.Meter.Name}.{histogram.Name}");
+                        break;
+                    case UpDownCounter<T> upDownCounter:
+                        upDownCounter.Add(measurement, tags);
+                        Log.Finest($"Bridged measurement {measurement} to upDownCounter {upDownCounter.Meter.Name}.{upDownCounter.Name}");
+                        break;
+#if NET8_0_OR_GREATER
+                    case Gauge<T> gauge:
+                        gauge.Record(measurement, tags);
+                        Log.Finest($"Bridged measurement {measurement} to gauge {gauge.Meter.Name}.{gauge.Name}");
+                        break;
+#endif
+                    default:
+                        Log.Debug($"Unsupported instrument type for measurement bridging: {state.GetType().Name}");
+                        break;
+                }
             }
-
-            var stateTypeName = state.GetType().Name;
-
-            switch (state)
+            catch (Exception ex)
             {
-                case Counter<T> counter:
-                    counter.Add(measurement, tags);
-                    Console.WriteLine($"Signaled {measurement} to {counter.Meter.Name} - {counter.Name}");
-                    break;
-                case Histogram<T> histogram:
-                    histogram.Record(measurement, tags);
-                    Console.WriteLine($"Signaled {measurement} to {histogram.Meter.Name} - {histogram.Name}");
-                    break;
-                case UpDownCounter<T> upDownCounter:
-                    upDownCounter.Add(measurement, tags);
-                    Console.WriteLine($"Signaled {measurement} to {upDownCounter.Meter.Name} - {upDownCounter.Name}");
-                    break;
-                // TODO: Add gauge support with .net 9 (needs corresponding otel sdk update)
-                default:
-                    break;
+                Log.Warn(ex, "Failed to record measurement for instrument type: {0}", state?.GetType()?.Name ?? "unknown");
             }
         }
 
