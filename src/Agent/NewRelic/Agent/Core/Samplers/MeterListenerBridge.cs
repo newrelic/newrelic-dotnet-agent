@@ -66,6 +66,7 @@ namespace NewRelic.Agent.Core.Samplers
     public class MeterListenerBridge : ConfigurationBasedService
     {
         private dynamic _meterListener;
+        private static Meter NewRelicBridgeMeter = new Meter("NewRelicOTelBridgeMeter");
         private static ConcurrentDictionary<string, Meter> _bridgedMeters = new ConcurrentDictionary<string, Meter>();
         private static ConcurrentDictionary<Type, object> _createInstrumentDelegates = new ConcurrentDictionary<Type, object>();
         private static ConcurrentDictionary<Type, object> _bridgeMeasurementDelegates = new ConcurrentDictionary<Type, object>();
@@ -78,18 +79,6 @@ namespace NewRelic.Agent.Core.Samplers
         // Configuration constants for OTLP export
         private const int DefaultOtlpTimeoutSeconds = 10;
         private const int DefaultOtlpExportIntervalSeconds = 5;
-
-        // Constants for expression tree parameter names
-        private const string InstrumentParameterName = "instrument";
-        private const string ListenerParameterName = "listener";
-        private const string StateParameterName = "state";
-        private const string MeasurementParameterName = "measurement";
-        private const string TagsParameterName = "tags";
-
-        // Constants for instrumentation name filtering
-        private const string NewRelicInstrumentationPrefix = "NewRelic";
-        private const string OpenTelemetryInstrumentationPrefix = "OpenTelemetry";
-        private const string SystemDiagnosticsInstrumentationPrefix = "System.Diagnostics";
 
         public MeterListenerBridge()
         {
@@ -325,8 +314,8 @@ namespace NewRelic.Agent.Core.Samplers
         {
             var instrumentPublishProperty = meterListenerType.GetProperty("InstrumentPublished");
 
-            var instrumentParameter = Expression.Parameter(instrumentType, InstrumentParameterName);
-            var listenerParameter = Expression.Parameter(meterListenerType, ListenerParameterName);
+            var instrumentParameter = Expression.Parameter(instrumentType, "instrument");
+            var listenerParameter = Expression.Parameter(meterListenerType, "listener");
 
             var meterNameProperty = Expression.Property(Expression.Property(instrumentParameter, "Meter"), "Name");
 
@@ -364,10 +353,10 @@ namespace NewRelic.Agent.Core.Samplers
             var setMeasurementEventCallbackMethodInfo = meterListenerType.GetMethod("SetMeasurementEventCallback").MakeGenericMethod(typeof(T));
             var callbackDelegateType = setMeasurementEventCallbackMethodInfo.GetParameters()[0].ParameterType;
 
-            var instrumentParameter = Expression.Parameter(instrumentType, InstrumentParameterName);
-            var measurementParameter = Expression.Parameter(typeof(T), MeasurementParameterName);
-            var tagsParameter = Expression.Parameter(typeof(ReadOnlySpan<KeyValuePair<string, object>>), TagsParameterName);
-            var stateParameter = Expression.Parameter(typeof(object), StateParameterName);
+            var instrumentParameter = Expression.Parameter(instrumentType, "measurement");
+            var measurementParameter = Expression.Parameter(typeof(T), "measurement");
+            var tagsParameter = Expression.Parameter(typeof(ReadOnlySpan<KeyValuePair<string, object>>), "tags");
+            var stateParameter = Expression.Parameter(typeof(object), "state");
 
             var methodCall = Expression.Call(
                 typeof(MeterListenerBridge),
@@ -399,8 +388,8 @@ namespace NewRelic.Agent.Core.Samplers
         {
             var measurementsCompletedProperty = meterListenerType.GetProperty("MeasurementsCompleted");
 
-            var instrumentParameter = Expression.Parameter(instrumentType, InstrumentParameterName);
-            var stateParameter = Expression.Parameter(typeof(object), StateParameterName);
+            var instrumentParameter = Expression.Parameter(instrumentType, "instrument");
+            var stateParameter = Expression.Parameter(typeof(object), "state");
 
             var disableBridgedInstrumentMethod = typeof(MeterListenerBridge).GetMethod(nameof(DisableBridgedInstrument), BindingFlags.NonPublic | BindingFlags.Static);
             var disableBridgedInstrumentCall = Expression.Call(null, disableBridgedInstrumentMethod, stateParameter);
@@ -450,9 +439,9 @@ namespace NewRelic.Agent.Core.Samplers
             }
 
             // Filter out internal infrastructure meters that could cause recursion
-            if (meterName.StartsWith(NewRelicInstrumentationPrefix, StringComparison.OrdinalIgnoreCase) ||
-                meterName.StartsWith(OpenTelemetryInstrumentationPrefix, StringComparison.OrdinalIgnoreCase) ||
-                meterName.StartsWith(SystemDiagnosticsInstrumentationPrefix + ".Metrics", StringComparison.OrdinalIgnoreCase))
+            if (meterName.StartsWith("NewRelic", StringComparison.OrdinalIgnoreCase) ||
+                meterName.StartsWith("OpenTelemetry", StringComparison.OrdinalIgnoreCase) ||
+                meterName.StartsWith("System.Diagnostics" + ".Metrics", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
