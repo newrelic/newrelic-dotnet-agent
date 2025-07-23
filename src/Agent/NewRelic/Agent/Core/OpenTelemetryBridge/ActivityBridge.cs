@@ -79,10 +79,25 @@ public class ActivityBridge : IDisposable
 
     private bool TryCreateActivityListener()
     {
+        // look for diagnostic source assembly -- if it's not found, manually load it
         var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
+        if (assembly == null)
+        {
+            Log.Debug("System.Diagnostics.DiagnosticSource assembly not found. Attempting to load it manually.");
+            try
+            {
+                assembly = Assembly.Load("System.Diagnostics.DiagnosticSource");
+                Log.Debug($"System.Diagnostics.DiagnosticSource assembly version {assembly.GetName().Version} loaded successfully.");
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Error loading System.Diagnostics.DiagnosticSource assembly. Not starting the activity listener.");
+                return false;
+            }
+        }
 
-        // TODO: Enforce that an appropriate minimum version of the DiagnosticSource assembly is loaded.
-        if (assembly == null || (assembly.GetName().Version?.Major ?? 0) < 7)
+        // TODO: Identify the minimum version of the DiagnosticSource assembly that is compatible with the OpenTelemetry Bridge.
+        if ((assembly.GetName().Version?.Major ?? 0) < 7)
         {
             Log.Debug("DiagnosticSource assembly not found or version < 7 is not compatible with OpenTelemetry Bridge. Not starting the activity listener.");
             return false;

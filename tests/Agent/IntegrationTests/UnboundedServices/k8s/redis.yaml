@@ -22,6 +22,17 @@ spec:
         command: ["sh", "-c", "redis-server --requirepass \"${REDIS_PASSWORD}\""]
         ports:
         - containerPort: 6379
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "redis-cli -a \"${REDIS_PASSWORD}\" ping"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
         env:
         - name: REDIS_PASSWORD
           valueFrom:
