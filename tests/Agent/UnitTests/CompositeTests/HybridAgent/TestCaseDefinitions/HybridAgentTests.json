@@ -842,7 +842,7 @@
             ],
             "spans": [
                 {
-                    "name": "Datastore/statement/Elasticsearch/Unknown/ping",
+                    "name": "Datastore/statement/Elasticsearch/Unknown/Ping",
                     "parentName": "Foo",
                     "category": "datastore",
                     "attributes": {
