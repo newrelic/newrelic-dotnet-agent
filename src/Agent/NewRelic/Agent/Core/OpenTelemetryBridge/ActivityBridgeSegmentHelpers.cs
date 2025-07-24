@@ -31,6 +31,13 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             Log.Debug($"{activityLogPrefix} has stopped.");
 
+            // check status - stop processing if status is Error
+            if ((ActivityStatusCode)activity.Status == ActivityStatusCode.Error)
+            {
+                Log.Debug($"{activityLogPrefix} has a Status of Error. Not adding tags to segment.");
+                return;
+            }
+
             var tags = ((IEnumerable<KeyValuePair<string, object>>)activity.TagObjects).ToDictionary(t => t.Key, t => t.Value);
             if (tags.Count == 0)
             {
@@ -231,6 +238,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // to look for events with an eventName of "exception" and record the available exception information.
 
             dynamic activity = originalActivity;
+            bool noticedError = false;
             foreach (var activityEvent in activity.Events)
             {
                 if (activityEvent.Name == "exception")
@@ -276,14 +284,37 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                             if (transaction is IHybridAgentTransaction internalTransaction)
                             {
                                 internalTransaction.NoticeErrorOnTransactionAndSegment(errorData, segment);
+                                noticedError = true;
                             }
                         }
                     }
 
                     // Short circuiting the loop after finding the first exception event.
-                    return;
+                    break;
                 }
             }
+
+            if (!noticedError)
+            {
+                if ((ActivityStatusCode)activity.Status == ActivityStatusCode.Error)
+                {
+                    // If no exception event was found, but the activity has an error status code, we can still record the error.
+                    // This is a fallback in case the activity does not have an "exception" event.
+
+                    // get the Tags and convert to a dictionary
+                    var tags = ((IEnumerable<KeyValuePair<string, object>>)activity.TagObjects).ToDictionary(t => t.Key, t => t.Value);
+                    var errorData = errorService.FromMessage(activity.StatusDescription ?? "Unknown error", (IDictionary<string, object>)tags, false);
+                    if (segment is IHybridAgentSegment hybridAgentSegment)
+                    {
+                        var transaction = hybridAgentSegment.GetTransactionFromSegment();
+                        if (transaction is IHybridAgentTransaction internalTransaction)
+                        {
+                            internalTransaction.NoticeErrorOnTransactionAndSegment(errorData, segment);
+                        }
+                    }
+                }
+            }
+
         }
     }
 
