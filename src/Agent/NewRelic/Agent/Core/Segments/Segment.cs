@@ -273,10 +273,10 @@ namespace NewRelic.Agent.Core.Segments
 
         public void MakeActivityCurrent()
         {
-            if (Log.IsFinestEnabled) Log.Finest($"Segment.MakeActivityCurrent: Setting Activity.Current to this segment's activity: {_activity.Id}");
-            _activity.MakeCurrent();
-            
+            if (Log.IsFinestEnabled) Log.Finest($"Segment.MakeActivityCurrent: Setting Activity.Current to this segment's activity: {_activity?.Id ?? "null"}");
 
+            _activity?.MakeCurrent();
+            
             if (Log.IsFinestEnabled) Log.Finest($"Segment.MakeActivityCurrent: Activity.Current is now: {((dynamic)ActivityBridgeHelpers.GetCurrentActivity())?.Id ?? "null"}");
         }
 
