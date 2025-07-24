@@ -95,6 +95,18 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         }
 
         [Test]
+        public void Id_ReturnsActivityId()
+        {
+            // Arrange
+            Mock.Arrange(() => _mockActivity.Id).Returns("TestActivityId");
+            var runtimeActivity = new RuntimeNewRelicActivity(_mockActivity);
+            // Act
+            var result = runtimeActivity.Id;
+            // Assert
+            Assert.That(result, Is.EqualTo("TestActivityId"));
+        }
+
+        [Test]
         public void Segment_Get_CallsGetSegmentFromActivity()
         {
             // Arrange
@@ -197,6 +209,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             public virtual SpanIdMock SpanId { get; set; }
             public virtual TraceIdMock TraceId { get; set; }
             public virtual string DisplayName { get; set; }
+            public virtual string Id { get; set; }
             public virtual object GetCustomProperty(string propertyName) { return null; }
             public virtual void SetCustomProperty(string propertyName, object value) { }
             public virtual void Start() { }
