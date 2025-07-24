@@ -29,6 +29,9 @@ public abstract class HybridAgentTestsBase
     public virtual void Setup()
     {
         _compositeTestAgent = new CompositeTestAgent();
+
+        _compositeTestAgent.LocalConfiguration.log.level = "finest"; // to ensure we exercise code paths that log messages only when finest is enabled
+
         // Used for the DT tests to identify the correct tracestate header component
         _compositeTestAgent.ServerConfiguration.TrustedAccountKey = "1";
 
