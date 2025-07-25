@@ -8,13 +8,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge;
 
@@ -217,7 +215,34 @@ public class ActivityBridge : IDisposable
         var parseTraceIdMethod = activityTraceIdType.GetMethod("CreateFromString", BindingFlags.Public | BindingFlags.Static);
         var parseTraceIdExpression = Expression.Call(null, parseTraceIdMethod, currentTraceIdAsSpanExpression);
 
-        var getOrCreateTraceIdExpression = Expression.Condition(hasCurrentTraceIdExpression, parseTraceIdExpression, generateNewTraceIdExpression);
+        var logFinestMethod = typeof(Log).GetMethod("Finest", new[] { typeof(string), typeof(object[]) });
+
+        var messageFormat = Expression.Constant("Using current traceId {0}");
+        var messageArgs = Expression.NewArrayInit(typeof(object), Expression.Convert(currentTraceIdVariable, typeof(object)));
+        var callLogFinestExpression = Expression.Call(logFinestMethod, messageFormat, messageArgs);
+
+        var ifBlockExpression = Expression.Block(
+            callLogFinestExpression,
+            parseTraceIdExpression
+        );
+
+        var newTraceIdVariable = Expression.Variable(activityTraceIdType, "newTraceId");
+        var assignNewTraceIdExpression = Expression.Assign(newTraceIdVariable, generateNewTraceIdExpression);
+        var toStringMethod = activityTraceIdType.GetMethod("ToString", Type.EmptyTypes);
+        var newTraceIdAsString = Expression.Call(newTraceIdVariable, toStringMethod);
+
+        var message2Format = Expression.Constant("Generated new traceId {0}");
+        var message2Args = Expression.NewArrayInit(typeof(object), Expression.Convert(newTraceIdAsString, typeof(object)));
+        var callLogFinestExpression2 = Expression.Call(logFinestMethod, message2Format, message2Args);
+
+        var elseBlockExpression = Expression.Block(
+            [newTraceIdVariable],
+            assignNewTraceIdExpression,
+            callLogFinestExpression2,
+            newTraceIdVariable
+        );
+
+        var getOrCreateTraceIdExpression = Expression.Condition(hasCurrentTraceIdExpression, ifBlockExpression, elseBlockExpression);
 
         var lambdaBodyExpression = Expression.Block([currentTraceIdVariable], assignCurrentTraceIdExpression, getOrCreateTraceIdExpression);
 

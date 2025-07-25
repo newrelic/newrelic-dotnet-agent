@@ -75,9 +75,9 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="Grpc.Net.Client" Version="2.63.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="[2.0.0]" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="[2.0.0]" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="[2.0.0]" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
