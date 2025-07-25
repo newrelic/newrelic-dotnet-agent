@@ -107,6 +107,17 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         }
 
         [Test]
+        public void Id_ReturnsNull_WhenActivityIsNull()
+        {
+            // Arrange
+            var runtimeActivity = new RuntimeNewRelicActivity(null);
+            // Act
+            var result = runtimeActivity.Id;
+            // Assert
+            Assert.That(result, Is.Null);
+        }
+
+        [Test]
         public void Segment_Get_CallsGetSegmentFromActivity()
         {
             // Arrange
