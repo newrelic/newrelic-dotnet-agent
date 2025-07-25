@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             if (!tags.TryGetAndRemoveTag<string>(["url.full", "http.url"], out var url))
             {
-                Log.Finest($"{activityLogPrefix} is missing `url.full` and `http.request.method`. Not creating an ExternalSegmentData.");
+                Log.Finest($"{activityLogPrefix} is missing url. Not creating an ExternalSegmentData.");
                 return;
             }
             if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(method))
