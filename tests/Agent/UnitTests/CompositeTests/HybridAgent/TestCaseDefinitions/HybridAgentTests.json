@@ -148,6 +148,56 @@
         }
     },
     {
+        "testDescription": "Client Http External with empty http.method and http.url does not create http span",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OTelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.method",
+                                    "value": ""
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.url",
+                                    "value": ""
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "OTelSpan1",
+                    "parentName": "Foo",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
         "testDescription": "Client Http External with AWS Lambda tags sets cloud sdk attributes",
         "operations": [
             {
@@ -469,7 +519,7 @@
         }
     },
     {
-        "testDescription": "Client Database test",
+        "testDescription": "Client Database - Mysql",
         "operations": [
             {
                 "command": "DoWorkInTransaction",

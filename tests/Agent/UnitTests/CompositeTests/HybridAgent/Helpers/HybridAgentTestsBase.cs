@@ -117,6 +117,10 @@ public abstract class HybridAgentTestsBase
                 var errorMessage = operation.Parameters!["errorMessage"] as string;
                 return (work) => OpenTelemetryOperations.RecordExceptionOnSpan(errorMessage!, work);
 
+            case { Command: "SetErrorStatusOnSpan" }:
+                var statusDescription = operation.Parameters!["statusDescription"] as string;
+                return (work) => OpenTelemetryOperations.SetErrorStatusOnSpan(statusDescription!, work);
+
             case { Command: "SimulateExternalCall" }:
                 var url = operation.Parameters!["url"] as string;
                 return (work) => SimulatedOperations.ExternalCall(url!, work);
