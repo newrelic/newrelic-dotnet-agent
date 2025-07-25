@@ -146,5 +146,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             return _getCurrentActivity();
         }
+
+        /// <summary>
+        /// FOR TESTING ONLY: Resets the static fields used for getting and setting the current activity.
+        /// </summary>
+        public static void Reset()
+        {
+            // Reset the static fields to null to allow for reinitialization.
+            _setCurrentActivity = null;
+            _getCurrentActivity = null;
+        }
     }
 }
