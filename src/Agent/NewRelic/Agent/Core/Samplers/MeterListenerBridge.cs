@@ -631,9 +631,7 @@ namespace NewRelic.Agent.Core.Samplers
                 "Counter`1" => "CreateCounter",
                 "Histogram`1" => "CreateHistogram",
                 "UpDownCounter`1" => "CreateUpDownCounter",
-#if NET8_0_OR_GREATER
-                "Gauge`1" => "CreateGauge",
-#endif
+                "Gauge`1" => "CreateGauge", // Always include for runtime detection
                 _ => null
             };
 
@@ -642,10 +640,52 @@ namespace NewRelic.Agent.Core.Samplers
                 return null;
             }
 
-            var methodInfo = typeof(Meter).GetMethod(createInstrumentMethodName, [typeof(string), typeof(string), typeof(string)]).MakeGenericMethod(genericType);
-            var createDelegate = (Func<Meter, string, string, string, object>)methodInfo.CreateDelegate(typeof(Func<Meter, string, string, string, object>));
+            // TODO: If we upgrade .NET or see test failures related to this reflection, revisit this logic.
+            // Reflection logic for Meter.Create* methods:
+            // 1. Try to match the latest public OTel signature (4 parameters: name, unit, description, tags)
+            // 2. Fallback to 3-parameter version (name, unit, description) for backward compatibility
+            // 3. Always match by parameter types, not just count
+            // 4. If neither found, return null (fail fast in tests)
+            // See: https://github.com/dotnet/runtime/blob/main/src/libraries/System.Diagnostics.DiagnosticSource/src/System/Diagnostics/Metrics/Meter.cs
+            MethodInfo methodInfo = null;
+            try
+            {
+                // Try 4-parameter overload (name, unit, description, tags)
+                methodInfo = typeof(Meter).GetMethods()
+                    .FirstOrDefault(m =>
+                        m.Name == createInstrumentMethodName &&
+                        m.IsGenericMethod &&
+                        m.GetParameters().Select(p => p.ParameterType)
+                            .SequenceEqual(new[] { typeof(string), typeof(string), typeof(string), typeof(IEnumerable<KeyValuePair<string, object>>) })
+                    );
+                if (methodInfo != null)
+                {
+                    methodInfo = methodInfo.MakeGenericMethod(genericType);
+                    // Wrap in a delegate that ignores the 4th argument (tags) for now (pass null)
+                    return (meter, name, unit, description) => methodInfo.Invoke(meter, new object[] { name, unit, description, null });
+                }
 
-            return createDelegate;
+                // Fallback: Try 3-parameter overload (name, unit, description)
+                methodInfo = typeof(Meter).GetMethods()
+                    .FirstOrDefault(m =>
+                        m.Name == createInstrumentMethodName &&
+                        m.IsGenericMethod &&
+                        m.GetParameters().Select(p => p.ParameterType)
+                            .SequenceEqual(new[] { typeof(string), typeof(string), typeof(string) })
+                    );
+                if (methodInfo != null)
+                {
+                    methodInfo = methodInfo.MakeGenericMethod(genericType);
+                    return (Func<Meter, string, string, string, object>)methodInfo.CreateDelegate(typeof(Func<Meter, string, string, string, object>));
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, $"Reflection failed for {createInstrumentMethodName}<{genericType}>");
+            }
+
+            // If method not found, return null
+            return null;
         }
 
         private static Delegate CreateBridgedObservableInstrumentDelegate(Type originalInstrumentType)
@@ -725,14 +765,25 @@ namespace NewRelic.Agent.Core.Samplers
                         upDownCounter.Add(measurement, tags);
                         Log.Finest($"Bridged measurement {measurement} to upDownCounter {upDownCounter.Meter.Name}.{upDownCounter.Name}");
                         break;
-#if NET8_0_OR_GREATER
-                    case Gauge<T> gauge:
-                        gauge.Record(measurement, tags);
-                        Log.Finest($"Bridged measurement {measurement} to gauge {gauge.Meter.Name}.{gauge.Name}");
-                        break;
-#endif
                     default:
-                        Log.Debug($"Unsupported instrument type for measurement bridging: {state.GetType().Name}");
+                        // Runtime support for Gauge<T> (for .NET 8+) even if compiled against older frameworks
+                        var stateType = state.GetType();
+                        if (stateType.Name.StartsWith("Gauge`1"))
+                        {
+                            var recordMethod = stateType.GetMethod("Record", new[] { typeof(T), typeof(ReadOnlySpan<KeyValuePair<string, object>>) });
+                            if (recordMethod != null)
+                            {
+                                // ReadOnlySpan<T> cannot be boxed, so convert to array for reflection
+                                recordMethod.Invoke(state, new object[] { measurement, tags.ToArray() });
+                                var meterProp = stateType.GetProperty("Meter");
+                                var nameProp = stateType.GetProperty("Name");
+                                var meterName = meterProp?.GetValue(state)?.GetType().GetProperty("Name")?.GetValue(meterProp.GetValue(state));
+                                var gaugeName = nameProp?.GetValue(state);
+                                Log.Finest($"Bridged measurement {measurement} to gauge {meterName}.{gaugeName}");
+                                break;
+                            }
+                        }
+                        Log.Debug($"Unsupported instrument type for measurement bridging: {stateType.Name}");
                         break;
                 }
             }
