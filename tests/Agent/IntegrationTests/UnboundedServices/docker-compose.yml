@@ -113,8 +113,24 @@ services:
             - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-MysqlPassword}
         container_name: MySqlServer
 
-    elastic:
-        build: ./elastic
+    elastic9:
+        build: ./elastic9
+        ports:
+            - 9202:9200
+        environment:
+            - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        deploy:
+            resources:
+                limits:
+                    memory: 2GB
+        container_name: Elastic9Server
+
+    elastic8:
+        build: ./elastic8
         ports:
             - 9200:9200
         environment:
@@ -127,7 +143,7 @@ services:
             resources:
                 limits:
                     memory: 2GB
-        container_name: ElasticServer
+        container_name: Elastic8Server
 
     elastic7:
         build: ./elastic7
@@ -145,27 +161,27 @@ services:
                     memory: 2GB
         container_name: Elastic7Server
 
-    # have to manually set the password for kibana_user - use curl to hit the correct endpoint
-    kibana_pw_setup:
-        image: curlimages/curl
-        depends_on:
-            - elastic
-        deploy:
-            restart_policy:
-                condition: on-failure
-        entrypoint: [ "sh", "-c", "sleep 10 && curl --user \"elastic:${ELASTIC_PASSWORD:-ElasticPassword}\" -X POST \"elastic:9200/_security/user/kibana_system/_password?pretty\" -H 'Content-Type: application/json' -d'{  \"password\" : \"${KIBANA_PASSWORD:-KibanaPassword}\"}'" ]
-        container_name: KibanaPWSetup
+    # # have to manually set the password for kibana_user - use curl to hit the correct endpoint
+    # kibana_pw_setup:
+    #     image: curlimages/curl
+    #     depends_on:
+    #         - elastic
+    #     deploy:
+    #         restart_policy:
+    #             condition: on-failure
+    #     entrypoint: [ "sh", "-c", "sleep 10 && curl --user \"elastic:${ELASTIC_PASSWORD:-ElasticPassword}\" -X POST \"elastic:9200/_security/user/kibana_system/_password?pretty\" -H 'Content-Type: application/json' -d'{  \"password\" : \"${KIBANA_PASSWORD:-KibanaPassword}\"}'" ]
+    #     container_name: KibanaPWSetup
 
-    kibana:
-        depends_on:
-            kibana_pw_setup:
-                 condition: service_completed_successfully
-        image: kibana:8.6.2
-        ports:
-            - 5601:5601
-        environment:
-            - SERVERNAME=kibana
-            - ELASTICSEARCH_HOSTS=http://elastic:9200
-            - ELASTICSEARCH_USERNAME=kibana_system
-            - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD:-KibanaPassword}
-        container_name: Kibana
+    # kibana:
+    #     depends_on:
+    #         kibana_pw_setup:
+    #              condition: service_completed_successfully
+    #     image: kibana:8.6.2
+    #     ports:
+    #         - 5601:5601
+    #     environment:
+    #         - SERVERNAME=kibana
+    #         - ELASTICSEARCH_HOSTS=http://elastic:9200
+    #         - ELASTICSEARCH_USERNAME=kibana_system
+    #         - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD:-KibanaPassword}
+    #     container_name: Kibana
