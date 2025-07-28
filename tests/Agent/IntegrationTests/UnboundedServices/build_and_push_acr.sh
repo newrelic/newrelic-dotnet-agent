@@ -15,7 +15,7 @@ LOGIN_SERVER=$(az acr show --name "$ACR_NAME" --resource-group "$RESOURCE_GROUP"
 az acr login --name "$ACR_NAME"
 
 # Default list of all services
-all_services=(rabbitmq mongodb32 mongodb60 redis couchbase postgres mssql mysql elastic elastic7 oracle)
+all_services=(rabbitmq mongodb32 mongodb60 redis couchbase postgres mssql mysql elastic9 elastic8 elastic7 oracle)
 
 # If specific services are provided as arguments, use those instead
 if [ $# -gt 0 ]; then
