@@ -5,7 +5,7 @@ using System;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
-    public class ElasticSearchConfiguration
+    public class ElasticSearch8Configuration
     {
         private static string _elasticServer;
         private static string _elasticUserName;
@@ -20,7 +20,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                     try
                     {
                         var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearchTests");
+                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch8Tests");
                         _elasticServer = testConfiguration["Server"];
                     }
                     catch (Exception ex)
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                     try
                     {
                         var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearchTests");
+                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch8Tests");
                         _elasticUserName = testConfiguration["UserName"];
                     }
                     catch (Exception ex)
@@ -62,7 +62,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                     try
                     {
                         var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearchTests");
+                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch8Tests");
                         _elasticPassword = testConfiguration["Password"];
                     }
                     catch (Exception ex)
