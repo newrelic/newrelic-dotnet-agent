@@ -3,21 +3,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: elastic
+  name: elastic9
   namespace: unbounded-services
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: elastic
+      app: elastic9
   template:
     metadata:
       labels:
-        app: elastic
+        app: elastic9
     spec:
       containers:
-      - name: elastic
-        image: dotnetunboundedservicesregistry.azurecr.io/elastic
+      - name: elastic9
+        image: dotnetunboundedservicesregistry.azurecr.io/elastic9
         imagePullPolicy: Always
         ports:
         - containerPort: 9200
@@ -42,7 +42,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: elastic
+  name: elastic9
   namespace: unbounded-services
   annotations:
     service.beta.kubernetes.io/azure-load-balancer-resource-group: ${RESOURCE_GROUP}
@@ -51,7 +51,7 @@ spec:
   type: LoadBalancer
   loadBalancerIP: ${PUBLIC_IP}
   ports:
-    - port: 9200
+    - port: 9202
       targetPort: 9200
   selector:
-    app: elastic
+    app: elastic9
