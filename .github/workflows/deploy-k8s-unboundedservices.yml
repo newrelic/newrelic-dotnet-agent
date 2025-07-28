@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       images_to_build:
-        description: "Images to build and push (optional; valid values: couchbase elastic elastic7 mongodb32 mongodb60 mssql mysql oracle postgres rabbitmq redis)"
+        description: "Images to build and push (optional; valid values: couchbase elastic9 elastic8 elastic7 mongodb32 mongodb60 mssql mysql oracle postgres rabbitmq redis)"
         required: false
         type: string
         default: ""
@@ -67,7 +67,7 @@ jobs:
           SERVICES=$(echo "$SERVICES" | xargs)
           
           # Validate each service name
-          VALID_SERVICES=("couchbase" "elastic" "elastic7" "mongodb32" "mongodb60" "mssql" "mysql" "oracle" "postgres" "rabbitmq" "redis")
+          VALID_SERVICES=("couchbase" "elastic9" "elastic8" "elastic7" "mongodb32" "mongodb60" "mssql" "mysql" "oracle" "postgres" "rabbitmq" "redis")
           INVALID_SERVICES=()
           
           for service in $SERVICES; do
