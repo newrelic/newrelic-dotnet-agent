@@ -181,7 +181,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.OpenSearch
         // Using the Elasticsearch server credentials since it OpenSearch supports it.
         private static string GetHostFromElasticServer()
         {
-            var elasticServer = ElasticSearchConfiguration.ElasticServer;
+            var elasticServer = ElasticSearch8Configuration.ElasticServer;
 
             if (elasticServer.StartsWith("https://"))
             {
