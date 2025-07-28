@@ -684,7 +684,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return 0;
             }
 
-            bool isAzureFunctionsHostLinux = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("/azure-functions-host/Microsoft.Azure.WebJobs.Script.WebHost"));
+            bool isAzureFunctionsHostLinux = NewRelic::Profiler::Strings::ContainsCaseInsensitive(processPath, _X("/azure-functions-host/Microsoft.Azure.WebJobs.Script.WebHost"));
             if (isAzureFunctionsHostLinux)
             {
                 LogInfo(L"Appears to be Azure Functions WebHost (Linux) based on commandLine. Not instrumenting this process.");
