@@ -684,6 +684,14 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return 0;
             }
 
+            bool isAzureFunctionsHostLinux = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("/azure-functions-host/Microsoft.Azure.WebJobs.Script.WebHost"));
+            if (isAzureFunctionsHostLinux)
+            {
+                LogInfo(L"Appears to be Azure Functions WebHost (Linux) based on commandLine. Not instrumenting this process.");
+                return 0;
+            }
+
+
             // AzureFunctionsNetHost.exe is the typical startup command for Azure Functions
              
             bool isAzureFunctionsNetHost = Strings::EndsWith(processPath, _X("FUNCTIONSNETHOST.EXE"));
