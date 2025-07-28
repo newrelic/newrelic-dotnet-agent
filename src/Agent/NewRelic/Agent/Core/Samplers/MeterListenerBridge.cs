@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -631,7 +632,7 @@ namespace NewRelic.Agent.Core.Samplers
                 "Counter`1" => "CreateCounter",
                 "Histogram`1" => "CreateHistogram",
                 "UpDownCounter`1" => "CreateUpDownCounter",
-                "Gauge`1" => "CreateGauge", // Always include for runtime detection
+                "Gauge`1" => "CreateGauge",
                 _ => null
             };
 
@@ -770,7 +771,8 @@ namespace NewRelic.Agent.Core.Samplers
                         var stateType = state.GetType();
                         if (stateType.Name.StartsWith("Gauge`1"))
                         {
-                            var recordMethod = stateType.GetMethod("Record", new[] { typeof(T), typeof(ReadOnlySpan<KeyValuePair<string, object>>) });
+                            var recordMethod = stateType.GetMethod("Record", new[] { typeof(T), typeof(ReadOnlySpan<KeyValuePair<string, object>>) })
+                                                ?? stateType.GetMethod("Record", new[] { typeof(T), typeof(TagList) });
                             if (recordMethod != null)
                             {
                                 // ReadOnlySpan<T> cannot be boxed, so convert to array for reflection
