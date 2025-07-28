@@ -215,7 +215,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         {
             // This isn't the password, so connection should fail, but we won't get an error until the Ping
             var settings = new ConnectionConfiguration(Address)
-                .BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
+                .BasicAuthentication(ElasticSearch8Configuration.ElasticUserName,
                     "1234")
                 .RequestTimeout(TimeSpan.FromMinutes(2));
 

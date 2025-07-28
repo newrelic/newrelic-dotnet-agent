@@ -202,7 +202,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
         private static string GetHostFromElasticServer(ClientType clientType)
         {
-            var elasticServer = clientType == ClientType.ElasticClients ? ElasticSearchConfiguration.ElasticServer : ElasticSearch7Configuration.ElasticServer;
+            var elasticServer = clientType == ClientType.ElasticClients ? ElasticSearch8Configuration.ElasticServer : ElasticSearch7Configuration.ElasticServer;
   
             if (elasticServer.StartsWith("https://"))
             {
