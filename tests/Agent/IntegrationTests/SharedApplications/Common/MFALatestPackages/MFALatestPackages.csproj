@@ -17,7 +17,7 @@
     <PackageReference Include="CouchbaseNetClient" Version="3.6.6" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="CouchbaseNetClient" Version="3.6.6" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.17.2" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.0.7" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="LibGit2Sharp" Version="0.31.0" Condition="'$(TargetFramework)' == 'net481'" />

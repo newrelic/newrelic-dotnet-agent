@@ -38,7 +38,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
 
         protected ElasticsearchTestsBase(TFixture fixture, ITestOutputHelper output, ClientType clientType,
-            bool syncMethodsOk = true, bool enableOTelBridge =false) : base(fixture)
+            bool syncMethodsOk = true, bool enableOTelBridge = false) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -59,7 +59,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.AddCommand($"ElasticsearchExerciser GenerateErrorAsync");
 
             // Sync operations
-            if (_syncMethodsOk )
+            if (_syncMethodsOk)
             {
                 _fixture.AddCommand($"ElasticsearchExerciser Index");
                 _fixture.AddCommand($"ElasticsearchExerciser Search");
@@ -202,10 +202,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             );
         }
 
-        private static string GetHostFromElasticServer(ClientType clientType)
+        private string GetHostFromElasticServer(ClientType clientType)
         {
-            var elasticServer = clientType == ClientType.ElasticClients ? ElasticSearchConfiguration.ElasticServer : ElasticSearch7Configuration.ElasticServer;
-  
+            // core latest fixture tests elasticsearch 9, which requires a different server configuration
+            string elasticServer;
+            if (_fixture is ConsoleDynamicMethodFixtureCoreLatest)
+                elasticServer = clientType == ClientType.ElasticClients ? ElasticSearch9Configuration.ElasticServer : ElasticSearch7Configuration.ElasticServer;
+            else
+                elasticServer = clientType == ClientType.ElasticClients ? ElasticSearch8Configuration.ElasticServer : ElasticSearch7Configuration.ElasticServer;
+
             if (elasticServer.StartsWith("https://"))
             {
                 return elasticServer.Remove(0, "https://".Length);

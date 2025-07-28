@@ -24,28 +24,51 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
         private const string NonAsyncDeprecationMessage = "Non-async methods are deprecated in the latest Elasticsearch clients.";
 
+#if NET9_0
         protected override Uri Address
         {
             get
             {
-                return new Uri(ElasticSearchConfiguration.ElasticServer);
+                return new Uri(ElasticSearch9Configuration.ElasticServer);
             }
         }
         protected override string Username
         {
             get
             {
-                return ElasticSearchConfiguration.ElasticUserName;
+                return ElasticSearch9Configuration.ElasticUserName;
             }
         }
         protected override string Password
         {
             get
             {
-                return ElasticSearchConfiguration.ElasticPassword;
+                return ElasticSearch9Configuration.ElasticPassword;
             }
         }
-
+#else
+        protected override Uri Address
+        {
+            get
+            {
+                return new Uri(ElasticSearch8Configuration.ElasticServer);
+            }
+        }
+        protected override string Username
+        {
+            get
+            {
+                return ElasticSearch8Configuration.ElasticUserName;
+            }
+        }
+        protected override string Password
+        {
+            get
+            {
+                return ElasticSearch8Configuration.ElasticPassword;
+            }
+        }
+#endif
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override async Task ConnectAsync()
         {
@@ -76,6 +99,25 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 #endif
         }
 
+#if NET9_0 // Elastic.Clients.Elasticsearch 9.0 and later
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override async Task<bool> IndexAsync()
+        {
+            var record = FlightRecord.GetSample();
+            var req = new IndexRequest<FlightRecord>
+            {
+                Index = IndexName,
+                Document = record
+            };
+
+            var response = await _client.IndexAsync(req);
+
+            AssertResponseIsSuccess(response);
+
+            return response.IsSuccess();
+        }
+#else
+
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override async Task<bool> IndexAsync()
         {
@@ -88,7 +130,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             return response.IsSuccess();
         }
-
+#endif
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Search()
         {
@@ -113,7 +155,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         public override async Task<long> SearchAsync()
         {
             var response = await _client.SearchAsync<FlightRecord>(s => s
+#if NET9_0
+                .Indices(IndexName)
+#else
                 .Index(IndexName)
+#endif
                 .From(0)
                 .Size(10)
                 .Query(q => q
@@ -192,7 +238,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         {
             // This isn't the password, so connection should fail, but we won't get an error until the Ping
             var settings = new ElasticsearchClientSettings(Address)
-                    .Authentication(new BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
+                    .Authentication(new BasicAuthentication(ElasticSearch8Configuration.ElasticUserName,
                     "12345")).
                     DefaultIndex(IndexName);
 

@@ -23,21 +23,21 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.OpenSearch
         {
             get
             {
-                return new Uri(ElasticSearchConfiguration.ElasticServer);
+                return new Uri(ElasticSearch8Configuration.ElasticServer);
             }
         }
         protected string Username
         {
             get
             {
-                return ElasticSearchConfiguration.ElasticUserName;
+                return ElasticSearch8Configuration.ElasticUserName;
             }
         }
         protected string Password
         {
             get
             {
-                return ElasticSearchConfiguration.ElasticPassword;
+                return ElasticSearch8Configuration.ElasticPassword;
             }
         }
 
