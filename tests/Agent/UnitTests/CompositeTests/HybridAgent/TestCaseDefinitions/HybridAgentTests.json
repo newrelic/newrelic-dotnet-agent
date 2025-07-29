@@ -148,6 +148,56 @@
         }
     },
     {
+        "testDescription": "Client Http External with empty http.method and http.url does not create http span",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OTelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.method",
+                                    "value": ""
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.url",
+                                    "value": ""
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "OTelSpan1",
+                    "parentName": "Foo",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
         "testDescription": "Client Http External with AWS Lambda tags sets cloud sdk attributes",
         "operations": [
             {
@@ -469,7 +519,7 @@
         }
     },
     {
-        "testDescription": "Client Database test",
+        "testDescription": "Client Database - Mysql",
         "operations": [
             {
                 "command": "DoWorkInTransaction",
@@ -545,6 +595,475 @@
                         "peer.address": "localhost:3306",
                         "peer.hostname": "localhost"
                     }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database - Elasticsearch / search",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "Execute",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "elasticsearch"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.operation",
+                                    "value": "search"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.elasticsearch.path_parts.index",
+                                    "value": "flights"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 9200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.product.name",
+                                    "value": "elasticsearch-net"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.product.version",
+                                    "value": "8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.version",
+                                    "value": "0.5.2+7d3a633b6c0d257ad611a60c720c1ee27688fdb1"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.elasticsearch.schema_url",
+                                    "value": "https://opentelemetry.io/schemas/1.21.0"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.user",
+                                    "value": "elastic"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "user_agent.original",
+                                    "value": "elasticsearch-net/8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125 (Microsoft Windows 10.0.26100; .NET 9.0.7; Elastic.Clients.Elasticsearch)"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.method",
+                                    "value": "POST"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "url.full",
+                                    "value": "http://localhost:9202/flights/_search"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.response.status_code",
+                                    "value": 200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.attempted_nodes",
+                                    "value": 1,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "Datastore/statement/Elasticsearch/flights/Search",
+                    "parentName": "Foo",
+                    "category": "datastore",
+                    "attributes": {
+                        "db.collection": "flights",
+                        "db.instance": "unknown",
+                        "db.operation": "Search",
+                        "db.system": "elasticsearch",
+                        "peer.address": "localhost:9200",
+                        "peer.hostname": "localhost",
+                        "server.address": "localhost",
+                        "server.port": 9200,
+                        "db.elasticsearch.schema_url": "https://opentelemetry.io/schemas/1.21.0",
+                        "db.user": "elastic",
+                        "elastic.transport.attempted_nodes": 1,
+                        "elastic.transport.product.name": "elasticsearch-net",
+                        "elastic.transport.product.version": "8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125",
+                        "elastic.transport.version": "0.5.2+7d3a633b6c0d257ad611a60c720c1ee27688fdb1",
+                        "http.request.method": "POST",
+                        "http.response.status_code": 200,
+                        "user_agent.original": "elasticsearch-net/8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125 (Microsoft Windows 10.0.26100; .NET 9.0.7; Elastic.Clients.Elasticsearch)"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database - Elasticsearch / ping",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "Execute",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "elasticsearch"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.operation",
+                                    "value": "ping"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.elasticsearch.schema_url",
+                                    "value": "https://opentelemetry.io/schemas/1.21.0"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.user",
+                                    "value": "elastic"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.product.name",
+                                    "value": "elasticsearch-net"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.product.version",
+                                    "value": "8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.version",
+                                    "value": "0.5.2+7d3a633b6c0d257ad611a60c720c1ee27688fdb1"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "user_agent.original",
+                                    "value": "elasticsearch-net/8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125 (Microsoft Windows 10.0.26100; .NET 9.0.7; Elastic.Clients.Elasticsearch)"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.method",
+                                    "value": "HEAD"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "url.full",
+                                    "value": "http://localhost:9200/"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 9200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.response.status_code",
+                                    "value": 200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.attempted_nodes",
+                                    "value": 1,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "Datastore/statement/Elasticsearch/Unknown/Ping",
+                    "parentName": "Foo",
+                    "category": "datastore",
+                    "attributes": {
+                        "db.collection": "Unknown",
+                        "db.instance": "unknown",
+                        "db.operation": "Ping",
+                        "db.system": "elasticsearch",
+                        "peer.address": "localhost:9200",
+                        "peer.hostname": "localhost",
+                        "server.address": "localhost",
+                        "server.port": 9200,
+                        "db.elasticsearch.schema_url": "https://opentelemetry.io/schemas/1.21.0",
+                        "db.user": "elastic",
+                        "elastic.transport.attempted_nodes": 1,
+                        "elastic.transport.product.name": "elasticsearch-net",
+                        "elastic.transport.product.version": "8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125",
+                        "elastic.transport.version": "0.5.2+7d3a633b6c0d257ad611a60c720c1ee27688fdb1",
+                        "http.request.method": "HEAD",
+                        "http.response.status_code": 200,
+                        "user_agent.original": "elasticsearch-net/8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125 (Microsoft Windows 10.0.26100; .NET 9.0.7; Elastic.Clients.Elasticsearch)"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database - Elasticsearch without operation does not create datastore segment data",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OtelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "elasticsearch"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "OtelSpan1",
+                    "parentName": "Foo",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database - Elasticsearch without url does not create datastore segment data",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OtelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "elasticsearch"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.operation",
+                                    "value": "ping"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "OtelSpan1",
+                    "parentName": "Foo",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database - Elasticsearch with empty url does not create datastore segment data",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OtelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "elasticsearch"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.operation",
+                                    "value": "ping"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "url.full",
+                                    "value": ""
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "OtelSpan1",
+                    "parentName": "Foo",
+                    "category": "generic"
                 }
             ]
         }

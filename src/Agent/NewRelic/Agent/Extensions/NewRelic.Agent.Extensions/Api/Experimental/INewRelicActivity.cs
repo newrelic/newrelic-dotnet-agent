@@ -12,6 +12,7 @@ namespace NewRelic.Agent.Extensions.Api.Experimental
         string TraceId { get; }
         string DisplayName { get; }
         bool IsStopped { get; }
+        string Id { get; }
 
         // can't use a Segment {get; set;} property here because it causes a circular reference between Activity and Segment
         void SetSegment(ISegment segment);
@@ -20,5 +21,6 @@ namespace NewRelic.Agent.Extensions.Api.Experimental
         void Start();
 
         void Stop();
+        void MakeCurrent();
     }
 }

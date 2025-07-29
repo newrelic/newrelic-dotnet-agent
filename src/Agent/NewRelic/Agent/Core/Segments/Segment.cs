@@ -19,6 +19,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Extensions.Api.Experimental;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Segments
 {
@@ -222,6 +223,27 @@ namespace NewRelic.Agent.Core.Segments
         public void RemoveSegmentFromCallStack()
         {
             _transactionSegmentState.CallStackPop(this);
+
+            UpdateCurrentActivity();
+        }
+
+        private void UpdateCurrentActivity()
+        {
+            var transaction = GetTransactionFromSegment();
+            if (transaction is IHybridAgentTransaction && transaction.CurrentSegment.IsValid)
+            {
+                if (transaction.CurrentSegment is IHybridAgentSegment hybridSegment)
+                {
+                    hybridSegment.MakeActivityCurrent();
+                }
+            }
+            else
+            {
+                Log.Finest("Segment.RemoveSegmentFromCallStack: NoOpSegment, setting Activity.Current to null");
+                ActivityBridgeHelpers.SetCurrentActivity(null);
+
+                if (Log.IsFinestEnabled) Log.Finest($"Segment.RemoveSegmentFromCallStack: Activity.Current is now: {((dynamic)ActivityBridgeHelpers.GetCurrentActivity())?.Id ?? "null"}");
+            }
         }
 
         public void SetMessageBrokerDestination(string destination)
@@ -248,6 +270,15 @@ namespace NewRelic.Agent.Core.Segments
         }
 
         public bool ActivityStartedTransaction { get; set; } = false;
+
+        public void MakeActivityCurrent()
+        {
+            if (Log.IsFinestEnabled) Log.Finest($"Segment.MakeActivityCurrent: Setting Activity.Current to this segment's activity: {_activity?.Id ?? "null"}");
+
+            _activity?.MakeCurrent();
+            
+            if (Log.IsFinestEnabled) Log.Finest($"Segment.MakeActivityCurrent: Activity.Current is now: {((dynamic)ActivityBridgeHelpers.GetCurrentActivity())?.Id ?? "null"}");
+        }
 
         // We start and end segments on different threads (sometimes) so we need _relativeEndTicks
         // to be threadsafe.  Be careful when using this variable and use the RelativeEndTime property instead 
@@ -505,5 +536,6 @@ namespace NewRelic.Agent.Core.Segments
         ITransaction GetTransactionFromSegment();
 
         bool ActivityStartedTransaction { get; set; }
+        void MakeActivityCurrent();
     }
 }

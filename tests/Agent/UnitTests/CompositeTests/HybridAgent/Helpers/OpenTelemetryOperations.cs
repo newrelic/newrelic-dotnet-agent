@@ -131,6 +131,13 @@ public static class OpenTelemetryOperations
     public static void RecordExceptionOnSpan(string errorMessage, Action work)
     {
         Activity.Current?.AddException(new Exception(errorMessage));
+        Activity.Current?.SetStatus(ActivityStatusCode.Error, errorMessage);
+
+        work();
+    }
+    public static void SetErrorStatusOnSpan(string statusDescription, Action work)
+    {
+        Activity.Current?.SetStatus(ActivityStatusCode.Error, statusDescription);
 
         work();
     }

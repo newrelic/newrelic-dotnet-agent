@@ -29,6 +29,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public string DisplayName => (string)(_dynamicActivity)?.DisplayName;
 
+        public string Id => (string)(_dynamicActivity)?.Id;
+
         public void Dispose()
         {
             _dynamicActivity?.Dispose();
@@ -42,6 +44,11 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         public void Stop()
         {
             _dynamicActivity?.Stop();
+        }
+
+        public void MakeCurrent()
+        {
+            ActivityBridgeHelpers.SetCurrentActivity(_activity);
         }
 
         public ISegment GetSegment()

@@ -293,6 +293,53 @@
         }
     },
 
+
+    {
+        "testDescription": "OpenTelemetry API can record errors based on Status",
+
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "Bar",
+                            "spanKind": "Internal"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "SetErrorStatusOnSpan",
+                                "parameters": {
+                                    "statusDescription": "Test exception message"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "Bar",
+                    "attributes": {
+                        "error.message": "Test exception message"
+                    }
+                }
+            ]
+        }
+    },
+
     {
         "testDescription": "OpenTelemetry API and New Relic API can inject outbound trace context",
 
