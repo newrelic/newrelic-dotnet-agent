@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         public static void AddActivityTagsToSegment(this ISegment segment, object originalActivity, IAgent agent)
         {
             dynamic activity = originalActivity;
-            ActivityKind activityKind = (ActivityKind)activity.Kind;
+            int activityKind = (int)activity.Kind;
             string activityId = activity.Id;
             string displayName = activity.DisplayName;
 
@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             Log.Debug($"{activityLogPrefix} has stopped.");
 
             // check status - stop processing if status is Error
-            if ((ActivityStatusCode)activity.Status == ActivityStatusCode.Error)
+            if ((int)activity.Status == (int)ActivityStatusCode.Error)
             {
                 Log.Debug($"{activityLogPrefix} has a Status of Error. Not adding tags to segment.");
                 return;
@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // remove all tags that are used in segment data creation
             switch (activityKind)
             {
-                case ActivityKind.Client:
+                case (int)ActivityKind.Client:
                     // could be an http call or a database call, so need to look for specific tags to decide
                     // order is important because some activities have both tags, e.g. a database call that is also an HTTP call, like Elasticsearch
                     if (tags.TryGetAndRemoveTag<string>(["db.system.name", "db.system"], out var dbSystemName)) // it's a database call
@@ -65,10 +65,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                         Log.Finest($"{activityLogPrefix} is missing required tags to determine whether it's an external or database activity.");
                     }
                     break;
-                case ActivityKind.Internal:
-                case ActivityKind.Server:
-                case ActivityKind.Producer:
-                case ActivityKind.Consumer:
+                case (int)ActivityKind.Internal:
+                case (int)ActivityKind.Server:
+                case (int)ActivityKind.Producer:
+                case (int)ActivityKind.Consumer:
                 default:
                     break;
             }
@@ -233,7 +233,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public static void AddExceptionEventInformationToSegment(this ISegment segment, object originalActivity, IErrorService errorService)
         {
-            // Exceptions recorded during an activity are currently added as events on the activity. Not every way of recording
+            // Exceptions recorded during an activity may be added as events on the activity. Not every way of recording
             // an exception will trigger the ExceptionRecorder callback, so we need to enumerate the events on the activity
             // to look for events with an eventName of "exception" and record the available exception information.
 
@@ -294,9 +294,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 }
             }
 
+            // as a fallback, if no exception event was found, we can still check the activity status code.
             if (!noticedError)
             {
-                if ((ActivityStatusCode)activity.Status == ActivityStatusCode.Error)
+                if ((int)activity.Status == (int)ActivityStatusCode.Error)
                 {
                     // If no exception event was found, but the activity has an error status code, we can still record the error.
                     // This is a fallback in case the activity does not have an "exception" event.
@@ -320,9 +321,22 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
     public static class ActivityLogPrefixHelpers
     {
-        public static string ActivityLogPrefix(string activityId, ActivityKind activityKind, string activityDisplayName)
+        public static string ActivityLogPrefix(string activityId, int activityKindInt, string activityDisplayName)
         {
-            return $"Activity {activityId} (Kind: {activityKind}, DisplayName: {activityDisplayName})";
+            return $"Activity {activityId} (Kind: {activityKindInt}, DisplayName: {activityDisplayName})";
+        }
+
+        internal static ActivityKind ToActivityKind(this int activityKindInt)
+        {
+            return activityKindInt switch
+            {
+                (int)ActivityKind.Client => ActivityKind.Client,
+                (int)ActivityKind.Internal => ActivityKind.Internal,
+                (int)ActivityKind.Server => ActivityKind.Server,
+                (int)ActivityKind.Producer => ActivityKind.Producer,
+                (int)ActivityKind.Consumer => ActivityKind.Consumer,
+                _ => throw new ArgumentOutOfRangeException(nameof(activityKindInt), activityKindInt, null)
+            };
         }
     }
 }
