@@ -9,7 +9,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
@@ -136,7 +136,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetFrameworkTest]
     public class MsSqlStoredProcedureUsingOdbcDriverTests_FWLatest : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsSqlStoredProcedureUsingOdbcDriverTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -148,7 +147,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
     public class MsSqlStoredProcedureUsingOdbcDriverTests_CoreLatest : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MsSqlStoredProcedureUsingOdbcDriverTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

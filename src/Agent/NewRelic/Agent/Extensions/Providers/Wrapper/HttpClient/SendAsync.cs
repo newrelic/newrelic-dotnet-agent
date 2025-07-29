@@ -174,7 +174,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
                 }
 
                 var httpStatusCode = response.StatusCode;
-                externalSegmentData.SetHttpStatusCode((int)httpStatusCode);
+                externalSegmentData.SetHttpStatus((int)httpStatusCode);
 
                 // Everything after this is for CAT, so bail if we're not using it
                 if (agent.Configuration.DistributedTracingEnabled || !agent.Configuration.CrossApplicationTracingEnabled)

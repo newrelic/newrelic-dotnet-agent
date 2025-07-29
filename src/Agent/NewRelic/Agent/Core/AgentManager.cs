@@ -159,6 +159,9 @@ namespace NewRelic.Agent.Core
             // Start the AgentHealthReporter early so that we can potentially report health issues during startup
             _agentHealthReporter = _container.Resolve<IAgentHealthReporter>();
 
+            if (Configuration.OpenTelemetryBridgeEnabled)
+                _container.Resolve<OpenTelemetryBridge.ActivityBridge>().Start();
+
             // Attempt to auto start the agent once all services have resolved, except in serverless mode
             if (!bootstrapConfig.ServerlessModeEnabled)
                 _container.Resolve<IConnectionManager>().AttemptAutoStart();
@@ -295,7 +298,8 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED",
                     "NEW_RELIC_AGENT_CONTROL_ENABLED",
                     "NEW_RELIC_AGENT_CONTROL_HEALTH_DELIVERY_LOCATION",
-                    "NEW_RELIC_AGENT_CONTROL_HEALTH_FREQUENCY"
+                    "NEW_RELIC_AGENT_CONTROL_HEALTH_FREQUENCY",
+                    "NEW_RELIC_APM_LAMBDA_MODE"
                 };
 
                 List<string> environmentVariablesSensitive = new List<string> {

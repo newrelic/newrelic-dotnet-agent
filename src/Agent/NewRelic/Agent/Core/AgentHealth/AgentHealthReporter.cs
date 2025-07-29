@@ -42,6 +42,10 @@ namespace NewRelic.Agent.Core.AgentHealth
         private InterlockedCounter _traceContextCreateSuccessCounter;
         private InterlockedCounter _traceContextAcceptSuccessCounter;
 
+        private readonly InterlockedCounter _customInstrumentationCounter;
+        private readonly HashSet<string> _customInstrumentationIds = new();
+        private bool _customInstrumentationMaxLogged;
+
         private HealthCheck _healthCheck;
         private bool _healthChecksInitialized;
         private bool _healthChecksFailed;
@@ -77,6 +81,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _payloadAcceptSuccessCounter = new InterlockedCounter();
             _traceContextAcceptSuccessCounter = new InterlockedCounter();
             _traceContextCreateSuccessCounter = new InterlockedCounter();
+            _customInstrumentationCounter = new InterlockedCounter();
         }
 
         public override void Dispose()
@@ -161,6 +166,32 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportLibraryVersion(string assemblyName, string assemblyVersion)
         {
             TrySend(_metricBuilder.TryBuildLibraryVersionMetric(assemblyName, assemblyVersion));
+        }
+
+        public void ReportCustomInstrumentation(string assemblyName, string className, string method)
+        {
+            // record only unique custom instrumentation metrics
+            var uniqueIdentifier = $"{assemblyName}.{className}.{method}";
+            if (!_customInstrumentationIds.Add(uniqueIdentifier))
+            {
+                return;
+            }
+
+            // always report the custom instrumentation count metric
+            _customInstrumentationCounter.Increment();
+
+            // if the custom instrumentation count exceeds the maximum allowed, log a warning and stop reporting further custom instrumentation metrics
+            if (_customInstrumentationCounter.Value > _configuration.MaxCustomInstrumentationSupportabilityMetrics)
+            {
+                if (!_customInstrumentationMaxLogged)
+                {
+                    Log.Debug($"Custom instrumentation count {_customInstrumentationCounter.Value} has exceeded the maximum of {_configuration.MaxCustomInstrumentationSupportabilityMetrics}. No further custom instrumentation metrics will be reported.");
+                    _customInstrumentationMaxLogged = true;
+                }
+                return;
+            }
+
+            TrySend(_metricBuilder.TryBuildCustomInstrumentationMetric(assemblyName, className, method));
         }
 
         #region TransactionEvents
@@ -252,10 +283,10 @@ namespace NewRelic.Agent.Core.AgentHealth
             TrySend(_metricBuilder.TryBuildInstallTypeMetric(AgentInstallConfiguration.AgentInfo?.ToString() ?? "Unknown"));
         }
 
-        public void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName)
+        public void ReportTransactionGarbageCollected(string transactionGuid, TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName)
         {
             var transactionName = transactionMetricName.PrefixedName;
-            Log.Debug($"Transaction was garbage collected without ever ending.\nTransaction Name: {transactionName}\nLast Started Segment: {lastStartedSegmentName}\nLast Finished Segment: {lastFinishedSegmentName}");
+            Log.Debug($"Transaction was garbage collected without ever ending.\nTransaction Guid: {transactionGuid}\nTransaction Name: {transactionName}\nLast Started Segment: {lastStartedSegmentName}\nLast Finished Segment: {lastFinishedSegmentName}");
             _agentHealthEventCounters[AgentHealthEvent.TransactionGarbageCollected]?.Increment();
         }
 
@@ -830,6 +861,13 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportAgentInfo();
 
             CollectOneTimeMetrics();
+
+            ReportCustomInstrumentationCountMetrics();
+        }
+
+        private void ReportCustomInstrumentationCountMetrics()
+        {
+            TrySend(_metricBuilder.TryBuildCountMetric(MetricNames.SupportabilityCustomInstrumentationCount, _customInstrumentationCounter.Value));
         }
 
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)
@@ -889,6 +927,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         private ConcurrentBag<DestinationInteractionSample> _externalApiDataUsageSamples = new ConcurrentBag<DestinationInteractionSample>();
+
 
         public void ReportSupportabilityDataUsage(string api, string apiArea, long dataSent, long dataReceived)
         {

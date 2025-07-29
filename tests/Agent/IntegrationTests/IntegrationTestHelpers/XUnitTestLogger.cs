@@ -3,7 +3,7 @@
 
 
 using System;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {

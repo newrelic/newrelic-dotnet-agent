@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NETFRAMEWORK
-
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
@@ -10,8 +8,8 @@ using NewRelic.Testing.Assertions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.IntegrationTests.DistributedTracing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.WCF.Client
 {
@@ -23,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
         protected override int _expectedTransactionCount_Service => _countClientInvocationMethodsToTest * COUNT_SVC_METHODS;    //2 methods being called (getdata, throwException)
         protected bool _thereWereCATFailures => LogHelpers.TrxTripIDs_Client.Except(LogHelpers.TrxIDs_Client).Any();
 
-        public WCFClientTestBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, WCFBindingType bindingToTest, TracingTestOption tracingTestOption, HostingModel hostingTestOption, ASPCompatibilityMode aspCompatModeOption, IWCFLogHelpers logHelpersImpl)
+        public WCFClientTestBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, WCFBindingType bindingToTest, WCFLegacyTracingTestOption tracingTestOption, HostingModel hostingTestOption, ASPCompatibilityMode aspCompatModeOption, IWCFLogHelpers logHelpersImpl)
             : base(fixture, output, bindingToTest, _instrumentedClientInvocMethods, new[] { WCFInvocationMethod.Sync }, tracingTestOption, hostingTestOption, aspCompatModeOption, logHelpersImpl)
         {
         }
@@ -82,7 +80,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
             //transaction, these assertions cannot be made.
             if (!_thereWereCATFailures)
             {
-                if (_tracingTestOption == TracingTestOption.CAT)
+                if (_tracingTestOption == WCFLegacyTracingTestOption.CAT)
                 {
                     assertions.Add(() => Assertions.MetricsDoNotExist(catExcludedMetrics, LogHelpers.MetricValues));
                 }
@@ -98,7 +96,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
         [Fact]
         public override void DistributedTracing_Metrics()
         {
-            if (_tracingTestOption != TracingTestOption.DT)
+            if (_tracingTestOption != WCFLegacyTracingTestOption.DT)
             {
                 return;
             }
@@ -179,7 +177,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
                 expectedMetrics.ForEach(x => x.callCount = null);
             }
 
-            if (_tracingTestOption == TracingTestOption.CAT)
+            if (_tracingTestOption == WCFLegacyTracingTestOption.CAT)
             {
                 NrAssert.Multiple(
                     () => Assertions.MetricsExist(expectedMetrics, LogHelpers.MetricValues),
@@ -199,7 +197,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
         public override void DistributedTracing_SpanEvents()
         {
 
-            if (_tracingTestOption != TracingTestOption.DT)
+            if (_tracingTestOption != WCFLegacyTracingTestOption.DT)
             {
                 return;
             }
@@ -236,4 +234,3 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
         }
     }
 }
-#endif

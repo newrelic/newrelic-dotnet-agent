@@ -9,11 +9,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
-    [NetCoreTest]
     public class AspNetCoreHSMEnabledWithCustomAttributesTests : NewRelicIntegrationTest<HSMAspNetCoreWebApiCustomAttributesFixture>
     {
         private readonly HSMAspNetCoreWebApiCustomAttributesFixture _fixture;

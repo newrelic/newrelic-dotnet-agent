@@ -7,11 +7,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHandling
 {
-    [NetFrameworkTest]
     public abstract class NotFoundAndOptionsTests<T> : NewRelicIntegrationTest<T> where T : RemoteApplicationFixture
     {
         protected readonly T _fixture;

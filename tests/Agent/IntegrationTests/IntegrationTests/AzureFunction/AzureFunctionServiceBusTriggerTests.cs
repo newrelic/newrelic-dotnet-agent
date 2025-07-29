@@ -8,9 +8,10 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AzureFunction;
+
+// NOTE: If these tests fail, verify that the queue named in AzureServiceBusConfiguration.FuncTestQueueName has been created.
 
 public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
     where TFixture : AzureFunctionApplicationFixture
@@ -158,7 +159,6 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
     }
 }
 
-[NetCoreTest]
 public class AzureFunctionServiceBusTriggerTestInProcCoreOldest : AzureFunctionServiceBusTriggerTestsBase<AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest>
 {
     public AzureFunctionServiceBusTriggerTestInProcCoreOldest(AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest fixture, ITestOutputHelper output)

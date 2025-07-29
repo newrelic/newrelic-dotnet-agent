@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AzureFunction;
 
@@ -92,10 +91,10 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         _fixture.Initialize();
     }
 
-    [SkippableFact()]
+    [Fact]
     public void Test_SimpleInvocationMode()
     {
-        Skip.IfNot(_testMode == AzureFunctionHttpTriggerTestMode.SimpleInvocation, "This test is for the Simple Invocation mode only.");
+        Assert.SkipUnless(_testMode == AzureFunctionHttpTriggerTestMode.SimpleInvocation, "This test is for the Simple Invocation mode only.");
 
         var firstTransactionExpectedTransactionEventIntrinsicAttributes = new List<string>
         {
@@ -151,9 +150,9 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
 
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("cloud.resource_id", out var cloudResourceIdValue));
-            Assert.Equal("/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/HttpTriggerFunctionUsingSimpleInvocation", cloudResourceIdValue);
+            Assert.Equal($"/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/{_fixture.RemoteApplication.AppName}/functions/HttpTriggerFunctionUsingSimpleInvocation", cloudResourceIdValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.name", out var faasNameValue));
-            Assert.Equal("IntegrationTestAppName/HttpTriggerFunctionUsingSimpleInvocation", faasNameValue);
+            Assert.Equal($"{_fixture.RemoteApplication.AppName}/HttpTriggerFunctionUsingSimpleInvocation", faasNameValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
             Assert.Equal("http", faasTriggerValue);
 
@@ -207,10 +206,10 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
     }
 
 
-    [SkippableFact]
+    [Fact]
     public void Test_PipelineMode()
     {
-        Skip.IfNot(_testMode == AzureFunctionHttpTriggerTestMode.AspNetCorePipeline, "This test is for the Pipeline mode only.");
+        Assert.SkipUnless(_testMode == AzureFunctionHttpTriggerTestMode.AspNetCorePipeline, "This test is for the Pipeline mode only.");
 
         var firstTransactionExpectedTransactionEventIntrinsicAttributes = new List<string>
         {
@@ -276,9 +275,9 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             Assertions.TransactionEventHasAttributes(simpleTransactionExpectedTransactionEventIntrinsicAttributes, Tests.TestSerializationHelpers.Models.TransactionEventAttributeType.Intrinsic, simpleTransaction);
 
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("cloud.resource_id", out var cloudResourceIdValue));
-            Assert.Equal("/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/HttpTriggerFunctionUsingAspNetCorePipeline", cloudResourceIdValue);
+            Assert.Equal($"/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/{_fixture.RemoteApplication.AppName}/functions/HttpTriggerFunctionUsingAspNetCorePipeline", cloudResourceIdValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.name", out var faasNameValue));
-            Assert.Equal("IntegrationTestAppName/HttpTriggerFunctionUsingAspNetCorePipeline", faasNameValue);
+            Assert.Equal($"{_fixture.RemoteApplication.AppName}/HttpTriggerFunctionUsingAspNetCorePipeline", faasNameValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
             Assert.Equal("http", faasTriggerValue);
 
@@ -332,10 +331,10 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
             Assert.NotNull(disabledLogLine);
         }
     }
-    [SkippableFact]
+    [Fact]
     public void Test_InProcess()
     {
-        Skip.IfNot(_testMode == AzureFunctionHttpTriggerTestMode.InProcess, "This test is for In-Process mode only.");
+        Assert.SkipUnless(_testMode == AzureFunctionHttpTriggerTestMode.InProcess, "This test is for In-Process mode only.");
 
         var firstTransactionExpectedTransactionEventIntrinsicAttributes = new List<string>
         {
@@ -402,9 +401,9 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
 
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("cloud.resource_id", out var cloudResourceIdValue));
-            Assert.Equal("/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/IntegrationTestAppName/functions/HttpTriggerFunction", cloudResourceIdValue);
+            Assert.Equal($"/subscriptions/subscription_id/resourceGroups/my_resource_group/providers/Microsoft.Web/sites/{_fixture.RemoteApplication.AppName}/functions/HttpTriggerFunction", cloudResourceIdValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.name", out var faasNameValue));
-            Assert.Equal("IntegrationTestAppName/HttpTriggerFunction", faasNameValue);
+            Assert.Equal($"{_fixture.RemoteApplication.AppName}/HttpTriggerFunction", faasNameValue);
             Assert.True(firstTransaction.IntrinsicAttributes.TryGetValue("faas.trigger", out var faasTriggerValue));
             Assert.Equal("http", faasTriggerValue);
 
@@ -460,7 +459,6 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
 #region Isolated model tests
 // the net8 target builds the function app without the aspnetcore pipeline package included
-[NetCoreTest]
 public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreOldest>
 {
     public AzureFunctionHttpTriggerTestsCoreOldest(AzureFunctionApplicationFixtureHttpTriggerCoreOldest fixture, ITestOutputHelper output)
@@ -480,7 +478,6 @@ public class AzureFunctionHttpTriggerTestsCore90 : AzureFunctionHttpTriggerTests
     }
 }
 
-[NetFrameworkTest]
 public class AzureFunctionHttpTriggerTestsFWLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerFWLatest>
 {
     public AzureFunctionHttpTriggerTestsFWLatest(AzureFunctionApplicationFixtureHttpTriggerFWLatest fixture, ITestOutputHelper output)
@@ -491,7 +488,6 @@ public class AzureFunctionHttpTriggerTestsFWLatest : AzureFunctionHttpTriggerTes
 #endregion
 
 #region InProc model tests
-[NetCoreTest]
 public class AzureFunctionHttpTriggerTestsInProcCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest>
 {
     public AzureFunctionHttpTriggerTestsInProcCoreOldest(AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest fixture, ITestOutputHelper output)

@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests
 {
@@ -15,7 +14,6 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
     /// Test W3C support when chaining multiple requests by using WebRequest.
     /// Instrumentations occur in this test are AspNet and HttpWebRequest.
     /// </summary>
-    [NetFrameworkTest]
     public class HttpWebRequestW3CTests : W3CTestBase<RemoteServiceFixtures.FrameworkTracingChainFixture>
     {
         public HttpWebRequestW3CTests(RemoteServiceFixtures.FrameworkTracingChainFixture fixture, ITestOutputHelper output) : base(fixture, output)

@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using NewRelic.Agent.Extensions.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -38,6 +39,14 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void Dispose()
         {
+        }
+
+        public ISegment StartActivitySegment(MethodCall methodCall, INewRelicActivity activity)
+        {
+#if DEBUG
+            Log.Finest("Skipping StartActivitySegment outside of a transaction");
+#endif
+            return Segment.NoOpSegment;
         }
 
         public ISegment StartCustomSegment(MethodCall methodCall, string segmentName)
@@ -168,6 +177,11 @@ namespace NewRelic.Agent.Core.Transactions
         }
 
         public void Release()
+        {
+
+        }
+
+        public void SetWebTransactionName(string type, string name, TransactionNamePriority priority)
         {
 
         }

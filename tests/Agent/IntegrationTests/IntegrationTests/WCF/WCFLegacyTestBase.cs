@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-#if NETFRAMEWORK
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Testing.Assertions;
@@ -11,7 +10,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
@@ -19,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
 {
     public abstract class WCFLegacyTestBase : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public enum TracingTestOption
+        public enum WCFLegacyTracingTestOption
         {
             CAT,
             DT,
@@ -57,7 +55,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         protected readonly WCFInvocationMethod[] _clientInvocationMethodsToTest;
         protected int _countClientInvocationMethodsToTest => _clientInvocationMethodsToTest.Length;
 
-        protected readonly TracingTestOption _tracingTestOption;
+        protected readonly WCFLegacyTracingTestOption _tracingTestOption;
         protected readonly HostingModel _hostingModelOption;
         protected readonly ASPCompatibilityMode _aspCompatibilityOption;
 
@@ -108,7 +106,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
             WCFBindingType bindingToTest,
             IEnumerable<WCFInvocationMethod> clientInvocationsToTest,
             IEnumerable<WCFInvocationMethod> serviceInvocationsToTest,
-            TracingTestOption tracingTestOption,
+            WCFLegacyTracingTestOption tracingTestOption,
             HostingModel hostingModelOption,
             ASPCompatibilityMode aspCompatModeOption,
             IWCFLogHelpers logHelpersImpl
@@ -138,8 +136,8 @@ namespace NewRelic.Agent.IntegrationTests.WCF
                     _fixture.RemoteApplication.NewRelicConfig.SetRequestTimeout(TimeSpan.FromSeconds(10));
                     _fixture.RemoteApplication.NewRelicConfig.ForceTransactionTraces();
                     _fixture.RemoteApplication.NewRelicConfig.EnableSpanEvents(true);
-                    _fixture.RemoteApplication.NewRelicConfig.SetOrDeleteDistributedTraceEnabled(_tracingTestOption == TracingTestOption.DT ? true : null as bool?);
-                    _fixture.RemoteApplication.NewRelicConfig.SetCATEnabled(_tracingTestOption == TracingTestOption.CAT);
+                    _fixture.RemoteApplication.NewRelicConfig.SetOrDeleteDistributedTraceEnabled(_tracingTestOption == WCFLegacyTracingTestOption.DT ? true : null as bool?);
+                    _fixture.RemoteApplication.NewRelicConfig.SetCATEnabled(_tracingTestOption == WCFLegacyTracingTestOption.CAT);
 
                     GenerateFixtureCommands();
 
@@ -263,7 +261,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         [Fact]
         public void DistributedTracing()
         {
-            if (_tracingTestOption != TracingTestOption.DT)
+            if (_tracingTestOption != WCFLegacyTracingTestOption.DT)
             {
                 return;
             }
@@ -366,7 +364,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         {
             var assertions = new List<Action>();
 
-            if (_tracingTestOption != TracingTestOption.CAT)
+            if (_tracingTestOption != WCFLegacyTracingTestOption.CAT)
             {
                 return;
             }
@@ -408,4 +406,3 @@ namespace NewRelic.Agent.IntegrationTests.WCF
 
     }
 }
-#endif

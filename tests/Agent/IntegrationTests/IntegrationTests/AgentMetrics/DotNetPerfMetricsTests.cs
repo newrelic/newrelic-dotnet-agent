@@ -8,12 +8,10 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 {
 
-    [NetFrameworkTest]
     public class DotNetPerfMetricsTestsFW : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureFWLatest>
     {
         public DotNetPerfMetricsTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -24,7 +22,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         protected override string[] ExpectedMetricNames_GC => ExpectedMetricNames_GC_NetFramework;
     }
 
-    [NetCoreTest]
     public class DotNetPerfMetricsTestsCoreOldest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public DotNetPerfMetricsTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -35,7 +32,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         protected override string[] ExpectedMetricNames_GC => ExpectedMetricNames_GC_NetCore;
     }
 
-    [NetCoreTest]
     public class DotNetPerfMetricsTestsCoreLatest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public DotNetPerfMetricsTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -46,7 +42,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         protected override string[] ExpectedMetricNames_GC => ExpectedMetricNames_GC_NetCore;
     }
 
-    [NetCoreTest]
     public class DotNetPerfMetricsTestsGCSamplerV2CoreOldest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public DotNetPerfMetricsTestsGCSamplerV2CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -57,7 +52,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         protected override string[] ExpectedMetricNames_GC => ExpectedMetricNames_GC_V2;
     }
 
-    [NetCoreTest]
     public class DotNetPerfMetricsTestsGCSamplerV2CoreLatest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public DotNetPerfMetricsTestsGCSamplerV2CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

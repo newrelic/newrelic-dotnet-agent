@@ -8,7 +8,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AwsSdk
 {
@@ -101,7 +100,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
             }
         }
     }
-    [NetFrameworkTest]
     public class InvokeLambdaTest_Sync_FW462 : InvokeLambdaTestBase<ConsoleDynamicMethodFixtureFW462>
     {
         public InvokeLambdaTest_Sync_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -109,7 +107,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
         {
         }
     }
-    [NetFrameworkTest]
     public class InvokeLambdaTest_Sync_FWLatest : InvokeLambdaTestBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public InvokeLambdaTest_Sync_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -117,7 +114,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
         {
         }
     }
-    [NetCoreTest]
     public class InvokeLambdaTest_Async_CoreOldest : InvokeLambdaTestBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public InvokeLambdaTest_Async_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -126,7 +122,6 @@ namespace NewRelic.Agent.IntegrationTests.AwsSdk
         }
     }
 
-    [NetCoreTest]
     public class InvokeLambdaTest_Async_CoreLatest : InvokeLambdaTestBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public InvokeLambdaTest_Async_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

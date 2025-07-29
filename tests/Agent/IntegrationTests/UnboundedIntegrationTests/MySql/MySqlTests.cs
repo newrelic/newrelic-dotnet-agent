@@ -11,7 +11,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
@@ -141,7 +141,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlTestsFW462 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MySqlTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -150,7 +149,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlTestsFW471 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MySqlTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -159,7 +157,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlTestsFW48 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public MySqlTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -168,7 +165,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlTestsFWLatest : MySqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -177,7 +173,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetCoreTest]
     public class MySqlTestsCoreOldest : MySqlTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MySqlTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -186,7 +181,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetCoreTest]
     public class MySqlTestsCoreLatest : MySqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MySqlTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

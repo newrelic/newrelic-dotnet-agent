@@ -81,20 +81,17 @@ services:
     mssql:
         build:
             context: ./mssql
-            args:
-                SA_PASS: ${SA_PASSWORD:-MssqlPassw0rd}
         ports:
             - "1433:1433"
         environment:
             # The password set here must match the password set in the connection
-            # string being used by the MS SQL tests, and also match what is set in the
-            # "SA_PASS" container build arg above.  If this password is changed, the container
-            # must be rebuilt.
-            - SA_PASSWORD=${SA_PASSWORD:-MssqlPassw0rd}
+            # string being used by the MS SQL unbounded integration tests.
+            - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-MssqlPassw0rd}
+            - ACCEPT_EULA=Y
         container_name: MssqlServer
 
     oracle:
-        image: container-registry.oracle.com/database/free:23.4.0.0-lite
+        build: ./oracle
         shm_size: 1g
         ports:
             - "1521:1521"
@@ -116,15 +113,12 @@ services:
             - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-MysqlPassword}
         container_name: MySqlServer
 
-    elastic:
-        image: elasticsearch:8.6.2
+    elastic9:
+        build: ./elastic9
         ports:
-            - 9200:9200
+            - 9202:9200
         environment:
-            - discovery.type=single-node
             - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
-            - xpack.security.enabled=true
-            - xpack.security.http.ssl.enabled=false
         ulimits:
             memlock:
                 soft: -1
@@ -133,17 +127,30 @@ services:
             resources:
                 limits:
                     memory: 2GB
-        container_name: ElasticServer
+        container_name: Elastic9Server
+
+    elastic8:
+        build: ./elastic8
+        ports:
+            - 9200:9200
+        environment:
+            - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        deploy:
+            resources:
+                limits:
+                    memory: 2GB
+        container_name: Elastic8Server
 
     elastic7:
-        image: elasticsearch:7.17.10
+        build: ./elastic7
         ports:
             - 9201:9200
         environment:
-            - discovery.type=single-node
             - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
-            - xpack.security.enabled=true
-            - xpack.security.http.ssl.enabled=false
         ulimits:
             memlock:
                 soft: -1
@@ -154,27 +161,27 @@ services:
                     memory: 2GB
         container_name: Elastic7Server
 
-    # have to manually set the password for kibana_user - use curl to hit the correct endpoint
-    kibana_pw_setup:
-        image: curlimages/curl
-        depends_on:
-            - elastic
-        deploy:
-            restart_policy:
-                condition: on-failure
-        entrypoint: [ "sh", "-c", "sleep 10 && curl --user \"elastic:${ELASTIC_PASSWORD:-ElasticPassword}\" -X POST \"elastic:9200/_security/user/kibana_system/_password?pretty\" -H 'Content-Type: application/json' -d'{  \"password\" : \"${KIBANA_PASSWORD:-KibanaPassword}\"}'" ]
-        container_name: KibanaPWSetup
+    # # have to manually set the password for kibana_user - use curl to hit the correct endpoint
+    # kibana_pw_setup:
+    #     image: curlimages/curl
+    #     depends_on:
+    #         - elastic
+    #     deploy:
+    #         restart_policy:
+    #             condition: on-failure
+    #     entrypoint: [ "sh", "-c", "sleep 10 && curl --user \"elastic:${ELASTIC_PASSWORD:-ElasticPassword}\" -X POST \"elastic:9200/_security/user/kibana_system/_password?pretty\" -H 'Content-Type: application/json' -d'{  \"password\" : \"${KIBANA_PASSWORD:-KibanaPassword}\"}'" ]
+    #     container_name: KibanaPWSetup
 
-    kibana:
-        depends_on:
-            kibana_pw_setup:
-                 condition: service_completed_successfully
-        image: kibana:8.6.2
-        ports:
-            - 5601:5601
-        environment:
-            - SERVERNAME=kibana
-            - ELASTICSEARCH_HOSTS=http://elastic:9200
-            - ELASTICSEARCH_USERNAME=kibana_system
-            - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD:-KibanaPassword}
-        container_name: Kibana
+    # kibana:
+    #     depends_on:
+    #         kibana_pw_setup:
+    #              condition: service_completed_successfully
+    #     image: kibana:8.6.2
+    #     ports:
+    #         - 5601:5601
+    #     environment:
+    #         - SERVERNAME=kibana
+    #         - ELASTICSEARCH_HOSTS=http://elastic:9200
+    #         - ELASTICSEARCH_USERNAME=kibana_system
+    #         - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD:-KibanaPassword}
+    #     container_name: Kibana

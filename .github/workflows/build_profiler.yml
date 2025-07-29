@@ -5,25 +5,12 @@ on:
     branches:
       - main
       - "feature/**"
-    paths-ignore:
-      - ".github/**" # skip changes to the .github folder (workflows, etc.)
 
   # needs to run on every push to main to keep CodeCov in sync
   push:
     branches:
       - main
-    paths-ignore:
-      - ".github/**" # skip changes to the .github folder (workflows, etc.)
       
-  # this workflow can be called from another workflow
-  workflow_call:
-    inputs:
-      deploy:
-        description: 'Deploy NuGet Package'
-        required: true
-        default: false
-        type: boolean
-  
   # this workflow can be invoked manually
   workflow_dispatch:
     inputs:
@@ -47,9 +34,19 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
+  check-modified-files:
+    name: Check for source file changes
+    uses: ./.github/workflows/check_modified_files.yml
+    permissions:
+      contents: read
+      pull-requests: read
+
   build-windows-profiler:
     name: Build Windows Profiler & Run Unit Tests / Code Coverage
     runs-on: windows-latest
+    needs: check-modified-files
+    # only run this job if source files were modified, or if triggered by a manual execution
+    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
 
     env:
       tests_base_path: ${{ github.workspace }}\src\Agent\NewRelic
@@ -106,7 +103,7 @@ jobs:
             mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x64.log
 
       - name: Upload coverage reports to Codecov.io
-        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5.4.3
         with:
             flags: Profiler
             files: ${{ env.test_results_path }}/profilerx86.xml,${{ env.test_results_path }}/profilerx64.xml
@@ -131,6 +128,9 @@ jobs:
   build-linux-x64-profiler:
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
+    needs: check-modified-files
+    # only run this job if source files were modified, or if triggered by a manual execution
+    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: read
 
@@ -182,6 +182,9 @@ jobs:
   build-linux-arm64-profiler:
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
+    needs: check-modified-files
+    # only run this job if source files were modified, or if triggered by a manual execution
+    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: read # for actions/checkout to fetch code
       packages: write # for uraimo/run-on-arch-action to cache docker images
@@ -191,7 +194,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -209,7 +212,7 @@ jobs:
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
 
-      - uses: uraimo/run-on-arch-action@4141da824ffb5eda88d221d9cf835f6a61ed98d9 # v3.0.0
+      - uses: uraimo/run-on-arch-action@d94c13912ea685de38fccc1109385b83fd79427d # v3.0.1
         name: Run commands
         id: runcmd
         with:
@@ -275,19 +278,19 @@ jobs:
           fetch-depth: 0
 
       - name: Download Windows Profiler Artifacts to working Directory
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: profiler-windows
           path: ${{ github.workspace }}/_workingDir
       
       - name: Download Linux amd64 Profiler Artifacts to working Directory
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: profiler-amd64
           path: ${{ github.workspace }}/_workingDir
 
       - name: Download Linux arm64 Profiler Artifacts to working Directory
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: profiler-arm64
           path: ${{ github.workspace }}/_workingDir
@@ -344,7 +347,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -370,8 +373,8 @@ jobs:
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
             token: ${{ secrets.DOTNET_AGENT_GH_TOKEN}}
-            commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}."
-            title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}"
+            commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }} (built from ${{ github.sha }}).\n\nBuilt from commit: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+            title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }} (built from ${{ github.sha }})"
             branch: profiler-nuget-updates/${{ github.ref_name }}
             labels: |
               profiler nuget

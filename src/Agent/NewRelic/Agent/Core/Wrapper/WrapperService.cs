@@ -12,6 +12,7 @@ using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Api;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
@@ -43,6 +44,14 @@ namespace NewRelic.Agent.Core.Wrapper
         }
 
         private readonly ConcurrentDictionary<ulong, InstrumentedMethodInfoWrapper> _functionIdToWrapper;
+        private readonly List<string> KnownCustomTracerNames = new List<string>
+        {
+            "NewRelic.Agent.Core.Tracer.Factories.BackgroundThreadTracerFactory",
+            "NewRelic.Agent.Core.Tracer.Factories.IgnoreTransactionTracerFactory",
+            "NewRelic.Providers.Wrapper.CustomInstrumentation.OtherTransactionWrapper",
+            "AsyncForceNewTransactionWrapper",
+            "OtherTransactionWrapper"
+        };
 
         public WrapperService(IConfigurationService configurationService, IWrapperMap wrapperMap, IAgent agent, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
         {
@@ -68,9 +77,14 @@ namespace NewRelic.Agent.Core.Wrapper
             }
             else
             {
+                bool isCustom = KnownCustomTracerNames.Contains(tracerFactoryName);
                 var isAsync = TracerArgument.IsAsync(tracerArguments);
 
-                tracerFactoryName = ResolveTracerFactoryNameForAttributeInstrumentation(tracerArguments, isAsync, tracerFactoryName);
+                if (TracerArgument.IsFlagSet(tracerArguments, TracerFlags.AttributeInstrumentation))
+                {
+                    tracerFactoryName = ResolveTracerFactoryNameForAttributeInstrumentation(tracerArguments, isAsync, tracerFactoryName);
+                    isCustom = true;
+                }
 
                 var method = new Method(type, methodName, argumentSignature, functionId.GetHashCode());
                 var transactionNamePriority = TracerArgument.GetTransactionNamingPriority(tracerArguments);
@@ -108,7 +122,7 @@ namespace NewRelic.Agent.Core.Wrapper
                 }
 
                 _functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumentedMethodInfo, trackedWrapper);
-                GenerateLibraryVersionSupportabilityMetric(instrumentedMethodInfo);
+                GenerateSupportabilityMetrics(instrumentedMethodInfo, isCustom);
             }
 
             var wrapper = trackedWrapper.Wrapper;
@@ -228,7 +242,7 @@ namespace NewRelic.Agent.Core.Wrapper
             }
         }
 
-        private void GenerateLibraryVersionSupportabilityMetric(InstrumentedMethodInfo instrumentedMethodInfo)
+        private void GenerateSupportabilityMetrics(InstrumentedMethodInfo instrumentedMethodInfo, bool isCustom)
         {
             try
             {
@@ -237,10 +251,16 @@ namespace NewRelic.Agent.Core.Wrapper
                 var assemblyVersion = reflectionAssemblyName.Version.ToString();
 
                 _agentHealthReporter.ReportLibraryVersion(assemblyName, assemblyVersion);
+                if (isCustom)
+                {
+                    string method = instrumentedMethodInfo.Method.MethodName;
+                    string className = instrumentedMethodInfo.Method.Type.FullName;
+                    _agentHealthReporter.ReportCustomInstrumentation(assemblyName, className, method);
+                }    
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to generate Library version Supportability Metric for {instrumentedMethodInfo.ToString()} : exception: {ex}");
+                Log.Error(ex, $"Failed to generate Supportability Metrics for {instrumentedMethodInfo}");
             }
         }
     }

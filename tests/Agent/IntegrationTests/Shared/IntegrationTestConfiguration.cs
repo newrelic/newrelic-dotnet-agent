@@ -114,6 +114,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         public string TraceObserverUrl { get; set; }
         public IDictionary<string, string> CustomSettings { get; set; }
         public string TraceObserverPort { get; set; } = "443";
+        public string ContainerTestAcrName { get; set; }
     }
 
 }

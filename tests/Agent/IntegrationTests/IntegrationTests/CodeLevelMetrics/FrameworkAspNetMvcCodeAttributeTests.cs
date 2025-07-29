@@ -7,11 +7,9 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
-    [NetFrameworkTest]
     public class FrameworkAspNetMvcCodeAttributeTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
 

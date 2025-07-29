@@ -13,6 +13,7 @@
 #include "../MethodRewriter/MethodRewriter.h"
 #include "../SignatureParser/Exceptions.h"
 #include "../ThreadProfiler/ThreadProfiler.h"
+#include "../Common/FileUtils.h"
 #include "Function.h"
 #include "FunctionResolver.h"
 #include "Win32Helpers.h"
@@ -944,7 +945,12 @@ namespace NewRelic { namespace Profiler {
             auto filePaths = GetXmlFilesInExtensionsDirectory(systemCalls);
 
             for (auto filePath : filePaths) {
-                instrumentationXmls->emplace(filePath, ReadFile(filePath));
+                try {
+                    auto xml = ReadFile(filePath);
+                    instrumentationXmls->emplace(filePath, xml);
+                } catch (...) {
+                    LogError(L"An exception was thrown while reading instrumentation file: ", filePath, L" - ignoring this file.");
+                }
             }
 
             return instrumentationXmls;
@@ -1002,42 +1008,6 @@ namespace NewRelic { namespace Profiler {
             LocalFree(commandLineArgv);
             return appPoolId;
 #endif
-        }
-
-        static xstring_t ReadFile(xstring_t filePath)
-        {
-// disabling: 'argument' : conversion from 'type1' to 'type2', possible loss of data
-// Ideally we need to be able to handle file paths with multibyte characters in them. Currently, we do not.
-#pragma warning(push)
-#pragma warning(disable : 4244)
-
-            // Open file to read as a binary byte stream.  This lets us reliably detect and
-            // remove a UTF-8 BOM at the beginning of the file.
-            // See https://github.com/newrelic/newrelic-dotnet-agent/issues/267 for context
-            ifstream inFile(std::string(filePath.begin(), filePath.end()), std::ios::binary);
-#pragma warning(pop)
-
-            if (!inFile) {
-                LogError(L"Unable to open file. File path: ", filePath);
-                throw ProfilerException();
-            }
-
-            ostringstream charResult;
-            charResult << inFile.rdbuf();
-            inFile.close();
-
-            // Detect and remove UTF-8 BOM
-            auto resultCharStr = charResult.str();
-            auto char1 = static_cast<unsigned char>(resultCharStr[0]);
-            auto char2 = static_cast<unsigned char>(resultCharStr[1]);
-            auto char3 = static_cast<unsigned char>(resultCharStr[2]);
-
-            if (char1 == 0xEF && char2 == 0xBB && char3 == 0xBF) {
-                LogDebug(L"ReadFile (", filePath, L") detected UTF-8 BOM, skipping.");
-                resultCharStr.erase(0, 3);
-            }
-
-            return ToWideString(resultCharStr.c_str());
         }
 
         static std::unique_ptr<xstring_t> TryGetNewRelicHomeFromRegistry()
@@ -1121,8 +1091,7 @@ namespace NewRelic { namespace Profiler {
             {
                 try {
                     xstring_t logfilename(nrlog::DefaultFileLogLocation(_systemCalls).GetPathAndFileName());
-                    std::string wlogfilename(std::begin(logfilename), std::end(logfilename));
-                    nrlog::StdLog.get_dest().open(wlogfilename);
+                    nrlog::StdLog.get_dest().open(to_pathstring(logfilename));
                     // Imbue with locale and codecvt facet is used to allow the log file to write non-ascii chars to the log
                     nrlog::StdLog.get_dest().imbue(std::locale(std::locale::classic(), new std::codecvt_utf8<wchar_t>));
                     nrlog::StdLog.get_dest().exceptions(std::wostream::failbit | std::wostream::badbit);

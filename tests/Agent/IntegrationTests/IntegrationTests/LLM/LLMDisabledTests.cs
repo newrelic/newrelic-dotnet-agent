@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.LLM
 {
@@ -61,7 +60,6 @@ where TFixture : ConsoleDynamicMethodFixture
 
         }
     }
-    [NetCoreTest]
     public class LlmDisabledTest_CoreLatest : LlmDisabledTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public LlmDisabledTest_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -70,7 +68,6 @@ where TFixture : ConsoleDynamicMethodFixture
         }
     }
 
-    [NetFrameworkTest]
     public class LlmDisabledTest_FWLatest : LlmDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public LlmDisabledTest_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

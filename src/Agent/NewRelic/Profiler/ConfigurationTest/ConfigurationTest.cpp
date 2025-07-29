@@ -125,6 +125,24 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsTrue(configuration.ShouldInstrument(L"w3wp.exe", L"", L"someapppoolname", L"blah blah blah FooBarBaz blah blah blah", true));
         }
 
+        TEST_METHOD(should_not_instrument_isolated_azure_function_linux_webhost_process)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <log level=\"deBug\"/>\
+    </configuration>\
+    ");
+
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
+            systemCalls->environmentVariables[L"NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"] = L"true";
+
+            Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
+
+            Assert::IsFalse(configuration.ShouldInstrument(L"/azure-functions-host/Microsoft.Azure.WebJobs.Script.WebHost", L"", L"", L"blah blah blah FooBarBaz blah blah blah", true));
+        }
+
         TEST_METHOD(should_not_instrument_isolated_azure_function_app_pool_id_in_commandline)
         {
             std::wstring configurationXml(L"\

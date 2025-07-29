@@ -5,7 +5,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
 {
@@ -55,7 +54,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
 
     #region log4net
 
-    [NetFrameworkTest]
     public class Log4netZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public Log4netZeroMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -64,7 +62,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetFrameworkTest]
     public class Log4netZeroMaxSamplesStoredTestsFW471Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public Log4netZeroMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -73,7 +70,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetFrameworkTest]
     public class Log4netZeroMaxSamplesStoredTestsFW462Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public Log4netZeroMaxSamplesStoredTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -82,7 +78,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetCoreTest]
     public class Log4netZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public Log4netZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -91,7 +86,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetCoreTest]
     public class Log4netZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public Log4netZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -104,7 +98,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
 
     #region MicrosoftLogging
 
-    [NetCoreTest]
     public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -113,7 +106,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetCoreTest]
     public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -122,7 +114,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetFrameworkTest]
     public class MicrosoftLoggingZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MicrosoftLoggingZeroMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -135,7 +126,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
 
     #region Serilog
 
-    [NetFrameworkTest]
     public class SerilogZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public SerilogZeroMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -144,7 +134,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetFrameworkTest]
     public class SerilogZeroMaxSamplesStoredTestsFW471Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public SerilogZeroMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -153,7 +142,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetFrameworkTest]
     public class SerilogZeroMaxSamplesStoredTestsFW462Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public SerilogZeroMaxSamplesStoredTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -162,7 +150,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetCoreTest]
     public class SerilogZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public SerilogZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -171,7 +158,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetCoreTest]
     public class SerilogZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public SerilogZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -184,7 +170,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
 
     #region NLog
 
-    [NetFrameworkTest]
     public class NLogZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public NLogZeroMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -193,7 +178,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetFrameworkTest]
     public class NLogZeroMaxSamplesStoredTestsFW471Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public NLogZeroMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -202,7 +186,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetFrameworkTest]
     public class NLogZeroMaxSamplesStoredTestsFW462Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public NLogZeroMaxSamplesStoredTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -211,7 +194,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetCoreTest]
     public class NLogZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NLogZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -220,7 +202,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
-    [NetCoreTest]
     public class NLogZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public NLogZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

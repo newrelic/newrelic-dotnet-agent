@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -6,7 +6,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
 {
@@ -78,7 +77,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
 
     #region log4net
 
-    [NetFrameworkTest]
     public class Log4netLogLevelFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public Log4netLogLevelFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -87,7 +85,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetFrameworkTest]
     public class Log4netLogLevelFW471Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public Log4netLogLevelFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -96,7 +93,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetFrameworkTest]
     public class Log4netLogLevelFW462Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public Log4netLogLevelFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -105,7 +101,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetCoreTest]
     public class Log4netLogLevelNetCoreLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public Log4netLogLevelNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -114,7 +109,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetCoreTest]
     public class Log4netLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public Log4netLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -127,7 +121,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
 
     #region MicrosoftLogging
 
-    [NetCoreTest]
     public class MicrosoftLoggingLogLevelTestsNetCoreLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MicrosoftLoggingLogLevelTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -136,7 +129,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetCoreTest]
     public class MicrosoftLoggingLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MicrosoftLoggingLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -145,7 +137,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetFrameworkTest]
     public class MicrosoftLoggingLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MicrosoftLoggingLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -158,7 +149,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
 
     #region Serilog
 
-    [NetFrameworkTest]
     public class SerilogLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public SerilogLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -167,7 +157,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetFrameworkTest]
     public class SerilogLogLevelTestsFW471Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public SerilogLogLevelTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -176,7 +165,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetFrameworkTest]
     public class SerilogLogLevelTestsFW462Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public SerilogLogLevelTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -185,7 +173,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetCoreTest]
     public class SerilogLogLevelTestsNetCoreLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public SerilogLogLevelTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -194,7 +181,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetCoreTest]
     public class SerilogLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public SerilogLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -206,7 +192,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
 
     #region NLog
 
-    [NetFrameworkTest]
     public class NLogLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public NLogLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -215,7 +200,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetFrameworkTest]
     public class NLogLogLevelTestsFW471Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public NLogLogLevelTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -224,7 +208,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetFrameworkTest]
     public class NLogLogLevelTestsFW462Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public NLogLogLevelTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -233,7 +216,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetCoreTest]
     public class NLogLogLevelTestsNetCoreLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NLogLogLevelTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -242,7 +224,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetCoreTest]
     public class NLogLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public NLogLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -255,7 +236,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
 
     #region Sitecore
 
-    [NetFrameworkTest]
     public class SitecoreLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public SitecoreLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -264,7 +244,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
-    [NetFrameworkTest]
     public class SitecoreLogLevelTestsFW480Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public SitecoreLogLevelTestsFW480Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)

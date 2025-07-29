@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 {
@@ -77,7 +77,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbPublishTestsFW471 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public NsbPublishTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -86,7 +85,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbPublishTestsFW48 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public NsbPublishTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -95,7 +93,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetFrameworkTest]
     public class NsbPublishTestsFWLatest : NsbPublishTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public NsbPublishTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -104,7 +101,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetCoreTest]
     public class NsbPublishTestsCoreOldest : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public NsbPublishTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -113,7 +109,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    [NetCoreTest]
     public class NsbPublishTestsCoreLatest : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NsbPublishTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

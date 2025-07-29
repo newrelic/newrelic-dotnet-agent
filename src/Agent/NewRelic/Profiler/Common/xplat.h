@@ -26,6 +26,9 @@
 
 #ifdef PAL_STDCPP_COMPAT
 
+#include <codecvt>
+#include <locale>
+
 #if defined(__llvm__)
 namespace std{
 template <class T, class... Args>
@@ -61,7 +64,14 @@ make_unique(Args &&...) = delete;
 
 typedef std::u16string::value_type xchar_t;
 typedef std::u16string xstring_t;
+typedef std::basic_ifstream<xchar_t> xifstream;
+typedef std::basic_stringstream<xchar_t> xstringstream;
 
+// The basic_ifstream api expects a UTF-8 path, so we need to convert the xstring_t to a UTF-8 string.
+inline std::string to_pathstring(const xstring_t& str)
+{
+    return std::wstring_convert <std::codecvt_utf8 <xchar_t>, xchar_t>().to_bytes(str);
+}
 
 inline xstring_t to_xstring(unsigned short val)
 {
@@ -90,7 +100,7 @@ inline int xstoi(xstring_t str)
 inline xstring_t ToWideString(const char* const buf)
 {
     auto str = std::string(buf);
-    return xstring_t(str.begin(), str.end());
+    return std::wstring_convert<std::codecvt_utf8<xchar_t>, xchar_t>{}.from_bytes(str.data());
 }
 
 // implementations of windows apis
@@ -108,7 +118,12 @@ inline int gmtime_s(struct tm* _tm, const time_t* time)
 // Windows
 
 typedef wchar_t xchar_t;
-typedef std::basic_string<xchar_t> xstring_t; 
+typedef std::basic_string<xchar_t> xstring_t;
+typedef std::wifstream xifstream;
+typedef std::wstringstream xstringstream;
+
+// The wifstream api expects a wide character path, which we already have so we can just return the string as is.
+inline xstring_t to_pathstring(const xstring_t& str) { return str; }
 
 inline xstring_t to_xstring(unsigned short val) { return std::to_wstring(val); }
 inline xstring_t to_xstring(unsigned int val) { return std::to_wstring(val); }

@@ -9,7 +9,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
 {
@@ -20,7 +19,6 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Logging: finest
     /// Files: Integration.Testing.AddNodeTest.xml
     /// </summary>
-    [NetCoreTest]
     public class AddIgnoredInstrumentation : NewRelicIntegrationTest<AspNetCoreReJitMvcApplicationFixture>
     {
         private readonly AspNetCoreReJitMvcApplicationFixture _fixture;

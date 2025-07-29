@@ -1,0 +1,58 @@
+# Standard License Header
+# Kubernetes Deployment and Service for Redis
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: dotnetunboundedservicesregistry.azurecr.io/redis
+        imagePullPolicy: Always
+        command: ["sh", "-c", "redis-server --requirepass \"${REDIS_PASSWORD}\""]
+        ports:
+        - containerPort: 6379
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "redis-cli -a \"${REDIS_PASSWORD}\" ping"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: REDIS_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: ${RESOURCE_GROUP}
+    service.beta.kubernetes.io/azure-pip-name: ${PUBLIC_IP_NAME}
+spec:
+  type: LoadBalancer
+  loadBalancerIP: ${PUBLIC_IP}
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    app: redis

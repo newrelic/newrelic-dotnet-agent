@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using MoreLinq;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;

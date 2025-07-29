@@ -1,0 +1,51 @@
+# Standard License Header
+# Kubernetes Deployment and Service for Oracle
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oracle
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oracle
+  template:
+    metadata:
+      labels:
+        app: oracle
+    spec:
+      containers:
+      - name: oracle
+        image: dotnetunboundedservicesregistry.azurecr.io/oracle
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 1521
+        env:
+        - name: ORACLE_PWD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: ORACLE_PWD
+        # resources:
+        #   requests:
+        #     memory: "4Gi"
+        #   limits:
+        #     memory: "8Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oracle
+  namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: ${RESOURCE_GROUP}
+    service.beta.kubernetes.io/azure-pip-name: ${PUBLIC_IP_NAME}
+spec:
+  type: LoadBalancer
+  loadBalancerIP: ${PUBLIC_IP}
+  ports:
+    - port: 1521
+      targetPort: 1521
+  selector:
+    app: oracle

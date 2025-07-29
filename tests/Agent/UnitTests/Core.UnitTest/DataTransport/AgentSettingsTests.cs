@@ -5,6 +5,8 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.TestUtilities;
+using Newtonsoft.Json.Converters;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -76,6 +78,8 @@ namespace NewRelic.Agent.Core.Configuration
                     "cross_application_tracer.cross_process_id": "CrossApplicationTracingCrossProcessId",
                     "cross_application_tracer.enabled": true,
                     "distributed_tracing.enabled": true,
+                    "distributed_tracing.sampler.remote_parent_sampled": "default",
+                    "distributed_tracing.sampler.remote_parent_not_sampled": "default",
                     "span_events.enabled": true,
                     "span_events.harvest_cycle": "00:20:34",
                     "span_events.attributes_enabled": true,
@@ -285,6 +289,8 @@ namespace NewRelic.Agent.Core.Configuration
                     "utilization.detect_docker_enabled": true,
                     "utilization.detect_kubernetes_enabled": true,
                     "utilization.detect_azure_function_enabled": true,
+                    "utilization.detect_azure_appservice_enabled": true,
+
                     "utilization.logical_processors": 22,
                     "utilization.total_ram_mib": 33,
                     "utilization.billing_host": "UtilizationBillingHost",
@@ -347,7 +353,10 @@ namespace NewRelic.Agent.Core.Configuration
                     "gc_sampler_v2.enabled": true,
                     "agent_control.enabled" : true,
                     "agent_control.health.delivery_location": "file:///tmp/health",
-                    "agent_control.health.frequency": 5
+                    "agent_control.health.frequency": 5,
+                    "otel_bridge.included_activity_sources": ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"],
+                    "otel_bridge.excluded_activity_sources": ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"],
+                    "otel_bridge.enabled": true
                 }
                 """;
 

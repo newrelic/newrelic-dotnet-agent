@@ -15,6 +15,7 @@ using NewRelic.Agent.Core.Spans.Tests;
 using System;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Api
 {

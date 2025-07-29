@@ -11,16 +11,15 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
     public abstract class MySqlAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
-        private bool _asyncOpen;
 
-        public MySqlAsyncTestsBase(TFixture fixture, ITestOutputHelper output, bool asyncOpen) : base(fixture)
+        public MySqlAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -55,8 +54,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             );
 
             _fixture.Initialize();
-            // AsyncOpen() is only supported in certain versions of the library
-            _asyncOpen = asyncOpen;
         }
 
         [Fact]
@@ -77,14 +74,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1, metricScope = transactionName },
             };
 
-            if (_asyncOpen)
-            {
-                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/MySql.Data.MySqlClient.MySqlConnection/OpenAsync", callCount = 1 });
-            }
-            else
-            {
-                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/MySql.Data.MySqlClient.MySqlConnection/Open", callCount = 1 });
-            }
+            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/MySql.Data.MySqlClient.MySqlConnection/OpenAsync", callCount = 1 });
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -97,10 +87,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             };
 
             // Don't double count the Open
-            if (_asyncOpen)
-            {
-                unexpectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/MySql.Data.MySqlClient.MySqlConnection/Open", callCount = 1 });
-            }
+            unexpectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/MySql.Data.MySqlClient.MySqlConnection/Open", callCount = 1 });
 
             var expectedTransactionTraceSegments = new List<string>
             {
@@ -157,55 +144,49 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlAsyncTestsFW462 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MySqlAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MySqlAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlAsyncTestsFW471 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public MySqlAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MySqlAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlAsyncTestsFW48 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
-        public MySqlAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MySqlAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
-    [NetFrameworkTest]
     public class MySqlAsyncTestsFWLatest : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MySqlAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MySqlAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
-    [NetCoreTest]
     public class MySqlAsyncTestsCoreOldest : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MySqlAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MySqlAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
-    [NetCoreTest]
     public class MySqlAsyncTestsCoreLatest : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MySqlAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MySqlAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

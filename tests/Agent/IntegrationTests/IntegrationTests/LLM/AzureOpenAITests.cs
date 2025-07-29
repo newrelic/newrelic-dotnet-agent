@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.LLM
 {
@@ -147,7 +146,6 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         }
     }
 
-    [NetCoreTest]
     public class AzureOpenAITests_CoreLatest : AzureOpenAITestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public AzureOpenAITests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -156,7 +154,6 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         }
     }
 
-    [NetCoreTest]
     public class AzureOpenAITests_CoreOldest : AzureOpenAITestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public AzureOpenAITests_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -165,7 +162,6 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         }
     }
 
-    [NetFrameworkTest]
     public class AzureOpenAITests_FWLatest : AzureOpenAITestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public AzureOpenAITests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

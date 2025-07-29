@@ -10,7 +10,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Api
 {
@@ -76,7 +75,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetFrameworkTest]
     public class ErrorGroupCallbackReturnsStringTestsFW : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ErrorGroupCallbackReturnsStringTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -85,7 +83,6 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    [NetCoreTest]
     public class ErrorGroupCallbackReturnsStringTestsCore : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ErrorGroupCallbackReturnsStringTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

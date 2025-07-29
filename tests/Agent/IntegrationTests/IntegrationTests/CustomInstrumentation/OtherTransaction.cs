@@ -8,11 +8,9 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
-    [NetFrameworkTest]
     public class OtherTransaction : NewRelicIntegrationTest<RemoteServiceFixtures.AgentApiExecutor>
     {
         private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;

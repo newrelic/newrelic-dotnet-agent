@@ -8,7 +8,6 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.LLM
 {
@@ -130,7 +129,6 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         }
     }
 
-    [NetCoreTest]
     public class BedrockConverseTests_Basic_CoreLatest : BedrockConverseTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public BedrockConverseTests_Basic_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -139,7 +137,6 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         }
     }
 
-    [NetFrameworkTest]
     public class BedrockConverseTests_Basic_FWLatest : BedrockConverseTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public BedrockConverseTests_Basic_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

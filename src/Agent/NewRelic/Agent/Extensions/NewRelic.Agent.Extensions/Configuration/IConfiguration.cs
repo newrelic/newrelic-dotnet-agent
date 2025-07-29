@@ -190,6 +190,10 @@ namespace NewRelic.Agent.Configuration
         bool ForceSynchronousTimingCalculationHttpClient { get; }
         bool EnableAspNetCore6PlusBrowserInjection { get; }
         bool ExcludeNewrelicHeader { get; }
+
+        RemoteParentSampledBehavior RemoteParentSampledBehavior { get; }
+        RemoteParentSampledBehavior RemoteParentNotSampledBehavior { get; }
+
         bool ApplicationLoggingEnabled { get; }
         bool LogMetricsCollectorEnabled { get; }
         bool LogEventCollectorEnabled { get; }
@@ -234,11 +238,21 @@ namespace NewRelic.Agent.Configuration
 
         bool UtilizationDetectAzureFunction { get; }
 
+        bool UtilizationDetectAzureAppService { get; }
+
         string AwsAccountId { get; }
         bool GCSamplerV2Enabled { get; }
 
         bool AgentControlEnabled { get; }
         string HealthDeliveryLocation { get; }
         int HealthFrequency { get; }
+
+        bool AwsLambdaApmModeEnabled { get; }
+
+        List<string> IncludedActivitySources { get; }
+        List<string> ExcludedActivitySources { get; }
+
+        bool OpenTelemetryBridgeEnabled { get; }
+        int MaxCustomInstrumentationSupportabilityMetrics { get; }
     }
 }

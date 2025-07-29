@@ -28,21 +28,21 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         {
             get
             {
-                return new Uri(ElasticSearchConfiguration.ElasticServer);
+                return new Uri(ElasticSearch8Configuration.ElasticServer);
             }
         }
         protected override string Username
         {
             get
             {
-                return ElasticSearchConfiguration.ElasticUserName;
+                return ElasticSearch8Configuration.ElasticUserName;
             }
         }
         protected override string Password
         {
             get
             {
-                return ElasticSearchConfiguration.ElasticPassword;
+                return ElasticSearch8Configuration.ElasticPassword;
             }
         }
 
@@ -192,7 +192,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         {
             // This isn't the password, so connection should fail, but we won't get an error until the Ping
             var settings = new ElasticsearchClientSettings(Address)
-                    .Authentication(new BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
+                    .Authentication(new BasicAuthentication(ElasticSearch8Configuration.ElasticUserName,
                     "12345")).
                     DefaultIndex(IndexName);
 

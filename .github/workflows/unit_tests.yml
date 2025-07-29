@@ -41,8 +41,8 @@ jobs:
     runs-on: windows-latest
 
     # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
-    # run this job if non-workflow files were modified, or if triggered by a manual execution or by a push (not a PR)
-    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.non-workflow-files-changed == 'true' ||  github.event_name == 'workflow_dispatch' || github.event_name == 'push')
+    # run this job if source files were modified, or if triggered by a manual execution or by a push (not a PR)
+    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' ||  github.event_name == 'workflow_dispatch' || github.event_name == 'push')
 
     env:
       test_results_path: tests\TestResults
@@ -59,7 +59,7 @@ jobs:
         run: dotnet test --verbosity minimal --no-restore --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
 
       - name: Upload coverage reports to Codecov.io
-        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5.4.3
         with:
             flags: Agent
             directory: ${{ env.test_results_path }}

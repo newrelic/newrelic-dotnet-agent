@@ -4,11 +4,9 @@
 
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
-    [NetCoreTest]
     public class AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture>
     {
         private const string QueryStringParameterValue = @"my thing";

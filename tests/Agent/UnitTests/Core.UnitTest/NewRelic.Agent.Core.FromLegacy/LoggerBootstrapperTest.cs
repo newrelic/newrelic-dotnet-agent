@@ -6,7 +6,9 @@ using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Extensions.Logging;
 using NUnit.Framework;
 using System.IO;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Testing.Assertions;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core
 {
@@ -14,6 +16,20 @@ namespace NewRelic.Agent.Core
     [TestFixture]
     public class LoggerBootstrapperTest
     {
+        private IEnvironment _originalEnvironmentProxy;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _originalEnvironmentProxy = ConfigLoaderHelpers.EnvironmentVariableProxy;
+            ConfigLoaderHelpers.EnvironmentVariableProxy = Mock.Create<IEnvironment>();
+        }
+        [TearDown]
+        public void TearDown()
+        {
+            ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironmentProxy;
+        }
+
         [Test]
         public static void No_log_levels_are_enabled_when_config_log_is_off()
         {

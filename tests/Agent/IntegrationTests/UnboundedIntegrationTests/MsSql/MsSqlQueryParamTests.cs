@@ -11,7 +11,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
@@ -174,7 +174,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     #region System.Data (.NET Framework only)
-    [NetFrameworkTest]
     public class MsSqlQueryParamTests_SystemData_FWLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsSqlQueryParamTests_SystemData_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -187,7 +186,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetFrameworkTest]
     public class MsSqlQueryParamTests_SystemData_NoAtSigns_FWLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsSqlQueryParamTests_SystemData_NoAtSigns_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -203,7 +201,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
     #region Microsoft.Data.SqlClient (FW and Core/5+)
 
-    [NetFrameworkTest]
     public class MsSqlQueryParamTests_MicrosoftDataSqlClient_FWLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsSqlQueryParamTests_MicrosoftDataSqlClient_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -217,7 +214,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetFrameworkTest]
     public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_FWLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -231,7 +227,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetFrameworkTest]
     public class MsSqlQueryParamTests_MicrosoftDataSqlClient_FW462 : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MsSqlQueryParamTests_MicrosoftDataSqlClient_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -245,7 +240,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetFrameworkTest]
     public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_FW462 : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -259,7 +253,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
     public class MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -272,7 +265,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
     public class MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreOldest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -285,7 +277,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
     public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -298,7 +289,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
     public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreOldest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

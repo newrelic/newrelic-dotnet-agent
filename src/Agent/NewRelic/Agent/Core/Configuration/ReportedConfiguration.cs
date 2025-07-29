@@ -207,6 +207,11 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("distributed_tracing.enabled")]
         public bool DistributedTracingEnabled => _configuration.DistributedTracingEnabled;
 
+        [JsonProperty("distributed_tracing.sampler.remote_parent_sampled")]
+        public RemoteParentSampledBehavior RemoteParentSampledBehavior { get; }
+        [JsonProperty("distributed_tracing.sampler.remote_parent_not_sampled")]
+        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior { get; }
+
         [JsonProperty("span_events.enabled")]
         public bool SpanEventsEnabled => _configuration.SpanEventsEnabled;
 
@@ -542,6 +547,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("utilization.detect_azure_function_enabled")]
         public bool UtilizationDetectAzureFunction => _configuration.UtilizationDetectAzureFunction;
 
+        [JsonProperty("utilization.detect_azure_appservice_enabled")]
+        public bool UtilizationDetectAzureAppService => _configuration.UtilizationDetectAzureAppService;
+
         [JsonProperty("utilization.logical_processors")]
         public int? UtilizationLogicalProcessors => _configuration.UtilizationLogicalProcessors;
 
@@ -736,6 +744,22 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("agent_control.health.frequency")]
         public int HealthFrequency => _configuration.HealthFrequency;
+
+        [JsonIgnore]
+        public bool AwsLambdaApmModeEnabled => _configuration.AwsLambdaApmModeEnabled;
+        
+
+        [JsonProperty("otel_bridge.included_activity_sources")]
+        public List<string> IncludedActivitySources => _configuration.IncludedActivitySources;
+
+        [JsonProperty("otel_bridge.excluded_activity_sources")]
+        public List<string> ExcludedActivitySources => _configuration.ExcludedActivitySources;
+
+        [JsonProperty("otel_bridge.enabled")]
+        public bool OpenTelemetryBridgeEnabled => _configuration.OpenTelemetryBridgeEnabled;
+
+        [JsonIgnore]
+        public int MaxCustomInstrumentationSupportabilityMetrics { get; }
 
         #endregion
     }

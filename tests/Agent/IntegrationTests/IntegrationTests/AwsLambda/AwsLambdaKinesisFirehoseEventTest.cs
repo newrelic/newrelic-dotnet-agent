@@ -8,11 +8,9 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AwsLambda.Kinesis
 {
-    [NetCoreTest]
     public abstract class AwsLambdaKinesisFirehoseEventTest<T> : NewRelicIntegrationTest<T> where T : LambdaKinesisFirehoseEventTriggerFixtureBase
     {
         private readonly LambdaKinesisFirehoseEventTriggerFixtureBase _fixture;

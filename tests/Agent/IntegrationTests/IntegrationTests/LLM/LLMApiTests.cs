@@ -6,7 +6,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.LLM
 {
@@ -91,7 +90,6 @@ where TFixture : ConsoleDynamicMethodFixture
             Assert.NotNull(transactionEvent);
         }
     }
-    [NetCoreTest]
     public class LlmApiTest_CoreLatest : LlmApiTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public LlmApiTest_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -100,7 +98,6 @@ where TFixture : ConsoleDynamicMethodFixture
         }
     }
 
-    [NetFrameworkTest]
     public class LlmApiTest_FWLatest : LlmApiTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public LlmApiTest_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

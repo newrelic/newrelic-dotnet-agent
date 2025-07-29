@@ -10,7 +10,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.RestSharp
 {
@@ -115,7 +114,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationDistributedTracingFWLatest : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public RestSharpInstrumentationDistributedTracingFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -124,7 +122,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationDistributedTracingFW48 : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFW48>
     {
         public RestSharpInstrumentationDistributedTracingFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -133,7 +130,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationDistributedTracingFW471 : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFW471>
     {
         public RestSharpInstrumentationDistributedTracingFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -142,7 +138,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         }
     }
 
-    [NetFrameworkTest]
     public class RestSharpInstrumentationDistributedTracingFW462 : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFW462>
     {
         public RestSharpInstrumentationDistributedTracingFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

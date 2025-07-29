@@ -1,0 +1,57 @@
+# Standard License Header
+# Kubernetes Deployment and Service for ElasticSearch 8.x
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elastic9
+  namespace: unbounded-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elastic9
+  template:
+    metadata:
+      labels:
+        app: elastic9
+    spec:
+      containers:
+      - name: elastic9
+        image: dotnetunboundedservicesregistry.azurecr.io/elastic9
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9200
+        env:
+        - name: discovery.type
+          value: "single-node"
+        - name: ELASTIC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: unboundedservices-secrets
+              key: ELASTIC_PASSWORD
+        - name: xpack.security.enabled
+          value: "true"
+        - name: xpack.security.http.ssl.enabled
+          value: "false"
+        resources:
+          limits:
+            memory: 2Gi
+        securityContext:
+          privileged: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elastic9
+  namespace: unbounded-services
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: ${RESOURCE_GROUP}
+    service.beta.kubernetes.io/azure-pip-name: ${PUBLIC_IP_NAME}
+spec:
+  type: LoadBalancer
+  loadBalancerIP: ${PUBLIC_IP}
+  ports:
+    - port: 9202
+      targetPort: 9200
+  selector:
+    app: elastic9

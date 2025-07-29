@@ -31,7 +31,7 @@ jobs:
   analyze-dotnet:
     name: Analyze .NET
     needs: check-modified-files
-    if: needs.check-modified-files.outputs.non-workflow-files-changed == 'true'
+    if: needs.check-modified-files.outputs.source-files-changed == 'true'
     runs-on: windows-latest
     timeout-minutes: 120
     permissions:
@@ -52,7 +52,7 @@ jobs:
         fetch-depth: 0
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.13
+      uses: github/codeql-action/init@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
       with:
         languages: csharp
         config-file: ./.github/codeql/codeql-config.yml
@@ -63,14 +63,14 @@ jobs:
       shell: powershell
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.13
+      uses: github/codeql-action/analyze@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
       with:
         category: "/language:csharp"
         
   analyze-cpp:
     name: Analyze C++
     needs: check-modified-files
-    if: needs.check-modified-files.outputs.non-workflow-files-changed == 'true'
+    if: needs.check-modified-files.outputs.source-files-changed == 'true'
     runs-on: windows-latest
     timeout-minutes: 120
     permissions:
@@ -88,7 +88,7 @@ jobs:
         fetch-depth: 0
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.13
+      uses: github/codeql-action/init@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
       with:
         languages: c-cpp
         config-file: ./.github/codeql/codeql-config.yml
@@ -105,6 +105,6 @@ jobs:
       shell: powershell
    
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.13
+      uses: github/codeql-action/analyze@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
       with:
         category: "/language:c-cpp"

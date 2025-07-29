@@ -23,8 +23,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             {
 #if NETFRAMEWORK
             return false;
+#else
+                return RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 #endif
-            return RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
             }
         }
 

@@ -7,7 +7,6 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
@@ -80,7 +79,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    [NetFrameworkTest]
     public class EnvironmentFrameworkTests : EnvironmentTests<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         public EnvironmentFrameworkTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
@@ -92,7 +90,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         protected override void ExerciseApplication() => _fixture.Get();
     }
 
-    [NetCoreTest]
     public class EnvironmentCoreTests : EnvironmentTests<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
         public EnvironmentCoreTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)

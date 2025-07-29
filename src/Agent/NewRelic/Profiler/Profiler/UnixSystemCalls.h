@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <libgen.h>
+#include <codecvt>
+#include <locale>
 
 namespace NewRelic { namespace Profiler
 {
@@ -38,7 +40,7 @@ namespace NewRelic { namespace Profiler
         {
             if (chars == nullptr) return _X("");
             std::string str = std::string(chars);
-            return xstring_t(str.begin(), str.end());
+            return std::wstring_convert<std::codecvt_utf8<xchar_t>, xchar_t>{}.from_bytes(str.data());
         }
 
         virtual std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName) override

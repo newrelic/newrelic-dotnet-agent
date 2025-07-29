@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NETFRAMEWORK
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -10,7 +9,6 @@ using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Agent.IntegrationTests.WCF;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 {
@@ -98,14 +96,12 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 
     #region IIS
 
-    [NetFrameworkTest]
     public class IIS_Basic_AllowAllHeadersDisabledTests : AllowAllHeadersDisabledTests
     {
         public IIS_Basic_AllowAllHeadersDisabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, HostingModel.IIS, WCFBindingType.BasicHttp) { }
     }
 
-    [NetFrameworkTest]
     public class IIS_Web_AllowAllHeadersDisabledTests : AllowAllHeadersDisabledTests
     {
         public IIS_Web_AllowAllHeadersDisabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -113,7 +109,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
     }
 
 
-    [NetFrameworkTest]
     public class IIS_WS_AllowAllHeadersDisabledTests : AllowAllHeadersDisabledTests
     {
         public IIS_WS_AllowAllHeadersDisabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -124,14 +119,12 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 
     #region IISNoAsp
 
-    [NetFrameworkTest]
     public class IISNoAsp_Basic_AllowAllHeadersDisabledTests : AllowAllHeadersDisabledTests
     {
         public IISNoAsp_Basic_AllowAllHeadersDisabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, HostingModel.IISNoAsp, WCFBindingType.BasicHttp) { }
     }
 
-    [NetFrameworkTest]
     public class IISNoAsp_Web_AllowAllHeadersDisabledTests : AllowAllHeadersDisabledTests
     {
         public IISNoAsp_Web_AllowAllHeadersDisabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -139,7 +132,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
     }
 
 
-    [NetFrameworkTest]
     public class IISNoAsp_WS_AllowAllHeadersDisabledTests : AllowAllHeadersDisabledTests
     {
         public IISNoAsp_WS_AllowAllHeadersDisabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -150,21 +142,18 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 
     #region Self
 
-    [NetFrameworkTest]
     public class Self_Basic_AllowAllHeadersDisabledTests : AllowAllHeadersDisabledTests
     {
         public Self_Basic_AllowAllHeadersDisabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, HostingModel.Self, WCFBindingType.BasicHttp) { }
     }
 
-    [NetFrameworkTest]
     public class Self_Web_AllowAllHeadersDisabledTests : AllowAllHeadersDisabledTests
     {
         public Self_Web_AllowAllHeadersDisabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, HostingModel.Self, WCFBindingType.WebHttp) { }
     }
 
-    [NetFrameworkTest]
     public class Self_WS_AllowAllHeadersDisabledTests : AllowAllHeadersDisabledTests
     {
         public Self_WS_AllowAllHeadersDisabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -173,4 +162,3 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 
     #endregion Self
 }
-#endif

@@ -7,7 +7,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using System;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
 {
@@ -166,7 +166,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
 
     }
 
-    [NetFrameworkTest]
     public class MongoDBDriverCollectionTestsFWLatest : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MongoDBDriverCollectionTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -175,7 +174,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         }
     }
 
-    [NetFrameworkTest]
     public class MongoDBDriverCollectionTestsFW48 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public MongoDBDriverCollectionTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -184,7 +182,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         }
     }
 
-    [NetFrameworkTest]
     public class MongoDBDriverCollectionTestsFW471 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MongoDBDriverCollectionTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -193,7 +190,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         }
     }
 
-    [NetCoreTest]
     public class MongoDBDriverCollectionTestsCoreLatest : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MongoDBDriverCollectionTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -202,7 +198,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         }
     }
 
-    [NetCoreTest]
     public class MongoDBDriverCollectionTestsCoreOldest : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MongoDBDriverCollectionTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
