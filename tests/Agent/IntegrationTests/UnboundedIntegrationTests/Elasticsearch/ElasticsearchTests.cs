@@ -147,7 +147,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         [Fact]
         public void ErrorAsync()
         {
-            ValidateError("GenerateErrorAsync");
+            if (_fixture is not ConsoleDynamicMethodFixtureFWLatest)
+                ValidateError("GenerateErrorAsync");
+            else
+                Assert.Skip("Not supported in Framework OTelBridge (FWLatest).");
+
         }
 
         private void ValidateError(string operationName)
@@ -328,7 +332,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchElasticClientTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ElasticsearchElasticClientTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticClients, syncMethodsOk: false)
+            : base(fixture, output, ClientType.ElasticClients, syncMethodsOk: false, enableOTelBridge: true)
         {
         }
     }

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Non-async client methods are deprecated in the latest Elastic.Clients.Elasticsearch
-#if !NET481_OR_GREATER && !NET9_0_OR_GREATER
+#if (NETFRAMEWORK && !NET48_OR_GREATER) || (NET && !NET9_0_OR_GREATER)
 #define SYNC_METHODS_OK
 #endif
 
