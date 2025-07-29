@@ -1,5 +1,6 @@
 ARG DISTRO_TAG
 ARG BUILD_ARCH
+# TODO Use stable .NET 10.0 image when available
 FROM --platform=amd64 mcr.microsoft.com/dotnet/aspnet:10.0-preview-trixie-slim AS base
 WORKDIR /app
 EXPOSE 80
@@ -12,6 +13,7 @@ RUN apt-get update \
     && apt-get install -y aspnetcore-runtime-8.0
 
 # build arch may be different from target arch (i.e., when running locally with QEMU)
+# TODO Use stable .NET 10.0 image when available
 FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:10.0-preview-trixie-slim AS build
 RUN apt-get update \
     && apt-get install -y wget \
