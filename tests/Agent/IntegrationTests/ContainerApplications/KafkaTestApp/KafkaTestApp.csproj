@@ -9,6 +9,6 @@
     
     <PackageReference Include="Confluent.Kafka" Version="2.9.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="Confluent.Kafka" Version="2.9.0" Condition="'$(TargetFramework)' == 'net10.0'" />
-	<PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.10" />
+	<PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15" />
   </ItemGroup>
 </Project>
