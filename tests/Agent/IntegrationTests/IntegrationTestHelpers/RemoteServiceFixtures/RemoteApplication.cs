@@ -640,6 +640,10 @@ public abstract class RemoteApplication : IDisposable
             }
         }
 
+        // TODO: For .NET10, SSL revocation checking changed. We'll restore the previous behavior for now but need to address the issue in the future.
+        // see https://learn.microsoft.com/en-us/dotnet/core/compatibility/networking/10.0/ssl-certificate-revocation-check-default
+        startInfo.EnvironmentVariables.Add("DOTNET_SYSTEM_NET_SECURITY_NOREVOCATIONCHECKBYDEFAULT", "true");
+
         AddCustomEnvironmentVariables(startInfo);
     }
 
