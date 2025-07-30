@@ -266,7 +266,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             Thread.Sleep(millisecondsTimeOut);
         }
 
-#if NET9_0
+#if NET10_0
         [LibraryMethod]
         public async Task MsSqlCreateStoredProcWithTempTable(string procedureName)
         {
