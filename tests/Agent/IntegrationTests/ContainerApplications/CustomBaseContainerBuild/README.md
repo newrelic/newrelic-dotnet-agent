@@ -7,25 +7,27 @@ Instructions for building a set of custom base images, used by the Container Int
 https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/
 https://docs.docker.com/engine/reference/commandline/buildx_build/
 
-* The container registry name is kept in a Github secret and is also accessible via 1Password.
-* The `dotnet-agent-acr-token` password is accessible in 1Password
+* Relevant secrets are available in 1Password
 
 ## Azure container registry login via Docker
 From a Powershell command prompt in the same folder as this README file:
-0. Set the container registry name in a variable
+0. Set the container registry name and login server in a variable
 `$acrName="{container registry name}"`
+`$acrLoginServer="{container registry login server}"`
 1. Log in to the container repository
-`docker login -u dotnet-agent-acr-token -p {password} $acrName`
+`docker login -u $acrName -p {password} $acrLoginServer`
 2. Configure buildx in Docker Desktop
 `docker buildx create --use`
 3. Build the base images. The images will be pushed to the container registry with tags per .NET version
 
 ```
-docker buildx  build --build-arg DOTNET_VERSION="8.0" -f Dockerfile.AmazonBaseImage --tag $acrName/amazonlinux-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 --push .
-docker buildx  build --build-arg DOTNET_VERSION="9.0" -f Dockerfile.AmazonBaseImage --tag $acrName/amazonlinux-aspnet:9.0 --platform linux/amd64,linux/arm64/v8 --push .
+docker buildx  build --build-arg DOTNET_VERSION="8.0" --build-arg DOTNET_QUALITY="GA" -f Dockerfile.AmazonBaseImage --tag $acrName/amazonlinux-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 --push .
+# TODO: UPDATE TO GA QUALITY AND REMOVE -preview IMAGE TAG WHEN .NET 10 IS RELEASED
+docker buildx  build --build-arg DOTNET_VERSION="10.0" --build-arg DOTNET_QUALITY="Preview" -f Dockerfile.AmazonBaseImage --tag $acrName/amazonlinux-aspnet:10.0-preview --platform linux/amd64,linux/arm64/v8 --push .
 
-docker buildx  build --build-arg DOTNET_VERSION="8.0" -f Dockerfile.FedoraBaseImage --tag $acrName/fedora-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 --push .
-docker buildx  build --build-arg DOTNET_VERSION="9.0" -f Dockerfile.FedoraBaseImage --tag $acrName/fedora-aspnet:9.0 --platform linux/amd64,linux/arm64/v8 --push .
+docker buildx  build --build-arg DOTNET_VERSION="8.0" --build-arg DOTNET_QUALITY="GA" -f Dockerfile.FedoraBaseImage --tag $acrName/fedora-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 --push .
+# TODO: UPDATE TO GA QUALITY AND REMOVE -preview IMAGE TAG WHEN .NET 10 IS RELEASED
+docker buildx  build --build-arg DOTNET_VERSION="10.0" --build-arg DOTNET_QUALITY="Preview" -f Dockerfile.FedoraBaseImage --tag $acrName/fedora-aspnet:10.0-preview --platform linux/amd64,linux/arm64/v8 --push .
 ```
 
 4. Disable buildx in Docker Desktop
