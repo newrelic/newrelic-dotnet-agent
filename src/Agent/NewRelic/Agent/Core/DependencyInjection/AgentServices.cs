@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<INetworkData, NetworkData>();
             container.Register<IDnsStatic, DnsStatic>();
             container.Register<IHttpRuntimeStatic, HttpRuntimeStatic>();
-            container.Register<IConfigurationManagerStatic, ConfigurationManagerStatic>();
+            container.Register<IConfigurationManagerStatic, ConfigurationManagerStaticBridged>();
             container.Register<ISerializer, JsonSerializer>();
             container.Register<ICollectorWireFactory, HttpCollectorWireFactory>();
             container.Register<Environment, Environment>();
