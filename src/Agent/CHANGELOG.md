@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.43.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.43.0...v10.43.1) (2025-08-01)
+
+
+### Fixes
+
+* Exclude Azure Function webhost (Linux) process from instrumentation. ([#3194](https://github.com/newrelic/newrelic-dotnet-agent/issues/3194)) ([fc20645](https://github.com/newrelic/newrelic-dotnet-agent/commit/fc20645213bbc6dbcd4cbf4add3c73043fe384ee))
+
 ## [10.43.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.42.0...v10.43.0) (2025-07-09)
 
 
