@@ -50,6 +50,8 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
         {
             var serverlessPayload = _fixture.AgentLog.GetServerlessPayloads().Single();
 
+            var metrics = serverlessPayload.Telemetry.MetricsPayload.Metrics;
+
             Assert.Multiple(
                 () => Assert.Equal(2, serverlessPayload.Version),
                 () => Assert.Equal("NR_LAMBDA_MONITORING", serverlessPayload.ServerlessType),
@@ -67,7 +69,11 @@ namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
                 () => Assert.Null(serverlessPayload.Telemetry.SqlTracePayload),
                 () => Assert.Null(serverlessPayload.Telemetry.ErrorTracePayload),
                 () => Assert.Null(serverlessPayload.Telemetry.ErrorEventsPayload),
-                () => Assert.Equal(_expectedTransactionName, serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"])
+                () => Assert.Equal(_expectedTransactionName, serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"]),
+                () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("GC/Gen0/Collections")),
+                () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("Threadpool/Worker/InUse")),
+                () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("Memory/Physical")),
+                () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("CPU/User/Utilization"))
                 );
         }
 
