@@ -23,14 +23,17 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
             _fixture = fixture;
             fixture.TestLogger = output;
 
+            _fixture.AddCommand("RabbitMQModernExerciser ConnectAsync");
+
             // RabbitMQ SendRecieve uses the BasicGet method to receive, which does not process incoming tracing payloads
-            _fixture.AddCommand($"RabbitMQ SendReceive {_sendReceiveQueue} TestMessage");
+            _fixture.AddCommand($"RabbitMQModernExerciser SendReceiveAsync {_sendReceiveQueue} TestMessage");
             // RabbitMQ SendRecieveWithEventingConsumer uses the HandleBasicDeliverWrapper on the receiving side, which does process incoming tracing headers
             // We execute the method twice to make sure this issue stays fixed: https://github.com/newrelic/newrelic-dotnet-agent/issues/464
-            _fixture.AddCommand($"RabbitMQ SendReceiveWithEventingConsumer {_sendReceiveQueue} EventingConsumerTestMessageOne");
-            _fixture.AddCommand($"RabbitMQ SendReceiveWithEventingConsumer {_sendReceiveQueue} EventingConsumerTestMessageTwo");
+            _fixture.AddCommand($"RabbitMQModernExerciser SendReceiveWithEventingConsumerAsync {_sendReceiveQueue} EventingConsumerTestMessageOne");
+            _fixture.AddCommand($"RabbitMQModernExerciser SendReceiveWithEventingConsumerAsync {_sendReceiveQueue} EventingConsumerTestMessageTwo");
+
             // This is needed to avoid a hang on shutdown in the test app
-            _fixture.AddCommand("RabbitMQ Shutdown");
+            _fixture.AddCommand("RabbitMQModernExerciser ShutdownAsync");
 
             fixture.Actions
             (
@@ -41,6 +44,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 
                     configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.SetOrDeleteSpanEventsEnabled(true);
+
+                    configModifier.EnableOTelBridge(true);
                 }
             );
             fixture.Initialize();
@@ -54,45 +59,13 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
                 new Assertions.ExpectedMetric { metricName = "Supportability/DistributedTrace/CreatePayload/Success", callCount = 3 },
                 new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Create/Success", callCount = 3 },
                 new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = "DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ/InstrumentedChildMethod"} ,
-                new Assertions.ExpectedMetric { metricName = "DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ/InstrumentedChildMethod", metricScope = "OtherTransaction/Message/RabbitMQ/Queue/Named/integrationTestQueue.*", IsRegexScope = true}
+                new Assertions.ExpectedMetric { metricName = "DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ.RabbitMQModernExerciser/InstrumentedChildMethod"} ,
+                new Assertions.ExpectedMetric { metricName = "DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ.RabbitMQModernExerciser/InstrumentedChildMethod", metricScope = "OtherTransaction/Message/RabbitMQ/Queue/Named/integrationTestQueue.*", IsRegexScope = true}
             };
 
             var metrics = _fixture.AgentLog.GetMetrics();
 
             Assertions.MetricsExist(expectedMetrics, metrics);
-        }
-    }
-
-    public class RabbitMqDistributedTracingTestsFWLatest : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public RabbitMqDistributedTracingTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    public class RabbitMqDistributedTracingTestsFW48 : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW48>
-    {
-        public RabbitMqDistributedTracingTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    public class RabbitMqDistributedTracingTestsFW471 : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public RabbitMqDistributedTracingTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    public class RabbitMqDistributedTracingTestsFW462 : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public RabbitMqDistributedTracingTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
         }
     }
 
@@ -103,13 +76,4 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         {
         }
     }
-
-    public class RabbitMqDistributedTracingTestsCoreOldest : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
-    {
-        public RabbitMqDistributedTracingTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
 }

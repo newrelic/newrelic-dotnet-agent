@@ -9,8 +9,10 @@ using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -65,10 +67,19 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                         Log.Finest($"{activityLogPrefix} is missing required tags to determine whether it's an external or database activity.");
                     }
                     break;
-                case (int)ActivityKind.Internal:
-                case (int)ActivityKind.Server:
                 case (int)ActivityKind.Producer:
                 case (int)ActivityKind.Consumer:
+                    if (tags.TryGetAndRemoveTag<string>(["messaging.system"], out var messagingSystem))
+                    {
+                        ProcessProducerConsumerMessagingSystemTags(segment, agent, activity, activityLogPrefix, tags, (ActivityKind)activityKind, messagingSystem);
+                    }
+                    else
+                    {
+                        Log.Finest($"{activityLogPrefix} is missing required tag for messaging system. Not creating a MessagingSegmentData.");
+                    }
+                    break;
+                case (int)ActivityKind.Internal:
+                case (int)ActivityKind.Server:
                 default:
                     break;
             }
@@ -81,6 +92,117 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 segment.AddCustomAttribute(tag.Key, tag.Value);
             }
 
+        }
+
+        private static void ProcessProducerConsumerMessagingSystemTags(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, ActivityKind actvityKind, string messagingSystem)
+        {
+            // translate the messaging system to a vendor name suitable for MessageBrokerSegmentData
+            string vendor = messagingSystem switch
+            {
+                // TODO: consolidate all vendor names to some common enum or constant similar to DatastoreVendor
+                "rabbitmq" => "RabbitMQ",
+                //"kafka" => KafkaHelper.VendorName,
+                //"aws.sqs" => SqsHelper.VendorName,
+                //"aws.sns" => SnsHelper.VendorName,
+                //"azure.servicebus" => AzureServiceBusHelper.VendorName,
+                _ => null
+            };
+
+            if (vendor == null)
+            {
+                Log.Finest($"{activityLogPrefix} has a messaging.system tag with unsupported value {messagingSystem}. Not creating a MessageBrokerSegmentData.");
+                return;
+            }
+            Log.Finest($"{activityLogPrefix} has a messaging.system tag with value {messagingSystem}. Mapping to vendor {vendor}.");
+
+            ISegmentData segmentData = vendor switch
+            {
+                "RabbitMQ" => GetRabbitMqSegmentData(agent, segment, activity, activityLogPrefix, tags, actvityKind, vendor,
+                    messagingSystem),
+                _ => null
+            };
+
+            if (segmentData != null)
+            {
+                segment.GetExperimentalApi().SetSegmentData(segmentData);
+            }
+        }
+
+        // see https://opentelemetry.io/docs/specs/semconv/messaging/rabbitmq/
+        private static ISegmentData GetRabbitMqSegmentData(IAgent agent, ISegment segment, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, ActivityKind activityKind, string vendor, string messagingSystem)
+        {
+            // get the routing key
+            if (!tags.TryGetAndRemoveTag<string>(["messaging.rabbitmq.destination.routing_key"], out var routingKey))
+            {
+                Log.Finest($"{activityLogPrefix} is missing required tag for routing_key. Not creating a MessageBrokerSegmentData.");
+                return null;
+            }
+
+            // TODO: do we need to key off of operationType and operationName?
+            //tags.TryGetAndRemoveTag<string>(["messaging.operation.type"], out var operationType);
+            tags.TryGetAndRemoveTag<string>(["messaging.operation.name"], out var operationName);
+
+            var operation = activityKind switch
+            {
+                ActivityKind.Producer when operationName == "purge" => MessageBrokerAction.Purge, // RabbitMQ purge operation arrives as a Producer activity
+                ActivityKind.Producer => MessageBrokerAction.Produce,
+                ActivityKind.Consumer => MessageBrokerAction.Consume,
+                _ => throw new ArgumentOutOfRangeException(nameof(activityKind), activityKind, "Unsupported activity kind for messaging system.")
+            };
+
+            var destinationType = GetBrokerDestinationType(routingKey);
+            var destinationName = ResolveDestinationName(destinationType, routingKey);
+
+            tags.TryGetAndRemoveTag<string>(["server.address", "net.peer.name", "net.peer.ip"], out var serverAddress);
+            tags.TryGetAndRemoveTag<int>(["server.port", "net.peer.port"], out var serverPort);
+
+            var action = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(operation);
+            var destType = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(destinationType);
+
+            // create the segment data
+            var segmentData = new MessageBrokerSegmentData(
+                vendor,
+                destinationName,
+                destType,
+                action,
+                messagingSystemName: messagingSystem,
+                serverAddress: serverAddress,
+                serverPort: serverPort,
+                routingKey: routingKey);
+
+            Log.Finest($"Created MessageBrokerSegmentData for {activityLogPrefix}.");
+
+            // set the transaction name if this is a consumer activity and the operation name is "deliver" (we created the transaction)
+            if (operation == MessageBrokerAction.Consume && operationName == "deliver")
+            {
+
+                if (segment is IHybridAgentSegment hybridAgentSegment)
+                {
+                    Log.Finest($"{activityLogPrefix} is a consumer activity. Setting transaction name to {TransactionName.ForBrokerTransaction(destinationType,vendor,destinationName)}");
+                    var transaction = hybridAgentSegment.GetTransactionFromSegment();
+                    transaction.SetMessageBrokerTransactionName(destinationType, vendor, destinationName);
+                }
+            }
+
+            return segmentData;
+        }
+
+        private const string TempQueuePrefix = "amq.";
+        private static MessageBrokerDestinationType GetBrokerDestinationType(string queueNameOrRoutingKey)
+        {
+            if (queueNameOrRoutingKey.StartsWith(TempQueuePrefix))
+                return MessageBrokerDestinationType.TempQueue;
+
+            return queueNameOrRoutingKey.Contains(".") ? MessageBrokerDestinationType.Topic : MessageBrokerDestinationType.Queue;
+        }
+
+        private static string ResolveDestinationName(MessageBrokerDestinationType destinationType,
+            string queueNameOrRoutingKey)
+        {
+            return (destinationType == MessageBrokerDestinationType.TempQueue ||
+                    destinationType == MessageBrokerDestinationType.TempTopic)
+                ? null
+                : queueNameOrRoutingKey;
         }
 
         private static void ProcessClientExternalTags(ISegment segment, IAgent agent, Dictionary<string, object> tags, string activityLogPrefix, string method)
@@ -138,17 +260,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             Log.Finest($"{activityLogPrefix} has db.system.name tag with value {dbSystemName}. Mapping to vendor {vendor}.");
 
             // get an appropriate datastore segment data based on the vendor
-            ISegmentData segmentData = null;
-            switch (vendor)
+            ISegmentData segmentData = vendor switch
             {
-                case DatastoreVendor.Elasticsearch:
-                    segmentData = GetElasticSearchDatastoreSegmentData(agent, tags, vendor, activityLogPrefix);
-                    break;
-
-                default:
-                    segmentData = GetDefaultDatastoreSegmentData(agent, activity, activityLogPrefix, tags, vendor);
-                    break;
-            }
+                DatastoreVendor.Elasticsearch => GetElasticSearchDatastoreSegmentData(agent, tags, vendor,
+                    activityLogPrefix),
+                _ => GetDefaultDatastoreSegmentData(agent, activity, activityLogPrefix, tags, vendor)
+            };
 
             if (segmentData != null)
             {
@@ -320,23 +437,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     }
 
     public static class ActivityLogPrefixHelpers
+{
+    public static string ActivityLogPrefix(string activityId, int activityKindInt, string activityDisplayName)
     {
-        public static string ActivityLogPrefix(string activityId, int activityKindInt, string activityDisplayName)
-        {
-            return $"Activity {activityId} (Kind: {activityKindInt}, DisplayName: {activityDisplayName})";
-        }
-
-        internal static ActivityKind ToActivityKind(this int activityKindInt)
-        {
-            return activityKindInt switch
-            {
-                (int)ActivityKind.Client => ActivityKind.Client,
-                (int)ActivityKind.Internal => ActivityKind.Internal,
-                (int)ActivityKind.Server => ActivityKind.Server,
-                (int)ActivityKind.Producer => ActivityKind.Producer,
-                (int)ActivityKind.Consumer => ActivityKind.Consumer,
-                _ => throw new ArgumentOutOfRangeException(nameof(activityKindInt), activityKindInt, null)
-            };
-        }
+        return $"Activity {activityId} (Kind: {(ActivityKind)activityKindInt}, DisplayName: {activityDisplayName})";
     }
+}
 }
