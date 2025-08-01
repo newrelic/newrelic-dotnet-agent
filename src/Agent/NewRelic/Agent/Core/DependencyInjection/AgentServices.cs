@@ -259,19 +259,16 @@ namespace NewRelic.Agent.Core.DependencyInjection
             samplerStartThread.IsBackground = true;
             samplerStartThread.Start();
 #else
-            if (!serverlessModeEnabled)
-            {
-                if (!gcSamplerV2Enabled)
-                    container.Resolve<GCSamplerNetCore>().Start();
-                else
-                    container.Resolve<GCSamplerV2>().Start();
-            }
+            if (!gcSamplerV2Enabled)
+                container.Resolve<GCSamplerNetCore>().Start();
+            else
+                container.Resolve<GCSamplerV2>().Start();
 #endif
+            container.Resolve<CpuSampler>().Start();
+            container.Resolve<MemorySampler>().Start();
+            container.Resolve<ThreadStatsSampler>().Start();
             if (!serverlessModeEnabled)
             {
-                container.Resolve<CpuSampler>().Start();
-                container.Resolve<MemorySampler>().Start();
-                container.Resolve<ThreadStatsSampler>().Start();
                 container.Resolve<ConfigurationTracker>();
                 container.Resolve<LiveInstrumentationServerConfigurationListener>();
                 container.Resolve<UpdatedLoadedModulesService>();
