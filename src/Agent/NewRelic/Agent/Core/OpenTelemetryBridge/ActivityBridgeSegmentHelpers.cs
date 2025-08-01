@@ -144,7 +144,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             var operation = activityKind switch
             {
-                ActivityKind.Producer when operationName == "purge" => MessageBrokerAction.Purge, // RabbitMQ purge operation arrives as a Producer activity
+                // doesn't work -- there's no activity for RabbitMQ purge operation
+                //ActivityKind.Producer when operationName == "purge" => MessageBrokerAction.Purge, 
+
                 ActivityKind.Producer => MessageBrokerAction.Produce,
                 ActivityKind.Consumer => MessageBrokerAction.Consume,
                 _ => throw new ArgumentOutOfRangeException(nameof(activityKind), activityKind, "Unsupported activity kind for messaging system.")
