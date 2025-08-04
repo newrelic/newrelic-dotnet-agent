@@ -518,11 +518,11 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual IEnumerable<string> CaptureAttributesIncludes =>
             CanUseAttributesIncludes
                 ? _captureAttributesIncludes ??=
-                    [..EnvironmentOverrides(_localConfiguration.attributes.include, "NEW_RELIC_ATTRIBUTES_INCLUDE")]
+                    [.. EnvironmentOverrides(_localConfiguration.attributes.include, "NEW_RELIC_ATTRIBUTES_INCLUDE")]
                 : _captureAttributesIncludes ??= [];
 
         private IEnumerable<string> _captureAttributesExcludes;
-        public virtual IEnumerable<string> CaptureAttributesExcludes => _captureAttributesExcludes ??= [..EnvironmentOverrides(_localConfiguration.attributes.exclude, "NEW_RELIC_ATTRIBUTES_EXCLUDE")];
+        public virtual IEnumerable<string> CaptureAttributesExcludes => _captureAttributesExcludes ??= [.. EnvironmentOverrides(_localConfiguration.attributes.exclude, "NEW_RELIC_ATTRIBUTES_EXCLUDE")];
 
         private IEnumerable<string> _captureAttributesDefaultExcludes;
         public virtual IEnumerable<string> CaptureAttributesDefaultExcludes => _captureAttributesDefaultExcludes ??= ["identity.*"];
@@ -547,12 +547,12 @@ namespace NewRelic.Agent.Core.Configuration
         private HashSet<string> _transactionEventsAttributesInclude;
         public HashSet<string> TransactionEventsAttributesInclude =>
             _transactionEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && TransactionEventsAttributesEnabled
-                ? [.._localConfiguration.transactionEvents.attributes.include]
+                ? [.. _localConfiguration.transactionEvents.attributes.include]
                 : [];
 
         private HashSet<string> _transactionEventsAttributesExclude;
         public HashSet<string> TransactionEventsAttributesExclude =>
-            _transactionEventsAttributesExclude ??= [.._localConfiguration.transactionEvents.attributes.exclude];
+            _transactionEventsAttributesExclude ??= [.. _localConfiguration.transactionEvents.attributes.exclude];
 
         public virtual bool CaptureTransactionTraceAttributes => ShouldCaptureTransactionTraceAttributes();
 
@@ -575,7 +575,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual IEnumerable<string> CaptureTransactionTraceAttributesIncludes =>
             ShouldCaptureTransactionTraceAttributesIncludes()
-                ? _captureTransactionTraceAttributesIncludes ??= [.._localConfiguration.transactionTracer.attributes.include]
+                ? _captureTransactionTraceAttributesIncludes ??= [.. _localConfiguration.transactionTracer.attributes.include]
                 : _captureTransactionTraceAttributesIncludes ??= [];
 
         private bool? _shouldCaptureTransactionTraceAttributesIncludes;
@@ -600,7 +600,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private IEnumerable<string> _captureTransactionTraceAttributesExcludes;
         public virtual IEnumerable<string> CaptureTransactionTraceAttributesExcludes =>
-            _captureTransactionTraceAttributesExcludes ??= [.._localConfiguration.transactionTracer.attributes.exclude];
+            _captureTransactionTraceAttributesExcludes ??= [.. _localConfiguration.transactionTracer.attributes.exclude];
 
 
         public virtual bool CaptureErrorCollectorAttributes => ShouldCaptureErrorCollectorAttributes();
@@ -688,7 +688,7 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         private IEnumerable<string> _captureBrowserMonitoringAttributesExcludes;
-        public virtual IEnumerable<string> CaptureBrowserMonitoringAttributesExcludes => _captureBrowserMonitoringAttributesExcludes ??=[.. _localConfiguration.browserMonitoring.attributes.exclude];
+        public virtual IEnumerable<string> CaptureBrowserMonitoringAttributesExcludes => _captureBrowserMonitoringAttributesExcludes ??= [.. _localConfiguration.browserMonitoring.attributes.exclude];
 
 
         private BoolConfigurationItem _shouldCaptureCustomParameters;
@@ -834,11 +834,11 @@ namespace NewRelic.Agent.Core.Configuration
         private HashSet<string> _spanEventsAttributesInclude;
         public HashSet<string> SpanEventsAttributesInclude =>
             _spanEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && SpanEventsAttributesEnabled
-                ? [.._localConfiguration.spanEvents.attributes.include]
+                ? [.. _localConfiguration.spanEvents.attributes.include]
                 : [];
 
         private HashSet<string> _spanEventsAttributesExclude;
-        public virtual HashSet<string> SpanEventsAttributesExclude => _spanEventsAttributesExclude ??= [.._localConfiguration.spanEvents.attributes.exclude];
+        public virtual HashSet<string> SpanEventsAttributesExclude => _spanEventsAttributesExclude ??= [.. _localConfiguration.spanEvents.attributes.exclude];
 
         #endregion
 
@@ -879,6 +879,9 @@ namespace NewRelic.Agent.Core.Configuration
         public RemoteParentSampledBehavior RemoteParentSampledBehavior => EnvironmentOverrides(_localConfiguration.distributedTracing.sampler.remoteParentSampled.ToString(), "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED").ToRemoteParentSampledBehavior();
 
         public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => EnvironmentOverrides(_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.ToString(), "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED").ToRemoteParentSampledBehavior();
+
+        public bool TraceIdRatioBaseSamplingEnabled => _localConfiguration.distributedTracing.root.traceIdRatioBased.ratioSpecified;
+        public float? TraceIdRatioBaseSamplingRatio => TraceIdRatioBaseSamplingEnabled ? _localConfiguration.distributedTracing.root.traceIdRatioBased.ratio : null;
 
         #endregion Distributed Tracing
 
@@ -1532,11 +1535,11 @@ namespace NewRelic.Agent.Core.Configuration
         private HashSet<string> _customEventsAttributesInclude;
         public HashSet<string> CustomEventsAttributesInclude =>
             _customEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && CustomEventsAttributesEnabled
-                ? [.._localConfiguration.customEvents.attributes.include]
+                ? [.. _localConfiguration.customEvents.attributes.include]
                 : [];
 
         private HashSet<string> _customEventsAttributesExclude;
-        public HashSet<string> CustomEventsAttributesExclude => _customEventsAttributesExclude ??= [.._localConfiguration.customEvents.attributes.exclude];
+        public HashSet<string> CustomEventsAttributesExclude => _customEventsAttributesExclude ??= [.. _localConfiguration.customEvents.attributes.exclude];
 
         #endregion
 
@@ -1579,7 +1582,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual TimeSpan TransactionTraceApdexT =>
             // get apdex_t from environment variable if running in serverless mode
-            TimeSpan.FromSeconds(ServerlessModeEnabled ? 
+            TimeSpan.FromSeconds(ServerlessModeEnabled ?
                 EnvironmentOverrides(0.5, "NEW_RELIC_APDEX_T").GetValueOrDefault() : ServerOverrides(_serverConfiguration.ApdexT, 0.5));
 
         public virtual TimeSpan TransactionTraceThreshold =>
