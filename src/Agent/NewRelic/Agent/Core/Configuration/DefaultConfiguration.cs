@@ -880,8 +880,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => EnvironmentOverrides(_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.ToString(), "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED").ToRemoteParentSampledBehavior();
 
-        public bool TraceIdRatioBaseSamplingEnabled => _localConfiguration.distributedTracing.root.traceIdRatioBased.ratioSpecified;
-        public float? TraceIdRatioBaseSamplingRatio => TraceIdRatioBaseSamplingEnabled ? _localConfiguration.distributedTracing.root.traceIdRatioBased.ratio : null;
+        public bool TraceIdRatioBasedSamplingEnabled => _localConfiguration.distributedTracing.root.traceIdRatioBased.ratioSpecified;
+        public float? TraceIdRatioBasedSamplingRatio => TraceIdRatioBasedSamplingEnabled ? _localConfiguration.distributedTracing.root.traceIdRatioBased.ratio : null;
 
         #endregion Distributed Tracing
 
