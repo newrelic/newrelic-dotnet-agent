@@ -42,8 +42,10 @@ updates:
         patterns:
           - "*"
     ignore:
-      - dependency-name: "Autofac"
+      - dependency-name: "Autofac" # v6+ doesn't support .NET Framework; we could upgerade to v5.x but there's no good reason for it
       - dependency-name: "Microsoft.Extensions.Configuration.*"
+      - dependency-name: "SharpZipLib" # we can't upgrade beyond 1.3.3
+
 
   # Update a specific set of packages for unit and integration tests
   - package-ecosystem: nuget
