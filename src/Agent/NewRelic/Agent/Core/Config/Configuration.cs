@@ -3861,6 +3861,8 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationDistributedTracing
     {
         
+        private configurationDistributedTracingRoot rootField;
+        
         private configurationDistributedTracingSampler samplerField;
         
         private bool enabledField;
@@ -3881,10 +3883,23 @@ namespace NewRelic.Agent.Core.Config
         public configurationDistributedTracing()
         {
             this.samplerField = new configurationDistributedTracingSampler();
+            this.rootField = new configurationDistributedTracingRoot();
             this.enabledField = false;
             this.excludeNewrelicHeaderField = false;
             this.enableSuccessMetricsField = true;
             this.primary_application_idField = "Unknown";
+        }
+        
+        public configurationDistributedTracingRoot root
+        {
+            get
+            {
+                return this.rootField;
+            }
+            set
+            {
+                this.rootField = value;
+            }
         }
         
         public configurationDistributedTracingSampler sampler
@@ -3988,6 +4003,102 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationDistributedTracing Clone()
         {
             return ((configurationDistributedTracing)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationDistributedTracingRoot
+    {
+        
+        private configurationDistributedTracingRootTraceIdRatioBased traceIdRatioBasedField;
+        
+        /// <summary>
+        /// configurationDistributedTracingRoot class constructor
+        /// </summary>
+        public configurationDistributedTracingRoot()
+        {
+            this.traceIdRatioBasedField = new configurationDistributedTracingRootTraceIdRatioBased();
+        }
+        
+        public configurationDistributedTracingRootTraceIdRatioBased traceIdRatioBased
+        {
+            get
+            {
+                return this.traceIdRatioBasedField;
+            }
+            set
+            {
+                this.traceIdRatioBasedField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationDistributedTracingRoot object
+        /// </summary>
+        public virtual configurationDistributedTracingRoot Clone()
+        {
+            return ((configurationDistributedTracingRoot)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationDistributedTracingRootTraceIdRatioBased
+    {
+        
+        private System.Nullable<float> ratioField;
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public float ratio
+        {
+            get
+            {
+                if (this.ratioField.HasValue)
+                {
+                    return this.ratioField.Value;
+                }
+                else
+                {
+                    return default(float);
+                }
+            }
+            set
+            {
+                this.ratioField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool ratioSpecified
+        {
+            get
+            {
+                return this.ratioField.HasValue;
+            }
+            set
+            {
+                if (value==false)
+                {
+                    this.ratioField = null;
+                }
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationDistributedTracingRootTraceIdRatioBased object
+        /// </summary>
+        public virtual configurationDistributedTracingRootTraceIdRatioBased Clone()
+        {
+            return ((configurationDistributedTracingRootTraceIdRatioBased)(this.MemberwiseClone()));
         }
         #endregion
     }
