@@ -208,9 +208,15 @@ namespace NewRelic.Agent.Core.Configuration
         public bool DistributedTracingEnabled => _configuration.DistributedTracingEnabled;
 
         [JsonProperty("distributed_tracing.sampler.remote_parent_sampled")]
-        public RemoteParentSampledBehavior RemoteParentSampledBehavior { get; }
+        public RemoteParentSampledBehavior RemoteParentSampledBehavior => _configuration.RemoteParentSampledBehavior;
         [JsonProperty("distributed_tracing.sampler.remote_parent_not_sampled")]
-        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior { get; }
+        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => _configuration.RemoteParentNotSampledBehavior;
+
+        [JsonProperty("distributed_tracing.trace_id_ratio_based.enabled")]
+        public bool TraceIdRatioBasedSamplingEnabled => _configuration.TraceIdRatioBasedSamplingEnabled;
+
+        [JsonProperty("distributed_tracing.trace_id_ratio_based.ratio")]
+        public float? TraceIdRatioBasedSamplingRatio => _configuration.TraceIdRatioBasedSamplingRatio;
 
         [JsonProperty("span_events.enabled")]
         public bool SpanEventsEnabled => _configuration.SpanEventsEnabled;
