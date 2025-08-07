@@ -1,11 +1,11 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace CompositeTests
 {
@@ -51,20 +51,21 @@ namespace CompositeTests
             for (var callCounter = 0; callCounter < calls; ++callCounter)
             {
                 var priority = defaultPriority;
-                var sampled = _adaptiveSampler.ComputeSampled(ref priority);
+                var samplingParameters = new SamplingParameters(null, priority);
+                var samplingResult = _adaptiveSampler.ShouldSample(samplingParameters);
 
                 // Assert
                 if (callCounter < _adaptiveSampler.TargetSamplesPerInterval)
                 {
                     NrAssert.Multiple(
-                        () => Assert.That(sampled, Is.True),
+                        () => Assert.That(samplingResult.Sampled, Is.True),
                         () => Assert.That(priority, Is.EqualTo(defaultPriority + PriorityBoost).Within(Epsilon))
                     );
                 }
                 else
                 {
                     NrAssert.Multiple(
-                        () => Assert.That(sampled, Is.False),
+                        () => Assert.That(samplingResult.Sampled, Is.False),
                         () => Assert.That(priority, Is.EqualTo(defaultPriority).Within(Epsilon))
                     );
                 }
@@ -82,9 +83,10 @@ namespace CompositeTests
             // Arrange
             for (var i = 0; i < firstHarvestTransactionCount; ++i)
             {
-                var pr = DefaultPriority;
-                _adaptiveSampler.ComputeSampled(ref pr);
+                var samplingParameters = new SamplingParameters(null, DefaultPriority);
+                _adaptiveSampler.ShouldSample(samplingParameters);
             }
+
             //end of Harvest
             System.Threading.Thread.Sleep(TimeSpan.FromSeconds(DefaultSamplingTargetIntervalInSecondsForTesting));
 
@@ -96,22 +98,22 @@ namespace CompositeTests
             for (var callCounter = 0; callCounter < secondHarvestTransactionCount; ++callCounter)
             {
                 var prePriority = Sanitize((float)rand.NextDouble());
-                var priority = prePriority;
-                var sampled = _adaptiveSampler.ComputeSampled(ref priority);
-                //Console.Write($"{sampled},");
+
+                var samplingParameters = new SamplingParameters(null, prePriority);
+                var samplingResult = _adaptiveSampler.ShouldSample(samplingParameters);
                 var message = $"callCounter: {callCounter}";
                 if (sampleSequence[callCounter])
                 {
                     NrAssert.Multiple(
-                        () => Assert.That(sampled, Is.True, message),
-                        () => Assert.That(priority, Is.EqualTo(Sanitize(prePriority + PriorityBoost)).Within(Epsilon), message)
+                        () => Assert.That(samplingResult.Priority, Is.True, message),
+                        () => Assert.That(samplingResult.Priority, Is.EqualTo(Sanitize(prePriority + PriorityBoost)).Within(Epsilon), message)
                     );
                 }
                 else
                 {
                     NrAssert.Multiple(
-                        () => Assert.That(sampled, Is.False, message),
-                        () => Assert.That(priority, Is.EqualTo(prePriority).Within(Epsilon), message)
+                        () => Assert.That(samplingResult.Sampled, Is.False, message),
+                        () => Assert.That(samplingResult.Priority, Is.EqualTo(prePriority).Within(Epsilon), message)
                     );
                 }
             }

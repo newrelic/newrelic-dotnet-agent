@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DistributedTracing
@@ -208,7 +209,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
             string agentTrustKey,
             DateTime transactionStartTime,
             RemoteParentSampledBehavior remoteParentSampledBehavior,
-            RemoteParentSampledBehavior remoteParentNotSampledBehavior)
+            RemoteParentSampledBehavior remoteParentNotSampledBehavior,
+            float? traceIdSampleRatio)
         {
             var tracingState = new TracingState();
             var errors = new List<IngestErrorType>();
@@ -217,12 +219,15 @@ namespace NewRelic.Agent.Core.DistributedTracing
             tracingState._traceContext = W3CTraceContext.TryGetTraceContextFromHeaders(carrier, getter, agentTrustKey, errors);
             tracingState.TraceContextWasAccepted =
                 tracingState._traceContext.TraceparentPresent &&
-                !errors.Contains(IngestErrorType.TraceParentParseException) ? true : false;
+                !errors.Contains(IngestErrorType.TraceParentParseException);
 
-            tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null ? true : false;
+            tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null;
 
-            tracingState.ApplyRemoteParentSampledBehavior(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
-
+            // attempt to apply one of our configurable sampling decisions, preferring the trace id sample ratio if it's configured
+            // and a trace id is available.
+            if (!tracingState.TryApplyTraceIdRatioSampler(traceIdSampleRatio))
+                tracingState.ApplyRemoteParentSampledBehavior(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
+            
             // newrelic 
             // if traceparent was present (regardless if valid), ignore newrelic header
             if (!tracingState._traceContext.TraceparentPresent)
@@ -261,12 +266,35 @@ namespace NewRelic.Agent.Core.DistributedTracing
         }
 
         /// <summary>
+        /// If a trace id sample ratio is configured and a trace id is available, apply a sampling decision based on the trace id. 
+        /// </summary>
+        /// <param name="traceIdSampleRatio"></param>
+        /// <returns><c>true</c> if the trace id ratio sampler was applied; <c>false</c> otherwise.</returns>
+        private bool TryApplyTraceIdRatioSampler(float? traceIdSampleRatio)
+        {
+            // if trace id sample ratio is not configured (non-null) or trace id is not available, do not apply the sampler
+            if (traceIdSampleRatio is null || _traceContext?.Traceparent?.TraceId is null)
+                return false;
+
+            var traceId = _traceContext.Traceparent.TraceId;
+
+            var traceIdSampler = new TraceIdRatioSampler(traceIdSampleRatio.Value);
+            var samplingResult = traceIdSampler.ShouldSample(new SamplingParameters(traceId, Priority ?? 0.0f));
+
+            _priority = samplingResult.Priority;
+            _sampled = samplingResult.Sampled;
+
+            Log.Finest("TryApplyTraceIdRatioSampler: traceIdSampleRatio={traceIdSampleRatio}, traceId={traceId} ==> Sampled: {Sampled}, Priority: {Priority}",
+                traceIdSampleRatio.Value, traceId, Sampled, Priority); 
+
+            return true;
+        }
+
+        /// <summary>
         /// Use remote parent sampled behavior configuration in conjunction with the traceparent sampled flag to determine
         /// if the transaction should be sampled.
         /// </summary>
-        private void ApplyRemoteParentSampledBehavior(
-            RemoteParentSampledBehavior remoteParentSampledBehavior,
-            RemoteParentSampledBehavior remoteParentNotSampledBehavior)
+        private void ApplyRemoteParentSampledBehavior(RemoteParentSampledBehavior remoteParentSampledBehavior, RemoteParentSampledBehavior remoteParentNotSampledBehavior)
         {
             // don't do anything if the traceparent is not present or if behavior is configured to default
             if (!_traceContext.TraceparentPresent ||
@@ -280,20 +308,18 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 ? remoteParentSampledBehavior
                 : remoteParentNotSampledBehavior;
 
-            switch (sampledBehavior)
+            ISampler sampler = sampledBehavior switch
             {
-                case RemoteParentSampledBehavior.AlwaysOn:
-                    _priority = 2.0f; // per the spec, set priority high so that this sample is always kept
-                    _sampled = true;
-                    break;
-                case RemoteParentSampledBehavior.AlwaysOff:
-                    _priority = 0.0f; // set lowest possible priority
-                    _sampled = false;
-                    break;
-                // don't need a case for Default, as it is handled above
-                default:
-                    throw new ArgumentException($"Invalid {(_traceContext.Traceparent.Sampled ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")} value: {sampledBehavior}.");
-            }
+                RemoteParentSampledBehavior.AlwaysOn => new AlwaysOnSampler(),
+                RemoteParentSampledBehavior.AlwaysOff => new AlwaysOffSampler(),
+                _ => throw new ArgumentException(
+                    $"Invalid {(_traceContext.Traceparent.Sampled ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")} value: {sampledBehavior}.")
+            };
+
+            var samplingResult = sampler.ShouldSample(new SamplingParameters(TraceId, Priority ?? 0.0f));
+            _priority = samplingResult.Priority;
+            _sampled = samplingResult.Sampled;
+
 
             Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext.Traceparent.Sampled={SampledValue}, {ParentType}SampledBehavior: {SampledBehavior} ==> Sampled: {Sampled}, Priority: {Priority}",
                     _traceContext.Traceparent.Sampled,

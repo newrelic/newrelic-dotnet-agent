@@ -13,11 +13,11 @@ using System.Linq;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Telerik.JustMock;
-using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
@@ -125,7 +125,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var logEventAggregator = Mock.Create<ILogEventAggregator>();
 
             // create TransactionTransformer
-            _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService, _spanEventAggregatorInfiniteTracing, logEventAggregator);
+            _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<ISampler>(), _errorService, _spanEventAggregatorInfiniteTracing, logEventAggregator);
         }
 
         [TearDown]
