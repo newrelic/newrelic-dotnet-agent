@@ -451,6 +451,79 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Assert.That(tracingState.Sampled, Is.EqualTo(Sampled), "Sampled should use the value from the trace context when behavior is 'default'.");
         }
 
+        [Test]
+        public void AcceptDistributedTraceHeaders_AppliesTraceIdSampleRatio_WhenNonNull()
+        {
+            // Arrange
+            var headers = new Dictionary<string, string>()
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", ValidTracestate },
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                carrier: headers,
+                getter: GetHeader,
+                transportType: TransportType.AMQP,
+                agentTrustKey: TrustKey,
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: 1.0f);
+
+            // Assert
+            Assert.That(tracingState.Sampled, Is.True, "Sampled should be true when sampleRatio is 1.0");
+            Assert.That(tracingState.Priority, Is.EqualTo(Priority + 1.0f), "Priority should be boosted when sampleRatio is 1.0");
+        }
+
+        [Test]
+        public void AcceptDistributedTraceHeaders_DoesNotApplyTraceIdSampleRatio_WhenNull()
+        {
+            // Arrange
+            var headers = new Dictionary<string, string>()
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", ValidTracestate },
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                carrier: headers,
+                getter: GetHeader,
+                transportType: TransportType.AMQP,
+                agentTrustKey: TrustKey,
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
+
+            // Assert
+            Assert.That(tracingState.Sampled, Is.EqualTo(Sampled), "Sampled should use the tracestate sampled value when sampleRatio is null");
+            Assert.That(tracingState.Priority, Is.EqualTo(Priority), "Priority should use the tracestate priority value when sampleRatio is null");
+        }
+
+        [Test]
+        public void AcceptDistributedTraceHeaders_AppliesTraceIdSampleRatio_SampledFalse()
+        {
+            // Arrange
+            var headers = new Dictionary<string, string>()
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", ValidTracestate },
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                carrier: headers,
+                getter: GetHeader,
+                transportType: TransportType.AMQP,
+                agentTrustKey: TrustKey,
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: 0.0f);
+
+            // Assert
+            Assert.That(tracingState.Sampled, Is.EqualTo(false), "Sampled should be false when sampleRatio is 0");
+            Assert.That(tracingState.Priority, Is.EqualTo(Priority), "Priority should use the tracestate priority value when sampleRatio is 0");
+        }
+
+
         #endregion
 
         #region helpers
