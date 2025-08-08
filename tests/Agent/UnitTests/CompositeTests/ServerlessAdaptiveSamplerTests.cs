@@ -59,7 +59,7 @@ namespace CompositeTests
                 else
                 {
                     NrAssert.Multiple(
-                        () => Assert.That(samplingResult.Priority, Is.False),
+                        () => Assert.That(samplingResult.Sampled, Is.False),
                         () => Assert.That(samplingResult.Priority, Is.EqualTo(defaultPriority).Within(Epsilon))
                     );
                 }

@@ -50,8 +50,7 @@ namespace CompositeTests
             // Act
             for (var callCounter = 0; callCounter < calls; ++callCounter)
             {
-                var priority = defaultPriority;
-                var samplingParameters = new SamplingParameters(null, priority);
+                var samplingParameters = new SamplingParameters(null, defaultPriority);
                 var samplingResult = _adaptiveSampler.ShouldSample(samplingParameters);
 
                 // Assert
@@ -59,14 +58,14 @@ namespace CompositeTests
                 {
                     NrAssert.Multiple(
                         () => Assert.That(samplingResult.Sampled, Is.True),
-                        () => Assert.That(priority, Is.EqualTo(defaultPriority + PriorityBoost).Within(Epsilon))
+                        () => Assert.That(samplingResult.Priority, Is.EqualTo(defaultPriority + PriorityBoost).Within(Epsilon))
                     );
                 }
                 else
                 {
                     NrAssert.Multiple(
                         () => Assert.That(samplingResult.Sampled, Is.False),
-                        () => Assert.That(priority, Is.EqualTo(defaultPriority).Within(Epsilon))
+                        () => Assert.That(samplingResult.Priority, Is.EqualTo(defaultPriority).Within(Epsilon))
                     );
                 }
             }
@@ -105,7 +104,7 @@ namespace CompositeTests
                 if (sampleSequence[callCounter])
                 {
                     NrAssert.Multiple(
-                        () => Assert.That(samplingResult.Priority, Is.True, message),
+                        () => Assert.That(samplingResult.Sampled, Is.True, message),
                         () => Assert.That(samplingResult.Priority, Is.EqualTo(Sanitize(prePriority + PriorityBoost)).Within(Epsilon), message)
                     );
                 }
