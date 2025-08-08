@@ -15,7 +15,6 @@ using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
@@ -42,7 +41,7 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
-using NewRelic.Agent.Core.Database.UnitTest;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {

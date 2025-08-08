@@ -10,7 +10,6 @@ using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metrics;
@@ -32,6 +31,7 @@ using System.Linq;
 using System.Reflection;
 using Telerik.JustMock;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 

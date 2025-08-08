@@ -4,7 +4,6 @@
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Configuration;
@@ -40,6 +39,12 @@ namespace NewRelic.Agent.Core.DistributedTracing
         // missing tx: AND id:
         private const string NewRelicPayloadUntraceable = "{ \"v\":[0,1],\"d\":{\"ty\":\"HTTP\",\"ac\":\"accountId\",\"ap\":\"appId\",\"tr\":\"traceId\",\"pr\":0.65,\"sa\":true,\"ti\":0,\"tk\":\"trustKey\"}}";
 
+        [SetUp]
+        public void Setup()
+        {
+            
+        }
+
         #region NewRelic Payload
 
         [TestCase(Constants.DistributedTracePayloadKeyAllLower)]
@@ -60,9 +65,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -96,9 +100,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -136,9 +139,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -176,9 +178,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -216,9 +217,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.Other,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -257,9 +257,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -293,9 +292,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -337,9 +335,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.That(tracingState.IngestErrors, Does.Contain(IngestErrorType.TraceParentParseException), "TracingState IngestErrors should contain TraceParentParseException.");
@@ -380,9 +377,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow,
-                remoteParentSampledBehavior,
-                remoteParentNotSampledBehavior
-            );
+                remoteParentSampledBehavior: remoteParentSampledBehavior,
+                remoteParentNotSampledBehavior: remoteParentNotSampledBehavior, traceIdSampleRatio: null);
 
             // Assert
             Assert.That(tracingState.Sampled, Is.EqualTo(expectedSampled));
@@ -407,8 +403,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                     agentTrustKey: TrustKey,
                     transactionStartTime: DateTime.UtcNow,
                     remoteParentSampledBehavior: (RemoteParentSampledBehavior)999, // Invalid enum value
-                    remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default
-                );
+                    remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
             });
         }
 
@@ -430,7 +425,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                     agentTrustKey: TrustKey,
                     transactionStartTime: DateTime.UtcNow,
                     remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
-                    remoteParentNotSampledBehavior: (RemoteParentSampledBehavior)999 // Invalid enum value
+                    remoteParentNotSampledBehavior: (RemoteParentSampledBehavior)999, traceIdSampleRatio: null // Invalid enum value
                 );
             });
         }
@@ -450,12 +445,84 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow,
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
 
             Assert.That(tracingState.Sampled, Is.EqualTo(Sampled), "Sampled should use the value from the trace context when behavior is 'default'.");
         }
+
+        [Test]
+        public void AcceptDistributedTraceHeaders_AppliesTraceIdSampleRatio_WhenNonNull()
+        {
+            // Arrange
+            var headers = new Dictionary<string, string>()
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", ValidTracestate },
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                carrier: headers,
+                getter: GetHeader,
+                transportType: TransportType.AMQP,
+                agentTrustKey: TrustKey,
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: 1.0f);
+
+            // Assert
+            Assert.That(tracingState.Sampled, Is.True, "Sampled should be true when sampleRatio is 1.0");
+            Assert.That(tracingState.Priority, Is.EqualTo(Priority + 1.0f), "Priority should be boosted when sampleRatio is 1.0");
+        }
+
+        [Test]
+        public void AcceptDistributedTraceHeaders_DoesNotApplyTraceIdSampleRatio_WhenNull()
+        {
+            // Arrange
+            var headers = new Dictionary<string, string>()
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", ValidTracestate },
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                carrier: headers,
+                getter: GetHeader,
+                transportType: TransportType.AMQP,
+                agentTrustKey: TrustKey,
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: null);
+
+            // Assert
+            Assert.That(tracingState.Sampled, Is.EqualTo(Sampled), "Sampled should use the tracestate sampled value when sampleRatio is null");
+            Assert.That(tracingState.Priority, Is.EqualTo(Priority), "Priority should use the tracestate priority value when sampleRatio is null");
+        }
+
+        [Test]
+        public void AcceptDistributedTraceHeaders_AppliesTraceIdSampleRatio_SampledFalse()
+        {
+            // Arrange
+            var headers = new Dictionary<string, string>()
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", ValidTracestate },
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                carrier: headers,
+                getter: GetHeader,
+                transportType: TransportType.AMQP,
+                agentTrustKey: TrustKey,
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
+                remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
+                remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default, traceIdSampleRatio: 0.0f);
+
+            // Assert
+            Assert.That(tracingState.Sampled, Is.EqualTo(false), "Sampled should be false when sampleRatio is 0");
+            Assert.That(tracingState.Priority, Is.EqualTo(Priority), "Priority should use the tracestate priority value when sampleRatio is 0");
+        }
+
 
         #endregion
 

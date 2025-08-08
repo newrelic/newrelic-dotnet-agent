@@ -11,7 +11,6 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
@@ -32,6 +31,7 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -145,7 +145,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _logEventAggregator = new LogEventAggregator(Mock.Create<IDataTransportService>(), scheduler, Mock.Create<IProcessStatic>(), Mock.Create<IAgentHealthReporter>(), _labelsService);
 
 
-            _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService, _spanEventAggregatorInfiniteTracing, _logEventAggregator);
+            _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<ISampler>(), _errorService, _spanEventAggregatorInfiniteTracing, _logEventAggregator);
         }
 
         [TearDown]

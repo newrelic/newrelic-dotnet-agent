@@ -8,7 +8,6 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
@@ -17,7 +16,6 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.TestUtilities;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
@@ -25,6 +23,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
@@ -69,7 +68,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
         private DistributedTracePayloadHandler _distributedTracePayloadHandler;
         private IConfiguration _configuration;
-        private IAdaptiveSampler _adaptiveSampler;
+        private ISampler _sampler;
         private IAgentHealthReporter _agentHealthReporter;
 
         private readonly TransactionName _initialTransactionName = TransactionName.ForWebTransaction("initialCategory", "initialName");
@@ -80,7 +79,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
         public void SetUp()
         {
             _configuration = Mock.Create<IConfiguration>();
-            _adaptiveSampler = Mock.Create<IAdaptiveSampler>();
+            _sampler = Mock.Create<ISampler>();
 
             Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
             Mock.Arrange(() => _configuration.TransactionEventsEnabled).Returns(true);
@@ -92,7 +91,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
             Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
 
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
-            _distributedTracePayloadHandler = new DistributedTracePayloadHandler(configurationService, _agentHealthReporter, _adaptiveSampler);
+            _distributedTracePayloadHandler = new DistributedTracePayloadHandler(configurationService, _agentHealthReporter, _sampler);
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
         }
 
