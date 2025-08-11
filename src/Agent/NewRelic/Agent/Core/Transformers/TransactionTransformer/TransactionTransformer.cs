@@ -18,6 +18,7 @@ using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
@@ -49,12 +50,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         private readonly ISqlTraceAggregator _sqlTraceAggregator;
         private readonly ISqlTraceMaker _sqlTraceMaker;
         private readonly IAgentTimerService _agentTimerService;
-        private readonly IAdaptiveSampler _adaptiveSampler;
+        private readonly ISampler _sampler;
         private readonly IErrorService _errorService;
         private readonly ILogEventAggregator _logEventAggregator;
 
         public TransactionTransformer(ITransactionMetricNameMaker transactionMetricNameMaker, ISegmentTreeMaker segmentTreeMaker, IMetricNameService metricNameService, IMetricAggregator metricAggregator, IConfigurationService configurationService, ITransactionTraceAggregator transactionTraceAggregator, ITransactionTraceMaker transactionTraceMaker, ITransactionEventAggregator transactionEventAggregator, ITransactionEventMaker transactionEventMaker, ITransactionAttributeMaker transactionAttributeMaker, IErrorTraceAggregator errorTraceAggregator, IErrorTraceMaker errorTraceMaker, IErrorEventAggregator errorEventAggregator, IErrorEventMaker errorEventMaker, ISqlTraceAggregator sqlTraceAggregator, ISqlTraceMaker sqlTraceMaker, ISpanEventAggregator spanEventAggregator, ISpanEventMaker spanEventMaker, IAgentTimerService agentTimerService,
-            IAdaptiveSampler adaptiveSampler, IErrorService errorService, ISpanEventAggregatorInfiniteTracing spanEventAggregatorInfiniteTracing, ILogEventAggregator logEventAggregator)
+            ISampler sampler, IErrorService errorService, ISpanEventAggregatorInfiniteTracing spanEventAggregatorInfiniteTracing, ILogEventAggregator logEventAggregator)
         {
             _transactionMetricNameMaker = transactionMetricNameMaker;
             _segmentTreeMaker = segmentTreeMaker;
@@ -76,7 +77,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             _spanEventAggregatorInfiniteTracing = spanEventAggregatorInfiniteTracing;
             _spanEventMaker = spanEventMaker;
             _agentTimerService = agentTimerService;
-            _adaptiveSampler = adaptiveSampler;
+            _sampler = sampler;
             _errorService = errorService;
             _logEventAggregator = logEventAggregator;
         }
@@ -469,7 +470,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         {
             if (_configurationService.Configuration.DistributedTracingEnabled)
             {
-                transaction.SetSampled(_adaptiveSampler);
+                transaction.SetSampled(_sampler);
             }
         }
 
