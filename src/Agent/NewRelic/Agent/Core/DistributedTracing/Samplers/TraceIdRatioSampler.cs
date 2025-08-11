@@ -9,6 +9,7 @@ namespace NewRelic.Agent.Core.DistributedTracing.Samplers;
 public class TraceIdRatioSampler : ISampler
 {
     private readonly long _idUpperBound;
+    private const int TraceIdLength = 16;
 
     public TraceIdRatioSampler(float sampleRatio)
     {
@@ -30,15 +31,15 @@ public class TraceIdRatioSampler : ISampler
         {
             throw new ArgumentNullException(nameof(samplingParameters.TraceId), "Trace ID cannot be null or empty.");
         }
-        if (samplingParameters.TraceId.Length < 16)
+        if (samplingParameters.TraceId.Length < TraceIdLength)
         {
-            throw new FormatException("Trace ID must be at least 16 characters long.");
+            throw new FormatException($"Trace ID must be at least {TraceIdLength} characters long.");
         }
 
         // Note use of '<' for comparison. This ensures that we never sample for probability == 0.0,
         // while allowing for a (very) small chance of *not* sampling if the id == Long.MAX_VALUE.
         // This is considered a reasonable trade-off for the simplicity/performance requirements.
-        var sampled = Math.Abs(GetLowerLong(samplingParameters.TraceId.AsSpan(0, 16))) < _idUpperBound;
+        var sampled = Math.Abs(GetLowerLong(samplingParameters.TraceId.AsSpan(0, TraceIdLength))) < _idUpperBound;
 
         return new SamplingResult(sampled, sampled ? BoostPriority(samplingParameters.Priority) : samplingParameters.Priority);
     }
@@ -57,10 +58,9 @@ public class TraceIdRatioSampler : ISampler
     private static long GetLowerLong(ReadOnlySpan<char> hex)
     {
         long result = 0;
-        for (var i = 0; i < 16; i++)
+        foreach (var t in hex)
         {
-            var value = ToHexValue(hex[i]);
-
+            var value = ToHexValue(t);
             result = (result << 4) | (uint)value;
         }
 

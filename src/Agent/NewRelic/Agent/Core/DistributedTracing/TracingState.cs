@@ -310,8 +310,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             ISampler sampler = sampledBehavior switch
             {
-                RemoteParentSampledBehavior.AlwaysOn => new AlwaysOnSampler(),
-                RemoteParentSampledBehavior.AlwaysOff => new AlwaysOffSampler(),
+                RemoteParentSampledBehavior.AlwaysOn => AlwaysOnSampler.Instance,
+                RemoteParentSampledBehavior.AlwaysOff => AlwaysOffSampler.Instance,
                 _ => throw new ArgumentException(
                     $"Invalid {(_traceContext.Traceparent.Sampled ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")} value: {sampledBehavior}.")
             };

@@ -5,7 +5,13 @@ namespace NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 public class AlwaysOffSampler: ISampler
 {
-    public ISamplingResult ShouldSample(ISamplingParameters samplingParameters) => new SamplingResult(false, 0.0f);
+    public static AlwaysOffSampler Instance { get; } = new AlwaysOffSampler();
+    private AlwaysOffSampler()
+    {
+    }
+
+    private static readonly SamplingResult _samplingResult = new SamplingResult(false, 0.0f);
+    public ISamplingResult ShouldSample(ISamplingParameters samplingParameters) => _samplingResult;
     public void StartTransaction()
     {
     }
