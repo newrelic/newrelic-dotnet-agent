@@ -20,6 +20,7 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -89,8 +90,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 internalTransaction.Add(SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, new MethodCallData("typeName", "methodName", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "MyMockedRootNode", false));
             }
 
-            var adaptiveSampler = Mock.Create<IAdaptiveSampler>();
-            Mock.Arrange(() => adaptiveSampler.ComputeSampled(ref priority)).Returns(sampled);
+            var adaptiveSampler = Mock.Create<ISampler>();
+            var samplingResult = Mock.Create<ISamplingResult>();
+            Mock.Arrange(() => samplingResult.Sampled).Returns(sampled);
+            Mock.Arrange(() => adaptiveSampler.ShouldSample(Arg.IsAny<ISamplingParameters>())).Returns(samplingResult);
+
             internalTransaction.SetSampled(adaptiveSampler);
             var transactionMetadata = internalTransaction.TransactionMetadata;
             PopulateTransactionMetadataBuilder(transactionMetadata, errorService, uri, statusCode, subStatusCode, referrerCrossProcessId);

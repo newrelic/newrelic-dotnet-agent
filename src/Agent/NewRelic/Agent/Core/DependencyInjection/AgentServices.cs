@@ -47,6 +47,7 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {
@@ -173,7 +174,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ITransactionTraceMaker, TransactionTraceMaker>();
             container.Register<ITransactionEventMaker, TransactionEventMaker>();
             container.Register<ICallStackManager, CallStackManager>();
-            container.Register<IAdaptiveSampler, AdaptiveSampler>();
+            container.Register<ISampler, AdaptiveSampler>();
 
             var transactionCollectors = new List<ITransactionCollector> {
                 new SlowestTransactionCollector(),

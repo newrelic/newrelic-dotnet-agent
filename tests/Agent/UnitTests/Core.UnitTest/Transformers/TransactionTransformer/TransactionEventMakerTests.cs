@@ -10,8 +10,8 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Time;
@@ -240,9 +240,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
 
-            var adaptiveSampler = Mock.Create<IAdaptiveSampler>();
-            Mock.Arrange(() => adaptiveSampler.ComputeSampled(ref priority)).Returns(sampled);
-            internalTransaction.SetSampled(adaptiveSampler);
+            var sampler = Mock.Create<ISampler>();
+            Mock.Arrange(() => sampler.ShouldSample(Arg.IsAny<ISamplingParameters>()))
+                .Returns(new SamplingResult(sampled, priority));
+
+            internalTransaction.SetSampled(sampler);
 
             PopulateTransactionMetadataBuilder(internalTransaction, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeUserAttributes);
 
