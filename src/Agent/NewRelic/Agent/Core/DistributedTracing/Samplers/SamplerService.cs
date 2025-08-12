@@ -51,7 +51,7 @@ public class SamplerService : ConfigurationBasedService, ISamplerService
 
     private void InitializeSamplers()
     {
-        if (_configuration.TraceIdRatioBasedSamplingEnabled)
+        if (_configuration.TraceIdRatioBasedSamplingEnabled) // TODO: This needs to use the root-level sampler configuration setting when implemented
         {
             Log.Finest("Trace ID ratio based sampling is enabled. Using TracedIdRatioSampler for root sampling.");
             _rootSampler = new TraceIdRatioSampler(_configuration.TraceIdRatioBasedSamplingRatio.Value);
