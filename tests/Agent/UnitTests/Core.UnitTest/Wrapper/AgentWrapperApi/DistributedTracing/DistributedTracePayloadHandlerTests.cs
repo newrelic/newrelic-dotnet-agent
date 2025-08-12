@@ -68,7 +68,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
         private DistributedTracePayloadHandler _distributedTracePayloadHandler;
         private IConfiguration _configuration;
-        private ISampler _sampler;
+        private ISamplerService _samplerService;
         private IAgentHealthReporter _agentHealthReporter;
 
         private readonly TransactionName _initialTransactionName = TransactionName.ForWebTransaction("initialCategory", "initialName");
@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
         public void SetUp()
         {
             _configuration = Mock.Create<IConfiguration>();
-            _sampler = Mock.Create<ISampler>();
+            _samplerService = Mock.Create<ISamplerService>();
 
             Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
             Mock.Arrange(() => _configuration.TransactionEventsEnabled).Returns(true);
@@ -91,7 +91,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
             Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
 
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
-            _distributedTracePayloadHandler = new DistributedTracePayloadHandler(configurationService, _agentHealthReporter, _sampler);
+            _distributedTracePayloadHandler = new DistributedTracePayloadHandler(configurationService, _agentHealthReporter, _samplerService);
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
         }
 

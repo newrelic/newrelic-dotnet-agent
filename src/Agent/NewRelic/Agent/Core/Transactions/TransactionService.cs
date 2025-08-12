@@ -68,10 +68,10 @@ namespace NewRelic.Agent.Core.Transactions
         private readonly IErrorService _errorService;
         private readonly IDistributedTracePayloadHandler _distributedTracePayloadHandler;
         private readonly IAttributeDefinitionService _attribDefSvc;
-        private readonly ISampler _sampler;
+        private readonly ISamplerService _samplerService;
 
         public TransactionService(IEnumerable<IContextStorageFactory> factories, ISimpleTimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser,
-            IErrorService errorService, IDistributedTracePayloadHandler distributedTracePayloadHandler, IAttributeDefinitionService attribDefSvc, ISampler sampler)
+            IErrorService errorService, IDistributedTracePayloadHandler distributedTracePayloadHandler, IAttributeDefinitionService attribDefSvc, ISamplerService samplerService)
         {
             _sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
             _asyncContext = GetAsyncTransactionContext(factories);
@@ -83,7 +83,7 @@ namespace NewRelic.Agent.Core.Transactions
             _errorService = errorService;
             _distributedTracePayloadHandler = distributedTracePayloadHandler;
             _attribDefSvc = attribDefSvc;
-            _sampler = sampler;
+            _samplerService = samplerService;
         }
 
         public bool IsAttachedToAsyncStorage => TryGetInternalTransaction(_asyncContext) != null;
@@ -167,7 +167,9 @@ namespace NewRelic.Agent.Core.Transactions
             var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(),
                 DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, priority,
                 _databaseStatementParser, _distributedTracePayloadHandler, _errorService, _attribDefSvc.AttributeDefs);
-            _sampler.StartTransaction();
+
+            _samplerService.GetSampler(SamplerType.Root).StartTransaction();
+
             try
             {
                 transactionContext.SetData(transaction);

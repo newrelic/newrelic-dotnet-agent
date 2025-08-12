@@ -33,7 +33,6 @@ namespace CompositeTests
         [TearDown]
         public void AfterEachTest()
         {
-            _adaptiveSampler.Dispose();
             _adaptiveSampler = null;
         }
 

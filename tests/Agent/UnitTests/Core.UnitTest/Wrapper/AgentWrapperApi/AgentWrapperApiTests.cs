@@ -677,7 +677,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         [Test]
         public void AcceptDistributedTraceHeaders__ReportsSupportabilityMetric_NullPayload()
         {
-            _distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, new AdaptiveSampler());
+            _distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, new SamplerService());
             _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService, _customEventTransformer, new NewRelicActivitySourceProxy(), _databaseService);
             SetupTransaction();
 
