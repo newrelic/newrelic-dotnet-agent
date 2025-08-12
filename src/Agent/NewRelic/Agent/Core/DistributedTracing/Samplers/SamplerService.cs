@@ -33,6 +33,11 @@ public class SamplerService : ConfigurationBasedService, ISamplerService
     private ISampler _remoteParentSampledSampler;
     private ISampler _remoteParentNotSampledSampler;
 
+    public SamplerService() : base()
+    {
+        InitializeSamplers();
+    }
+
     protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
     {
         // if the root sampler is the adaptive sampler, update its sampling target and period if necessary
