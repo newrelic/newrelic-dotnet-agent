@@ -15,8 +15,8 @@ public class AdaptiveSampler : ISampler
         private const int DoneWithFirstIntervalSentinel = -1;
         private const double BackOffExponent = 0.5d;
 
-        private readonly object _intervalLockObject = new object();
-        private readonly object _sync = new object();
+        private readonly object _intervalLockObject = new();
+        private readonly object _sync = new();
         private readonly Random _rand;
 
         //_ceilingValuesForBackoff values are used for the TargetSamplesPerInterval+1, TargetSamplesPerInterval+2,... candidates in an interval.
