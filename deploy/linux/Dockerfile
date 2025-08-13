@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     dos2unix \
     bsdmainutils \
     rsync \
-    gnupg1 \
+    gnupg2 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /data
