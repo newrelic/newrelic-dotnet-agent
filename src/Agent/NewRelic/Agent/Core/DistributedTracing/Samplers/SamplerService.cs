@@ -30,19 +30,15 @@ public class SamplerService : ConfigurationBasedService, ISamplerService
 
     protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
     {
-        // if we have already initialized the samplers and the root sampler is the adaptive sampler,
+        InitializeSamplers();
+
+        // if the root sampler is the adaptive sampler,
         // update its sampling target and period, which will start a new sampling interval.
         if (_samplers.TryGetValue(SamplerType.Root, out var rootSampler) &&
             rootSampler is AdaptiveSampler adaptiveSampler &&
             !_configuration.TraceIdRatioBasedSamplingEnabled) // TODO: This needs to use the root-level sampler configuration setting when implemented
         {
-            Log.Finest("Configuration updated. Updating AdaptiveSampler with new sampling target and period.");
             adaptiveSampler.UpdateSamplingTarget(_configuration.SamplingTarget ?? AdaptiveSampler.DefaultTargetSamplesPerInterval, _configuration.SamplingTargetPeriodInSeconds ?? AdaptiveSampler.DefaultTargetSamplingIntervalInSeconds);
-        }
-        else
-        {
-            Log.Finest("Configuration updated. Reinitializing samplers.");
-            InitializeSamplers();
         }
     }
 
