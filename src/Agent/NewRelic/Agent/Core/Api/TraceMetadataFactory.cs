@@ -32,11 +32,11 @@ namespace NewRelic.Agent.Core.Api
 
     public class TraceMetadataFactory : ITraceMetadataFactory
     {
-        private readonly ISampler _sampler;
+        private readonly ISamplerService _samplerService;
 
-        public TraceMetadataFactory(ISampler sampler)
+        public TraceMetadataFactory(ISamplerService samplerService)
         {
-            _sampler = sampler;
+            _samplerService = samplerService;
         }
 
         public ITraceMetadata CreateTraceMetadata(IInternalTransaction transaction)
@@ -57,7 +57,7 @@ namespace NewRelic.Agent.Core.Api
             }
             else
             {
-                transaction.SetSampled(_sampler);
+                transaction.SetSampled(_samplerService.GetSampler(SamplerType.Root)); //TODO: Is Root correct here?
                 return (bool)transaction.Sampled;
             }
         }

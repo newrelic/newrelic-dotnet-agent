@@ -11,6 +11,8 @@ public class TraceIdRatioSampler : ISampler
     private readonly long _idUpperBound;
     private const int TraceIdLength = 16;
 
+    private const float PriorityBoost = 1.0f;
+
     public TraceIdRatioSampler(float sampleRatio)
     {
         _idUpperBound = sampleRatio switch
@@ -41,47 +43,38 @@ public class TraceIdRatioSampler : ISampler
         // This is considered a reasonable trade-off for the simplicity/performance requirements.
         var sampled = Math.Abs(GetLowerLong(samplingParameters.TraceId.AsSpan(0, TraceIdLength))) < _idUpperBound;
 
-        return new SamplingResult(sampled, sampled ? BoostPriority(samplingParameters.Priority) : samplingParameters.Priority);
+        return new SamplingResult(sampled, sampled ? TracePriorityManager.Adjust(samplingParameters.Priority, PriorityBoost) : samplingParameters.Priority);
     }
 
     public void StartTransaction()
     {
     }
 
-    private const float PriorityBoost = 1.0f;
-
-    private static float BoostPriority(float priority)
-    {
-        return TracePriorityManager.Adjust(priority, PriorityBoost);
-    }
-
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     private static long GetLowerLong(ReadOnlySpan<char> hex)
     {
         long result = 0;
-        foreach (var t in hex)
+        for (int i = 0; i < hex.Length; i++)
         {
-            var value = ToHexValue(t);
-            result = (result << 4) | (uint)value;
+            var v = hex[i] < (uint)HexLookup.Length ? HexLookup[hex[i]] : -1;
+            if (v < 0)
+                throw new FormatException("Trace ID contains invalid hexadecimal characters.");
+            result = (result << 4) | (uint)v;
         }
-
         return result;
     }
 
-    private static int ToHexValue(char c)
+    private static readonly sbyte[] HexLookup = CreateHexLookup();
+
+    private static sbyte[] CreateHexLookup()
     {
-        var value = c switch
-        {
-            >= '0' and <= '9' => c - '0',
-            >= 'a' and <= 'f' => c - 'a' + 10,
-            >= 'A' and <= 'F' => c - 'A' + 10,
-            _ => -1
-        };
-
-        if (value == -1)
-        {
-            throw new FormatException("Trace ID contains invalid hexadecimal characters.");
-        }
-
-        return value;
+        var arr = new sbyte['f' + 1]; // covers all valid ASCII hex chars
+        for (int i = 0; i < arr.Length; i++) arr[i] = -1;
+        for (char ch = '0'; ch <= '9'; ch++) arr[ch] = (sbyte)(ch - '0');
+        for (char ch = 'a'; ch <= 'f'; ch++) arr[ch] = (sbyte)(ch - 'a' + 10);
+        for (char ch = 'A'; ch <= 'F'; ch++) arr[ch] = (sbyte)(ch - 'A' + 10);
+        return arr;
     }
+
+
 }

@@ -26,19 +26,16 @@ namespace CompositeTests
         {
             _compositeTestAgent = new CompositeTestAgent();
 
-            _adaptiveSampler = new AdaptiveSampler(AdaptiveSampler.DefaultTargetSamplesPerInterval, DefaultSamplingTargetIntervalInSecondsForTesting, DefaultSeedForTesting);
+            _adaptiveSampler = new AdaptiveSampler(AdaptiveSampler.DefaultTargetSamplesPerInterval, DefaultSamplingTargetIntervalInSecondsForTesting, DefaultSeedForTesting, false);
 
-            //This will simulate that the agent has connected and force a sampling interval to start
-            _compositeTestAgent.ServerConfiguration.SamplingTarget = AdaptiveSampler.DefaultTargetSamplesPerInterval;
-            _compositeTestAgent.ServerConfiguration.SamplingTargetPeriodInSeconds = DefaultSamplingTargetIntervalInSecondsForTesting;
-            _compositeTestAgent.PushConfiguration();
+            // this is the same call that SamplerService makes on a configuration update. This will start a sampling interval.
+            _adaptiveSampler.UpdateSamplingTarget(AdaptiveSampler.DefaultTargetSamplesPerInterval, DefaultSamplingTargetIntervalInSecondsForTesting);
         }
 
         [TearDown]
         public void AfterEachTest()
         {
             _compositeTestAgent.Dispose();
-            _adaptiveSampler.Dispose();
             _adaptiveSampler = null;
         }
 

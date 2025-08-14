@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.Api
     {
         private TraceMetadataFactory _traceMetadataFactory;
         private IConfiguration _configuration;
-        private ISampler _sampler;
+        private ISamplerService _samplerService;
         private float priority = 0.0f;
 
         private IAttributeDefinitionService _attribDefSvc;
@@ -37,8 +37,8 @@ namespace NewRelic.Agent.Core.Api
 
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
-            _sampler = Mock.Create<ISampler>();
-            _traceMetadataFactory = new TraceMetadataFactory(_sampler);
+            _samplerService = Mock.Create<ISamplerService>();
+            _traceMetadataFactory = new TraceMetadataFactory(_samplerService);
         }
 
         [TearDown]
@@ -53,13 +53,13 @@ namespace NewRelic.Agent.Core.Api
             var transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
             Assert.That(transaction.Sampled, Is.Null);
 
-            Mock.Arrange(() => _sampler.ShouldSample(Arg.IsAny<ISamplingParameters>())).Returns(new SamplingResult(true, priority));   
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerType.Root).ShouldSample(Arg.IsAny<ISamplingParameters>())).Returns(new SamplingResult(true, priority));   
 
             var traceMetadata = _traceMetadataFactory.CreateTraceMetadata(transaction);
             var sampled = traceMetadata.IsSampled;
 
             Assert.That(sampled, Is.EqualTo(true), "TraceMetadata did not set IsSampled.");
-            Mock.Assert(() => _sampler.ShouldSample(Arg.IsAny<ISamplingParameters>()), Occurs.Once());
+            Mock.Assert(() => _samplerService.GetSampler(SamplerType.Root).ShouldSample(Arg.IsAny<ISamplingParameters>()), Occurs.Once());
         }
 
         [Test]
@@ -68,13 +68,13 @@ namespace NewRelic.Agent.Core.Api
             var transaction = Mock.Create<IInternalTransaction>();
             Mock.Arrange(() => transaction.Sampled).Returns(true);
 
-            Mock.Arrange(() => _sampler.ShouldSample(Arg.IsAny<ISamplingParameters>())).Returns(new SamplingResult(false, priority));
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerType.Root).ShouldSample(Arg.IsAny<ISamplingParameters>())).Returns(new SamplingResult(false, priority));
 
             var traceMetadata = _traceMetadataFactory.CreateTraceMetadata(transaction);
             var sampled = traceMetadata.IsSampled;
 
             Assert.That(sampled, Is.EqualTo(true), "TraceMetadata did not use existing Sampled setting.");
-            Mock.Assert(() => _sampler.ShouldSample(Arg.IsAny<ISamplingParameters>()), Occurs.Never());
+            Mock.Assert(() => _samplerService.GetSampler(SamplerType.Root).ShouldSample(Arg.IsAny<ISamplingParameters>()), Occurs.Never());
         }
     }
 }

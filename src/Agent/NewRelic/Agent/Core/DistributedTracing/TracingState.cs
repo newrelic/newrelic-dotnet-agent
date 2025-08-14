@@ -207,10 +207,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Func<T, string, IEnumerable<string>> getter,
             TransportType transportType,
             string agentTrustKey,
-            DateTime transactionStartTime,
-            RemoteParentSampledBehavior remoteParentSampledBehavior,
-            RemoteParentSampledBehavior remoteParentNotSampledBehavior,
-            float? traceIdSampleRatio)
+            DateTime transactionStartTime, ISamplerService samplerService)
         {
             var tracingState = new TracingState();
             var errors = new List<IngestErrorType>();
@@ -223,10 +220,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null;
 
-            // attempt to apply one of our configurable sampling decisions, preferring the trace id sample ratio if it's configured
-            // and a trace id is available.
-            if (!tracingState.TryApplyTraceIdRatioSampler(traceIdSampleRatio))
-                tracingState.ApplyRemoteParentSampledBehavior(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
+            tracingState.ApplyRemoteParentSampledBehavior(samplerService);
             
             // newrelic 
             // if traceparent was present (regardless if valid), ignore newrelic header
@@ -266,65 +260,29 @@ namespace NewRelic.Agent.Core.DistributedTracing
         }
 
         /// <summary>
-        /// If a trace id sample ratio is configured and a trace id is available, apply a sampling decision based on the trace id. 
-        /// </summary>
-        /// <param name="traceIdSampleRatio"></param>
-        /// <returns><c>true</c> if the trace id ratio sampler was applied; <c>false</c> otherwise.</returns>
-        private bool TryApplyTraceIdRatioSampler(float? traceIdSampleRatio)
-        {
-            // if trace id sample ratio is not configured (non-null) or trace id is not available, do not apply the sampler
-            if (traceIdSampleRatio is null || _traceContext?.Traceparent?.TraceId is null)
-                return false;
-
-            var traceId = _traceContext.Traceparent.TraceId;
-
-            var traceIdSampler = new TraceIdRatioSampler(traceIdSampleRatio.Value);
-            var samplingResult = traceIdSampler.ShouldSample(new SamplingParameters(traceId, Priority ?? 0.0f));
-
-            _priority = samplingResult.Priority;
-            _sampled = samplingResult.Sampled;
-
-            Log.Finest("TryApplyTraceIdRatioSampler: traceIdSampleRatio={traceIdSampleRatio}, traceId={traceId} ==> Sampled: {Sampled}, Priority: {Priority}",
-                traceIdSampleRatio.Value, traceId, Sampled, Priority); 
-
-            return true;
-        }
-
-        /// <summary>
         /// Use remote parent sampled behavior configuration in conjunction with the traceparent sampled flag to determine
         /// if the transaction should be sampled.
         /// </summary>
-        private void ApplyRemoteParentSampledBehavior(RemoteParentSampledBehavior remoteParentSampledBehavior, RemoteParentSampledBehavior remoteParentNotSampledBehavior)
+        private void ApplyRemoteParentSampledBehavior(ISamplerService samplerService)
         {
-            // don't do anything if the traceparent is not present or if behavior is configured to default
-            if (!_traceContext.TraceparentPresent ||
-                (remoteParentNotSampledBehavior == RemoteParentSampledBehavior.Default &&
-                 remoteParentSampledBehavior == RemoteParentSampledBehavior.Default))
+            // don't do anything if the traceparent is not present or it's null
+            if (!_traceContext.TraceparentPresent || _traceContext.Traceparent == null)
             {
                 return;
             }
 
-            var sampledBehavior = _traceContext.Traceparent.Sampled
-                ? remoteParentSampledBehavior
-                : remoteParentNotSampledBehavior;
-
-            ISampler sampler = sampledBehavior switch
-            {
-                RemoteParentSampledBehavior.AlwaysOn => AlwaysOnSampler.Instance,
-                RemoteParentSampledBehavior.AlwaysOff => AlwaysOffSampler.Instance,
-                _ => throw new ArgumentException(
-                    $"Invalid {(_traceContext.Traceparent.Sampled ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")} value: {sampledBehavior}.")
-            };
+            var sampler = samplerService.GetSampler(_traceContext.Traceparent.Sampled ? SamplerType.RemoteParentSampled : SamplerType.RemoteParentNotSampled);
+            if (sampler == null) // remote parent sampled behavior is not configured
+                return;
 
             var samplingResult = sampler.ShouldSample(new SamplingParameters(TraceId, Priority ?? 0.0f));
+
             _priority = samplingResult.Priority;
             _sampled = samplingResult.Sampled;
 
-
-            Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext.Traceparent.Sampled={SampledValue}, {ParentType}SampledBehavior: {SampledBehavior} ==> Sampled: {Sampled}, Priority: {Priority}",
+            Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext.Traceparent.Sampled={SampledValue}, Sampler: {Sampler} ==> Sampled: {Sampled}, Priority: {Priority}",
                     _traceContext.Traceparent.Sampled,
-                    _sampled.Value ? "remoteParent" : "remoteParentNot",
-                    sampledBehavior,
+                    sampler.GetType().Name,
                     Sampled,
                     Priority
                 );

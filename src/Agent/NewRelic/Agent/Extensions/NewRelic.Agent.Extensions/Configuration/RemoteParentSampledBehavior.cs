@@ -17,6 +17,9 @@ namespace NewRelic.Agent.Configuration
         AlwaysOn,
 
         [EnumMember(Value = "always_off")]
-        AlwaysOff
+        AlwaysOff,
+
+        [EnumMember(Value = "trace_id_ratio_based")]
+        TraceIdRatioBased
     }
 }
