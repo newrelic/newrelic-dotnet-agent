@@ -417,8 +417,10 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool ExcludeNewrelicHeader => true;
 
-        public RemoteParentSampledBehavior RemoteParentSampledBehavior => RemoteParentSampledBehavior.Default;
-        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => RemoteParentSampledBehavior.Default;
+        public RemoteParentSampledBehavior RemoteParentSampledBehavior => RemoteParentSampledBehavior.AlwaysOff;
+        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => RemoteParentSampledBehavior.AlwaysOn;
+        public bool TraceIdRatioBasedSamplingEnabled => true;
+        public float? TraceIdRatioBasedSamplingRatio => 0.12f;
 
         public bool ApplicationLoggingEnabled => true;
 

@@ -193,6 +193,8 @@ namespace NewRelic.Agent.Configuration
 
         RemoteParentSampledBehavior RemoteParentSampledBehavior { get; }
         RemoteParentSampledBehavior RemoteParentNotSampledBehavior { get; }
+        bool TraceIdRatioBasedSamplingEnabled { get; }
+        float? TraceIdRatioBasedSamplingRatio { get; }
 
         bool ApplicationLoggingEnabled { get; }
         bool LogMetricsCollectorEnabled { get; }

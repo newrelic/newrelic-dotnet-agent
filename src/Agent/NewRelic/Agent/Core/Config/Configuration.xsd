@@ -1243,6 +1243,23 @@
                     </xs:annotation>
                     <xs:complexType>
                         <xs:sequence>
+                            <xs:element name="root" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:all>
+                                        <xs:element name="traceIdRatioBased" minOccurs="0" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:attribute name="ratio" type="xs:float">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            The percentage of traces to sample, between 0.0 and 1.0.
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:all>
+                                </xs:complexType>
+                            </xs:element>
                             <xs:element name="sampler" minOccurs="0" maxOccurs="1">
                                 <xs:complexType>
                                     <xs:attribute name="remoteParentSampled" type="tns:RemoteParentSampledBehaviorType" default="default">

@@ -37,7 +37,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
 
 namespace CompositeTests
 {
