@@ -46,12 +46,14 @@ namespace NewRelic.Agent.Core.DistributedTracing
         private readonly IConfigurationService _configurationService;
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly ISamplerService _samplerService;
+        private ISampler _rootSampler;
 
         public DistributedTracePayloadHandler(IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, ISamplerService samplerService)
         {
             _configurationService = configurationService;
             _agentHealthReporter = agentHealthReporter;
             _samplerService = samplerService;
+            _rootSampler = samplerService.GetSampler(SamplerType.Root);
         }
 
         #region Outgoing/Create
@@ -78,7 +80,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 }
                 else
                 {
-                    transaction.SetSampled(_samplerService.GetSampler(SamplerType.Root)); // TODO: Is Root correct here?
+                    transaction.SetSampled(_rootSampler); // TODO: Is Root correct here?
                 }
 
                 var createOutboundTraceContextHeadersSuccess = false;
@@ -217,7 +219,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 return DistributedTraceApiModel.EmptyModel;
             }
 
-            transaction.SetSampled(_samplerService.GetSampler(SamplerType.Root)); // TODO: Is Root correct here?
+            transaction.SetSampled(_rootSampler); // TODO: Is Root correct here?
             var transactionIsSampled = transaction.Sampled;
 
             if (transactionIsSampled.HasValue == false)
@@ -273,7 +275,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
         public void GetTraceFlagsAndState(IInternalTransaction transaction, out bool sampled, out string traceStateString)
         {
-            transaction.SetSampled(_samplerService.GetSampler(SamplerType.Root)); //TODO: Is Root correct here?
+            transaction.SetSampled(_rootSampler); //TODO: Is Root correct here?
             traceStateString = BuildTracestate(transaction, DateTime.UtcNow);
             sampled = transaction.Sampled.Value;
         }
