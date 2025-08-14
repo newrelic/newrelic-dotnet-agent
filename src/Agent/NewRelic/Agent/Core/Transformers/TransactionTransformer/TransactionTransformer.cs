@@ -470,7 +470,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         {
             if (_configurationService.Configuration.DistributedTracingEnabled)
             {
-                transaction.SetSampled(_samplerService.GetSampler(SamplerType.Root)); // TODO: Is Root correct here?
+                transaction.SetSampled(_samplerService.GetSampler(SamplerLevel.Root)); // TODO: Is Root correct here?
             }
         }
 

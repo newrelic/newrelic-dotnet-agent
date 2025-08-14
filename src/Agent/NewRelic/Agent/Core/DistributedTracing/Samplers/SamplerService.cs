@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 public class SamplerService : ConfigurationBasedService, ISamplerService
 {
-    private readonly Dictionary<SamplerType, ISampler> _samplers = new();
+    private readonly Dictionary<SamplerLevel, ISampler> _samplers = new();
 
     public SamplerService()
     {
@@ -20,13 +20,13 @@ public class SamplerService : ConfigurationBasedService, ISamplerService
     }
 
     /// <summary>
-    /// Returns the appropriate sampler based on the SamplerType.
+    /// Returns the appropriate sampler based on the SamplerLevel.
     /// Will be <c>null</c> for RemoteParentSampled or RemoteParentNotSampled if the behavior is set to Default.
     /// </summary>
-    /// <param name="samplerType"></param>
+    /// <param name="SamplerLevel"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public ISampler GetSampler(SamplerType samplerType) => _samplers.TryGetValue(samplerType, out var sampler) ? sampler : throw new ArgumentOutOfRangeException();
+    public ISampler GetSampler(SamplerLevel SamplerLevel) => _samplers.TryGetValue(SamplerLevel, out var sampler) ? sampler : throw new ArgumentOutOfRangeException();
 
     protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
     {
@@ -34,9 +34,7 @@ public class SamplerService : ConfigurationBasedService, ISamplerService
 
         // if the root sampler is the adaptive sampler,
         // update its sampling target and period, which will start a new sampling interval.
-        if (_samplers.TryGetValue(SamplerType.Root, out var rootSampler) &&
-            rootSampler is AdaptiveSampler adaptiveSampler &&
-            !_configuration.TraceIdRatioBasedSamplingEnabled) // TODO: This needs to use the root-level sampler configuration setting when implemented
+        if (_samplers.TryGetValue(SamplerLevel.Root, out var rootSampler) && rootSampler is AdaptiveSampler adaptiveSampler)
         {
             adaptiveSampler.UpdateSamplingTarget(_configuration.SamplingTarget ?? AdaptiveSampler.DefaultTargetSamplesPerInterval, _configuration.SamplingTargetPeriodInSeconds ?? AdaptiveSampler.DefaultTargetSamplingIntervalInSeconds);
         }
@@ -44,29 +42,44 @@ public class SamplerService : ConfigurationBasedService, ISamplerService
 
     private void InitializeSamplers()
     {
-        if (_configuration.TraceIdRatioBasedSamplingEnabled) // TODO: This needs to use the root-level sampler configuration setting when implemented
-        {
-            Log.Finest("Trace ID ratio based sampling is enabled. Using TracedIdRatioSampler for root sampling.");
-            _samplers[SamplerType.Root] = new TraceIdRatioSampler(_configuration.TraceIdRatioBasedSamplingRatio.Value);
-        }
-        else
-        {
-            Log.Finest("Trace ID ratio based sampling is not enabled. Using the default AdaptiveSampler for root sampling.");
-            _samplers[SamplerType.Root] = new AdaptiveSampler(_configuration.SamplingTarget ?? AdaptiveSampler.DefaultTargetSamplesPerInterval, _configuration.SamplingTargetPeriodInSeconds ?? AdaptiveSampler.DefaultTargetSamplingIntervalInSeconds, null, _configuration.ServerlessModeEnabled);
-        }
-        _samplers[SamplerType.RemoteParentSampled] = GetRemoteParentSampler(_configuration.RemoteParentSampledBehavior);
-        _samplers[SamplerType.RemoteParentNotSampled] = GetRemoteParentSampler(_configuration.RemoteParentNotSampledBehavior);
+        _samplers[SamplerLevel.Root] = GetConfiguredSampler(SamplerLevel.Root, _configuration.RootSamplerType, _configuration.RootTraceIdRatioSamplerRatio);
+        _samplers[SamplerLevel.RemoteParentSampled] = GetConfiguredSampler(SamplerLevel.RemoteParentSampled, _configuration.RemoteParentNotSampledSamplerType, _configuration.RemoteParentSampledTraceIdRatioSamplerRatio);
+        _samplers[SamplerLevel.RemoteParentNotSampled] = GetConfiguredSampler(SamplerLevel.RemoteParentNotSampled, _configuration.RemoteParentNotSampledSamplerType, _configuration.RemoteParentNotSampledTraceIdRatioSamplerRatio);
     }
 
-    private ISampler GetRemoteParentSampler(RemoteParentSampledBehavior behavior)
+    private ISampler GetConfiguredSampler(SamplerLevel samplerLevel, SamplerType samplerType, float? traceIdRatioSamplerRatio)
     {
-        return behavior switch
+        switch (samplerType)
         {
-            RemoteParentSampledBehavior.Default => null,
-            RemoteParentSampledBehavior.AlwaysOn => AlwaysOnSampler.Instance,
-            RemoteParentSampledBehavior.AlwaysOff => AlwaysOffSampler.Instance,
-            RemoteParentSampledBehavior.TraceIdRatioBased => new TraceIdRatioSampler(_configuration.TraceIdRatioBasedSamplingRatio.Value),
-            _ => throw new ArgumentOutOfRangeException()
-        };
+            // only the root sampler can use the adaptive sampler
+            case SamplerType.Default:
+                return samplerLevel == SamplerLevel.Root
+                    ? new AdaptiveSampler(
+                        _configuration.SamplingTarget ?? AdaptiveSampler.DefaultTargetSamplesPerInterval,
+                        _configuration.SamplingTargetPeriodInSeconds ??
+                        AdaptiveSampler.DefaultTargetSamplingIntervalInSeconds, null,
+                        _configuration.ServerlessModeEnabled)
+                    : null;
+            case SamplerType.AlwaysOn:
+                return AlwaysOnSampler.Instance;
+            case SamplerType.AlwaysOff:
+                return AlwaysOffSampler.Instance;
+
+            // if the ratio is not set, log a warning and use the default sampler
+            case SamplerType.TraceIdRatioBased when !traceIdRatioSamplerRatio.HasValue:
+                Log.Warn($"The configured TraceIdRatioBased sampler for {samplerLevel} is missing a ratio value. Using default sampler.");
+
+                return samplerLevel == SamplerLevel.Root
+                    ? new AdaptiveSampler(
+                        _configuration.SamplingTarget ?? AdaptiveSampler.DefaultTargetSamplesPerInterval,
+                        _configuration.SamplingTargetPeriodInSeconds ??
+                        AdaptiveSampler.DefaultTargetSamplingIntervalInSeconds, null,
+                        _configuration.ServerlessModeEnabled)
+                    : null;
+            case SamplerType.TraceIdRatioBased:
+                return new TraceIdRatioSampler(traceIdRatioSamplerRatio.Value);
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 }

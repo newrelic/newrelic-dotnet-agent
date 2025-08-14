@@ -17,9 +17,10 @@ namespace NewRelic.Agent.Core.Configuration.Tests
         {
             Assert.Multiple(() =>
             {
-                Assert.That(RemoteParentSampledBehaviorType.@default.ToRemoteParentSampledBehavior(), Is.EqualTo(RemoteParentSampledBehavior.Default));
-                Assert.That(RemoteParentSampledBehaviorType.alwaysOn.ToRemoteParentSampledBehavior(), Is.EqualTo(RemoteParentSampledBehavior.AlwaysOn));
-                Assert.That(RemoteParentSampledBehaviorType.alwaysOff.ToRemoteParentSampledBehavior(), Is.EqualTo(RemoteParentSampledBehavior.AlwaysOff));
+                Assert.That(RemoteParentSampledBehaviorType.@default.ToRemoteParentSampledBehavior(), Is.EqualTo(SamplerType.Default));
+                Assert.That(RemoteParentSampledBehaviorType.alwaysOn.ToRemoteParentSampledBehavior(), Is.EqualTo(SamplerType.AlwaysOn));
+                Assert.That(RemoteParentSampledBehaviorType.alwaysOff.ToRemoteParentSampledBehavior(), Is.EqualTo(SamplerType.AlwaysOff));
+                Assert.That(RemoteParentSampledBehaviorType.traceIdRatioBased.ToRemoteParentSampledBehavior(), Is.EqualTo(SamplerType.TraceIdRatioBased));
             });
         }
 
@@ -35,16 +36,17 @@ namespace NewRelic.Agent.Core.Configuration.Tests
         {
             Assert.Multiple(() =>
             {
-                Assert.That(RemoteParentSampledBehavior.Default.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.@default));
-                Assert.That(RemoteParentSampledBehavior.AlwaysOn.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.alwaysOn));
-                Assert.That(RemoteParentSampledBehavior.AlwaysOff.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.alwaysOff));
+                Assert.That(SamplerType.Default.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.@default));
+                Assert.That(SamplerType.AlwaysOn.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.alwaysOn));
+                Assert.That(SamplerType.AlwaysOff.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.alwaysOff));
+                Assert.That(SamplerType.TraceIdRatioBased.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.traceIdRatioBased));
             });
         }
 
         [Test]
         public void ToRemoteParentSampledBehaviorType_InvalidEnumValue_ThrowsArgumentOutOfRangeException()
         {
-            var invalidValue = (RemoteParentSampledBehavior)999;
+            var invalidValue = (SamplerType)999;
             Assert.Throws<ArgumentOutOfRangeException>(() => invalidValue.ToRemoteParentSampledBehaviorType());
         }
     }

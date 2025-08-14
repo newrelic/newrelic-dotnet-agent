@@ -53,7 +53,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             _configurationService = configurationService;
             _agentHealthReporter = agentHealthReporter;
             _samplerService = samplerService;
-            _rootSampler = samplerService.GetSampler(SamplerType.Root);
+            _rootSampler = samplerService.GetSampler(SamplerLevel.Root);
         }
 
         #region Outgoing/Create

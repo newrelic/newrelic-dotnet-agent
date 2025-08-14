@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Transactions;
 
@@ -57,7 +58,7 @@ namespace NewRelic.Agent.Core.Api
             }
             else
             {
-                transaction.SetSampled(_samplerService.GetSampler(SamplerType.Root)); //TODO: Is Root correct here?
+                transaction.SetSampled(_samplerService.GetSampler(SamplerLevel.Root)); //TODO: Is Root correct here?
                 return (bool)transaction.Sampled;
             }
         }

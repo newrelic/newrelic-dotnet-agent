@@ -876,12 +876,74 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool ExcludeNewrelicHeader => _localConfiguration.distributedTracing.excludeNewrelicHeader;
 
-        public RemoteParentSampledBehavior RemoteParentSampledBehavior => EnvironmentOverrides(_localConfiguration.distributedTracing.sampler.remoteParentSampled.ToString(), "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED").ToRemoteParentSampledBehavior();
+        public SamplerType RootSamplerType => GetSamplerType(SamplerLevel.Root);
+        public SamplerType RemoteParentSampledSamplerType => GetSamplerType(SamplerLevel.RemoteParentSampled);
+        public SamplerType RemoteParentNotSampledSamplerType => GetSamplerType(SamplerLevel.RemoteParentNotSampled);
+        public float? RootTraceIdRatioSamplerRatio { get => RootSamplerType == SamplerType.TraceIdRatioBased ? TraceIdSamplerRatio(SamplerLevel.Root) : null; }
+        public float? RemoteParentSampledTraceIdRatioSamplerRatio { get => RemoteParentSampledSamplerType == SamplerType.TraceIdRatioBased ? TraceIdSamplerRatio(SamplerLevel.RemoteParentSampled) : null; }
+        public float? RemoteParentNotSampledTraceIdRatioSamplerRatio { get => RemoteParentNotSampledSamplerType == SamplerType.TraceIdRatioBased ? TraceIdSamplerRatio(SamplerLevel.RemoteParentNotSampled) : null; }
 
-        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => EnvironmentOverrides(_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.ToString(), "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED").ToRemoteParentSampledBehavior();
+        private SamplerType GetSamplerType(SamplerLevel samplerLevel)
+        {
+            // Environment variable (if present) always wins for this sampler level
+            var envVarName = samplerLevel switch
+            {
+                SamplerLevel.Root => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT_SAMPLER",
+                SamplerLevel.RemoteParentSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED",
+                SamplerLevel.RemoteParentNotSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED",
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
+            };
 
-        public bool TraceIdRatioBasedSamplingEnabled => _localConfiguration.distributedTracing.root.traceIdRatioBased.ratioSpecified;
-        public float? TraceIdRatioBasedSamplingRatio => TraceIdRatioBasedSamplingEnabled ? _localConfiguration.distributedTracing.root.traceIdRatioBased.ratio : null;
+            var envValue = _environment.GetEnvironmentVariableFromList(envVarName);
+            if (!string.IsNullOrEmpty(envValue))
+            {
+                return envValue.ToRemoteParentSampledBehavior();
+            }
+
+            // use local config if no env var override
+            var samplerItem = samplerLevel switch
+            {
+                SamplerLevel.Root => _localConfiguration.distributedTracing.sampler.root.Item,
+                SamplerLevel.RemoteParentSampled => _localConfiguration.distributedTracing.sampler.remoteParentSampled.Item,
+                SamplerLevel.RemoteParentNotSampled => _localConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item,
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
+            };
+
+            return MapSamplerItem(samplerItem);
+        }
+
+        private static SamplerType MapSamplerItem(object samplerItem) =>
+            samplerItem switch
+            {
+                null => SamplerType.Default,          // not configured
+                DefaultSamplerType => SamplerType.Default,
+                AlwaysOnSamplerType => SamplerType.AlwaysOn,
+                AlwaysOffSamplerType => SamplerType.AlwaysOff,
+                TraceIdRatioSamplerType => SamplerType.TraceIdRatioBased,
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerItem), samplerItem, "Unknown sampler type in configuration.")
+            };
+
+        private float? TraceIdSamplerRatio(SamplerLevel samplerLevel)
+        {
+            // TODO: do we need to support environment variable override for these? Naming will be difficult.
+            switch (samplerLevel)
+            {
+                case SamplerLevel.Root:
+                    if (_localConfiguration.distributedTracing.sampler.root.Item is TraceIdRatioSamplerType rootTraceIdRatioSamplerType)
+                        return (float)rootTraceIdRatioSamplerType.sampleRatio;
+                    return null;
+                case SamplerLevel.RemoteParentSampled:
+                    if (_localConfiguration.distributedTracing.sampler.remoteParentSampled.Item is TraceIdRatioSamplerType remoteParentSampledTraceIdRatioSamplerType)
+                        return (float)remoteParentSampledTraceIdRatioSamplerType.sampleRatio;
+                    return null;
+                case SamplerLevel.RemoteParentNotSampled:
+                    if (_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item is TraceIdRatioSamplerType remoteParentNotSampledTraceIdRatioSamplerType)
+                        return (float)remoteParentNotSampledTraceIdRatioSamplerType.sampleRatio;
+                    return null;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null);
+            }
+        }
 
         #endregion Distributed Tracing
 

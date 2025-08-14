@@ -9,50 +9,71 @@ namespace NewRelic.Agent.Core.Configuration
 {
     public static class ConfigurationEnumHelpers
     {
-        public static RemoteParentSampledBehavior ToRemoteParentSampledBehavior(
+        public static SamplerType ToRemoteParentSampledBehavior(
             this RemoteParentSampledBehaviorType localConfigEnumValue)
         {
             switch (localConfigEnumValue)
             {
                 case RemoteParentSampledBehaviorType.@default:
-                    return RemoteParentSampledBehavior.Default;
+                    return SamplerType.Default;
                 case RemoteParentSampledBehaviorType.alwaysOn:
-                    return RemoteParentSampledBehavior.AlwaysOn;
+                    return SamplerType.AlwaysOn;
                 case RemoteParentSampledBehaviorType.alwaysOff:
-                    return RemoteParentSampledBehavior.AlwaysOff;
+                    return SamplerType.AlwaysOff;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(localConfigEnumValue), localConfigEnumValue, null);
             }
         }
 
-        public static RemoteParentSampledBehavior ToRemoteParentSampledBehavior(this string remoteParentSampledBehavior)
+        public static SamplerType ToRemoteParentSampledBehavior(this string remoteParentSampledBehavior)
         {
             switch (remoteParentSampledBehavior.ToLower())
             {
                 case "default":
-                    return RemoteParentSampledBehavior.Default;
+                    return SamplerType.Default;
                 case "alwayson":
-                    return RemoteParentSampledBehavior.AlwaysOn;
+                    return SamplerType.AlwaysOn;
                 case "alwaysoff":
-                    return RemoteParentSampledBehavior.AlwaysOff;
+                    return SamplerType.AlwaysOff;
+                case "traceidratiobased":
+                    return SamplerType.TraceIdRatioBased;
                 default:
-                    return RemoteParentSampledBehavior.Default;
+                    return SamplerType.Default;
             }
         }
 
         public static RemoteParentSampledBehaviorType ToRemoteParentSampledBehaviorType(
-            this RemoteParentSampledBehavior remoteParentSampledBehavior)
+            this SamplerType remoteParentSampledBehavior)
         {
             switch (remoteParentSampledBehavior)
             {
-                case RemoteParentSampledBehavior.Default:
+                case SamplerType.Default:
                     return RemoteParentSampledBehaviorType.@default;
-                case RemoteParentSampledBehavior.AlwaysOn:
+                case SamplerType.AlwaysOn:
                     return RemoteParentSampledBehaviorType.alwaysOn;
-                case RemoteParentSampledBehavior.AlwaysOff:
+                case SamplerType.AlwaysOff:
                     return RemoteParentSampledBehaviorType.alwaysOff;
+                case SamplerType.TraceIdRatioBased:
+                    return RemoteParentSampledBehaviorType.traceIdRatioBased;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(remoteParentSampledBehavior), remoteParentSampledBehavior, null);
+            }
+        }
+
+        public static object ToConfiguredSamplerType(this SamplerType samplerType)
+        {
+            switch (samplerType)
+            {
+                case SamplerType.Default:
+                    return new DefaultSamplerType();
+                case SamplerType.AlwaysOn:
+                    return new AlwaysOnSamplerType();
+                case SamplerType.AlwaysOff:
+                    return new AlwaysOffSamplerType();
+                case SamplerType.TraceIdRatioBased:
+                    return new TraceIdRatioSamplerType();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(samplerType), samplerType, null);
             }
         }
     }

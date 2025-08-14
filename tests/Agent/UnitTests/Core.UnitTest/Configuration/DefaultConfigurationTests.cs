@@ -4623,40 +4623,347 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         }
 
-        [TestCase("alwaysOn", RemoteParentSampledBehavior.AlwaysOn, TestName = "RemoteParentSampledBehavior_AlwaysOn_EnvironmentVariableOverride")]
-        [TestCase("AlWaYSOn", RemoteParentSampledBehavior.AlwaysOn, TestName = "RemoteParentSampledBehavior_AlwaysOnMixedCase_EnvironmentVariableOverride")]
-        [TestCase("alwaysOff", RemoteParentSampledBehavior.AlwaysOff, TestName = "RemoteParentSampledBehavior_AlwaysOff_EnvironmentVariableOverride")]
-        [TestCase("default", RemoteParentSampledBehavior.Default, TestName = "RemoteParentSampledBehavior_Default_EnvironmentVariableOverride")]
-        [TestCase("invalidValue", RemoteParentSampledBehavior.Default, TestName = "RemoteParentSampledBehavior_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
-        public void RemoteParentSampledBehavior_UsesEnvironmentVariableOverride(string environmentVariableValue, RemoteParentSampledBehavior expectedRemoteParentSampledBehavior)
+        [TestCase("alwaysOn", SamplerType.AlwaysOn, TestName = "RootSamplerType_AlwaysOn_EnvironmentVariableOverride")]
+        [TestCase("alwaysOff", SamplerType.AlwaysOff, TestName = "RootSamplerType_AlwaysOff_EnvironmentVariableOverride")]
+        [TestCase("default", SamplerType.Default, TestName = "RootSamplerType_Default_EnvironmentVariableOverride")]
+        [TestCase("traceIdRatioBased", SamplerType.TraceIdRatioBased, TestName = "RootSamplerType_TraceIdRatioBased_EnvironmentVariableOverride")]
+        [TestCase("invalidValue", SamplerType.Default, TestName = "RootSamplerType_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
+        public void RootSampler_UsesEnvironmentVariableOverride(string environmentVariableValue, SamplerType expectedSamplerType)
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT_SAMPLER"))
+                .Returns(environmentVariableValue);
+
+            // Act
+            var result = _defaultConfig.RootSamplerType;
+
+            // Assert
+            Assert.That(result, Is.EqualTo(expectedSamplerType));
+        }
+
+
+        [TestCase("alwaysOn", SamplerType.AlwaysOn, TestName = "RemoteParentSampledSamplerType_AlwaysOn_EnvironmentVariableOverride")]
+        [TestCase("AlWaYSOn", SamplerType.AlwaysOn, TestName = "RemoteParentSampledSamplerType_AlwaysOnMixedCase_EnvironmentVariableOverride")]
+        [TestCase("alwaysOff", SamplerType.AlwaysOff, TestName = "RemoteParentSampledSamplerType_AlwaysOff_EnvironmentVariableOverride")]
+        [TestCase("traceIdRatioBased", SamplerType.TraceIdRatioBased, TestName = "RemoteParentSampledSamplerType_TraceIdRatioBased_EnvironmentVariableOverride")]
+        [TestCase("default", SamplerType.Default, TestName = "RemoteParentSampledSamplerType_Default_EnvironmentVariableOverride")]
+        [TestCase("invalidValue", SamplerType.Default, TestName = "RemoteParentSampledSamplerType_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
+        public void RemoteParentSampledSamplerType_UsesEnvironmentVariableOverride(string environmentVariableValue, SamplerType expectedRemoteParentSampledSamplerType)
         {
             // Arrange
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED"))
                 .Returns(environmentVariableValue);
 
             // Act
-            var result = _defaultConfig.RemoteParentSampledBehavior;
+            var result = _defaultConfig.RemoteParentSampledSamplerType;
 
             // Assert
-            Assert.That(result, Is.EqualTo(expectedRemoteParentSampledBehavior));
+            Assert.That(result, Is.EqualTo(expectedRemoteParentSampledSamplerType));
         }
 
-        [TestCase("alwaysOn", RemoteParentSampledBehavior.AlwaysOn, TestName = "RemoteParentNotSampledBehavior_AlwaysOn_EnvironmentVariableOverride")]
-        [TestCase("alwaysOff", RemoteParentSampledBehavior.AlwaysOff, TestName = "RemoteParentNotSampledBehavior_AlwaysOff_EnvironmentVariableOverride")]
-        [TestCase("default", RemoteParentSampledBehavior.Default, TestName = "RemoteParentNotSampledBehavior_Default_EnvironmentVariableOverride")]
-        [TestCase("invalidValue", RemoteParentSampledBehavior.Default, TestName = "RemoteParentNotSampledBehavior_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
-        public void RemoteParentNotSampledBehavior_UsesEnvironmentVariableOverride(string environmentVariableValue, RemoteParentSampledBehavior expectedRemoteParentSampledBehavior)
+        [TestCase("alwaysOn", SamplerType.AlwaysOn, TestName = "RemoteParentNotSampledSamplerType_AlwaysOn_EnvironmentVariableOverride")]
+        [TestCase("alwaysOff", SamplerType.AlwaysOff, TestName = "RemoteParentNotSampledSamplerType_AlwaysOff_EnvironmentVariableOverride")]
+        [TestCase("default", SamplerType.Default, TestName = "RemoteParentNotSampledSamplerType_Default_EnvironmentVariableOverride")]
+        [TestCase("traceIdRatioBased", SamplerType.TraceIdRatioBased, TestName = "RemoteParentNotSampledSamplerType_TraceIdRatioBased_EnvironmentVariableOverride")]
+        [TestCase("invalidValue", SamplerType.Default, TestName = "RemoteParentNotSampledSamplerType_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
+        public void RemoteParentNotSampledSamplerType_UsesEnvironmentVariableOverride(string environmentVariableValue, SamplerType expectedRemoteParentSampledSamplerType)
         {
             // Arrange
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED"))
                 .Returns(environmentVariableValue);
 
             // Act
-            var result = _defaultConfig.RemoteParentNotSampledBehavior;
+            var result = _defaultConfig.RemoteParentNotSampledSamplerType;
 
             // Assert
-            Assert.That(result, Is.EqualTo(expectedRemoteParentSampledBehavior));
+            Assert.That(result, Is.EqualTo(expectedRemoteParentSampledSamplerType));
         }
+
+        #region RootTraceIdRatioSamplerRatio Tests
+
+        [Test]
+        public void RootTraceIdRatioSamplerRatio_ReturnsConfiguredRatio_WhenSamplerTypeIsTraceIdRatioBased()
+        {
+            // Arrange
+            var ratio = 0.42m;
+            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioSamplerType { sampleRatio = ratio };
+
+            // Act
+            var value = _defaultConfig.RootTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.EqualTo((float)ratio));
+        }
+
+        [TestCase(SamplerType.AlwaysOn)]
+        [TestCase(SamplerType.AlwaysOff)]
+        [TestCase(SamplerType.Default)]
+        public void RootTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsNotTraceIdRatioBased(SamplerType samplerType)
+        {
+            // Arrange
+            _localConfig.distributedTracing.sampler.root.Item = samplerType switch
+            {
+                SamplerType.AlwaysOn => new AlwaysOnSamplerType(),
+                SamplerType.AlwaysOff => new AlwaysOffSamplerType(),
+                _ => new DefaultSamplerType()
+            };
+
+            // Act
+            var value = _defaultConfig.RootTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.Null);
+        }
+
+        [Test]
+        public void RootTraceIdRatioSamplerRatio_UsesLocalRatio_WhenEnvOverridesSamplerTypeToTraceIdRatioBased()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT_SAMPLER"))
+                .Returns("traceIdRatioBased");
+            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioSamplerType { sampleRatio = 0.7m };
+
+            // Recreate config to apply env override
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act
+            var value = _defaultConfig.RootTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.EqualTo(0.7f));
+        }
+
+        [Test]
+        public void RootTraceIdRatioSamplerRatio_IsNull_WhenEnvOverridesSamplerTypeToNonRatioBased()
+        {
+            // Arrange
+            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioSamplerType { sampleRatio = 0.15m }; // should be ignored
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT_SAMPLER"))
+                .Returns("alwaysOn");
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act
+            var value = _defaultConfig.RootTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.Null);
+        }
+
+        [Test]
+        public void RootTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsTraceIdRatioBasedButNoRatioConfigured()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT_SAMPLER"))
+                .Returns("traceIdRatioBased");
+            _localConfig.distributedTracing.sampler.root.Item = new DefaultSamplerType(); // no TraceIdRatioSamplerType provided
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act
+            var value = _defaultConfig.RootTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.Null);
+        }
+
+        #endregion RootTraceIdRatioSamplerRatio Tests
+        #region RemoteParentSampledTraceIdRatioSamplerRatio Tests
+
+        [Test]
+        public void RemoteParentSampledTraceIdRatioSamplerRatio_ReturnsConfiguredRatio_WhenSamplerTypeIsTraceIdRatioBased()
+        {
+            // Arrange
+            var ratio = 0.33m;
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioSamplerType { sampleRatio = ratio };
+
+            // Act
+            var value = _defaultConfig.RemoteParentSampledTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.EqualTo((float)ratio));
+        }
+
+        [TestCase(SamplerType.AlwaysOn)]
+        [TestCase(SamplerType.AlwaysOff)]
+        [TestCase(SamplerType.Default)]
+        public void RemoteParentSampledTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsNotTraceIdRatioBased(SamplerType samplerType)
+        {
+            // Arrange
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = samplerType switch
+            {
+                SamplerType.AlwaysOn => new AlwaysOnSamplerType(),
+                SamplerType.AlwaysOff => new AlwaysOffSamplerType(),
+                _ => new DefaultSamplerType()
+            };
+
+            // Act
+            var value = _defaultConfig.RemoteParentSampledTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.Null);
+        }
+
+        [Test]
+        public void RemoteParentSampledTraceIdRatioSamplerRatio_UsesLocalRatio_WhenEnvOverridesSamplerTypeToTraceIdRatioBased()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED"))
+                .Returns("traceIdRatioBased");
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioSamplerType { sampleRatio = 0.55m };
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act
+            var value = _defaultConfig.RemoteParentSampledTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.EqualTo(0.55f));
+        }
+
+        [Test]
+        public void RemoteParentSampledTraceIdRatioSamplerRatio_IsNull_WhenEnvOverridesSamplerTypeToNonRatioBased()
+        {
+            // Arrange
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioSamplerType { sampleRatio = 0.25m }; // should be ignored
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED"))
+                .Returns("alwaysOff");
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act
+            var value = _defaultConfig.RemoteParentSampledTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.Null);
+        }
+
+        [Test]
+        public void RemoteParentSampledTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsTraceIdRatioBasedButNoRatioConfigured()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED"))
+                .Returns("traceIdRatioBased");
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new DefaultSamplerType(); // no ratio sampler object
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act
+            var value = _defaultConfig.RemoteParentSampledTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.Null);
+        }
+
+        #endregion RemoteParentSampledTraceIdRatioSamplerRatio Tests
+
+        #region RemoteParentNotSampledTraceIdRatioSamplerRatio Tests
+
+        [Test]
+        public void RemoteParentNotSampledTraceIdRatioSamplerRatio_ReturnsConfiguredRatio_WhenSamplerTypeIsTraceIdRatioBased()
+        {
+            // Arrange
+            var ratio = 0.61m;
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioSamplerType { sampleRatio = ratio };
+
+            // Act
+            var value = _defaultConfig.RemoteParentNotSampledTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.EqualTo((float)ratio));
+        }
+
+        [TestCase(SamplerType.AlwaysOn)]
+        [TestCase(SamplerType.AlwaysOff)]
+        [TestCase(SamplerType.Default)]
+        public void RemoteParentNotSampledTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsNotTraceIdRatioBased(SamplerType samplerType)
+        {
+            // Arrange
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = samplerType switch
+            {
+                SamplerType.AlwaysOn => new AlwaysOnSamplerType(),
+                SamplerType.AlwaysOff => new AlwaysOffSamplerType(),
+                _ => new DefaultSamplerType()
+            };
+
+            // Act
+            var value = _defaultConfig.RemoteParentNotSampledTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.Null);
+        }
+
+        [Test]
+        public void RemoteParentNotSampledTraceIdRatioSamplerRatio_UsesLocalRatio_WhenEnvOverridesSamplerTypeToTraceIdRatioBased()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED"))
+                .Returns("traceIdRatioBased");
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioSamplerType { sampleRatio = 0.9m };
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act
+            var value = _defaultConfig.RemoteParentNotSampledTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.EqualTo(0.9f));
+        }
+
+        [Test]
+        public void RemoteParentNotSampledTraceIdRatioSamplerRatio_IsNull_WhenEnvOverridesSamplerTypeToNonRatioBased()
+        {
+            // Arrange
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioSamplerType { sampleRatio = 0.11m }; // should be ignored
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED"))
+                .Returns("default");
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act
+            var value = _defaultConfig.RemoteParentNotSampledTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.Null);
+        }
+
+        [Test]
+        public void RemoteParentNotSampledTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsTraceIdRatioBasedButNoRatioConfigured()
+        {
+            // Arrange
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED"))
+                .Returns("traceIdRatioBased");
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new DefaultSamplerType(); // no TraceIdRatioSamplerType
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act
+            var value = _defaultConfig.RemoteParentNotSampledTraceIdRatioSamplerRatio;
+
+            // Assert
+            Assert.That(value, Is.Null);
+        }
+
+        #endregion RemoteParentNotSampledTraceIdRatioSamplerRatio Tests
+
         [Test]
         public void IncludedActivitySources_IncludesDefaultPlusConfigured()
         {
