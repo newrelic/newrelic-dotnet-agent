@@ -4,21 +4,19 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DistributedTracing.Samplers;
 
-public class AdaptiveSampler : ConfigurationBasedService, ISampler
+public class AdaptiveSampler : ISampler
 {
     internal class AdaptiveSamplerState
     {
         private const int DoneWithFirstIntervalSentinel = -1;
         private const double BackOffExponent = 0.5d;
 
-        private readonly object _intervalLockObject = new object();
-        private readonly object _sync = new object();
+        private readonly object _intervalLockObject = new();
+        private readonly object _sync = new();
         private readonly Random _rand;
 
         //_ceilingValuesForBackoff values are used for the TargetSamplesPerInterval+1, TargetSamplesPerInterval+2,... candidates in an interval.
@@ -219,7 +217,7 @@ public class AdaptiveSampler : ConfigurationBasedService, ISampler
 
     private AdaptiveSamplerState _state;
 
-    public AdaptiveSampler(int targetSamplesPerInterval = DefaultTargetSamplesPerInterval, int targetSamplingIntervalInSeconds = DefaultTargetSamplingIntervalInSeconds, int? seed = null, bool? serverlessMode = null)
+    public AdaptiveSampler(int targetSamplesPerInterval, int targetSamplingIntervalInSeconds, int? seed, bool serverlessMode)
     {
         if (targetSamplesPerInterval < MinTargetSamplesPerInterval)
         {
@@ -229,7 +227,7 @@ public class AdaptiveSampler : ConfigurationBasedService, ISampler
         }
 
         var rand = (seed.HasValue) ? new Random(seed.Value) : new Random();
-        var manualIntervalCheck = serverlessMode.HasValue ? serverlessMode.Value : _configuration.ServerlessModeEnabled;
+        var manualIntervalCheck = serverlessMode;
 
         //This .ctor does not trigger the start of the sampling interval timer
         _state = new AdaptiveSamplerState(targetSamplesPerInterval, TimeSpan.FromSeconds(targetSamplingIntervalInSeconds), rand, manualIntervalCheck);
@@ -240,16 +238,6 @@ public class AdaptiveSampler : ConfigurationBasedService, ISampler
         _state.ManualCheckAndUpdateInterval();
     }
 
-    /// <summary>
-    /// Atomically boost the priority
-    /// </summary>
-    /// <param name="priority">The priority value to boost</param>
-    /// <returns></returns>
-    private static float BoostPriority(float priority)
-    {
-        return TracePriorityManager.Adjust(priority, PriorityBoost);
-    }
-
     public ISamplingResult ShouldSample(ISamplingParameters parameters)
     {
         float priority = parameters.Priority;
@@ -257,23 +245,14 @@ public class AdaptiveSampler : ConfigurationBasedService, ISampler
         var sampled = _state.ShouldSample();
         if (sampled)
         {
-            priority = BoostPriority(parameters.Priority);
+            priority = TracePriorityManager.Adjust(priority, PriorityBoost);
         }
 
         return new SamplingResult(sampled, priority);
     }
 
-    protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+    public void UpdateSamplingTarget(int samplingTarget, int samplingTargetPeriod)
     {
-        if (configurationUpdateSource != ConfigurationUpdateSource.Server
-            || !_configuration.DistributedTracingEnabled
-            || !_configuration.SamplingTarget.HasValue)
-        {
-            return;
-        }
-
-        var samplingTarget = _configuration.SamplingTarget.Value;
-
         if (samplingTarget < MinTargetSamplesPerInterval)
         {
             Log.Error(
@@ -281,7 +260,7 @@ public class AdaptiveSampler : ConfigurationBasedService, ISampler
             samplingTarget = DefaultTargetSamplesPerInterval;
         }
 
-        var samplingInterval = TimeSpan.FromSeconds(_configuration.SamplingTargetPeriodInSeconds ?? DefaultTargetSamplingIntervalInSeconds);
+        var samplingInterval = TimeSpan.FromSeconds(samplingTargetPeriod);
 
         //This .ctor will force the start of the sampling interval timer if it wasn't started previously (and we aren't in serverless mode)
         _state = new AdaptiveSamplerState(samplingTarget, samplingInterval, _state);

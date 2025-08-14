@@ -174,7 +174,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ITransactionTraceMaker, TransactionTraceMaker>();
             container.Register<ITransactionEventMaker, TransactionEventMaker>();
             container.Register<ICallStackManager, CallStackManager>();
-            container.Register<ISampler, AdaptiveSampler>();
+            container.Register<ISamplerService, SamplerService>();
 
             var transactionCollectors = new List<ITransactionCollector> {
                 new SlowestTransactionCollector(),

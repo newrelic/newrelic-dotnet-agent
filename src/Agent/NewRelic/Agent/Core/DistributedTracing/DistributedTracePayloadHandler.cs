@@ -45,13 +45,13 @@ namespace NewRelic.Agent.Core.DistributedTracing
         private const int TraceIdMaxLength = 32;
         private readonly IConfigurationService _configurationService;
         private readonly IAgentHealthReporter _agentHealthReporter;
-        private readonly ISampler _sampler;
+        private readonly ISamplerService _samplerService;
 
-        public DistributedTracePayloadHandler(IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, ISampler sampler)
+        public DistributedTracePayloadHandler(IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, ISamplerService samplerService)
         {
             _configurationService = configurationService;
             _agentHealthReporter = agentHealthReporter;
-            _sampler = sampler;
+            _samplerService = samplerService;
         }
 
         #region Outgoing/Create
@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 }
                 else
                 {
-                    transaction.SetSampled(_sampler);
+                    transaction.SetSampled(_samplerService.GetSampler(SamplerType.Root)); // TODO: Is Root correct here?
                 }
 
                 var createOutboundTraceContextHeadersSuccess = false;
@@ -217,7 +217,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 return DistributedTraceApiModel.EmptyModel;
             }
 
-            transaction.SetSampled(_sampler);
+            transaction.SetSampled(_samplerService.GetSampler(SamplerType.Root)); // TODO: Is Root correct here?
             var transactionIsSampled = transaction.Sampled;
 
             if (transactionIsSampled.HasValue == false)
@@ -273,7 +273,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
         public void GetTraceFlagsAndState(IInternalTransaction transaction, out bool sampled, out string traceStateString)
         {
-            transaction.SetSampled(_sampler);
+            transaction.SetSampled(_samplerService.GetSampler(SamplerType.Root)); //TODO: Is Root correct here?
             traceStateString = BuildTracestate(transaction, DateTime.UtcNow);
             sampled = transaction.Sampled.Value;
         }
@@ -297,9 +297,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                     getter,
                     transportType,
                     _configurationService.Configuration.TrustedAccountKey,
-                    transactionStartTime,
-                    _configurationService.Configuration.RemoteParentSampledBehavior,
-                    _configurationService.Configuration.RemoteParentNotSampledBehavior, _configurationService.Configuration.TraceIdRatioBasedSamplingRatio);
+                    transactionStartTime, _samplerService);
 
                 if (tracingState?.IngestErrors != null)
                 {
