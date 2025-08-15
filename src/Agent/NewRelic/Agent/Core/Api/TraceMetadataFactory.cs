@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Api
             }
             else
             {
-                transaction.SetSampled(_samplerService.GetSampler(SamplerLevel.Root)); //TODO: Is Root correct here?
+                transaction.SetSampled(_samplerService.GetSampler(SamplerLevel.Root));
                 return (bool)transaction.Sampled;
             }
         }
