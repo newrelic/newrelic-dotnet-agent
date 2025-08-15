@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.Transactions
@@ -168,7 +169,7 @@ namespace NewRelic.Agent.Core.Transactions
                 DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, priority,
                 _databaseStatementParser, _distributedTracePayloadHandler, _errorService, _attribDefSvc.AttributeDefs);
 
-            _samplerService.GetSampler(SamplerType.Root).StartTransaction();
+            _samplerService.GetSampler(SamplerLevel.Root).StartTransaction();
 
             try
             {

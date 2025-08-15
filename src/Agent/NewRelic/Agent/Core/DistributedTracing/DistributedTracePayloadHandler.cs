@@ -53,7 +53,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             _configurationService = configurationService;
             _agentHealthReporter = agentHealthReporter;
             _samplerService = samplerService;
-            _rootSampler = samplerService.GetSampler(SamplerType.Root);
+            _rootSampler = samplerService.GetSampler(SamplerLevel.Root);
         }
 
         #region Outgoing/Create
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 }
                 else
                 {
-                    transaction.SetSampled(_rootSampler); // TODO: Is Root correct here?
+                    transaction.SetSampled(_rootSampler);
                 }
 
                 var createOutboundTraceContextHeadersSuccess = false;
@@ -219,7 +219,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 return DistributedTraceApiModel.EmptyModel;
             }
 
-            transaction.SetSampled(_rootSampler); // TODO: Is Root correct here?
+            transaction.SetSampled(_rootSampler);
             var transactionIsSampled = transaction.Sampled;
 
             if (transactionIsSampled.HasValue == false)
@@ -275,7 +275,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
         public void GetTraceFlagsAndState(IInternalTransaction transaction, out bool sampled, out string traceStateString)
         {
-            transaction.SetSampled(_rootSampler); //TODO: Is Root correct here?
+            transaction.SetSampled(_rootSampler);
             traceStateString = BuildTracestate(transaction, DateTime.UtcNow);
             sampled = transaction.Sampled.Value;
         }

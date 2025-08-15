@@ -271,7 +271,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 return;
             }
 
-            var sampler = samplerService.GetSampler(_traceContext.Traceparent.Sampled ? SamplerType.RemoteParentSampled : SamplerType.RemoteParentNotSampled);
+            var sampler = samplerService.GetSampler(_traceContext.Traceparent.Sampled ? SamplerLevel.RemoteParentSampled : SamplerLevel.RemoteParentNotSampled);
             if (sampler == null) // remote parent sampled behavior is not configured
                 return;
 
