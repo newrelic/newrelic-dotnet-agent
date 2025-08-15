@@ -140,7 +140,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
 
-            Assert::IsFalse(configuration.ShouldInstrument(L"/azure-functions-host/Microsoft.Azure.WebJobs.Script.WebHost", L"", L"", L"blah blah blah FooBarBaz blah blah blah", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"blah blah blah FooBarBaz blah blah blah", L"", L"", L"/azure-functions-host/Microsoft.Azure.WebJobs.Script.WebHost", true));
         }
 
         TEST_METHOD(should_not_instrument_isolated_azure_function_app_pool_id_in_commandline)

@@ -183,6 +183,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
         bool ShouldInstrument(xstring_t const& processPath, xstring_t const& parentProcessPath, xstring_t const& appPoolId, xstring_t const& commandLine, bool isCoreClr)
         {
+            LogTrace(_X("Process Path: ") + processPath);
+            LogTrace(_X("Parent Process Path: ") + parentProcessPath);
+            LogTrace(_X("App Pool Id: ") + appPoolId);
+            LogTrace(_X("Command Line: ") + commandLine);
+            LogTrace(_X("Is Core CLR: ") + xstring_t(isCoreClr ? _X("true") : _X("false")));
+
             if (IsAzureFunction()) // valid for both .NET Framework and .NET Core
             {
                 if (IsAzureFunctionModeEnabled()) // if not explicitly enabled, fall back to "legacy" behavior
@@ -684,7 +690,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return 0;
             }
 
-            bool isAzureFunctionsHostLinux = NewRelic::Profiler::Strings::ContainsCaseInsensitive(processPath, _X("/azure-functions-host/Microsoft.Azure.WebJobs.Script.WebHost"));
+            bool isAzureFunctionsHostLinux = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("/azure-functions-host/Microsoft.Azure.WebJobs.Script.WebHost"));
             if (isAzureFunctionsHostLinux)
             {
                 LogInfo(L"Appears to be Azure Functions WebHost (Linux) based on commandLine. Not instrumenting this process.");
