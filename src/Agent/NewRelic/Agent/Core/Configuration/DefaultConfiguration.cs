@@ -897,7 +897,7 @@ namespace NewRelic.Agent.Core.Configuration
             var envValue = _environment.GetEnvironmentVariableFromList(envVarName);
             if (!string.IsNullOrEmpty(envValue))
             {
-                return envValue.ToRemoteParentSampledBehavior();
+                return envValue.ToRemoteParentSamplerType();
             }
 
             // use local config if no env var override
@@ -908,6 +908,20 @@ namespace NewRelic.Agent.Core.Configuration
                 SamplerLevel.RemoteParentNotSampled => _localConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item,
                 _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
             };
+
+            //if samplerLevel is one of the remote parent levels and samplerItem is null, we need to check the legacy attributes
+            if (samplerLevel != SamplerLevel.Root && samplerItem == null)
+            {
+                var remoteParentSampledBehaviorType = samplerLevel == SamplerLevel.RemoteParentSampled ?
+                    _localConfiguration.distributedTracing.sampler.remoteParentSampled1 :
+                    _localConfiguration.distributedTracing.sampler.remoteParentNotSampled1;
+
+                if (remoteParentSampledBehaviorType != RemoteParentSampledBehaviorType.@default)
+                {
+                    Log.Warn($"Using deprecated configuration for {samplerLevel}. Please use the new distributed tracing sampler configuration.");
+                    return remoteParentSampledBehaviorType.ToRemoteParentSamplerType();
+                }
+            }
 
             return MapSamplerItem(samplerItem);
         }

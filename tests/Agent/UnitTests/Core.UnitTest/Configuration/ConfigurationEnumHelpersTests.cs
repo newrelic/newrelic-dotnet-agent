@@ -4,10 +4,9 @@
 using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
-using NewRelic.Agent.Core.Configuration;
 using NUnit.Framework;
 
-namespace NewRelic.Agent.Core.Configuration.Tests
+namespace NewRelic.Agent.Core.Configuration
 {
     [TestFixture]
     public class ConfigurationEnumHelpersTests

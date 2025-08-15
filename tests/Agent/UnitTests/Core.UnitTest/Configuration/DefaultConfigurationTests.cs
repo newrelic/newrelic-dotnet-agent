@@ -16,7 +16,7 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.Configuration.UnitTest
+namespace NewRelic.Agent.Core.Configuration
 {
     internal class TestableDefaultConfiguration : DefaultConfiguration
     {
@@ -4963,6 +4963,106 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         #endregion RemoteParentNotSampledTraceIdRatioSamplerRatio Tests
+
+        #region SamplerType legacy fallback tests
+
+        [Test]
+        public void RemoteParentSampledSamplerType_UsesLegacyFallback_WhenItemNull_AlwaysOn()
+        {
+            // Arrange
+            _localConfig.distributedTracing.enabled = true;
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = null; // force legacy path
+            _localConfig.distributedTracing.sampler.remoteParentSampled1 = RemoteParentSampledBehaviorType.alwaysOn;
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act / Assert
+            Assert.That(_defaultConfig.RemoteParentSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOn));
+        }
+
+        [Test]
+        public void RemoteParentSampledSamplerType_UsesLegacyFallback_WhenItemNull_TraceIdRatioBased()
+        {
+            // Arrange
+            _localConfig.distributedTracing.enabled = true;
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = null;
+            _localConfig.distributedTracing.sampler.remoteParentSampled1 = RemoteParentSampledBehaviorType.traceIdRatioBased;
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act / Assert
+            Assert.That(_defaultConfig.RemoteParentSampledSamplerType, Is.EqualTo(SamplerType.TraceIdRatioBased));
+        }
+
+        [Test]
+        public void RemoteParentSampledSamplerType_IgnoresLegacy_WhenItemPresent()
+        {
+            // Arrange
+            _localConfig.distributedTracing.enabled = true;
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new AlwaysOffSamplerType();
+            _localConfig.distributedTracing.sampler.remoteParentSampled1 = RemoteParentSampledBehaviorType.alwaysOn; // should be ignored
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act / Assert
+            Assert.That(_defaultConfig.RemoteParentSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOff));
+        }
+
+        [Test]
+        public void RemoteParentNotSampledSamplerType_UsesLegacyFallback_WhenItemNull_AlwaysOff()
+        {
+            // Arrange
+            _localConfig.distributedTracing.enabled = true;
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = null;
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled1 = RemoteParentSampledBehaviorType.alwaysOff;
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act / Assert
+            Assert.That(_defaultConfig.RemoteParentNotSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOff));
+        }
+
+        [Test]
+        public void RemoteParentNotSampledSamplerType_UsesLegacyFallback_WhenItemNull_Default()
+        {
+            // Arrange
+            _localConfig.distributedTracing.enabled = true;
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = null;
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled1 = RemoteParentSampledBehaviorType.@default; // should map to Default
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act / Assert
+            Assert.That(_defaultConfig.RemoteParentNotSampledSamplerType, Is.EqualTo(SamplerType.Default));
+        }
+
+        [Test]
+        public void RemoteParentNotSampledSamplerType_IgnoresLegacy_WhenItemPresent()
+        {
+            // Arrange
+            _localConfig.distributedTracing.enabled = true;
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new AlwaysOnSamplerType();
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled1 = RemoteParentSampledBehaviorType.alwaysOff; // should be ignored
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
+                _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+
+            // Act / Assert
+            Assert.That(_defaultConfig.RemoteParentNotSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOn));
+        }
+
+        #endregion
 
         [Test]
         public void IncludedActivitySources_IncludesDefaultPlusConfigured()
