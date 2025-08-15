@@ -417,8 +417,8 @@ namespace CompositeTests
             configuration.distributedTracing.enabled = true;
 
             // configure the distributed tracing samplers
-            configuration.distributedTracing.sampler.remoteParentSampled.Item = remoteParentSampledSamplerType.ToConfiguredSamplerType();
-            configuration.distributedTracing.sampler.remoteParentNotSampled.Item = remoteParentNotSampledSamplerType.ToConfiguredSamplerType();
+            configuration.distributedTracing.sampler.remoteParentSampled.Item = remoteParentSampledSamplerType.ToConfigurationSamplerTypeInstance();
+            configuration.distributedTracing.sampler.remoteParentNotSampled.Item = remoteParentNotSampledSamplerType.ToConfigurationSamplerTypeInstance();
 
             return configuration;
         }

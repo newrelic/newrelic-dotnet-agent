@@ -475,7 +475,65 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Assert.That(tracingState.Priority, Is.EqualTo(Priority), "Priority should use the tracestate priority value when sampleRatio is 0");
         }
 
+        [TestCase("0000000000000001", 0.01f, true, true, TestName = "TraceIdRatioBased_LowValue_AlwaysSamples_Ratio001_ParentSampled")]
+        [TestCase("0000000000000001", 0.25f, true, true, TestName = "TraceIdRatioBased_LowValue_AlwaysSamples_Ratio025_ParentNotSampled")]
+        [TestCase("3fffffffffffffff", 0.75f, true, true, TestName = "TraceIdRatioBased_MidValue_Sample_Ratio075_ParentSampled")]
+        // Use boundary value 0x4000... (>= computed upperBound for ratio 0.50) to ensure NOT sampled
+        [TestCase("4000000000000000", 0.50f, false, false, TestName = "TraceIdRatioBased_MidValue_NoSample_Ratio050_ParentNotSampled")]
+        [TestCase("3fffffffffffffff", 0.25f, false, true, TestName = "TraceIdRatioBased_MidValue_NoSample_Ratio025_ParentSampled")]
+        [TestCase("7fffffffffffffff", 0.99f, false, true, TestName = "TraceIdRatioBased_HighValue_NoSample_Ratio099_ParentSampled")]
+        [TestCase("7fffffffffffffff", 0.75f, false, false, TestName = "TraceIdRatioBased_HighValue_NoSample_Ratio075_ParentNotSampled")]
+        public void Probabilistic_TraceIdRatioBased_Sampling_Deterministic(string first16Hex, float ratio, bool expectedSampled, bool parentSampledFlag)
+        {
+            // Build a deterministic trace id (32 hex chars) using supplied high/low prefix + zeros for remaining 16 chars
+            var fullTraceId = first16Hex + "0000000000000000";
+            Assert.That(fullTraceId.Length, Is.EqualTo(32), "TraceId must be 32 hex chars");
 
+            // Construct a traceparent with the supplied sampled flag
+            var traceparent = $"00-{fullTraceId}-{ParentId}-{(parentSampledFlag ? "01" : "00")}";
+
+            // Use existing valid tracestate (priority & other intrinsic values)
+            var headers = new Dictionary<string, string>
+            {
+                { "traceparent", traceparent },
+                { "tracestate", ValidTracestate }
+            };
+
+            // Configure sampler service so that only the relevant sampler level uses the ratio sampler
+            if (parentSampledFlag)
+            {
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                    .Returns(new TraceIdRatioSampler(ratio));
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
+                    .Returns((ISampler)null);
+            }
+            else
+            {
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                    .Returns((ISampler)null);
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
+                    .Returns(new TraceIdRatioSampler(ratio));
+            }
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                carrier: headers,
+                getter: GetHeader,
+                transportType: TransportType.HTTP,
+                agentTrustKey: TrustKey,
+                transactionStartTime: DateTime.UtcNow.AddMilliseconds(1),
+                _samplerService);
+
+            // Expected priority: base priority (.65) + 1.0f if sampled (ratio sampler boosts by 1.0)
+            var expectedPriority = expectedSampled ? Priority + 1.0f : Priority;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracingState.TraceId, Is.EqualTo(fullTraceId));
+                Assert.That(tracingState.ParentId, Is.EqualTo(ParentId));
+                Assert.That(tracingState.Sampled, Is.EqualTo(expectedSampled));
+                Assert.That(tracingState.Priority, Is.EqualTo(expectedPriority));
+            });
+        }
         #endregion
 
         #region helpers

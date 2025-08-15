@@ -9,8 +9,7 @@ namespace NewRelic.Agent.Core.Configuration
 {
     public static class ConfigurationEnumHelpers
     {
-        public static SamplerType ToRemoteParentSampledBehavior(
-            this RemoteParentSampledBehaviorType localConfigEnumValue)
+        public static SamplerType ToRemoteParentSamplerType(this RemoteParentSampledBehaviorType localConfigEnumValue)
         {
             switch (localConfigEnumValue)
             {
@@ -20,12 +19,14 @@ namespace NewRelic.Agent.Core.Configuration
                     return SamplerType.AlwaysOn;
                 case RemoteParentSampledBehaviorType.alwaysOff:
                     return SamplerType.AlwaysOff;
+                    case RemoteParentSampledBehaviorType.traceIdRatioBased:
+                        return SamplerType.TraceIdRatioBased;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(localConfigEnumValue), localConfigEnumValue, null);
             }
         }
 
-        public static SamplerType ToRemoteParentSampledBehavior(this string remoteParentSampledBehavior)
+        public static SamplerType ToRemoteParentSamplerType(this string remoteParentSampledBehavior)
         {
             switch (remoteParentSampledBehavior.ToLower())
             {
@@ -42,8 +43,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public static RemoteParentSampledBehaviorType ToRemoteParentSampledBehaviorType(
-            this SamplerType remoteParentSampledBehavior)
+        public static RemoteParentSampledBehaviorType ToRemoteParentSampledBehaviorType(this SamplerType remoteParentSampledBehavior)
         {
             switch (remoteParentSampledBehavior)
             {
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public static object ToConfiguredSamplerType(this SamplerType samplerType)
+        public static object ToConfigurationSamplerTypeInstance(this SamplerType samplerType)
         {
             switch (samplerType)
             {

@@ -17,10 +17,10 @@ namespace NewRelic.Agent.Core.Configuration.Tests
         {
             Assert.Multiple(() =>
             {
-                Assert.That(RemoteParentSampledBehaviorType.@default.ToRemoteParentSampledBehavior(), Is.EqualTo(SamplerType.Default));
-                Assert.That(RemoteParentSampledBehaviorType.alwaysOn.ToRemoteParentSampledBehavior(), Is.EqualTo(SamplerType.AlwaysOn));
-                Assert.That(RemoteParentSampledBehaviorType.alwaysOff.ToRemoteParentSampledBehavior(), Is.EqualTo(SamplerType.AlwaysOff));
-                Assert.That(RemoteParentSampledBehaviorType.traceIdRatioBased.ToRemoteParentSampledBehavior(), Is.EqualTo(SamplerType.TraceIdRatioBased));
+                Assert.That(RemoteParentSampledBehaviorType.@default.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.Default));
+                Assert.That(RemoteParentSampledBehaviorType.alwaysOn.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.AlwaysOn));
+                Assert.That(RemoteParentSampledBehaviorType.alwaysOff.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.AlwaysOff));
+                Assert.That(RemoteParentSampledBehaviorType.traceIdRatioBased.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.TraceIdRatioBased));
             });
         }
 
@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.Configuration.Tests
         public void ToRemoteParentSampledBehavior_InvalidEnumValue_ThrowsArgumentOutOfRangeException()
         {
             var invalidValue = (RemoteParentSampledBehaviorType)999;
-            Assert.Throws<ArgumentOutOfRangeException>(() => invalidValue.ToRemoteParentSampledBehavior());
+            Assert.Throws<ArgumentOutOfRangeException>(() => invalidValue.ToRemoteParentSamplerType());
         }
 
         [Test]
