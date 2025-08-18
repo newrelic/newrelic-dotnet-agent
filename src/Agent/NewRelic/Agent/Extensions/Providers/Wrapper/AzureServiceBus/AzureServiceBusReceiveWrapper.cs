@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -80,6 +81,14 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         else
         {
             transaction = agent.CurrentTransaction;
+
+            if (!transaction.IsValid)
+            {
+                // transaction is required when we're not in processor mode
+                transaction.LogFinest($"No transaction. Not creating MessageBroker segment for {instrumentedMethodName}.");
+                return Delegates.NoOp;
+            }
+
             transaction.LogFinest($"Using existing transaction for {instrumentedMethodName}.");
         }
 
@@ -106,6 +115,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                 false,
                 (responseTask) =>
                 {
+                    bool noMessagesReceived = false;
                     try
                     {
                         if (responseTask.IsFaulted)
@@ -113,24 +123,21 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                             transaction.NoticeError(responseTask.Exception);
                         }
 
-                        HandleReceiveResponse(responseTask, instrumentedMethodName, transaction, isProcessor);
-                    }
-                    catch (Exception ex)
-                    {
-                        transaction.LogFinest($"Unexpected exception: {ex.Message}");
+                        HandleReceiveResponse(responseTask, instrumentedMethodName, transaction, isProcessor, out noMessagesReceived);
                     }
                     finally
                     {
                         segment.End();
 
-                        if (isProcessor && responseTask.IsCanceled)
+                        // if we are in processor mode and the task was canceled or no messages were received, ignore the transaction
+                        if (isProcessor && (responseTask.IsCanceled || noMessagesReceived))
                         {
-                            transaction.LogFinest("ReceiveMessagesAsync task was canceled in processor mode. Ignoring transaction.");
-                            transaction.Ignore();
+                            transaction.LogFinest($"{(responseTask.IsCanceled ? "ReceiveMessagesAsync task was canceled in processor mode" : "No messages received")}. Ignoring transaction.");
 
-                            // End the transaction here since end in the AzureServiceBusReceiverManagerWrapper is never called
+                            // Ignore and end the transaction here since end in the AzureServiceBusReceiverManagerWrapper is never called
                             // In FW this results in a transaction has been garbage collected message, probably due to different GC settings in FW vs. Core
-                            transaction.End(); 
+                            transaction.Ignore();
+                            transaction.End();
                         }
                     }
                 },
@@ -139,7 +146,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             Delegates.GetDelegateFor<object>(
                 onFailure: transaction.NoticeError,
                 onComplete: segment.End,
-                onSuccess: (resultObj) => ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName, isProcessor));
+                onSuccess: (resultObj) => ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName, isProcessor, out _));
     }
 
     private static object GetTaskResultFromObject(object taskObj)
@@ -162,15 +169,16 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         return getResponse(task);
     }
 
-    private static void HandleReceiveResponse(Task responseTask, string instrumentedMethodName, ITransaction transaction, bool isProcessor)
+    private static void HandleReceiveResponse(Task responseTask, string instrumentedMethodName, ITransaction transaction, bool isProcessor, out bool noMessagesReceived)
     {
         var resultObj = GetTaskResultFromObject(responseTask);
-        ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName, isProcessor);
+        ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName, isProcessor, out noMessagesReceived);
     }
 
     // For more details on DT for this library see: https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/TROUBLESHOOTING.md#distributed-tracing
-    private static void ExtractDTHeadersIfAvailable(object resultObj, ITransaction transaction, string instrumentedMethodName, bool isProcessor)
+    private static void ExtractDTHeadersIfAvailable(object resultObj, ITransaction transaction, string instrumentedMethodName, bool isProcessor, out bool noMessagesReceived)
     {
+        noMessagesReceived = false;
         if (resultObj != null)
         {
             switch (instrumentedMethodName)
@@ -180,21 +188,21 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                 case "PeekMessagesInternalAsync":
                     // the response contains a list of messages.
                     // get the first message from the response and extract DT headers
-                    dynamic messages = resultObj;
-                    if (messages.Count > 0)
+                    int messageCount = ((ICollection)resultObj).Count;
+
+                    dynamic messages = resultObj; // so we can index into it
+                    if (messageCount > 0)
                     {
-                        transaction.LogFinest($"Received {messages.Count} message(s). Accepting DT headers from the first message.");
+                        transaction.LogFinest($"Received {messageCount} message(s). Accepting DT headers from the first message.");
                         var msg = messages[0];
                         if (msg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
                         {
                             transaction.AcceptDistributedTraceHeaders(applicationProperties, ProcessHeaders, TransportType.Queue);
                         }
                     }
-                    else if (messages.Count == 0 && isProcessor) // if there are no messages and the receiver is a processor, ignore the transaction we created
+                    else if (messageCount == 0 && isProcessor) // if there are no messages and the receiver is a processor, ignore the transaction we created
                     {
-                        transaction.LogFinest("No messages received. Ignoring transaction.");
-                        transaction.Ignore();
-                        // Do not end transaction here - this will happen in the GetAsyncDelegateFor finally statement, see #127-129.
+                        noMessagesReceived = true;
                     }
                     break;
             }
