@@ -261,7 +261,6 @@ namespace NewRelic { namespace Profiler {
                 auto commandLine = _systemCalls->GetProgramCommandLine();
                 auto parentProcessPath = Strings::ToUpper(_systemCalls->GetParentProcessPath());
                 auto appPoolId = GetAppPoolId(_systemCalls);
-                LogInfo(L"Command line: ", commandLine);
                 if (!forceProfiling && !configuration->ShouldInstrument(processPath, parentProcessPath, appPoolId, commandLine, _isCoreClr)) {
                     LogInfo("This process should not be instrumented, unloading profiler.");
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
