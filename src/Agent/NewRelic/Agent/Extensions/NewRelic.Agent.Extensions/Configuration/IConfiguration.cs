@@ -191,10 +191,13 @@ namespace NewRelic.Agent.Configuration
         bool EnableAspNetCore6PlusBrowserInjection { get; }
         bool ExcludeNewrelicHeader { get; }
 
-        RemoteParentSampledBehavior RemoteParentSampledBehavior { get; }
-        RemoteParentSampledBehavior RemoteParentNotSampledBehavior { get; }
-        bool TraceIdRatioBasedSamplingEnabled { get; }
-        float? TraceIdRatioBasedSamplingRatio { get; }
+        SamplerType RootSamplerType { get; }
+        SamplerType RemoteParentSampledSamplerType { get; }
+        SamplerType RemoteParentNotSampledSamplerType { get; }
+
+        float? RootTraceIdRatioSamplerRatio { get; }
+        float? RemoteParentSampledTraceIdRatioSamplerRatio { get; }
+        float? RemoteParentNotSampledTraceIdRatioSamplerRatio { get; }
 
         bool ApplicationLoggingEnabled { get; }
         bool LogMetricsCollectorEnabled { get; }

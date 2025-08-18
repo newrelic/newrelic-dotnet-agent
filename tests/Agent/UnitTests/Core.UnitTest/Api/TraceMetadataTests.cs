@@ -53,13 +53,13 @@ namespace NewRelic.Agent.Core.Api
             var transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
             Assert.That(transaction.Sampled, Is.Null);
 
-            Mock.Arrange(() => _samplerService.GetSampler(SamplerType.Root).ShouldSample(Arg.IsAny<ISamplingParameters>())).Returns(new SamplingResult(true, priority));   
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.Root).ShouldSample(Arg.IsAny<ISamplingParameters>())).Returns(new SamplingResult(true, priority));   
 
             var traceMetadata = _traceMetadataFactory.CreateTraceMetadata(transaction);
             var sampled = traceMetadata.IsSampled;
 
             Assert.That(sampled, Is.EqualTo(true), "TraceMetadata did not set IsSampled.");
-            Mock.Assert(() => _samplerService.GetSampler(SamplerType.Root).ShouldSample(Arg.IsAny<ISamplingParameters>()), Occurs.Once());
+            Mock.Assert(() => _samplerService.GetSampler(SamplerLevel.Root).ShouldSample(Arg.IsAny<ISamplingParameters>()), Occurs.Once());
         }
 
         [Test]
@@ -68,13 +68,13 @@ namespace NewRelic.Agent.Core.Api
             var transaction = Mock.Create<IInternalTransaction>();
             Mock.Arrange(() => transaction.Sampled).Returns(true);
 
-            Mock.Arrange(() => _samplerService.GetSampler(SamplerType.Root).ShouldSample(Arg.IsAny<ISamplingParameters>())).Returns(new SamplingResult(false, priority));
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.Root).ShouldSample(Arg.IsAny<ISamplingParameters>())).Returns(new SamplingResult(false, priority));
 
             var traceMetadata = _traceMetadataFactory.CreateTraceMetadata(transaction);
             var sampled = traceMetadata.IsSampled;
 
             Assert.That(sampled, Is.EqualTo(true), "TraceMetadata did not use existing Sampled setting.");
-            Mock.Assert(() => _samplerService.GetSampler(SamplerType.Root).ShouldSample(Arg.IsAny<ISamplingParameters>()), Occurs.Never());
+            Mock.Assert(() => _samplerService.GetSampler(SamplerLevel.Root).ShouldSample(Arg.IsAny<ISamplingParameters>()), Occurs.Never());
         }
     }
 }

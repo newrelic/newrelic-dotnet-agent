@@ -132,7 +132,7 @@ namespace CompositeTests
         {
         }
 
-        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false, bool enableGCSamplerV2 = false, RemoteParentSampledBehavior remoteParentSampledBehavior = RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior remoteParentNotSampledBehavior = RemoteParentSampledBehavior.Default)
+        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false, bool enableGCSamplerV2 = false, SamplerType rootSamplerType = SamplerType.Default, SamplerType remoteParentSampledSamplerType = SamplerType.Default, SamplerType remoteParentNotSampledSamplerType = SamplerType.Default)
         {
             Log.Initialize(new Logger());
 
@@ -226,7 +226,7 @@ namespace CompositeTests
             AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
             // Update configuration (will also start services)
-            LocalConfiguration = GetDefaultTestLocalConfiguration(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
+            LocalConfiguration = GetDefaultTestLocalConfiguration(rootSamplerType, remoteParentSampledSamplerType, remoteParentNotSampledSamplerType);
             ServerConfiguration = GetDefaultTestServerConfiguration();
             SecurityConfiguration = GetDefaultSecurityPoliciesConfiguration();
             InstrumentationWatcher.Start();
@@ -409,14 +409,16 @@ namespace CompositeTests
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
         }
 
-        private static configuration GetDefaultTestLocalConfiguration(RemoteParentSampledBehavior remoteParentSampledBehavior, RemoteParentSampledBehavior remoteParentNotSampledBehavior)
+        private static configuration GetDefaultTestLocalConfiguration(SamplerType rootSamplerType, SamplerType remoteParentSampledSamplerType, SamplerType remoteParentNotSampledSamplerType)
         {
             var configuration = new configuration();
 
             // Distributed tracing is disabled by default. However, we have fewer tests that need it disabled than we do that need it enabled.
             configuration.distributedTracing.enabled = true;
-            configuration.distributedTracing.sampler.remoteParentSampled = remoteParentSampledBehavior.ToRemoteParentSampledBehaviorType();
-            configuration.distributedTracing.sampler.remoteParentNotSampled = remoteParentNotSampledBehavior.ToRemoteParentSampledBehaviorType();
+
+            // configure the distributed tracing samplers
+            configuration.distributedTracing.sampler.remoteParentSampled.Item = remoteParentSampledSamplerType.ToConfigurationSamplerTypeInstance();
+            configuration.distributedTracing.sampler.remoteParentNotSampled.Item = remoteParentNotSampledSamplerType.ToConfigurationSamplerTypeInstance();
 
             return configuration;
         }
