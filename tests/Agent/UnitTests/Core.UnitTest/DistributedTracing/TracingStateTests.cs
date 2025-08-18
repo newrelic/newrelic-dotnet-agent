@@ -46,11 +46,11 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void Setup()
         {
             _samplerService = Mock.Create<ISamplerService>();
-            Mock.Arrange(() => _samplerService.GetSampler(SamplerType.Root))
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.Root))
                 .Returns(new AdaptiveSampler(1, 1, 1, false)); // Using a simple sampler for testing
-            Mock.Arrange(() => _samplerService.GetSampler(SamplerType.RemoteParentSampled))
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
                 .Returns((ISampler)null);
-            Mock.Arrange(() => _samplerService.GetSampler(SamplerType.RemoteParentNotSampled))
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
                 .Returns((ISampler)null);
 
         }
@@ -336,42 +336,39 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Assert.That(tracingState.IngestErrors, Does.Contain(IngestErrorType.TraceParentParseException), "TracingState IngestErrors should contain TraceParentParseException.");
         }
 
-        [TestCase(true, true, RemoteParentSampledBehavior.AlwaysOn, RemoteParentSampledBehavior.Default, true, 2.0f, TestName = "TraceParentSampled_AlwaysOn")]
-        [TestCase(true, true, RemoteParentSampledBehavior.AlwaysOff, RemoteParentSampledBehavior.Default, false, 0f, TestName = "TraceParentSampled_AlwaysOff")]
-        [TestCase(true, true, RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior.Default, true, 0.65f, TestName = "TraceParentSampled_Default")]
-        [TestCase(true, false, RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior.AlwaysOn, true, 2.0f, TestName = "TraceParentNotSampled_AlwaysOn")]
-        [TestCase(true, false, RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior.AlwaysOff, false, 0f, TestName = "TraceParentNotSampled_AlwaysOff")]
-        [TestCase(true, false, RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior.Default, true, 0.65f, TestName = "TraceParentNotSampled_Default")]
-        [TestCase(false, false, RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior.Default, null, null, TestName = "TraceParentNotValid")]
+        [TestCase(true, true, SamplerType.AlwaysOn, SamplerType.Default, true, 2.0f, null, TestName = "TraceParentSampled_AlwaysOn")]
+        [TestCase(true, true, SamplerType.AlwaysOff, SamplerType.Default, false, 0f, null, TestName = "TraceParentSampled_AlwaysOff")]
+        [TestCase(true, true, SamplerType.Default, SamplerType.Default, true, 0.65f, null, TestName = "TraceParentSampled_Default")]
+        [TestCase(true, false, SamplerType.Default, SamplerType.AlwaysOn, true, 2.0f, null, TestName = "TraceParentNotSampled_AlwaysOn")]
+        [TestCase(true, false, SamplerType.Default, SamplerType.AlwaysOff, false, 0f, null, TestName = "TraceParentNotSampled_AlwaysOff")]
+        [TestCase(true, false, SamplerType.Default, SamplerType.Default, true, 0.65f, null, TestName = "TraceParentNotSampled_Default")]
+        [TestCase(false, false, SamplerType.Default, SamplerType.Default, null, null, null, TestName = "TraceParentNotValid")]
+        // TraceIdRatioBased (ratio = 1.0 -> always sample & boost priority)
+        [TestCase(true, true, SamplerType.TraceIdRatioBased, SamplerType.Default, true, 1.65f, 1.0f, TestName = "TraceParentSampled_RatioSampler_AlwaysSample")]
+        [TestCase(true, false, SamplerType.Default, SamplerType.TraceIdRatioBased, true, 1.65f, 1.0f, TestName = "TraceParentNotSampled_RatioSampler_AlwaysSample")]
+        // TraceIdRatioBased (ratio = 0.0 -> never sample & no priority boost)
+        [TestCase(true, true, SamplerType.TraceIdRatioBased, SamplerType.Default, false, 0.65f, 0.0f, TestName = "TraceParentSampled_RatioSampler_NeverSample")]
+        [TestCase(true, false, SamplerType.Default, SamplerType.TraceIdRatioBased, false, 0.65f, 0.0f, TestName = "TraceParentNotSampled_RatioSampler_NeverSample")]
         public void Sampled_TestMatrix(
             bool traceParentValid,
             bool traceParentSampled,
-            RemoteParentSampledBehavior remoteParentSampledBehavior,
-            RemoteParentSampledBehavior remoteParentNotSampledBehavior,
-            bool? expectedSampled, float? expectedPriority)
+            SamplerType remoteParentSampledSamplerType,
+            SamplerType remoteParentNotSampledSamplerType,
+            bool? expectedSampled,
+            float? expectedPriority,
+            float? ratio // only used when a TraceIdRatioBased sampler is supplied
+            )
         {
             // Arrange
-            var traceparent = traceParentValid ? traceParentSampled ? ValidTraceparent : ValidTraceparentNotSampled : null;
+            var traceparent = traceParentValid
+                ? (traceParentSampled ? ValidTraceparent : ValidTraceparentNotSampled)
+                : null;
             var tracestate = ValidTracestate;
 
-            switch (remoteParentSampledBehavior)
-            {
-                case RemoteParentSampledBehavior.Default:
-                    break;
-                case RemoteParentSampledBehavior.AlwaysOn:
-                    break;
-                case RemoteParentSampledBehavior.AlwaysOff:
-                    break;
-                case RemoteParentSampledBehavior.TraceIdRatioBased:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(remoteParentSampledBehavior), remoteParentSampledBehavior, null);
-            }
-
-            Mock.Arrange(() => _samplerService.GetSampler(SamplerType.RemoteParentSampled))
-                .Returns(() => GetSampler(remoteParentSampledBehavior));
-            Mock.Arrange(() => _samplerService.GetSampler(SamplerType.RemoteParentNotSampled))
-                .Returns(() => GetSampler(remoteParentNotSampledBehavior));
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                .Returns(() => GetSampler(remoteParentSampledSamplerType, ratio));
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
+                .Returns(() => GetSampler(remoteParentNotSampledSamplerType, ratio));
 
             var headers = new Dictionary<string, string>();
             if (traceparent != null)
@@ -389,22 +386,22 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 getter: GetHeader,
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
-                transactionStartTime: DateTime.UtcNow, _samplerService);
+                transactionStartTime: DateTime.UtcNow,
+                _samplerService);
 
             // Assert
             Assert.That(tracingState.Sampled, Is.EqualTo(expectedSampled));
             Assert.That(tracingState.Priority, Is.EqualTo(expectedPriority));
 
-            ISampler GetSampler(RemoteParentSampledBehavior remoteParentSampledBehavior1)
+            ISampler GetSampler(SamplerType behavior, float? r)
             {
-                return remoteParentSampledBehavior1 switch
+                return behavior switch
                 {
-                    RemoteParentSampledBehavior.Default => null,
-                    RemoteParentSampledBehavior.AlwaysOn => AlwaysOnSampler.Instance,
-                    RemoteParentSampledBehavior.AlwaysOff => AlwaysOffSampler.Instance,
-                    RemoteParentSampledBehavior.TraceIdRatioBased => new TraceIdRatioSampler(0.5f), // Example ratio
-                    _ => throw new ArgumentOutOfRangeException(nameof(remoteParentSampledBehavior1),
-                        remoteParentSampledBehavior1, null)
+                    SamplerType.Default => null,
+                    SamplerType.AlwaysOn => AlwaysOnSampler.Instance,
+                    SamplerType.AlwaysOff => AlwaysOffSampler.Instance,
+                    SamplerType.TraceIdRatioBased => new TraceIdRatioSampler(r ?? 0.5f),
+                    _ => throw new ArgumentOutOfRangeException(nameof(behavior), behavior, null)
                 };
             }
         }
@@ -438,7 +435,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 { "tracestate", ValidTracestate },
             };
 
-            Mock.Arrange(() => _samplerService.GetSampler(SamplerType.RemoteParentSampled))
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
                 .Returns(new TraceIdRatioSampler(1.0f));
 
 
@@ -463,7 +460,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 { "traceparent", ValidTraceparent },
                 { "tracestate", ValidTracestate },
             };
-            Mock.Arrange(() => _samplerService.GetSampler(SamplerType.RemoteParentSampled))
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
                 .Returns(new TraceIdRatioSampler(0.0f));
 
             var tracingState = TracingState.AcceptDistributedTraceHeaders(
@@ -478,7 +475,65 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Assert.That(tracingState.Priority, Is.EqualTo(Priority), "Priority should use the tracestate priority value when sampleRatio is 0");
         }
 
+        [TestCase("0000000000000001", 0.01f, true, true, TestName = "TraceIdRatioBased_LowValue_AlwaysSamples_Ratio001_ParentSampled")]
+        [TestCase("0000000000000001", 0.25f, true, true, TestName = "TraceIdRatioBased_LowValue_AlwaysSamples_Ratio025_ParentNotSampled")]
+        [TestCase("3fffffffffffffff", 0.75f, true, true, TestName = "TraceIdRatioBased_MidValue_Sample_Ratio075_ParentSampled")]
+        // Use boundary value 0x4000... (>= computed upperBound for ratio 0.50) to ensure NOT sampled
+        [TestCase("4000000000000000", 0.50f, false, false, TestName = "TraceIdRatioBased_MidValue_NoSample_Ratio050_ParentNotSampled")]
+        [TestCase("3fffffffffffffff", 0.25f, false, true, TestName = "TraceIdRatioBased_MidValue_NoSample_Ratio025_ParentSampled")]
+        [TestCase("7fffffffffffffff", 0.99f, false, true, TestName = "TraceIdRatioBased_HighValue_NoSample_Ratio099_ParentSampled")]
+        [TestCase("7fffffffffffffff", 0.75f, false, false, TestName = "TraceIdRatioBased_HighValue_NoSample_Ratio075_ParentNotSampled")]
+        public void Probabilistic_TraceIdRatioBased_Sampling_Deterministic(string first16Hex, float ratio, bool expectedSampled, bool parentSampledFlag)
+        {
+            // Build a deterministic trace id (32 hex chars) using supplied high/low prefix + zeros for remaining 16 chars
+            var fullTraceId = first16Hex + "0000000000000000";
+            Assert.That(fullTraceId.Length, Is.EqualTo(32), "TraceId must be 32 hex chars");
 
+            // Construct a traceparent with the supplied sampled flag
+            var traceparent = $"00-{fullTraceId}-{ParentId}-{(parentSampledFlag ? "01" : "00")}";
+
+            // Use existing valid tracestate (priority & other intrinsic values)
+            var headers = new Dictionary<string, string>
+            {
+                { "traceparent", traceparent },
+                { "tracestate", ValidTracestate }
+            };
+
+            // Configure sampler service so that only the relevant sampler level uses the ratio sampler
+            if (parentSampledFlag)
+            {
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                    .Returns(new TraceIdRatioSampler(ratio));
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
+                    .Returns((ISampler)null);
+            }
+            else
+            {
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                    .Returns((ISampler)null);
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
+                    .Returns(new TraceIdRatioSampler(ratio));
+            }
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                carrier: headers,
+                getter: GetHeader,
+                transportType: TransportType.HTTP,
+                agentTrustKey: TrustKey,
+                transactionStartTime: DateTime.UtcNow.AddMilliseconds(1),
+                _samplerService);
+
+            // Expected priority: base priority (.65) + 1.0f if sampled (ratio sampler boosts by 1.0)
+            var expectedPriority = expectedSampled ? Priority + 1.0f : Priority;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracingState.TraceId, Is.EqualTo(fullTraceId));
+                Assert.That(tracingState.ParentId, Is.EqualTo(ParentId));
+                Assert.That(tracingState.Sampled, Is.EqualTo(expectedSampled));
+                Assert.That(tracingState.Priority, Is.EqualTo(expectedPriority));
+            });
+        }
         #endregion
 
         #region helpers

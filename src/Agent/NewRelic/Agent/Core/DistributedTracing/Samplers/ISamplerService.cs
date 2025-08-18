@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.DistributedTracing.Samplers
 {
@@ -10,9 +11,9 @@ namespace NewRelic.Agent.Core.DistributedTracing.Samplers
         /// <summary>
         /// Returns the appropriately configured sampler based on the SamplerType
         /// </summary>
-        /// <param name="samplerType"></param>
+        /// <param name="samplerLevel"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        ISampler GetSampler(SamplerType samplerType);
+        ISampler GetSampler(SamplerLevel samplerLevel);
     }
 }
