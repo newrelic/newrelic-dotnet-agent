@@ -664,6 +664,7 @@ public abstract class RemoteApplication : IDisposable
         environmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
         environmentVariables.Remove("NEW_RELIC_HOST");
         environmentVariables.Remove("NEW_RELIC_INSTALL_PATH");
+        environmentVariables.Remove("NEW_RELIC_APP_NAME");
 
         environmentVariables.Remove("CORECLR_ENABLE_PROFILING");
         environmentVariables.Remove("CORECLR_PROFILER");
