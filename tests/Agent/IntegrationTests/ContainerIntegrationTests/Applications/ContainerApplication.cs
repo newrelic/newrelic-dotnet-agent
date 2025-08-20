@@ -26,7 +26,7 @@ public class ContainerApplication : RemoteApplication
     private readonly string _containerPlatform;
 
     private static readonly Random random = new();
-    private readonly string _randomToken; // short hex token for uniqueness
+    private readonly string _randomToken; // short hex token for uniqueness (extended to 12 hex chars)
     private int _startupAttempts;
 
     // Used for handling dependent containers started automatically for services
@@ -51,7 +51,7 @@ public class ContainerApplication : RemoteApplication
         _dockerComposeFile = dockerComposeFile;
         _serviceName = serviceName;
 
-    _randomToken = (random.NextInt64() & 0xFFFFFFFF).ToString("x8");
+    _randomToken = (random.NextInt64() & 0xFFFFFFFFFFFF).ToString("x12");
     _startupAttempts = 0;
 
         DockerDependencies = new List<string>();
@@ -149,7 +149,50 @@ public class ContainerApplication : RemoteApplication
         Console.WriteLine($"[{AppName} {DateTime.Now}] Cleaning up container and images related to {ContainerName} container.");
         TestLogger?.WriteLine($"[{AppName}] Cleaning up container and images related to {ContainerName} container.");
 
-        Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans");
+        try
+        {
+            var downProc = Process.Start(new ProcessStartInfo
+            {
+                FileName = "docker",
+                Arguments = $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            });
+            downProc?.WaitForExit(30000);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[{AppName} {DateTime.Now}] Error during compose down: {ex.Message}");
+        }
+
+        // Force remove lingering container with same name if still present
+        try
+        {
+            var inspect = Process.Start(new ProcessStartInfo
+            {
+                FileName = "docker",
+                Arguments = $"ps -a --filter name=^/{ContainerName}$ -q",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            });
+            var output = inspect?.StandardOutput.ReadToEnd();
+            inspect?.WaitForExit(5000);
+            if (!string.IsNullOrWhiteSpace(output))
+            {
+                var rm = Process.Start(new ProcessStartInfo
+                {
+                    FileName = "docker",
+                    Arguments = $"rm -f {ContainerName}",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                });
+                rm?.WaitForExit(10000);
+            }
+        }
+        catch { /* ignore */ }
 
         // Attempt removal of lingering default network (compose sometimes races on rapid successive runs)
         try
@@ -177,6 +220,21 @@ public class ContainerApplication : RemoteApplication
     protected override void PrepareForStart()
     {
         CleanupContainer();
+        // Pre-create network to avoid race where compose fails before creating it
+        try
+        {
+            var networkName = $"{ContainerName.ToLower()}_default";
+            var netCreate = Process.Start(new ProcessStartInfo
+            {
+                FileName = "docker",
+                Arguments = $"network create {networkName}",
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            });
+            netCreate?.WaitForExit(5000);
+        }
+        catch { /* ignore */ }
     }
 
     protected override void WaitForProcessToStartListening(bool captureStandardOutput)
