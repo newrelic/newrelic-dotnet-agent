@@ -109,7 +109,7 @@ rebuild_yum() {
 
     printf \\n
     if [[ -d "$REPO_DIR" ]]; then
-      createrepo_c --update "$REPO_DIR"
+      createrepo_c --update --general-compress-type=gz "$REPO_DIR"
     fi
   done
 }
