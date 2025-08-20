@@ -50,8 +50,8 @@ public class ContainerApplication : RemoteApplication
         _dockerComposeFile = dockerComposeFile;
         _serviceName = serviceName;
 
-    _randomToken = Guid.NewGuid().ToString("N").Substring(0, 12); // 12 hex chars ensures high uniqueness across parallel runs
-    _startupAttempts = 0;
+        _randomToken = Guid.NewGuid().ToString("N").Substring(0, 12); // 12 hex chars ensures high uniqueness across parallel runs
+        _startupAttempts = 0;
 
         DockerDependencies = new List<string>();
 
@@ -235,7 +235,7 @@ public class ContainerApplication : RemoteApplication
         }
         catch { /* ignore */ }
 
-    CaptureDockerState("pre-start");
+        CaptureDockerState("pre-start");
     }
 
     protected override void WaitForProcessToStartListening(bool captureStandardOutput)
@@ -300,30 +300,30 @@ public class ContainerApplication : RemoteApplication
             }
         }
 
-    // Capture state after failure / before any retry
-    CaptureDockerState(RemoteProcess.HasExited ? "post-failure-exited" : "post-failure-running");
+        // Capture state after failure / before any retry
+        CaptureDockerState(RemoteProcess.HasExited ? "post-failure-exited" : "post-failure-running");
 
         if (captureStandardOutput)
         {
             CapturedOutput.WriteProcessOutputToLog($"[{AppName}]: WaitForAppServerToStartListening");
         }
 
-    Assert.Fail($"{AppName}: process never generated a .pid file (after {_startupAttempts + 1} attempt(s))!");
+        Assert.Fail($"{AppName}: process never generated a .pid file (after {_startupAttempts + 1} attempt(s))!");
     }
 
     private void CaptureDockerState(string stage)
     {
         try
         {
-            Directory.CreateDirectory(DefaultLogFileDirectoryPath);
-            var file = Path.Combine(DefaultLogFileDirectoryPath, $"docker_state_{stage}.log");
-            using var sw = new StreamWriter(file, append: false);
-            sw.WriteLine($"[{DateTime.UtcNow:o}] Stage: {stage}");
+            TestLogger?.WriteLine("");
+            TestLogger?.WriteLine($"====== Docker diagnostics stage '{stage}' for {AppName} ({ContainerName}) ======");
+            TestLogger?.WriteLine($"UTC: {DateTime.UtcNow:o}");
+
             void RunAndWrite(string title, string fileName, string args, int timeoutMs = 8000)
             {
                 try
                 {
-                    sw.WriteLine($"--- {title}: {fileName} {args}");
+                    TestLogger?.WriteLine($"--- {title}: {fileName} {args}");
                     var psi = new ProcessStartInfo
                     {
                         FileName = fileName,
@@ -335,18 +335,26 @@ public class ContainerApplication : RemoteApplication
                     var p = Process.Start(psi);
                     if (p?.WaitForExit(timeoutMs) == true)
                     {
-                        sw.WriteLine(p.StandardOutput.ReadToEnd());
+                        var stdout = p.StandardOutput.ReadToEnd();
+                        if (!string.IsNullOrWhiteSpace(stdout))
+                        {
+                            TestLogger?.WriteLine(stdout);
+                        }
                         var err = p.StandardError.ReadToEnd();
-                        if (!string.IsNullOrWhiteSpace(err)) sw.WriteLine("[stderr]\n" + err);
+                        if (!string.IsNullOrWhiteSpace(err))
+                        {
+                            TestLogger?.WriteLine("[stderr]");
+                            TestLogger?.WriteLine(err);
+                        }
                     }
                     else
                     {
-                        sw.WriteLine("(timed out)");
+                        TestLogger?.WriteLine("(timed out)");
                     }
                 }
                 catch (Exception ex)
                 {
-                    sw.WriteLine($"(error collecting '{title}'): {ex.Message}");
+                    TestLogger?.WriteLine($"(error collecting '{title}'): {ex.Message}");
                 }
             }
 
@@ -358,6 +366,8 @@ public class ContainerApplication : RemoteApplication
             RunAndWrite("inspect_target_network", "docker", $"network inspect {ContainerName.ToLower()}_default");
             // Compose ls (if available)
             RunAndWrite("compose_projects", "docker", "compose ls");
+
+            TestLogger?.WriteLine($"====== End docker diagnostics stage '{stage}' for {AppName} ======");
         }
         catch
         {
