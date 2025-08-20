@@ -25,8 +25,7 @@ public class ContainerApplication : RemoteApplication
     private readonly string _agentArch;
     private readonly string _containerPlatform;
 
-    private static readonly Random random = new();
-    private readonly string _randomToken; // short hex token for uniqueness (extended to 12 hex chars)
+    private readonly string _randomToken; // short hex token (from Guid) for uniqueness
     private int _startupAttempts;
 
     // Used for handling dependent containers started automatically for services
@@ -51,7 +50,7 @@ public class ContainerApplication : RemoteApplication
         _dockerComposeFile = dockerComposeFile;
         _serviceName = serviceName;
 
-    _randomToken = (random.NextInt64() & 0xFFFFFFFFFFFF).ToString("x12");
+    _randomToken = Guid.NewGuid().ToString("N").Substring(0, 12); // 12 hex chars ensures high uniqueness across parallel runs
     _startupAttempts = 0;
 
         DockerDependencies = new List<string>();
@@ -220,21 +219,23 @@ public class ContainerApplication : RemoteApplication
     protected override void PrepareForStart()
     {
         CleanupContainer();
-        // Pre-create network to avoid race where compose fails before creating it
+        // Remove any stale network with expected name so compose can recreate it with correct labels
         try
         {
             var networkName = $"{ContainerName.ToLower()}_default";
-            var netCreate = Process.Start(new ProcessStartInfo
+            var netRm = Process.Start(new ProcessStartInfo
             {
                 FileName = "docker",
-                Arguments = $"network create {networkName}",
+                Arguments = $"network rm {networkName}",
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
                 UseShellExecute = false
             });
-            netCreate?.WaitForExit(5000);
+            netRm?.WaitForExit(5000);
         }
         catch { /* ignore */ }
+
+    CaptureDockerState("pre-start");
     }
 
     protected override void WaitForProcessToStartListening(bool captureStandardOutput)
@@ -248,6 +249,7 @@ public class ContainerApplication : RemoteApplication
             if (File.Exists(pidFilePath))
             {
                 Console.WriteLine($"[{DateTime.Now}] PID file {pidFilePath} found...");
+                CaptureDockerState("post-success");
                 return;
             }
             Thread.Sleep(Timing.TimeBetweenFileExistChecks);
@@ -298,12 +300,69 @@ public class ContainerApplication : RemoteApplication
             }
         }
 
+    // Capture state after failure / before any retry
+    CaptureDockerState(RemoteProcess.HasExited ? "post-failure-exited" : "post-failure-running");
+
         if (captureStandardOutput)
         {
             CapturedOutput.WriteProcessOutputToLog($"[{AppName}]: WaitForAppServerToStartListening");
         }
 
     Assert.Fail($"{AppName}: process never generated a .pid file (after {_startupAttempts + 1} attempt(s))!");
+    }
+
+    private void CaptureDockerState(string stage)
+    {
+        try
+        {
+            Directory.CreateDirectory(DefaultLogFileDirectoryPath);
+            var file = Path.Combine(DefaultLogFileDirectoryPath, $"docker_state_{stage}.log");
+            using var sw = new StreamWriter(file, append: false);
+            sw.WriteLine($"[{DateTime.UtcNow:o}] Stage: {stage}");
+            void RunAndWrite(string title, string fileName, string args, int timeoutMs = 8000)
+            {
+                try
+                {
+                    sw.WriteLine($"--- {title}: {fileName} {args}");
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = fileName,
+                        Arguments = args,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false
+                    };
+                    var p = Process.Start(psi);
+                    if (p?.WaitForExit(timeoutMs) == true)
+                    {
+                        sw.WriteLine(p.StandardOutput.ReadToEnd());
+                        var err = p.StandardError.ReadToEnd();
+                        if (!string.IsNullOrWhiteSpace(err)) sw.WriteLine("[stderr]\n" + err);
+                    }
+                    else
+                    {
+                        sw.WriteLine("(timed out)");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    sw.WriteLine($"(error collecting '{title}'): {ex.Message}");
+                }
+            }
+
+            // Broad listing of our containers (prefix containertestapp_)
+            RunAndWrite("containers", "docker", "ps -a --filter name=containertestapp_ --format \"{{.ID}} {{.Names}} {{.Status}}\"");
+            // List networks
+            RunAndWrite("networks", "docker", "network ls --format \"{{.ID}} {{.Name}}\"");
+            // Inspect the specific expected network (may fail if absent)
+            RunAndWrite("inspect_target_network", "docker", $"network inspect {ContainerName.ToLower()}_default");
+            // Compose ls (if available)
+            RunAndWrite("compose_projects", "docker", "compose ls");
+        }
+        catch
+        {
+            // swallow logging errors
+        }
     }
 
     public enum Architecture
