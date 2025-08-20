@@ -11,6 +11,7 @@ using Xunit;
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
 [Trait("Architecture", "amd64")]
+ [Trait("Distro", "Ubuntu")]
 public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehoseTestFixture>
 {
     private readonly AwsSdkContainerFirehoseTestFixture _fixture;
