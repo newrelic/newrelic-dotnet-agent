@@ -16,6 +16,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
     /// created successfully.
     /// </summary>
     [Trait("Architecture", "amd64")]
+    [Trait("Distro", "Ubuntu")]
     public class LinuxUnicodeLogFileTest : NewRelicIntegrationTest<LinuxUnicodeLogFileTestFixture>
     {
         private readonly LinuxUnicodeLogFileTestFixture _fixture;
