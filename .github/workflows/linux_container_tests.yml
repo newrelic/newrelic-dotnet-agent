@@ -31,7 +31,7 @@ permissions:
 jobs:
 
   linux-container-tests:
-    name: Run Linux Container Integration Tests (${{ matrix.arch }} / ${{ matrix.distro }})
+    name: Container Test (${{ matrix.distro }}/${{ matrix.arch }})
     # Runner chosen per matrix entry
     runs-on: ${{ matrix.runner }}
     strategy:
