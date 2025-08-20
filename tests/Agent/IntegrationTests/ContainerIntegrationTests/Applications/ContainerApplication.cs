@@ -25,8 +25,9 @@ public class ContainerApplication : RemoteApplication
     private readonly string _agentArch;
     private readonly string _containerPlatform;
 
-    private static Random random = new Random();
-    private readonly long _randomId;
+    private static readonly Random random = new();
+    private readonly string _randomToken; // short hex token for uniqueness
+    private int _startupAttempts;
 
     // Used for handling dependent containers started automatically for services
     public readonly List<string> DockerDependencies;
@@ -50,7 +51,8 @@ public class ContainerApplication : RemoteApplication
         _dockerComposeFile = dockerComposeFile;
         _serviceName = serviceName;
 
-        _randomId = random.NextInt64(); // a random id to help ensure container name uniqueness
+    _randomToken = (random.NextInt64() & 0xFFFFFFFF).ToString("x8");
+    _startupAttempts = 0;
 
         DockerDependencies = new List<string>();
 
@@ -69,9 +71,9 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public string NRAppName =>$"ContainerTestApp_{_dotnetVersion}-{_distroTag}_{_targetArch}";
+    public string NRAppName => $"ContainerTestApp_{_dotnetVersion}-{_distroTag}_{_targetArch}";
 
-    public override string AppName => $"{NRAppName}_{_randomId}";
+    public override string AppName => $"{NRAppName}_{_randomToken}";
 
     private string ContainerName => AppName.ToLower().Replace(".", "_"); // must be lowercase, can't have any periods in it
 
@@ -149,6 +151,22 @@ public class ContainerApplication : RemoteApplication
 
         Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans");
 
+        // Attempt removal of lingering default network (compose sometimes races on rapid successive runs)
+        try
+        {
+            var networkName = $"{ContainerName.ToLower()}_default";
+            var proc = Process.Start(new ProcessStartInfo
+            {
+                FileName = "docker",
+                Arguments = $"network rm {networkName}",
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            });
+            proc?.WaitForExit(5000);
+        }
+        catch { /* ignore */ }
+
 
 #if DEBUG
         // Cleanup the networks with no attached containers. Mainly for testings on dev laptops - they can build up and block runs.
@@ -179,6 +197,34 @@ public class ContainerApplication : RemoteApplication
 
         Console.WriteLine($"[{AppName} {DateTime.Now}] Did not find PID file matching {pidFilePath}. {(RemoteProcess.HasExited ? "Process exited" : "Wait timed out")}.");
 
+        // Retry once if compose exited quickly (often due to transient network creation issues)
+        if (RemoteProcess.HasExited && _startupAttempts == 0)
+        {
+            _startupAttempts++;
+            Console.WriteLine($"[{AppName} {DateTime.Now}] Early compose exit detected. Retrying docker compose up (attempt {_startupAttempts}).");
+            TestLogger?.WriteLine($"[{AppName}] Retrying docker compose up.");
+            CleanupContainer();
+            try
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = StartInfoFileName,
+                    Arguments = GetStartInfoArgs(null),
+                    WorkingDirectory = StartInfoWorkingDirectory,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                };
+                RemoteProcess = Process.Start(startInfo);
+                WaitForProcessToStartListening(captureStandardOutput);
+                return;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[{AppName} {DateTime.Now}] Retry failed: {ex.Message}");
+            }
+        }
+
         if (!RemoteProcess.HasExited)
         {
             CleanupContainer();
@@ -199,7 +245,7 @@ public class ContainerApplication : RemoteApplication
             CapturedOutput.WriteProcessOutputToLog($"[{AppName}]: WaitForAppServerToStartListening");
         }
 
-        Assert.Fail($"{AppName}: process never generated a .pid file!");
+    Assert.Fail($"{AppName}: process never generated a .pid file (after {_startupAttempts + 1} attempt(s))!");
     }
 
     public enum Architecture
