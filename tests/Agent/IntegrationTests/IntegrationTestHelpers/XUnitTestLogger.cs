@@ -23,17 +23,72 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public void WriteLine(string message)
         {
-            _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {message}");
+            var line = $"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {message}";
+            if (_xunitOutput == null)
+            {
+                Console.WriteLine(line);
+                return;
+            }
+            try
+            {
+                _xunitOutput.WriteLine(line);
+            }
+            catch (InvalidOperationException)
+            {
+                // Happens if xUnit test context already finished (e.g., fixture Dispose after test completion)
+                // Fall back to console so cleanup diagnostics are not lost.
+                Console.WriteLine(line);
+            }
         }
 
         public void WriteLine(string format, params object[] args)
         {
-            _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {format}", args);
+            var timestampedFormat = $"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {format}";
+            if (_xunitOutput == null)
+            {
+                try
+                {
+                    Console.WriteLine(string.Format(timestampedFormat, args));
+                }
+                catch
+                {
+                    Console.WriteLine(timestampedFormat);
+                }
+                return;
+            }
+            try
+            {
+                _xunitOutput.WriteLine(timestampedFormat, args);
+            }
+            catch (InvalidOperationException)
+            {
+                // See comment above – write to console if test already finished.
+                try
+                {
+                    Console.WriteLine(string.Format(timestampedFormat, args));
+                }
+                catch
+                {
+                    Console.WriteLine(timestampedFormat);
+                }
+            }
         }
 
         public void WriteFormattedOutput(string formattedOutput)
         {
-            _xunitOutput?.WriteLine(formattedOutput);
+            if (_xunitOutput == null)
+            {
+                Console.WriteLine(formattedOutput);
+                return;
+            }
+            try
+            {
+                _xunitOutput.WriteLine(formattedOutput);
+            }
+            catch (InvalidOperationException)
+            {
+                Console.WriteLine(formattedOutput);
+            }
         }
     }
 }
