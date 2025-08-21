@@ -11,12 +11,9 @@ public class AwsSdkContainerMultiServiceTestFixture : AwsSdkContainerTestFixture
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "jammy";
 
-    private readonly string BaseUrl;
+    private string BaseUrl => $"http://localhost:{(RemoteApplication as ContainerApplication)?.EffectiveHostPort ?? Port}/awssdkmultiservice";
 
-    public AwsSdkContainerMultiServiceTestFixture() : base(DistroTag, Architecture, Dockerfile)
-    {
-        BaseUrl = $"http://localhost:{Port}/awssdkmultiservice";
-    }
+    public AwsSdkContainerMultiServiceTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 
     public void ExerciseMultiService(string tableName, string queueName, string bookName)
     {

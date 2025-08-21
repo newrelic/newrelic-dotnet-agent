@@ -11,12 +11,9 @@ public class AwsSdkContainerDynamoDBTestFixture : AwsSdkContainerTestFixtureBase
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "jammy";
 
-    private readonly string BaseUrl;
+    private string BaseUrl => $"http://localhost:{(RemoteApplication as ContainerApplication)?.EffectiveHostPort ?? Port}/awssdkdynamodb";
 
-    public AwsSdkContainerDynamoDBTestFixture() : base(DistroTag, Architecture, Dockerfile)
-    {
-        BaseUrl = $"http://localhost:{Port}/awssdkdynamodb";
-    }
+    public AwsSdkContainerDynamoDBTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 
     public void CreateTableAsync(string tableName)
     {

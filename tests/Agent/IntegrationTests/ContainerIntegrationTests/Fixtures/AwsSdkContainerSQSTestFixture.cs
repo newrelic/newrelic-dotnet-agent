@@ -11,12 +11,9 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures
         private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
         private const string DistroTag = "jammy";
 
-        private readonly string BaseUrl;
+    private string BaseUrl => $"http://localhost:{(RemoteApplication as ContainerApplication)?.EffectiveHostPort ?? Port}/awssdksqs";
 
-        public AwsSdkContainerSQSTestFixture() : base(DistroTag, Architecture, Dockerfile)
-        {
-            BaseUrl = $"http://localhost:{Port}/awssdksqs";
-        }
+    public AwsSdkContainerSQSTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 
         public void ExerciseSQS_SendReceivePurge(string queueName)
         {

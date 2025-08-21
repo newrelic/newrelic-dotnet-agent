@@ -26,7 +26,8 @@ public abstract class MemcachedTestFixtureBase : RemoteApplicationFixture
 
     public virtual void ExerciseApplication()
     {
-        var address = $"http://localhost:{Port}/memcached/";
+    var effectivePort = (RemoteApplication as ContainerApplication)?.EffectiveHostPort ?? Port;
+    var address = $"http://localhost:{effectivePort}/memcached/";
         GetAndAssertStatusCode(address + "testallmethods", System.Net.HttpStatusCode.OK);
     }
 

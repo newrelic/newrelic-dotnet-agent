@@ -24,14 +24,16 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
 
     public virtual void ExerciseApplication()
     {
-        var address = $"http://localhost:{Port}/kafka/";
+    var effectivePort = (RemoteApplication as ContainerApplication)?.EffectiveHostPort ?? Port;
+    var address = $"http://localhost:{effectivePort}/kafka/";
         GetAndAssertStatusCode(address + "produce", System.Net.HttpStatusCode.OK);
         GetAndAssertStatusCode(address + "produceasync", System.Net.HttpStatusCode.OK);
     }
 
     public string GetBootstrapServer()
     {
-        var address = $"http://localhost:{Port}/kafka/bootstrap_server";
+    var effectivePort = (RemoteApplication as ContainerApplication)?.EffectiveHostPort ?? Port;
+    var address = $"http://localhost:{effectivePort}/kafka/bootstrap_server";
         var response = GetString(address);
 
         return response;

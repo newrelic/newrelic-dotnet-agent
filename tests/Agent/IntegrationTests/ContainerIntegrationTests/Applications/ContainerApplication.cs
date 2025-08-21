@@ -7,6 +7,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Text.RegularExpressions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -27,6 +28,8 @@ public class ContainerApplication : RemoteApplication
 
     private readonly string _randomToken; // short hex token (from Guid) for uniqueness
     private int _startupAttempts;
+    private readonly bool _useDynamicHostPort = true; // enable ephemeral host port mapping (Docker assigns a free port)
+    private int? _resolvedHostPort; // actual host port mapped to container port 80 when using dynamic mapping
 
     // Used for handling dependent containers started automatically for services
     public readonly List<string> DockerDependencies;
@@ -115,50 +118,70 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Add("PLATFORM", _containerPlatform);
         startInfo.EnvironmentVariables.Add("NEW_RELIC_LICENSE_KEY", testConfiguration.LicenseKey);
         startInfo.EnvironmentVariables.Add("NEW_RELIC_HOST", testConfiguration.CollectorUrl);
-        startInfo.EnvironmentVariables.Add("PORT", $"{Port}");
+    // If dynamic host port allocation is enabled, set PORT env to 0 so docker chooses a free ephemeral port
+    var hostPortEnv = _useDynamicHostPort ? "0" : $"{Port}";
+    startInfo.EnvironmentVariables.Add("PORT", hostPortEnv);
         startInfo.EnvironmentVariables.Add("AGENT_PATH", DestinationNewRelicHomeDirectoryPath);
         startInfo.EnvironmentVariables.Add("LOG_PATH", DefaultLogFileDirectoryPath);
         startInfo.EnvironmentVariables.Add("CONTAINER_NAME", ContainerName);
+    TestLogger?.WriteLine($"[{AppName}] Compose env summary: RequestedHostPort={( _useDynamicHostPort ? "dynamic(0)" : Port )}; TARGET_ARCH={_targetArch}; DISTRO_TAG={_distroTag}; DOCKERFILE={_dockerfile}; COMPOSE_FILE={_dockerComposeFile}");
     }
 
     public override void Shutdown(bool force = false)
     {
         if (!IsRunning)
         {
+            // Even if RemoteProcess is not running we may still have lingering containers/networks (e.g. early test failure before Shutdown was invoked)
+            CaptureDockerState("pre-shutdown-orphan-scan");
+            CleanupContainer(includeComposeDown: false); // force removal of any leftovers
+            CaptureDockerState("post-shutdown-orphan-scan");
             return;
         }
 
         Console.WriteLine($"[{AppName} {DateTime.Now}] Sending shutdown signal to {ContainerName} container.");
         TestLogger?.WriteLine($"[{AppName}] Sending shutdown signal to {ContainerName} container.");
 
-        // stop and remove the container, no need to kill RemoteProcess, as it will die when this command runs
-        // wait up to 20 seconds for the app to terminate gracefully before forcefully closing it
-        var proc = Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans -t 20");
-
-        // wait for the process to complete
-        if (!proc.WaitForExit(30000))
+        // Initiate compose down (graceful stop) allowing up to 20s for app shutdown
+        var downArgs = $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans -t 20";
+        var proc = Process.Start("docker", downArgs);
+        if (proc == null)
         {
-            Console.WriteLine($"[{AppName} {DateTime.Now}] Timed out waiting for {ContainerName} container to stop.");
-            TestLogger?.WriteLine($"[{AppName}] Timed out waiting for {ContainerName} container to stop.");
+            TestLogger?.WriteLine($"[{AppName}] Failed to start docker compose down process. Will attempt forced cleanup.");
         }
+        else if (!proc.WaitForExit(30000))
+        {
+            Console.WriteLine($"[{AppName} {DateTime.Now}] Timed out waiting for compose down to complete.");
+            TestLogger?.WriteLine($"[{AppName}] Timed out waiting for compose down to complete.");
+        }
+
+        // Capture state prior to forced cleanup to aid diagnostics if something lingers
+        CaptureDockerState("pre-forced-cleanup");
+
+        // Always perform forced cleanup to handle any compose race / orphan (skip second compose down within CleanupContainer)
+        CleanupContainer(includeComposeDown: false);
+
+        CaptureDockerState("post-forced-cleanup");
     }
 
-    private void CleanupContainer()
+    private void CleanupContainer(bool includeComposeDown = true)
     {
         Console.WriteLine($"[{AppName} {DateTime.Now}] Cleaning up container and images related to {ContainerName} container.");
         TestLogger?.WriteLine($"[{AppName}] Cleaning up container and images related to {ContainerName} container.");
 
         try
         {
-            var downProc = Process.Start(new ProcessStartInfo
+            if (includeComposeDown)
             {
-                FileName = "docker",
-                Arguments = $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            });
-            downProc?.WaitForExit(30000);
+                var downProc = Process.Start(new ProcessStartInfo
+                {
+                    FileName = "docker",
+                    Arguments = $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                });
+                downProc?.WaitForExit(30000);
+            }
         }
         catch (Exception ex)
         {
@@ -218,7 +241,7 @@ public class ContainerApplication : RemoteApplication
 
     protected override void PrepareForStart()
     {
-        CleanupContainer();
+    CleanupContainer();
         // Remove any stale network with expected name so compose can recreate it with correct labels
         try
         {
@@ -250,19 +273,30 @@ public class ContainerApplication : RemoteApplication
             {
                 Console.WriteLine($"[{DateTime.Now}] PID file {pidFilePath} found...");
                 CaptureDockerState("post-success");
+                // Resolve actual host port if using dynamic mapping
+                if (_useDynamicHostPort && _resolvedHostPort == null)
+                {
+                    ResolveDynamicHostPort();
+                }
                 return;
             }
             Thread.Sleep(Timing.TimeBetweenFileExistChecks);
         }
 
         Console.WriteLine($"[{AppName} {DateTime.Now}] Did not find PID file matching {pidFilePath}. {(RemoteProcess.HasExited ? "Process exited" : "Wait timed out")}.");
+        if (RemoteProcess.HasExited)
+        {
+            TestLogger?.WriteLine($"[{AppName}] First compose attempt exited early. ExitCode={RemoteProcess.ExitCode}.");
+        }
 
         // Retry once if compose exited quickly (often due to transient network creation issues)
         if (RemoteProcess.HasExited && _startupAttempts == 0)
         {
             _startupAttempts++;
             Console.WriteLine($"[{AppName} {DateTime.Now}] Early compose exit detected. Retrying docker compose up (attempt {_startupAttempts}).");
-            TestLogger?.WriteLine($"[{AppName}] Retrying docker compose up.");
+            TestLogger?.WriteLine($"[{AppName}] Retrying docker compose up (will attempt {_startupAttempts}).");
+            // Log stdout/stderr from first attempt before retry (if captured)
+            try { CapturedOutput?.WriteProcessOutputToLog($"{AppName} docker compose first-attempt"); } catch { /* ignore */ }
             CleanupContainer();
             try
             {
@@ -302,6 +336,12 @@ public class ContainerApplication : RemoteApplication
 
         // Capture state after failure / before any retry
         CaptureDockerState(RemoteProcess.HasExited ? "post-failure-exited" : "post-failure-running");
+
+        if (RemoteProcess.HasExited)
+        {
+            TestLogger?.WriteLine($"[{AppName}] Final compose attempt exited. ExitCode={RemoteProcess.ExitCode}.");
+            try { CapturedOutput?.WriteProcessOutputToLog($"{AppName} docker compose final-attempt"); } catch { /* ignore */ }
+        }
 
         if (captureStandardOutput)
         {
@@ -358,14 +398,20 @@ public class ContainerApplication : RemoteApplication
                 }
             }
 
-            // Broad listing of our containers (prefix containertestapp_)
-            RunAndWrite("containers", "docker", "ps -a --filter name=containertestapp_ --format \"{{.ID}} {{.Names}} {{.Status}}\"");
+            // Broad listing of our containers (prefix containertestapp_) including host ports
+            RunAndWrite("containers", "docker", "ps -a --filter name=containertestapp_ --format \"{{.ID}} {{.Names}} {{.Status}} {{.Ports}}\"");
+            // Focused listing for this compose project
+            // For project-specific containers we need to preserve double braces in Go template; build format separately to avoid interpolation collapsing braces
+            var formatTemplate = "{{.ID}} {{.Names}} {{.Status}} {{.Ports}}"; // keep double braces
+            RunAndWrite("project_containers", "docker", $"ps -a --filter name={ContainerName} --format \"{formatTemplate}\"");
             // List networks
             RunAndWrite("networks", "docker", "network ls --format \"{{.ID}} {{.Name}}\"");
             // Inspect the specific expected network (may fail if absent)
             RunAndWrite("inspect_target_network", "docker", $"network inspect {ContainerName.ToLower()}_default");
             // Compose ls (if available)
             RunAndWrite("compose_projects", "docker", "compose ls");
+            // Recent docker events (short window)
+            RunAndWrite("recent_events", "docker", "events --since 3s --until 0s --format \"{{json .}}\"", timeoutMs: 3000);
 
             TestLogger?.WriteLine($"====== End docker diagnostics stage '{stage}' for {AppName} ======");
         }
@@ -374,6 +420,47 @@ public class ContainerApplication : RemoteApplication
             // swallow logging errors
         }
     }
+
+    private void ResolveDynamicHostPort()
+    {
+        try
+        {
+            // Prefer docker compose port command
+            var psi = new ProcessStartInfo
+            {
+                FileName = "docker",
+                Arguments = $"compose -p {ContainerName} port {_serviceName} 80",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+            var p = Process.Start(psi);
+            if (p?.WaitForExit(5000) == true)
+            {
+                var output = (p.StandardOutput.ReadToEnd() + "\n" + p.StandardError.ReadToEnd()).Trim();
+                // Typical outputs: "0.0.0.0:49123" or ":::49123"; extract last colon + digits
+                var match = Regex.Match(output, @":(\d+)(?!.*:\d+)");
+                if (match.Success && int.TryParse(match.Groups[1].Value, out var portNum))
+                {
+                    _resolvedHostPort = portNum;
+                    TestLogger?.WriteLine($"[{AppName}] Resolved dynamic host port: {_resolvedHostPort}");
+                    return;
+                }
+                TestLogger?.WriteLine($"[{AppName}] Could not parse resolved host port from output: '{output}'");
+            }
+            else
+            {
+                TestLogger?.WriteLine($"[{AppName}] Timeout resolving dynamic host port.");
+            }
+        }
+        catch (Exception ex)
+        {
+            TestLogger?.WriteLine($"[{AppName}] Exception resolving dynamic host port: {ex.Message}");
+        }
+    }
+
+    public int EffectiveHostPort => _resolvedHostPort ?? Port; // fallback to allocated random port if not resolved
+    public int? ResolvedHostPort => _resolvedHostPort; // expose raw nullable resolved port for fixtures
 
     public enum Architecture
     {

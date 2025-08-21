@@ -11,12 +11,9 @@ public class AwsSdkContainerKinesisTestFixture : AwsSdkContainerTestFixtureBase
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "jammy";
 
-    private readonly string BaseUrl;
+    private string BaseUrl => $"http://localhost:{(RemoteApplication as ContainerApplication)?.EffectiveHostPort ?? Port}/awssdkkinesis";
 
-    public AwsSdkContainerKinesisTestFixture() : base(DistroTag, Architecture, Dockerfile)
-    {
-        BaseUrl = $"http://localhost:{Port}/awssdkkinesis";
-    }
+    public AwsSdkContainerKinesisTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 
     public void CreateStreamAsync(string streamName)
     {

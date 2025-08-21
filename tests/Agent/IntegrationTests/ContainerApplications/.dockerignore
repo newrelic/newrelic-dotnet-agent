@@ -1,0 +1,15 @@
+# Copyright 2025 New Relic, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Exclude host-mounted volume data and large dependency trees from the build context.
+# These paths are only used as bind mounts / external service data, not needed in images.
+volume/
+
+# Common noise / build artifacts
+**/node_modules/
+**/bin/
+**/obj/
+
+# Logs and temp
+**/logs/
+**/temp/

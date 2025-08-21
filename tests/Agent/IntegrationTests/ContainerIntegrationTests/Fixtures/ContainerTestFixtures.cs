@@ -21,7 +21,8 @@ public abstract class ContainerTestFixtureBase : RemoteApplicationFixture
 
     public virtual void ExerciseApplication()
     {
-        var address = $"http://localhost:{Port}/weatherforecast";
+    var effectivePort = (RemoteApplication as ContainerApplication)?.EffectiveHostPort ?? Port;
+    var address = $"http://localhost:{effectivePort}/weatherforecast";
         GetAndAssertStatusCode(address, System.Net.HttpStatusCode.OK);
     }
 
