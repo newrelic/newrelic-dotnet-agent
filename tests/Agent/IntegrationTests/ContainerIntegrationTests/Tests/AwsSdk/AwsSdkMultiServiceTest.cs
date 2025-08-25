@@ -10,6 +10,7 @@ using Xunit;
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
 [Trait("Architecture", "amd64")]
+ [Trait("Distro", "Ubuntu")]
 public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMultiServiceTestFixture>
 {
     private readonly AwsSdkContainerMultiServiceTestFixture _fixture;

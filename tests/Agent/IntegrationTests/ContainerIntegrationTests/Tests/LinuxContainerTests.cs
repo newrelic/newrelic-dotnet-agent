@@ -47,6 +47,7 @@ public abstract class LinuxContainerTest<T> : NewRelicIntegrationTest<T> where T
 }
 
 [Trait("Architecture", "amd64")]
+[Trait("Distro", "Debian")]
 public class DebianX64ContainerTest : LinuxContainerTest<DebianX64ContainerTestFixture>
 {
     public DebianX64ContainerTest(DebianX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -55,6 +56,7 @@ public class DebianX64ContainerTest : LinuxContainerTest<DebianX64ContainerTestF
 }
 
 [Trait("Architecture", "amd64")]
+[Trait("Distro", "Ubuntu")]
 public class UbuntuX64ContainerTest : LinuxContainerTest<UbuntuX64ContainerTestFixture>
 {
     public UbuntuX64ContainerTest(UbuntuX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -63,6 +65,7 @@ public class UbuntuX64ContainerTest : LinuxContainerTest<UbuntuX64ContainerTestF
 }
 
 [Trait("Architecture", "amd64")]
+[Trait("Distro", "Alpine")]
 public class AlpineX64ContainerTest : LinuxContainerTest<AlpineX64ContainerTestFixture>
 {
     public AlpineX64ContainerTest(AlpineX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -71,6 +74,7 @@ public class AlpineX64ContainerTest : LinuxContainerTest<AlpineX64ContainerTestF
 }
 
 [Trait("Architecture", "arm64")]
+[Trait("Distro", "Debian")]
 public class DebianArm64ContainerTest : LinuxContainerTest<DebianArm64ContainerTestFixture>
 {
     public DebianArm64ContainerTest(DebianArm64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -79,6 +83,7 @@ public class DebianArm64ContainerTest : LinuxContainerTest<DebianArm64ContainerT
 }
 
 [Trait("Architecture", "arm64")]
+[Trait("Distro", "Ubuntu")]
 public class UbuntuArm64ContainerTest : LinuxContainerTest<UbuntuArm64ContainerTestFixture>
 {
     public UbuntuArm64ContainerTest(UbuntuArm64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -87,6 +92,7 @@ public class UbuntuArm64ContainerTest : LinuxContainerTest<UbuntuArm64ContainerT
 }
 
 [Trait("Architecture", "amd64")]
+[Trait("Distro", "Centos")]
 public class CentosX64ContainerTest : LinuxContainerTest<CentosX64ContainerTestFixture>
 {
     public CentosX64ContainerTest(CentosX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -104,6 +110,7 @@ public class CentosX64ContainerTest : LinuxContainerTest<CentosX64ContainerTestF
 //}
 
 [Trait("Architecture", "amd64")]
+[Trait("Distro", "Amazon")]
 public class AmazonX64ContainerTest : LinuxContainerTest<AmazonX64ContainerTestFixture>
 {
     public AmazonX64ContainerTest(AmazonX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -112,6 +119,7 @@ public class AmazonX64ContainerTest : LinuxContainerTest<AmazonX64ContainerTestF
 }
 
 [Trait("Architecture", "arm64")]
+[Trait("Distro", "Amazon")]
 public class AmazonArm64ContainerTest : LinuxContainerTest<AmazonArm64ContainerTestFixture>
 {
     public AmazonArm64ContainerTest(AmazonArm64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -120,6 +128,7 @@ public class AmazonArm64ContainerTest : LinuxContainerTest<AmazonArm64ContainerT
 }
 
 [Trait("Architecture", "amd64")]
+[Trait("Distro", "Fedora")]
 public class FedoraX64ContainerTest : LinuxContainerTest<FedoraX64ContainerTestFixture>
 {
     public FedoraX64ContainerTest(FedoraX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -128,6 +137,7 @@ public class FedoraX64ContainerTest : LinuxContainerTest<FedoraX64ContainerTestF
 }
 
 [Trait("Architecture", "arm64")]
+[Trait("Distro", "Fedora")]
 public class FedoraArm64ContainerTest : LinuxContainerTest<FedoraArm64ContainerTestFixture>
 {
     public FedoraArm64ContainerTest(FedoraArm64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
