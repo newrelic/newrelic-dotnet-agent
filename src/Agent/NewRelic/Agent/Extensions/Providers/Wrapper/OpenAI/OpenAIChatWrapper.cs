@@ -99,6 +99,9 @@ public class OpenAiChatWrapper : IWrapper
         string model = _modelFieldAccessor(instrumentedMethodCall.MethodCall.InvocationTarget);
         SupportabilityHelpers.CreateModelIdSupportabilityMetricsForOpenAi(model, agent); // prepend vendor name to model id
 
+        // useful for tracking LLM usage by vendor
+        agent.RecordSupportabilityMetric($"DotNet/LLM/{GetVendorName()}-Chat");
+
         if (isAsync)
         {
             return Delegates.GetAsyncDelegateFor<Task>(
