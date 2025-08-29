@@ -14,20 +14,20 @@ using NewRelic.Agent.Core.Utilities;
 namespace NewRelic.Agent.Core.Configuration
 {
     /// <summary>
-    /// Bridge to access the application's actual Microsoft.Extensions.Configuration system instead of the ILRepacked one.
-    /// Uses reflection and expression trees similar to MeterListenerBridge to access application runtime types.
+    /// Internal bridging logic for accessing the application's Microsoft.Extensions.Configuration system.
+    /// This class is internal to prevent IoC containers from discovering and registering it.
     /// </summary>
-    public static class ConfigurationBridge
+    internal static class ConfigurationBridge
     {
         private static readonly ConcurrentDictionary<string, Type> _cachedTypes = new();
         private static readonly object _initializationLock = new object();
         private static volatile bool _initialized = false;
         private static volatile bool _bridgeAvailable = false;
-        // Remove _applicationConfiguration as it's not used after delegate creation
         private static Func<string, string> _getConfigurationValueDelegate = null;
 
         /// <summary>
-        /// Initializes the configuration bridge by detecting and connecting to the application's configuration system.
+        /// Initializes the configuration bridge. Attempts to locate and bridge to the application's Microsoft.Extensions.Configuration system.
+        /// If the bridge cannot be established, falls back to ILRepacked configuration logic.
         /// </summary>
         public static void Initialize()
         {
@@ -57,9 +57,11 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         /// <summary>
-        /// Gets a configuration value using the application's configuration system if available,
-        /// otherwise falls back to the ILRepacked configuration system.
+        /// Retrieves the value for the specified configuration key from the application's configuration system.
+        /// Falls back to ILRepacked configuration if the bridge is unavailable or the key is not found.
         /// </summary>
+        /// <param name="key">The configuration key to retrieve.</param>
+        /// <returns>The configuration value, or null if not found.</returns>
         public static string GetAppSetting(string key)
         {
             // Fast path: null or empty key check before initialization
@@ -83,7 +85,7 @@ namespace NewRelic.Agent.Core.Configuration
                 {
                     if (Log.IsDebugEnabled)
                     {
-                        var logValue = string.Equals(key, Constants.AppSettingsLicenseKey, StringComparison.Ordinal)
+                        var logValue = ShouldObfuscateKey(key)
                             ? Strings.ObfuscateLicenseKey(value)
                             : value;
                         Log.Debug($"ConfigurationBridge: Retrieved '{key}={logValue}' from application configuration.");
@@ -107,8 +109,10 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         /// <summary>
-        /// Gets the path to the application's configuration file if available.
+        /// Gets the file path to the application's configuration file (e.g., appsettings.json).
+        /// Falls back to the ILRepacked configuration file path if the bridge is unavailable or the file is not found.
         /// </summary>
+        /// <returns>The configuration file path.</returns>
         public static string GetAppSettingsFilePath()
         {
             Initialize();
@@ -138,9 +142,14 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private static bool ShouldObfuscateKey(string key)
+        {
+            return string.Equals(key, Constants.AppSettingsLicenseKey, StringComparison.Ordinal);
+        }
+        
         private static bool TryInitializeBridge()
         {
-            // Attempt to find Microsoft.Extensions.Configuration types in the application's loaded assemblies
+            // Try to find the application's IConfiguration type
             var configurationType = FindApplicationConfigurationType();
             if (configurationType == null)
             {
@@ -156,7 +165,7 @@ namespace NewRelic.Agent.Core.Configuration
                 return false;
             }
 
-            // Create a delegate to access configuration values
+            // Try to create a delegate for accessing configuration values
             var getValueDelegate = CreateGetValueDelegate(configurationType, configurationInstance);
             if (getValueDelegate == null)
             {
@@ -173,6 +182,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static Type FindApplicationConfigurationType()
         {
+            // Try to find the application's IConfiguration type in loaded assemblies
             return _cachedTypes.GetOrAdd("IConfiguration", _ =>
             {
                 try
@@ -228,7 +238,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             try
             {
-                // Strategy 1: Look for IConfiguration in dependency injection containers
+                // Try to find an IConfiguration instance via ServiceProvider
                 var serviceProviderInstance = FindServiceProvider();
                 if (serviceProviderInstance != null)
                 {
@@ -240,7 +250,7 @@ namespace NewRelic.Agent.Core.Configuration
                     }
                 }
 
-                // Strategy 2: Look for static configuration instances
+                // Try to find a static IConfiguration instance in loaded types
                 var staticConfigInstance = FindStaticConfigurationInstance(configurationType);
                 if (staticConfigInstance != null)
                 {
@@ -261,6 +271,7 @@ namespace NewRelic.Agent.Core.Configuration
         // Fix for S3011: Ensure accessibility bypass is safe  
         private static object FindServiceProvider()
         {
+            // Try to find a static IServiceProvider instance in loaded assemblies
             try
             {
                 var assemblies = AppDomain.CurrentDomain.GetAssemblies()
@@ -276,7 +287,7 @@ namespace NewRelic.Agent.Core.Configuration
 
                         if (serviceProviderType != null)
                         {
-                            // Ensure safe accessibility bypass  
+                            // Try to find static fields of type IServiceProvider
                             var staticFields = serviceProviderType.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                                 .Where(f => f.FieldType.GetInterfaces().Any(i => i.Name == "IServiceProvider"))
                                 .ToArray();
@@ -290,6 +301,7 @@ namespace NewRelic.Agent.Core.Configuration
                                 }
                             }
 
+                            // Try to find static properties of type IServiceProvider
                             var staticProperties = serviceProviderType.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                                 .Where(p => p.PropertyType.GetInterfaces().Any(i => i.Name == "IServiceProvider"))
                                 .ToArray();
@@ -328,6 +340,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static object GetServiceFromProvider(object serviceProvider, Type serviceType)
         {
+            // Try to get a service from the IServiceProvider instance
             try
             {
                 var getServiceMethod = serviceProvider.GetType().GetMethod("GetService", new[] { typeof(Type) });
@@ -347,6 +360,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static object FindStaticConfigurationInstance(Type configurationType)
         {
+            // Try to find a static IConfiguration instance in loaded types
             try
             {
                 // Fix for IDE0300: Simplify collection initialization  
@@ -366,7 +380,7 @@ namespace NewRelic.Agent.Core.Configuration
                         {
                             try
                             {
-                                // Check static fields first (more common pattern)
+                                // Try to find static fields of type IConfiguration
                                 var staticFields = type.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                                     .Where(f => configurationType.IsAssignableFrom(f.FieldType))
                                     .ToArray();
@@ -381,7 +395,7 @@ namespace NewRelic.Agent.Core.Configuration
                                     }
                                 }
 
-                                // Check static properties if no fields found
+                                // Try to find static properties of type IConfiguration
                                 var staticProperties = type.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                                     .Where(p => configurationType.IsAssignableFrom(p.PropertyType) && p.CanRead)
                                     .ToArray();
@@ -426,6 +440,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static Func<string, string> CreateGetValueDelegate(Type configurationType, object configurationInstance)
         {
+            // Try to create a delegate for accessing configuration values via the indexer
             try
             {
                 // Look for the indexer property: string this[string key] { get; }

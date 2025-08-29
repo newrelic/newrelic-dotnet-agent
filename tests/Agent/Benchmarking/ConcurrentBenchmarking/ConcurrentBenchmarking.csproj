@@ -3,7 +3,10 @@
     <TargetFrameworks>net481</TargetFrameworks>
     <AssemblyName>ConcurrentBenchmarking</AssemblyName>
     <RootNamespace>ConcurrentBenchmarking</RootNamespace>
-    <Description></Description>
+    <Description>Concurrent benchmarking for the New Relic .NET Agent</Description>
+    <IntermediateOutputPath>$(MSBuildThisFileDirectory)..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\obj</IntermediateOutputPath>
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   
   <ItemGroup>
@@ -13,6 +16,9 @@
     </PackageReference>
     <PackageReference Include="NBench" Version="0.3.4.0" />
     <PackageReference Include="NBench.Runner" Version="0.3.4.0" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.8" />
   </ItemGroup>
   
   <ItemGroup>  

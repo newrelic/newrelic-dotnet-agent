@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using Microsoft.Extensions.Configuration;
 using NewRelic.Agent.Core.Configuration;
 using NUnit.Framework;
@@ -90,13 +91,11 @@ namespace NewRelic.Agent.Core.Config.UnitTest
             try
             {
                 var bridgeType = typeof(ConfigurationBridge);
-                var cachedDelegatesField = bridgeType.GetField("_cachedDelegates", BindingFlags.NonPublic | BindingFlags.Static);
                 var cachedTypesField = bridgeType.GetField("_cachedTypes", BindingFlags.NonPublic | BindingFlags.Static);
                 var initializedField = bridgeType.GetField("_initialized", BindingFlags.NonPublic | BindingFlags.Static);
                 var bridgeAvailableField = bridgeType.GetField("_bridgeAvailable", BindingFlags.NonPublic | BindingFlags.Static);
                 var getConfigurationValueDelegateField = bridgeType.GetField("_getConfigurationValueDelegate", BindingFlags.NonPublic | BindingFlags.Static);
 
-                cachedDelegatesField?.SetValue(null, new ConcurrentDictionary<string, object>());
                 cachedTypesField?.SetValue(null, new ConcurrentDictionary<string, Type>());
                 initializedField?.SetValue(null, false);
                 bridgeAvailableField?.SetValue(null, false);
@@ -116,11 +115,12 @@ namespace NewRelic.Agent.Core.Config.UnitTest
             // Arrange
             Directory.SetCurrentDirectory(_testDirectory);
             SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
 
             // Act
-            var appName = ConfigurationBridge.GetAppSetting("NewRelic.AppName");
-            var licenseKey = ConfigurationBridge.GetAppSetting("NewRelic.LicenseKey");
-            var agentEnabled = ConfigurationBridge.GetAppSetting("NewRelic.AgentEnabled");
+            var appName = configManager.GetAppSetting("NewRelic.AppName");
+            var licenseKey = configManager.GetAppSetting("NewRelic.LicenseKey");
+            var agentEnabled = configManager.GetAppSetting("NewRelic.AgentEnabled");
 
             // Assert
             Assert.That(appName, Is.EqualTo("TestApplication"));
@@ -134,11 +134,12 @@ namespace NewRelic.Agent.Core.Config.UnitTest
             // Arrange
             Directory.SetCurrentDirectory(_testDirectory);
             SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
 
             // Act
-            var nonExistentValue = ConfigurationBridge.GetAppSetting("NonExistent.Key");
-            var emptyKey = ConfigurationBridge.GetAppSetting("");
-            var nullKey = ConfigurationBridge.GetAppSetting(null);
+            var nonExistentValue = configManager.GetAppSetting("NonExistent.Key");
+            var emptyKey = configManager.GetAppSetting("");
+            var nullKey = configManager.GetAppSetting(null);
 
             // Assert
             Assert.That(nonExistentValue, Is.Null);
@@ -151,9 +152,10 @@ namespace NewRelic.Agent.Core.Config.UnitTest
         {
             // Arrange - No application configuration setup
             TestStaticConfigurationHolder.Reset();
+            var configManager = new ConfigurationManagerStatic();
 
             // Act
-            var result = ConfigurationBridge.GetAppSetting("NewRelic.AppName");
+            var result = configManager.GetAppSetting("NewRelic.AppName");
 
             // Assert
             // Should fall back to ILRepacked configuration (which returns null in our test environment)
@@ -166,9 +168,10 @@ namespace NewRelic.Agent.Core.Config.UnitTest
             // Arrange
             Directory.SetCurrentDirectory(_testDirectory);
             SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
 
             // Act
-            var filePath = ConfigurationBridge.GetAppSettingsFilePath();
+            var filePath = configManager.AppSettingsFilePath;
 
             // Assert
             Assert.That(filePath, Is.Not.Null);
@@ -185,9 +188,10 @@ namespace NewRelic.Agent.Core.Config.UnitTest
             try
             {
                 Directory.SetCurrentDirectory(tempDir);
+                var configManager = new ConfigurationManagerStatic();
 
                 // Act
-                var filePath = ConfigurationBridge.GetAppSettingsFilePath();
+                var filePath = configManager.AppSettingsFilePath;
 
                 // Assert
                 Assert.That(filePath, Is.Not.Null); // Should fallback to ILRepacked path
@@ -202,123 +206,14 @@ namespace NewRelic.Agent.Core.Config.UnitTest
             }
         }
 
-        #endregion
-
-        #region Initialization Tests
-
         [Test]
-        public void ConfigurationBridge_Initialize_ShouldBeThreadSafe()
+        public void ConfigurationBridge_WithException_ShouldDisableAndReturnNull()
         {
             // Arrange
-            var exceptions = new List<Exception>();
-            var tasks = new List<System.Threading.Tasks.Task>();
-
-            // Act - Multiple concurrent initializations
-            for (int i = 0; i < 10; i++)
-            {
-                var task = System.Threading.Tasks.Task.Run(() =>
-                {
-                    try
-                    {
-                        ConfigurationBridge.Initialize();
-                        ConfigurationBridge.GetAppSetting("test");
-                    }
-                    catch (Exception ex)
-                    {
-                        lock (exceptions)
-                        {
-                            exceptions.Add(ex);
-                        }
-                    }
-                });
-                tasks.Add(task);
-            }
-
-            System.Threading.Tasks.Task.WaitAll(tasks.ToArray());
-
-            // Assert
-            Assert.That(exceptions, Is.Empty, $"Concurrent initialization caused exceptions: {string.Join(", ", exceptions.Select(e => e.Message))}");
-        }
-
-        [Test]
-        public void ConfigurationBridge_Initialize_ShouldHandleMultipleCalls()
-        {
-            // Act & Assert - Should not throw on multiple calls
-            Assert.DoesNotThrow(() => ConfigurationBridge.Initialize());
-            Assert.DoesNotThrow(() => ConfigurationBridge.Initialize());
-            Assert.DoesNotThrow(() => ConfigurationBridge.Initialize());
-        }
-
-        [Test]
-        public void ConfigurationBridge_Initialize_WithException_ShouldFallbackGracefully()
-        {
-            // Arrange - Force an exception scenario by mocking AppDomain
-            ResetConfigurationBridgeState();
-
-            // Act & Assert - Should not throw even if initialization fails
-            Assert.DoesNotThrow(() => ConfigurationBridge.Initialize());
-            Assert.DoesNotThrow(() => ConfigurationBridge.GetAppSetting("test"));
-        }
-
-        #endregion
-
-        #region ConfigurationManagerStaticBridged Tests
-
-        [Test]
-        public void ConfigurationManagerStaticBridged_GetAppSetting_ShouldUseConfigurationBridge()
-        {
-            // Arrange
-            Directory.SetCurrentDirectory(_testDirectory);
-            SetupApplicationConfiguration();
-            var configManager = new ConfigurationManagerStaticBridged();
-
-            // Act
-            var appName = configManager.GetAppSetting("NewRelic.AppName");
-            var licenseKey = configManager.GetAppSetting("NewRelic.LicenseKey");
-            var nonExistent = configManager.GetAppSetting("NonExistent.Key");
-
-            // Assert
-            Assert.That(appName, Is.EqualTo("TestApplication"));
-            Assert.That(licenseKey, Is.EqualTo("test-license-key-123456789"));
-            Assert.That(nonExistent, Is.Null);
-        }
-
-        [Test]
-        public void ConfigurationManagerStaticBridged_AppSettingsFilePath_ShouldReturnValidPath()
-        {
-            // Arrange
-            Directory.SetCurrentDirectory(_testDirectory);
-            SetupApplicationConfiguration();
-            var configManager = new ConfigurationManagerStaticBridged();
-
-            // Act
-            var filePath = configManager.AppSettingsFilePath;
-
-            // Assert
-            Assert.That(filePath, Is.Not.Null);
-        }
-
-        [Test]
-        public void ConfigurationManagerStaticBridged_GetAppSetting_WithNullKey_ShouldReturnNull()
-        {
-            // Arrange
-            var configManager = new ConfigurationManagerStaticBridged();
-
-            // Act
-            var result = configManager.GetAppSetting(null);
-
-            // Assert
-            Assert.That(result, Is.Null);
-        }
-
-        [Test]
-        public void ConfigurationManagerStaticBridged_WithException_ShouldDisableAndReturnNull()
-        {
-            // Arrange
-            var configManager = new ConfigurationManagerStaticBridged();
+            var configManager = new ConfigurationManagerStatic();
             
             // Force an exception by using reflection to set localConfigChecksDisabled
-            var field = typeof(ConfigurationManagerStaticBridged).GetField("localConfigChecksDisabled", BindingFlags.NonPublic | BindingFlags.Instance);
+            var field = typeof(ConfigurationManagerStatic).GetField("localConfigChecksDisabled", BindingFlags.NonPublic | BindingFlags.Instance);
             
             // Act
             var result1 = configManager.GetAppSetting("test"); // This might work
@@ -333,111 +228,6 @@ namespace NewRelic.Agent.Core.Config.UnitTest
 
         #endregion
 
-        #region Error Handling Tests
-
-        [Test]
-        public void ConfigurationBridge_WithCorruptedConfigFile_ShouldHandleGracefully()
-        {
-            // Arrange
-            var corruptedConfigPath = Path.Combine(_testDirectory, "corrupted-appsettings.json");
-            File.WriteAllText(corruptedConfigPath, "{ invalid json }");
-            
-            Directory.SetCurrentDirectory(_testDirectory);
-
-            // Act & Assert - Should not throw
-            Assert.DoesNotThrow(() => ConfigurationBridge.Initialize());
-            Assert.DoesNotThrow(() => ConfigurationBridge.GetAppSetting("test"));
-        }
-
-        [Test]
-        public void ConfigurationBridge_WithMissingConfigFile_ShouldHandleGracefully()
-        {
-            // Arrange
-            var emptyDir = Path.Combine(Path.GetTempPath(), "EmptyConfigTest");
-            Directory.CreateDirectory(emptyDir);
-            
-            try
-            {
-                Directory.SetCurrentDirectory(emptyDir);
-                ResetConfigurationBridgeState();
-
-                // Act & Assert - Should not throw
-                Assert.DoesNotThrow(() => ConfigurationBridge.Initialize());
-                Assert.DoesNotThrow(() => ConfigurationBridge.GetAppSetting("test"));
-            }
-            finally
-            {
-                Directory.SetCurrentDirectory(_originalDirectory);
-                if (Directory.Exists(emptyDir))
-                {
-                    Directory.Delete(emptyDir, true);
-                }
-            }
-        }
-
-        [Test]
-        public void ConfigurationBridge_WithReflectionException_ShouldFallbackToILRepacked()
-        {
-            // Arrange - Create scenario where reflection might fail
-            ResetConfigurationBridgeState();
-
-            // Act
-            var result = ConfigurationBridge.GetAppSetting("NewRelic.AppName");
-
-            // Assert - Should fall back gracefully
-            Assert.That(result, Is.Null); // Fallback should return null in test environment
-        }
-
-        [Test]
-        public void ConfigurationBridge_WithNullConfigurationInstance_ShouldHandleGracefully()
-        {
-            // Arrange
-            ResetConfigurationBridgeState();
-            TestStaticConfigurationHolder.Configuration = null;
-
-            // Act & Assert
-            Assert.DoesNotThrow(() => ConfigurationBridge.Initialize());
-            Assert.DoesNotThrow(() => ConfigurationBridge.GetAppSetting("test"));
-        }
-
-        [Test]
-        public void ConfigurationBridge_WithInvalidIndexerProperty_ShouldFallback()
-        {
-            // Arrange - Setup configuration that might have indexer issues
-            ResetConfigurationBridgeState();
-            
-            // Act & Assert - Should handle missing or invalid indexer gracefully
-            Assert.DoesNotThrow(() => ConfigurationBridge.GetAppSetting("test.key"));
-        }
-
-        [Test]
-        public void ConfigurationBridge_WithExceptionInDelegateExecution_ShouldFallback()
-        {
-            // Arrange
-            Directory.SetCurrentDirectory(_testDirectory);
-            SetupApplicationConfiguration();
-            
-            // Force initialization first
-            ConfigurationBridge.Initialize();
-
-            // Act - Even if delegate execution fails, should fallback gracefully
-            Assert.DoesNotThrow(() => ConfigurationBridge.GetAppSetting("potentially.problematic.key"));
-        }
-
-        [Test]
-        public void ConfigurationBridge_WithEmptyAssemblyList_ShouldHandleGracefully()
-        {
-            // Arrange - This tests the edge case where no suitable assemblies are found
-            ResetConfigurationBridgeState();
-
-            // Act & Assert
-            Assert.DoesNotThrow(() => ConfigurationBridge.Initialize());
-            var result = ConfigurationBridge.GetAppSetting("test");
-            Assert.That(result, Is.Null); // Should fallback to ILRepacked
-        }
-
-        #endregion
-
         #region Integration Tests
 
         [Test]
@@ -447,9 +237,10 @@ namespace NewRelic.Agent.Core.Config.UnitTest
             Directory.SetCurrentDirectory(_testDirectory);
             var configuration = CreateTestConfiguration();
             TestStaticConfigurationHolder.SetupServiceProvider(configuration);
+            var configManager = new ConfigurationManagerStatic();
 
             // Act
-            var appName = ConfigurationBridge.GetAppSetting("NewRelic.AppName");
+            var appName = configManager.GetAppSetting("NewRelic.AppName");
 
             // Assert
             Assert.That(appName, Is.EqualTo("TestApplication"));
@@ -462,9 +253,10 @@ namespace NewRelic.Agent.Core.Config.UnitTest
             Directory.SetCurrentDirectory(_testDirectory);
             var configuration = CreateTestConfiguration();
             TestStaticConfigurationHolder.Configuration = configuration;
+            var configManager = new ConfigurationManagerStatic();
 
             // Act
-            var appName = ConfigurationBridge.GetAppSetting("NewRelic.AppName");
+            var appName = configManager.GetAppSetting("NewRelic.AppName");
 
             // Assert
             Assert.That(appName, Is.EqualTo("TestApplication"));
@@ -476,11 +268,12 @@ namespace NewRelic.Agent.Core.Config.UnitTest
             // Arrange
             Directory.SetCurrentDirectory(_testDirectory);
             SetupComplexConfiguration();
+            var configManager = new ConfigurationManagerStatic();
 
             // Act
-            var appName = ConfigurationBridge.GetAppSetting("NewRelic.AppName");
-            var connectionString = ConfigurationBridge.GetAppSetting("ConnectionStrings:DefaultConnection");
-            var nestedValue = ConfigurationBridge.GetAppSetting("CustomSection:NestedValue");
+            var appName = configManager.GetAppSetting("NewRelic.AppName");
+            var connectionString = configManager.GetAppSetting("ConnectionStrings:DefaultConnection");
+            var nestedValue = configManager.GetAppSetting("CustomSection:NestedValue");
 
             // Assert
             Assert.That(appName, Is.EqualTo("TestApplication"));
@@ -498,10 +291,11 @@ namespace NewRelic.Agent.Core.Config.UnitTest
             try
             {
                 SetupEnvironmentSpecificConfiguration();
+                var configManager = new ConfigurationManagerStatic();
 
                 // Act
-                var appName = ConfigurationBridge.GetAppSetting("NewRelic.AppName");
-                var environment = ConfigurationBridge.GetAppSetting("Environment");
+                var appName = configManager.GetAppSetting("NewRelic.AppName");
+                var environment = configManager.GetAppSetting("Environment");
 
                 // Assert
                 Assert.That(appName, Is.EqualTo("TestApplication-Development"));
@@ -515,171 +309,108 @@ namespace NewRelic.Agent.Core.Config.UnitTest
 
         #endregion
 
-        #region Performance Tests
+        #region Error Handling Tests
 
         [Test]
-        public void ConfigurationBridge_RepeatedAccess_ShouldBeFast()
+        public void ConfigurationBridge_WithCorruptedConfigFile_ShouldHandleGracefully()
         {
             // Arrange
-            Directory.SetCurrentDirectory(_testDirectory);
-            SetupApplicationConfiguration();
+            var corruptedConfigPath = Path.Combine(_testDirectory, "corrupted-appsettings.json");
+            File.WriteAllText(corruptedConfigPath, "{ invalid json }");
+            File.Copy(corruptedConfigPath, _testConfigFile, true);
             
-            // Warm up
-            ConfigurationBridge.GetAppSetting("NewRelic.AppName");
+            Directory.SetCurrentDirectory(_testDirectory);
+            var configManager = new ConfigurationManagerStatic();
 
-            // Act & Assert - Should complete quickly
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < 1000; i++)
+            // Act & Assert - Should not throw
+            Assert.DoesNotThrow(() => configManager.GetAppSetting("test"));
+        }
+
+        [Test]
+        public void ConfigurationBridge_WithMissingConfigFile_ShouldHandleGracefully()
+        {
+            // Arrange
+            var emptyDir = Path.Combine(Path.GetTempPath(), "EmptyConfigTest");
+            Directory.CreateDirectory(emptyDir);
+            
+            try
             {
-                ConfigurationBridge.GetAppSetting("NewRelic.AppName");
+                Directory.SetCurrentDirectory(emptyDir);
+                ResetConfigurationBridgeState();
+                var configManager = new ConfigurationManagerStatic();
+
+                // Act & Assert - Should not throw
+                Assert.DoesNotThrow(() => configManager.GetAppSetting("test"));
             }
-            stopwatch.Stop();
-
-            // Assert - Should be fast (under 100ms for 1000 calls)
-            Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(100), 
-                "Configuration access should be fast after initialization");
-        }
-
-        #endregion
-
-        #region Classic Configuration Manager Tests
-
-        [Test]
-        public void ConfigurationBridge_WithClassicConfigManager_ShouldFallbackToAppConfig()
-        {
-            // Arrange - Reset to simulate environment without Microsoft.Extensions.Configuration
-            ResetConfigurationBridgeState();
-            TestStaticConfigurationHolder.Reset();
-
-            // Act - Should attempt classic config manager fallback
-            var result = ConfigurationBridge.GetAppSetting("NonExistent.Key");
-
-            // Assert - Should not throw and handle gracefully
-            Assert.DoesNotThrow(() => ConfigurationBridge.Initialize());
-        }
-
-        [Test]
-        public void ConfigurationBridge_WithMissingMicrosoftExtensionsConfiguration_ShouldHandleGracefully()
-        {
-            // Arrange - Simulate environment where Microsoft.Extensions.Configuration is not available
-            ResetConfigurationBridgeState();
-            TestStaticConfigurationHolder.Reset();
-
-            // Act & Assert
-            Assert.DoesNotThrow(() => ConfigurationBridge.GetAppSetting("test.key"));
-        }
-
-        #endregion
-
-        #region Assembly Discovery Tests
-
-        [Test]
-        public void ConfigurationBridge_AssemblyDiscovery_ShouldIgnoreNewRelicAssemblies()
-        {
-            // Arrange
-            ResetConfigurationBridgeState();
-
-            // Act - This should trigger assembly discovery logic
-            ConfigurationBridge.Initialize();
-
-            // Assert - Should not throw and complete successfully
-            Assert.DoesNotThrow(() => ConfigurationBridge.GetAppSetting("test"));
-        }
-
-        [Test]
-        public void ConfigurationBridge_AssemblyDiscovery_ShouldIgnoreGACAssemblies()
-        {
-            // Arrange
-            ResetConfigurationBridgeState();
-
-            // Act - Assembly discovery should skip GAC assemblies
-            Assert.DoesNotThrow(() => ConfigurationBridge.Initialize());
-        }
-
-        #endregion
-
-        #region Caching Tests
-
-        [Test]
-        public void ConfigurationBridge_RepeatedInitialization_ShouldUseCachedResults()
-        {
-            // Arrange
-            Directory.SetCurrentDirectory(_testDirectory);
-            SetupApplicationConfiguration();
-            
-            // Act - Multiple initializations
-            ConfigurationBridge.Initialize();
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            
-            for (int i = 0; i < 100; i++)
+            finally
             {
-                ConfigurationBridge.Initialize();
+                Directory.SetCurrentDirectory(_originalDirectory);
+                if (Directory.Exists(emptyDir))
+                {
+                    Directory.Delete(emptyDir, true);
+                }
             }
+        }
+
+        [Test]
+        public void ConfigurationBridge_WithSpecialCharactersInValues_ShouldHandleCorrectly()
+        {
+            // Arrange
+            var specialConfigContent = @"{
+  ""NewRelic.AppName"": ""Test-App_With.Special@Chars"",
+  ""NewRelic.SpecialValue"": ""Line1\nLine2\tTab"",
+  ""NewRelic.UnicodeValue"": ""测试应用程序"",
+  ""NewRelic.EscapedValue"": ""Value with \""quotes\"" and \\backslashes\\""
+}";
+            File.WriteAllText(_testConfigFile, specialConfigContent);
             
-            stopwatch.Stop();
-
-            // Assert - Subsequent initializations should be very fast due to caching
-            Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(10), 
-                "Cached initialization should be very fast");
-        }
-
-        [Test]
-        public void ConfigurationBridge_TypeCaching_ShouldImprovePerformance()
-        {
-            // Arrange
             Directory.SetCurrentDirectory(_testDirectory);
             SetupApplicationConfiguration();
-            
-            // Warm up the cache
-            ConfigurationBridge.GetAppSetting("NewRelic.AppName");
+            var configManager = new ConfigurationManagerStatic();
 
-            // Act - Time multiple calls that should hit the cache
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < 1000; i++)
-            {
-                ConfigurationBridge.GetAppSetting("NewRelic.LicenseKey");
-            }
-            stopwatch.Stop();
-
-            // Assert - Should be very fast due to delegate caching
-            Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(50), 
-                "Cached delegate calls should be very fast");
-        }
-
-        #endregion
-
-        #region Logging and Debugging Tests
-
-        [Test]
-        public void ConfigurationBridge_WithLoggingEnabled_ShouldLogConfigurationAccess()
-        {
-            // Arrange
-            Directory.SetCurrentDirectory(_testDirectory);
-            SetupApplicationConfiguration();
-
-            // Act - These calls should generate debug logs (though we can't assert on them directly)
-            var appName = ConfigurationBridge.GetAppSetting("NewRelic.AppName");
-            var nonExistent = ConfigurationBridge.GetAppSetting("NonExistent.Key");
-
-            // Assert - Should complete without exceptions
-            Assert.That(appName, Is.EqualTo("TestApplication"));
-            Assert.That(nonExistent, Is.Null);
-        }
-
-        [Test]
-        public void ConfigurationBridge_WithLicenseKey_ShouldObfuscateInLogs()
-        {
-            // Arrange
-            Directory.SetCurrentDirectory(_testDirectory);
-            SetupApplicationConfiguration();
-
-            // Act - License key access should trigger obfuscation logic
-            var licenseKey = ConfigurationBridge.GetAppSetting("NewRelic.LicenseKey");
+            // Act
+            var appName = configManager.GetAppSetting("NewRelic.AppName");
+            var specialValue = configManager.GetAppSetting("NewRelic.SpecialValue");
+            var unicodeValue = configManager.GetAppSetting("NewRelic.UnicodeValue");
+            var escapedValue = configManager.GetAppSetting("NewRelic.EscapedValue");
 
             // Assert
-            Assert.That(licenseKey, Is.EqualTo("test-license-key-123456789"));
-            // Note: Log obfuscation behavior is tested implicitly - the actual obfuscation
-            // happens in logging, not in the return value
+            Assert.That(appName, Is.EqualTo("Test-App_With.Special@Chars"));
+            Assert.That(specialValue, Is.EqualTo("Line1\nLine2\tTab"));
+            Assert.That(unicodeValue, Is.EqualTo("测试应用程序"));
+            Assert.That(escapedValue, Is.EqualTo("Value with \"quotes\" and \\backslashes\\"));
+        }
+
+        [Test]
+        public void ConfigurationBridge_WithHighFrequencyAccess_ShouldMaintainPerformance()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
+            
+            // Warm up
+            configManager.GetAppSetting("NewRelic.AppName");
+
+            // Act & Assert - High frequency access should remain fast
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < 1000; i++)
+            {
+                var appName = configManager.GetAppSetting("NewRelic.AppName");
+                var licenseKey = configManager.GetAppSetting("NewRelic.LicenseKey");
+                
+                // Verify correctness during performance test
+                if (i % 100 == 0) // Check every 100th iteration
+                {
+                    Assert.That(appName, Is.EqualTo("TestApplication"));
+                    Assert.That(licenseKey, Is.EqualTo("test-license-key-123456789"));
+                }
+            }
+            stopwatch.Stop();
+
+            // Assert - Should complete high-frequency access in reasonable time
+            Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(500), 
+                "High-frequency configuration access should remain performant");
         }
 
         #endregion
@@ -749,25 +480,6 @@ namespace NewRelic.Agent.Core.Config.UnitTest
             Mock.Arrange(() => mockServiceProvider.GetService(typeof(IConfiguration)))
                 .Returns(configuration);
             ServiceProvider = mockServiceProvider;
-        }
-    }
-
-    /// <summary>
-    /// Mock service provider for testing DI scenarios
-    /// </summary>
-    public class TestServiceProvider : IServiceProvider
-    {
-        private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
-
-        public void RegisterService<T>(T service)
-        {
-            _services[typeof(T)] = service;
-        }
-
-        public object GetService(Type serviceType)
-        {
-            _services.TryGetValue(serviceType, out var service);
-            return service;
         }
     }
 

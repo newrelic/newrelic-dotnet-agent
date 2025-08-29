@@ -52,7 +52,7 @@ namespace NewRelic.Agent.Core.Config
         /// <param name="localConfiguration">The local configuration object to use.</param>
         /// <param name="configurationFileName">The name and path of the local configuration file.</param>
         public BootstrapConfiguration(configuration localConfiguration, string configurationFileName)
-            : this(localConfiguration, configurationFileName, ConfigurationLoader.GetWebConfigAppSetting, new ConfigurationManagerStaticBridged(), new ProcessStatic(), Directory.Exists, Path.GetFullPath)
+            : this(localConfiguration, configurationFileName, ConfigurationLoader.GetWebConfigAppSetting, new ConfigurationManagerStatic(), new ProcessStatic(), Directory.Exists, Path.GetFullPath)
         { }
 
         /// <summary>

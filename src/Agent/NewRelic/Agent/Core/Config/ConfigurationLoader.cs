@@ -129,8 +129,8 @@ namespace NewRelic.Agent.Core.Config
 #else
             if (value?.Value == null)
             {
-                // Use bridged configuration manager to access application's actual config system
-                var configMgrStatic = new ConfigurationManagerStaticBridged();
+                // Use configuration manager to access application's actual config system
+                var configMgrStatic = new ConfigurationManagerStatic();
                 var configValue = configMgrStatic.GetAppSetting(key);
                 if (configValue != null)
                     value = new ValueWithProvenance<string>(configValue, configMgrStatic.AppSettingsFilePath);
