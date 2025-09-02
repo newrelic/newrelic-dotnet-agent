@@ -183,6 +183,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
         bool ShouldInstrument(xstring_t const& processPath, xstring_t const& parentProcessPath, xstring_t const& appPoolId, xstring_t const& commandLine, bool isCoreClr)
         {
+            LogTrace(_X("Process Path: ") + processPath);
+            LogTrace(_X("Parent Process Path: ") + parentProcessPath);
+            LogTrace(_X("App Pool Id: ") + appPoolId);
+            LogTrace(_X("Is Core CLR: ") + xstring_t(isCoreClr ? _X("true") : _X("false")));
+
             if (IsAzureFunction()) // valid for both .NET Framework and .NET Core
             {
                 if (IsAzureFunctionModeEnabled()) // if not explicitly enabled, fall back to "legacy" behavior
@@ -663,7 +668,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         /// </summary>
         int ShouldInstrumentAzureFunction(xstring_t const& processPath, xstring_t const& appPoolId, xstring_t const& commandLine)
         {
-            LogInfo(_X("Azure function detected. Determining whether to instrument ") + commandLine);
+            LogInfo(_X("Azure function detected. Determining whether to instrument ") + processPath);
 
             if (IsAzureFunctionInProcess())
             {
@@ -683,6 +688,16 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 LogInfo(L"Appears to be Azure WebJobs Script WebHost based on commandLine. Not instrumenting this process.");
                 return 0;
             }
+
+            xstring_t const webHostToken = _X("/azure-functions-host/Microsoft.Azure.WebJobs.Script.WebHost");
+            bool isAzureFunctionsHostLinux = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, webHostToken)
+                || NewRelic::Profiler::Strings::ContainsCaseInsensitive(processPath, webHostToken);
+            if (isAzureFunctionsHostLinux)
+            {
+                LogInfo(L"Appears to be Azure Functions WebHost (Linux) based on commandLine. Not instrumenting this process.");
+                return 0;
+            }
+
 
             // AzureFunctionsNetHost.exe is the typical startup command for Azure Functions
              

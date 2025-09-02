@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             Mock.Arrange(() => _mockConfiguration.PutForDataSend).Returns(false);
 
             _mockConnectionInfo = Mock.Create<IConnectionInfo>();
-            Mock.Arrange(() => _mockConnectionInfo.Host).Returns("testhost.com");
+            Mock.Arrange(() => _mockConnectionInfo.Host).Returns("google.com");
             Mock.Arrange(() => _mockConnectionInfo.HttpProtocol).Returns("https");
             Mock.Arrange(() => _mockConnectionInfo.Port).Returns(123);
 
