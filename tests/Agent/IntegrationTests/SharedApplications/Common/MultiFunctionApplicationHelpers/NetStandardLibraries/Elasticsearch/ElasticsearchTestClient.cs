@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 {
@@ -68,6 +69,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
         public static List<FlightRecord> GetSamples(int num) => Samples.Take(num % Samples.Length).ToList();
 
+        public FlightRecord()
+        {
+        }
+        
         protected FlightRecord(int id, string origin, string departure, string dest, string arrival) 
         {
             Id = id.ToString();

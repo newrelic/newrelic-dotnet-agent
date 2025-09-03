@@ -2693,7 +2693,9 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Otel Bridge
 
-        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent"];
+        // The activity sources we listen to by default - these are the sources that we will automatically instrument
+        // TODO: eventually we want to include "Elastic.Transport" by default
+        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent"]; 
 
         private List<string> _includedActivitySources;
         public List<string> IncludedActivitySources
@@ -2710,12 +2712,16 @@ namespace NewRelic.Agent.Core.Configuration
                         includedActivitySources.AddRange(appSetting.Split(','));
                     }
 
-                    _includedActivitySources = includedActivitySources;
+                    _includedActivitySources = includedActivitySources.Distinct().ToList();
                 }
 
                 return _includedActivitySources;
             }
         }
+
+        // The activity sources we do not want to listen to - these sources will not be instrumented even if they are in the include list
+        // TODO: we probably want to have a default set of excluded activity sources at some point
+        private static readonly string[] DefaultExcludedActivitySources = [];
 
         private List<string> _excludedActivitySources;
         public List<string> ExcludedActivitySources
@@ -2724,13 +2730,14 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (_excludedActivitySources == null)
                 {
-                    _excludedActivitySources = [];
+                    var excludedActivitySources = DefaultExcludedActivitySources.ToList();
 
                     var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Exclude");
                     if (!string.IsNullOrEmpty(appSetting))
                     {
-                        _excludedActivitySources.AddRange(appSetting.Split(','));
+                        excludedActivitySources.AddRange(appSetting.Split(','));
                     }
+                    _excludedActivitySources = excludedActivitySources.Distinct().ToList();
                 }
 
                 return _excludedActivitySources;

@@ -544,5 +544,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.SetConfigAppSetting(_configFilePath, "AwsLambdaApmModeEnabled", awsLambdaApmModeEnabled.ToString(), "urn:newrelic-config");
             return this;
         }
+
+        public NewRelicConfigModifier EnableOTelBridge(bool enabled)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.Enabled", enabled.ToString(), "urn:newrelic-config");
+            return this;
+        }
+
+        public void IncludeActivitySource(string activitySourceName)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.ActivitySource.Include", activitySourceName, "urn:newrelic-config");
+        }
     }
 }
