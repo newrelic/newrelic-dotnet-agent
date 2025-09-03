@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.44.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.44.0...v10.44.1) (2025-08-19)
+
+
+### Fixes
+
+* Exception incorrectly handled in Service Bus instrumentation wrapper. ([825cd2b](https://github.com/newrelic/newrelic-dotnet-agent/commit/825cd2b3e2d99057a31963f736260218253aa5e9))
+* Exclude Azure Function webhost (Linux) process from instrumentation. ([#3223](https://github.com/newrelic/newrelic-dotnet-agent/issues/3223)) ([e363aea](https://github.com/newrelic/newrelic-dotnet-agent/commit/e363aea291629b357d569812d1007d4cb5721537))
+
+## [10.44.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.43.0...v10.44.0) (2025-08-06)
+
+
+### New features
+
+* Enable performance metric samplers in Serverless mode ([#3199](https://github.com/newrelic/newrelic-dotnet-agent/issues/3199)) ([3fc5ea7](https://github.com/newrelic/newrelic-dotnet-agent/commit/3fc5ea711270a491ee4860547fe3508a1e09f733))
+
+
+### Fixes
+
+* Exclude Azure Function webhost (Linux) process from instrumentation. ([#3194](https://github.com/newrelic/newrelic-dotnet-agent/issues/3194)) ([fc20645](https://github.com/newrelic/newrelic-dotnet-agent/commit/fc20645213bbc6dbcd4cbf4add3c73043fe384ee))
+
 ## [10.43.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.42.0...v10.43.0) (2025-07-09)
 
 

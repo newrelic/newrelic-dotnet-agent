@@ -5,6 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 -->
 <extension xmlns="urn:newrelic-extension">
 	<instrumentation>
+    <!-- TODO: Add maxVersion="8.15.10" on all <match> elements when OtelBridge is enabled by default in the agent. -->
 
     <!--7.x NEST/Elasticsearch.Net -->
     <tracerFactory name="ElasticsearchRequestWrapper">

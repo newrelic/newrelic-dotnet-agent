@@ -56,6 +56,9 @@ namespace NewRelic.Providers.Wrapper.Bedrock
             var version = GetOrAddLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
             agent.RecordSupportabilityMetric($"DotNet/ML/{VendorName}/{version}");
 
+            // useful for tracking LLM usage by vendor
+            agent.RecordSupportabilityMetric($"DotNet/LLM/{VendorName}-Invoke");
+
             return Delegates.GetAsyncDelegateFor<Task>(
                 agent,
                 segment,

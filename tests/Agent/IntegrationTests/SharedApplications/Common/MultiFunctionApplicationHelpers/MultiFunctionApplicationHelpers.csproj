@@ -157,7 +157,6 @@
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.2.7" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Owin" Version="4.1.0">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
@@ -170,7 +169,6 @@
     <PackageReference Include="Owin" Version="1.0.0">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
-    <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.11.0" />
   </ItemGroup>
 

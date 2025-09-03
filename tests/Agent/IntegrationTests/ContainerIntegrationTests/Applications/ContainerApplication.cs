@@ -25,8 +25,8 @@ public class ContainerApplication : RemoteApplication
     private readonly string _agentArch;
     private readonly string _containerPlatform;
 
-    private static Random random = new Random();
-    private readonly long _randomId;
+    private readonly string _randomToken; // short hex token (from Guid) for uniqueness
+    private int _startupAttempts;
 
     // Used for handling dependent containers started automatically for services
     public readonly List<string> DockerDependencies;
@@ -50,7 +50,8 @@ public class ContainerApplication : RemoteApplication
         _dockerComposeFile = dockerComposeFile;
         _serviceName = serviceName;
 
-        _randomId = random.NextInt64(); // a random id to help ensure container name uniqueness
+        _randomToken = Guid.NewGuid().ToString("N").Substring(0, 12); // 12 hex chars ensures high uniqueness across parallel runs
+        _startupAttempts = 0;
 
         DockerDependencies = new List<string>();
 
@@ -69,9 +70,9 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public string NRAppName =>$"ContainerTestApp_{_dotnetVersion}-{_distroTag}_{_targetArch}";
+    public string NRAppName => $"ContainerTestApp_{_dotnetVersion}-{_distroTag}_{_targetArch}";
 
-    public override string AppName => $"{NRAppName}_{_randomId}";
+    public override string AppName => $"{NRAppName}_{_randomToken}";
 
     private string ContainerName => AppName.ToLower().Replace(".", "_"); // must be lowercase, can't have any periods in it
 
@@ -147,7 +148,66 @@ public class ContainerApplication : RemoteApplication
         Console.WriteLine($"[{AppName} {DateTime.Now}] Cleaning up container and images related to {ContainerName} container.");
         TestLogger?.WriteLine($"[{AppName}] Cleaning up container and images related to {ContainerName} container.");
 
-        Process.Start("docker", $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans");
+        try
+        {
+            var downProc = Process.Start(new ProcessStartInfo
+            {
+                FileName = "docker",
+                Arguments = $"compose -p {ContainerName.ToLower()} down --rmi local --remove-orphans",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            });
+            downProc?.WaitForExit(30000);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[{AppName} {DateTime.Now}] Error during compose down: {ex.Message}");
+        }
+
+        // Force remove lingering container with same name if still present
+        try
+        {
+            var inspect = Process.Start(new ProcessStartInfo
+            {
+                FileName = "docker",
+                Arguments = $"ps -a --filter name=^/{ContainerName}$ -q",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            });
+            var output = inspect?.StandardOutput.ReadToEnd();
+            inspect?.WaitForExit(5000);
+            if (!string.IsNullOrWhiteSpace(output))
+            {
+                var rm = Process.Start(new ProcessStartInfo
+                {
+                    FileName = "docker",
+                    Arguments = $"rm -f {ContainerName}",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                });
+                rm?.WaitForExit(10000);
+            }
+        }
+        catch { /* ignore */ }
+
+        // Attempt removal of lingering default network (compose sometimes races on rapid successive runs)
+        try
+        {
+            var networkName = $"{ContainerName.ToLower()}_default";
+            var proc = Process.Start(new ProcessStartInfo
+            {
+                FileName = "docker",
+                Arguments = $"network rm {networkName}",
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            });
+            proc?.WaitForExit(5000);
+        }
+        catch { /* ignore */ }
 
 
 #if DEBUG
@@ -159,6 +219,23 @@ public class ContainerApplication : RemoteApplication
     protected override void PrepareForStart()
     {
         CleanupContainer();
+        // Remove any stale network with expected name so compose can recreate it with correct labels
+        try
+        {
+            var networkName = $"{ContainerName.ToLower()}_default";
+            var netRm = Process.Start(new ProcessStartInfo
+            {
+                FileName = "docker",
+                Arguments = $"network rm {networkName}",
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            });
+            netRm?.WaitForExit(5000);
+        }
+        catch { /* ignore */ }
+
+        CaptureDockerState("pre-start");
     }
 
     protected override void WaitForProcessToStartListening(bool captureStandardOutput)
@@ -172,12 +249,41 @@ public class ContainerApplication : RemoteApplication
             if (File.Exists(pidFilePath))
             {
                 Console.WriteLine($"[{DateTime.Now}] PID file {pidFilePath} found...");
+                CaptureDockerState("post-success");
                 return;
             }
             Thread.Sleep(Timing.TimeBetweenFileExistChecks);
         }
 
         Console.WriteLine($"[{AppName} {DateTime.Now}] Did not find PID file matching {pidFilePath}. {(RemoteProcess.HasExited ? "Process exited" : "Wait timed out")}.");
+
+        // Retry once if compose exited quickly (often due to transient network creation issues)
+        if (RemoteProcess.HasExited && _startupAttempts == 0)
+        {
+            _startupAttempts++;
+            Console.WriteLine($"[{AppName} {DateTime.Now}] Early compose exit detected. Retrying docker compose up (attempt {_startupAttempts}).");
+            TestLogger?.WriteLine($"[{AppName}] Retrying docker compose up.");
+            CleanupContainer();
+            try
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = StartInfoFileName,
+                    Arguments = GetStartInfoArgs(null),
+                    WorkingDirectory = StartInfoWorkingDirectory,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                };
+                RemoteProcess = Process.Start(startInfo);
+                WaitForProcessToStartListening(captureStandardOutput);
+                return;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[{AppName} {DateTime.Now}] Retry failed: {ex.Message}");
+            }
+        }
 
         if (!RemoteProcess.HasExited)
         {
@@ -194,12 +300,79 @@ public class ContainerApplication : RemoteApplication
             }
         }
 
+        // Capture state after failure / before any retry
+        CaptureDockerState(RemoteProcess.HasExited ? "post-failure-exited" : "post-failure-running");
+
         if (captureStandardOutput)
         {
             CapturedOutput.WriteProcessOutputToLog($"[{AppName}]: WaitForAppServerToStartListening");
         }
 
-        Assert.Fail($"{AppName}: process never generated a .pid file!");
+        Assert.Fail($"{AppName}: process never generated a .pid file (after {_startupAttempts + 1} attempt(s))!");
+    }
+
+    private void CaptureDockerState(string stage)
+    {
+        try
+        {
+            TestLogger?.WriteLine("");
+            TestLogger?.WriteLine($"====== Docker diagnostics stage '{stage}' for {AppName} ({ContainerName}) ======");
+            TestLogger?.WriteLine($"UTC: {DateTime.UtcNow:o}");
+
+            void RunAndWrite(string title, string fileName, string args, int timeoutMs = 8000)
+            {
+                try
+                {
+                    TestLogger?.WriteLine($"--- {title}: {fileName} {args}");
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = fileName,
+                        Arguments = args,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false
+                    };
+                    var p = Process.Start(psi);
+                    if (p?.WaitForExit(timeoutMs) == true)
+                    {
+                        var stdout = p.StandardOutput.ReadToEnd();
+                        if (!string.IsNullOrWhiteSpace(stdout))
+                        {
+                            TestLogger?.WriteLine(stdout);
+                        }
+                        var err = p.StandardError.ReadToEnd();
+                        if (!string.IsNullOrWhiteSpace(err))
+                        {
+                            TestLogger?.WriteLine("[stderr]");
+                            TestLogger?.WriteLine(err);
+                        }
+                    }
+                    else
+                    {
+                        TestLogger?.WriteLine("(timed out)");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TestLogger?.WriteLine($"(error collecting '{title}'): {ex.Message}");
+                }
+            }
+
+            // Broad listing of our containers (prefix containertestapp_)
+            RunAndWrite("containers", "docker", "ps -a --filter name=containertestapp_ --format \"{{.ID}} {{.Names}} {{.Status}}\"");
+            // List networks
+            RunAndWrite("networks", "docker", "network ls --format \"{{.ID}} {{.Name}}\"");
+            // Inspect the specific expected network (may fail if absent)
+            RunAndWrite("inspect_target_network", "docker", $"network inspect {ContainerName.ToLower()}_default");
+            // Compose ls (if available)
+            RunAndWrite("compose_projects", "docker", "compose ls");
+
+            TestLogger?.WriteLine($"====== End docker diagnostics stage '{stage}' for {AppName} ======");
+        }
+        catch
+        {
+            // swallow logging errors
+        }
     }
 
     public enum Architecture
