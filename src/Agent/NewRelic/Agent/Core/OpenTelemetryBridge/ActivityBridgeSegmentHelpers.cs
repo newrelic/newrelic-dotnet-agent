@@ -146,6 +146,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var operation = activityKind switch
             {
                 ActivityKind.Producer when operationName == "purge" => MessageBrokerAction.Purge,
+                // TODO: consider supporting other Producer operations like "create", "delete", "process", "receive", etc.
 
                 ActivityKind.Producer => MessageBrokerAction.Produce,
                 ActivityKind.Consumer => MessageBrokerAction.Consume,
@@ -265,8 +266,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // get an appropriate datastore segment data based on the vendor
             ISegmentData segmentData = vendor switch
             {
-                DatastoreVendor.Elasticsearch => GetElasticSearchDatastoreSegmentData(agent, tags, vendor,
-                    activityLogPrefix),
+                DatastoreVendor.Elasticsearch => GetElasticSearchDatastoreSegmentData(agent, tags, vendor, activityLogPrefix),
                 _ => GetDefaultDatastoreSegmentData(agent, activity, activityLogPrefix, tags, vendor)
             };
 
@@ -279,8 +279,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private static ISegmentData GetDefaultDatastoreSegmentData(IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, DatastoreVendor vendor)
         {
             // TODO: We may get two activities with "db.system" tags - one with a DisplayName of "Open" and one with a DisplayName of "Execute".
-            // The "Execute" activity will have the SQL command text in the tags, while the "Open" activity will not.
-            // What do we do with the "Open" activity? For now, we'll ignore it
+            // TODO: The "Execute" activity will have the SQL command text in the tags, while the "Open" activity will not.
+            // TODO: What do we do with the "Open" activity? For now, we'll ignore it
             if (activity.DisplayName != "Execute")
                 return null;
 
