@@ -78,8 +78,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
                     .ConfigureFasterMetricsHarvestCycle(15)
                     .ConfigureFasterErrorTracesHarvestCycle(15)
                     .ConfigureFasterSpanEventsHarvestCycle(15)
-                    .ForceTransactionTraces()
-                    .EnableOTelBridge(enableOTelBridge);
+                    .ForceTransactionTraces();
+
+                    if (enableOTelBridge)
+                    {
+                        configModifier
+                            .EnableOTelBridge(true)
+                            .IncludeActivitySource("Elastic.Transport");
+                    }
                 },
                 exerciseApplication: () =>
                 {

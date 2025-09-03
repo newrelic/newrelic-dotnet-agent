@@ -4665,7 +4665,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var includedActivitySources = defaultConfig.IncludedActivitySources;
 
-            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Elastic.Transport", "Foo", "Bar", "Baz"]));
+            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Foo", "Bar", "Baz"]));
+            //TODO: Use this line with Elastic.Transport is included by default  Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Elastic.Transport", "Foo", "Bar", "Baz"]));
         }
 
         [Test]
