@@ -46,9 +46,11 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-                configModifier.ForceTransactionTraces();
-
-                configModifier.EnableOTelBridge(true);
+                configModifier
+                .ForceTransactionTraces()
+                .SetLogLevel("Finest")
+                .EnableOTelBridge(true)
+                .IncludeActivitySource("RabbitMQ.Client.Subscriber, RabbitMQ.Client.Publisher");
             },
             exerciseApplication: () =>
             {
@@ -75,8 +77,9 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Produce/Named/{_purgeQueue}", callCount = 1 },
             new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Produce/Named/{_purgeQueue}", callCount = 1, metricScope = $"{_metricScopeBase}/QueuePurgeAsync" },
 
-            new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Purge/Named/{_purgeQueue}", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Purge/Named/{_purgeQueue}", callCount = 1, metricScope = $"{_metricScopeBase}/QueuePurgeAsync" },
+            // not available via otel bridge
+            //new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Purge/Named/{_purgeQueue}", callCount = 1 },
+            //new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Purge/Named/{_purgeQueue}", callCount = 1, metricScope = $"{_metricScopeBase}/QueuePurgeAsync" },
 
             new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Queue/Produce/Temp", callCount = 1 },
             new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Queue/Produce/Temp", callCount = 1, metricScope = $"{_metricScopeBase}/SendReceiveTempQueueAsync"},
@@ -127,18 +130,20 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
 
         var expectedConsumeAgentAttributes = new List<string>
         {
-            "server.address",
-            "server.port",
+            // not available via otel bridge
+            //"server.address",
+            //"server.port",
             "messaging.destination.name",
             "message.queueName",
             "messaging.destination_publish.name",
         };
 
-        var expectedTempConsumeAgentAttributes = new List<string>
-        {
-            "server.address",
-            "server.port",
-        };
+        // not available via otel bridge
+        //var expectedTempConsumeAgentAttributes = new List<string>
+        //{
+        //    "server.address",
+        //    "server.port",
+        //};
 
         var expectedIntrinsicAttributes = new List<string> { "span.kind", };
 
@@ -172,8 +177,9 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
                 Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, tempProduceSpanEvents),
 
-            () => Assertions.SpanEventHasAttributes(expectedTempConsumeAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, tempConsumeSpanEvents),
+            // not available via otel bridge
+            //() => Assertions.SpanEventHasAttributes(expectedTempConsumeAgentAttributes,
+            //    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, tempConsumeSpanEvents),
             () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
                 Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, tempConsumeSpanEvents),
 

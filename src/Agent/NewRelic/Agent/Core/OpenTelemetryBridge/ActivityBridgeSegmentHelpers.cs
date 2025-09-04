@@ -145,6 +145,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             var operation = activityKind switch
             {
+                // doesn't work for RabbitMQ, as there is no activity for purge operation. Might work for other messaging systems but is unverified.
                 ActivityKind.Producer when operationName == "purge" => MessageBrokerAction.Purge,
                 // TODO: consider supporting other Producer operations like "create", "delete", "process", "receive", etc.
 
