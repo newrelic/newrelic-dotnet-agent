@@ -143,6 +143,8 @@ public abstract class HybridAgentTestsBase
             "Internal" => ActivityKind.Internal,
             "Client" => ActivityKind.Client,
             "Server" => ActivityKind.Server,
+            "Producer" => ActivityKind.Producer,
+            "Consumer" => ActivityKind.Consumer,
             _ => throw new NotImplementedException(),
         };
     }
