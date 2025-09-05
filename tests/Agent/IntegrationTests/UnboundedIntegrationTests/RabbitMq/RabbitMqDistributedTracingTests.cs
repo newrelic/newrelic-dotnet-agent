@@ -1,8 +1,8 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // TODO: Distributed tracing in RabbitMQ with OpenTelemetryBridge does not work. Save in case we figure it out in the future.
 //
-//// Copyright 2020 New Relic, Inc. All rights reserved.
-//// SPDX-License-Identifier: Apache-2.0
-
 
 //using NewRelic.Agent.IntegrationTestHelpers;
 //using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
