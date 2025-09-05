@@ -2694,7 +2694,7 @@ namespace NewRelic.Agent.Core.Configuration
         #region Otel Bridge
 
         // The activity sources we listen to by default - these are the sources that we will automatically instrument
-        // TODO: eventually we want to include "Elastic.Transport" by default
+        // TODO: eventually we want to include "Elastic.Transport", "RabbitMQ.Client.Subscriber", "RabbitMQ.Client.Publisher" by default
         private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent"]; 
 
         private List<string> _includedActivitySources;
@@ -2709,7 +2709,12 @@ namespace NewRelic.Agent.Core.Configuration
                     var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Include");
                     if (!string.IsNullOrEmpty(appSetting))
                     {
-                        includedActivitySources.AddRange(appSetting.Split(','));
+                        includedActivitySources.AddRange(
+                 appSetting
+                            .Split([','], StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.Trim())
+                            .Where(s => !string.IsNullOrEmpty(s))
+                        );
                     }
 
                     _includedActivitySources = includedActivitySources.Distinct().ToList();
@@ -2735,7 +2740,12 @@ namespace NewRelic.Agent.Core.Configuration
                     var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Exclude");
                     if (!string.IsNullOrEmpty(appSetting))
                     {
-                        excludedActivitySources.AddRange(appSetting.Split(','));
+                        excludedActivitySources.AddRange(
+                          appSetting
+                            .Split([','], StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.Trim())
+                            .Where(s => !string.IsNullOrEmpty(s))
+                        );
                     }
                     _excludedActivitySources = excludedActivitySources.Distinct().ToList();
                 }

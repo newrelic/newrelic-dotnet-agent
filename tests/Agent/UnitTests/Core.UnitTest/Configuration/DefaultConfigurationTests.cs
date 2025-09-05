@@ -832,7 +832,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void ApdexT_SetFromEnvironmentVariable_WhenInServerlessMode()
         {
             // set NEW_RELIC_APDEX_T environment variable
-                Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_APDEX_T")).Returns("1.234");
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_APDEX_T")).Returns("1.234");
 
             Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
 
@@ -4670,16 +4670,33 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
+        public void IncludedActivitySources_ParsesPoorlyFormedInputCorrectly()
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Include", value = "  , Foo , , Bar,Baz,, " });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+            var includedActivitySources = defaultConfig.IncludedActivitySources;
+            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Foo", "Bar", "Baz"]));
+        }
+
+        [Test]
         public void ExcludedActivitySources_IncludesConfigured()
         {
             _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Exclude", value = "Foo,Bar,Baz" });
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
-            var excludedActivitySources= defaultConfig.ExcludedActivitySources;
+            var excludedActivitySources = defaultConfig.ExcludedActivitySources;
 
             Assert.That(excludedActivitySources, Is.EquivalentTo(["Foo", "Bar", "Baz"]));
         }
 
+        [Test]
+        public void ExcludedActivitySources_ParsesPoorlyFormedInputCorrectly()
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Exclude", value = "  , Foo , , Bar,Baz,, " });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+            var excludedActivitySources = defaultConfig.ExcludedActivitySources;
+            Assert.That(excludedActivitySources, Is.EquivalentTo(["Foo", "Bar", "Baz"]));
+        }
 
         private DefaultConfiguration GenerateConfigFromXml(string xml)
         {
@@ -4698,6 +4715,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         private void CreateDefaultConfiguration()
         {
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
-        }   
+        }
     }
 }

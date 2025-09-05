@@ -551,9 +551,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
-        public void IncludeActivitySource(string activitySourceName)
+        public NewRelicConfigModifier IncludeActivitySource(string activitySourceName)
         {
             CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.ActivitySource.Include", activitySourceName, "urn:newrelic-config");
+            return this;
         }
     }
 }

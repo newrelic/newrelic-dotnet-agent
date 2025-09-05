@@ -12,13 +12,13 @@ using Xunit;
 
 
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
+namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq.Legacy
 {
-    public abstract class RabbitMqW3cTracingTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW471>
+    public abstract class RabbitMqLegacyW3cTracingTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW471>
     {
-        protected readonly string _metricScopeBase = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ";
+        protected readonly string _metricScopeBase = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ.RabbitMQLegacyExerciser";
 
-        public RabbitMqW3cTracingTests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)  : base(fixture)
+        public RabbitMqLegacyW3cTracingTests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)  : base(fixture)
         {
             fixture.TestLogger = output;
             fixture.Actions
@@ -35,18 +35,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         }
     }
 
-    public class RabbitMqW3cTracingBasicTest : RabbitMqW3cTracingTests
+    public class RabbitMqLegacyW3cTracingBasicTest : RabbitMqLegacyW3cTracingTests
     {
         private ConsoleDynamicMethodFixtureFW471 _fixture;
 
         private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
 
-        public RabbitMqW3cTracingBasicTest(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public RabbitMqLegacyW3cTracingBasicTest(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
         : base(fixture, output)
         {
             _fixture = fixture;
 
-            _fixture.AddCommand($"RabbitMQ SendReceive {_sendReceiveQueue} TestMessage");
+            _fixture.AddCommand($"RabbitMQLegacyExerciser SendReceive {_sendReceiveQueue} TestMessage");
             // This is needed to avoid a hang on shutdown in the test app
             _fixture.AddCommand("RabbitMQ Shutdown");
 
@@ -70,12 +70,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 
             Assert.Equal(headerValueTx.IntrinsicAttributes["guid"], produceSpan.IntrinsicAttributes["transactionId"]);
             Assert.Equal(headerValueTx.IntrinsicAttributes["traceId"], produceSpan.IntrinsicAttributes["traceId"]);
-            Assert.True(AttributeComparer.IsEqualTo(headerValueTx.IntrinsicAttributes["priority"], produceSpan.IntrinsicAttributes["priority"]),
+            Assert.True(headerValueTx.IntrinsicAttributes["priority"].IsEqualTo(produceSpan.IntrinsicAttributes["priority"]),
                 $"priority: expected: {headerValueTx.IntrinsicAttributes["priority"]}, actual: {produceSpan.IntrinsicAttributes["priority"]}");
 
             Assert.Equal(headerValueTx.IntrinsicAttributes["guid"], consumeSpan.IntrinsicAttributes["transactionId"]);
             Assert.Equal(headerValueTx.IntrinsicAttributes["traceId"], consumeSpan.IntrinsicAttributes["traceId"]);
-            Assert.True(AttributeComparer.IsEqualTo(headerValueTx.IntrinsicAttributes["priority"], consumeSpan.IntrinsicAttributes["priority"]),
+            Assert.True(headerValueTx.IntrinsicAttributes["priority"].IsEqualTo(consumeSpan.IntrinsicAttributes["priority"]),
                 $"priority: expected: {headerValueTx.IntrinsicAttributes["priority"]}, actual: {consumeSpan.IntrinsicAttributes["priority"]}");
 
             // metrics
@@ -91,20 +91,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         }
     }
 
-    public class RabbitMqW3cTracingEventingConsumerTest : RabbitMqW3cTracingTests
+    public class RabbitMqLegacyW3cTracingEventingConsumerTest : RabbitMqLegacyW3cTracingTests
     {
         private ConsoleDynamicMethodFixtureFW471 _fixture;
 
         private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
 
-        public RabbitMqW3cTracingEventingConsumerTest(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public RabbitMqLegacyW3cTracingEventingConsumerTest(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
         : base(fixture, output)
         {
             _fixture = fixture;
 
-            _fixture.AddCommand($"RabbitMQ SendReceiveWithEventingConsumer {_sendReceiveQueue} TestMessage");
+            _fixture.AddCommand($"RabbitMQLegacyExerciser SendReceiveWithEventingConsumer {_sendReceiveQueue} TestMessage");
             // This is needed to avoid a hang on shutdown in the test app
-            _fixture.AddCommand("RabbitMQ Shutdown");
+            _fixture.AddCommand("RabbitMQLegacyExerciser Shutdown");
 
             fixture.Initialize();
         }
@@ -118,7 +118,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
             var consumeTx = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Message/RabbitMQ/Queue/Named/{_sendReceiveQueue}");
 
             Assert.Equal(consumeTx.IntrinsicAttributes["traceId"], produceTx.IntrinsicAttributes["traceId"]);
-            Assert.True(AttributeComparer.IsEqualTo(produceTx.IntrinsicAttributes["priority"], consumeTx.IntrinsicAttributes["priority"]),
+            Assert.True(produceTx.IntrinsicAttributes["priority"].IsEqualTo(consumeTx.IntrinsicAttributes["priority"]),
                 $"priority: expected: {produceTx.IntrinsicAttributes["priority"]}, actual: {consumeTx.IntrinsicAttributes["priority"]}");
             Assert.Equal(consumeTx.IntrinsicAttributes["parentId"], produceTx.IntrinsicAttributes["guid"]);
             Assert.Equal("AMQP", consumeTx.IntrinsicAttributes["parent.transportType"]);
@@ -129,7 +129,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
                 (span =>
                 {
                     Assert.Equal(produceTx.IntrinsicAttributes["traceId"], span.IntrinsicAttributes["traceId"]);
-                    Assert.True(AttributeComparer.IsEqualTo(produceTx.IntrinsicAttributes["priority"], span.IntrinsicAttributes["priority"]),
+                    Assert.True(produceTx.IntrinsicAttributes["priority"].IsEqualTo(span.IntrinsicAttributes["priority"]),
                         $"priority: expected: {produceTx.IntrinsicAttributes["priority"]}, actual: {span.IntrinsicAttributes["priority"]}");
                 });
 

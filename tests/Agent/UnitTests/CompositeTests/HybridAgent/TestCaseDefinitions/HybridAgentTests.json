@@ -1067,5 +1067,583 @@
                 }
             ]
         }
+    },
+    {
+        "testDescription": "Consumer Messaging - RabbitMQ Topic",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxn"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Consume",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.destination.routing_key",
+                                    "value": "order.created"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.destination.temporary",
+                                    "value": false,
+                                    "type": "bool"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.message.id",
+                                    "value": "abc123"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "custom.tag",
+                                    "value": "value"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OtherTransaction/Message/RabbitMQ/Topic/Named/order.created"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/RabbitMQ/Topic/Consume/Named/order.created",
+                    "parentName": "OtherTransaction/Message/RabbitMQ/Topic/Named/order.created",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "consumer",
+                        "server.address": "rabbitmq.local",
+                        "server.port": 5672,
+                        "messaging.destination.name": "order.created",
+                        "messaging.destination_publish.name": "order.created",
+                        "messaging.system": "rabbitmq",
+                        "messaging.message.id": "abc123",
+                        "custom.tag": "value"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - RabbitMQ temp queue (explicit temporary flag true)",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnTempFlagTrue"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Consume Temp True",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.destination.routing_key",
+                                    "value": "tempqueue1"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.destination.temporary",
+                                    "value": true,
+                                    "type": "bool"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/RabbitMQ/Queue/Consume/Temp",
+                    "parentName": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "consumer",
+                        "server.address": "rabbitmq.local",
+                        "server.port": 5672,
+                        "messaging.system": "rabbitmq"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - RabbitMQ temp queue (amq. prefix implicit temp)",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnTempAmqPrefix"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Consume Temp amq prefix",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.destination.routing_key",
+                                    "value": "amq.gen-XYZ123"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/RabbitMQ/Queue/Consume/Temp",
+                    "parentName": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "consumer",
+                        "server.address": "rabbitmq.local",
+                        "server.port": 5672,
+                        "messaging.system": "rabbitmq"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - RabbitMQ temp queue (amq. prefix overrides explicit temporary=false)",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnTempAmqPrefixOverridesFlag"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Consume Temp amq override",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.destination.routing_key",
+                                    "value": "amq.gen-ABC789"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.destination.temporary",
+                                    "value": false,
+                                    "type": "bool"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/RabbitMQ/Queue/Consume/Temp",
+                    "parentName": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "consumer",
+                        "server.address": "rabbitmq.local",
+                        "server.port": 5672,
+                        "messaging.system": "rabbitmq"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - Kafka named queue",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnNamedQueue"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "Kafka Consume Named Queue",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "kafka"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.kafka.message.key",
+                                    "value": "orders"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "kafka.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 1234,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OtherTransaction/Message/Kafka/Queue/Named/orders"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/Kafka/Queue/Consume/Named/orders",
+                    "parentName": "OtherTransaction/Message/Kafka/Queue/Named/orders",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "consumer",
+                        "server.address": "kafka.local",
+                        "server.port": 1234,
+                        "messaging.destination.name": "orders",
+                        "messaging.destination_publish.name": "orders",
+                        "messaging.system": "kafka"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - RabbitMQ missing routing key does not create broker segment",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnMissingRoutingKey"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Consume Missing Routing Key",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OriginalTxnMissingRoutingKey"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "RabbitMQ Consume Missing Routing Key",
+                    "parentName": "OriginalTxnMissingRoutingKey",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Producer Messaging - ServiceBus named queue",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnServiceBusProduce"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "ServiceBus Produce Named Queue",
+                            "spanKind": "Producer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "azure.servicebus"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.destination.name",
+                                    "value": "ordersqueue"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "publish"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "servicebus.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 8080,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OriginalTxnServiceBusProduce"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/ServiceBus/Queue/Produce/Named/ordersqueue",
+                    "parentName": "OriginalTxnServiceBusProduce",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "producer",
+                        "server.address": "servicebus.local",
+                        "server.port": 8080,
+                        "messaging.destination.name": "ordersqueue",
+                        "messaging.system": "azure.servicebus"
+                    }
+                }
+            ]
+        }
     }
 ]
