@@ -346,9 +346,9 @@ namespace NewRelic.Agent.Core.Metrics
             TempQueue,
             TempTopic
         }
-        public static MetricNames.MessageBrokerDestinationType AgentWrapperApiEnumToMetricNamesEnum(NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerDestinationType wrapper)
+        public static MetricNames.MessageBrokerDestinationType AgentWrapperApiEnumToMetricNamesEnum(NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerDestinationType destinationType)
         {
-            switch (wrapper)
+            switch (destinationType)
             {
                 case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerDestinationType.Queue:
                     return MetricNames.MessageBrokerDestinationType.Queue;
@@ -359,7 +359,7 @@ namespace NewRelic.Agent.Core.Metrics
                 case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerDestinationType.TempTopic:
                     return MetricNames.MessageBrokerDestinationType.TempTopic;
                 default:
-                    throw new InvalidOperationException("Unexpected enum value: " + wrapper);
+                    throw new InvalidOperationException("Unexpected enum value: " + destinationType);
             }
         }
 
@@ -375,9 +375,9 @@ namespace NewRelic.Agent.Core.Metrics
             Cancel
         }
 
-        public static MetricNames.MessageBrokerAction AgentWrapperApiEnumToMetricNamesEnum(NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction wrapper)
+        public static MetricNames.MessageBrokerAction AgentWrapperApiEnumToMetricNamesEnum(NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction actionType)
         {
-            switch (wrapper)
+            switch (actionType)
             {
                 case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction.Consume:
                     return MetricNames.MessageBrokerAction.Consume;
@@ -394,7 +394,7 @@ namespace NewRelic.Agent.Core.Metrics
                 case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction.Cancel:
                     return MetricNames.MessageBrokerAction.Cancel;
                 default:
-                    throw new InvalidOperationException("Unexpected enum value: " + wrapper);
+                    throw new InvalidOperationException("Unexpected enum value: " + actionType);
             }
         }
 
