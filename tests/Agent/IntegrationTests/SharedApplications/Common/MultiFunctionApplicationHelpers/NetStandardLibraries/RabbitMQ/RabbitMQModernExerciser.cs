@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using RabbitMQ.Client;
@@ -22,10 +23,11 @@ public class RabbitMQModernExerciser
 {
     private static readonly ConnectionFactory ChannelFactory = new ConnectionFactory()
     {
-        HostName = "127.0.0.1",
-        UserName = "RabbitUser",
-        Password = "RabbitPassword"
+        HostName = RabbitMqConfiguration.RabbitMqServerIp,
+        UserName = RabbitMqConfiguration.RabbitMqUsername,
+        Password = RabbitMqConfiguration.RabbitMqPassword
     };
+
     private static IConnection Connection;
     private static IChannel Channel;
 
