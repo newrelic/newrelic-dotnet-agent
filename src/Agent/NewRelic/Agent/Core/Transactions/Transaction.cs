@@ -33,6 +33,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Extensions.Api.Experimental;
 
@@ -119,16 +120,16 @@ namespace NewRelic.Agent.Core.Transactions
             internal set => _sampled = value;
         }
 
-        public void SetSampled(IAdaptiveSampler adaptiveSampler)
+        public void SetSampled(ISampler sampler)
         {
             lock (_sync)
             {
                 if (!Sampled.HasValue)
                 {
-                    var priority = _priority;
-                    Sampled = adaptiveSampler.ComputeSampled(ref priority);
-                    _priority = priority;
+                    var result = sampler.ShouldSample(new SamplingParameters(TraceId, _priority));
 
+                    _sampled = result.Sampled;
+                    _priority = result.Priority;
                 }
             }
         }
