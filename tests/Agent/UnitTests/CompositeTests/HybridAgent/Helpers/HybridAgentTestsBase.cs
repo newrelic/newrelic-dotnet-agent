@@ -29,6 +29,9 @@ public abstract class HybridAgentTestsBase
     public virtual void Setup()
     {
         _compositeTestAgent = new CompositeTestAgent();
+
+        _compositeTestAgent.LocalConfiguration.log.level = "finest"; // to ensure we exercise code paths that log messages only when finest is enabled
+
         // Used for the DT tests to identify the correct tracestate header component
         _compositeTestAgent.ServerConfiguration.TrustedAccountKey = "1";
 
@@ -114,6 +117,10 @@ public abstract class HybridAgentTestsBase
                 var errorMessage = operation.Parameters!["errorMessage"] as string;
                 return (work) => OpenTelemetryOperations.RecordExceptionOnSpan(errorMessage!, work);
 
+            case { Command: "SetErrorStatusOnSpan" }:
+                var statusDescription = operation.Parameters!["statusDescription"] as string;
+                return (work) => OpenTelemetryOperations.SetErrorStatusOnSpan(statusDescription!, work);
+
             case { Command: "SimulateExternalCall" }:
                 var url = operation.Parameters!["url"] as string;
                 return (work) => SimulatedOperations.ExternalCall(url!, work);
@@ -136,6 +143,8 @@ public abstract class HybridAgentTestsBase
             "Internal" => ActivityKind.Internal,
             "Client" => ActivityKind.Client,
             "Server" => ActivityKind.Server,
+            "Producer" => ActivityKind.Producer,
+            "Consumer" => ActivityKind.Consumer,
             _ => throw new NotImplementedException(),
         };
     }

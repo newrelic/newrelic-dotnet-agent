@@ -5,6 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 -->
 <extension xmlns="urn:newrelic-extension">
 
+  <!-- TODO: Add maxVersion="6.8.1" on all <match> elements when OtelBridge is enabled by default in the agent. -->
 	<instrumentation>
     <!-- Consume Pull -->
 		<tracerFactory name="BasicGetWrapper">

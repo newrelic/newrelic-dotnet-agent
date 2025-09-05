@@ -355,8 +355,8 @@ namespace NewRelic.Agent.Core.Transactions
             if (brokerVendorName == null)
                 throw new ArgumentNullException("brokerVendorName");
 
-            var action = AgentWrapperApiEnumToMetricNamesEnum(operation);
-            var destType = AgentWrapperApiEnumToMetricNamesEnum(destinationType);
+            var action = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(operation);
+            var destType = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(destinationType);
 
             return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action, messagingSystemName: messagingSystemName, cloudAccountId: cloudAccountId, cloudRegion: cloudRegion, serverAddress: serverAddress, serverPort: serverPort, routingKey: routingKey);
         }
@@ -366,8 +366,8 @@ namespace NewRelic.Agent.Core.Transactions
             if (brokerVendorName == null)
                 throw new ArgumentNullException("brokerVendorName");
 
-            var action = AgentWrapperApiEnumToMetricNamesEnum(operation);
-            var destType = AgentWrapperApiEnumToMetricNamesEnum(destinationType);
+            var action = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(operation);
+            var destType = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(destinationType);
 
             return new MessageBrokerSerializationSegmentData(brokerVendorName, destinationName, destType, action, kind);
         }
@@ -443,47 +443,6 @@ namespace NewRelic.Agent.Core.Transactions
         private static MethodCallData GetMethodCallData(string typeName, string methodName, int invocationTargetHashCode)
         {
             return new MethodCallData(typeName, methodName, invocationTargetHashCode, true); // assume async
-        }
-
-        private static MetricNames.MessageBrokerDestinationType AgentWrapperApiEnumToMetricNamesEnum(
-            MessageBrokerDestinationType wrapper)
-        {
-            switch (wrapper)
-            {
-                case MessageBrokerDestinationType.Queue:
-                    return MetricNames.MessageBrokerDestinationType.Queue;
-                case MessageBrokerDestinationType.Topic:
-                    return MetricNames.MessageBrokerDestinationType.Topic;
-                case MessageBrokerDestinationType.TempQueue:
-                    return MetricNames.MessageBrokerDestinationType.TempQueue;
-                case MessageBrokerDestinationType.TempTopic:
-                    return MetricNames.MessageBrokerDestinationType.TempTopic;
-                default:
-                    throw new InvalidOperationException("Unexpected enum value: " + wrapper);
-            }
-        }
-
-        private static MetricNames.MessageBrokerAction AgentWrapperApiEnumToMetricNamesEnum(MessageBrokerAction wrapper)
-        {
-            switch (wrapper)
-            {
-                case MessageBrokerAction.Consume:
-                    return MetricNames.MessageBrokerAction.Consume;
-                case MessageBrokerAction.Peek:
-                    return MetricNames.MessageBrokerAction.Peek;
-                case MessageBrokerAction.Produce:
-                    return MetricNames.MessageBrokerAction.Produce;
-                case MessageBrokerAction.Purge:
-                    return MetricNames.MessageBrokerAction.Purge;
-                case MessageBrokerAction.Process:
-                    return MetricNames.MessageBrokerAction.Process;
-                case MessageBrokerAction.Settle:
-                    return MetricNames.MessageBrokerAction.Settle;
-                case MessageBrokerAction.Cancel:
-                    return MetricNames.MessageBrokerAction.Cancel;
-                default:
-                    throw new InvalidOperationException("Unexpected enum value: " + wrapper);
-            }
         }
 
         private Dictionary<string, IConvertible> GetNormalizedQueryParameters(IDictionary<string, IConvertible> originalQueryParameters)

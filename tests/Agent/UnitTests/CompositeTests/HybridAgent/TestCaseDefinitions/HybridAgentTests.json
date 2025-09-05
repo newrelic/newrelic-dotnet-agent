@@ -148,6 +148,56 @@
         }
     },
     {
+        "testDescription": "Client Http External with empty http.method and http.url does not create http span",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OTelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.method",
+                                    "value": ""
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.url",
+                                    "value": ""
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "OTelSpan1",
+                    "parentName": "Foo",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
         "testDescription": "Client Http External with AWS Lambda tags sets cloud sdk attributes",
         "operations": [
             {
@@ -469,7 +519,7 @@
         }
     },
     {
-        "testDescription": "Client Database test",
+        "testDescription": "Client Database - Mysql",
         "operations": [
             {
                 "command": "DoWorkInTransaction",
@@ -544,6 +594,1053 @@
                         "db.system": "mysql",
                         "peer.address": "localhost:3306",
                         "peer.hostname": "localhost"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database - Elasticsearch / search",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "Execute",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "elasticsearch"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.operation",
+                                    "value": "search"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.elasticsearch.path_parts.index",
+                                    "value": "flights"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 9200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.product.name",
+                                    "value": "elasticsearch-net"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.product.version",
+                                    "value": "8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.version",
+                                    "value": "0.5.2+7d3a633b6c0d257ad611a60c720c1ee27688fdb1"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.elasticsearch.schema_url",
+                                    "value": "https://opentelemetry.io/schemas/1.21.0"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.user",
+                                    "value": "elastic"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "user_agent.original",
+                                    "value": "elasticsearch-net/8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125 (Microsoft Windows 10.0.26100; .NET 9.0.7; Elastic.Clients.Elasticsearch)"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.method",
+                                    "value": "POST"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "url.full",
+                                    "value": "http://localhost:9202/flights/_search"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.response.status_code",
+                                    "value": 200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.attempted_nodes",
+                                    "value": 1,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "Datastore/statement/Elasticsearch/flights/Search",
+                    "parentName": "Foo",
+                    "category": "datastore",
+                    "attributes": {
+                        "db.collection": "flights",
+                        "db.instance": "unknown",
+                        "db.operation": "Search",
+                        "db.system": "elasticsearch",
+                        "peer.address": "localhost:9200",
+                        "peer.hostname": "localhost",
+                        "server.address": "localhost",
+                        "server.port": 9200,
+                        "db.elasticsearch.schema_url": "https://opentelemetry.io/schemas/1.21.0",
+                        "db.user": "elastic",
+                        "elastic.transport.attempted_nodes": 1,
+                        "elastic.transport.product.name": "elasticsearch-net",
+                        "elastic.transport.product.version": "8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125",
+                        "elastic.transport.version": "0.5.2+7d3a633b6c0d257ad611a60c720c1ee27688fdb1",
+                        "http.request.method": "POST",
+                        "http.response.status_code": 200,
+                        "user_agent.original": "elasticsearch-net/8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125 (Microsoft Windows 10.0.26100; .NET 9.0.7; Elastic.Clients.Elasticsearch)"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database - Elasticsearch / ping",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "Execute",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "elasticsearch"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.operation",
+                                    "value": "ping"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.elasticsearch.schema_url",
+                                    "value": "https://opentelemetry.io/schemas/1.21.0"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.user",
+                                    "value": "elastic"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.product.name",
+                                    "value": "elasticsearch-net"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.product.version",
+                                    "value": "8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.version",
+                                    "value": "0.5.2+7d3a633b6c0d257ad611a60c720c1ee27688fdb1"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "user_agent.original",
+                                    "value": "elasticsearch-net/8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125 (Microsoft Windows 10.0.26100; .NET 9.0.7; Elastic.Clients.Elasticsearch)"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.method",
+                                    "value": "HEAD"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "url.full",
+                                    "value": "http://localhost:9200/"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 9200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.response.status_code",
+                                    "value": 200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "elastic.transport.attempted_nodes",
+                                    "value": 1,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "Datastore/statement/Elasticsearch/Unknown/Ping",
+                    "parentName": "Foo",
+                    "category": "datastore",
+                    "attributes": {
+                        "db.collection": "Unknown",
+                        "db.instance": "unknown",
+                        "db.operation": "Ping",
+                        "db.system": "elasticsearch",
+                        "peer.address": "localhost:9200",
+                        "peer.hostname": "localhost",
+                        "server.address": "localhost",
+                        "server.port": 9200,
+                        "db.elasticsearch.schema_url": "https://opentelemetry.io/schemas/1.21.0",
+                        "db.user": "elastic",
+                        "elastic.transport.attempted_nodes": 1,
+                        "elastic.transport.product.name": "elasticsearch-net",
+                        "elastic.transport.product.version": "8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125",
+                        "elastic.transport.version": "0.5.2+7d3a633b6c0d257ad611a60c720c1ee27688fdb1",
+                        "http.request.method": "HEAD",
+                        "http.response.status_code": 200,
+                        "user_agent.original": "elasticsearch-net/8.16.0+2b5796fa9aa0d3fb6027084618893772829ef125 (Microsoft Windows 10.0.26100; .NET 9.0.7; Elastic.Clients.Elasticsearch)"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database - Elasticsearch without operation does not create datastore segment data",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OtelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "elasticsearch"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "OtelSpan1",
+                    "parentName": "Foo",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database - Elasticsearch without url does not create datastore segment data",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OtelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "elasticsearch"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.operation",
+                                    "value": "ping"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "OtelSpan1",
+                    "parentName": "Foo",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database - Elasticsearch with empty url does not create datastore segment data",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "OtelSpan1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "elasticsearch"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.operation",
+                                    "value": "ping"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "url.full",
+                                    "value": ""
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "OtelSpan1",
+                    "parentName": "Foo",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - RabbitMQ Topic",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxn"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Consume",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.destination.routing_key",
+                                    "value": "order.created"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.destination.temporary",
+                                    "value": false,
+                                    "type": "bool"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.message.id",
+                                    "value": "abc123"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "custom.tag",
+                                    "value": "value"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OtherTransaction/Message/RabbitMQ/Topic/Named/order.created"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/RabbitMQ/Topic/Consume/Named/order.created",
+                    "parentName": "OtherTransaction/Message/RabbitMQ/Topic/Named/order.created",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "consumer",
+                        "server.address": "rabbitmq.local",
+                        "server.port": 5672,
+                        "messaging.destination.name": "order.created",
+                        "messaging.destination_publish.name": "order.created",
+                        "messaging.system": "rabbitmq",
+                        "messaging.message.id": "abc123",
+                        "custom.tag": "value"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - RabbitMQ temp queue (explicit temporary flag true)",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnTempFlagTrue"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Consume Temp True",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.destination.routing_key",
+                                    "value": "tempqueue1"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.destination.temporary",
+                                    "value": true,
+                                    "type": "bool"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/RabbitMQ/Queue/Consume/Temp",
+                    "parentName": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "consumer",
+                        "server.address": "rabbitmq.local",
+                        "server.port": 5672,
+                        "messaging.system": "rabbitmq"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - RabbitMQ temp queue (amq. prefix implicit temp)",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnTempAmqPrefix"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Consume Temp amq prefix",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.destination.routing_key",
+                                    "value": "amq.gen-XYZ123"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/RabbitMQ/Queue/Consume/Temp",
+                    "parentName": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "consumer",
+                        "server.address": "rabbitmq.local",
+                        "server.port": 5672,
+                        "messaging.system": "rabbitmq"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - RabbitMQ temp queue (amq. prefix overrides explicit temporary=false)",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnTempAmqPrefixOverridesFlag"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Consume Temp amq override",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.destination.routing_key",
+                                    "value": "amq.gen-ABC789"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.destination.temporary",
+                                    "value": false,
+                                    "type": "bool"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/RabbitMQ/Queue/Consume/Temp",
+                    "parentName": "OtherTransaction/Message/RabbitMQ/TempQueue/Temp",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "consumer",
+                        "server.address": "rabbitmq.local",
+                        "server.port": 5672,
+                        "messaging.system": "rabbitmq"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - Kafka named queue",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnNamedQueue"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "Kafka Consume Named Queue",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "kafka"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.kafka.message.key",
+                                    "value": "orders"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "kafka.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 1234,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OtherTransaction/Message/Kafka/Queue/Named/orders"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/Kafka/Queue/Consume/Named/orders",
+                    "parentName": "OtherTransaction/Message/Kafka/Queue/Named/orders",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "consumer",
+                        "server.address": "kafka.local",
+                        "server.port": 1234,
+                        "messaging.destination.name": "orders",
+                        "messaging.destination_publish.name": "orders",
+                        "messaging.system": "kafka"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - RabbitMQ missing routing key does not create broker segment",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnMissingRoutingKey"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Consume Missing Routing Key",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OriginalTxnMissingRoutingKey"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "RabbitMQ Consume Missing Routing Key",
+                    "parentName": "OriginalTxnMissingRoutingKey",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Producer Messaging - ServiceBus named queue",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnServiceBusProduce"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "ServiceBus Produce Named Queue",
+                            "spanKind": "Producer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "azure.servicebus"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.destination.name",
+                                    "value": "ordersqueue"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "publish"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "servicebus.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 8080,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OriginalTxnServiceBusProduce"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/ServiceBus/Queue/Produce/Named/ordersqueue",
+                    "parentName": "OriginalTxnServiceBusProduce",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "producer",
+                        "server.address": "servicebus.local",
+                        "server.port": 8080,
+                        "messaging.destination.name": "ordersqueue",
+                        "messaging.system": "azure.servicebus"
                     }
                 }
             ]
