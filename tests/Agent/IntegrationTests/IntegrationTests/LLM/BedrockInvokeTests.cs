@@ -21,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         {
             "amazonembed",
             "amazonexpress",
-            "anthropic"
+            //"anthropic" // Model is EOLed as of 9/11/25
         };
 
         private Dictionary<string, LlmMessageTypes> _expectedAttributes = new Dictionary<string, LlmMessageTypes>
