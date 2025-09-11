@@ -22,7 +22,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
     public static class ActivityBridgeSegmentHelpers
     {
-        public static void AddActivityTagsToSegment(this ISegment segment, object originalActivity, IAgent agent)
+        // TODO: Coalesce with NewRelic.Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders
+        public static readonly string[] DefaultCaptureHeaders = ["Referer", "Accept", "Content-Length", "Host", "User-Agent"];
+
+        public static void ProcessActivityTags(this ISegment segment, object originalActivity, IAgent agent)
         {
             dynamic activity = originalActivity;
             int activityKind = (int)activity.Kind;
@@ -78,10 +81,19 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                         Log.Finest($"{activityLogPrefix} is missing required tag for messaging system. Not creating a MessagingSegmentData.");
                     }
                     break;
-                case (int)ActivityKind.Internal:
                 case (int)ActivityKind.Server:
-                default:
+                    if (tags.TryGetAndRemoveTag<string>(["http.request.method", "http.method"], out var serverMethod)) // it's an HTTP server activity
+                    {
+                        ProcessHttpServerTags(segment, agent, tags, activityLogPrefix, serverMethod);
+                    }
+                    else
+                    {
+                        Log.Finest($"{activityLogPrefix} is missing required tags to determine the type of server activity.");
+                    }
                     break;
+                case (int)ActivityKind.Internal:
+                default:
+                    break; // don't do anything -- we'll use the existing SimpleSegmentData that was created when the segment was created
             }
 
             // add any tags left in the collection as custom attributes
@@ -92,6 +104,80 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 segment.AddCustomAttribute(tag.Key, tag.Value);
             }
 
+        }
+
+        private static void ProcessHttpServerTags(ISegment segment, IAgent agent, Dictionary<string, object> tags, string activityLogPrefix, string requestMethod)
+        {
+            // look for http.route first, then fall back to url.path. Prefer http.route because it may contain templated route information,
+            // but it won't exist for an invalid request.
+            if (!tags.TryGetAndRemoveTag<string>(["http.route"], out var path))
+            {
+                tags.TryGetAndRemoveTag<string>(["url.path"], out path);
+            }
+
+            // if path is empty, consider it the same as /. Otherwise strip leading / if it exists
+            path = string.IsNullOrEmpty(path) || path.Equals("/") ? "ROOT" : path[0] == '/' ? path.Substring(1) : path;
+
+            tags.TryGetAndRemoveTag<string>(["url.query"], out var query);
+            tags.TryGetAndRemoveTag<int>(["http.response.status_code", "http.status_code"], out var statusCode);
+
+            if (segment is not IHybridAgentSegment hybridAgentSegment)
+            {
+                return; // TODO: this shouldn't happen
+            }
+
+            var transaction = hybridAgentSegment.GetTransactionFromSegment();
+
+            if (statusCode >= 400)
+            {
+                transaction.SetWebTransactionName(WebTransactionType.StatusCode, $"{statusCode}", TransactionNamePriority.StatusCode);
+            }
+            else
+            {
+                transaction.SetWebTransactionNameFromPath(WebTransactionType.Custom, path);
+            }
+
+            transaction.SetRequestMethod(requestMethod);
+            transaction.SetUri(path);
+            transaction.SetHttpResponseStatusCode(statusCode);
+
+            if (!string.IsNullOrEmpty(query))
+            {
+                // if query starts with ?, trim it off
+                if (query.StartsWith("?"))
+                {
+                    query = query.Substring(1);
+                }
+
+                // split the query string into key/value pairs
+                var parameters = query.Split('&')
+                    .Select(part => part.Split('='))
+                    .Where(part => part.Length == 2)
+                    .ToDictionary(split => split[0], split => split[1]);
+
+                transaction.SetRequestParameters(parameters);
+            }
+
+            // iterate the tags collection and extract all values from keys that start with "http.request.header."
+            // convert headers to a dictionary with the prefix removed from the key
+            var headerPrefix = "http.request.header.";
+            var startIndex = headerPrefix.Length;
+            var headersDict = tags
+                .Where(t => t.Key.StartsWith(headerPrefix, StringComparison.OrdinalIgnoreCase) && t.Value is string)
+                .ToDictionary(t => t.Key.Substring(startIndex), t => (string)t.Value, StringComparer.OrdinalIgnoreCase);
+
+            if (headersDict.Any())
+            {
+                // Filter to only headers that actually exist if not allowing all, to avoid KeyNotFoundException (e.g. Referer missing).
+                IEnumerable<string> captureKeys = agent.Configuration.AllowAllRequestHeaders
+                    ? headersDict.Keys
+                    : DefaultCaptureHeaders.Where(h => headersDict.ContainsKey(h));
+
+                if (captureKeys.Any())
+                {
+                    transaction.SetRequestHeaders(headersDict, captureKeys, (hd, keyVal) => hd[keyVal]);
+                }
+            }
         }
 
         /// <summary>

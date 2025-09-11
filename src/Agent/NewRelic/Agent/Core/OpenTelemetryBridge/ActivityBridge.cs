@@ -390,9 +390,13 @@ public class ActivityBridge : IDisposable
         var includedActivitySources = _agent.Configuration.IncludedActivitySources;
         var excludedActivitySources = _agent.Configuration.ExcludedActivitySources;
 
-        return !string.IsNullOrEmpty(activitySourceName)
-               && includedActivitySources.Contains(activitySourceName)
-               && !excludedActivitySources.Contains(activitySourceName);
+        var shouldListenToActivitySource = !string.IsNullOrEmpty(activitySourceName)
+                                           && includedActivitySources.Contains(activitySourceName)
+                                           && !excludedActivitySources.Contains(activitySourceName);
+
+        Log.Finest($"ShouldListenToActivitySource: {(shouldListenToActivitySource ? "Listening to" : "Not listening to")} {activitySourceName}.");
+
+        return shouldListenToActivitySource;
     }
 
     private bool ShouldSampleActivity(int kind, object activityContext)
@@ -502,7 +506,7 @@ public class ActivityBridge : IDisposable
 
         if (segment != null)
         {
-            segment.AddActivityTagsToSegment(originalActivity, agent);
+            segment.ProcessActivityTags(originalActivity, agent);
             segment.AddExceptionEventInformationToSegment(originalActivity, errorService);
             segment.End();
         }

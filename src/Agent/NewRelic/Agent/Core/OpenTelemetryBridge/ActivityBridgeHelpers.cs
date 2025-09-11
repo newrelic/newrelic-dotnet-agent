@@ -29,6 +29,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             dynamic activity = originalActivity;
 
+            // Start a transaction when there's a remote parent or if it's an activity kind that we want to start a transaction for
             return (bool)activity.HasRemoteParent || _activityKindsThatStartATransaction.Contains((int)activity.Kind);
         }
 
@@ -38,6 +39,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             bool isWeb = (int)activity.Kind == (int)ActivityKind.Server;
 
+            // TODO: Consider using activity source name for category ?? 
             return agent.CreateTransaction(isWeb, "Activity", activity.DisplayName, doNotTrackAsUnitOfWork: true);
         }
 

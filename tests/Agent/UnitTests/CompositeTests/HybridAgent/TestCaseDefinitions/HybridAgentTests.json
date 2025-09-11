@@ -1645,5 +1645,253 @@
                 }
             ]
         }
+    },
+    {
+        "testDescription": "Server HTTP activity with http.route, query params, headers (success path)",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "TxnRouteSuccess"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "HTTP GET api/widgets",
+                            "spanKind": "Server"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.method",
+                                    "value": "GET"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.route",
+                                    "value": "/api/widgets"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "url.query",
+                                    "value": "?foo=bar&baz=qux"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.response.status_code",
+                                    "value": 200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.header.User-Agent",
+                                    "value": "UnitTestAgent/1.0"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.header.Host",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.header.Accept",
+                                    "value": "application/json"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "WebTransaction/Uri/api/widgets",
+                    "attributes": {
+                        "request.method": "GET",
+                        "request.uri": "api/widgets",
+                        "response.status": "200",
+                        "http.statusCode": 200
+                    }
+                }
+            ],
+            "spans": [
+                {
+                    "name": "HTTP GET api/widgets",
+                    "parentName": "WebTransaction/Uri/api/widgets",
+                    "category": "generic",
+                    "attributes": {
+                        "http.request.header.User-Agent": "UnitTestAgent/1.0",
+                        "http.request.header.Host": "localhost",
+                        "http.request.header.Accept": "application/json"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Server HTTP activity with url.path root and error status (status code naming path)",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "TxnRoot404"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "HTTP GET ROOT 404",
+                            "spanKind": "Server"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.method",
+                                    "value": "GET"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "url.path",
+                                    "value": "/"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.status_code",
+                                    "value": 404,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.header.User-Agent",
+                                    "value": "ErrAgent/2.0"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "WebTransaction/StatusCode/404",
+                    "attributes": {
+                        "request.method": "GET",
+                        "request.uri": "ROOT",
+                        "error": true,
+                        "errorType": "404",
+                        "errorMessage": "404",
+                        "response.status": "404",
+                        "http.statusCode": 404
+                    }
+                }
+            ],
+            "spans": [
+                {
+                    "name": "HTTP GET ROOT 404",
+                    "parentName": "WebTransaction/StatusCode/404",
+                    "category": "generic",
+                    "attributes": {
+                        "http.request.header.User-Agent": "ErrAgent/2.0"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Server HTTP activity missing route & path, query with leading ?, partial headers (defaults to ROOT)",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "TxnMissingPath"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "HTTP POST ROOT",
+                            "spanKind": "Server"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.method",
+                                    "value": "POST"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "url.query",
+                                    "value": "?a=1&b=2"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.response.status_code",
+                                    "value": 200,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "http.request.header.Content-Length",
+                                    "value": "15"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "WebTransaction/Uri/ROOT",
+                    "attributes": {
+                        "request.method": "POST",
+                        "request.uri": "ROOT",
+                        "response.status": "200",
+                        "http.statusCode": 200
+                    }
+                }
+            ],
+            "spans": [
+                {
+                    "name": "HTTP POST ROOT",
+                    "parentName": "WebTransaction/Uri/ROOT",
+                    "category": "generic",
+                    "attributes": {
+                        "http.request.header.Content-Length": "15"
+                    }
+                }
+            ]
+        }
     }
 ]
