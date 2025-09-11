@@ -387,6 +387,12 @@ public class ActivityBridge : IDisposable
         dynamic dynamicActivitySource = activitySource;
         string activitySourceName = (string)dynamicActivitySource.Name;
 
+        if (string.IsNullOrWhiteSpace(activitySourceName))
+        {
+            Log.Finest("ShouldListenToActivitySource: Activity source name is null or empty. Not listening.");
+            return false;
+        }
+
         var includedActivitySources = _agent.Configuration.IncludedActivitySources;
         var excludedActivitySources = _agent.Configuration.ExcludedActivitySources;
 
