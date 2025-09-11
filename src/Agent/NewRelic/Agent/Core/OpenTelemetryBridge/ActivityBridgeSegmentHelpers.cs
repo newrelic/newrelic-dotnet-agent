@@ -123,10 +123,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             if (segment is not IHybridAgentSegment hybridAgentSegment)
             {
-                return; // TODO: this shouldn't happen
+                return; // TODO: this shouldn't be possible; don't think we need to check for it
             }
 
             var transaction = hybridAgentSegment.GetTransactionFromSegment();
+
+
+            transaction.SetRequestMethod(requestMethod);
+            transaction.SetUri(path);
+            transaction.SetHttpResponseStatusCode(statusCode);
 
             if (statusCode >= 400)
             {
@@ -136,10 +141,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             {
                 transaction.SetWebTransactionNameFromPath(WebTransactionType.Custom, path);
             }
-
-            transaction.SetRequestMethod(requestMethod);
-            transaction.SetUri(path);
-            transaction.SetHttpResponseStatusCode(statusCode);
 
             if (!string.IsNullOrEmpty(query))
             {
