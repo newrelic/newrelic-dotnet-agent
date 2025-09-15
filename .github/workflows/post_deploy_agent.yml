@@ -12,7 +12,7 @@ on:
         default: true
         required: true
       test_mode:
-        description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue.'
+        description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue, and release tags will not be created.'
         type: boolean
         default: false
         required: true
@@ -27,7 +27,7 @@ on:
         default: true
         required: true
       test_mode:
-        description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue.'
+        description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue, and release tags will not be created.'
         type: boolean
         default: false
         required: false
@@ -61,7 +61,7 @@ jobs:
           wget -O- https://download.newrelic.com/NEWRELIC_APT_2DAD550E.public | sudo gpg --import --batch --no-default-keyring --keyring /usr/share/keyrings/newrelic-apt.gpg
           sudo apt-get update
           sudo apt-get install newrelic-dotnet-agent
-          installed_version=$(dpkg -s newrelic-dotnet-agent | grep -i version)
+          installed_version=$(dpkg -s newrelic-dotnet-agent | grep '^Version:' |cut -d' ' -f2)
           if [ "$AGENT_VERSION" = "$installed_version" ]; then
               echo "Versions match."
               exit 0
@@ -71,7 +71,7 @@ jobs:
           fi
         shell: bash
         env:
-          AGENT_VERSION: "Version: ${{ inputs.agent_version }}"
+          AGENT_VERSION: "${{ inputs.agent_version }}"
 
   validate-apt-repo-ubuntu-2204:
     name: Validate APT-based repo
@@ -94,7 +94,7 @@ jobs:
           wget -O- https://download.newrelic.com/548C16BF.gpg | sudo apt-key add -
           sudo apt-get update
           sudo apt-get install newrelic-dotnet-agent
-          installed_version=$(dpkg -s newrelic-dotnet-agent | grep -i version)
+          installed_version=$(dpkg -s newrelic-dotnet-agent | grep '^Version:' |cut -d' ' -f2)
           if [ "$AGENT_VERSION" = "$installed_version" ]; then
               echo "Versions match."
               exit 0
@@ -104,7 +104,7 @@ jobs:
           fi
         shell: bash
         env:
-          AGENT_VERSION: "Version: ${{ inputs.agent_version }}"
+          AGENT_VERSION: "${{ inputs.agent_version }}"
 
   validate-yum-repo:
     name: Validate YUM-based repo
@@ -145,7 +145,89 @@ jobs:
           fi
         shell: bash
         env:
-          AGENT_VERSION: "newrelic-dotnet-agent-${{ inputs.agent_version }}-1.x86_64"
+          AGENT_VERSION: "${{ inputs.agent_version }}"
+
+  validate-apt-repo-debian-latest:
+    name: Validate APT-based repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Wait for APT to update
+        if: ${{ inputs.wait_for_apt_and_yum }} # only wait if requested
+        run: |
+          echo "Sleeping 5 minutes to wait for apt to update itself"
+          sleep 300
+        shell: bash
+
+      - name: Validate
+        run: |
+          cd deploy/validation/validate-debian-latest
+
+          # This will setup the New Relic apt repo and install the agent.
+          docker build -t localtesting/validate-debian-latest:latest .
+          docker run --name validate-debian-latest localtesting/validate-debian-latest:latest
+          installed_version=$(docker logs --tail 1 validate-debian-latest)
+          if [ "$AGENT_VERSION" = "$installed_version" ]; then
+              echo "Versions match."
+              exit 0
+          else
+              echo "ERROR: Version mismatch: Expected $AGENT_VERSION was $installed_version"
+              exit 1
+          fi
+        shell: bash
+        env:
+          AGENT_VERSION: "${{ inputs.agent_version }}"
+
+  validate-apt-repo-debian-oldest:
+    name: Validate APT-based repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Wait for APT to update
+        if: ${{ inputs.wait_for_apt_and_yum }} # only wait if requested
+        run: |
+          echo "Sleeping 5 minutes to wait for apt to update itself"
+          sleep 300
+        shell: bash
+
+      - name: Validate
+        run: |
+          cd deploy/validation/validate-debian-oldest
+
+          # This will setup the New Relic apt repo and install the agent.
+          docker build -t localtesting/validate-debian-oldest:latest .
+          docker run --name validate-debian-oldest localtesting/validate-debian-oldest:latest
+          installed_version=$(docker logs --tail 1 validate-debian-oldest)
+          if [ "$AGENT_VERSION" = "$installed_version" ]; then
+              echo "Versions match."
+              exit 0
+          else
+              echo "ERROR: Version mismatch: Expected $AGENT_VERSION was $installed_version"
+              exit 1
+          fi
+        shell: bash
+        env:
+          AGENT_VERSION: "${{ inputs.agent_version }}"
 
   validate-download-site-s3:
     name: Validate S3-hosted Download Site
@@ -224,6 +306,7 @@ jobs:
           PUBLISH_PATH: ${{ github.workspace }}/publish
 
   release-tags:
+    if: ${{ inputs.test_mode == false }} # only run if not in test mode
     name: Create release tags
     runs-on: ubuntu-latest
     steps:
