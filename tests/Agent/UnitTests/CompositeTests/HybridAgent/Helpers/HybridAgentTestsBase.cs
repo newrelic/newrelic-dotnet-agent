@@ -271,7 +271,7 @@ public abstract class HybridAgentTestsBase
 
     private void ValidateTransactions(IEnumerable<Transaction> transactionsToCheck)
     {
-        var actualTransactionEvents = GetTransactionEventsFromHarvest();
+        var actualTransactionEvents = GetTransactionEventsFromHarvest().ToList();
 
         if (!transactionsToCheck.Any())
         {
