@@ -292,12 +292,7 @@ public abstract class HybridAgentTestsBase
 
             if (expectedTransaction.Attributes != null && expectedTransaction.Attributes.Any())
             {
-                // Merge intrinsic, agent, and user attributes into a single lookup (we don't care where they came from for this validation)
-                var combined = new Dictionary<string, object>(StringComparer.Ordinal);
-                foreach (var kvp in actual.IntrinsicAttributes()) combined[kvp.Key] = kvp.Value;
-                foreach (var kvp in actual.AgentAttributes()) combined[kvp.Key] = kvp.Value;
-                foreach (var kvp in actual.UserAttributes()) combined[kvp.Key] = kvp.Value;
-
+                var combined = actual.AttributeValues.GetAllAttributeValuesDic();
                 foreach (var expectedAttr in expectedTransaction.Attributes)
                 {
                     Assert.That(combined.ContainsKey(expectedAttr.Key),
