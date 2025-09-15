@@ -41,7 +41,7 @@ env:
 
 jobs:
   validate-apt-repo-ubuntu-latest:
-    name: Validate APT-based repo
+    name: Validate APT repo on latest Ubuntu with new key
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -74,7 +74,7 @@ jobs:
           AGENT_VERSION: "${{ inputs.agent_version }}"
 
   validate-apt-repo-ubuntu-2204:
-    name: Validate APT-based repo
+    name: Validate APT repo on older Ubuntu with old key
     runs-on: ubuntu-22.04
     steps:
       - name: Harden Runner
@@ -149,7 +149,7 @@ jobs:
           AGENT_VERSION: "${{ inputs.agent_version }}"
 
   validate-apt-repo-debian-latest:
-    name: Validate APT-based repo
+    name: Validate APT repo on latest Debian
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -190,7 +190,7 @@ jobs:
           AGENT_VERSION: "${{ inputs.agent_version }}"
 
   validate-apt-repo-debian-oldest:
-    name: Validate APT-based repo
+    name: Validate APT repo on older Debian
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
