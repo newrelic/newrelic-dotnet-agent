@@ -951,6 +951,9 @@ namespace NewRelic.Agent.Core.WireModels
                 txStats.MergeUnscopedStats(webOrOther, data);
             }
 
+            public MetricWireModel TryBuildDistributedTraceHeadersAcceptedLate =>
+                TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceHeadersAcceptedLate);
+
             #endregion Distributed Trace builders
 
             #region Span builders

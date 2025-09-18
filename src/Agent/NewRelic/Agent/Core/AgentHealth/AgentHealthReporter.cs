@@ -391,6 +391,11 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
         }
 
+        public void ReportSupportabilityDistributedTraceHeadersAcceptedLate()
+        {
+            TrySend(_metricBuilder.TryBuildDistributedTraceHeadersAcceptedLate);
+        }
+
         #endregion DistributedTrace
 
         #region TraceContext
