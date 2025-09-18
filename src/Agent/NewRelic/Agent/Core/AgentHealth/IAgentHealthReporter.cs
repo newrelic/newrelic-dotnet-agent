@@ -154,5 +154,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportLoggingEventsEmpty(int count = 1);
         void SetAgentControlStatus((bool IsHealthy, string Code, string Status) healthStatus, params string[] statusParams);
         void PublishAgentControlHealthCheck();
+        void ReportSupportabilityDistributedTraceHeadersAcceptedLate();
     }
 }
