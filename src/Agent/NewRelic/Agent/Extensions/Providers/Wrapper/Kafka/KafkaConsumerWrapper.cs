@@ -37,7 +37,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var existingTransaction = agent.CurrentTransaction.IsValid;
+            var createdNewTransaction = !agent.CurrentTransaction.IsValid;
 
             // create a transaction (or a segment if we are already in a transaction)
             transaction = agent.CreateKafkaTransaction(
@@ -52,10 +52,14 @@ namespace NewRelic.Providers.Wrapper.Kafka
                 try
                 {
                     // null is a valid return value, so we have to handle it. We only want to ignore the transaction if we created it
-                    if (resultAsObject == null && !existingTransaction) 
+                    if (resultAsObject == null) 
                     {
-                        transaction.Ignore();
-                        transaction.End();
+                        if (createdNewTransaction)
+                        {
+                            transaction.Ignore();
+                            transaction.End();
+                        }
+
                         return;
                     }
 
