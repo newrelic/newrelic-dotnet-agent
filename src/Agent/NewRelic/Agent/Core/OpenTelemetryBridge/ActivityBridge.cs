@@ -512,7 +512,7 @@ public class ActivityBridge : IDisposable
 
         if (segment != null)
         {
-            segment.ProcessActivityTags(originalActivity, agent);
+            segment.ProcessActivityTags(originalActivity, agent, errorService);
             segment.AddExceptionEventInformationToSegment(originalActivity, errorService);
             segment.End();
         }
