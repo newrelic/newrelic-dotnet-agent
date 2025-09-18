@@ -199,8 +199,7 @@ namespace NewRelic.Agent.Core.Metrics
                         : MetricName.Create(DatastoreOperation, EnumNameCache<DatastoreVendor>.GetName(vendor), operation);
                 });
         }
-
-        
+                
         public static MetricName GetCustom(string suffix)
         {
             return MetricName.Create(Custom, suffix);
