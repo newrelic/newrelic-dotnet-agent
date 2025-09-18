@@ -128,9 +128,8 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetAndRemoveTag<int>(["server.port", "network.peer.port"], out var port);
 
         // TODO: Otel tracing spec says "component" should be set to the rpc system, but the grpc spec makes no mention of it.
-        // TODO: Adding it as a custom attribute now, but that's almost certainly not correct.
-        // TODO: ExternalSegmentData curently sets Component as an Intrinsic attribute on the span, with a value of _segmentData.TypeName (which ends up being `NewRelic.Agent.Core.OpenTelemetryBridge.ActivityBridge`)  with no override available.  
-        segment.AddCustomAttribute("component", rpcSystem); 
+        // TODO: ExternalSegmentData curently sets Component as an Intrinsic attribute on the span, with a value of _segmentData.TypeName (which ends up being `NewRelic.Agent.Core.OpenTelemetryBridge.ActivityBridge`)  with no override available. So there's no way for us to set the same attribute with a different value.
+        //segment.AddCustomAttribute("component", rpcSystem);
 
         var path = BuildRpcPath(host, port, service, method, grpcMethod);
         Uri uri = new Uri(path);
@@ -171,9 +170,8 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
 
         // TODO: Otel tracing spec says "component" should be set to the rpc system, but the grpc spec makes no mention of it.
-        // TODO: Adding it as a custom attribute now, but that's almost certainly not correct.
-        // TODO: ExternalSegmentData curently sets Component as an Intrinsic attribute on the span, with a value of _segmentData.TypeName (which ends up being `NewRelic.Agent.Core.OpenTelemetryBridge.ActivityBridge`)  with no override available.  
-        segment.AddCustomAttribute("component", rpcSystem);
+        // TODO: ExternalSegmentData curently sets Component as an Intrinsic attribute on the span, with a value of _segmentData.TypeName (which ends up being `NewRelic.Agent.Core.OpenTelemetryBridge.ActivityBridge`)  with no override available. So there's no way for us to set the same attribute with a different value.
+        //segment.AddCustomAttribute("component", rpcSystem);
 
         var transaction = hybridAgentSegment.GetTransactionFromSegment();
 

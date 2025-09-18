@@ -1895,7 +1895,7 @@
         }
     },
     {
-        "testDescription": "Client RPC gRPC success creates external span with status 0",
+        "testDescription": "RPC Client gRPC success creates external span with status 0",
         "operations": [
             {
                 "command": "DoWorkInTransaction",
@@ -1984,7 +1984,7 @@
         }
     },
     {
-        "testDescription": "Client RPC gRPC error non-zero status records error",
+        "testDescription": "RPC Client gRPC error non-zero status records error",
         "operations": [
             {
                 "command": "DoWorkInTransaction",
@@ -2078,7 +2078,7 @@
         }
     },
     {
-        "testDescription": "Client RPC gRPC no status code (omitted status attribute)",
+        "testDescription": "RPC Client gRPC no status code (omitted status attribute)",
         "operations": [
             {
                 "command": "DoWorkInTransaction",
@@ -2158,7 +2158,7 @@
         }
     },
     {
-        "testDescription": "Client RPC gRPC path derived from grpc.method when service missing",
+        "testDescription": "RPC Client gRPC path derived from grpc.method when service missing",
         "operations": [
             {
                 "command": "DoWorkInTransaction",
@@ -2240,6 +2240,189 @@
                         "http.request.method": "UnaryCall",
                         "http.statusCode": 0,
                         "http.url": "grpc://grpc.example.com:6000/pkg.alt.Service/UnaryCall"
+                        //"component": "grpc" -- doesn't work currently
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "RPC Server gRPC success with status code 0",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": { "transactionName": "RpcServerTxnSuccess" },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": { "spanName": "Grpc Server Success", "spanKind": "Server" },
+                        "childOperations": [
+                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.system", "value": "grpc" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.service", "value": "my.test.Service" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.method", "value": "GetItem" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.grpc.status_code", "value": 0, "type": "int" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "server.address", "value": "localhost" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "server.port", "value": 50051, "type": "int" } }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "RpcServerTxnSuccess",
+                    "attributes": {
+                        "request.method": "GetItem",
+                        "request.uri": "grpc://localhost:50051/my.test.Service/GetItem",
+                        "response.status": "0",
+                        "http.statusCode": 0
+                    }
+                }
+            ],
+            "spans": [
+                {
+                    "name": "Grpc Server Success",
+                    "parentName": "RpcServerTxnSuccess",
+                    "category": "generic",
+                    "attributes": {
+                        //"component": "grpc" -- doesn't work currently
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "RPC Server gRPC error non-zero status records error",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": { "transactionName": "RpcServerTxnError" },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": { "spanName": "Grpc Server Error", "spanKind": "Server" },
+                        "childOperations": [
+                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.system", "value": "grpc" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.service", "value": "my.test.Service" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.method", "value": "GetItem" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.grpc.status_code", "value": 14, "type": "int" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "server.address", "value": "localhost" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "server.port", "value": 50051, "type": "int" } }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "RpcServerTxnError",
+                    "attributes": {
+                        "request.method": "GetItem",
+                        "request.uri": "grpc://localhost:50051/my.test.Service/GetItem",
+                        "response.status": "14",
+                        "http.statusCode": 14,
+                        "error": true,
+                        "errorType": "Custom Error",
+                        "errorMessage": "gRPC call to grpc://localhost:50051/my.test.Service/GetItem failed with status code 14"
+                    }
+                }
+            ],
+            "spans": [
+                {
+                    "name": "Grpc Server Error",
+                    "parentName": "RpcServerTxnError",
+                    "category": "generic",
+                    "attributes": {
+                        //"component": "grpc" -- doesn't work currently
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "RPC Server gRPC with only grpc.method (no service) no status code",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": { "transactionName": "RpcServerTxnGrpcMethodOnly" },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": { "spanName": "Grpc Server GrpcMethodOnly", "spanKind": "Server" },
+                        "childOperations": [
+                            { "command": "AddOTelAttribute", "parameters": { "name": "grpc.method", "value": "/pkg.alt.Service/UnaryCall" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "server.address", "value": "grpc.example.com" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "server.port", "value": 6000, "type": "int" } }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "RpcServerTxnGrpcMethodOnly",
+                    "attributes": {
+                        "request.method": "/pkg.alt.Service/UnaryCall",
+                        "request.uri": "grpc://grpc.example.com:6000/pkg.alt.Service/UnaryCall"
+                    }
+                }
+            ],
+            "spans": [
+                {
+                    "name": "Grpc Server GrpcMethodOnly",
+                    "parentName": "RpcServerTxnGrpcMethodOnly",
+                    "category": "generic",
+                    "attributes": {
+                        //"component": "grpc" -- doesn't work currently
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "RPC Server gRPC minimal tags (rpc.system only) unknown method with error status",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": { "transactionName": "RpcServerTxnMinimal" },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": { "spanName": "Grpc Server Minimal", "spanKind": "Server" },
+                        "childOperations": [
+                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.system", "value": "grpc" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.grpc.status_code", "value": 3, "type": "int" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "server.address", "value": "bare.example.com" } },
+                            { "command": "AddOTelAttribute", "parameters": { "name": "server.port", "value": 7777, "type": "int" } }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "RpcServerTxnMinimal",
+                    "attributes": {
+                        "request.method": "Unknown",
+                        "request.uri": "grpc://bare.example.com:7777",
+                        "response.status": "3",
+                        "http.statusCode": 3,
+                        "error": true,
+                        "errorType": "Custom Error",
+                        "errorMessage": "gRPC call to grpc://bare.example.com:7777 failed with status code 3"
+                    }
+                }
+            ],
+            "spans": [
+                {
+                    "name": "Grpc Server Minimal",
+                    "parentName": "RpcServerTxnMinimal",
+                    "category": "generic",
+                    "attributes": {
                         //"component": "grpc" -- doesn't work currently
                     }
                 }
