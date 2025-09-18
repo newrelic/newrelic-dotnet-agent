@@ -1893,5 +1893,357 @@
                 }
             ]
         }
+    },
+    {
+        "testDescription": "Client RPC gRPC success creates external span with status 0",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "GrpcClientCall1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.system",
+                                    "value": "grpc"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.service",
+                                    "value": "my.test.Service"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.method",
+                                    "value": "GetItem"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.grpc.status_code",
+                                    "value": 0,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 50051,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "External/localhost/Stream/GetItem",
+                    "parentName": "Foo",
+                    "category": "http",
+                    "attributes": {
+                        "span.kind": "client",
+                        "server.address": "localhost",
+                        "server.port": 50051,
+                        "http.request.method": "GetItem",
+                        "http.statusCode": 0,
+                        "http.url": "grpc://localhost:50051/my.test.Service/GetItem"
+                        //"component": "grpc" -- doesn't work currently
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client RPC gRPC error non-zero status records error",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "GrpcClientCallError",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.system",
+                                    "value": "grpc"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.service",
+                                    "value": "my.test.Service"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.method",
+                                    "value": "GetItem"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.grpc.status_code",
+                                    "value": 14,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 50051,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo",
+                    "attributes": {
+                        "error": true,
+                        "errorType": "Custom Error",
+                        "errorMessage": "gRPC call to grpc://localhost:50051/my.test.Service/GetItem failed with status code 14"
+                    }
+                }
+            ],
+            "spans": [
+                {
+                    "name": "External/localhost/Stream/GetItem",
+                    "parentName": "Foo",
+                    "category": "http",
+                    "attributes": {
+                        "span.kind": "client",
+                        "server.address": "localhost",
+                        "server.port": 50051,
+                        "http.request.method": "GetItem",
+                        "http.statusCode": 14,
+                        "http.url": "grpc://localhost:50051/my.test.Service/GetItem"
+                        //"component": "grpc" -- doesn't work currently
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client RPC gRPC no status code (omitted status attribute)",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "GrpcClientCallNoStatus",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.system",
+                                    "value": "grpc"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.service",
+                                    "value": "my.test.Service"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.method",
+                                    "value": "ListItems"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 50052,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "External/localhost/Stream/ListItems",
+                    "parentName": "Foo",
+                    "category": "http",
+                    "attributes": {
+                        "span.kind": "client",
+                        "server.address": "localhost",
+                        "server.port": 50052,
+                        "http.request.method": "ListItems",
+                        "http.url": "grpc://localhost:50052/my.test.Service/ListItems"
+                        //"component": "grpc" -- doesn't work currently
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client RPC gRPC path derived from grpc.method when service missing",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "GrpcClientCallGrpcMethodOnly",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.system",
+                                    "value": "grpc"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "grpc.method",
+                                    "value": "/pkg.alt.Service/UnaryCall"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.method",
+                                    "value": "UnaryCall"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.grpc.status_code",
+                                    "value": 0,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "grpc.example.com"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 6000,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "External/grpc.example.com/Stream/UnaryCall",
+                    "parentName": "Foo",
+                    "category": "http",
+                    "attributes": {
+                        "span.kind": "client",
+                        "server.address": "grpc.example.com",
+                        "server.port": 6000,
+                        "http.request.method": "UnaryCall",
+                        "http.statusCode": 0,
+                        "http.url": "grpc://grpc.example.com:6000/pkg.alt.Service/UnaryCall"
+                        //"component": "grpc" -- doesn't work currently
+                    }
+                }
+            ]
+        }
     }
 ]
