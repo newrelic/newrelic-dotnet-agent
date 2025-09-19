@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using Telerik.JustMock;
 
 namespace CompositeTests.CrossAgentTests.DistributedTracing
@@ -23,7 +24,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
     {
         private static CompositeTestAgent _compositeTestAgent;
         private IAgent _agent;
-        private static IAdaptiveSampler _adaptiveSampler;
+        private static ISampler _sampler;
 
         private static List<TestCaseData> TraceContextTestCaseData => GetTraceContextTestData();
 
@@ -32,7 +33,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
         {
             _compositeTestAgent = new CompositeTestAgent();
             _agent = _compositeTestAgent.GetAgent();
-            _adaptiveSampler = Mock.Create<IAdaptiveSampler>(Behavior.CallOriginal);
+            _sampler = Mock.Create<ISampler>(Behavior.CallOriginal);
         }
 
         [TearDown]
@@ -91,7 +92,8 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             if (testData.ForceSampledTrue)
             {
                 var priority = 1.0f;
-                Mock.Arrange(() => _adaptiveSampler.ComputeSampled(ref priority)).IgnoreArguments().Returns(true);
+                Mock.Arrange(() => _sampler.ShouldSample(Arg.IsAny<ISamplingParameters>()))
+                    .Returns(new SamplingResult(true, priority));
             }
 
             _compositeTestAgent.LocalConfiguration.spanEvents.enabled = testData.SpanEventsEnabled;
