@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
@@ -89,7 +90,7 @@ public class SamplerService : ConfigurationBasedService, ISamplerService
     /// <param name="sampler">The mock or stub sampler to use for testing.</param>
     public void ReplaceAdaptiveSamplerForTesting(ISampler sampler)
     {
-        foreach (var key in _samplers.Keys)
+        foreach (var key in _samplers.Keys.ToList())
         {
             if (_samplers[key] is AdaptiveSampler)
             {

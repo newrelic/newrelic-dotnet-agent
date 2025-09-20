@@ -52,6 +52,8 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 
             _compositeTestAgent.Harvest();
 
+            ValidateExpectedPriority(testData);
+
             ValidateIntrinsics(testData);
 
             ValidateMetrics(testData);
@@ -407,6 +409,19 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                 JArray actualVendors = (JArray)tracestateJson["tracestate"]["vendors"];
 
                 Assert.That(JToken.DeepEquals(actualVendors, payloadSettings.Vendors), $"Expected vendors {payloadSettings.Vendors}, actual: {actualVendors}");
+            }
+        }
+
+        private void ValidateExpectedPriority(TraceContextTestData testData)
+        {
+            if (testData.ExpectedPriorityBetween != null)
+            {
+                var minValue = testData.ExpectedPriorityBetween[0];
+                var maxValue = testData.ExpectedPriorityBetween[1];
+                var transactionEvent = _compositeTestAgent.TransactionEvents?.First();
+
+                Assert.That(transactionEvent, Is.Not.Null, "A transaction event was expected to be found.");
+                Assert.That(transactionEvent.Priority, Is.InRange(minValue, maxValue), $"Actual priority {transactionEvent.Priority} not in expected range [{minValue}, {maxValue}]");
             }
         }
 
