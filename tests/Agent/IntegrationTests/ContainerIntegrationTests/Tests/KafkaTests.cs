@@ -39,11 +39,13 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             exerciseApplication: () =>
             {
                 _fixture.Delay(15); // wait long enough to ensure kafka and app are ready
+                _fixture.TestLogger.WriteLine("Starting exercise application");
                 _fixture.ExerciseApplication();
 
                 _bootstrapServer = _fixture.GetBootstrapServer();
 
-                _fixture.Delay(11); // wait long enough to ensure a metric harvest occurs after we exercise the app
+                _fixture.TestLogger.WriteLine("Waiting for metrics to be harvested");
+                _fixture.Delay(12); // wait long enough to ensure a metric harvest occurs after we exercise the app
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(11));
 
                 // shut down the container and wait for the agent log to see it
@@ -63,7 +65,8 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
 
         var messageBrokerConsume = "MessageBroker/Kafka/Topic/Consume/Named/" + _topicName;
 
-        var consumeTransactionName = @"OtherTransaction/Message/Kafka/Topic/Consume/Named/" + _topicName;
+        var consumeTransactionName1 = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithTimeoutAsync";
+        var consumeTransactionName2 = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithTimeoutAsync";
         var produceWebTransactionName = @"WebTransaction/MVC/Kafka/Produce";
 
         var messageBrokerNode = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}";
@@ -73,7 +76,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var metrics = _fixture.AgentLog.GetMetrics();
         var spans = _fixture.AgentLog.GetSpanEvents();
         var produceSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(messageBrokerProduce));
-        var consumeTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeTransactionName));
+        var consumeTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeTransactionName1));
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
@@ -85,9 +88,11 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             new() { metricName = messageBrokerProduceSerializationValue, callCount = 2 },
             new() { metricName = messageBrokerProduceSerializationValue, metricScope = produceWebTransactionName, callCount = 2 },
 
-            new() { metricName = consumeTransactionName, callCount = 2 },
+            new() { metricName = consumeTransactionName1, callCount = 1 },
+            new() { metricName = consumeTransactionName2, callCount = 1 },
             new() { metricName = messageBrokerConsume, callCount = 2 },
-            new() { metricName = messageBrokerConsume, metricScope = consumeTransactionName, callCount = 2 },
+            new() { metricName = messageBrokerConsume, metricScope = consumeTransactionName2, callCount = 1 },
+            new() { metricName = messageBrokerConsume, metricScope = consumeTransactionName2, callCount = 1 },
             new() { metricName = "Supportability/TraceContext/Create/Success", callCount = 2 },
             new() { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 },
 

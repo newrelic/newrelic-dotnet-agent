@@ -25,8 +25,12 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
     public virtual void ExerciseApplication()
     {
         var address = $"http://localhost:{Port}/kafka/";
+
         GetAndAssertStatusCode(address + "produce", System.Net.HttpStatusCode.OK);
         GetAndAssertStatusCode(address + "produceasync", System.Net.HttpStatusCode.OK);
+
+        GetAndAssertStatusCode(address + "consumewithtimeout", System.Net.HttpStatusCode.OK);
+        GetAndAssertStatusCode(address + "consumewithcancellationtoken", System.Net.HttpStatusCode.OK);
     }
 
     public string GetBootstrapServer()
