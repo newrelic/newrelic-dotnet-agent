@@ -73,7 +73,9 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var messageBrokerNodeProduceTopic = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}/Produce/{_topicName}";
         var messageBrokerNodeConsumeTopic = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}/Consume/{_topicName}";
 
-        var metrics = _fixture.AgentLog.GetMetrics();
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+        
+
         var spans = _fixture.AgentLog.GetSpanEvents();
         var produceSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(messageBrokerProduce));
         var consumeWithTimeoutTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeWithTimeoutTransactionName));
@@ -81,25 +83,25 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = produceWebTransactionName, callCount = 2 }, // includes sync and async actions
-            new() { metricName = messageBrokerProduce, callCount = 2 },
-            new() { metricName = messageBrokerProduce, metricScope = produceWebTransactionName, callCount = 2 },
-            new() { metricName = messageBrokerProduceSerializationKey, callCount = 2 },
-            new() { metricName = messageBrokerProduceSerializationKey, metricScope = produceWebTransactionName, callCount = 2 },
-            new() { metricName = messageBrokerProduceSerializationValue, callCount = 2 },
-            new() { metricName = messageBrokerProduceSerializationValue, metricScope = produceWebTransactionName, callCount = 2 },
+            new() { metricName = produceWebTransactionName, CallCountAllHarvests = 4 }, // includes sync and async actions
+            new() { metricName = messageBrokerProduce, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduce, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduceSerializationKey, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduceSerializationKey, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduceSerializationValue, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduceSerializationValue, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
 
-            new() { metricName = consumeWithTimeoutTransactionName, callCount = 2 },
-            new() { metricName = consumeWithCancellationTransactionName, callCount = 2 },
-            new() { metricName = messageBrokerConsume, callCount = 4 },
-            new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, callCount = 2 },
-            new() { metricName = messageBrokerConsume, metricScope = consumeWithCancellationTransactionName, callCount = 2 },
-            new() { metricName = "Supportability/TraceContext/Create/Success", callCount = 2 },
-            new() { metricName = "Supportability/TraceContext/Accept/Success", callCount = 4 },
+            new() { metricName = consumeWithTimeoutTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = consumeWithCancellationTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = messageBrokerConsume, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = messageBrokerConsume, metricScope = consumeWithCancellationTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 4 },
+            new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 4 },
 
-            new() { metricName = messageBrokerNode, callCount = 8 },
-            new() { metricName = messageBrokerNodeProduceTopic, callCount = 4 },
-            new() { metricName = messageBrokerNodeConsumeTopic, callCount = 4 }
+            new() { metricName = messageBrokerNode, CallCountAllHarvests = 8 },
+            new() { metricName = messageBrokerNodeProduceTopic, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerNodeConsumeTopic, CallCountAllHarvests = 4 }
         };
 
         NrAssert.Multiple(
