@@ -19,7 +19,7 @@ namespace KafkaTestApp
         private readonly IConfiguration _configuration;
         private readonly ILogger<Consumer> _logger;
 
-        private sealed record ConsumeRequest(ConsumptionMode Mode, TaskCompletionSource Tcs);
+        private sealed record ConsumeRequest(ConsumptionMode Mode);
 
         private readonly Channel<ConsumeRequest> _requests =
             Channel.CreateUnbounded<ConsumeRequest>(new UnboundedChannelOptions
@@ -39,12 +39,13 @@ namespace KafkaTestApp
         public Task RequestConsumeAsync(ConsumptionMode mode)
         {
             _logger.LogInformation("Queueing consume request ({Mode}).", mode);
-            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            if (!_requests.Writer.TryWrite(new ConsumeRequest(mode, tcs)))
+            if (!_requests.Writer.TryWrite(new ConsumeRequest(mode)))
             {
-                tcs.SetException(new InvalidOperationException("Unable to queue consume request."));
+                _logger.LogError("Unable to queue consume request ({Mode}) - channel is closed.", mode);
+                return Task.FromException(new InvalidOperationException("Channel is closed."));
             }
-            return tcs.Task;
+
+            return Task.CompletedTask;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -68,13 +69,12 @@ namespace KafkaTestApp
                                     await ConsumeOneWithCancellationTokenAsync();
                                     break;
                             }
-                            req.Tcs.TrySetResult();
                             _logger.LogInformation("Completed consume request ({Mode}).", req.Mode);
                         }
                         catch (Exception ex)
                         {
                             _logger.LogError(ex, "Error processing consume request ({Mode}).", req.Mode);
-                            req.Tcs.TrySetException(ex);
+                            // Errors are now only logged (caller is not notified).
                         }
                     }
                 }
@@ -86,11 +86,8 @@ namespace KafkaTestApp
             finally
             {
                 _logger.LogInformation("Consumer background service is stopping.");
-                // Cancel any pending queued requests
-                while (_requests.Reader.TryRead(out var leftover))
-                {
-                    leftover.Tcs.TrySetCanceled(stoppingToken);
-                }
+                // Drain any leftover queued requests (they are fire-and-forget now).
+                while (_requests.Reader.TryRead(out _)) { }
             }
         }
 
@@ -102,6 +99,7 @@ namespace KafkaTestApp
             try
             {
                 var result = consumer.Consume(120 * 1000);
+                // Simulate some processing time
                 int delay = Random.Shared.Next(500, 1000);
                 await Task.Delay(delay);
 
@@ -130,7 +128,8 @@ namespace KafkaTestApp
             try
             {
                 var result = consumer.Consume(cts.Token);
-                int delay = Random.Shared.Next(250, 500);
+                // Simulate some processing time - longer than the timeout version to ensure this transaction is sampled
+                int delay = Random.Shared.Next(1000, 2000);
                 await Task.Delay(delay, cts.Token);
 
                 _logger.LogInformation("ConsumeOneWithCancellationToken: Consumed message '{MessageValue}' at: '{ResultTopicPartitionOffset}'.",

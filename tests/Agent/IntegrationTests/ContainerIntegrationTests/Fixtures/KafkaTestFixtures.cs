@@ -28,9 +28,16 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
 
         GetAndAssertStatusCode(address + "produce", System.Net.HttpStatusCode.OK);
         GetAndAssertStatusCode(address + "produceasync", System.Net.HttpStatusCode.OK);
-
         GetAndAssertStatusCode(address + "consumewithtimeout", System.Net.HttpStatusCode.OK);
+        GetAndAssertStatusCode(address + "consumewithtimeout", System.Net.HttpStatusCode.OK);
+
+        GetAndAssertStatusCode(address + "produce", System.Net.HttpStatusCode.OK);
         GetAndAssertStatusCode(address + "consumewithcancellationtoken", System.Net.HttpStatusCode.OK);
+
+        // start a consume on an empty queue so we can verify that the Consume(CancellationToken) overload is correctly suppressing the Consume(int) overload calls
+        GetAndAssertStatusCode(address + "consumewithcancellationtoken", System.Net.HttpStatusCode.OK);
+        Delay(1); // wait a bit to ensure the consumer is started before we produce
+        GetAndAssertStatusCode(address + "produceasync", System.Net.HttpStatusCode.OK); // produce after the consume is started so we know the consume will get a message
     }
 
     public string GetBootstrapServer()

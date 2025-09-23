@@ -45,7 +45,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
                 _bootstrapServer = _fixture.GetBootstrapServer();
 
                 _fixture.TestLogger.WriteLine("Waiting for metrics to be harvested");
-                _fixture.Delay(12); // wait long enough to ensure a metric harvest occurs after we exercise the app
+                _fixture.Delay(30); // wait long enough to ensure a metric harvest occurs after we exercise the app
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(11));
 
                 // shut down the container and wait for the agent log to see it
@@ -65,8 +65,8 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
 
         var messageBrokerConsume = "MessageBroker/Kafka/Topic/Consume/Named/" + _topicName;
 
-        var consumeTransactionName1 = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithTimeoutAsync";
-        var consumeTransactionName2 = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithTimeoutAsync";
+        var consumeWithTimeoutTransactionName = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithTimeoutAsync";
+        var consumeWithCancellationTransactionName = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithCancellationTokenAsync";
         var produceWebTransactionName = @"WebTransaction/MVC/Kafka/Produce";
 
         var messageBrokerNode = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}";
@@ -76,7 +76,8 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var metrics = _fixture.AgentLog.GetMetrics();
         var spans = _fixture.AgentLog.GetSpanEvents();
         var produceSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(messageBrokerProduce));
-        var consumeTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeTransactionName1));
+        var consumeWithTimeoutTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeWithTimeoutTransactionName));
+        var consumeWithCancellationTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeWithCancellationTransactionName));
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
@@ -88,28 +89,33 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             new() { metricName = messageBrokerProduceSerializationValue, callCount = 2 },
             new() { metricName = messageBrokerProduceSerializationValue, metricScope = produceWebTransactionName, callCount = 2 },
 
-            new() { metricName = consumeTransactionName1, callCount = 1 },
-            new() { metricName = consumeTransactionName2, callCount = 1 },
-            new() { metricName = messageBrokerConsume, callCount = 2 },
-            new() { metricName = messageBrokerConsume, metricScope = consumeTransactionName2, callCount = 1 },
-            new() { metricName = messageBrokerConsume, metricScope = consumeTransactionName2, callCount = 1 },
+            new() { metricName = consumeWithTimeoutTransactionName, callCount = 2 },
+            new() { metricName = consumeWithCancellationTransactionName, callCount = 2 },
+            new() { metricName = messageBrokerConsume, callCount = 4 },
+            new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, callCount = 2 },
+            new() { metricName = messageBrokerConsume, metricScope = consumeWithCancellationTransactionName, callCount = 2 },
             new() { metricName = "Supportability/TraceContext/Create/Success", callCount = 2 },
-            new() { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 },
+            new() { metricName = "Supportability/TraceContext/Accept/Success", callCount = 4 },
 
-            new() { metricName = messageBrokerNode, callCount = 4 },
-            new() { metricName = messageBrokerNodeProduceTopic, callCount = 2 },
-            new() { metricName = messageBrokerNodeConsumeTopic, callCount = 2 }
+            new() { metricName = messageBrokerNode, callCount = 8 },
+            new() { metricName = messageBrokerNodeProduceTopic, callCount = 4 },
+            new() { metricName = messageBrokerNodeConsumeTopic, callCount = 4 }
         };
 
         NrAssert.Multiple(
             () => Assertions.MetricsExist(expectedMetrics, metrics),
             () => Assert.True(produceSpan.IntrinsicAttributes.ContainsKey("traceId")),
             () => Assert.True(produceSpan.IntrinsicAttributes.ContainsKey("parentId")),
-            () => Assert.NotNull(consumeTxnSpan),
-            () => Assert.True(consumeTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
-            () => Assert.InRange((long)consumeTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 470), // includes headers
-            () => Assert.True(consumeTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
-            () => Assert.True(consumeTxnSpan.IntrinsicAttributes.ContainsKey("parentId"))
+            () => Assert.NotNull(consumeWithTimeoutTxnSpan),
+            () => Assert.True(consumeWithTimeoutTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
+            () => Assert.InRange((long)consumeWithTimeoutTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 470), // includes headers
+            () => Assert.True(consumeWithTimeoutTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
+            () => Assert.True(consumeWithTimeoutTxnSpan.IntrinsicAttributes.ContainsKey("parentId")),
+            () => Assert.NotNull(consumeWithCancellationTxnSpan),
+            () => Assert.True(consumeWithCancellationTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
+            () => Assert.InRange((long)consumeWithCancellationTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 470), // includes headers
+            () => Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
+            () => Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("parentId"))
         );
     }
 
