@@ -44,7 +44,8 @@ namespace Agent.Extensions.Tests.Helpers
                 Arg.IsAny<string>(),
                 Arg.IsAny<string>(),
                 Arg.IsAny<int?>(),
-                Arg.IsAny<string>()))
+                Arg.IsAny<string>(),
+                Arg.IsAny<bool>()))
                 .Returns(new TestSegment());
         }
 
@@ -175,7 +176,8 @@ namespace Agent.Extensions.Tests.Helpers
                 "us-east-2",
                 Arg.IsAny<string>(),
                 Arg.IsAny<int?>(),
-                Arg.IsAny<string>()), Occurs.Once());
+                Arg.IsAny<string>(),
+                Arg.IsAny<bool>()), Occurs.Once());
         }
 
         [Test]
@@ -202,12 +204,13 @@ namespace Agent.Extensions.Tests.Helpers
                 SqsHelper.VendorName,
                 null,
                 SqsHelper.
-                MessagingSystemName,
+                    MessagingSystemName,
                 null,
                 null,
                 Arg.IsAny<string>(),
                 Arg.IsAny<int?>(),
-                Arg.IsAny<string>()), Occurs.Once());
+                Arg.IsAny<string>(),
+                Arg.IsAny<bool>()), Occurs.Once());
         }
     }
 

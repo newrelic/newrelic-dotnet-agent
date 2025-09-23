@@ -95,12 +95,13 @@ namespace NewRelic.Agent.Api
         /// <param name="serverAddress"></param>
         /// <param name="serverPort"></param>
         /// <param name="routingKey"></param>
+        /// <param name="isLeaf"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <returns>an opaque object that will be needed when you want to end the segment.</returns>
         ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
             MessageBrokerAction operation, string brokerVendorName, string destinationName = null,
             string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
-            string serverAddress = null, int? serverPort = null, string routingKey = null);
+            string serverAddress = null, int? serverPort = null, string routingKey = null, bool isLeaf = false);
 
         /// <summary>
         /// Creates a segment for serializing a key or value in a message brokering system..

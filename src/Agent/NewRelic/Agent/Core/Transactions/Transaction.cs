@@ -308,7 +308,7 @@ namespace NewRelic.Agent.Core.Transactions
         public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
             MessageBrokerAction operation, string brokerVendorName, string destinationName,
             string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
-            string serverAddress = null, int? serverPort = null, string routingKey = null)
+            string serverAddress = null, int? serverPort = null, string routingKey = null, bool isLeaf = false)
         {
             if (Ignored)
                 return Segment.NoOpSegment;
@@ -317,6 +317,10 @@ namespace NewRelic.Agent.Core.Transactions
 
 
             var segment = StartSegmentImpl(methodCall);
+
+            if (isLeaf)
+                segment.MakeLeaf();
+
             var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName, cloudAccountId, cloudRegion, serverAddress, serverPort, routingKey);
 
             segment.SetSegmentData(messageBrokerSegmentData);
