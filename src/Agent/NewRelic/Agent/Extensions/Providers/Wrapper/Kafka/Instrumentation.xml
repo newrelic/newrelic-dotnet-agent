@@ -17,6 +17,7 @@ SPDX-License-Identifier: Apache-2.0
     <tracerFactory name="KafkaConsumerWrapper">
       <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Consumer`2">
         <exactMethodMatcher methodName="Consume" parameters="System.Int32"/>
+        <exactMethodMatcher methodName="Consume" parameters="System.Threading.CancellationToken"/>
       </match>
     </tracerFactory>
 
