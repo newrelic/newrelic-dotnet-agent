@@ -201,8 +201,7 @@ namespace Agent.Extensions.Tests.Helpers
                 action,
                 SqsHelper.VendorName,
                 null,
-                SqsHelper.
-                    MessagingSystemName,
+                SqsHelper.MessagingSystemName,
                 null,
                 null,
                 Arg.IsAny<string>(),
