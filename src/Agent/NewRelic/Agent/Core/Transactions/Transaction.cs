@@ -315,11 +315,7 @@ namespace NewRelic.Agent.Core.Transactions
             if (brokerVendorName == null)
                 throw new ArgumentNullException("brokerVendorName");
 
-
             var segment = StartSegmentImpl(methodCall);
-
-            if (isLeaf)
-                segment.MakeLeaf();
 
             var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName, cloudAccountId, cloudRegion, serverAddress, serverPort, routingKey);
 
