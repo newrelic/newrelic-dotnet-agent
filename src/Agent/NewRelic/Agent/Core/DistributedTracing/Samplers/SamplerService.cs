@@ -24,10 +24,10 @@ public class SamplerService : ConfigurationBasedService, ISamplerService
     /// Returns the appropriate sampler based on the SamplerLevel.
     /// Will be <c>null</c> for RemoteParentSampled or RemoteParentNotSampled if the behavior is set to Default.
     /// </summary>
-    /// <param name="SamplerLevel"></param>
+    /// <param name="samplerLevel"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public ISampler GetSampler(SamplerLevel SamplerLevel) => _samplers.TryGetValue(SamplerLevel, out var sampler) ? sampler : throw new ArgumentOutOfRangeException();
+    public ISampler GetSampler(SamplerLevel samplerLevel) => _samplers.TryGetValue(samplerLevel, out var sampler) ? sampler : throw new ArgumentOutOfRangeException();
 
     protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
     {
@@ -43,8 +43,8 @@ public class SamplerService : ConfigurationBasedService, ISamplerService
 
     private void InitializeSamplers()
     {
-        _samplers[SamplerLevel.Root] = _samplerFactory.CreateSampler(SamplerLevel.Root, _configuration.RootSamplerType, _configuration.RootTraceIdRatioSamplerRatio);
-        _samplers[SamplerLevel.RemoteParentSampled] = _samplerFactory.CreateSampler(SamplerLevel.RemoteParentSampled, _configuration.RemoteParentSampledSamplerType, _configuration.RemoteParentSampledTraceIdRatioSamplerRatio);
-        _samplers[SamplerLevel.RemoteParentNotSampled] = _samplerFactory.CreateSampler(SamplerLevel.RemoteParentNotSampled, _configuration.RemoteParentNotSampledSamplerType, _configuration.RemoteParentNotSampledTraceIdRatioSamplerRatio);
+        _samplers[SamplerLevel.Root] = _samplerFactory.CreateSampler(_configuration.RootSamplerType, _configuration.RootTraceIdRatioSamplerRatio);
+        _samplers[SamplerLevel.RemoteParentSampled] = _samplerFactory.CreateSampler(_configuration.RemoteParentSampledSamplerType, _configuration.RemoteParentSampledTraceIdRatioSamplerRatio);
+        _samplers[SamplerLevel.RemoteParentNotSampled] = _samplerFactory.CreateSampler(_configuration.RemoteParentNotSampledSamplerType, _configuration.RemoteParentNotSampledTraceIdRatioSamplerRatio);
     }
 }

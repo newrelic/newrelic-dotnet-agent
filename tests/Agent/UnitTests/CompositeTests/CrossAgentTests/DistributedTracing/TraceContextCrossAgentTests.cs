@@ -26,47 +26,25 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
     {
         private static CompositeTestAgent _compositeTestAgent;
         private IAgent _agent;
-        private ISamplerFactory _samplerFactory;
-        private static ISampler _sampler;
+        private SamplerFactory _samplerFactory;
 
         private static List<TestCaseData> TraceContextTestCaseData => GetTraceContextTestData();
 
         [SetUp]
         public void Setup()
         {
-            _samplerFactory = Mock.Create<ISamplerFactory>();
-
-            // Create a mock sampler that we can control to force sampling decisions
-            _sampler = Mock.Create<ISampler>();
-            Mock.Arrange(() => _samplerFactory.CreateSampler(Arg.IsAny<SamplerLevel>(), Arg.IsAny<SamplerType>(), Arg.IsAny<float?>()))
-                .Returns((SamplerLevel samplerLevel, SamplerType samplerType, float? ratio) =>
-                {
-                    switch (samplerType)
-                    {
-                        case SamplerType.Adaptive:
-                        case SamplerType.Default:
-                            return samplerLevel == SamplerLevel.Root ? _sampler : null;
-                        case SamplerType.AlwaysOn:
-                            return AlwaysOnSampler.Instance;
-                        case SamplerType.AlwaysOff:
-                            return AlwaysOffSampler.Instance;
-                        case SamplerType.TraceIdRatioBased when !ratio.HasValue:
-                            return samplerLevel == SamplerLevel.Root ? _sampler : null;
-                        case SamplerType.TraceIdRatioBased:
-                            return new TraceIdRatioSampler(ratio.Value);
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                });
+            _samplerFactory = Mock.Create<SamplerFactory>(Behavior.CallOriginal);
 
             _compositeTestAgent = new CompositeTestAgent(samplerFactory: _samplerFactory);
+
             _agent = _compositeTestAgent.GetAgent();
         }
 
         [TearDown]
-        public static void TearDown()
+        public void TearDown()
         {
             _compositeTestAgent.Dispose();
+            _samplerFactory.Dispose();
         }
 
         [TestCaseSource(nameof(TraceContextTestCaseData))]
@@ -116,13 +94,17 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             return testCaseData;
         }
 
-        private static void InitializeSettings(TraceContextTestData testData)
+        private void InitializeSettings(TraceContextTestData testData)
         {
             if (testData.ForceSampledTrue)
             {
                 var priority = 1.0f;
-                Mock.Arrange(() => _sampler.ShouldSample(Arg.IsAny<ISamplingParameters>()))
+                var sampler = Mock.Create<ISampler>();
+                Mock.Arrange(() => sampler.ShouldSample(Arg.IsAny<ISamplingParameters>()))
                     .Returns(new SamplingResult(true, priority));
+
+                Mock.Arrange(() => _samplerFactory.CreateSampler(SamplerType.Adaptive, Arg.IsAny<float?>()))
+                    .Returns(() => sampler);
             }
 
             _compositeTestAgent.LocalConfiguration.spanEvents.enabled = testData.SpanEventsEnabled;

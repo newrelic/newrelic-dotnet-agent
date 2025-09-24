@@ -286,6 +286,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             var samplingResult = sampler.ShouldSample(new SamplingParameters(TraceId, Priority ?? 0.0f));
 
+            // setting these to non-null values will override the logic in the property getters that falls back to the payload or tracestate values
             _priority = samplingResult.Priority;
             _sampled = samplingResult.Sampled;
 

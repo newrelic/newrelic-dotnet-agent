@@ -7,6 +7,6 @@ namespace NewRelic.Agent.Core.DistributedTracing.Samplers
 {
     public interface ISamplerFactory 
     {
-        ISampler CreateSampler(SamplerLevel samplerLevel, SamplerType samplerType, float? traceIdRatioSamplerRatio);
+        ISampler CreateSampler(SamplerType samplerType, float? traceIdRatioSamplerRatio);
     }
 }
