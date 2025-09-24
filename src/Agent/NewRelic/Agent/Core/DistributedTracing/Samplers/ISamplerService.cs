@@ -15,5 +15,11 @@ namespace NewRelic.Agent.Core.DistributedTracing.Samplers
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         ISampler GetSampler(SamplerLevel samplerLevel);
+
+        /// <summary>
+        /// Used only for testing to replace the adaptive sampler with a mock or stub.
+        /// </summary>
+        /// <param name="sampler">The mock or stub sampler to use for testing.</param>
+        void ReplaceAdaptiveSamplerForTesting(ISampler sampler);
     }
 }

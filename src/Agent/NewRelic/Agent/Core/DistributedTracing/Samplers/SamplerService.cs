@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
@@ -43,7 +44,7 @@ public class SamplerService : ConfigurationBasedService, ISamplerService
     private void InitializeSamplers()
     {
         _samplers[SamplerLevel.Root] = GetConfiguredSampler(SamplerLevel.Root, _configuration.RootSamplerType, _configuration.RootTraceIdRatioSamplerRatio);
-        _samplers[SamplerLevel.RemoteParentSampled] = GetConfiguredSampler(SamplerLevel.RemoteParentSampled, _configuration.RemoteParentNotSampledSamplerType, _configuration.RemoteParentSampledTraceIdRatioSamplerRatio);
+        _samplers[SamplerLevel.RemoteParentSampled] = GetConfiguredSampler(SamplerLevel.RemoteParentSampled, _configuration.RemoteParentSampledSamplerType, _configuration.RemoteParentSampledTraceIdRatioSamplerRatio);
         _samplers[SamplerLevel.RemoteParentNotSampled] = GetConfiguredSampler(SamplerLevel.RemoteParentNotSampled, _configuration.RemoteParentNotSampledSamplerType, _configuration.RemoteParentNotSampledTraceIdRatioSamplerRatio);
     }
 
@@ -80,6 +81,21 @@ public class SamplerService : ConfigurationBasedService, ISamplerService
                 return new TraceIdRatioSampler(traceIdRatioSamplerRatio.Value);
             default:
                 throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    /// <summary>
+    /// Used only for testing to replace the adaptive sampler with a mock or stub.
+    /// </summary>
+    /// <param name="sampler">The mock or stub sampler to use for testing.</param>
+    public void ReplaceAdaptiveSamplerForTesting(ISampler sampler)
+    {
+        foreach (var key in _samplers.Keys.ToList())
+        {
+            if (_samplers[key] is AdaptiveSampler)
+            {
+                _samplers[key] = sampler;
+            }
         }
     }
 }

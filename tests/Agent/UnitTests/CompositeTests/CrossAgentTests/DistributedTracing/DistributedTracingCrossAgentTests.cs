@@ -16,25 +16,24 @@ using System.Linq;
 using System.Reflection;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using Telerik.JustMock;
-using NewRelic.Agent.Core.Config;
 
 namespace CompositeTests.CrossAgentTests.DistributedTracing
 {
     [TestFixture]
-    public class TraceContextCrossAgentTests
+    public class DistributedTracingCrossAgentTests
     {
         private static CompositeTestAgent _compositeTestAgent;
         private IAgent _agent;
         private static ISampler _sampler;
 
-        private static List<TestCaseData> TraceContextTestCaseData => GetTraceContextTestData();
+        private static List<TestCaseData> DistributedTracingTestCaseData => GetDistributedTracingTestData();
 
         [SetUp]
         public void Setup()
         {
             _compositeTestAgent = new CompositeTestAgent();
             _agent = _compositeTestAgent.GetAgent();
-            _sampler = Mock.Create<ISampler>();
+            _sampler = Mock.Create<ISampler>(Behavior.CallOriginal);
         }
 
         [TearDown]
@@ -43,8 +42,8 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             _compositeTestAgent.Dispose();
         }
 
-        [TestCaseSource(nameof(TraceContextTestCaseData))]
-        public void TraceContext_CrossAgentTests(TraceContextTestData testData)
+        [TestCaseSource(nameof(DistributedTracingTestCaseData))]
+        public void DistributedTracing_CrossAgentTests(DistributedTracingTestData testData)
         {
             InitializeSettings(testData);
 
@@ -52,20 +51,18 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 
             _compositeTestAgent.Harvest();
 
-            ValidateExpectedPriority(testData);
-
             ValidateIntrinsics(testData);
 
             ValidateMetrics(testData);
         }
 
-        private static List<TestCaseData> GetTraceContextTestData()
+        private static List<TestCaseData> GetDistributedTracingTestData()
         {
             var testCaseData = new List<TestCaseData>();
 
             string location = Assembly.GetExecutingAssembly().GetLocation();
             var dllPath = Path.GetDirectoryName(new Uri(location).LocalPath);
-            var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "DistributedTracing", "trace_context.json");
+            var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "DistributedTracing", "distributed_tracing.json");
             var jsonString = File.ReadAllText(jsonPath);
 
             var settings = new JsonSerializerSettings
@@ -78,19 +75,19 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                     }
                 }
             };
-            var testList = JsonConvert.DeserializeObject<List<TraceContextTestData>>(jsonString, settings);
+            var testList = JsonConvert.DeserializeObject<List<DistributedTracingTestData>>(jsonString, settings);
 
             foreach (var testData in testList)
             {
                 var testCase = new TestCaseData(testData);
-                testCase.SetName("TraceContextCrossAgentTests: " + testData.Name);
+                testCase.SetName("DistributedTracingCrossAgentTests: " + testData.Name);
                 testCaseData.Add(testCase);
             }
 
             return testCaseData;
         }
 
-        private static void InitializeSettings(TraceContextTestData testData)
+        private static void InitializeSettings(DistributedTracingTestData testData)
         {
             if (testData.ForceSampledTrue)
             {
@@ -99,65 +96,18 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                     .Returns(new SamplingResult(true, priority));
             }
 
-                _compositeTestAgent.LocalConfiguration.spanEvents.enabled = testData.SpanEventsEnabled;
+            _compositeTestAgent.LocalConfiguration.spanEvents.enabled = testData.SpanEventsEnabled;
             var defaultTransactionEventsEnabled = _compositeTestAgent.LocalConfiguration.transactionEvents.enabled;
-            _compositeTestAgent.LocalConfiguration.transactionEvents.enabled =
-                testData.TransactionEventsEnabled.HasValue ?
-                    testData.TransactionEventsEnabled.Value :
-                    defaultTransactionEventsEnabled;
             _compositeTestAgent.ServerConfiguration.TrustedAccountKey = testData.TrustedAccountKey;
             _compositeTestAgent.ServerConfiguration.AccountId = testData.AccountId;
             _compositeTestAgent.ServerConfiguration.PrimaryApplicationId = "primaryApplicationId";
 
-            if (testData.RootSampler != null)
-            {
-                _compositeTestAgent.LocalConfiguration.distributedTracing.sampler.root.Item = GetSamplerFromName(testData.RootSampler, testData);
-            }
-
-            if (testData.RemoteParentSampledSampler != null)
-            {
-                _compositeTestAgent.LocalConfiguration.distributedTracing.sampler.remoteParentSampled.Item = GetSamplerFromName(testData.RemoteParentSampledSampler, testData);
-            }
-
-            if (testData.RemoteParentNotSampledSampler != null)
-            {
-                _compositeTestAgent.LocalConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item = GetSamplerFromName(testData.RemoteParentNotSampledSampler, testData);
-            }
-
             _compositeTestAgent.PushConfiguration();
-
-            _compositeTestAgent.Container.Resolve<ISamplerService>().ReplaceAdaptiveSamplerForTesting(_sampler);
         }
 
-        private static object GetSamplerFromName(string samplerName, TraceContextTestData testData)
+        void MakeTransaction(DistributedTracingTestData testData)
         {
-            switch (samplerName)
-            {
-                case "always_on":
-                    return new AlwaysOnSamplerType();
-                case "always_off":
-                    return new AlwaysOffSamplerType();
-                case "trace_id_ratio_based":
-                    if (!testData.Ratio.HasValue)
-                    {
-                        // This is not valid in our config so we need to treat it as if the sampler is not set
-                        return null;
-                    }
-                    return new TraceIdRatioSamplerType
-                    {
-                        sampleRatio = (decimal)testData.Ratio
-                    };
-                case "adaptive":
-                case "default":
-                    return new DefaultSamplerType();
-                default:
-                    throw new Exception($"Unknown sampler type {samplerName}");
-            }
-        }
-
-        void MakeTransaction(TraceContextTestData testData)
-        {
-            var testDataInboundHeaderSets = MakeHeaders(testData);
+            var testDataInboundHeaders = MakeHeaders(testData);
 
             var transaction = _agent.CreateTransaction(
                 isWeb: testData.WebTransaction,
@@ -165,11 +115,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                 transactionDisplayName: "name",
                 doNotTrackAsUnitOfWork: true);
 
-            testDataInboundHeaderSets?.ForEach
-                (headerSet =>
-                {
-                    AcceptPayloads(headerSet, testData);
-                });
+            AcceptPayloads(testDataInboundHeaders, testData);
 
             var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 
@@ -200,42 +146,28 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             transaction.End();
         }
 
-        List<IEnumerable<KeyValuePair<string, string>>> MakeHeaders(TraceContextTestData testData)
+        List<IEnumerable<KeyValuePair<string, string>>> MakeHeaders(DistributedTracingTestData testData)
         {
-            List<IEnumerable<KeyValuePair<string, string>>> inboundHeaderSets = new List<IEnumerable<KeyValuePair<string, string>>>();
+            List<IEnumerable<KeyValuePair<string, string>>> payloads = new List<IEnumerable<KeyValuePair<string, string>>>();
 
-            testData.InboundHeaders?.ToList().ForEach
-                (headerSet =>
-                {
-                    var ingestHeaderSet = new List<KeyValuePair<string, string>>();
-
-                    headerSet.Headers?.ToList().ForEach(header =>
-                    {
-
-                        if (header.Key.Equals("newrelic"))
-                        {
-                            var settingPayload = header.Value.ToObject<string>();
-                            ingestHeaderSet.Add(new KeyValuePair<string, string>(header.Key, settingPayload));
-                        }
-                        else
-                        {
-                            ingestHeaderSet.Add(new KeyValuePair<string, string>(header.Key, header.Value.ToString()));
-                        }
-                    });
-
-                    inboundHeaderSets.Add(ingestHeaderSet);
-                });
-
-            if (inboundHeaderSets.Count == 0)
+            if (testData.InboundPayloads == null)
             {
-                // test requires AcceptPayloads to be called even if there are no headers
-                inboundHeaderSets.Add(new List<KeyValuePair<string, string>>());
+                payloads.Add(new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>("Newrelic", null) });
+                return payloads;
             }
 
-            return inboundHeaderSets;
+            testData.InboundPayloads?.ToList().ForEach
+                (payloadSetting =>
+                {
+                    string payload = JsonConvert.SerializeObject(payloadSetting.Payload);
+
+                    payloads.Add(new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>("Newrelic", payload) });
+                });
+
+            return payloads;
         }
 
-        private void AcceptPayloads(IEnumerable<KeyValuePair<string, string>> testDataInboundHeaders, TraceContextTestData testData)
+        private void AcceptPayloads(List<IEnumerable<KeyValuePair<string, string>>> testDataInboundHeaders, DistributedTracingTestData testData)
         {
             var isValidEnumValue = Enum.TryParse(testData.TransportType, ignoreCase: false, result: out TransportType transportType);
             if (!isValidEnumValue)
@@ -243,7 +175,10 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                 transportType = (TransportType)(-1);
             }
 
-            _agent.CurrentTransaction.AcceptDistributedTraceHeaders(testDataInboundHeaders, GetHeaderValue, transportType);
+            foreach (var headers in testDataInboundHeaders)
+            {
+                _agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, transportType);
+            }
 
             IEnumerable<string> GetHeaderValue(IEnumerable<KeyValuePair<string, string>> carrier, string key)
             {
@@ -261,57 +196,10 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
         private void ValidateOutboundHeaders(OutboundPayloadSettings payloadSettings, Dictionary<string, string> actualOutboundHeaders, string trustedAccountKey)
         {
             JObject newrelicHeaderValue = null;
-            JObject newrelicJson = null;
-            JObject traceparentJson = null;
-            JObject tracestateJson = null;
 
             if (actualOutboundHeaders.ContainsKey("newrelic"))
             {
                 newrelicHeaderValue = JObject.Parse(Strings.Base64Decode(actualOutboundHeaders["newrelic"]));
-
-                newrelicJson = new JObject
-                {
-                    {"newrelic", newrelicHeaderValue}
-                };
-            }
-            if (actualOutboundHeaders.ContainsKey("traceparent"))
-            {
-                var fields = actualOutboundHeaders["traceparent"].Split('-');
-                traceparentJson = new JObject
-                {
-                    {"traceparent", new JObject
-                        {
-                            {"version", fields[0] },
-                            {"trace_id", fields[1] },
-                            {"parent_id", fields[2] },
-                            {"trace_flags", fields[3] }
-                        }
-                    }
-                };
-            }
-            if (actualOutboundHeaders.ContainsKey("tracestate"))
-            {
-                var tracestate = W3CTracestate.GetW3CTracestateFromHeaders(new string[] { actualOutboundHeaders["tracestate"] }, trustedAccountKey);
-                var headerValue = actualOutboundHeaders["tracestate"];
-                var tenantId = headerValue.Substring(0, headerValue.IndexOf('@'));
-                tracestateJson = new JObject
-                {
-                    {"tracestate", new JObject
-                        {
-                            {"version", tracestate.Version },
-                            {"parent_type", (int)tracestate.ParentType },
-                            {"parent_account_id", tracestate.AccountId },
-                            {"parent_application_id", tracestate.AppId },
-                            {"span_id", tracestate.SpanId },
-                            {"transaction_id", tracestate.TransactionId },
-                            {"sampled", tracestate.Sampled },
-                            {"priority", string.Format("{0:0.######}", tracestate.Priority) }, // cheating here: priority is stored as float, which may show in scientific notation; this formatting is performed when creating a new tracestate header in the agent so it will not be transmitted in scientific notation
-							{"timestamp", tracestate.Timestamp },
-                            {"tenant_id",  tenantId },
-                            {"vendors", new JArray(tracestate.VendorstateEntries.Select(vse => vse.Split('=')[0]).ToList()) }
-                        }
-                    }
-                };
             }
 
             JToken actualValue = null;
@@ -322,21 +210,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                 foreach (var key in exactFields.Keys)
                 {
                     var expectedValue = exactFields[key];
-
-                    switch (key.Substring(0, key.IndexOf('.')))
-                    {
-                        case "newrelic":
-                            actualValue = newrelicJson.SelectToken(key);
-                            break;
-                        case "traceparent":
-                            actualValue = traceparentJson.SelectToken(key);
-                            break;
-                        case "tracestate":
-                            actualValue = tracestateJson.SelectToken(key);
-                            break;
-                        default:
-                            break;
-                    }
+                    actualValue = newrelicHeaderValue.SelectToken(key);
 
                     Assert.That(actualValue.IsEqualTo(expectedValue), $"{key}, expected: {expectedValue}, actual: {actualValue}");
                 }
@@ -344,88 +218,16 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 
             payloadSettings.Expected?.ToList().ForEach(expected =>
             {
-                switch (expected.Substring(0, expected.IndexOf('.')))
-                {
-                    case "newrelic":
-                        Assert.That(newrelicJson.SelectToken(expected), Is.Not.Null, $"Missing expected: {expected}");
-                        break;
-                    case "traceparent":
-                        Assert.That(traceparentJson.SelectToken(expected), Is.Not.Null, $"Missing expected: {expected}");
-                        break;
-                    case "tracestate":
-                        Assert.That(tracestateJson.SelectToken(expected), Is.Not.Null, $"Missing expected: {expected}");
-                        break;
-                    default:
-                        break;
-                }
+                Assert.That(newrelicHeaderValue.SelectToken(expected), Is.Not.Null, $"Missing expected: {expected}");
             });
 
             payloadSettings.Unexpected?.ToList().ForEach(unexpected =>
             {
-                switch (unexpected.Substring(0, unexpected.IndexOf('.')))
-                {
-                    case "newrelic":
-                        Assert.That(newrelicJson.SelectToken(unexpected), Is.Null, $"Unexpected exists: {unexpected}");
-                        break;
-                    case "traceparent":
-                        Assert.That(traceparentJson.SelectToken(unexpected), Is.Empty, $"Unexpected exists: {unexpected}");
-                        break;
-                    case "tracestate":
-                        Assert.That(tracestateJson.SelectToken(unexpected), Is.Empty, $"Unexpected exists: {unexpected}");
-                        break;
-                    default:
-                        break;
-                }
+                Assert.That(newrelicHeaderValue.SelectToken(unexpected), Is.Null, $"Unexpected exists: {unexpected}");
             });
-
-            var notequalFields = payloadSettings.Notequal;
-            if (notequalFields != null)
-            {
-                foreach (var key in notequalFields.Keys)
-                {
-                    var notValue = notequalFields[key];
-
-                    switch (key.Substring(0, key.IndexOf('.')))
-                    {
-                        case "newrelic":
-                            actualValue = newrelicJson.SelectToken(key);
-                            break;
-                        case "traceparent":
-                            actualValue = traceparentJson.SelectToken(key);
-                            break;
-                        case "tracestate":
-                            actualValue = tracestateJson.SelectToken(key);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    Assert.That(actualValue.IsNotEqualTo(notValue), $"Expected not equal {key}, but was equal {notValue}");
-                }
-            }
-
-            if (payloadSettings.Vendors != null)
-            {
-                JArray actualVendors = (JArray)tracestateJson["tracestate"]["vendors"];
-
-                Assert.That(JToken.DeepEquals(actualVendors, payloadSettings.Vendors), $"Expected vendors {payloadSettings.Vendors}, actual: {actualVendors}");
-            }
         }
 
-        private void ValidateExpectedPriority(TraceContextTestData testData)
-        {
-            if (testData.ExpectedPriorityBetween != null)
-            {
-                var minValue = testData.ExpectedPriorityBetween[0];
-                var maxValue = testData.ExpectedPriorityBetween[1];
-                var transactionEvent = _compositeTestAgent.TransactionEvents?.First();
-
-                Assert.That(transactionEvent, Is.Not.Null, "A transaction event was expected to be found.");
-                Assert.That(transactionEvent.Priority, Is.InRange(minValue, maxValue), $"Actual priority {transactionEvent.Priority} not in expected range [{minValue}, {maxValue}]");
-            }
-        }
-
-        private void ValidateIntrinsics(TraceContextTestData testData)
+        private void ValidateIntrinsics(DistributedTracingTestData testData)
         {
             if (testData.IntrinsicSettings != null)
             {
@@ -457,7 +259,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             }
         }
 
-        private void ValidateAttributes(IDictionary<string, object> actualAttributes, TraceContextTestData testData, JToken eventSpecificAttributes = null)
+        private void ValidateAttributes(IDictionary<string, object> actualAttributes, DistributedTracingTestData testData, JToken eventSpecificAttributes = null)
         {
             // Common (for all target_events)
             ValidateAttributeSettings(testData.IntrinsicSettings.CommonAttributes, actualAttributes);
@@ -491,11 +293,8 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             });
         }
 
-        private void ValidateMetrics(TraceContextTestData testData)
+        private void ValidateMetrics(DistributedTracingTestData testData)
         {
-            if (testData.ExpectedMetrics == null)
-                return;
-
             var expectedMetrics = new List<ExpectedMetric>();
 
             // convert json ExpectedMetrics for CompositeTests.MetricAssertions
@@ -507,9 +306,9 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             MetricAssertions.MetricsExist(expectedMetrics, _compositeTestAgent.Metrics);
         }
 
-        #region Trace Context Test Data Classes
+        #region Distributed Tracing Test Data Classes
 
-        public class TraceContextTestData
+        public class DistributedTracingTestData
         {
             [JsonProperty("test_name")]
             public string Name { get; set; }
@@ -526,35 +325,23 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             [JsonProperty("raises_exception")]
             public bool RaisesException { get; set; }
 
-            [JsonProperty("force_adaptive_sampled_true")]
+            [JsonProperty("force_sampled_true")]
             public bool ForceSampledTrue { get; set; }
 
             [JsonProperty("span_events_enabled")]
             public bool SpanEventsEnabled { get; set; }
 
-            [JsonProperty("transaction_events_enabled")]
-            public bool? TransactionEventsEnabled { get; set; }
+            [JsonProperty("major_version")]
+            public int MajorVersion { get; set; }
 
-            [JsonProperty("root")]
-            public string RootSampler { get; set; }
-
-            [JsonProperty("remote_parent_sampled")]
-            public string RemoteParentSampledSampler { get; set; }
-
-            [JsonProperty("remote_parent_not_sampled")]
-            public string RemoteParentNotSampledSampler { get; set; }
-
-            [JsonProperty("ratio")]
-            public double? Ratio { get; set; }
+            [JsonProperty("minor_version")]
+            public int MinorVersion { get; set; }
 
             [JsonProperty("transport_type")]
             public string TransportType { get; set; }
 
-            [JsonProperty("inbound_headers")]
-            public HeaderSettings[] InboundHeaders { get; set; }
-
-            [JsonProperty("expected_priority_between")]
-            public int[] ExpectedPriorityBetween { get; set; }
+            [JsonProperty("inbound_payloads")]
+            public InboundPayloadSettings[] InboundPayloads { get; set; }
 
             [JsonProperty("outbound_payloads", NullValueHandling = NullValueHandling.Ignore)]
             public OutboundPayloadSettings[] OutboundPayloadsSettings { get; set; }
@@ -566,10 +353,10 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             public Metric[] ExpectedMetrics { get; set; }
         }
 
-        public class HeaderSettings
+        public class InboundPayloadSettings
         {
             [JsonExtensionData]
-            public IDictionary<string, JToken> Headers { get; set; }
+            public IDictionary<string, JToken> Payload { get; set; }
         }
 
         [JsonObject]
@@ -583,12 +370,6 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 
             [JsonProperty("unexpected", NullValueHandling = NullValueHandling.Ignore)]
             public string[] Unexpected { get; set; }
-
-            [JsonProperty("notequal", NullValueHandling = NullValueHandling.Ignore)]
-            public IDictionary<string, JToken> Notequal { get; set; }
-
-            [JsonProperty("vendors", NullValueHandling = NullValueHandling.Ignore)]
-            public JArray Vendors { get; set; }
         }
 
         public class IntrinsicsSettings

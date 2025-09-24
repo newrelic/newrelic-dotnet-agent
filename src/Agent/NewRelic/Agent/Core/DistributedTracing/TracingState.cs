@@ -220,8 +220,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null;
 
-            tracingState.ApplyRemoteParentSampledBehavior(samplerService);
-            
             // newrelic 
             // if traceparent was present (regardless if valid), ignore newrelic header
             if (!tracingState._traceContext.TraceparentPresent)
@@ -230,20 +228,22 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 // If the getter function makes a case-insensitive search it will find any of the three
                 // variants on the first call.
                 var newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllLower);
-                if (newRelicHeaderList?.Any() == false)
+                if (newRelicHeaderList == null || newRelicHeaderList.Any() == false)
                 {
                     newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllUpper);
                 }
-                if (newRelicHeaderList?.Any() == false)
+                if (newRelicHeaderList == null || newRelicHeaderList.Any() == false)
                 {
                     newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeySingleUpper);
                 }
-                if (newRelicHeaderList?.Any() == true) // a NR header key was present
+                if (newRelicHeaderList == null || newRelicHeaderList.Any() == true) // a NR header key was present
                 {
                     tracingState._newRelicPayload = DistributedTracePayload.TryDecodeAndDeserializeDistributedTracePayload(newRelicHeaderList.FirstOrDefault(), agentTrustKey, errors);
                     tracingState.NewRelicPayloadWasAccepted = tracingState._newRelicPayload != null ? true : false;
                 }
             }
+
+            tracingState.ApplyRemoteParentSampledBehavior(samplerService);
 
             if (errors.Any())
             {
@@ -266,12 +266,21 @@ namespace NewRelic.Agent.Core.DistributedTracing
         private void ApplyRemoteParentSampledBehavior(ISamplerService samplerService)
         {
             // don't do anything if the traceparent is not present or it's null
-            if (!_traceContext.TraceparentPresent || _traceContext.Traceparent == null)
+            bool? isRemoteParentSampled = null;
+            if (_traceContext.TraceparentPresent && _traceContext.Traceparent != null)
             {
-                return;
+                isRemoteParentSampled = _traceContext.Traceparent.Sampled;
             }
 
-            var sampler = samplerService.GetSampler(_traceContext.Traceparent.Sampled ? SamplerLevel.RemoteParentSampled : SamplerLevel.RemoteParentNotSampled);
+            if (isRemoteParentSampled == null && _newRelicPayload != null)
+            {
+                isRemoteParentSampled = _newRelicPayload.Sampled;
+            }
+
+            if (isRemoteParentSampled == null) // no remote parent
+                return;
+
+            var sampler = samplerService.GetSampler(isRemoteParentSampled.Value ? SamplerLevel.RemoteParentSampled : SamplerLevel.RemoteParentNotSampled);
             if (sampler == null) // remote parent sampled behavior is not configured
                 return;
 
@@ -280,8 +289,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
             _priority = samplingResult.Priority;
             _sampled = samplingResult.Sampled;
 
-            Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext.Traceparent.Sampled={SampledValue}, Sampler: {Sampler} ==> Sampled: {Sampled}, Priority: {Priority}",
-                    _traceContext.Traceparent.Sampled,
+            Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext?.Traceparent?.Sampled={TraceParentSampled}, _newRelicPayload?.Sampled={NewRelicSampled}, Sampler: {Sampler} ==> Sampled: {Sampled}, Priority: {Priority}",
+                    _traceContext?.Traceparent?.Sampled,
+                    _newRelicPayload?.Sampled,
                     sampler.GetType().Name,
                     Sampled,
                     Priority
