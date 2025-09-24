@@ -104,6 +104,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private ICustomEventTransformer _customEventTransformer;
         private IDatabaseService _databaseService;
 
+        private SamplerFactory _samplerFactory;
+        private SamplerService _samplerService;
+
         [SetUp]
         public void SetUp()
         {
@@ -161,6 +164,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _customEventTransformer = Mock.Create<ICustomEventTransformer>();
             _databaseService = Mock.Create<IDatabaseService>();
 
+            _samplerFactory = new SamplerFactory();
+            _samplerService = new SamplerService(_samplerFactory);
+
             _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService, _customEventTransformer, new NewRelicActivitySourceProxy(), _databaseService);
         }
 
@@ -173,6 +179,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _attribDefSvc.Dispose();
             _labelsService.Dispose();
             _databaseService.Dispose();
+            _samplerService.Dispose();
+            _samplerFactory.Dispose();
         }
 
         private class CallStackManagerFactory : ICallStackManagerFactory
@@ -677,7 +685,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         [Test]
         public void AcceptDistributedTraceHeaders__ReportsSupportabilityMetric_NullPayload()
         {
-            _distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, new SamplerService());
+            _distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, _samplerService);
             _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService, _customEventTransformer, new NewRelicActivitySourceProxy(), _databaseService);
             SetupTransaction();
 

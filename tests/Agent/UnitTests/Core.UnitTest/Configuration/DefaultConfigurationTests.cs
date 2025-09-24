@@ -4625,9 +4625,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         [TestCase("alwaysOn", SamplerType.AlwaysOn, TestName = "RootSamplerType_AlwaysOn_EnvironmentVariableOverride")]
         [TestCase("alwaysOff", SamplerType.AlwaysOff, TestName = "RootSamplerType_AlwaysOff_EnvironmentVariableOverride")]
-        [TestCase("default", SamplerType.Default, TestName = "RootSamplerType_Default_EnvironmentVariableOverride")]
+        [TestCase("default", SamplerType.Adaptive, TestName = "RootSamplerType_Default_EnvironmentVariableOverride")]
+        [TestCase("adaptive", SamplerType.Adaptive, TestName = "RootSamplerType_Adaptive_EnvironmentVariableOverride")]
         [TestCase("traceIdRatioBased", SamplerType.TraceIdRatioBased, TestName = "RootSamplerType_TraceIdRatioBased_EnvironmentVariableOverride")]
-        [TestCase("invalidValue", SamplerType.Default, TestName = "RootSamplerType_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
+        [TestCase("invalidValue", SamplerType.Adaptive, TestName = "RootSamplerType_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
         public void RootSampler_UsesEnvironmentVariableOverride(string environmentVariableValue, SamplerType expectedSamplerType)
         {
             // Arrange
@@ -4646,8 +4647,9 @@ namespace NewRelic.Agent.Core.Configuration
         [TestCase("AlWaYSOn", SamplerType.AlwaysOn, TestName = "RemoteParentSampledSamplerType_AlwaysOnMixedCase_EnvironmentVariableOverride")]
         [TestCase("alwaysOff", SamplerType.AlwaysOff, TestName = "RemoteParentSampledSamplerType_AlwaysOff_EnvironmentVariableOverride")]
         [TestCase("traceIdRatioBased", SamplerType.TraceIdRatioBased, TestName = "RemoteParentSampledSamplerType_TraceIdRatioBased_EnvironmentVariableOverride")]
-        [TestCase("default", SamplerType.Default, TestName = "RemoteParentSampledSamplerType_Default_EnvironmentVariableOverride")]
-        [TestCase("invalidValue", SamplerType.Default, TestName = "RemoteParentSampledSamplerType_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
+        [TestCase("default", SamplerType.Adaptive, TestName = "RemoteParentSampledSamplerType_Default_EnvironmentVariableOverride")]
+        [TestCase("adaptive", SamplerType.Adaptive, TestName = "RemoteParentSampledSamplerType_Adaptive_EnvironmentVariableOverride")]
+        [TestCase("invalidValue", SamplerType.Adaptive, TestName = "RemoteParentSampledSamplerType_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
         public void RemoteParentSampledSamplerType_UsesEnvironmentVariableOverride(string environmentVariableValue, SamplerType expectedRemoteParentSampledSamplerType)
         {
             // Arrange
@@ -4663,9 +4665,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         [TestCase("alwaysOn", SamplerType.AlwaysOn, TestName = "RemoteParentNotSampledSamplerType_AlwaysOn_EnvironmentVariableOverride")]
         [TestCase("alwaysOff", SamplerType.AlwaysOff, TestName = "RemoteParentNotSampledSamplerType_AlwaysOff_EnvironmentVariableOverride")]
-        [TestCase("default", SamplerType.Default, TestName = "RemoteParentNotSampledSamplerType_Default_EnvironmentVariableOverride")]
+        [TestCase("default", SamplerType.Adaptive, TestName = "RemoteParentNotSampledSamplerType_Default_EnvironmentVariableOverride")]
+        [TestCase("adaptive", SamplerType.Adaptive, TestName = "RemoteParentNotSampledSamplerType_Adaptive_EnvironmentVariableOverride")]
         [TestCase("traceIdRatioBased", SamplerType.TraceIdRatioBased, TestName = "RemoteParentNotSampledSamplerType_TraceIdRatioBased_EnvironmentVariableOverride")]
-        [TestCase("invalidValue", SamplerType.Default, TestName = "RemoteParentNotSampledSamplerType_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
+        [TestCase("invalidValue", SamplerType.Adaptive, TestName = "RemoteParentNotSampledSamplerType_InvalidValueDefaultsToDefault_EnvironmentVariableOverride")]
         public void RemoteParentNotSampledSamplerType_UsesEnvironmentVariableOverride(string environmentVariableValue, SamplerType expectedRemoteParentSampledSamplerType)
         {
             // Arrange
@@ -4697,6 +4700,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         [TestCase(SamplerType.AlwaysOn)]
         [TestCase(SamplerType.AlwaysOff)]
+        [TestCase(SamplerType.Adaptive)]
         [TestCase(SamplerType.Default)]
         public void RootTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsNotTraceIdRatioBased(SamplerType samplerType)
         {
@@ -4705,7 +4709,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 SamplerType.AlwaysOn => new AlwaysOnSamplerType(),
                 SamplerType.AlwaysOff => new AlwaysOffSamplerType(),
-                _ => new DefaultSamplerType()
+                _ => new AdaptiveSamplerType()
             };
 
             // Act
@@ -4760,7 +4764,7 @@ namespace NewRelic.Agent.Core.Configuration
             // Arrange
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT_SAMPLER"))
                 .Returns("traceIdRatioBased");
-            _localConfig.distributedTracing.sampler.root.Item = new DefaultSamplerType(); // no TraceIdRatioSamplerType provided
+            _localConfig.distributedTracing.sampler.root.Item = new AdaptiveSamplerType(); // no TraceIdRatioSamplerType provided
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
@@ -4792,6 +4796,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         [TestCase(SamplerType.AlwaysOn)]
         [TestCase(SamplerType.AlwaysOff)]
+        [TestCase(SamplerType.Adaptive)]
         [TestCase(SamplerType.Default)]
         public void RemoteParentSampledTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsNotTraceIdRatioBased(SamplerType samplerType)
         {
@@ -4800,7 +4805,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 SamplerType.AlwaysOn => new AlwaysOnSamplerType(),
                 SamplerType.AlwaysOff => new AlwaysOffSamplerType(),
-                _ => new DefaultSamplerType()
+                _ => new AdaptiveSamplerType()
             };
 
             // Act
@@ -4854,7 +4859,7 @@ namespace NewRelic.Agent.Core.Configuration
             // Arrange
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED"))
                 .Returns("traceIdRatioBased");
-            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new DefaultSamplerType(); // no ratio sampler object
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new AdaptiveSamplerType(); // no ratio sampler object
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
@@ -4887,6 +4892,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         [TestCase(SamplerType.AlwaysOn)]
         [TestCase(SamplerType.AlwaysOff)]
+        [TestCase(SamplerType.Adaptive)]
         [TestCase(SamplerType.Default)]
         public void RemoteParentNotSampledTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsNotTraceIdRatioBased(SamplerType samplerType)
         {
@@ -4895,7 +4901,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 SamplerType.AlwaysOn => new AlwaysOnSamplerType(),
                 SamplerType.AlwaysOff => new AlwaysOffSamplerType(),
-                _ => new DefaultSamplerType()
+                _ => new AdaptiveSamplerType()
             };
 
             // Act
@@ -4949,7 +4955,7 @@ namespace NewRelic.Agent.Core.Configuration
             // Arrange
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED"))
                 .Returns("traceIdRatioBased");
-            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new DefaultSamplerType(); // no TraceIdRatioSamplerType
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new AdaptiveSamplerType(); // no TraceIdRatioSamplerType
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
@@ -5043,7 +5049,7 @@ namespace NewRelic.Agent.Core.Configuration
                 _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
             // Act / Assert
-            Assert.That(_defaultConfig.RemoteParentNotSampledSamplerType, Is.EqualTo(SamplerType.Default));
+            Assert.That(_defaultConfig.RemoteParentNotSampledSamplerType, Is.EqualTo(SamplerType.Adaptive));
         }
 
         [Test]

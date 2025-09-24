@@ -929,8 +929,8 @@ namespace NewRelic.Agent.Core.Configuration
         private static SamplerType MapSamplerItem(object samplerItem) =>
             samplerItem switch
             {
-                null => SamplerType.Default,          // not configured
-                DefaultSamplerType => SamplerType.Default,
+                null => SamplerType.Adaptive,          // not configured
+                AdaptiveSamplerType => SamplerType.Adaptive,
                 AlwaysOnSamplerType => SamplerType.AlwaysOn,
                 AlwaysOffSamplerType => SamplerType.AlwaysOff,
                 TraceIdRatioSamplerType => SamplerType.TraceIdRatioBased,

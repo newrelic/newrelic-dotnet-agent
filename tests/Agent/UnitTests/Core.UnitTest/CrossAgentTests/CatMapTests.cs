@@ -91,7 +91,10 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             var customEventTransformer = Mock.Create<ICustomEventTransformer>();
             var databaseService = Mock.Create<IDatabaseService>();
 
-            _agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new SamplerService()), catSupportabilityCounters, logEventAggregator, logContextDataFilter, simpleSchedulingService, customEventTransformer, new NewRelicActivitySourceProxy(), databaseService);
+            var samplerFactory = new SamplerFactory();
+            var samplerService = new SamplerService(samplerFactory);
+
+            _agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(samplerService), catSupportabilityCounters, logEventAggregator, logContextDataFilter, simpleSchedulingService, customEventTransformer, new NewRelicActivitySourceProxy(), databaseService);
 
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
             _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);

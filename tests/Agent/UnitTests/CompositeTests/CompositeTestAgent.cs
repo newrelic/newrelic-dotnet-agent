@@ -37,6 +37,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using Telerik.JustMock;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace CompositeTests
 {
@@ -128,11 +129,11 @@ namespace CompositeTests
 
         public List<SqlTraceWireModel> SqlTraces { get; } = new List<SqlTraceWireModel>();
 
-        public CompositeTestAgent(bool enableServerlessMode = false) : this(shouldAllowThreads: false, includeAsyncLocalStorage: false, enableServerlessMode)
+        public CompositeTestAgent(bool enableServerlessMode = false, ISamplerFactory samplerFactory = null) : this(shouldAllowThreads: false, includeAsyncLocalStorage: false, enableServerlessMode, samplerFactory: samplerFactory)
         {
         }
 
-        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false, bool enableGCSamplerV2 = false, SamplerType rootSamplerType = SamplerType.Default, SamplerType remoteParentSampledSamplerType = SamplerType.Default, SamplerType remoteParentNotSampledSamplerType = SamplerType.Default)
+        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false, bool enableGCSamplerV2 = false, SamplerType rootSamplerType = SamplerType.Adaptive, SamplerType remoteParentSampledSamplerType = SamplerType.Adaptive, SamplerType remoteParentNotSampledSamplerType = SamplerType.Adaptive, ISamplerFactory samplerFactory = null)
         {
             Log.Initialize(new Logger());
 
@@ -214,6 +215,12 @@ namespace CompositeTests
             }
 
             _container.ReplaceInstanceRegistration(configurationManagerStatic);
+
+            if (samplerFactory != null)
+            {
+                _container.ReplaceInstanceRegistration(samplerFactory);
+            }
+
             _container.ReplaceRegistrations(); // creates a new scope, registering the replacement instances from all .ReplaceRegistration() calls above
 
             InstrumentationService = _container.Resolve<IInstrumentationService>();

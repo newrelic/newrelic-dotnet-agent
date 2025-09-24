@@ -14,7 +14,8 @@ namespace NewRelic.Agent.Core.Configuration
             switch (localConfigEnumValue)
             {
                 case RemoteParentSampledBehaviorType.@default:
-                    return SamplerType.Default;
+                case RemoteParentSampledBehaviorType.adaptive:
+                    return SamplerType.Adaptive;
                 case RemoteParentSampledBehaviorType.alwaysOn:
                     return SamplerType.AlwaysOn;
                 case RemoteParentSampledBehaviorType.alwaysOff:
@@ -31,7 +32,8 @@ namespace NewRelic.Agent.Core.Configuration
             switch (remoteParentSampledBehavior.ToLower())
             {
                 case "default":
-                    return SamplerType.Default;
+                case "adaptive":
+                    return SamplerType.Adaptive;
                 case "alwayson":
                     return SamplerType.AlwaysOn;
                 case "alwaysoff":
@@ -39,7 +41,7 @@ namespace NewRelic.Agent.Core.Configuration
                 case "traceidratiobased":
                     return SamplerType.TraceIdRatioBased;
                 default:
-                    return SamplerType.Default;
+                    return SamplerType.Adaptive; // default to adaptive if unrecognized value
             }
         }
 
@@ -48,7 +50,8 @@ namespace NewRelic.Agent.Core.Configuration
             switch (remoteParentSampledBehavior)
             {
                 case SamplerType.Default:
-                    return RemoteParentSampledBehaviorType.@default;
+                case SamplerType.Adaptive:
+                    return RemoteParentSampledBehaviorType.adaptive;
                 case SamplerType.AlwaysOn:
                     return RemoteParentSampledBehaviorType.alwaysOn;
                 case SamplerType.AlwaysOff:
@@ -65,7 +68,8 @@ namespace NewRelic.Agent.Core.Configuration
             switch (samplerType)
             {
                 case SamplerType.Default:
-                    return new DefaultSamplerType();
+                case SamplerType.Adaptive:
+                    return new AdaptiveSamplerType();
                 case SamplerType.AlwaysOn:
                     return new AlwaysOnSamplerType();
                 case SamplerType.AlwaysOff:
