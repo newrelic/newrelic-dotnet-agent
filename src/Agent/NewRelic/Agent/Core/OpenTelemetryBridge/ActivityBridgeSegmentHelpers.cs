@@ -36,13 +36,6 @@ public static class ActivityBridgeSegmentHelpers
 
         Log.Debug($"{activityLogPrefix} has stopped.");
 
-        // check status - stop processing if status is Error
-        if ((int)activity.Status == (int)ActivityStatusCode.Error)
-        {
-            Log.Debug($"{activityLogPrefix} has a Status of Error. Not adding tags to segment.");
-            return;
-        }
-
         var tags = ((IEnumerable<KeyValuePair<string, object>>)activity.TagObjects).ToDictionary(t => t.Key, t => t.Value);
         if (tags.Count == 0)
         {
@@ -50,60 +43,71 @@ public static class ActivityBridgeSegmentHelpers
             return;
         }
 
-        // based on activity kind, create the appropriate segment data
-        // remove all tags that are used in segment data creation
-        switch (activityKind)
+        // process tags only if the activity status is not Error
+        if ((int)activity.Status != (int)ActivityStatusCode.Error)
         {
-            case (int)ActivityKind.Client:
-                // could be an http call or a database call, so need to look for specific tags to decide
-                // order is important because some activities have both tags, e.g. a database call that is also an HTTP call, like Elasticsearch
-                if (tags.TryGetAndRemoveTag<string>(["db.system.name", "db.system"], out var dbSystemName)) // it's a database call
-                {
-                    ProcessClientDatabaseTags(segment, agent, activity, activityLogPrefix, tags, dbSystemName);
-                }
-                else if (tags.TryGetAndRemoveTag<string>(["rpc.system"], out var rpcSystem)) // it's an RPC client activity
-                {
-                    ProcessRpcClientTags(segment, agent, errorService, tags, activityLogPrefix, rpcSystem);
-                }
-                else if (tags.TryGetAndRemoveTag<string>(["http.request.method", "http.method"], out var method)) // it's an HTTP call
-                {
-                    ProcessClientExternalTags(segment, agent, tags, activityLogPrefix, method);
-                }
-                else
-                {
-                    Log.Finest($"{activityLogPrefix} is missing required tags to determine whether it's an external or database activity.");
-                }
-                break;
-            case (int)ActivityKind.Producer: // producer and consumer both create messaging segments
-            case (int)ActivityKind.Consumer:
-                if (tags.TryGetAndRemoveTag<string>(["messaging.system"], out var messagingSystem))
-                {
-                    ProcessProducerConsumerMessagingSystemTags(segment, agent, activity, activityLogPrefix, tags, (ActivityKind)activityKind, messagingSystem);
-                }
-                else
-                {
-                    Log.Finest($"{activityLogPrefix} is missing required tag for messaging system. Not creating a MessagingSegmentData.");
-                }
-                break;
-            case (int)ActivityKind.Server:
-                // rpc server activities also have http server activity tags so
-                // check first whether it's an RPC server activity -- note that rpc.system may not exist so check for grpc.method also. 
-                if (tags.TryGetTag<string>(["rpc.system", "grpc.method"], out _))
-                {
-                    ProcessRpcServerTags(segment, agent, errorService, tags, activityLogPrefix);
-                }
-                else if (tags.TryGetAndRemoveTag<string>(["http.request.method", "http.method"], out var serverMethod)) // it's an HTTP server activity
-                {
-                    ProcessHttpServerTags(segment, agent, tags, activityLogPrefix, serverMethod);
-                }
-                else
-                {
-                    Log.Finest($"{activityLogPrefix} is missing required tags to determine the type of server activity.");
-                }
-                break;
-            case (int)ActivityKind.Internal:
-            default:
-                break; // don't do anything -- we'll use the existing SimpleSegmentData that was created when the segment was created
+            // based on activity kind, create the appropriate segment data
+            // remove all tags that are used in segment data creation
+            switch (activityKind)
+            {
+                case (int)ActivityKind.Client:
+                    // could be an http call or a database call, so need to look for specific tags to decide
+                    // order is important because some activities have both tags, e.g. a database call that is also an HTTP call, like Elasticsearch
+                    if (tags.TryGetAndRemoveTag<string>(["db.system.name", "db.system"], out var dbSystemName)) // it's a database call
+                    {
+                        ProcessClientDatabaseTags(segment, agent, activity, activityLogPrefix, tags, dbSystemName);
+                    }
+                    else if (tags.TryGetAndRemoveTag<string>(["rpc.system"], out var rpcSystem)) // it's an RPC client activity
+                    {
+                        ProcessRpcClientTags(segment, agent, errorService, tags, activityLogPrefix, rpcSystem);
+                    }
+                    else if (tags.TryGetAndRemoveTag<string>(["http.request.method", "http.method"], out var method)) // it's an HTTP call
+                    {
+                        ProcessClientExternalTags(segment, agent, tags, activityLogPrefix, method);
+                    }
+                    else
+                    {
+                        Log.Finest($"{activityLogPrefix} is missing required tags to determine whether it's an external or database activity.");
+                    }
+
+                    break;
+                case (int)ActivityKind.Producer: // producer and consumer both create messaging segments
+                case (int)ActivityKind.Consumer:
+                    if (tags.TryGetAndRemoveTag<string>(["messaging.system"], out var messagingSystem))
+                    {
+                        ProcessProducerConsumerMessagingSystemTags(segment, agent, activity, activityLogPrefix, tags, (ActivityKind)activityKind, messagingSystem);
+                    }
+                    else
+                    {
+                        Log.Finest($"{activityLogPrefix} is missing required tag for messaging system. Not creating a MessagingSegmentData.");
+                    }
+
+                    break;
+                case (int)ActivityKind.Server:
+                    // rpc server activities also have http server activity tags so
+                    // check first whether it's an RPC server activity -- note that rpc.system may not exist so check for grpc.method also. 
+                    if (tags.TryGetTag<string>(["rpc.system", "grpc.method"], out _))
+                    {
+                        ProcessRpcServerTags(segment, agent, errorService, tags, activityLogPrefix);
+                    }
+                    else if (tags.TryGetAndRemoveTag<string>(["http.request.method", "http.method"], out var serverMethod)) // it's an HTTP server activity
+                    {
+                        ProcessHttpServerTags(segment, agent, tags, activityLogPrefix, serverMethod);
+                    }
+                    else
+                    {
+                        Log.Finest($"{activityLogPrefix} is missing required tags to determine the type of server activity.");
+                    }
+
+                    break;
+                case (int)ActivityKind.Internal:
+                default:
+                    break; // don't do anything -- we'll use the existing SimpleSegmentData that was created when the segment was created
+            }
+        }
+        else
+        {
+            Log.Debug($"{activityLogPrefix} has a Status of Error. Not processing tags.");
         }
 
         // add any tags left in the collection as custom attributes
@@ -113,7 +117,6 @@ public static class ActivityBridgeSegmentHelpers
             // the ones that we map to intrinsic or agent attributes.
             segment.AddCustomAttribute(tag.Key, tag.Value);
         }
-
     }
 
     private static void ProcessRpcClientTags(ISegment segment, IAgent agent, IErrorService errorService, Dictionary<string, object> tags, string activityLogPrefix, string rpcSystem)
