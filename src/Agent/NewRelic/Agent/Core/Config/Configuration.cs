@@ -1343,16 +1343,16 @@ namespace NewRelic.Agent.Core.Config
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="urn:newrelic-config")]
-    public partial class DefaultSamplerType
+    public partial class AdaptiveSamplerType
     {
         
         #region Clone method
         /// <summary>
-        /// Create a clone of this DefaultSamplerType object
+        /// Create a clone of this AdaptiveSamplerType object
         /// </summary>
-        public virtual DefaultSamplerType Clone()
+        public virtual AdaptiveSamplerType Clone()
         {
-            return ((DefaultSamplerType)(this.MemberwiseClone()));
+            return ((AdaptiveSamplerType)(this.MemberwiseClone()));
         }
         #endregion
     }
@@ -4209,10 +4209,14 @@ namespace NewRelic.Agent.Core.Config
         
         private object itemField;
         
+        private ItemChoiceType itemElementNameField;
+        
+        [System.Xml.Serialization.XmlElementAttribute("adaptive", typeof(AdaptiveSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("alwaysOff", typeof(AlwaysOffSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("alwaysOn", typeof(AlwaysOnSamplerType))]
-        [System.Xml.Serialization.XmlElementAttribute("default", typeof(DefaultSamplerType))]
+        [System.Xml.Serialization.XmlElementAttribute("default", typeof(AdaptiveSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("traceIdRatio", typeof(TraceIdRatioSamplerType))]
+        [System.Xml.Serialization.XmlChoiceIdentifierAttribute("ItemElementName")]
         public object Item
         {
             get
@@ -4222,6 +4226,19 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.itemField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public ItemChoiceType ItemElementName
+        {
+            get
+            {
+                return this.itemElementNameField;
+            }
+            set
+            {
+                this.itemElementNameField = value;
             }
         }
         
@@ -4238,6 +4255,28 @@ namespace NewRelic.Agent.Core.Config
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
     [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="urn:newrelic-config", IncludeInSchema=false)]
+    public enum ItemChoiceType
+    {
+        
+        /// <remarks/>
+        adaptive,
+        
+        /// <remarks/>
+        alwaysOff,
+        
+        /// <remarks/>
+        alwaysOn,
+        
+        /// <remarks/>
+        @default,
+        
+        /// <remarks/>
+        traceIdRatio,
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
     public partial class configurationDistributedTracingSamplerRemoteParentSampled
@@ -4245,10 +4284,14 @@ namespace NewRelic.Agent.Core.Config
         
         private object itemField;
         
+        private ItemChoiceType1 itemElementNameField;
+        
+        [System.Xml.Serialization.XmlElementAttribute("adaptive", typeof(AdaptiveSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("alwaysOff", typeof(AlwaysOffSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("alwaysOn", typeof(AlwaysOnSamplerType))]
-        [System.Xml.Serialization.XmlElementAttribute("default", typeof(DefaultSamplerType))]
+        [System.Xml.Serialization.XmlElementAttribute("default", typeof(AdaptiveSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("traceIdRatio", typeof(TraceIdRatioSamplerType))]
+        [System.Xml.Serialization.XmlChoiceIdentifierAttribute("ItemElementName")]
         public object Item
         {
             get
@@ -4258,6 +4301,19 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.itemField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public ItemChoiceType1 ItemElementName
+        {
+            get
+            {
+                return this.itemElementNameField;
+            }
+            set
+            {
+                this.itemElementNameField = value;
             }
         }
         
@@ -4274,6 +4330,28 @@ namespace NewRelic.Agent.Core.Config
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
     [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="urn:newrelic-config", IncludeInSchema=false)]
+    public enum ItemChoiceType1
+    {
+        
+        /// <remarks/>
+        adaptive,
+        
+        /// <remarks/>
+        alwaysOff,
+        
+        /// <remarks/>
+        alwaysOn,
+        
+        /// <remarks/>
+        @default,
+        
+        /// <remarks/>
+        traceIdRatio,
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
     public partial class configurationDistributedTracingSamplerRemoteParentNotSampled
@@ -4281,10 +4359,14 @@ namespace NewRelic.Agent.Core.Config
         
         private object itemField;
         
+        private ItemChoiceType2 itemElementNameField;
+        
+        [System.Xml.Serialization.XmlElementAttribute("adaptive", typeof(AdaptiveSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("alwaysOff", typeof(AlwaysOffSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("alwaysOn", typeof(AlwaysOnSamplerType))]
-        [System.Xml.Serialization.XmlElementAttribute("default", typeof(DefaultSamplerType))]
+        [System.Xml.Serialization.XmlElementAttribute("default", typeof(AdaptiveSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("traceIdRatio", typeof(TraceIdRatioSamplerType))]
+        [System.Xml.Serialization.XmlChoiceIdentifierAttribute("ItemElementName")]
         public object Item
         {
             get
@@ -4294,6 +4376,19 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.itemField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public ItemChoiceType2 ItemElementName
+        {
+            get
+            {
+                return this.itemElementNameField;
+            }
+            set
+            {
+                this.itemElementNameField = value;
             }
         }
         
@@ -4310,6 +4405,28 @@ namespace NewRelic.Agent.Core.Config
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
     [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="urn:newrelic-config", IncludeInSchema=false)]
+    public enum ItemChoiceType2
+    {
+        
+        /// <remarks/>
+        adaptive,
+        
+        /// <remarks/>
+        alwaysOff,
+        
+        /// <remarks/>
+        alwaysOn,
+        
+        /// <remarks/>
+        @default,
+        
+        /// <remarks/>
+        traceIdRatio,
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="urn:newrelic-config")]
     public enum RemoteParentSampledBehaviorType
     {
@@ -4318,6 +4435,11 @@ namespace NewRelic.Agent.Core.Config
         /// Default behavior. The agent will use New Relic adaptive sampling logic.
         /// </summary>
         @default,
+        
+        /// <summary>
+        /// (Same as default) The agent will use New Relic adaptive sampling logic.
+        /// </summary>
+        adaptive,
         
         /// <summary>
         /// The agent will sample spans.

@@ -174,6 +174,8 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ITransactionTraceMaker, TransactionTraceMaker>();
             container.Register<ITransactionEventMaker, TransactionEventMaker>();
             container.Register<ICallStackManager, CallStackManager>();
+
+            container.Register<ISamplerFactory, SamplerFactory>();
             container.Register<ISamplerService, SamplerService>();
 
             var transactionCollectors = new List<ITransactionCollector> {

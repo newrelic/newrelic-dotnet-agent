@@ -16,7 +16,8 @@ namespace NewRelic.Agent.Core.Configuration
         {
             Assert.Multiple(() =>
             {
-                Assert.That(RemoteParentSampledBehaviorType.@default.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.Default));
+                Assert.That(RemoteParentSampledBehaviorType.@default.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.Adaptive));
+                Assert.That(RemoteParentSampledBehaviorType.adaptive.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.Adaptive));
                 Assert.That(RemoteParentSampledBehaviorType.alwaysOn.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.AlwaysOn));
                 Assert.That(RemoteParentSampledBehaviorType.alwaysOff.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.AlwaysOff));
                 Assert.That(RemoteParentSampledBehaviorType.traceIdRatioBased.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.TraceIdRatioBased));
@@ -35,7 +36,8 @@ namespace NewRelic.Agent.Core.Configuration
         {
             Assert.Multiple(() =>
             {
-                Assert.That(SamplerType.Default.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.@default));
+                Assert.That(SamplerType.Default.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.adaptive));
+                Assert.That(SamplerType.Adaptive.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.adaptive));
                 Assert.That(SamplerType.AlwaysOn.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.alwaysOn));
                 Assert.That(SamplerType.AlwaysOff.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.alwaysOff));
                 Assert.That(SamplerType.TraceIdRatioBased.ToRemoteParentSampledBehaviorType(), Is.EqualTo(RemoteParentSampledBehaviorType.traceIdRatioBased));

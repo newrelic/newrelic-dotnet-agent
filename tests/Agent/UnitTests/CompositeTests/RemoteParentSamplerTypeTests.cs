@@ -26,8 +26,8 @@ namespace CompositeTests
         [TestCase(SamplerType.AlwaysOn, "00", true, null, TestName = "AlwaysOn_WithNotSampledTraceparent")]
         [TestCase(SamplerType.AlwaysOff, "01", false, null, TestName = "AlwaysOff_WithSampledTraceparent")]
         [TestCase(SamplerType.AlwaysOff, "00", false, null, TestName = "AlwaysOff_WithNotSampledTraceparent")]
-        [TestCase(SamplerType.Default, "01", true, null, TestName = "Default_WithSampledTraceparent")]
-        [TestCase(SamplerType.Default, "00", true, null, TestName = "Default_WithNotSampledTraceparent")] // uses existing logic
+        [TestCase(SamplerType.Adaptive, "01", true, null, TestName = "Default_WithSampledTraceparent")]
+        [TestCase(SamplerType.Adaptive, "00", true, null, TestName = "Default_WithNotSampledTraceparent")] // uses existing logic
         // TraceIdRatioBased explicit ratio scenarios
         [TestCase(SamplerType.TraceIdRatioBased, "01", true, 1.0f, TestName = "TraceIdRatioBased_Ratio1_WithSampledTraceparent")]
         [TestCase(SamplerType.TraceIdRatioBased, "00", true, 1.0f, TestName = "TraceIdRatioBased_Ratio1_WithNotSampledTraceparent")]

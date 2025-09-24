@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Config;
@@ -25,6 +26,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
     {
         private static CompositeTestAgent _compositeTestAgent;
         private IAgent _agent;
+        private ISamplerFactory _samplerFactory;
         private static ISampler _sampler;
 
         private static List<TestCaseData> TraceContextTestCaseData => GetTraceContextTestData();
@@ -32,9 +34,33 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
         [SetUp]
         public void Setup()
         {
-            _compositeTestAgent = new CompositeTestAgent();
-            _agent = _compositeTestAgent.GetAgent();
+            _samplerFactory = Mock.Create<ISamplerFactory>();
+
+            // Create a mock sampler that we can control to force sampling decisions
             _sampler = Mock.Create<ISampler>();
+            Mock.Arrange(() => _samplerFactory.CreateSampler(Arg.IsAny<SamplerLevel>(), Arg.IsAny<SamplerType>(), Arg.IsAny<float?>()))
+                .Returns((SamplerLevel samplerLevel, SamplerType samplerType, float? ratio) =>
+                {
+                    switch (samplerType)
+                    {
+                        case SamplerType.Adaptive:
+                        case SamplerType.Default:
+                            return samplerLevel == SamplerLevel.Root ? _sampler : null;
+                        case SamplerType.AlwaysOn:
+                            return AlwaysOnSampler.Instance;
+                        case SamplerType.AlwaysOff:
+                            return AlwaysOffSampler.Instance;
+                        case SamplerType.TraceIdRatioBased when !ratio.HasValue:
+                            return samplerLevel == SamplerLevel.Root ? _sampler : null;
+                        case SamplerType.TraceIdRatioBased:
+                            return new TraceIdRatioSampler(ratio.Value);
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                });
+
+            _compositeTestAgent = new CompositeTestAgent(samplerFactory: _samplerFactory);
+            _agent = _compositeTestAgent.GetAgent();
         }
 
         [TearDown]
@@ -99,7 +125,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                     .Returns(new SamplingResult(true, priority));
             }
 
-                _compositeTestAgent.LocalConfiguration.spanEvents.enabled = testData.SpanEventsEnabled;
+            _compositeTestAgent.LocalConfiguration.spanEvents.enabled = testData.SpanEventsEnabled;
             var defaultTransactionEventsEnabled = _compositeTestAgent.LocalConfiguration.transactionEvents.enabled;
             _compositeTestAgent.LocalConfiguration.transactionEvents.enabled =
                 testData.TransactionEventsEnabled.HasValue ?
@@ -125,8 +151,6 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             }
 
             _compositeTestAgent.PushConfiguration();
-
-            _compositeTestAgent.Container.Resolve<ISamplerService>().ReplaceAdaptiveSamplerForTesting(_sampler);
         }
 
         private static object GetSamplerFromName(string samplerName, TraceContextTestData testData)
@@ -149,7 +173,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                     };
                 case "adaptive":
                 case "default":
-                    return new DefaultSamplerType();
+                    return new AdaptiveSamplerType();
                 default:
                     throw new Exception($"Unknown sampler type {samplerName}");
             }

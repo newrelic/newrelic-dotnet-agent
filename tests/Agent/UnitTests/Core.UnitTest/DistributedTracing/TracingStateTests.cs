@@ -336,19 +336,19 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Assert.That(tracingState.IngestErrors, Does.Contain(IngestErrorType.TraceParentParseException), "TracingState IngestErrors should contain TraceParentParseException.");
         }
 
-        [TestCase(true, true, SamplerType.AlwaysOn, SamplerType.Default, true, 2.0f, null, TestName = "TraceParentSampled_AlwaysOn")]
-        [TestCase(true, true, SamplerType.AlwaysOff, SamplerType.Default, false, 0f, null, TestName = "TraceParentSampled_AlwaysOff")]
-        [TestCase(true, true, SamplerType.Default, SamplerType.Default, true, 0.65f, null, TestName = "TraceParentSampled_Default")]
-        [TestCase(true, false, SamplerType.Default, SamplerType.AlwaysOn, true, 2.0f, null, TestName = "TraceParentNotSampled_AlwaysOn")]
-        [TestCase(true, false, SamplerType.Default, SamplerType.AlwaysOff, false, 0f, null, TestName = "TraceParentNotSampled_AlwaysOff")]
-        [TestCase(true, false, SamplerType.Default, SamplerType.Default, true, 0.65f, null, TestName = "TraceParentNotSampled_Default")]
-        [TestCase(false, false, SamplerType.Default, SamplerType.Default, null, null, null, TestName = "TraceParentNotValid")]
+        [TestCase(true, true, SamplerType.AlwaysOn, SamplerType.Adaptive, true, 2.0f, null, TestName = "TraceParentSampled_AlwaysOn")]
+        [TestCase(true, true, SamplerType.AlwaysOff, SamplerType.Adaptive, false, 0f, null, TestName = "TraceParentSampled_AlwaysOff")]
+        [TestCase(true, true, SamplerType.Adaptive, SamplerType.Adaptive, true, 0.65f, null, TestName = "TraceParentSampled_Adaptive")]
+        [TestCase(true, false, SamplerType.Adaptive, SamplerType.AlwaysOn, true, 2.0f, null, TestName = "TraceParentNotSampled_AlwaysOn")]
+        [TestCase(true, false, SamplerType.Adaptive, SamplerType.AlwaysOff, false, 0f, null, TestName = "TraceParentNotSampled_AlwaysOff")]
+        [TestCase(true, false, SamplerType.Adaptive, SamplerType.Adaptive, true, 0.65f, null, TestName = "TraceParentNotSampled_Adaptive")]
+        [TestCase(false, false, SamplerType.Adaptive, SamplerType.Adaptive, null, null, null, TestName = "TraceParentNotValid")]
         // TraceIdRatioBased (ratio = 1.0 -> always sample & boost priority)
-        [TestCase(true, true, SamplerType.TraceIdRatioBased, SamplerType.Default, true, 1.65f, 1.0f, TestName = "TraceParentSampled_RatioSampler_AlwaysSample")]
-        [TestCase(true, false, SamplerType.Default, SamplerType.TraceIdRatioBased, true, 1.65f, 1.0f, TestName = "TraceParentNotSampled_RatioSampler_AlwaysSample")]
+        [TestCase(true, true, SamplerType.TraceIdRatioBased, SamplerType.Adaptive, true, 1.65f, 1.0f, TestName = "TraceParentSampled_RatioSampler_AlwaysSample")]
+        [TestCase(true, false, SamplerType.Adaptive, SamplerType.TraceIdRatioBased, true, 1.65f, 1.0f, TestName = "TraceParentNotSampled_RatioSampler_AlwaysSample")]
         // TraceIdRatioBased (ratio = 0.0 -> never sample & no priority boost)
-        [TestCase(true, true, SamplerType.TraceIdRatioBased, SamplerType.Default, false, 0.65f, 0.0f, TestName = "TraceParentSampled_RatioSampler_NeverSample")]
-        [TestCase(true, false, SamplerType.Default, SamplerType.TraceIdRatioBased, false, 0.65f, 0.0f, TestName = "TraceParentNotSampled_RatioSampler_NeverSample")]
+        [TestCase(true, true, SamplerType.TraceIdRatioBased, SamplerType.Adaptive, false, 0.65f, 0.0f, TestName = "TraceParentSampled_RatioSampler_NeverSample")]
+        [TestCase(true, false, SamplerType.Adaptive, SamplerType.TraceIdRatioBased, false, 0.65f, 0.0f, TestName = "TraceParentNotSampled_RatioSampler_NeverSample")]
         public void Sampled_TestMatrix(
             bool traceParentValid,
             bool traceParentSampled,
@@ -397,6 +397,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             {
                 return behavior switch
                 {
+                    SamplerType.Adaptive => null,
                     SamplerType.Default => null,
                     SamplerType.AlwaysOn => AlwaysOnSampler.Instance,
                     SamplerType.AlwaysOff => AlwaysOffSampler.Instance,
