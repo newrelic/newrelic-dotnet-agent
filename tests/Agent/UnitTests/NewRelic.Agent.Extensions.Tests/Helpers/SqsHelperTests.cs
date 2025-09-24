@@ -44,8 +44,7 @@ namespace Agent.Extensions.Tests.Helpers
                 Arg.IsAny<string>(),
                 Arg.IsAny<string>(),
                 Arg.IsAny<int?>(),
-                Arg.IsAny<string>(),
-                Arg.IsAny<bool>()))
+                Arg.IsAny<string>()))
                 .Returns(new TestSegment());
         }
 
@@ -176,8 +175,7 @@ namespace Agent.Extensions.Tests.Helpers
                 "us-east-2",
                 Arg.IsAny<string>(),
                 Arg.IsAny<int?>(),
-                Arg.IsAny<string>(),
-                Arg.IsAny<bool>()), Occurs.Once());
+                Arg.IsAny<string>()), Occurs.Once());
         }
 
         [Test]
@@ -209,8 +207,7 @@ namespace Agent.Extensions.Tests.Helpers
                 null,
                 Arg.IsAny<string>(),
                 Arg.IsAny<int?>(),
-                Arg.IsAny<string>(),
-                Arg.IsAny<bool>()), Occurs.Once());
+                Arg.IsAny<string>()), Occurs.Once());
         }
     }
 
