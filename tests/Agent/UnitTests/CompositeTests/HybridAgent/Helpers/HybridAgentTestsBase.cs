@@ -271,19 +271,36 @@ public abstract class HybridAgentTestsBase
 
     private void ValidateTransactions(IEnumerable<Transaction> transactionsToCheck)
     {
-        var actualTransactionEvents = GetTransactionEventsFromHarvest();
+        var actualTransactionEvents = GetTransactionEventsFromHarvest().ToList();
 
         if (!transactionsToCheck.Any())
         {
             Assert.That(actualTransactionEvents, Is.Empty, "Expected no transactions but found some.");
-
             return;
         }
 
         foreach (var expectedTransaction in transactionsToCheck)
         {
             // find the actual transaction that matches the expected transaction
-            Assert.That(actualTransactionEvents, Has.One.Matches<TransactionEventWireModel>(t => TransactionEventHasName(t, expectedTransaction.Name!)), $"Expected transaction {expectedTransaction.Name} not found in {string.Join(", ", actualTransactionEvents.Select(GetTransactionNameFromTransactionEvent))}.");
+            Assert.That(
+                actualTransactionEvents,
+                Has.One.Matches<TransactionEventWireModel>(t => TransactionEventHasName(t, expectedTransaction.Name!)),
+                $"Expected transaction {expectedTransaction.Name} not found in {string.Join(", ", actualTransactionEvents.Select(GetTransactionNameFromTransactionEvent))}."
+            );
+
+            var actual = actualTransactionEvents.Single(t => TransactionEventHasName(t, expectedTransaction.Name!));
+
+            if (expectedTransaction.Attributes != null && expectedTransaction.Attributes.Any())
+            {
+                var combined = actual.AttributeValues.GetAllAttributeValuesDic();
+                foreach (var expectedAttr in expectedTransaction.Attributes)
+                {
+                    Assert.That(combined.ContainsKey(expectedAttr.Key),
+                        $"Transaction '{expectedTransaction.Name}' missing expected attribute '{expectedAttr.Key}'.",
+                        $"Transaction '{expectedTransaction.Name}' attribute '{expectedAttr.Key}' expected '{expectedAttr.Value}' but was '{combined[expectedAttr.Key] ?? "null"}'."
+                    );
+                }
+            }
         }
     }
 
@@ -338,9 +355,10 @@ public abstract class HybridAgentTestsBase
 
             if (expectedSpan.Attributes != null && expectedSpan.Attributes.Any())
             {
+                var allAttributes = actualSpan.GetAllAttributeValuesDic();
+
                 foreach (var attribute in expectedSpan.Attributes)
                 {
-                    var allAttributes = actualSpan.GetAllAttributeValuesDic();
 
                     Assert.That(allAttributes, Contains.Key(attribute.Key), $"Expected attribute {attribute.Key} not found.");
                     Assert.That(allAttributes[attribute.Key], Is.EqualTo(attribute.Value), $"Expected attribute {attribute.Key} with value {attribute.Value} does not match actual value {allAttributes[attribute.Key]}.");

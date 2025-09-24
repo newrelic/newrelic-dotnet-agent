@@ -64,6 +64,9 @@ public class Transaction
 {
     [JsonProperty("name")]
     public string Name { get; set; }
+
+    [JsonProperty("attributes")]
+    public IDictionary<string, object> Attributes { get; set; }
 }
 
 public class Span
