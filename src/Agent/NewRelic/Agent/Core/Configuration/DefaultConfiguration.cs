@@ -2694,8 +2694,7 @@ namespace NewRelic.Agent.Core.Configuration
         #region Otel Bridge
 
         // The activity sources we listen to by default - these are the sources that we will automatically instrument
-        // TODO: eventually we want to include "Elastic.Transport", "RabbitMQ.Client.Subscriber", "RabbitMQ.Client.Publisher" by default
-        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent"]; 
+        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent,Elastic.Transport,RabbitMQ.Client.Subscriber,RabbitMQ.Client.Publisher"]; 
 
         private List<string> _includedActivitySources;
         public List<string> IncludedActivitySources
