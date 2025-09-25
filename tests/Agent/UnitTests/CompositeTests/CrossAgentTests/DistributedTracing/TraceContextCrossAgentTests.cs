@@ -96,16 +96,8 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 
         private void InitializeSettings(TraceContextTestData testData)
         {
-            if (testData.ForceSampledTrue)
-            {
-                var priority = 1.0f;
-                var sampler = Mock.Create<ISampler>();
-                Mock.Arrange(() => sampler.ShouldSample(Arg.IsAny<ISamplingParameters>()))
-                    .Returns(new SamplingResult(true, priority));
-
-                Mock.Arrange(() => _samplerFactory.CreateSampler(SamplerType.Adaptive, Arg.IsAny<float?>()))
-                    .Returns(() => sampler);
-            }
+            Mock.Arrange(() => _samplerFactory.CreateSampler(SamplerType.Adaptive, Arg.IsAny<float?>()))
+                .Returns(() => new MockAdaptiveSampler(testData.ForceSampledTrue));
 
             _compositeTestAgent.LocalConfiguration.spanEvents.enabled = testData.SpanEventsEnabled;
             var defaultTransactionEventsEnabled = _compositeTestAgent.LocalConfiguration.transactionEvents.enabled;
@@ -511,6 +503,21 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             }
 
             MetricAssertions.MetricsExist(expectedMetrics, _compositeTestAgent.Metrics);
+        }
+
+        private class MockAdaptiveSampler : AdaptiveSampler
+        {
+            private readonly bool _shouldSample;
+
+            public MockAdaptiveSampler(bool shouldSample) : base(10, 60, 0, false)
+            {
+                _shouldSample = shouldSample;
+            }
+
+            protected override bool ShouldSample()
+            {
+                return _shouldSample;
+            }
         }
 
         #region Trace Context Test Data Classes

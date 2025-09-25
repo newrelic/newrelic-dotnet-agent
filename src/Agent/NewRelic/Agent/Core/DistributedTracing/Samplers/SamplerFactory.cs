@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.DistributedTracing.Samplers
             _adaptiveSampler = GetAdaptiveSampler();
         }
 
-        public ISampler CreateSampler(SamplerType samplerType, float? traceIdRatioSamplerRatio)
+        public virtual ISampler CreateSampler(SamplerType samplerType, float? traceIdRatioSamplerRatio)
         {
             switch (samplerType)
             {

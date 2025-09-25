@@ -240,9 +240,26 @@ public class AdaptiveSampler : ISampler
 
     public ISamplingResult ShouldSample(ISamplingParameters parameters)
     {
+        if (parameters.NewRelicTraceContextWasAccepted && parameters.TraceContext.Tracestate.Sampled.HasValue)
+        {
+            //W3C Trace Context is present and has a sampling decision.  Honor it.
+            bool sampledValue = Convert.ToBoolean(parameters.TraceContext.Tracestate.Sampled);
+            var priorityValue = parameters.TraceContext.Tracestate.Priority ?? 0.0f;
+            return new SamplingResult(sampledValue, priorityValue);
+        }
+
+        if (parameters.NewRelicPayloadWasAccepted && parameters.NewRelicPayload.Sampled.HasValue)
+        {
+            //New Relic distributed trace payload is present and has a sampling decision.  Honor it.
+            bool sampledValue = parameters.NewRelicPayload.Sampled.Value;
+            var priorityValue = parameters.Priority;
+            return new SamplingResult(sampledValue, priorityValue);
+        }
+
+        //No New Relic sampling decision from upstream.  Make our own decision.
         float priority = parameters.Priority;
 
-        var sampled = _state.ShouldSample();
+        var sampled = ShouldSample();
         if (sampled)
         {
             priority = TracePriorityManager.Adjust(priority, PriorityBoost);
@@ -250,6 +267,8 @@ public class AdaptiveSampler : ISampler
 
         return new SamplingResult(sampled, priority);
     }
+
+    protected virtual bool ShouldSample() => _state.ShouldSample();
 
     public void UpdateSamplingTarget(int samplingTarget, int samplingTargetPeriod)
     {

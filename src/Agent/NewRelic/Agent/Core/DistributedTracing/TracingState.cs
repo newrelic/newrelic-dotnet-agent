@@ -284,7 +284,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             if (sampler == null) // remote parent sampled behavior is not configured
                 return;
 
-            var samplingResult = sampler.ShouldSample(new SamplingParameters(TraceId, Priority ?? 0.0f));
+            var samplingResult = sampler.ShouldSample(new SamplingParameters(TraceId, Priority ?? 0.0f, _traceContext, TraceContextWasAccepted && _validTracestateWasAccepted, _newRelicPayload, NewRelicPayloadWasAccepted));
 
             // setting these to non-null values will override the logic in the property getters that falls back to the payload or tracestate values
             _priority = samplingResult.Priority;
