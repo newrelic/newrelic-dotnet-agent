@@ -316,8 +316,8 @@ namespace NewRelic.Agent.Core.Transactions
             if (brokerVendorName == null)
                 throw new ArgumentNullException("brokerVendorName");
 
-
             var segment = StartSegmentImpl(methodCall);
+
             var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName, cloudAccountId, cloudRegion, serverAddress, serverPort, routingKey);
 
             segment.SetSegmentData(messageBrokerSegmentData);

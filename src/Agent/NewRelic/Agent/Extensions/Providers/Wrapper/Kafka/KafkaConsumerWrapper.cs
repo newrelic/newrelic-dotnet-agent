@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using Confluent.Kafka;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
@@ -18,7 +19,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
         private const string WrapperName = "KafkaConsumerWrapper";
         private const string BrokerVendorName = "Kafka";
 
-        public bool IsTransactionRequired => false;
+        public bool IsTransactionRequired => true;
 
         private static readonly ConcurrentDictionary<Type, Func<object, string>> TopicAccessorDictionary =
             new ConcurrentDictionary<Type, Func<object, string>>();
@@ -37,20 +38,22 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            transaction = agent.CreateKafkaTransaction(
-                destinationType: MessageBrokerDestinationType.Topic,
-                brokerVendorName: BrokerVendorName,
-                destination: "unknown"); // placeholder since the topic name is unknown at this point
-
             var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, BrokerVendorName, "unknown");
+
+            // if the overload that takes a CancellationToken was used, then we want to make this a leaf segment
+            // because that overload calls the overload that takes an int (timeout) many times in a loop until the token is cancelled or a message is received
+            // and we don't want to create a segment for each of those calls.
+            var isCancellationTokenOverload = instrumentedMethodCall.MethodCall.MethodArguments[0] is CancellationToken;
+            if (isCancellationTokenOverload)
+                ((ISegmentExperimental)segment).MakeLeaf();
 
             return Delegates.GetDelegateFor<object>(onSuccess: (resultAsObject) =>
             {
                 try
                 {
-                    if (resultAsObject == null) // null is a valid return value, so we have to handle it. 
+                    // null is a valid return value, so we have to handle it.
+                    if (resultAsObject == null) 
                     {
-                        transaction.Ignore();
                         return;
                     }
 
@@ -62,9 +65,8 @@ namespace NewRelic.Providers.Wrapper.Kafka
                     var topicAccessor = TopicAccessorDictionary.GetOrAdd(type, GetTopicAccessorFunc);
                     string topic = topicAccessor(resultAsObject);
 
-                    // set the segment and transaction name
+                    // set the segment name now that we have the topic
                     segment.SetMessageBrokerDestination(topic);
-                    transaction.SetKafkaMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
 
                     if (KafkaHelper.TryGetBootstrapServersFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var bootstrapServers))
                     {
@@ -86,9 +88,8 @@ namespace NewRelic.Providers.Wrapper.Kafka
                 }
                 finally
                 {
-                    // need to guarantee that the segment and transaction are terminated
+                    // need to guarantee that the segment is ended
                     segment.End();
-                    transaction.End();
                 }
             });
         }
