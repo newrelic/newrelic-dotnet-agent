@@ -169,7 +169,7 @@
     <PackageReference Include="Owin" Version="1.0.0">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
   </ItemGroup>
 
   <!-- The following section is used to specify particular versions of the RabbitMQ client to be tested with different
