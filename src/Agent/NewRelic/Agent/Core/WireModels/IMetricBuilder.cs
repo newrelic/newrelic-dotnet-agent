@@ -211,6 +211,6 @@ namespace NewRelic.Agent.Core.WireModels
         MetricWireModel TryBuildCountMetric(string metricName, long count);
         MetricWireModel TryBuildByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null);
 
-        MetricWireModel TryBuildDistributedTraceHeadersAcceptedLate { get; }
+        MetricWireModel TryBuildDistributedTraceHeadersAcceptedLate(int acceptedLateCount);
     }
 }

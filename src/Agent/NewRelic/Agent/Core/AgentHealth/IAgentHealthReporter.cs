@@ -123,7 +123,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         void ReportSpanEventsSent(int count);
 
-        void CollectDistributedTraceSuccessMetrics();
+        void CollectDistributedTraceMetrics();
 
         void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint);
 
