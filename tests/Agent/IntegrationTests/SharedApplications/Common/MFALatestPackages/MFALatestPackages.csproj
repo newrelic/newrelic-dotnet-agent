@@ -49,7 +49,7 @@
     <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'net9.0'" />
     <!-- required by Microsoft.Azure.Cosmos -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="NLog" Version="6.0.4" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="NLog" Version="6.0.4" Condition="'$(TargetFramework)' == 'net9.0'" />

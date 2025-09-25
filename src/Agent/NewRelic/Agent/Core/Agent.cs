@@ -33,7 +33,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
-using NewRelic.Agent.Core.Database;
 
 namespace NewRelic.Agent.Core
 {
@@ -128,11 +127,6 @@ namespace NewRelic.Agent.Core
         public ITransaction CreateTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination, Action wrapperOnCreate)
         {
             return CreateTransaction(TransactionName.ForBrokerTransaction(destinationType, brokerVendorName, destination), true, wrapperOnCreate ?? NoOpWrapperOnCreate);
-        }
-
-        public ITransaction CreateKafkaTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination, Action wrapperOnCreate)
-        {
-            return CreateTransaction(TransactionName.ForKafkaBrokerTransaction(destinationType, brokerVendorName, destination), true, wrapperOnCreate ?? NoOpWrapperOnCreate);
         }
 
         public ITransaction CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool doNotTrackAsUnitOfWork, Action wrapperOnCreate)
