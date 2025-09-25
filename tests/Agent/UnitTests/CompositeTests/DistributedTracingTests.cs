@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Metrics;
 
 namespace CompositeTests
 {
@@ -283,6 +284,33 @@ namespace CompositeTests
                 Assert.That(intrinsicAttributes["server.address"], Is.EqualTo("127.0.0.2"));
                 Assert.That(intrinsicAttributes["server.port"], Is.EqualTo(123));
             });
+        }
+
+        [Test]
+        public void AcceptDistributedTraceHeaders_AfterSegmentStarted_ReportsLateMetric()
+        {
+            // Arrange: create transaction and start a segment BEFORE accepting headers to trigger Segments.Any() path
+            var tx = _agent.CreateTransaction(
+                isWeb: true,
+                category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+                transactionDisplayName: "LateAcceptTxn",
+                doNotTrackAsUnitOfWork: true);
+
+            var segment = _agent.StartTransactionSegmentOrThrow("preAcceptSegment");
+
+            // Act: accept headers after a segment has started (late)
+            _agent.CurrentTransaction.AcceptDistributedTraceHeaders(NewRelicHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
+
+            segment.End();
+            tx.End();
+            _compositeTestAgent.Harvest();
+
+            // Assert: late accept metric emitted and tracing state set
+            var expectedMetrics = new List<ExpectedMetric>
+            {
+                new ExpectedCountMetric { Name = MetricNames.SupportabilityDistributedTraceHeadersAcceptedLate, CallCount = 1 }
+            };
+            MetricAssertions.MetricsExist(expectedMetrics, _compositeTestAgent.Metrics);
         }
 
         private static Dictionary<string, string> NewRelicHeaders

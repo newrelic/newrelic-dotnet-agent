@@ -41,6 +41,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private InterlockedCounter _traceContextCreateSuccessCounter;
         private InterlockedCounter _traceContextAcceptSuccessCounter;
+        private InterlockedCounter _distributedTraceHeadersAcceptedLateCounter = new InterlockedCounter();
 
         private readonly InterlockedCounter _customInstrumentationCounter;
         private readonly HashSet<string> _customInstrumentationIds = new();
@@ -377,8 +378,13 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportSupportabilityDistributedTraceCreatePayloadException() =>
             TrySend(_metricBuilder.TryBuildCreatePayloadException);
 
+        public void ReportSupportabilityDistributedTraceHeadersAcceptedLate()
+        {
+            _distributedTraceHeadersAcceptedLateCounter.Increment();
+        }
+
         /// <summary>Limits Collect calls to once per harvest per metric.</summary>
-        public void CollectDistributedTraceSuccessMetrics()
+        public void CollectDistributedTraceMetrics()
         {
             if (TryGetCount(_payloadCreateSuccessCounter, out var createCount))
             {
@@ -388,6 +394,11 @@ namespace NewRelic.Agent.Core.AgentHealth
             if (TryGetCount(_payloadAcceptSuccessCounter, out var acceptCount))
             {
                 TrySend(_metricBuilder.TryBuildAcceptPayloadSuccess(acceptCount));
+            }
+
+            if (TryGetCount(_distributedTraceHeadersAcceptedLateCounter, out var acceptedLateCount))
+            {
+                TrySend(_metricBuilder.TryBuildDistributedTraceHeadersAcceptedLate(acceptedLateCount));
             }
         }
 
@@ -849,7 +860,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void CollectMetrics()
         {
-            CollectDistributedTraceSuccessMetrics();
+            CollectDistributedTraceMetrics();
             CollectTraceContextSuccessMetrics();
             CollectInfiniteTracingMetrics();
             CollectLoggingMetrics();
