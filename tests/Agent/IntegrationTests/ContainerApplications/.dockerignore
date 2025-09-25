@@ -1,0 +1,25 @@
+# Copyright 2020 New Relic, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+# Exclude transient / large / generated content from image build contexts.
+
+# LocalStack / Kinesis / other emulated AWS service state
+volume/
+**/localstack/
+**/kinesis-local*/
+
+# Node modules (if any JS tooling leaks in)
+**/node_modules/
+
+# Dotnet build outputs
+**/bin/
+**/obj/
+**/TestResults/
+
+# Logs, temp artifacts
+**/logs/
+**/*.log
+
+# Git & tooling
+.git/
+.gitignore
+.dockerignore
