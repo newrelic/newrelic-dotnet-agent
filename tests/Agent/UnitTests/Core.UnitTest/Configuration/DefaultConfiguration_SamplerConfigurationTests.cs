@@ -1,10 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NUnit.Framework;
 using Telerik.JustMock;
-using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.SharedInterfaces;
@@ -13,10 +11,6 @@ using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Configuration
 {
-    /// <summary>
-    /// Additional sampler / ratio focused tests.
-    /// Existing test file left untouched per user request.
-    /// </summary>
     [TestFixture, Category("Configuration")]
     public class DefaultConfiguration_SamplerConfigurationTests
     {
