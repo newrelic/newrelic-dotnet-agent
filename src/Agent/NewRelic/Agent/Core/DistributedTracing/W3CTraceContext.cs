@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
-    internal class W3CTraceContext
+    public class W3CTraceContext
     {
         internal W3CTraceparent Traceparent { get; private set; }
         internal W3CTracestate Tracestate { get; private set; }

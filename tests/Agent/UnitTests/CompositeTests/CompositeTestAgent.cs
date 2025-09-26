@@ -37,7 +37,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace CompositeTests
 {
@@ -129,11 +129,11 @@ namespace CompositeTests
 
         public List<SqlTraceWireModel> SqlTraces { get; } = new List<SqlTraceWireModel>();
 
-        public CompositeTestAgent(bool enableServerlessMode = false) : this(shouldAllowThreads: false, includeAsyncLocalStorage: false, enableServerlessMode)
+        public CompositeTestAgent(bool enableServerlessMode = false, ISamplerFactory samplerFactory = null) : this(shouldAllowThreads: false, includeAsyncLocalStorage: false, enableServerlessMode, samplerFactory: samplerFactory)
         {
         }
 
-        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false, bool enableGCSamplerV2 = false, RemoteParentSampledBehavior remoteParentSampledBehavior = RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior remoteParentNotSampledBehavior = RemoteParentSampledBehavior.Default)
+        public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false, bool enableGCSamplerV2 = false, SamplerType rootSamplerType = SamplerType.Adaptive, SamplerType remoteParentSampledSamplerType = SamplerType.Adaptive, SamplerType remoteParentNotSampledSamplerType = SamplerType.Adaptive, ISamplerFactory samplerFactory = null)
         {
             Log.Initialize(new Logger());
 
@@ -215,6 +215,12 @@ namespace CompositeTests
             }
 
             _container.ReplaceInstanceRegistration(configurationManagerStatic);
+
+            if (samplerFactory != null)
+            {
+                _container.ReplaceInstanceRegistration(samplerFactory);
+            }
+
             _container.ReplaceRegistrations(); // creates a new scope, registering the replacement instances from all .ReplaceRegistration() calls above
 
             InstrumentationService = _container.Resolve<IInstrumentationService>();
@@ -227,7 +233,7 @@ namespace CompositeTests
             AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
             // Update configuration (will also start services)
-            LocalConfiguration = GetDefaultTestLocalConfiguration(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
+            LocalConfiguration = GetDefaultTestLocalConfiguration(rootSamplerType, remoteParentSampledSamplerType, remoteParentNotSampledSamplerType);
             ServerConfiguration = GetDefaultTestServerConfiguration();
             SecurityConfiguration = GetDefaultSecurityPoliciesConfiguration();
             InstrumentationWatcher.Start();
@@ -410,14 +416,16 @@ namespace CompositeTests
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
         }
 
-        private static configuration GetDefaultTestLocalConfiguration(RemoteParentSampledBehavior remoteParentSampledBehavior, RemoteParentSampledBehavior remoteParentNotSampledBehavior)
+        private static configuration GetDefaultTestLocalConfiguration(SamplerType rootSamplerType, SamplerType remoteParentSampledSamplerType, SamplerType remoteParentNotSampledSamplerType)
         {
             var configuration = new configuration();
 
             // Distributed tracing is disabled by default. However, we have fewer tests that need it disabled than we do that need it enabled.
             configuration.distributedTracing.enabled = true;
-            configuration.distributedTracing.sampler.remoteParentSampled = remoteParentSampledBehavior.ToRemoteParentSampledBehaviorType();
-            configuration.distributedTracing.sampler.remoteParentNotSampled = remoteParentNotSampledBehavior.ToRemoteParentSampledBehaviorType();
+
+            // configure the distributed tracing samplers
+            configuration.distributedTracing.sampler.remoteParentSampled.Item = remoteParentSampledSamplerType.ToConfigurationSamplerTypeInstance();
+            configuration.distributedTracing.sampler.remoteParentNotSampled.Item = remoteParentNotSampledSamplerType.ToConfigurationSamplerTypeInstance();
 
             return configuration;
         }
