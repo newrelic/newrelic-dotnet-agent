@@ -4,7 +4,6 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.DistributedTracing
