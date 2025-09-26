@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Threading;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
@@ -12,20 +13,21 @@ namespace NewRelic.Agent.Core.DistributedTracing.Samplers
     public class SamplerFactory : ConfigurationBasedService, ISamplerFactory
     {
         // we use a single instance of the adaptive sampler because it manages its own state internally
-        private AdaptiveSampler _adaptiveSampler;
+        // Now lazily initialized so we only create it if/when needed and after the most recent configuration is available.
+        private readonly Lazy<AdaptiveSampler> _adaptiveSampler;
 
         public SamplerFactory()
         {
-            _adaptiveSampler = GetAdaptiveSampler();
+            _adaptiveSampler = new Lazy<AdaptiveSampler>(CreateAdaptiveSampler, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         // virtual to allow for mocking in tests
         public virtual ISampler GetSampler(SamplerType samplerType, float? traceIdRatioSamplerRatio)
         {
-           switch (samplerType)
+            switch (samplerType)
             {
                 case SamplerType.Adaptive:
-                    return _adaptiveSampler;
+                    return _adaptiveSampler.Value;
                 case SamplerType.AlwaysOn:
                     return AlwaysOnSampler.Instance;
                 case SamplerType.AlwaysOff:
@@ -36,22 +38,34 @@ namespace NewRelic.Agent.Core.DistributedTracing.Samplers
                         return new TraceIdRatioSampler(traceIdRatioSamplerRatio.Value); // always return a new instance since it is stateless
 
                     Log.Warn($"The configured TraceIdRatioBased sampler is missing a ratio value. Using default sampler.");
-                    return _adaptiveSampler;
+                    return _adaptiveSampler.Value;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(samplerType), samplerType, null);
             }
         }
 
-        private AdaptiveSampler GetAdaptiveSampler() =>
+        // Factory method used by Lazy<T> so the latest configuration values are applied at first use.
+        private AdaptiveSampler CreateAdaptiveSampler() =>
             new(
                 _configuration.SamplingTarget ?? AdaptiveSampler.DefaultTargetSamplesPerInterval,
-                _configuration.SamplingTargetPeriodInSeconds ?? AdaptiveSampler.DefaultTargetSamplingIntervalInSeconds, null,
+                _configuration.SamplingTargetPeriodInSeconds ?? AdaptiveSampler.DefaultTargetSamplingIntervalInSeconds,
+                null,
                 _configuration.ServerlessModeEnabled);
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
         {
-            // update the AdaptiveSampler's sampling target and period, which will start a new sampling interval.
-            _adaptiveSampler.UpdateSamplingTarget(_configuration.SamplingTarget ?? AdaptiveSampler.DefaultTargetSamplesPerInterval, _configuration.SamplingTargetPeriodInSeconds ?? AdaptiveSampler.DefaultTargetSamplingIntervalInSeconds);
+            // Ensure an adaptive sampler exists after a configuration update so subsequent requests
+            // immediately use a sampler reflecting the newest configuration.
+            if (!_adaptiveSampler.IsValueCreated)
+            {
+                _ = _adaptiveSampler.Value; // forces creation with current configuration
+                return;
+            }
+
+            // If already created, update its sampling target and period (starts a new interval).
+            _adaptiveSampler.Value.UpdateSamplingTarget(
+                _configuration.SamplingTarget ?? AdaptiveSampler.DefaultTargetSamplesPerInterval,
+                _configuration.SamplingTargetPeriodInSeconds ?? AdaptiveSampler.DefaultTargetSamplingIntervalInSeconds);
         }
 
     }

@@ -132,40 +132,36 @@ namespace NewRelic.Agent.Core.DistributedTracing
         [Test]
         public void ConcurrentAccess_InitializesOnlyOncePerSampler()
         {
+            // Configure all sampler levels to use a ratio-based sampler to exercise factory calls uniformly.
             ArrangeConfig(
                 rootType: SamplerType.TraceIdRatioBased, rootRatio: 0.3f,
                 remoteSampledType: SamplerType.TraceIdRatioBased, remoteSampledRatio: 0.4f,
                 remoteNotSampledType: SamplerType.TraceIdRatioBased, remoteNotSampledRatio: 0.5f);
             _service.OverrideConfigForTesting(_config);
 
-            var results = new ConcurrentBag<ISampler>();
+            // Using separate bags removes reliance on ordering of a single ConcurrentBag (its internal enumeration order
+            // is not guaranteed and caused intermittent failures when using index % 3 bucketing).
+            var rootSamplers = new ConcurrentBag<ISampler>();
+            var remoteSampledSamplers = new ConcurrentBag<ISampler>();
+            var remoteNotSampledSamplers = new ConcurrentBag<ISampler>();
+
             Parallel.For(0, 100, _ =>
             {
-                results.Add(_service.GetSampler(SamplerLevel.Root));
-                results.Add(_service.GetSampler(SamplerLevel.RemoteParentSampled));
-                results.Add(_service.GetSampler(SamplerLevel.RemoteParentNotSampled));
+                rootSamplers.Add(_service.GetSampler(SamplerLevel.Root));
+                remoteSampledSamplers.Add(_service.GetSampler(SamplerLevel.RemoteParentSampled));
+                remoteNotSampledSamplers.Add(_service.GetSampler(SamplerLevel.RemoteParentNotSampled));
             });
 
-            var rootDistinct = results
-                .Where((_, idx) => idx % 3 == 0)
-                .Distinct()
-                .Count();
-
-            var remoteSampledDistinct = results
-                .Where((_, idx) => idx % 3 == 1)
-                .Distinct()
-                .Count();
-
-            var remoteNotSampledDistinct = results
-                .Where((_, idx) => idx % 3 == 2)
-                .Distinct()
-                .Count();
+            var rootDistinct = rootSamplers.Distinct().Count();
+            var remoteSampledDistinct = remoteSampledSamplers.Distinct().Count();
+            var remoteNotSampledDistinct = remoteNotSampledSamplers.Distinct().Count();
 
             Assert.Multiple(() =>
             {
-                Assert.That(rootDistinct, Is.EqualTo(1));
-                Assert.That(remoteSampledDistinct, Is.EqualTo(1));
-                Assert.That(remoteNotSampledDistinct, Is.EqualTo(1));
+                Assert.That(rootDistinct, Is.EqualTo(1), "Root sampler should be initialized exactly once.");
+                Assert.That(remoteSampledDistinct, Is.EqualTo(1), "RemoteParentSampled sampler should be initialized exactly once.");
+                Assert.That(remoteNotSampledDistinct, Is.EqualTo(1), "RemoteParentNotSampled sampler should be initialized exactly once.");
+                Assert.That(_samplerId, Is.EqualTo(3), "Factory should have been invoked exactly once per sampler level.");
             });
         }
 
