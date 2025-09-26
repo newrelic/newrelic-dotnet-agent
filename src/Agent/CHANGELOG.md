@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.44.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.44.1...v10.44.2) (2025-09-26)
+
+
+### Fixes
+
+* Kafka instrumentation doesn't play nice with custom instrumentation ([#3257](https://github.com/newrelic/newrelic-dotnet-agent/issues/3257)) ([1dbd1c5](https://github.com/newrelic/newrelic-dotnet-agent/commit/1dbd1c51aeaf6e2909d23b078029ee78b721b3bc))
+
 ## [10.44.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.44.0...v10.44.1) (2025-08-19)
 
 
