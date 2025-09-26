@@ -5075,8 +5075,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             var includedActivitySources = defaultConfig.IncludedActivitySources;
 
-            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Foo", "Bar", "Baz"]));
-            //TODO: Use this line with Elastic.Transport is included by default  Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Elastic.Transport", "Foo", "Bar", "Baz"]));
+            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Elastic.Transport", "RabbitMQ.Client.Subscriber", "RabbitMQ.Client.Publisher", "Foo", "Bar", "Baz"]));
         }
 
         [Test]
@@ -5085,7 +5084,7 @@ namespace NewRelic.Agent.Core.Configuration
             _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Include", value = "  , Foo , , Bar,Baz,, " });
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
             var includedActivitySources = defaultConfig.IncludedActivitySources;
-            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Foo", "Bar", "Baz"]));
+            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Elastic.Transport", "RabbitMQ.Client.Subscriber", "RabbitMQ.Client.Publisher", "Foo", "Bar", "Baz"]));
         }
 
         [Test]

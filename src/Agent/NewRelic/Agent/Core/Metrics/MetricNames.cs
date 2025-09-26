@@ -199,8 +199,7 @@ namespace NewRelic.Agent.Core.Metrics
                         : MetricName.Create(DatastoreOperation, EnumNameCache<DatastoreVendor>.GetName(vendor), operation);
                 });
         }
-
-
+                
         public static MetricName GetCustom(string suffix)
         {
             return MetricName.Create(Custom, suffix);
@@ -1018,6 +1017,8 @@ namespace NewRelic.Agent.Core.Metrics
             var prefix = GetDistributedTraceMetricPrefix(DistributedTraceTransportDurationPs, type, accountId, app, transport);
             return (all: MetricName.Create(prefix + All), webOrOther: MetricName.Create(prefix + (isWeb ? AllWeb : AllOther)));
         }
+
+        public static string SupportabilityDistributedTraceHeadersAcceptedLate => SupportabilityDistributedTracePs + "HeadersAcceptedLate";
 
         #endregion Distributed Trace Metrics
 
