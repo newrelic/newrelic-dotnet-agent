@@ -227,16 +227,15 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 // Search for the following header keys in this order: "newrelic", "NEWRELIC", "Newrelic"
                 // If the getter function makes a case-insensitive search it will find any of the three
                 // variants on the first call.
-                var newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllLower);
-                if (newRelicHeaderList == null || newRelicHeaderList.Any() == false)
-                {
-                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllUpper);
-                }
-                if (newRelicHeaderList == null || newRelicHeaderList.Any() == false)
-                {
-                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeySingleUpper);
-                }
-                if (newRelicHeaderList == null || newRelicHeaderList.Any() == true) // a NR header key was present
+                var newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllLower)?.ToList();
+
+                if (newRelicHeaderList is not { Count: > 0})
+                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllUpper)?.ToList();
+
+                if (newRelicHeaderList is not { Count: > 0 })
+                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeySingleUpper)?.ToList();
+
+                if (newRelicHeaderList is { Count: > 0}) // a NR header key was present
                 {
                     tracingState._newRelicPayload = DistributedTracePayload.TryDecodeAndDeserializeDistributedTracePayload(newRelicHeaderList.FirstOrDefault(), agentTrustKey, errors);
                     tracingState.NewRelicPayloadWasAccepted = tracingState._newRelicPayload != null ? true : false;
