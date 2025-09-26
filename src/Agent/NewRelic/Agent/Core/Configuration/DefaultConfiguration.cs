@@ -909,7 +909,7 @@ namespace NewRelic.Agent.Core.Configuration
                 _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
             };
 
-            //if samplerLevel is one of the remote parent levels and samplerItem is null, we need to check the legacy attributes
+            //if samplerLevel is one of the remote parent levels and samplerItem is null (not configured), we need to check the legacy attributes
             if (samplerLevel != SamplerLevel.Root && samplerItem == null)
             {
                 var remoteParentSampledBehaviorType = samplerLevel == SamplerLevel.RemoteParentSampled ?
@@ -929,7 +929,7 @@ namespace NewRelic.Agent.Core.Configuration
         private static SamplerType MapSamplerItem(object samplerItem) =>
             samplerItem switch
             {
-                null => SamplerType.Adaptive,          // not configured
+                null => SamplerType.Adaptive, // not configured, default to Adaptive
                 AdaptiveSamplerType => SamplerType.Adaptive,
                 AlwaysOnSamplerType => SamplerType.AlwaysOn,
                 AlwaysOffSamplerType => SamplerType.AlwaysOff,

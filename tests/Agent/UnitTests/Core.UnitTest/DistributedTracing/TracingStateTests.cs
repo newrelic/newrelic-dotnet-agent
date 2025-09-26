@@ -398,7 +398,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 return behavior switch
                 {
                     SamplerType.Adaptive => null,
-                    SamplerType.Default => null,
                     SamplerType.AlwaysOn => AlwaysOnSampler.Instance,
                     SamplerType.AlwaysOff => AlwaysOffSampler.Instance,
                     SamplerType.TraceIdRatioBased => new TraceIdRatioSampler(r ?? 0.5f),

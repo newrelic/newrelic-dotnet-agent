@@ -45,29 +45,11 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public static RemoteParentSampledBehaviorType ToRemoteParentSampledBehaviorType(this SamplerType remoteParentSampledBehavior)
-        {
-            switch (remoteParentSampledBehavior)
-            {
-                case SamplerType.Default:
-                case SamplerType.Adaptive:
-                    return RemoteParentSampledBehaviorType.adaptive;
-                case SamplerType.AlwaysOn:
-                    return RemoteParentSampledBehaviorType.alwaysOn;
-                case SamplerType.AlwaysOff:
-                    return RemoteParentSampledBehaviorType.alwaysOff;
-                case SamplerType.TraceIdRatioBased:
-                    return RemoteParentSampledBehaviorType.traceIdRatioBased;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(remoteParentSampledBehavior), remoteParentSampledBehavior, null);
-            }
-        }
 
         public static object ToConfigurationSamplerTypeInstance(this SamplerType samplerType)
         {
             switch (samplerType)
             {
-                case SamplerType.Default:
                 case SamplerType.Adaptive:
                     return new AdaptiveSamplerType();
                 case SamplerType.AlwaysOn:

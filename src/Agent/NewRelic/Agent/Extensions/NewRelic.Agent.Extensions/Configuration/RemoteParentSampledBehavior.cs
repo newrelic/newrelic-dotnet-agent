@@ -10,10 +10,6 @@ namespace NewRelic.Agent.Configuration
     [JsonConverter(typeof(StringEnumConverter))]
     public enum SamplerType
     {
-        // Default and Adaptive are effectively the same, but we keep both for backward compatibility
-        [EnumMember(Value = "default")]
-        Default,
-
         [EnumMember(Value = "adaptive")]
         Adaptive,
 

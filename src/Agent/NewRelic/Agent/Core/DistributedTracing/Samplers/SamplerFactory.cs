@@ -12,45 +12,46 @@ namespace NewRelic.Agent.Core.DistributedTracing.Samplers
     public class SamplerFactory : ConfigurationBasedService, ISamplerFactory
     {
         // we use a single instance of the adaptive sampler because it manages its own state internally
-        private ISampler _adaptiveSampler;
+        private AdaptiveSampler _adaptiveSampler;
 
         public SamplerFactory()
         {
             _adaptiveSampler = GetAdaptiveSampler();
         }
 
-        public virtual ISampler CreateSampler(SamplerType samplerType, float? traceIdRatioSamplerRatio)
+        // virtual to allow for mocking in tests
+        public virtual ISampler GetSampler(SamplerType samplerType, float? traceIdRatioSamplerRatio)
         {
-            switch (samplerType)
+           switch (samplerType)
             {
-                case SamplerType.Default:
                 case SamplerType.Adaptive:
                     return _adaptiveSampler;
                 case SamplerType.AlwaysOn:
                     return AlwaysOnSampler.Instance;
                 case SamplerType.AlwaysOff:
                     return AlwaysOffSampler.Instance;
+                case SamplerType.TraceIdRatioBased:
+                    // if the ratio is not set, log a warning and use the default sampler
+                    if (traceIdRatioSamplerRatio.HasValue)
+                        return new TraceIdRatioSampler(traceIdRatioSamplerRatio.Value); // always return a new instance since it is stateless
 
-                // if the ratio is not set, log a warning and use the default sampler
-                case SamplerType.TraceIdRatioBased when !traceIdRatioSamplerRatio.HasValue:
                     Log.Warn($"The configured TraceIdRatioBased sampler is missing a ratio value. Using default sampler.");
                     return _adaptiveSampler;
-                case SamplerType.TraceIdRatioBased:
-                    return new TraceIdRatioSampler(traceIdRatioSamplerRatio.Value);
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(samplerType), samplerType, null);
             }
         }
 
-        private ISampler GetAdaptiveSampler() =>
-            new AdaptiveSampler(
+        private AdaptiveSampler GetAdaptiveSampler() =>
+            new(
                 _configuration.SamplingTarget ?? AdaptiveSampler.DefaultTargetSamplesPerInterval,
                 _configuration.SamplingTargetPeriodInSeconds ?? AdaptiveSampler.DefaultTargetSamplingIntervalInSeconds, null,
                 _configuration.ServerlessModeEnabled);
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
         {
-            _adaptiveSampler = GetAdaptiveSampler(); // create a new adaptive sampler with the updated configuration
+            // update the AdaptiveSampler's sampling target and period, which will start a new sampling interval.
+            _adaptiveSampler.UpdateSamplingTarget(_configuration.SamplingTarget ?? AdaptiveSampler.DefaultTargetSamplesPerInterval, _configuration.SamplingTargetPeriodInSeconds ?? AdaptiveSampler.DefaultTargetSamplingIntervalInSeconds);
         }
 
     }

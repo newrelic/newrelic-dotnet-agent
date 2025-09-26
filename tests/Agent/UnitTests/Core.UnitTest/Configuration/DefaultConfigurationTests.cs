@@ -4701,7 +4701,6 @@ namespace NewRelic.Agent.Core.Configuration
         [TestCase(SamplerType.AlwaysOn)]
         [TestCase(SamplerType.AlwaysOff)]
         [TestCase(SamplerType.Adaptive)]
-        [TestCase(SamplerType.Default)]
         public void RootTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsNotTraceIdRatioBased(SamplerType samplerType)
         {
             // Arrange
@@ -4797,7 +4796,6 @@ namespace NewRelic.Agent.Core.Configuration
         [TestCase(SamplerType.AlwaysOn)]
         [TestCase(SamplerType.AlwaysOff)]
         [TestCase(SamplerType.Adaptive)]
-        [TestCase(SamplerType.Default)]
         public void RemoteParentSampledTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsNotTraceIdRatioBased(SamplerType samplerType)
         {
             // Arrange
@@ -4893,7 +4891,6 @@ namespace NewRelic.Agent.Core.Configuration
         [TestCase(SamplerType.AlwaysOn)]
         [TestCase(SamplerType.AlwaysOff)]
         [TestCase(SamplerType.Adaptive)]
-        [TestCase(SamplerType.Default)]
         public void RemoteParentNotSampledTraceIdRatioSamplerRatio_ReturnsNull_WhenSamplerTypeIsNotTraceIdRatioBased(SamplerType samplerType)
         {
             // Arrange

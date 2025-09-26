@@ -96,7 +96,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 
         private void InitializeSettings(TraceContextTestData testData)
         {
-            Mock.Arrange(() => _samplerFactory.CreateSampler(SamplerType.Adaptive, Arg.IsAny<float?>()))
+            Mock.Arrange(() => _samplerFactory.GetSampler(SamplerType.Adaptive, Arg.IsAny<float?>()))
                 .Returns(() => new MockAdaptiveSampler(testData.ForceSampledTrue));
 
             _compositeTestAgent.LocalConfiguration.spanEvents.enabled = testData.SpanEventsEnabled;
