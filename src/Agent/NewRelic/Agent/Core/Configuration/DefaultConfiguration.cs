@@ -885,10 +885,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         private SamplerType GetSamplerType(SamplerLevel samplerLevel)
         {
-            // Environment variable (if present) always wins for this sampler level
+            // Environment variable (if present) always wins
             var envVarName = samplerLevel switch
             {
-                SamplerLevel.Root => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT_SAMPLER",
+                SamplerLevel.Root => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT",
                 SamplerLevel.RemoteParentSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED",
                 SamplerLevel.RemoteParentNotSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED",
                 _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
@@ -939,7 +939,21 @@ namespace NewRelic.Agent.Core.Configuration
 
         private float? TraceIdSamplerRatio(SamplerLevel samplerLevel)
         {
-            // TODO: do we need to support environment variable override for these? Naming will be difficult.
+            var envVarName = samplerLevel switch
+            {
+                SamplerLevel.Root => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT_TRACE_ID_RATIO_BASED_RATIO",
+                SamplerLevel.RemoteParentSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED_TRACE_ID_RATIO_BASED_RATIO",
+                SamplerLevel.RemoteParentNotSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED_TRACE_ID_RATIO_BASED_RATIO",
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
+            };
+
+            var envValue = _environment.GetEnvironmentVariableFromList(envVarName);
+            if (!string.IsNullOrEmpty(envValue) && float.TryParse(envValue, out var ratioFromEnv))
+            {
+                return ratioFromEnv;
+            }
+
+            // use local config if no env var override
             switch (samplerLevel)
             {
                 case SamplerLevel.Root:
