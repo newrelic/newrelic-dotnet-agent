@@ -268,6 +268,7 @@ public class AdaptiveSampler : ISampler
         return new SamplingResult(sampled, priority);
     }
 
+    // virtual to allow for mocking in tests
     protected virtual bool ShouldSample() => _state.ShouldSample();
 
     public void UpdateSamplingTarget(int samplingTarget, int samplingTargetPeriod)
