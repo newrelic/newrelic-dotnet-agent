@@ -40,6 +40,26 @@ namespace NewRelic.Agent.Core.JsonConverters
             JsonSerializerHelpers.WriteCollection(writer, value.GetAttributeValues(AttributeClassification.UserAttributes));
             JsonSerializerHelpers.WriteCollection(writer, value.GetAttributeValues(AttributeClassification.AgentAttributes));
             writer.WriteEndArray();
+
+            foreach (var link in value.Span.Links)
+            {
+                writer.WriteToken(JsonToken.Raw, ",");
+                writer.WriteStartArray();
+                JsonSerializerHelpers.WriteCollection(writer, link.AttributeValues.GetAttributeValues(AttributeClassification.Intrinsics));
+                JsonSerializerHelpers.WriteCollection(writer, link.AttributeValues.GetAttributeValues(AttributeClassification.UserAttributes));
+                JsonSerializerHelpers.WriteCollection(writer, link.AttributeValues.GetAttributeValues(AttributeClassification.AgentAttributes));
+                writer.WriteEndArray();
+            }
+
+            foreach (var evt in value.Span.Events)
+            {
+                writer.WriteToken(JsonToken.Raw, ",");
+                writer.WriteStartArray();
+                JsonSerializerHelpers.WriteCollection(writer, evt.AttributeValues.GetAttributeValues(AttributeClassification.Intrinsics));
+                JsonSerializerHelpers.WriteCollection(writer, evt.AttributeValues.GetAttributeValues(AttributeClassification.UserAttributes));
+                JsonSerializerHelpers.WriteCollection(writer, evt.AttributeValues.GetAttributeValues(AttributeClassification.AgentAttributes));
+                writer.WriteEndArray();
+            }
         }
     }
 }
