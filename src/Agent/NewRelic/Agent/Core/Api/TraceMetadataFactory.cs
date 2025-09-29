@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Api
             }
             else
             {
-                transaction.SetSampled(_samplerService.GetSampler(SamplerLevel.Root));
+                transaction.SetSampled();
                 return (bool)transaction.Sampled;
             }
         }

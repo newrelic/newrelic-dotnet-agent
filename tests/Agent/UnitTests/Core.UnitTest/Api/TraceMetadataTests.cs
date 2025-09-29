@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core.Api
         [Test]
         public void TraceMetadata_ComputesSampledIfNotSet()
         {
-            var transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
+            var transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs, _samplerService);
             Assert.That(transaction.Sampled, Is.Null);
 
             Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.Root).ShouldSample(Arg.IsAny<ISamplingParameters>())).Returns(new SamplingResult(true, priority));   

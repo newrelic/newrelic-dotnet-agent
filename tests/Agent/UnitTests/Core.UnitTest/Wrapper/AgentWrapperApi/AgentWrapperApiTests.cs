@@ -2328,7 +2328,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private void SetupTransaction()
         {
             var transactionName = TransactionName.ForWebTransaction("foo", "bar");
-            _transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            _transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
 
             Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns(_transaction);
         }

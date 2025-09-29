@@ -167,7 +167,7 @@ namespace NewRelic.Agent.Core.Transactions
             var priority = _tracePriorityManager.Create();
             var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(),
                 DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, priority,
-                _databaseStatementParser, _distributedTracePayloadHandler, _errorService, _attribDefSvc.AttributeDefs);
+                _databaseStatementParser, _distributedTracePayloadHandler, _errorService, _attribDefSvc.AttributeDefs, _samplerService);
 
             _samplerService.GetSampler(SamplerLevel.Root).StartTransaction();
 

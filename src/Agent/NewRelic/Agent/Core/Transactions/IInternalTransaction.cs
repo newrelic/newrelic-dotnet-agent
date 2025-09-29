@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.Transactions
         string TraceId { get; }
         float Priority { get; }
         bool? Sampled { get; }
-        void SetSampled(ISampler sampler);
+        void SetSampled();
 
         /// <summary>
         /// Marks this builder as cleanly finished.
