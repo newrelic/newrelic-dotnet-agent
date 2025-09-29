@@ -55,6 +55,13 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
+            <xs:enumeration value="adaptive">
+                <xs:annotation>
+                    <xs:documentation>
+                        (Same as default) The agent will use New Relic adaptive sampling logic.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
             <xs:enumeration value="alwaysOn">
                 <xs:annotation>
                     <xs:documentation>
@@ -69,9 +76,57 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
+            <xs:enumeration value="traceIdRatioBased">
+                <xs:annotation>
+                    <xs:documentation>
+                        The agent will use trace ID ratio based sampling.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
         </xs:restriction>
     </xs:simpleType>
 
+    <xs:complexType name="AdaptiveSamplerType">
+        <xs:annotation>
+            <xs:documentation>
+                The default sampler for the agent which uses an adaptive sampling strategy.
+            </xs:documentation>
+        </xs:annotation>
+    </xs:complexType>
+
+    <xs:complexType name="TraceIdRatioSamplerType">
+        <xs:annotation>
+            <xs:documentation>
+                Based on the OpenTelemetry TraceIdRatioBased sampler.
+                It samples traces with a probability defined by the sampleRatio attribute, which must be a decimal value between 0.0 (no sampling) and 1.0 (sample all).
+                For more information, see the OpenTelemetry specification: https://opentelemetry.io/docs/specs/otel/trace/tracestate-probability-sampling/
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="sampleRatio" type="xs:decimal" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The percentage of traces to sample, between 0.0 and 1.0.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="AlwaysOnSamplerType">
+        <xs:annotation>
+            <xs:documentation>
+                Samples all traces. Intended primarily for use with remoteParentSampled and remoteParentNotSampled
+            </xs:documentation>
+        </xs:annotation>
+    </xs:complexType>
+
+    <xs:complexType name="AlwaysOffSamplerType">
+        <xs:annotation>
+            <xs:documentation>
+                Doesn't sample any traces. Intended primarily for use with remoteParentSampled and remoteParentNotSampled
+            </xs:documentation>
+        </xs:annotation>
+    </xs:complexType>
+    
     <xs:element name="configuration">
         <xs:complexType>
             <xs:all>
@@ -1234,7 +1289,7 @@
                     </xs:complexType>
                 </xs:element>
 
-                <xs:element name="distributedTracing" minOccurs="0" maxOccurs="1">
+                <xs:element name="distributedTracing">
                     <xs:annotation>
                         <xs:documentation>
                             Distributed tracing lets you see the path that a request takes through your distributed system. Enabling distributed tracing changes the behavior of some New Relic features, so carefully consult the transition guide before you enable this feature: https://docs.newrelic.com/docs/transition-guide-distributed-tracing
@@ -1245,9 +1300,60 @@
                         <xs:sequence>
                             <xs:element name="sampler" minOccurs="0" maxOccurs="1">
                                 <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="root" minOccurs="0" maxOccurs="1">
+                                            <xs:annotation>
+                                                <xs:documentation>
+                                                    Controls span sampling at the root of the transaction.
+                                                </xs:documentation>
+                                            </xs:annotation>
+                                            <xs:complexType>
+                                                <xs:choice minOccurs="1" maxOccurs="1">
+                                                    <xs:element name="default" type="tns:AdaptiveSamplerType"/>
+                                                    <xs:element name="adaptive" type="tns:AdaptiveSamplerType"/>
+                                                    <xs:element name="traceIdRatio" type="tns:TraceIdRatioSamplerType"/>
+                                                    <xs:element name="alwaysOn" type="tns:AlwaysOnSamplerType"/>
+                                                    <xs:element name="alwaysOff" type="tns:AlwaysOffSamplerType"/>
+                                                </xs:choice>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="remoteParentSampled" minOccurs="0" maxOccurs="1">
+                                            <xs:annotation>
+                                                <xs:documentation>
+                                                    Controls span sampling behavior when the trace parent was sampled.
+                                                </xs:documentation>
+                                            </xs:annotation>
+                                            <xs:complexType>
+                                                <xs:choice minOccurs="1" maxOccurs="1">
+                                                    <xs:element name="default" type="tns:AdaptiveSamplerType"/>
+                                                    <xs:element name="adaptive" type="tns:AdaptiveSamplerType"/>
+                                                    <xs:element name="traceIdRatio" type="tns:TraceIdRatioSamplerType"/>
+                                                    <xs:element name="alwaysOn" type="tns:AlwaysOnSamplerType"/>
+                                                    <xs:element name="alwaysOff" type="tns:AlwaysOffSamplerType"/>
+                                                </xs:choice>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="remoteParentNotSampled" minOccurs="0" maxOccurs="1">
+                                            <xs:annotation>
+                                                <xs:documentation>
+                                                    Controls span sampling behavior when the trace parent was not sampled.
+                                                </xs:documentation>
+                                            </xs:annotation>
+                                            <xs:complexType>
+                                                <xs:choice minOccurs="1" maxOccurs="1">
+                                                    <xs:element name="default" type="tns:AdaptiveSamplerType"/>
+                                                    <xs:element name="adaptive" type="tns:AdaptiveSamplerType"/>
+                                                    <xs:element name="traceIdRatio" type="tns:TraceIdRatioSamplerType"/>
+                                                    <xs:element name="alwaysOn" type="tns:AlwaysOnSamplerType"/>
+                                                    <xs:element name="alwaysOff" type="tns:AlwaysOffSamplerType"/>
+                                                </xs:choice>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
                                     <xs:attribute name="remoteParentSampled" type="tns:RemoteParentSampledBehaviorType" default="default">
                                         <xs:annotation>
                                             <xs:documentation>
+                                                DEPRECATED: Please use the remoteParentSampled element instead of this attribute. This attribute will be removed in a future release.
                                                 Controls span sampling behavior when the trace parent was sampled.
                                             </xs:documentation>
                                         </xs:annotation>
@@ -1255,6 +1361,7 @@
                                     <xs:attribute name="remoteParentNotSampled" type="tns:RemoteParentSampledBehaviorType" default="default">
                                         <xs:annotation>
                                             <xs:documentation>
+                                                DEPRECATED: Please use the remoteParentNotSampled element instead of this attribute. This attribute will be removed in a future release.
                                                 Controls span sampling behavior when the trace parent was not sampled.
                                             </xs:documentation>
                                         </xs:annotation>
@@ -1306,7 +1413,7 @@
                         </xs:attribute>
                     </xs:complexType>
                 </xs:element>
-
+                
                 <xs:element name="spanEvents" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>

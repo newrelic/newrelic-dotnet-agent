@@ -1,19 +1,21 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
     [TestFixture]
     public class TracingStateTests
     {
+        private ISamplerService _samplerService;
         private const DistributedTracingParentType Type = DistributedTracingParentType.App;
         private const string AccountId = "accountId";
         private const string AppId = "appId";
@@ -40,6 +42,19 @@ namespace NewRelic.Agent.Core.DistributedTracing
         // missing tx: AND id:
         private const string NewRelicPayloadUntraceable = "{ \"v\":[0,1],\"d\":{\"ty\":\"HTTP\",\"ac\":\"accountId\",\"ap\":\"appId\",\"tr\":\"traceId\",\"pr\":0.65,\"sa\":true,\"ti\":0,\"tk\":\"trustKey\"}}";
 
+        [SetUp]
+        public void Setup()
+        {
+            _samplerService = Mock.Create<ISamplerService>();
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.Root))
+                .Returns(new AdaptiveSampler(1, 1, 1, false)); // Using a simple sampler for testing
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                .Returns((ISampler)null);
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
+                .Returns((ISampler)null);
+
+        }
+
         #region NewRelic Payload
 
         [TestCase(Constants.DistributedTracePayloadKeyAllLower)]
@@ -59,10 +74,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 getter: GetHeader,
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
-                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -95,10 +107,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 getter: GetHeader,
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
-                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -135,10 +144,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 getter: GetHeader,
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
-                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -175,10 +181,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 getter: GetHeader,
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
-                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -215,10 +218,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 getter: GetHeader,
                 transportType: TransportType.Other,
                 agentTrustKey: TrustKey,
-                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -256,10 +256,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 getter: GetHeader,
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
-                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -292,10 +289,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 getter: GetHeader,
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
-                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.Multiple(() =>
@@ -336,32 +330,45 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 getter: GetHeader,
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
-                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)),
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
 
             Assert.That(tracingState, Is.Not.Null);
             Assert.That(tracingState.IngestErrors, Does.Contain(IngestErrorType.TraceParentParseException), "TracingState IngestErrors should contain TraceParentParseException.");
         }
 
-        [TestCase(true, true, RemoteParentSampledBehavior.AlwaysOn, RemoteParentSampledBehavior.Default, true, 2.0f, TestName = "TraceParentSampled_AlwaysOn")]
-        [TestCase(true, true, RemoteParentSampledBehavior.AlwaysOff, RemoteParentSampledBehavior.Default, false, 0f, TestName = "TraceParentSampled_AlwaysOff")]
-        [TestCase(true, true, RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior.Default, true, 0.65f, TestName = "TraceParentSampled_Default")]
-        [TestCase(true, false, RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior.AlwaysOn, true, 2.0f, TestName = "TraceParentNotSampled_AlwaysOn")]
-        [TestCase(true, false, RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior.AlwaysOff, false, 0f, TestName = "TraceParentNotSampled_AlwaysOff")]
-        [TestCase(true, false, RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior.Default, true, 0.65f, TestName = "TraceParentNotSampled_Default")]
-        [TestCase(false, false, RemoteParentSampledBehavior.Default, RemoteParentSampledBehavior.Default, null, null, TestName = "TraceParentNotValid")]
+        [TestCase(true, true, SamplerType.AlwaysOn, SamplerType.Adaptive, true, 2.0f, null, TestName = "TraceParentSampled_AlwaysOn")]
+        [TestCase(true, true, SamplerType.AlwaysOff, SamplerType.Adaptive, false, 0f, null, TestName = "TraceParentSampled_AlwaysOff")]
+        [TestCase(true, true, SamplerType.Adaptive, SamplerType.Adaptive, true, 0.65f, null, TestName = "TraceParentSampled_Adaptive")]
+        [TestCase(true, false, SamplerType.Adaptive, SamplerType.AlwaysOn, true, 2.0f, null, TestName = "TraceParentNotSampled_AlwaysOn")]
+        [TestCase(true, false, SamplerType.Adaptive, SamplerType.AlwaysOff, false, 0f, null, TestName = "TraceParentNotSampled_AlwaysOff")]
+        [TestCase(true, false, SamplerType.Adaptive, SamplerType.Adaptive, true, 0.65f, null, TestName = "TraceParentNotSampled_Adaptive")]
+        [TestCase(false, false, SamplerType.Adaptive, SamplerType.Adaptive, null, null, null, TestName = "TraceParentNotValid")]
+        // TraceIdRatioBased (ratio = 1.0 -> always sample & boost priority)
+        [TestCase(true, true, SamplerType.TraceIdRatioBased, SamplerType.Adaptive, true, 1.65f, 1.0f, TestName = "TraceParentSampled_RatioSampler_AlwaysSample")]
+        [TestCase(true, false, SamplerType.Adaptive, SamplerType.TraceIdRatioBased, true, 1.65f, 1.0f, TestName = "TraceParentNotSampled_RatioSampler_AlwaysSample")]
+        // TraceIdRatioBased (ratio = 0.0 -> never sample & no priority boost)
+        [TestCase(true, true, SamplerType.TraceIdRatioBased, SamplerType.Adaptive, false, 0.65f, 0.0f, TestName = "TraceParentSampled_RatioSampler_NeverSample")]
+        [TestCase(true, false, SamplerType.Adaptive, SamplerType.TraceIdRatioBased, false, 0.65f, 0.0f, TestName = "TraceParentNotSampled_RatioSampler_NeverSample")]
         public void Sampled_TestMatrix(
             bool traceParentValid,
             bool traceParentSampled,
-            RemoteParentSampledBehavior remoteParentSampledBehavior,
-            RemoteParentSampledBehavior remoteParentNotSampledBehavior,
-            bool? expectedSampled, float? expectedPriority)
+            SamplerType remoteParentSampledSamplerType,
+            SamplerType remoteParentNotSampledSamplerType,
+            bool? expectedSampled,
+            float? expectedPriority,
+            float? ratio // only used when a TraceIdRatioBased sampler is supplied
+            )
         {
             // Arrange
-            var traceparent = traceParentValid ? traceParentSampled ? ValidTraceparent : ValidTraceparentNotSampled : null;
+            var traceparent = traceParentValid
+                ? (traceParentSampled ? ValidTraceparent : ValidTraceparentNotSampled)
+                : null;
             var tracestate = ValidTracestate;
+
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                .Returns(() => GetSampler(remoteParentSampledSamplerType, ratio));
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
+                .Returns(() => GetSampler(remoteParentNotSampledSamplerType, ratio));
 
             var headers = new Dictionary<string, string>();
             if (traceparent != null)
@@ -380,59 +387,23 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
                 transactionStartTime: DateTime.UtcNow,
-                remoteParentSampledBehavior,
-                remoteParentNotSampledBehavior
-            );
+                _samplerService);
 
             // Assert
             Assert.That(tracingState.Sampled, Is.EqualTo(expectedSampled));
             Assert.That(tracingState.Priority, Is.EqualTo(expectedPriority));
-        }
 
-        [Test]
-        public void Sampled_ThrowsException_WhenInvalidRemoteParentSampledBehavior()
-        {
-            var headers = new Dictionary<string, string>
+            ISampler GetSampler(SamplerType behavior, float? r)
             {
-                { "traceparent", ValidTraceparent },
-                { "tracestate", ValidTracestate }
-            };
-
-            Assert.Throws<ArgumentException>(() =>
-            {
-                TracingState.AcceptDistributedTraceHeaders(
-                    carrier: headers,
-                    getter: GetHeader,
-                    transportType: TransportType.AMQP,
-                    agentTrustKey: TrustKey,
-                    transactionStartTime: DateTime.UtcNow,
-                    remoteParentSampledBehavior: (RemoteParentSampledBehavior)999, // Invalid enum value
-                    remoteParentNotSampledBehavior: RemoteParentSampledBehavior.Default
-                );
-            });
-        }
-
-        [Test]
-        public void Sampled_ThrowsException_WhenInvalidRemoteParentNotSampledBehavior()
-        {
-            var headers = new Dictionary<string, string>
-            {
-                { "traceparent", ValidTraceparentNotSampled },
-                { "tracestate", ValidTracestate }
-            };
-
-            Assert.Throws<ArgumentException>(() =>
-            {
-                TracingState.AcceptDistributedTraceHeaders(
-                    carrier: headers,
-                    getter: GetHeader,
-                    transportType: TransportType.AMQP,
-                    agentTrustKey: TrustKey,
-                    transactionStartTime: DateTime.UtcNow,
-                    remoteParentSampledBehavior: RemoteParentSampledBehavior.Default,
-                    remoteParentNotSampledBehavior: (RemoteParentSampledBehavior)999 // Invalid enum value
-                );
-            });
+                return behavior switch
+                {
+                    SamplerType.Adaptive => null,
+                    SamplerType.AlwaysOn => AlwaysOnSampler.Instance,
+                    SamplerType.AlwaysOff => AlwaysOffSampler.Instance,
+                    SamplerType.TraceIdRatioBased => new TraceIdRatioSampler(r ?? 0.5f),
+                    _ => throw new ArgumentOutOfRangeException(nameof(behavior), behavior, null)
+                };
+            }
         }
 
         [Test]
@@ -449,12 +420,435 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 getter: GetHeader,
                 transportType: TransportType.AMQP,
                 agentTrustKey: TrustKey,
-                transactionStartTime: DateTime.UtcNow,
-                RemoteParentSampledBehavior.Default,
-                RemoteParentSampledBehavior.Default
-            );
+                transactionStartTime: DateTime.UtcNow, _samplerService);
 
             Assert.That(tracingState.Sampled, Is.EqualTo(Sampled), "Sampled should use the value from the trace context when behavior is 'default'.");
+        }
+
+        [Test]
+        public void AcceptDistributedTraceHeaders_AppliesTraceIdSampleRatioCorrectly()
+        {
+            // Arrange
+            var headers = new Dictionary<string, string>()
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", ValidTracestate },
+            };
+
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                .Returns(new TraceIdRatioSampler(1.0f));
+
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                carrier: headers,
+                getter: GetHeader,
+                transportType: TransportType.AMQP,
+                agentTrustKey: TrustKey,
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
+
+            // Assert
+            Assert.That(tracingState.Sampled, Is.True, "Sampled should be true when sampleRatio is 1.0");
+            Assert.That(tracingState.Priority, Is.EqualTo(Priority + 1.0f), "Priority should be boosted when sampleRatio is 1.0");
+        }
+
+        [Test]
+        public void AcceptDistributedTraceHeaders_AppliesTraceIdSampleRatio_SampledFalse()
+        {
+            // Arrange
+            var headers = new Dictionary<string, string>()
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", ValidTracestate },
+            };
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                .Returns(new TraceIdRatioSampler(0.0f));
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                carrier: headers,
+                getter: GetHeader,
+                transportType: TransportType.AMQP,
+                agentTrustKey: TrustKey,
+                transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
+
+            // Assert
+            Assert.That(tracingState.Sampled, Is.EqualTo(false), "Sampled should be false when sampleRatio is 0");
+            Assert.That(tracingState.Priority, Is.EqualTo(Priority), "Priority should use the tracestate priority value when sampleRatio is 0");
+        }
+
+        [TestCase("0000000000000001", 0.01f, true, true, TestName = "TraceIdRatioBased_LowValue_AlwaysSamples_Ratio001_ParentSampled")]
+        [TestCase("0000000000000001", 0.25f, true, true, TestName = "TraceIdRatioBased_LowValue_AlwaysSamples_Ratio025_ParentNotSampled")]
+        [TestCase("3fffffffffffffff", 0.75f, true, true, TestName = "TraceIdRatioBased_MidValue_Sample_Ratio075_ParentSampled")]
+        // Use boundary value 0x4000... (>= computed upperBound for ratio 0.50) to ensure NOT sampled
+        [TestCase("4000000000000000", 0.50f, false, false, TestName = "TraceIdRatioBased_MidValue_NoSample_Ratio050_ParentNotSampled")]
+        [TestCase("3fffffffffffffff", 0.25f, false, true, TestName = "TraceIdRatioBased_MidValue_NoSample_Ratio025_ParentSampled")]
+        [TestCase("7fffffffffffffff", 0.99f, false, true, TestName = "TraceIdRatioBased_HighValue_NoSample_Ratio099_ParentSampled")]
+        [TestCase("7fffffffffffffff", 0.75f, false, false, TestName = "TraceIdRatioBased_HighValue_NoSample_Ratio075_ParentNotSampled")]
+        public void Probabilistic_TraceIdRatioBased_Sampling_Deterministic(string first16Hex, float ratio, bool expectedSampled, bool parentSampledFlag)
+        {
+            // Build a deterministic trace id (32 hex chars) using supplied high/low prefix + zeros for remaining 16 chars
+            var fullTraceId = first16Hex + "0000000000000000";
+            Assert.That(fullTraceId.Length, Is.EqualTo(32), "TraceId must be 32 hex chars");
+
+            // Construct a traceparent with the supplied sampled flag
+            var traceparent = $"00-{fullTraceId}-{ParentId}-{(parentSampledFlag ? "01" : "00")}";
+
+            // Use existing valid tracestate (priority & other intrinsic values)
+            var headers = new Dictionary<string, string>
+            {
+                { "traceparent", traceparent },
+                { "tracestate", ValidTracestate }
+            };
+
+            // Configure sampler service so that only the relevant sampler level uses the ratio sampler
+            if (parentSampledFlag)
+            {
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                    .Returns(new TraceIdRatioSampler(ratio));
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
+                    .Returns((ISampler)null);
+            }
+            else
+            {
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                    .Returns((ISampler)null);
+                Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
+                    .Returns(new TraceIdRatioSampler(ratio));
+            }
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                carrier: headers,
+                getter: GetHeader,
+                transportType: TransportType.HTTP,
+                agentTrustKey: TrustKey,
+                transactionStartTime: DateTime.UtcNow.AddMilliseconds(1),
+                _samplerService);
+
+            // Expected priority: base priority (.65) + 1.0f if sampled (ratio sampler boosts by 1.0)
+            var expectedPriority = expectedSampled ? Priority + 1.0f : Priority;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracingState.TraceId, Is.EqualTo(fullTraceId));
+                Assert.That(tracingState.ParentId, Is.EqualTo(ParentId));
+                Assert.That(tracingState.Sampled, Is.EqualTo(expectedSampled));
+                Assert.That(tracingState.Priority, Is.EqualTo(expectedPriority));
+            });
+        }
+        #endregion
+
+        #region Additional Coverage
+
+        [Test]
+        public void InvalidTraceParent_IgnoresNewRelicPayload()
+        {
+            var payload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
+            var headers = new Dictionary<string, string>
+            {
+                { "traceparent", "abc" }, // invalid
+                { Constants.DistributedTracePayloadKeyAllLower, payload }
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.HTTP, TrustKey, DateTime.UtcNow.AddMilliseconds(1), _samplerService);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracingState.IngestErrors, Does.Contain(IngestErrorType.TraceParentParseException));
+                Assert.That(tracingState.Type, Is.EqualTo(DistributedTracingParentType.Unknown)); // NR payload ignored
+                Assert.That(tracingState.AccountId, Is.Null);
+                Assert.That(tracingState.NewRelicPayloadWasAccepted, Is.False);
+            });
+        }
+
+        [Test]
+        public void ValidTraceParent_IgnoresNewRelicPayload_WhenTraceparentPresent_NoTracestate()
+        {
+            var payload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
+            var headers = new Dictionary<string, string>
+            {
+                { "traceparent", ValidTraceparent },
+                { Constants.DistributedTracePayloadKeyAllLower, payload }
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.AMQP, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracingState.NewRelicPayloadWasAccepted, Is.False);
+                Assert.That(tracingState.Type, Is.EqualTo(DistributedTracingParentType.Unknown));
+                Assert.That(tracingState.TraceId, Is.EqualTo(TraceId));
+                Assert.That(tracingState.ParentId, Is.EqualTo(ParentId));
+            });
+        }
+
+        [Test]
+        public void HasDataForAttributes_False_WhenOnlyNullPayload()
+        {
+            var headers = new Dictionary<string, string>
+            {
+                { Constants.DistributedTracePayloadKeyAllLower, null }
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.HTTP, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.That(tracingState.HasDataForAttributes, Is.False);
+        }
+
+        [Test]
+        public void HasDataForAttributes_True_WhenInvalidTraceParentPresent()
+        {
+            var headers = new Dictionary<string, string>
+            {
+                { "traceparent", "zz-invalid" }
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.HTTP, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.That(tracingState.HasDataForAttributes, Is.True);
+        }
+
+        [Test]
+        public void HasDataForParentAttributes_NewRelicPayloadOnly_True()
+        {
+            var payload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
+            var headers = new Dictionary<string, string> { { Constants.DistributedTracePayloadKeyAllLower, payload } };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.Kafka, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.That(tracingState.HasDataForParentAttributes, Is.True);
+        }
+
+        [Test]
+        public void HasDataForParentAttributes_ValidTracestateNrEntry_True()
+        {
+            var headers = new Dictionary<string, string>
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", ValidTracestate }
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.AMQP, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.That(tracingState.HasDataForParentAttributes, Is.True);
+        }
+
+        [Test]
+        public void HasDataForParentAttributes_VendorOnlyTracestate_False()
+        {
+            var headers = new Dictionary<string, string>
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", "aa=1,bb=2" }
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.AMQP, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.That(tracingState.HasDataForParentAttributes, Is.False);
+        }
+
+        [Test]
+        public void HasDataForParentAttributes_InvalidTraceParentOnly_False()
+        {
+            var headers = new Dictionary<string, string>
+            {
+                { "traceparent", "bad" }
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.HTTP, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.That(tracingState.HasDataForParentAttributes, Is.False);
+        }
+
+        [Test]
+        public void ParentId_Null_WhenOnlyNewRelicPayload()
+        {
+            var payload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
+            var headers = new Dictionary<string, string> { { Constants.DistributedTracePayloadKeyAllLower, payload } };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.Queue, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.That(tracingState.ParentId, Is.Null);
+        }
+
+        [Test]
+        public void TransportType_IsSet()
+        {
+            var payload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
+            var headers = new Dictionary<string, string> { { Constants.DistributedTracePayloadKeyAllLower, payload } };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.Kafka, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.That(tracingState.TransportType, Is.EqualTo(TransportType.Kafka));
+        }
+
+        [Test]
+        public void VendorStateEntries_Present_WithValidNrTracestate()
+        {
+            var headers = new Dictionary<string, string>
+            {
+                { "traceparent", ValidTraceparent },
+                { "tracestate", ValidTracestate }
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.HTTP, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.That(string.Join(",", tracingState.VendorStateEntries), Does.Contain("dd="));
+        }
+
+        [Test]
+        public void Type_Unknown_WhenPayloadTypeUnparseable()
+        {
+            var json = CreateCustomPayloadJson(typeValue: "NOTATYPE", includeSampled: true, includePriority: true);
+            var headers = new Dictionary<string, string>
+            {
+                { Constants.DistributedTracePayloadKeyAllLower, Strings.Base64Encode(json) }
+            };
+            var ts = DateTime.UtcNow.AddMilliseconds(2);
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.Other, TrustKey, ts, _samplerService);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracingState.Type, Is.EqualTo(DistributedTracingParentType.Unknown));
+                Assert.That(tracingState.AccountId, Is.EqualTo(AccountId));
+                Assert.That(tracingState.AppId, Is.EqualTo(AppId));
+                Assert.That(tracingState.Guid, Is.EqualTo(Guid));
+            });
+        }
+
+        [Test]
+        public void PayloadWithoutPriorityOrSampled_PropertiesNull()
+        {
+            var json = CreateCustomPayloadJson(includeSampled: false, includePriority: false);
+            var headers = new Dictionary<string, string>
+            {
+                { Constants.DistributedTracePayloadKeyAllLower, Strings.Base64Encode(json) }
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.AMQP, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracingState.Priority, Is.Null);
+                Assert.That(tracingState.Sampled, Is.Null);
+            });
+        }
+
+        [Test]
+        public void RemoteParentFromNewRelicPayload_SampledTrue_AppliesSampler()
+        {
+            var payload = DistributedTracePayload.TryBuildOutgoingPayload(
+                Type.ToString(), AccountId, AppId, Guid, TraceId, TrustKey, Priority, true, DateTime.UtcNow, TransactionId);
+            var encoded = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
+
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
+                .Returns(AlwaysOnSampler.Instance);
+
+            var headers = new Dictionary<string, string> { { Constants.DistributedTracePayloadKeyAllLower, encoded } };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.HTTP, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracingState.Sampled, Is.True);
+                Assert.That(tracingState.Priority, Is.GreaterThan(Priority)); // overridden (e.g. 2.0)
+            });
+        }
+
+        [Test]
+        public void RemoteParentFromNewRelicPayload_SampledFalse_AppliesSampler()
+        {
+            var payload = DistributedTracePayload.TryBuildOutgoingPayload(
+                Type.ToString(), AccountId, AppId, Guid, TraceId, TrustKey, Priority, false, DateTime.UtcNow, TransactionId);
+            var encoded = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
+
+            Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
+                .Returns(AlwaysOffSampler.Instance);
+
+            var headers = new Dictionary<string, string> { { Constants.DistributedTracePayloadKeyAllLower, encoded } };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.HTTP, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracingState.Sampled, Is.False);
+                Assert.That(tracingState.Priority, Is.LessThanOrEqualTo(Priority)); // overridden (likely 0)
+            });
+        }
+
+        [Test]
+        public void RemoteParentFromNewRelicPayload_SampledNull_NoOverride()
+        {
+            var json = CreateCustomPayloadJson(includeSampled: false, includePriority: true);
+            var headers = new Dictionary<string, string>
+            {
+                { Constants.DistributedTracePayloadKeyAllLower, Strings.Base64Encode(json) }
+            };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.Other, TrustKey, DateTime.UtcNow, _samplerService);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tracingState.Sampled, Is.Null);
+                Assert.That(tracingState.Priority, Is.EqualTo(Priority));
+            });
+        }
+
+        [Test]
+        public void TransportDuration_Negative_ClampedToZero()
+        {
+            var future = DateTime.UtcNow.AddSeconds(5);
+            var payload = DistributedTracePayload.TryBuildOutgoingPayload(
+                Type.ToString(), AccountId, AppId, Guid, TraceId, TrustKey, Priority, Sampled, future, TransactionId);
+            var encoded = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
+
+            var earlierStart = future.AddSeconds(-10); // earlier than payload timestamp -> negative duration
+
+            var headers = new Dictionary<string, string> { { Constants.DistributedTracePayloadKeyAllLower, encoded } };
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.HTTP, TrustKey, earlierStart, _samplerService);
+
+            Assert.That(tracingState.TransportDuration, Is.EqualTo(TimeSpan.Zero));
+        }
+
+        [Test]
+        public void Timestamp_CachedValueStable()
+        {
+            var payload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
+            var headers = new Dictionary<string, string> { { Constants.DistributedTracePayloadKeyAllLower, payload } };
+
+            var tracingState = TracingState.AcceptDistributedTraceHeaders(
+                headers, GetHeader, TransportType.AMQP, TrustKey, DateTime.UtcNow, _samplerService);
+
+            var first = tracingState.Timestamp;
+            var second = tracingState.Timestamp;
+            Assert.That(second, Is.EqualTo(first));
+        }
+
+        private static string CreateCustomPayloadJson(string typeValue = null, bool includeSampled = true, bool includePriority = true)
+        {
+            var nowMs = DateTime.UtcNow.ToUnixTimeMilliseconds();
+            var ty = typeValue ?? Type.ToString();
+            var pr = includePriority ? $"\"pr\":{Priority}," : "";
+            var sa = includeSampled ? $"\"sa\":true," : "";
+            return "{ \"v\":[0,1],\"d\":{\"ty\":\"" + ty + "\",\"ac\":\"" + AccountId + "\",\"ap\":\"" + AppId + "\"," +
+                   "\"tr\":\"" + TraceId + "\"," + pr + sa + "\"ti\":" + nowMs + ",\"tk\":\"" + TrustKey + "\"," +
+                   "\"tx\":\"" + TransactionId + "\",\"id\":\"" + Guid + "\"}}";
         }
 
         #endregion

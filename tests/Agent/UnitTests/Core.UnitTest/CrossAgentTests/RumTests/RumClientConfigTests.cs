@@ -30,6 +30,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 {
@@ -140,7 +141,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 
             ITransactionName name = TransactionName.ForWebTransaction(transactionMetricName.Prefix, transactionMetricName.UnPrefixedName);
             var priority = 0.5f;
-            IInternalTransaction tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
+            IInternalTransaction tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs, Mock.Create<ISamplerService>());
             tx.TransactionMetadata.SetQueueTime(TimeSpan.FromMilliseconds(testCase.QueueTimeMilliseconds));
             testCase.UserAttributes.ForEach(attr => tx.AddCustomAttribute(attr.Key, attr.Value));
             tx.TransactionMetadata.SetCrossApplicationReferrerTripId("");
