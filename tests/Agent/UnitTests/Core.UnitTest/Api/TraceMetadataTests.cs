@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Api
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
             _samplerService = Mock.Create<ISamplerService>();
-            _traceMetadataFactory = new TraceMetadataFactory(_samplerService);
+            _traceMetadataFactory = new TraceMetadataFactory();
         }
 
         [TearDown]

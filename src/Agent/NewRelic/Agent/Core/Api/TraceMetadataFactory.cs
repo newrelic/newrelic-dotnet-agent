@@ -33,34 +33,20 @@ namespace NewRelic.Agent.Core.Api
 
     public class TraceMetadataFactory : ITraceMetadataFactory
     {
-        private readonly ISamplerService _samplerService;
-
-        public TraceMetadataFactory(ISamplerService samplerService)
-        {
-            _samplerService = samplerService;
-        }
-
         public ITraceMetadata CreateTraceMetadata(IInternalTransaction transaction)
         {
             var traceId = transaction.TraceId;
             var spanId = transaction.CurrentSegment.SpanId;
-            var isSampled = SetIsSampled(transaction);
 
-            return new TraceMetadata(traceId, spanId, isSampled);
-        }
-
-        private bool SetIsSampled(IInternalTransaction transaction)
-        {
             // if Sampled has not been set, compute it now
-            if (transaction.Sampled != null)
-            {
-                return (bool)transaction.Sampled;
-            }
-            else
+            if (transaction.Sampled is null)
             {
                 transaction.SetSampled();
-                return (bool)transaction.Sampled;
             }
+
+            var isSampled = transaction.Sampled ?? false;
+
+            return new TraceMetadata(traceId, spanId, isSampled);
         }
     }
 }
