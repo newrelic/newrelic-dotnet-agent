@@ -518,11 +518,11 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual IEnumerable<string> CaptureAttributesIncludes =>
             CanUseAttributesIncludes
                 ? _captureAttributesIncludes ??=
-                    [..EnvironmentOverrides(_localConfiguration.attributes.include, "NEW_RELIC_ATTRIBUTES_INCLUDE")]
+                    [.. EnvironmentOverrides(_localConfiguration.attributes.include, "NEW_RELIC_ATTRIBUTES_INCLUDE")]
                 : _captureAttributesIncludes ??= [];
 
         private IEnumerable<string> _captureAttributesExcludes;
-        public virtual IEnumerable<string> CaptureAttributesExcludes => _captureAttributesExcludes ??= [..EnvironmentOverrides(_localConfiguration.attributes.exclude, "NEW_RELIC_ATTRIBUTES_EXCLUDE")];
+        public virtual IEnumerable<string> CaptureAttributesExcludes => _captureAttributesExcludes ??= [.. EnvironmentOverrides(_localConfiguration.attributes.exclude, "NEW_RELIC_ATTRIBUTES_EXCLUDE")];
 
         private IEnumerable<string> _captureAttributesDefaultExcludes;
         public virtual IEnumerable<string> CaptureAttributesDefaultExcludes => _captureAttributesDefaultExcludes ??= ["identity.*"];
@@ -547,12 +547,12 @@ namespace NewRelic.Agent.Core.Configuration
         private HashSet<string> _transactionEventsAttributesInclude;
         public HashSet<string> TransactionEventsAttributesInclude =>
             _transactionEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && TransactionEventsAttributesEnabled
-                ? [.._localConfiguration.transactionEvents.attributes.include]
+                ? [.. _localConfiguration.transactionEvents.attributes.include]
                 : [];
 
         private HashSet<string> _transactionEventsAttributesExclude;
         public HashSet<string> TransactionEventsAttributesExclude =>
-            _transactionEventsAttributesExclude ??= [.._localConfiguration.transactionEvents.attributes.exclude];
+            _transactionEventsAttributesExclude ??= [.. _localConfiguration.transactionEvents.attributes.exclude];
 
         public virtual bool CaptureTransactionTraceAttributes => ShouldCaptureTransactionTraceAttributes();
 
@@ -575,7 +575,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual IEnumerable<string> CaptureTransactionTraceAttributesIncludes =>
             ShouldCaptureTransactionTraceAttributesIncludes()
-                ? _captureTransactionTraceAttributesIncludes ??= [.._localConfiguration.transactionTracer.attributes.include]
+                ? _captureTransactionTraceAttributesIncludes ??= [.. _localConfiguration.transactionTracer.attributes.include]
                 : _captureTransactionTraceAttributesIncludes ??= [];
 
         private bool? _shouldCaptureTransactionTraceAttributesIncludes;
@@ -600,7 +600,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private IEnumerable<string> _captureTransactionTraceAttributesExcludes;
         public virtual IEnumerable<string> CaptureTransactionTraceAttributesExcludes =>
-            _captureTransactionTraceAttributesExcludes ??= [.._localConfiguration.transactionTracer.attributes.exclude];
+            _captureTransactionTraceAttributesExcludes ??= [.. _localConfiguration.transactionTracer.attributes.exclude];
 
 
         public virtual bool CaptureErrorCollectorAttributes => ShouldCaptureErrorCollectorAttributes();
@@ -688,7 +688,7 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         private IEnumerable<string> _captureBrowserMonitoringAttributesExcludes;
-        public virtual IEnumerable<string> CaptureBrowserMonitoringAttributesExcludes => _captureBrowserMonitoringAttributesExcludes ??=[.. _localConfiguration.browserMonitoring.attributes.exclude];
+        public virtual IEnumerable<string> CaptureBrowserMonitoringAttributesExcludes => _captureBrowserMonitoringAttributesExcludes ??= [.. _localConfiguration.browserMonitoring.attributes.exclude];
 
 
         private BoolConfigurationItem _shouldCaptureCustomParameters;
@@ -834,11 +834,11 @@ namespace NewRelic.Agent.Core.Configuration
         private HashSet<string> _spanEventsAttributesInclude;
         public HashSet<string> SpanEventsAttributesInclude =>
             _spanEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && SpanEventsAttributesEnabled
-                ? [.._localConfiguration.spanEvents.attributes.include]
+                ? [.. _localConfiguration.spanEvents.attributes.include]
                 : [];
 
         private HashSet<string> _spanEventsAttributesExclude;
-        public virtual HashSet<string> SpanEventsAttributesExclude => _spanEventsAttributesExclude ??= [.._localConfiguration.spanEvents.attributes.exclude];
+        public virtual HashSet<string> SpanEventsAttributesExclude => _spanEventsAttributesExclude ??= [.. _localConfiguration.spanEvents.attributes.exclude];
 
         #endregion
 
@@ -876,9 +876,102 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool ExcludeNewrelicHeader => _localConfiguration.distributedTracing.excludeNewrelicHeader;
 
-        public RemoteParentSampledBehavior RemoteParentSampledBehavior => EnvironmentOverrides(_localConfiguration.distributedTracing.sampler.remoteParentSampled.ToString(), "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED").ToRemoteParentSampledBehavior();
+        public SamplerType RootSamplerType => GetSamplerType(SamplerLevel.Root);
+        public SamplerType RemoteParentSampledSamplerType => GetSamplerType(SamplerLevel.RemoteParentSampled);
+        public SamplerType RemoteParentNotSampledSamplerType => GetSamplerType(SamplerLevel.RemoteParentNotSampled);
+        public float? RootTraceIdRatioSamplerRatio { get => RootSamplerType == SamplerType.TraceIdRatioBased ? TraceIdSamplerRatio(SamplerLevel.Root) : null; }
+        public float? RemoteParentSampledTraceIdRatioSamplerRatio { get => RemoteParentSampledSamplerType == SamplerType.TraceIdRatioBased ? TraceIdSamplerRatio(SamplerLevel.RemoteParentSampled) : null; }
+        public float? RemoteParentNotSampledTraceIdRatioSamplerRatio { get => RemoteParentNotSampledSamplerType == SamplerType.TraceIdRatioBased ? TraceIdSamplerRatio(SamplerLevel.RemoteParentNotSampled) : null; }
 
-        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => EnvironmentOverrides(_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.ToString(), "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED").ToRemoteParentSampledBehavior();
+        private SamplerType GetSamplerType(SamplerLevel samplerLevel)
+        {
+            // Environment variable (if present) always wins
+            var envVarName = samplerLevel switch
+            {
+                SamplerLevel.Root => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT",
+                SamplerLevel.RemoteParentSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED",
+                SamplerLevel.RemoteParentNotSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED",
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
+            };
+
+            var envValue = _environment.GetEnvironmentVariableFromList(envVarName);
+            if (!string.IsNullOrEmpty(envValue))
+            {
+                return envValue.ToRemoteParentSamplerType();
+            }
+
+            // use local config if no env var override
+            var samplerItem = samplerLevel switch
+            {
+                SamplerLevel.Root => _localConfiguration.distributedTracing.sampler.root.Item,
+                SamplerLevel.RemoteParentSampled => _localConfiguration.distributedTracing.sampler.remoteParentSampled.Item,
+                SamplerLevel.RemoteParentNotSampled => _localConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item,
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
+            };
+
+            //if samplerLevel is one of the remote parent levels and samplerItem is null (not configured), we need to check the legacy attributes
+            if (samplerLevel != SamplerLevel.Root && samplerItem == null)
+            {
+                var remoteParentSampledBehaviorType = samplerLevel == SamplerLevel.RemoteParentSampled ?
+                    _localConfiguration.distributedTracing.sampler.remoteParentSampled1 :
+                    _localConfiguration.distributedTracing.sampler.remoteParentNotSampled1;
+
+                if (remoteParentSampledBehaviorType != RemoteParentSampledBehaviorType.@default)
+                {
+                    Log.Warn($"Using deprecated configuration for {samplerLevel}. Please use the new distributed tracing sampler configuration.");
+                    return remoteParentSampledBehaviorType.ToRemoteParentSamplerType();
+                }
+            }
+
+            return MapSamplerItem(samplerItem);
+        }
+
+        private static SamplerType MapSamplerItem(object samplerItem) =>
+            samplerItem switch
+            {
+                null => SamplerType.Adaptive, // not configured, default to Adaptive
+                AdaptiveSamplerType => SamplerType.Adaptive,
+                AlwaysOnSamplerType => SamplerType.AlwaysOn,
+                AlwaysOffSamplerType => SamplerType.AlwaysOff,
+                TraceIdRatioSamplerType => SamplerType.TraceIdRatioBased,
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerItem), samplerItem, "Unknown sampler type in configuration.")
+            };
+
+        private float? TraceIdSamplerRatio(SamplerLevel samplerLevel)
+        {
+            var envVarName = samplerLevel switch
+            {
+                SamplerLevel.Root => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT_TRACE_ID_RATIO_BASED_RATIO",
+                SamplerLevel.RemoteParentSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED_TRACE_ID_RATIO_BASED_RATIO",
+                SamplerLevel.RemoteParentNotSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED_TRACE_ID_RATIO_BASED_RATIO",
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
+            };
+
+            var envValue = _environment.GetEnvironmentVariableFromList(envVarName);
+            if (!string.IsNullOrEmpty(envValue) && float.TryParse(envValue, out var ratioFromEnv))
+            {
+                return ratioFromEnv;
+            }
+
+            // use local config if no env var override
+            switch (samplerLevel)
+            {
+                case SamplerLevel.Root:
+                    if (_localConfiguration.distributedTracing.sampler.root.Item is TraceIdRatioSamplerType rootTraceIdRatioSamplerType)
+                        return (float)rootTraceIdRatioSamplerType.sampleRatio;
+                    return null;
+                case SamplerLevel.RemoteParentSampled:
+                    if (_localConfiguration.distributedTracing.sampler.remoteParentSampled.Item is TraceIdRatioSamplerType remoteParentSampledTraceIdRatioSamplerType)
+                        return (float)remoteParentSampledTraceIdRatioSamplerType.sampleRatio;
+                    return null;
+                case SamplerLevel.RemoteParentNotSampled:
+                    if (_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item is TraceIdRatioSamplerType remoteParentNotSampledTraceIdRatioSamplerType)
+                        return (float)remoteParentNotSampledTraceIdRatioSamplerType.sampleRatio;
+                    return null;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null);
+            }
+        }
 
         #endregion Distributed Tracing
 
@@ -1532,11 +1625,11 @@ namespace NewRelic.Agent.Core.Configuration
         private HashSet<string> _customEventsAttributesInclude;
         public HashSet<string> CustomEventsAttributesInclude =>
             _customEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && CustomEventsAttributesEnabled
-                ? [.._localConfiguration.customEvents.attributes.include]
+                ? [.. _localConfiguration.customEvents.attributes.include]
                 : [];
 
         private HashSet<string> _customEventsAttributesExclude;
-        public HashSet<string> CustomEventsAttributesExclude => _customEventsAttributesExclude ??= [.._localConfiguration.customEvents.attributes.exclude];
+        public HashSet<string> CustomEventsAttributesExclude => _customEventsAttributesExclude ??= [.. _localConfiguration.customEvents.attributes.exclude];
 
         #endregion
 
@@ -1579,7 +1672,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual TimeSpan TransactionTraceApdexT =>
             // get apdex_t from environment variable if running in serverless mode
-            TimeSpan.FromSeconds(ServerlessModeEnabled ? 
+            TimeSpan.FromSeconds(ServerlessModeEnabled ?
                 EnvironmentOverrides(0.5, "NEW_RELIC_APDEX_T").GetValueOrDefault() : ServerOverrides(_serverConfiguration.ApdexT, 0.5));
 
         public virtual TimeSpan TransactionTraceThreshold =>

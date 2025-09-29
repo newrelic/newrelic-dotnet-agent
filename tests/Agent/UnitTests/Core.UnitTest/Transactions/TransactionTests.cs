@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Data;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.Transactions;
 
@@ -46,7 +47,7 @@ public class TransactionTests
 
         _transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(),
             DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(),
-            _priority, _databaseStatementParser, _distributedTracePayloadHandler, Mock.Create<IErrorService>(), AttribDefs);
+            _priority, _databaseStatementParser, _distributedTracePayloadHandler, Mock.Create<IErrorService>(), AttribDefs, Mock.Create<ISamplerService>());
     }
 
     [TearDown]
@@ -636,7 +637,7 @@ public class TransactionTests
         var distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
         var errorService = Mock.Create<IErrorService>();
         var attribDefs = Mock.Create<IAttributeDefinitions>();
-        return new Transaction(config, transactionName, timer, DateTime.UtcNow, callStackManager, databaseService, 0.5f, databaseStatementParser, distributedTracePayloadHandler, errorService, attribDefs);
+        return new Transaction(config, transactionName, timer, DateTime.UtcNow, callStackManager, databaseService, 0.5f, databaseStatementParser, distributedTracePayloadHandler, errorService, attribDefs, Mock.Create<ISamplerService>());
     }
 
 }

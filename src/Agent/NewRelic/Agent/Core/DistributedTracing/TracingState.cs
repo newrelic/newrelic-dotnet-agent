@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DistributedTracing
@@ -206,9 +207,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Func<T, string, IEnumerable<string>> getter,
             TransportType transportType,
             string agentTrustKey,
-            DateTime transactionStartTime,
-            RemoteParentSampledBehavior remoteParentSampledBehavior,
-            RemoteParentSampledBehavior remoteParentNotSampledBehavior)
+            DateTime transactionStartTime, ISamplerService samplerService)
         {
             var tracingState = new TracingState();
             var errors = new List<IngestErrorType>();
@@ -217,11 +216,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
             tracingState._traceContext = W3CTraceContext.TryGetTraceContextFromHeaders(carrier, getter, agentTrustKey, errors);
             tracingState.TraceContextWasAccepted =
                 tracingState._traceContext.TraceparentPresent &&
-                !errors.Contains(IngestErrorType.TraceParentParseException) ? true : false;
+                !errors.Contains(IngestErrorType.TraceParentParseException);
 
-            tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null ? true : false;
-
-            tracingState.ApplyRemoteParentSampledBehavior(remoteParentSampledBehavior, remoteParentNotSampledBehavior);
+            tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null;
 
             // newrelic 
             // if traceparent was present (regardless if valid), ignore newrelic header
@@ -230,21 +227,22 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 // Search for the following header keys in this order: "newrelic", "NEWRELIC", "Newrelic"
                 // If the getter function makes a case-insensitive search it will find any of the three
                 // variants on the first call.
-                var newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllLower);
-                if (newRelicHeaderList?.Any() == false)
-                {
-                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllUpper);
-                }
-                if (newRelicHeaderList?.Any() == false)
-                {
-                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeySingleUpper);
-                }
-                if (newRelicHeaderList?.Any() == true) // a NR header key was present
+                var newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllLower)?.ToList();
+
+                if (newRelicHeaderList is not { Count: > 0})
+                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllUpper)?.ToList();
+
+                if (newRelicHeaderList is not { Count: > 0 })
+                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeySingleUpper)?.ToList();
+
+                if (newRelicHeaderList is { Count: > 0}) // a NR header key was present
                 {
                     tracingState._newRelicPayload = DistributedTracePayload.TryDecodeAndDeserializeDistributedTracePayload(newRelicHeaderList.FirstOrDefault(), agentTrustKey, errors);
                     tracingState.NewRelicPayloadWasAccepted = tracingState._newRelicPayload != null ? true : false;
                 }
             }
+
+            tracingState.ApplyRemoteParentSampledBehavior(samplerService);
 
             if (errors.Any())
             {
@@ -264,41 +262,37 @@ namespace NewRelic.Agent.Core.DistributedTracing
         /// Use remote parent sampled behavior configuration in conjunction with the traceparent sampled flag to determine
         /// if the transaction should be sampled.
         /// </summary>
-        private void ApplyRemoteParentSampledBehavior(
-            RemoteParentSampledBehavior remoteParentSampledBehavior,
-            RemoteParentSampledBehavior remoteParentNotSampledBehavior)
+        private void ApplyRemoteParentSampledBehavior(ISamplerService samplerService)
         {
-            // don't do anything if the traceparent is not present or if behavior is configured to default
-            if (!_traceContext.TraceparentPresent ||
-                (remoteParentNotSampledBehavior == RemoteParentSampledBehavior.Default &&
-                 remoteParentSampledBehavior == RemoteParentSampledBehavior.Default))
+            // don't do anything if the traceparent is not present or it's null
+            bool? isRemoteParentSampled = null;
+            if (_traceContext.TraceparentPresent && _traceContext.Traceparent != null)
             {
+                isRemoteParentSampled = _traceContext.Traceparent.Sampled;
+            }
+
+            if (isRemoteParentSampled == null && _newRelicPayload != null)
+            {
+                isRemoteParentSampled = _newRelicPayload.Sampled;
+            }
+
+            if (isRemoteParentSampled == null) // no remote parent
                 return;
-            }
 
-            var sampledBehavior = _traceContext.Traceparent.Sampled
-                ? remoteParentSampledBehavior
-                : remoteParentNotSampledBehavior;
+            var sampler = samplerService.GetSampler(isRemoteParentSampled.Value ? SamplerLevel.RemoteParentSampled : SamplerLevel.RemoteParentNotSampled);
+            if (sampler == null) // remote parent sampled behavior is not configured
+                return;
 
-            switch (sampledBehavior)
-            {
-                case RemoteParentSampledBehavior.AlwaysOn:
-                    _priority = 2.0f; // per the spec, set priority high so that this sample is always kept
-                    _sampled = true;
-                    break;
-                case RemoteParentSampledBehavior.AlwaysOff:
-                    _priority = 0.0f; // set lowest possible priority
-                    _sampled = false;
-                    break;
-                // don't need a case for Default, as it is handled above
-                default:
-                    throw new ArgumentException($"Invalid {(_traceContext.Traceparent.Sampled ? "remoteParentSampledBehavior" : "remoteParentNotSampledBehavior")} value: {sampledBehavior}.");
-            }
+            var samplingResult = sampler.ShouldSample(new SamplingParameters(TraceId, Priority ?? 0.0f, _traceContext, TraceContextWasAccepted && _validTracestateWasAccepted, _newRelicPayload, NewRelicPayloadWasAccepted));
 
-            Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext.Traceparent.Sampled={SampledValue}, {ParentType}SampledBehavior: {SampledBehavior} ==> Sampled: {Sampled}, Priority: {Priority}",
-                    _traceContext.Traceparent.Sampled,
-                    _sampled.Value ? "remoteParent" : "remoteParentNot",
-                    sampledBehavior,
+            // setting these to non-null values will override the logic in the property getters that falls back to the payload or tracestate values
+            _priority = samplingResult.Priority;
+            _sampled = samplingResult.Sampled;
+
+            Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext?.Traceparent?.Sampled={TraceParentSampled}, _newRelicPayload?.Sampled={NewRelicSampled}, Sampler: {Sampler} ==> Sampled: {Sampled}, Priority: {Priority}",
+                    _traceContext?.Traceparent?.Sampled,
+                    _newRelicPayload?.Sampled,
+                    sampler.GetType().Name,
                     Sampled,
                     Priority
                 );

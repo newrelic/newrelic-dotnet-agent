@@ -1,8 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Transactions;
 
 namespace NewRelic.Agent.Core.Api
@@ -32,34 +33,20 @@ namespace NewRelic.Agent.Core.Api
 
     public class TraceMetadataFactory : ITraceMetadataFactory
     {
-        private readonly IAdaptiveSampler _adaptiveSampler;
-
-        public TraceMetadataFactory(IAdaptiveSampler adaptiveSampler)
-        {
-            _adaptiveSampler = adaptiveSampler;
-        }
-
         public ITraceMetadata CreateTraceMetadata(IInternalTransaction transaction)
         {
             var traceId = transaction.TraceId;
             var spanId = transaction.CurrentSegment.SpanId;
-            var isSampled = SetIsSampled(transaction);
+
+            // if Sampled has not been set, compute it now
+            if (transaction.Sampled is null)
+            {
+                transaction.SetSampled();
+            }
+
+            var isSampled = transaction.Sampled ?? false;
 
             return new TraceMetadata(traceId, spanId, isSampled);
-        }
-
-        private bool SetIsSampled(IInternalTransaction transaction)
-        {
-            // if Sampled has not been set, compute it now
-            if (transaction.Sampled != null)
-            {
-                return (bool)transaction.Sampled;
-            }
-            else
-            {
-                transaction.SetSampled(_adaptiveSampler);
-                return (bool)transaction.Sampled;
-            }
         }
     }
 }

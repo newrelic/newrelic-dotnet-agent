@@ -16,6 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -67,10 +69,10 @@ namespace NewRelic.Agent.Core.Transactions
         private readonly IErrorService _errorService;
         private readonly IDistributedTracePayloadHandler _distributedTracePayloadHandler;
         private readonly IAttributeDefinitionService _attribDefSvc;
-        private readonly IAdaptiveSampler _adaptiveSampler;
+        private readonly ISamplerService _samplerService;
 
         public TransactionService(IEnumerable<IContextStorageFactory> factories, ISimpleTimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser,
-            IErrorService errorService, IDistributedTracePayloadHandler distributedTracePayloadHandler, IAttributeDefinitionService attribDefSvc, IAdaptiveSampler adaptiveSampler)
+            IErrorService errorService, IDistributedTracePayloadHandler distributedTracePayloadHandler, IAttributeDefinitionService attribDefSvc, ISamplerService samplerService)
         {
             _sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
             _asyncContext = GetAsyncTransactionContext(factories);
@@ -82,7 +84,7 @@ namespace NewRelic.Agent.Core.Transactions
             _errorService = errorService;
             _distributedTracePayloadHandler = distributedTracePayloadHandler;
             _attribDefSvc = attribDefSvc;
-            _adaptiveSampler = adaptiveSampler;
+            _samplerService = samplerService;
         }
 
         public bool IsAttachedToAsyncStorage => TryGetInternalTransaction(_asyncContext) != null;
@@ -165,8 +167,10 @@ namespace NewRelic.Agent.Core.Transactions
             var priority = _tracePriorityManager.Create();
             var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(),
                 DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, priority,
-                _databaseStatementParser, _distributedTracePayloadHandler, _errorService, _attribDefSvc.AttributeDefs);
-            _adaptiveSampler.StartTransaction();
+                _databaseStatementParser, _distributedTracePayloadHandler, _errorService, _attribDefSvc.AttributeDefs, _samplerService);
+
+            _samplerService.GetSampler(SamplerLevel.Root).StartTransaction();
+
             try
             {
                 transactionContext.SetData(transaction);
