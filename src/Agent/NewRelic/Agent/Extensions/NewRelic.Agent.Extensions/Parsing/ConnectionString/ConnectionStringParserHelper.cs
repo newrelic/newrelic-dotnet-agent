@@ -24,8 +24,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
             var hostIsLocalhost = localhost.Contains(host);
             if (!hostIsLocalhost)
             {
-                IPAddress ipAddress;
-                var isIpAddress = IPAddress.TryParse(host, out ipAddress);
+                var isIpAddress = IPAddress.TryParse(host, out var ipAddress);
                 hostIsLocalhost = isIpAddress && IPAddress.IsLoopback(ipAddress);
             }
 

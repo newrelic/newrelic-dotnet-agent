@@ -1,8 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
@@ -22,32 +24,39 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 
         public ConnectionInfo GetConnectionInfo(string utilizationHostName)
         {
-            var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
-
-            var hasMultipleHosts = host != null && host.IndexOf(StringSeparators.CommaChar) != -1;
-            if (hasMultipleHosts)
-                host = null;
-            else if (host != null)
-                host = ConnectionStringParserHelper.NormalizeHostname(host, utilizationHostName);
-
-            var databaseName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _databaseNameKeys)?.Value;
-
-            var port = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _portKeys)?.Value;
-            if (port == null && host != null)
+            try
             {
-                return new ConnectionInfo(host, "default", databaseName);
-            }
-            else
-            {
-                int portNum;
-                if (!int.TryParse(port, out portNum))
+                var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
+
+                var hasMultipleHosts = host != null && host.IndexOf(StringSeparators.CommaChar) != -1;
+                if (hasMultipleHosts)
+                    host = null;
+                else if (host != null)
+                    host = ConnectionStringParserHelper.NormalizeHostname(host, utilizationHostName);
+
+                var databaseName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _databaseNameKeys)?.Value;
+
+                var port = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _portKeys)?.Value;
+                if (port == null && host != null)
                 {
-                    portNum = -1;
+                    return new ConnectionInfo(host, "default", databaseName);
                 }
-                return new ConnectionInfo(host, portNum, databaseName);
+                else
+                {
+                    int portNum;
+                    if (!int.TryParse(port, out portNum))
+                    {
+                        portNum = -1;
+                    }
+                    return new ConnectionInfo(host, portNum, databaseName);
+                }
             }
+            catch (Exception e)
+            {
 
-
+                Log.Debug(e, "Unhandled exception in MySqlConnectionStringParser.GetConnectionInfo");
+                return new ConnectionInfo(null, null, null);
+            }
         }
     }
 }
