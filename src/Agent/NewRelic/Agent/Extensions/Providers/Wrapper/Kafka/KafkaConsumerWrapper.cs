@@ -30,6 +30,8 @@ namespace NewRelic.Providers.Wrapper.Kafka
             new ConcurrentDictionary<Type, Func<object, object>>();
         private static readonly ConcurrentDictionary<Type, Func<object, object>> ValueAccessorDictionary =
             new ConcurrentDictionary<Type, Func<object, object>>();
+        private static readonly ConcurrentDictionary<Type, Func<object, object>> OffsetAccessorDictionary =
+            new ConcurrentDictionary<Type, Func<object, object>>();
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -85,6 +87,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
                     }
 
                     ReportSizeMetrics(agent, transaction, topic, headersSize, messageAsObject);
+                    ReportOffsetMetrics(agent, transaction, topic, resultAsObject);
                 }
                 finally
                 {
@@ -131,6 +134,26 @@ namespace NewRelic.Providers.Wrapper.Kafka
             agentExp.RecordByteMetric($"Message/Kafka/Topic/Named/{topic}/Received/Bytes", totalSize);
         }
 
+        private static void ReportOffsetMetrics(IAgent agent, ITransaction transaction, string topic, object resultAsObject)
+        {
+            // get the message Key and Value properties so we can try to get their size
+            var resultType = resultAsObject.GetType();
+            var offsetAccessor = OffsetAccessorDictionary.GetOrAdd(resultType, GetOffsetAccessorFunc);
+
+            var offsetAsObject = offsetAccessor(resultAsObject);
+
+            var offsetValueAccessor = ValueAccessorDictionary.GetOrAdd(offsetAsObject.GetType(), GetValueAccessorFunc);
+
+            var offsetValueAsObject = offsetValueAccessor(offsetAsObject);
+
+            // This makes sense, I think
+            transaction.AddCustomAttribute("kafka.consume.offset", offsetValueAsObject);
+
+            // Add metric for offset value - not sure if this makes any sense at all
+            var agentExp = agent.GetExperimentalApi();
+            agentExp.RecordCountMetric($"Message/Kafka/Topic/Named/{topic}/Offset", (long)offsetValueAsObject);
+        }
+
         private static Func<object, string> GetTopicAccessorFunc(Type t) =>
             VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(t, "Topic");
         private static Func<object, object> GetMessageAccessorFunc(Type t) =>
@@ -139,6 +162,8 @@ namespace NewRelic.Providers.Wrapper.Kafka
             VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Key");
         private static Func<object, object> GetValueAccessorFunc(Type t) =>
             VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Value");
+        private static Func<object, object> GetOffsetAccessorFunc(Type t) =>
+            VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Offset");
 
         private static IEnumerable<string> DistributedTraceHeadersGetter(MessageMetadata carrier, string key)
         {

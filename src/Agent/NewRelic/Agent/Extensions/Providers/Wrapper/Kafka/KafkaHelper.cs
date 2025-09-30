@@ -36,12 +36,12 @@ namespace NewRelic.Providers.Wrapper.Kafka
         {
             foreach (var server in bootstrapServers)
             {
-                var mode = (isProducer? "Produce" : "Consume");
+                var mode = (isProducer ? "Produce" : "Consume");
 
                 agent.RecordCountMetric($"MessageBroker/Kafka/Nodes/{server}");
                 agent.RecordCountMetric($"MessageBroker/Kafka/Nodes/{server}/{mode}/{topicName}");
             }
-            
+
         }
     }
 }

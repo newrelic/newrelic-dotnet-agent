@@ -36,8 +36,22 @@ namespace NewRelic.Providers.Wrapper.Kafka
                 KafkaHelper.RecordKafkaNodeMetrics(agent, topicPartition.Topic, bootstrapServers, true);
             }
 
-            return instrumentedMethodCall.MethodCall.Method.MethodName == "Produce" ? Delegates.GetDelegateFor(segment) : Delegates.GetAsyncDelegateFor<Task>(agent, segment);
+            return instrumentedMethodCall.MethodCall.Method.MethodName == "Produce" ? Delegates.GetDelegateFor(segment) :
+                Delegates.GetAsyncDelegateFor<Task>(agent, segment, holdTransactionOpen: true, onComplete: handleDeliveryResult);
+
+            void handleDeliveryResult(Task task)
+            {
+                // Some of this is AI-generated so not sure if it's what we want, but leaving it for now.
+                if (task is Task<DeliveryResult<Null, byte[]>> deliveryResultTask && deliveryResultTask.Status == TaskStatus.RanToCompletion)
+                {
+                    var deliveryResult = deliveryResultTask.Result;
+                    transaction.AddCustomAttribute("kafka.produce.offset", deliveryResult.TopicPartitionOffset.Offset.Value);
+                    // TBD - Record a metric for the offset?
+                }
+            }
+
         }
+
 
         private static void DistributedTraceHeadersSetter(MessageMetadata carrier, string key, string value)
         {
