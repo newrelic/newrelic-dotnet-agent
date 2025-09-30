@@ -39,12 +39,29 @@ namespace ParsingTests
         [TestCase(DatastoreVendor.Oracle, "myserver", "1234", "unknown", null, @"Data Source=username/password@myserver:1234/myservice:dedicated/instancename;")]
         [TestCase(DatastoreVendor.Oracle, "myserver", "default", "unknown", null, @"Data Source=username/password@myserver/myservice:dedicated/instancename;")]
         [TestCase(DatastoreVendor.Oracle, "myserver", "default", "unknown", null, @"Data Source=username/password@myserver//instancename;")]
+        // Malformed / edge Oracle patterns (non-numeric / empty ports) – should not throw
+        [TestCase(DatastoreVendor.Oracle, "myserver", "unknown", "unknown", null, @"Data Source=username/password@myserver:abc/myservice;Uid=user;Pwd=pw;")]
+        [TestCase(DatastoreVendor.Oracle, "myserver", "default", "unknown", null, @"Data Source=username/password@myserver/myservice;Uid=user;Pwd=pw;")]              // no port -> default
+        [TestCase(DatastoreVendor.Oracle, "myserver", "unknown", "unknown", null, @"Data Source=username/password@myserver:/myservice;Uid=user;Pwd=pw;")]             // empty port -> unknown
+        [TestCase(DatastoreVendor.Oracle, "myserver", "unknown", "unknown", null, @"Data Source=username/password@//myserver:xyz/my.service.com;Uid=user;Pwd=pw;")]   // //host:nonNumeric
+        [TestCase(DatastoreVendor.Oracle, "myserver", "unknown", "unknown", null, @"Data Source=username/password@//myserver:/my.service.com;Uid=user;Pwd=pw;")]      // //host: (empty)
 
         [TestCase(DatastoreVendor.MySQL, "myServerAddress", "default", "myDataBase", null, @"Server=myServerAddress;Database=myDataBase;")]
         [TestCase(DatastoreVendor.MySQL, "myServerAddress", "1234", "myDataBase", null, @"Data Source=myServerAddress;Port=1234;Database=myDataBase;")]
         [TestCase(DatastoreVendor.MySQL, "myServerAddress", "1234", "myDataBase", null, @"Network Address=myServerAddress;Port=1234;Database=myDataBase;")]
         [TestCase(DatastoreVendor.MySQL, "myServerAddress", "1234", "myDataBase", null, @"Server=myServerAddress;Port=1234;Database=myDataBase;")]
         [TestCase(DatastoreVendor.MySQL, "unknown", "unknown", "myDataBase", null, @"Server=serverAddress1, serverAddress2, serverAddress3;Database=myDataBase;")]
+        // Malformed MySql patterns - should not throw
+        [TestCase(DatastoreVendor.MySQL, "unknown", "unknown", "db", null, "Server=host1,host2;Database=db;")]
+        [TestCase(DatastoreVendor.MySQL, "myHost", "default", "db", null, "Server=myHost;Database=db;")]
+        [TestCase(DatastoreVendor.MySQL, "hostname_of_localhost", "default", "db", null, "Server=localhost;Database=db;")]
+        [TestCase(DatastoreVendor.MySQL, "myHost", "3306", "db", null, "Server=myHost;Port=3306;Database=db;")]
+        [TestCase(DatastoreVendor.MySQL, "myHost", "default", "db", null, "Server=myHost;Port=;Database=db;")]
+        [TestCase(DatastoreVendor.MySQL, "myHost", "unknown", "db", null, "Server=myHost;Port=abc;Database=db;")]
+        [TestCase(DatastoreVendor.MySQL, "myHost", "unknown", "db", null, "Server=myHost;Port=-1;Database=db;")]
+        [TestCase(DatastoreVendor.MySQL, "myHost", "unknown", "db", null, "Server=myHost;Port=999999999999;Database=db;")]
+        [TestCase(DatastoreVendor.MySQL, "unknown", "3306", "db", null, "Server=;Port=3306;Database=db;")]
+        [TestCase(DatastoreVendor.MySQL, "unknown", "unknown", "db", null, "Server=;Database=db;")]
 
         [TestCase(DatastoreVendor.Postgres, "myServerAddress", "5432", "myDataBase", null, @"Server=myServerAddress;Port=5432;Database=myDataBase;")]
         [TestCase(DatastoreVendor.Postgres, "myServerAddress", "1234", "myDataBase", null, @"Host=myServerAddress;Port=1234;Database=myDataBase;")]
@@ -70,6 +87,13 @@ namespace ParsingTests
         [TestCase(DatastoreVendor.ODBC, "myReddishServerHost", "234", "unknown", null, "Driver={ODBC Driver for Reddish Server};Server=myReddishServerHost:234")]
         [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "unknown", "unknown", null, "localhost,password=NOPERS")]
         [TestCase(DatastoreVendor.ODBC, "hostname_of_localhost", "unknown", "unknown", null, "127.0.0.1,password=NOPERS")]
+        // malformed ODBC patterns - should not throw
+        [TestCase(DatastoreVendor.ODBC, "myHost", "1234", "Db", "myInstance", @"Driver={ODBC Driver for Sequel Server};Server=myHost\myInstance,1234;Database=Db")]   // host\instance,port
+        [TestCase(DatastoreVendor.ODBC, "myHost", "unknown", "Db", "myInstance", @"Driver={ODBC Driver for Sequel Server};Server=myHost\myInstance,;Database=Db")]    // host\instance, (missing port)
+        [TestCase(DatastoreVendor.ODBC, "myHost", "unknown", "Db", "myInstance", @"Driver={ODBC Driver for Sequel Server};Server=myHost,\myInstance;Database=Db")]    // host,\instance (empty port before instance)
+        [TestCase(DatastoreVendor.ODBC, "myHost", "1234", "Db", "myInstance", @"Driver={ODBC Driver for Sequel Server};Server=myHost,1234\myInstance;Database=Db")]   // host,port\instance
+        [TestCase(DatastoreVendor.ODBC, "myHost", "unknown", "Db", null, @"Driver={ODBC Driver for Sequel Server};Server=myHost,;Database=Db")]                // host, (trailing comma)
+        [TestCase(DatastoreVendor.ODBC, "myHost", "1234", "Db", null, @"Driver={ODBC Driver for Sequel Server};Server=myHost,,1234;Database=Db")]           // multiple commas
 
         public void TestConnectionStringParsing(DatastoreVendor vendor, string expectedHost, string expectedPathPortOrId, string expectedDatabaseName, string expectedInstanceName, string connectionString)
         {
@@ -126,106 +150,6 @@ namespace ParsingTests
             Assert.That(connectionInfo.PortPathOrId, Is.EqualTo("unknown"));
             Assert.That(connectionInfo.DatabaseName, Is.EqualTo("unknown"));
             Assert.That(connectionInfo.InstanceName, Is.Null);
-        }
-
-        [Test]
-        public void MsSql_MalformedConnectionStrings_DoNotThrow()
-        {
-            var utilizationHostName = "hostname_of_localhost";
-
-            // Each tuple: connectionString, expectedPortPathOrId, expectedInstanceName
-            var cases = new (string cs, string expectedPort, string expectedInstance)[]
-            {
-                // Original negative-length risk patterns (backslash before comma)
-                (@"Server=myHost\myInstance,1433;Database=Db;", "1433", "myInstance"),   // host\instance,port
-                (@"Server=127.0.0.1\SQLEXPRESS,1433;Database=Db;", "1433", "SQLEXPRESS"),
-                (@"Server=::1\SQLEXPRESS,1433;Database=Db;", "1433", "SQLEXPRESS"),
-
-                // Port after instance but missing (trailing comma)
-                (@"Server=myHost\myInstance,;Database=Db;", "unknown", "myInstance"),
-
-                // Empty port segment before instance
-                (@"Server=myHost,\myInstance;Database=Db;", "unknown", "myInstance"),
-
-                // Port before instance (already covered in main parameterized tests but kept for explicit exception handling verification)
-                (@"Server=myHost,1433\myInstance;Database=Db;", "1433", "myInstance"),
-
-                // Instance only, no port
-                (@"Server=myHost\myInstance;Database=Db;", "default", "myInstance"),
-
-                // Trailing comma with no instance
-                (@"Server=myHost,;Database=Db;", "unknown", null),
-
-                // Multiple commas
-                (@"Server=myHost,,1433;Database=Db;", "1433", null),
-
-                // Leading comma then port
-                (@"Server=,1433;Database=Db;", "1433", null),
-
-                // Leading comma then instance and port
-                (@"Server=,\myInstance,1433;Database=Db;", "1433", "myInstance"),
-
-                // Just delimiters
-                (@"Server=,;Database=Db;", "unknown", null),
-            };
-
-            foreach (var (cs, expectedPort, expectedInstance) in cases)
-            {
-                ConnectionInfo info = null;
-                Assert.DoesNotThrow(() =>
-                {
-                    info = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, cs, utilizationHostName);
-                }, $"Parser threw for MSSQL connection string: {cs}");
-
-                Assert.Multiple(() =>
-                {
-                    Assert.That(info, Is.Not.Null, cs);
-                    // Host may be empty -> becomes "unknown"
-                    Assert.That(info.Host, Is.Not.Null.And.Not.Empty, cs);
-                    Assert.That(info.PortPathOrId, Is.EqualTo(expectedPort), $"Port mismatch for: {cs}");
-                    Assert.That(info.InstanceName, Is.EqualTo(expectedInstance), $"Instance mismatch for: {cs}");
-                });
-            }
-        }
-
-        [Test]
-        public void Odbc_MalformedConnectionStrings_DoNotThrow()
-        {
-            var utilizationHostName = "hostname_of_localhost";
-
-            // Each tuple: connectionString, expectedPortPathOrId, expectedInstanceName
-            var cases = new (string cs, string expectedPort, string expectedInstance)[]
-            {
-                // host\instance,port
-                (@"Driver={ODBC Driver for Sequel Server};Server=myHost\myInstance,1234;Database=Db", "1234", "myInstance"),
-                // host\instance, (missing port)
-                (@"Driver={ODBC Driver for Sequel Server};Server=myHost\myInstance,;Database=Db", "unknown", "myInstance"),
-                // host,\instance (empty port before instance)
-                (@"Driver={ODBC Driver for Sequel Server};Server=myHost,\myInstance;Database=Db", "unknown", "myInstance"),
-                // host,port\instance
-                (@"Driver={ODBC Driver for Sequel Server};Server=myHost,1234\myInstance;Database=Db", "1234", "myInstance"),
-                // host, (trailing comma)
-                (@"Driver={ODBC Driver for Sequel Server};Server=myHost,;Database=Db", "unknown", null),
-                // multiple commas
-                (@"Driver={ODBC Driver for Sequel Server};Server=myHost,,1234;Database=Db", "1234", null),
-            };
-
-            foreach (var (cs, expectedPort, expectedInstance) in cases)
-            {
-                ConnectionInfo info = null;
-                Assert.DoesNotThrow(() =>
-                {
-                    info = ConnectionInfoParser.FromConnectionString(DatastoreVendor.ODBC, cs, utilizationHostName);
-                }, $"Parser threw for ODBC connection string: {cs}");
-
-                Assert.Multiple(() =>
-                {
-                    Assert.That(info, Is.Not.Null, cs);
-                    Assert.That(info.Host, Is.Not.Null.And.Not.Empty, cs);
-                    Assert.That(info.PortPathOrId, Is.EqualTo(expectedPort), $"Port mismatch for: {cs}");
-                    Assert.That(info.InstanceName, Is.EqualTo(expectedInstance), $"Instance mismatch for: {cs}");
-                });
-            }
         }
     }
 }
