@@ -549,6 +549,33 @@ namespace NewRelic.Agent.Core.Segments
             return this;
         }
 
+        public void AddEventToSpan(string name, DateTime timestamp, IEnumerable<KeyValuePair<string, object>> attributes)
+        {
+            var spanEvent = new SpanEventEvent(name, timestamp);
+            if (attributes != null)
+            {
+                foreach (var attribute in attributes)
+                {
+                    spanEvent.Attributes.TrySetValue(AttribDefs.GetCustomAttributeForSpan(attribute.Key), attribute.Value);
+                }
+            }
+            Events.Add(spanEvent);
+        }
+
+        public void AddLinkToSpan(string linkedTraceId, string linkedSpanId, IEnumerable<KeyValuePair<string, object>> attributes)
+        {
+            var spanLink = new SpanLink(linkedTraceId, linkedSpanId);
+            if (attributes != null)
+            {
+                foreach (var attribute in attributes)
+                {
+                    spanLink.Attributes.TrySetValue(AttribDefs.GetCustomAttributeForSpan(attribute.Key), attribute.Value);
+                }
+            }
+            Links.Add(spanLink);
+        }
+
+
         private readonly object _attribValuesSyncRoot = new object();
 
         public ISpan AddCustomAttribute(string key, object value)
@@ -600,7 +627,8 @@ namespace NewRelic.Agent.Core.Segments
         bool ActivityStartedTransaction { get; set; }
         void MakeActivityCurrent();
 
-        List<ISpanLink> Links { get; }
-        List<ISpanEventEvent> Events { get; }
+        void AddEventToSpan(string name, DateTime timestamp, IEnumerable<KeyValuePair<string, object>> attributes);
+
+        void AddLinkToSpan(string linkedTraceId, string linkedSpanId, IEnumerable<KeyValuePair<string, object>> attributes);
     }
 }

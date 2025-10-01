@@ -43,7 +43,6 @@ namespace NewRelic.Agent.Core.JsonConverters
 
             foreach (var link in value.Span.Links)
             {
-                writer.WriteToken(JsonToken.Raw, ",");
                 writer.WriteStartArray();
                 JsonSerializerHelpers.WriteCollection(writer, link.AttributeValues.GetAttributeValues(AttributeClassification.Intrinsics));
                 JsonSerializerHelpers.WriteCollection(writer, link.AttributeValues.GetAttributeValues(AttributeClassification.UserAttributes));
@@ -53,7 +52,6 @@ namespace NewRelic.Agent.Core.JsonConverters
 
             foreach (var evt in value.Span.Events)
             {
-                writer.WriteToken(JsonToken.Raw, ",");
                 writer.WriteStartArray();
                 JsonSerializerHelpers.WriteCollection(writer, evt.AttributeValues.GetAttributeValues(AttributeClassification.Intrinsics));
                 JsonSerializerHelpers.WriteCollection(writer, evt.AttributeValues.GetAttributeValues(AttributeClassification.UserAttributes));

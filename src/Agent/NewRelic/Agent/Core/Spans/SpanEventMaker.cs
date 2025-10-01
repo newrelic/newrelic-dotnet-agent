@@ -107,25 +107,30 @@ namespace NewRelic.Agent.Core.Spans
 
             foreach (var link in segment.Links)
             {
-                var linkWireModel = new SpanLinkWireModel(link.Attributes);
+                var attributes = link.Attributes;
 
-                _attribDefs.GetTypeAttribute(TypeAttributeValue.SpanLink).TrySetDefault(linkWireModel.AttributeValues);
-                linkWireModel.AttributeValues.TrySetValue(_attribDefs.DistributedTraceId, immutableTransaction.TraceId);
-                linkWireModel.AttributeValues.TrySetValue(_attribDefs.SpanId, segment.SpanId);
-                linkWireModel.AttributeValues.TrySetValue(_attribDefs.LinkedTraceId, link.LinkedTraceId);
-                linkWireModel.AttributeValues.TrySetValue(_attribDefs.LinkedSpanId, link.LinkedSpanId);
+                _attribDefs.GetTypeAttribute(TypeAttributeValue.SpanLink).TrySetDefault(attributes);
+                attributes.TrySetValue(_attribDefs.TraceIdForSpanData, immutableTransaction.TraceId);
+                attributes.TrySetValue(_attribDefs.SpanIdForSpanData, segment.SpanId);
+                attributes.TrySetValue(_attribDefs.LinkedTraceId, link.LinkedTraceId);
+                attributes.TrySetValue(_attribDefs.LinkedSpanId, link.LinkedSpanId);
+                _attribDefs.Timestamp.TrySetValue(attributes, immutableTransaction.StartTime.Add(segment.RelativeStartTime));
 
+                var linkWireModel = new SpanLinkWireModel(attributes);
                 attribValues.Span.Links.Add(linkWireModel);
             }
 
             foreach (var evt in segment.Events)
             {
-                var eventWireModel = new SpanEventEventWireModel(evt.Attributes);
+                var attributes = evt.Attributes;
 
-                _attribDefs.GetTypeAttribute(TypeAttributeValue.SpanEventEvent).TrySetDefault(eventWireModel.AttributeValues);
-                _attribDefs.Timestamp.TrySetValue(eventWireModel.AttributeValues, evt.Timestamp);
-                eventWireModel.AttributeValues.TrySetValue(_attribDefs.NameForSpan, evt.Name);
+                _attribDefs.GetTypeAttribute(TypeAttributeValue.SpanEvent).TrySetDefault(attributes);
+                _attribDefs.Timestamp.TrySetValue(attributes, evt.Timestamp);
+                attributes.TrySetValue(_attribDefs.NameForSpan, evt.Name);
+                attributes.TrySetValue(_attribDefs.TraceIdForSpanData, immutableTransaction.TraceId);
+                attributes.TrySetValue(_attribDefs.SpanIdForSpanData, segment.SpanId);
 
+                var eventWireModel = new SpanEventEventWireModel(attributes);
                 attribValues.Span.Events.Add(eventWireModel);
             }
 

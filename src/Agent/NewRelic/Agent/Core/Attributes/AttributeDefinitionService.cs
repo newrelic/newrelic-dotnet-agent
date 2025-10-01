@@ -149,6 +149,8 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> MessagingDestinationPublishName { get; }
         AttributeDefinition<string, string> LinkedTraceId { get; }
         AttributeDefinition<string, string> LinkedSpanId { get; }
+        AttributeDefinition<string, string> SpanIdForSpanData { get; }
+        AttributeDefinition<string, string> TraceIdForSpanData { get; }
     }
 
     public class AttributeDefinitionService : ConfigurationBasedService, IAttributeDefinitionService
@@ -346,7 +348,7 @@ namespace NewRelic.Agent.Core.Attributes
 
                 case TypeAttributeValue.Span:
                 case TypeAttributeValue.SpanLink:
-                case TypeAttributeValue.SpanEventEvent:
+                case TypeAttributeValue.SpanEvent:
                     dest = AttributeDestinations.SpanEvent;
                     break;
             }
@@ -1217,6 +1219,18 @@ namespace NewRelic.Agent.Core.Attributes
         private AttributeDefinition<string, string> _linkedSpanId;
         public AttributeDefinition<string, string> LinkedSpanId => _linkedSpanId ?? (_linkedSpanId =
             AttributeDefinitionBuilder.CreateString("linkedSpanId", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _spanIdForSpanData;
+        public AttributeDefinition<string, string> SpanIdForSpanData => _spanIdForSpanData ?? (_spanIdForSpanData =
+            AttributeDefinitionBuilder.CreateString("id", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _traceIdForSpanData;
+        public AttributeDefinition<string, string> TraceIdForSpanData => _traceIdForSpanData ?? (_traceIdForSpanData =
+            AttributeDefinitionBuilder.CreateString("trace.id", AttributeClassification.Intrinsics)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
     }
