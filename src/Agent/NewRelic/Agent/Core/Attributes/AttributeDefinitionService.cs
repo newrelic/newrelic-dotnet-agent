@@ -149,8 +149,9 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> MessagingDestinationPublishName { get; }
         AttributeDefinition<string, string> LinkedTraceId { get; }
         AttributeDefinition<string, string> LinkedSpanId { get; }
-        AttributeDefinition<string, string> SpanIdForSpanData { get; }
+        AttributeDefinition<string, string> SpanIdForSpanLink { get; }
         AttributeDefinition<string, string> TraceIdForSpanData { get; }
+        AttributeDefinition<string, string> SpanIdForSpanEvent { get; }
     }
 
     public class AttributeDefinitionService : ConfigurationBasedService, IAttributeDefinitionService
@@ -1222,9 +1223,15 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
 
-        private AttributeDefinition<string, string> _spanIdForSpanData;
-        public AttributeDefinition<string, string> SpanIdForSpanData => _spanIdForSpanData ?? (_spanIdForSpanData =
+        private AttributeDefinition<string, string> _spanIdForSpanLink;
+        public AttributeDefinition<string, string> SpanIdForSpanLink => _spanIdForSpanLink ?? (_spanIdForSpanLink =
             AttributeDefinitionBuilder.CreateString("id", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _spanIdForSpanEvent;
+        public AttributeDefinition<string, string> SpanIdForSpanEvent => _spanIdForSpanEvent ?? (_spanIdForSpanEvent =
+            AttributeDefinitionBuilder.CreateString("span.id", AttributeClassification.Intrinsics)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
 
