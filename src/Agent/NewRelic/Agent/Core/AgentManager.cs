@@ -144,7 +144,10 @@ namespace NewRelic.Agent.Core
 
             // At this point all configuration checks should use Configuration instead of the local and bootstrap configs.
 
-            AssertAgentEnabled(); // throws if the agent is not enabled
+            // Start the AgentHealthReporter early so that we can potentially report health issues during startup
+            _agentHealthReporter = _container.Resolve<IAgentHealthReporter>();
+
+            ValidateAgentConfiguration(); // throws if there is a fatal configuration problem (agent enabled, missing license key, missing application name)
 
             EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
 
@@ -161,9 +164,6 @@ namespace NewRelic.Agent.Core
             // process really needs to be refactored so that it's more explicit in its behavior.
             var agentApi = _container.Resolve<IAgentApi>();
             _wrapperService = _container.Resolve<IWrapperService>();
-
-            // Start the AgentHealthReporter early so that we can potentially report health issues during startup
-            _agentHealthReporter = _container.Resolve<IAgentHealthReporter>();
 
             if (Configuration.OpenTelemetryBridgeEnabled)
                 _container.Resolve<OpenTelemetryBridge.ActivityBridge>().Start();
@@ -186,33 +186,49 @@ namespace NewRelic.Agent.Core
             _isInitialized = true;
         }
 
-        /// <summary>
-        /// Ensures that the New Relic agent is enabled and properly configured.
-        /// </summary>
-        /// <remarks>This method verifies that the agent is enabled in the configuration and, if not,
-        /// shuts down any services  that may have started and throws an exception to prevent further execution.
-        /// Additionally, it checks for  the presence of a valid license key unless the agent is operating in serverless
-        /// mode.</remarks>
-        /// <exception cref="Exception">Thrown if the agent is disabled in the configuration, or if the license key is not set and the agent is not
-        /// in serverless mode.</exception>
-        private void AssertAgentEnabled()
+        private void ValidateAgentConfiguration()
         {
             if (!Configuration.AgentEnabled)
             {
                 var message = $"The New Relic agent is disabled via configuration. Update {Configuration.AgentEnabledAt} to re-enable it.";
-                Log.Warn(message);
-
-                Shutdown(false); // shut down any services that may have started. Also terminates logging, so no messages after this call will be logged
-
-                // throw an exception to prevent the agent from starting (caught in CreateInstance above)
-                throw new Exception(message);
+                FailStartup(message);
             }
 
             if (!Configuration.ServerlessModeEnabled) // license key is not required to be set in serverless mode
             {
                 if ("REPLACE_WITH_LICENSE_KEY".Equals(Configuration.AgentLicenseKey))
-                    throw new Exception("Please set your license key.");
+                {
+                    FailStartup("Please set your license key.", HealthCodes.LicenseKeyMissing);
+                }
             }
+
+            // check for application names
+            if (!Configuration.TryGetApplicationNames(out _))
+            {
+                FailStartup("An application name is required.", HealthCodes.ApplicationNameMissing);
+            }
+        }
+
+        /// <summary>
+        /// Centralizes repeated startup failure handling when a health code should be reported:
+        /// logs, reports health (if enabled), shuts down services, and throws an exception.
+        /// </summary>
+        /// <param name="message">The error message to log and include in the exception.</param>
+        /// <param name="healthCode">Health code to report via Agent Control.</param>
+        private void FailStartup(string message, (bool IsHealthy, string Code, string Status) healthCode = default)
+        {
+            // have to log here because Shutdown() will terminate logging
+            Log.Error(message);
+
+            if (Configuration.AgentControlEnabled && healthCode != default)
+            {
+                _agentHealthReporter.SetAgentControlStatus(healthCode);
+            }
+
+            Shutdown(false);
+
+            // throw an exception to prevent the agent from starting (caught in CreateInstance above)
+            throw new Exception(message);
         }
 
         private void Initialize(bool serverlessModeEnabled)

@@ -271,97 +271,132 @@ namespace NewRelic.Agent.Core.Configuration
 
         private IEnumerable<string> GetApplicationNames()
         {
+            // Wrapper that throws if no application names could be resolved.
+            if (TryGetApplicationNames(out var names))
+            {
+                return names;
+            }
+
+            // TODO: do we really need this now? 
+            throw new Exception("An application name must be provided");
+        }
+
+        /// <summary>
+        /// Attempts to resolve the application names following the same ordered precedence
+        /// as the legacy <see cref="GetApplicationNames"/> implementation without throwing.
+        /// </summary>
+        /// <param name="names">Resolved application names when successful; null otherwise.</param>
+        /// <returns>True if application names were found; false if none could be resolved.</returns>
+        /// <remarks>
+        /// Side effects:
+        /// - Sets <see cref="_applicationNamesSource"/> to the source of the resolved names.
+        /// - Sets <see cref="_applicationNamesMissing"/> to true only when resolution fails.
+        /// Logging behavior is preserved exactly from the original implementation.
+        /// </remarks>
+        public bool TryGetApplicationNames(out IEnumerable<string> names)
+        {
             _applicationNamesMissing = false;
 
+            // 1. Runtime API
             var runtimeAppNames = _runTimeConfiguration.ApplicationNames.ToList();
             if (runtimeAppNames.Any())
             {
                 Log.Info("Application name from SetApplicationName API.");
                 _applicationNamesSource = "API";
-
-                return runtimeAppNames;
+                names = runtimeAppNames;
+                return true;
             }
 
+            // 2. App/web config (web.config/app.config/appsettings.json)
             var appName = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName);
             if (appName != null)
             {
                 Log.Info("Application name from web.config or app.config.");
                 _applicationNamesSource = "Application Config";
-
-                return appName.Split(StringSeparators.Comma);
+                names = appName.Split(StringSeparators.Comma);
+                return true;
             }
 
+            // 3. IISEXPRESS_SITENAME
             appName = _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME");
             if (appName != null)
             {
                 Log.Info("Application name from IISEXPRESS_SITENAME Environment Variable.");
                 _applicationNamesSource = "Environment Variable (IISEXPRESS_SITENAME)";
-
-                return appName.Split(StringSeparators.Comma);
+                names = appName.Split(StringSeparators.Comma);
+                return true;
             }
 
+            // 4. NEW_RELIC_APP_NAME
             appName = _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME");
             if (appName != null)
             {
                 Log.Info("Application name from NEW_RELIC_APP_NAME Environment Variable.");
                 _applicationNamesSource = "Environment Variable (NEW_RELIC_APP_NAME)";
-
-                return appName.Split(StringSeparators.Comma);
+                names = appName.Split(StringSeparators.Comma);
+                return true;
             }
 
+            // 5. Azure Function site name (when detected & enabled)
             if (AzureFunctionModeDetected && AzureFunctionModeEnabled && !string.IsNullOrEmpty(AzureFunctionAppName))
             {
                 Log.Info("Application name from Azure Function site name.");
                 _applicationNamesSource = "Azure Function";
-                return [AzureFunctionAppName];
+                names = [AzureFunctionAppName];
+                return true;
             }
 
+            // 6. RoleName
             appName = _environment.GetEnvironmentVariable("RoleName");
             if (appName != null)
             {
                 Log.Info("Application name from RoleName Environment Variable.");
                 _applicationNamesSource = "Environment Variable (RoleName)";
-
-                return appName.Split(StringSeparators.Comma);
+                names = appName.Split(StringSeparators.Comma);
+                return true;
             }
 
-            if (ServerlessModeEnabled)
+            // 7. Serverless (Lambda)
+            if (ServerlessModeEnabled && !string.IsNullOrEmpty(ServerlessFunctionName))
             {
-                if (!string.IsNullOrEmpty(ServerlessFunctionName))
-                {
-                    Log.Info("Application name from Lambda Function Name.");
-                    _applicationNamesSource = "Environment Variable (AWS_LAMBDA_FUNCTION_NAME)";
-                    return [ServerlessFunctionName];
-                }
+                Log.Info("Application name from Lambda Function Name.");
+                _applicationNamesSource = "Environment Variable (AWS_LAMBDA_FUNCTION_NAME)";
+                names = [ServerlessFunctionName];
+                return true;
             }
 
+            // 8. newrelic.config
             if (_localConfiguration.application.name.Count > 0)
             {
                 Log.Info("Application name from newrelic.config.");
                 _applicationNamesSource = "NewRelic Config";
-
-                return _localConfiguration.application.name;
+                names = _localConfiguration.application.name;
+                return true;
             }
 
+            // 9. Application Pool
             appName = GetAppPoolId();
             if (!string.IsNullOrWhiteSpace(appName))
             {
                 Log.Info("Application name from Application Pool name.");
                 _applicationNamesSource = "Application Pool";
-
-                return appName.Split(StringSeparators.Comma);
+                names = appName.Split(StringSeparators.Comma);
+                return true;
             }
 
+            // 10. Process name (only when AppDomain virtual path is null)
             if (_httpRuntimeStatic.AppDomainAppVirtualPath == null)
             {
                 Log.Info("Application name from process name.");
                 _applicationNamesSource = "Process Name";
-
-                return [_processStatic.GetCurrentProcess().ProcessName];
+                names = [_processStatic.GetCurrentProcess().ProcessName];
+                return true;
             }
 
+            // Failure path
             _applicationNamesMissing = true;
-            throw new Exception("An application name must be provided");
+            names = null;
+            return false;
         }
 
         private string GetAppPoolId()

@@ -52,6 +52,9 @@ namespace NewRelic.Agent.Core.AgentHealth
         private bool _healthChecksFailed;
         private string _healthCheckPath;
 
+        /// <remarks>
+        /// This class is resolved very early during startup. Be careful about adding dependencies.
+        /// </remarks>
         public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler, IFileWrapper fileWrapper, IDirectoryWrapper directoryWrapper)
         {
             _metricBuilder = metricBuilder;
