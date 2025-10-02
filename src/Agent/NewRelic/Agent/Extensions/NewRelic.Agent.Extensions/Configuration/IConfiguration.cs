@@ -20,6 +20,7 @@ namespace NewRelic.Agent.Configuration
 
         string AgentLicenseKey { get; }
         IEnumerable<string> ApplicationNames { get; }
+        bool ApplicationNamesMissing { get; }
         string ApplicationNamesSource { get; }
         bool AutoStartAgent { get; }
         string BrowserMonitoringApplicationId { get; }

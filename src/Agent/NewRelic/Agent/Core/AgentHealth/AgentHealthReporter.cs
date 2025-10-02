@@ -1,6 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.SharedInterfaces;
@@ -8,17 +16,9 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Logging;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading;
-using System.IO;
-using System.Text;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
@@ -59,19 +59,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             _fileWrapper = fileWrapper;
             _directoryWrapper = directoryWrapper;
 
-            if (!_configuration.AgentControlEnabled)
-                Log.Debug("Agent Control is disabled. Health checks will not be reported.");
-            else
-            {
-                Log.Debug("Agent Control health checks will be published every {HealthCheckInterval} seconds", _configuration.HealthFrequency);
+            _subscriptions.Add<AgentConnectedEvent>(e => OnAgentConnected());
 
-                _healthCheck = new() { IsHealthy = true, Status = "Agent starting", LastError = string.Empty };
-
-                // schedule the health check and issue the first one immediately
-                _scheduler.ExecuteEvery(PublishAgentControlHealthCheck, TimeSpan.FromSeconds(_configuration.HealthFrequency), TimeSpan.Zero);
-            }
-
-            _scheduler.ExecuteEvery(LogPeriodicReport, _timeBetweenExecutions);
             var agentHealthEvents = Enum.GetValues(typeof(AgentHealthEvent)) as AgentHealthEvent[];
             foreach (var agentHealthEvent in agentHealthEvents)
             {
@@ -83,12 +72,55 @@ namespace NewRelic.Agent.Core.AgentHealth
             _traceContextAcceptSuccessCounter = new InterlockedCounter();
             _traceContextCreateSuccessCounter = new InterlockedCounter();
             _customInstrumentationCounter = new InterlockedCounter();
+
+            _healthCheck = new() { IsHealthy = true, Status = "Agent starting", LastError = string.Empty };
         }
 
         public override void Dispose()
         {
             _scheduler.StopExecuting(LogPeriodicReport);
             base.Dispose();
+        }
+
+        /// <summary>
+        /// Handles the event when the agent is connected, initializing health checks and scheduling periodic tasks.
+        /// </summary>
+        /// <remarks>
+        /// This method starts the heartbeat timer to log periodic reports and, if agent control
+        /// is enabled, schedules health checks to be published at regular intervals. It also performs immediate health
+        /// status checks for critical conditions, such as missing license keys or application names, and updates the
+        /// agent control status accordingly.
+        ///
+        /// public for unit testing
+        /// </remarks>
+        public void OnAgentConnected()
+        {
+            Log.Debug("AgentHealthReporter: Agent is connected. Initializing health checks.");
+
+            // start the heartbeat timer
+            _scheduler.ExecuteEvery(LogPeriodicReport, _timeBetweenExecutions);
+
+            if (!_configuration.AgentControlEnabled)
+                Log.Debug("Agent Control is disabled. Health checks will not be reported.");
+            else
+            {
+                Log.Debug("Agent Control health checks will be published every {HealthCheckInterval} seconds", _configuration.HealthFrequency);
+
+
+                // report a few things immediately -- these used to be reported in DefaultConfiguration but we removed the dependency on AgentHealthReporter from it
+                // we can only report one of these things, so order from most to least important
+                if (string.IsNullOrWhiteSpace(_configuration.AgentLicenseKey) && !_configuration.ServerlessModeEnabled)
+                {
+                    SetAgentControlStatus(HealthCodes.LicenseKeyMissing);
+                }
+                else if (_configuration.ApplicationNamesMissing)
+                {
+                    SetAgentControlStatus(HealthCodes.ApplicationNameMissing);
+                }
+
+                // schedule the health check and issue the first one immediately
+                _scheduler.ExecuteEvery(PublishAgentControlHealthCheck, TimeSpan.FromSeconds(_configuration.HealthFrequency), TimeSpan.Zero);
+            }
         }
 
         private void LogPeriodicReport()
@@ -745,6 +777,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void SetAgentControlStatus((bool IsHealthy, string Code, string Status) healthStatus, params string[] statusParams)
         {
+
             // Do nothing if agent control is not enabled
             if (!_configuration.AgentControlEnabled)
                 return;
@@ -771,7 +804,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
 
             // stop the scheduled task if agent control isn't enabled or health checks fail for any reason
-            if (!_configuration.AgentControlEnabled || _healthChecksFailed) 
+            if (!_configuration.AgentControlEnabled || _healthChecksFailed)
             {
                 _scheduler.StopExecuting(PublishAgentControlHealthCheck);
                 return;
@@ -809,8 +842,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             var fileUri = new Uri(_configuration.HealthDeliveryLocation);
             if (fileUri.Scheme != Uri.UriSchemeFile)
             {
-                Log.Warn(
-                    "Agent Control is enabled but the provided agent_control.health.delivery_location is not a file URL. Health checks will be disabled.");
+                Log.Warn("Agent Control is enabled but the provided agent_control.health.delivery_location is not a file URL. Health checks will be disabled.");
                 _healthChecksFailed = true;
                 return;
             }

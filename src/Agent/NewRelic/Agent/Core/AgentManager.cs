@@ -59,13 +59,16 @@ namespace NewRelic.Agent.Core
                 {
                     try
                     {
+                        // this log message may not get written if the exception happened during logger initialization
+                        // or as a result of the AssertAgentEnabled() check
                         Log.Error(exception, "There was an error initializing the agent");
-                        return DisabledAgentManager;
                     }
                     catch
                     {
-                        return DisabledAgentManager;
+                        // ignored
                     }
+
+                    return DisabledAgentManager;
                 }
             }
         }
@@ -111,7 +114,10 @@ namespace NewRelic.Agent.Core
                 {
                     LoggerBootstrapper.ConfigureLogger(BootstrapConfiguration.GetDefault().LogConfig);
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
 
                 throw;
             }
@@ -120,9 +126,9 @@ namespace NewRelic.Agent.Core
             AgentServices.RegisterServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
 
             // Resolve IConfigurationService (so that it starts listening to config change events) and then publish the serialized event
+            // note that resolving this service also resolves all of its dependent services, which can lead to unintended side effects at this stage of startup
             _container.Resolve<IConfigurationService>();
             ConfigurationLoader.PublishDeserializedEvent(localConfig);
-
 
             // delay agent startup to allow a debugger to be attached. Used primarily for local debugging of AWS Lambda functions
             if (bootstrapConfig.DebugStartupDelaySeconds > 0)
@@ -138,7 +144,7 @@ namespace NewRelic.Agent.Core
 
             // At this point all configuration checks should use Configuration instead of the local and bootstrap configs.
 
-            AssertAgentEnabled();
+            AssertAgentEnabled(); // throws if the agent is not enabled
 
             EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
 
@@ -180,10 +186,27 @@ namespace NewRelic.Agent.Core
             _isInitialized = true;
         }
 
+        /// <summary>
+        /// Ensures that the New Relic agent is enabled and properly configured.
+        /// </summary>
+        /// <remarks>This method verifies that the agent is enabled in the configuration and, if not,
+        /// shuts down any services  that may have started and throws an exception to prevent further execution.
+        /// Additionally, it checks for  the presence of a valid license key unless the agent is operating in serverless
+        /// mode.</remarks>
+        /// <exception cref="Exception">Thrown if the agent is disabled in the configuration, or if the license key is not set and the agent is not
+        /// in serverless mode.</exception>
         private void AssertAgentEnabled()
         {
             if (!Configuration.AgentEnabled)
-                throw new Exception(string.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", Configuration.AgentEnabledAt));
+            {
+                var message = $"The New Relic agent is disabled via configuration. Update {Configuration.AgentEnabledAt} to re-enable it.";
+                Log.Warn(message);
+
+                Shutdown(false); // shut down any services that may have started. Also terminates logging, so no messages after this call will be logged
+
+                // throw an exception to prevent the agent from starting (caught in CreateInstance above)
+                throw new Exception(message);
+            }
 
             if (!Configuration.ServerlessModeEnabled) // license key is not required to be set in serverless mode
             {
@@ -382,7 +405,7 @@ namespace NewRelic.Agent.Core
 
         private void StopServices()
         {
-            _threadProfilingService.Stop();
+            _threadProfilingService?.Stop();
         }
 
         /// <summary>

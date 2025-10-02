@@ -48,7 +48,6 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly IHttpRuntimeStatic _httpRuntimeStatic = new HttpRuntimeStatic();
         private readonly IConfigurationManagerStatic _configurationManagerStatic = new ConfigurationManagerStaticMock();
         private readonly IDnsStatic _dnsStatic;
-        private readonly IAgentHealthReporter _agentHealthReporter;
 
         /// <summary>
         /// Default configuration.  It will contain reasonable default values for everything and never anything more.  Useful when you don't have configuration off disk or a collector response yet.
@@ -74,7 +73,7 @@ namespace NewRelic.Agent.Core.Configuration
             ConfigurationVersion = Interlocked.Increment(ref _currentConfigurationVersion);
         }
 
-        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter)
+        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
             : this()
         {
             _environment = environment;
@@ -85,8 +84,6 @@ namespace NewRelic.Agent.Core.Configuration
 
             _utilizationFullHostName = new Lazy<string>(_dnsStatic.GetFullHostName);
             _utilizationHostName = new Lazy<string>(_dnsStatic.GetHostName);
-
-            _agentHealthReporter = agentHealthReporter;
 
             if (localConfiguration != null)
             {
@@ -207,11 +204,6 @@ namespace NewRelic.Agent.Core.Configuration
             get
             {
                 _agentLicenseKey ??= TryGetLicenseKey();
-                if (string.IsNullOrWhiteSpace(_agentLicenseKey) && !ServerlessModeEnabled)
-                {
-                    TrySetAgentControlStatus(HealthCodes.LicenseKeyMissing);
-                }
-
                 return _agentLicenseKey;
             }
         }
@@ -271,11 +263,16 @@ namespace NewRelic.Agent.Core.Configuration
         private IEnumerable<string> _applicationNames;
         public virtual IEnumerable<string> ApplicationNames => _applicationNames ??= GetApplicationNames();
 
+        private bool _applicationNamesMissing;
+        public bool ApplicationNamesMissing => _applicationNamesMissing;
+
         private string _applicationNamesSource;
         public virtual string ApplicationNamesSource => _applicationNamesSource;
 
         private IEnumerable<string> GetApplicationNames()
         {
+            _applicationNamesMissing = false;
+
             var runtimeAppNames = _runTimeConfiguration.ApplicationNames.ToList();
             if (runtimeAppNames.Any())
             {
@@ -363,7 +360,7 @@ namespace NewRelic.Agent.Core.Configuration
                 return [_processStatic.GetCurrentProcess().ProcessName];
             }
 
-            TrySetAgentControlStatus(HealthCodes.ApplicationNameMissing);
+            _applicationNamesMissing = true;
             throw new Exception("An application name must be provided");
         }
 
@@ -2632,18 +2629,6 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         private static int? GetNullableIntValue(bool specified, int value) => specified ? value : null;
-
-        // Since the configuration is initialized before the AgentHealthReporter, needed a way to not call it till it was ready 
-        private void TrySetAgentControlStatus((bool IsHealthy, string Code, string Status) healthStatus)
-        {
-            if (_agentHealthReporter == null)
-            {
-                Log.Debug("DefaultConfiguration: Unable to set Agent Control status {status} because agent health reporter has not been initialized.", healthStatus);
-                return;
-            }
-
-            _agentHealthReporter.SetAgentControlStatus(healthStatus);
-        }
 
         #endregion
 

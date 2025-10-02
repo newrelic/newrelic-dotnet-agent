@@ -53,6 +53,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.application_names")]
         public IEnumerable<string> ApplicationNames => _configuration.ApplicationNames;
 
+        [JsonIgnore]
+        public bool ApplicationNamesMissing => _configuration.ApplicationNamesMissing;
+
         [JsonProperty("agent.application_names_source")]
         public string ApplicationNamesSource => _configuration.ApplicationNamesSource;
 

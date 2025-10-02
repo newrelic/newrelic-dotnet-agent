@@ -25,6 +25,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public string AgentLicenseKey => "AgentLicenseKey";
 
         public IEnumerable<string> ApplicationNames => new[] { "name1", "name2", "name3" };
+        public bool ApplicationNamesMissing => false;
 
         public string ApplicationNamesSource => "ApplicationNameSource";
 
