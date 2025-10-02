@@ -107,7 +107,6 @@ namespace NewRelic.Agent.Core.AgentHealth
             {
                 Log.Debug("Agent Control health checks will be published every {HealthCheckInterval} seconds", _configuration.HealthFrequency);
 
-
                 // report a few things immediately -- these used to be reported in DefaultConfiguration but we removed the dependency on AgentHealthReporter from it
                 // we can only report one of these things, so order from most to least important
                 if (string.IsNullOrWhiteSpace(_configuration.AgentLicenseKey) && !_configuration.ServerlessModeEnabled)
