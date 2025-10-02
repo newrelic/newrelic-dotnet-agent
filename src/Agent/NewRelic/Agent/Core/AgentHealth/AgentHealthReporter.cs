@@ -73,7 +73,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             _traceContextCreateSuccessCounter = new InterlockedCounter();
             _customInstrumentationCounter = new InterlockedCounter();
 
-            _healthCheck = new() { IsHealthy = true, Status = "Agent starting", LastError = string.Empty };
+            if (_configuration.AgentControlEnabled)
+                _healthCheck = new() { IsHealthy = true, Status = "Agent starting", LastError = string.Empty };
         }
 
         public override void Dispose()
