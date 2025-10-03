@@ -86,17 +86,6 @@ namespace NewRelic.Agent.Core.AgentHealth
             base.Dispose();
         }
 
-        /// <summary>
-        /// Handles the event when the agent is connected, initializing health checks and scheduling periodic tasks.
-        /// </summary>
-        /// <remarks>
-        /// This method starts the heartbeat timer to log periodic reports and, if agent control
-        /// is enabled, schedules health checks to be published at regular intervals. It also performs immediate health
-        /// status checks for critical conditions, such as missing license keys or application names, and updates the
-        /// agent control status accordingly.
-        ///
-        /// public for unit testing
-        /// </remarks>
         public void OnAgentConnected()
         {
             Log.Debug("AgentHealthReporter: Agent is connected. Initializing health checks.");

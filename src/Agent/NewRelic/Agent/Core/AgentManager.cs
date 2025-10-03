@@ -127,6 +127,7 @@ namespace NewRelic.Agent.Core
             _container = AgentServices.GetContainer();
             AgentServices.RegisterServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
 
+            // Resolve IConfigurationService (so that it starts listening to config change events) and then publish the serialized event
             _container.Resolve<IConfigurationService>();
             ConfigurationLoader.PublishDeserializedEvent(localConfig);
 
