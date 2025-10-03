@@ -53,7 +53,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
         }
 
         [TestCase("alwaysOn", SamplerType.AlwaysOn, TestName = "RootSamplerType_AlwaysOn_EnvironmentVariableOverride")]
@@ -162,7 +162,7 @@ namespace NewRelic.Agent.Core.Configuration
             // Recreate config to apply env override
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RootTraceIdRatioSamplerRatio;
@@ -181,7 +181,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RootTraceIdRatioSamplerRatio;
@@ -200,7 +200,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RootTraceIdRatioSamplerRatio;
@@ -257,7 +257,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentSampledTraceIdRatioSamplerRatio;
@@ -276,7 +276,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentSampledTraceIdRatioSamplerRatio;
@@ -295,7 +295,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentSampledTraceIdRatioSamplerRatio;
@@ -352,7 +352,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentNotSampledTraceIdRatioSamplerRatio;
@@ -371,7 +371,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentNotSampledTraceIdRatioSamplerRatio;
@@ -390,7 +390,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentNotSampledTraceIdRatioSamplerRatio;
@@ -413,7 +413,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOn));
@@ -429,7 +429,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentSampledSamplerType, Is.EqualTo(SamplerType.TraceIdRatioBased));
@@ -445,7 +445,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOff));
@@ -461,7 +461,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentNotSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOff));
@@ -477,7 +477,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentNotSampledSamplerType, Is.EqualTo(SamplerType.Adaptive));
@@ -493,7 +493,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentNotSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOn));

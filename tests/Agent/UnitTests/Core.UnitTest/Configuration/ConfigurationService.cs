@@ -28,8 +28,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             public void SetUp()
             {
                 _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(),
-                    Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>(),
-                    Mock.Create<IAgentHealthReporter>());
+                    Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>());
             }
 
             [TearDown]
@@ -59,7 +58,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             public void publishes_ConfigurationUpdatedEvent()
             {
                 var wasCalled = false;
-                using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>(), Mock.Create<IAgentHealthReporter>()))
+                using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>()))
                 using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
                 {
                     EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(new ServerConfiguration
@@ -80,7 +79,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             public void publishes_AppNameUpdateEvent()
             {
                 var wasCalled = false;
-                using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>(), Mock.Create<IAgentHealthReporter>()))
+                using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>()))
                 using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
                 {
                     EventBus<AppNameUpdateEvent>.Publish(new AppNameUpdateEvent(new[] { "NewAppName" }));
@@ -101,7 +100,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             [SetUp]
             public void SetUp()
             {
-                _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>(), Mock.Create<IAgentHealthReporter>());
+                _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>());
             }
 
             [TearDown]
@@ -146,7 +145,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             [SetUp]
             public void SetUp()
             {
-                _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>(), Mock.Create<IAgentHealthReporter>());
+                _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>());
             }
 
             [TearDown]
@@ -194,7 +193,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             [SetUp]
             public void SetUp()
             {
-                _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>(), Mock.Create<IAgentHealthReporter>());
+                _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>());
 
                 _logLevelChanged = false;
                 _newLogLevel = null;

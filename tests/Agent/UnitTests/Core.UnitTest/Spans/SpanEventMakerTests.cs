@@ -125,7 +125,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
         private void PublishConfig()
         {
-            var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+            var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
             _config = config;
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_config, ConfigurationUpdateSource.Local));
         }

@@ -53,6 +53,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             var reporter = new AgentHealthReporter(GetSimpleMetricBuilder(), scheduler, Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
             using (var logger = new TestUtilities.Logging())
             {
+                reporter.OnAgentConnected();
+
                 // Make sure all the event types get seen in the log
                 reporter.ReportTransactionEventsSent(1);
                 reporter.ReportCustomEventsSent(2);

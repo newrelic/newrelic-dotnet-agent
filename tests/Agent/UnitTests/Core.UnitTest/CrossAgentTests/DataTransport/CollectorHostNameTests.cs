@@ -21,7 +21,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
     internal class TestDefaultConfiguration : DefaultConfiguration
     {
         public TestDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration _securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter) :
-            base(environment, localConfig, serverConfig, runTimeConfiguration, _securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic, agentHealthReporter) { }
+            base(environment, localConfig, serverConfig, runTimeConfiguration, _securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
     }
 
     [TestFixture]

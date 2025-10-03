@@ -28,7 +28,6 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly IHttpRuntimeStatic _httpRuntimeStatic;
         private readonly IConfigurationManagerStatic _configurationManagerStatic;
         private readonly IDnsStatic _dnsStatic;
-        private readonly IAgentHealthReporter _agentHealthReporter;
 
         /// <summary>
         /// Do not use this field outside of this class. It only exists for testing purposes.
@@ -37,16 +36,15 @@ namespace NewRelic.Agent.Core.Configuration
 
         public IConfiguration Configuration { get; private set; }
 
-        public ConfigurationService(IEnvironment environment, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter)
+        public ConfigurationService(IEnvironment environment, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
         {
             _environment = environment;
             _processStatic = processStatic;
             _httpRuntimeStatic = httpRuntimeStatic;
             _configurationManagerStatic = configurationManagerStatic;
             _dnsStatic = dnsStatic;
-            _agentHealthReporter = agentHealthReporter;
 
-            Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, dnsStatic, _agentHealthReporter);
+            Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, dnsStatic);
 
             _subscriptions.Add<ConfigurationDeserializedEvent>(OnConfigurationDeserialized);
             _subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
@@ -125,7 +123,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             var previousLogLevel = Configuration.LoggingLevel;
 
-            Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+            Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
             UpdateLogLevel(previousLogLevel);
 
