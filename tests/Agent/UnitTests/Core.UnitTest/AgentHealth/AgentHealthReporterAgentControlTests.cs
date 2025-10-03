@@ -298,110 +298,174 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         [Test]
-        public void AgentControl_LicenseKeyMissingInConfiguration_SetsLicenseKeyMissing_OnConnect()
+        public void AgentControl_Output_Unhealthy_WhenAgentDisabled()
         {
-            // Arrange
-            // path must be absolute, not relative
-            var executingPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)!;
-            var readOnlyPath = Path.Combine(executingPath, Path.GetRandomFileName(), "readonly");
-            var actualMS = new MemoryStream();
-            FileStream fs = Mock.Create<FileStream>(Constructor.Mocked);
-            Mock.Arrange(() => fs.Write(null, 0, 0)).IgnoreArguments()
-                .DoInstead((byte[] content, int offset, int len) => actualMS.Write(content, 0, content.Length));
-            Mock.Arrange(() => fs.CanWrite).Returns(true);
-            var fileWrapper = Mock.Create<IFileWrapper>();
-            Mock.Arrange(() => fileWrapper.TryCreateFile(Arg.IsAny<string>(), Arg.IsAny<bool>())).Returns(true);
-            Mock.Arrange(() => fileWrapper.OpenWrite(Arg.IsAny<string>())).Returns(fs);
-            var directoryWrapper = Mock.Create<IDirectoryWrapper>();
-            Mock.Arrange(() => directoryWrapper.Exists(Arg.IsAny<string>())).Returns(true);
-            Setup(true, $"file://{readOnlyPath}", 12, fileWrapper, directoryWrapper);
+            var parsed = SetupValidationAndCaptureYaml(
+                agentEnabled: false,
+                serverlessMode: false,
+                licenseKey: "REPLACE_WITH_LICENSE_KEY",
+                appNamesPresent: true);
 
-            Mock.Arrange(() => _configurationAutoResponder.Configuration.AgentLicenseKey).Returns(string.Empty);
-
-            // Act
-            _agentHealthReporter.OnAgentConnected(); // this is where we check for a license key
-            _agentHealthReporter.PublishAgentControlHealthCheck();
-
-            // Assert
-            // verify the health check hasn't failed
-            Assert.That(_agentHealthReporter.HealthCheckFailed, Is.False);
-            actualMS.Position = 0;
-            var actualBytes = actualMS.ToArray();
-            // convert actualBytes to a string
-            var payload = Encoding.UTF8.GetString(actualBytes);
-            var parsedObject = new SimpleYamlParser().ParseYaml(payload);
-            Assert.That(parsedObject.healthy, Is.EqualTo("False"));
-            Assert.That(parsedObject.status, Is.EqualTo("License key missing in configuration"));
-            Assert.That(parsedObject.last_error, Is.EqualTo("NR-APM-002"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(parsed.healthy, Is.EqualTo("False"));
+                Assert.That(parsed.status, Is.EqualTo("Agent is disabled via configuration"));
+                Assert.That(parsed.last_error, Is.EqualTo("NR-APM-008"));
+            });
         }
 
         [Test]
-        public void AgentControl_ApplicationNamesMissingInConfig_SetsApplicationNameMissing_OnConnect()
+        public void AgentControl_Output_Unhealthy_WhenLicenseKeyMissing_NonServerless()
         {
-            // Arrange
-            // path must be absolute, not relative
+            var parsed = SetupValidationAndCaptureYaml(
+                agentEnabled: true,
+                serverlessMode: false,
+                licenseKey: "REPLACE_WITH_LICENSE_KEY",
+                appNamesPresent: true);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(parsed.healthy, Is.EqualTo("False"));
+                Assert.That(parsed.status, Is.EqualTo("License key missing in configuration"));
+                Assert.That(parsed.last_error, Is.EqualTo("NR-APM-002"));
+            });
+        }
+
+        [Test]
+        public void AgentControl_Output_Unhealthy_WhenApplicationNameMissing()
+        {
+            var parsed = SetupValidationAndCaptureYaml(
+                agentEnabled: true,
+                serverlessMode: false,
+                licenseKey: "1234567890123456789012345678901234567890",
+                appNamesPresent: false);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(parsed.healthy, Is.EqualTo("False"));
+                Assert.That(parsed.status, Is.EqualTo("Missing application name in agent configuration"));
+                Assert.That(parsed.last_error, Is.EqualTo("NR-APM-005"));
+            });
+        }
+
+        [Test]
+        public void AgentControl_Output_Healthy_WhenServerless_PlaceholderLicenseKey_WithAppName()
+        {
+            var parsed = SetupValidationAndCaptureYaml(
+                agentEnabled: true,
+                serverlessMode: true,
+                licenseKey: "REPLACE_WITH_LICENSE_KEY",
+                appNamesPresent: true);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(parsed.healthy, Is.EqualTo("True"));
+                Assert.That(parsed.status, Is.EqualTo("Agent starting"));
+                Assert.That(parsed.last_error, Is.Empty);
+            });
+        }
+
+        [Test]
+        public void AgentControl_Output_Healthy_WhenValidConfig()
+        {
+            var parsed = SetupValidationAndCaptureYaml(
+                agentEnabled: true,
+                serverlessMode: false,
+                licenseKey: "1234567890123456789012345678901234567890",
+                appNamesPresent: true);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(parsed.healthy, Is.EqualTo("True"));
+                Assert.That(parsed.status, Is.EqualTo("Agent starting"));
+                Assert.That(parsed.last_error, Is.Empty);
+            });
+        }
+
+        private dynamic SetupValidationAndCaptureYaml(
+            bool agentEnabled,
+            bool serverlessMode,
+            string licenseKey,
+            bool appNamesPresent)
+        {
+            // Fresh config & health reporter for each validation test
+            _agentHealthReporter?.Dispose();
+            _configurationAutoResponder?.Dispose();
+
+            var configuration = Mock.Create<IConfiguration>();
+            Mock.Arrange(() => configuration.AgentControlEnabled).Returns(true);
             var executingPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)!;
-            var readOnlyPath = Path.Combine(executingPath, Path.GetRandomFileName(), "readonly");
-            var actualMS = new MemoryStream();
+            var tmpPath = Path.Combine(executingPath, Path.GetRandomFileName(), "health");
+            Mock.Arrange(() => configuration.HealthDeliveryLocation).Returns($"file://{tmpPath}");
+            Mock.Arrange(() => configuration.HealthFrequency).Returns(5);
+            Mock.Arrange(() => configuration.AgentEnabled).Returns(agentEnabled);
+            Mock.Arrange(() => configuration.ServerlessModeEnabled).Returns(serverlessMode);
+            Mock.Arrange(() => configuration.AgentLicenseKey).Returns(licenseKey);
+
+            // TryGetApplicationNames(out ...)
+            if (appNamesPresent)
+            {
+                IEnumerable<string> names = new[] { "MyApp" };
+                Mock.Arrange(() => configuration.TryGetApplicationNames(out names)).Returns(true);
+            }
+            else
+            {
+                IEnumerable<string> names = null;
+                Mock.Arrange(() => configuration.TryGetApplicationNames(out names)).Returns(false);
+            }
+
+            _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+
+            var ms = new MemoryStream();
             FileStream fs = Mock.Create<FileStream>(Constructor.Mocked);
             Mock.Arrange(() => fs.Write(null, 0, 0)).IgnoreArguments()
-                .DoInstead((byte[] content, int offset, int len) => actualMS.Write(content, 0, content.Length));
+                .DoInstead((byte[] content, int offset, int len) => ms.Write(content, 0, content.Length));
             Mock.Arrange(() => fs.CanWrite).Returns(true);
+
             var fileWrapper = Mock.Create<IFileWrapper>();
             Mock.Arrange(() => fileWrapper.TryCreateFile(Arg.IsAny<string>(), Arg.IsAny<bool>())).Returns(true);
             Mock.Arrange(() => fileWrapper.OpenWrite(Arg.IsAny<string>())).Returns(fs);
+
             var directoryWrapper = Mock.Create<IDirectoryWrapper>();
             Mock.Arrange(() => directoryWrapper.Exists(Arg.IsAny<string>())).Returns(true);
-            Setup(true, $"file://{readOnlyPath}", 12, fileWrapper, directoryWrapper);
 
-            // set a valid license key so we can get past that check
-            Mock.Arrange(() => _configurationAutoResponder.Configuration.AgentLicenseKey).Returns("valid");
-            // return an empty array for application names
-            Mock.Arrange(() => _configurationAutoResponder.Configuration.ApplicationNamesMissing).Returns(true);
+            var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
+            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), fileWrapper, directoryWrapper);
 
-            // Act
-            _agentHealthReporter.OnAgentConnected(); // this is where we check for application names
+            // Invoke validation then publish output
+            _agentHealthReporter.ValidateAgentConfiguration();
             _agentHealthReporter.PublishAgentControlHealthCheck();
 
-            // Assert
-            // verify the health check hasn't failed
-            Assert.That(_agentHealthReporter.HealthCheckFailed, Is.False);
-            actualMS.Position = 0;
-            var actualBytes = actualMS.ToArray();
-            // convert actualBytes to a string
-            var payload = Encoding.UTF8.GetString(actualBytes);
-            var parsedObject = new SimpleYamlParser().ParseYaml(payload);
-            Assert.That(parsedObject.healthy, Is.EqualTo("False"));
-            Assert.That(parsedObject.status, Is.EqualTo("Missing application name in agent configuration"));
-            Assert.That(parsedObject.last_error, Is.EqualTo("NR-APM-005"));
+            ms.Position = 0;
+            var payload = Encoding.UTF8.GetString(ms.ToArray());
+            return new SimpleYamlParser().ParseYaml(payload);
         }
 
-    }
-
-    public class SimpleYamlParser
-    {
-        public dynamic ParseYaml(string yamlContent)
+        public class SimpleYamlParser
         {
-            var result = new ExpandoObject() as IDictionary<string, object>;
-            using (var reader = new StringReader(yamlContent))
+            public dynamic ParseYaml(string yamlContent)
             {
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                var result = new ExpandoObject() as IDictionary<string, object>;
+                using (var reader = new StringReader(yamlContent))
                 {
-                    if (string.IsNullOrWhiteSpace(line))
-                        continue;
-
-                    var parts = line.Split(new[] { ':' }, 2);
-                    if (parts.Length == 2)
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
                     {
-                        var key = parts[0].Trim();
-                        var value = parts[1].Trim();
-                        result[key] = value;
+                        if (string.IsNullOrWhiteSpace(line))
+                            continue;
+
+                        var parts = line.Split(new[] { ':' }, 2);
+                        if (parts.Length == 2)
+                        {
+                            var key = parts[0].Trim();
+                            var value = parts[1].Trim();
+                            result[key] = value;
+                        }
                     }
                 }
-            }
 
-            return result;
+                return result;
+            }
         }
     }
 }

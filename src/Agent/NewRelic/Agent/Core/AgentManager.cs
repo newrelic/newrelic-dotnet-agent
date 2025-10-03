@@ -21,7 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+#if NETSTANDARD
 using System.Runtime.InteropServices;
+#endif
 using System.Threading;
 
 namespace NewRelic.Agent.Core
@@ -60,7 +62,7 @@ namespace NewRelic.Agent.Core
                     try
                     {
                         // this log message may not get written if the exception happened during logger initialization
-                        // or as a result of the AssertAgentEnabled() check
+                        // or as a result of the ValidateAgentConfiguration() check
                         Log.Error(exception, "There was an error initializing the agent");
                     }
                     catch
@@ -125,8 +127,6 @@ namespace NewRelic.Agent.Core
             _container = AgentServices.GetContainer();
             AgentServices.RegisterServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
 
-            // Resolve IConfigurationService (so that it starts listening to config change events) and then publish the serialized event
-            // note that resolving this service also resolves all of its dependent services, which can lead to unintended side effects at this stage of startup
             _container.Resolve<IConfigurationService>();
             ConfigurationLoader.PublishDeserializedEvent(localConfig);
 
@@ -147,7 +147,14 @@ namespace NewRelic.Agent.Core
             // Start the AgentHealthReporter early so that we can potentially report health issues during startup
             _agentHealthReporter = _container.Resolve<IAgentHealthReporter>();
 
-            ValidateAgentConfiguration(); // throws if there is a fatal configuration problem (agent enabled, missing license key, missing application name)
+            // Validate the configuration to ensure that the agent can start and shutdown if not
+            if (!_agentHealthReporter.ValidateAgentConfiguration())
+            {
+                Shutdown(false);
+
+                // this exception won't get logged, but it will get caught by the AgentSingleton and prevent the agent from starting
+                throw new Exception("There was a fatal configuration problem preventing the agent from starting. Please see previous log messages for details.");
+            }
 
             EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
 
@@ -184,51 +191,6 @@ namespace NewRelic.Agent.Core
 
             Initialize(bootstrapConfig.ServerlessModeEnabled);
             _isInitialized = true;
-        }
-
-        private void ValidateAgentConfiguration()
-        {
-            if (!Configuration.AgentEnabled)
-            {
-                var message = $"The New Relic agent is disabled via configuration. Update {Configuration.AgentEnabledAt} to re-enable it.";
-                FailStartup(message);
-            }
-
-            if (!Configuration.ServerlessModeEnabled) // license key is not required to be set in serverless mode
-            {
-                if ("REPLACE_WITH_LICENSE_KEY".Equals(Configuration.AgentLicenseKey))
-                {
-                    FailStartup("Please set your license key.", HealthCodes.LicenseKeyMissing);
-                }
-            }
-
-            // check for application names
-            if (!Configuration.TryGetApplicationNames(out _))
-            {
-                FailStartup("An application name is required.", HealthCodes.ApplicationNameMissing);
-            }
-        }
-
-        /// <summary>
-        /// Centralizes repeated startup failure handling when a health code should be reported:
-        /// logs, reports health (if enabled), shuts down services, and throws an exception.
-        /// </summary>
-        /// <param name="message">The error message to log and include in the exception.</param>
-        /// <param name="healthCode">Health code to report via Agent Control.</param>
-        private void FailStartup(string message, (bool IsHealthy, string Code, string Status) healthCode = default)
-        {
-            // have to log here because Shutdown() will terminate logging
-            Log.Error(message);
-
-            if (Configuration.AgentControlEnabled && healthCode != default)
-            {
-                _agentHealthReporter.SetAgentControlStatus(healthCode);
-            }
-
-            Shutdown(false);
-
-            // throw an exception to prevent the agent from starting (caught in CreateInstance above)
-            throw new Exception(message);
         }
 
         private void Initialize(bool serverlessModeEnabled)

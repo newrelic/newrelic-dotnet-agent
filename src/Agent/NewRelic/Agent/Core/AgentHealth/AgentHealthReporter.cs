@@ -110,17 +110,6 @@ namespace NewRelic.Agent.Core.AgentHealth
             {
                 Log.Debug("Agent Control health checks will be published every {HealthCheckInterval} seconds", _configuration.HealthFrequency);
 
-                // report a few things immediately -- these used to be reported in DefaultConfiguration but we removed the dependency on AgentHealthReporter from it
-                // we can only report one of these things, so order from most to least important
-                if (string.IsNullOrWhiteSpace(_configuration.AgentLicenseKey) && !_configuration.ServerlessModeEnabled)
-                {
-                    SetAgentControlStatus(HealthCodes.LicenseKeyMissing);
-                }
-                else if (_configuration.ApplicationNamesMissing)
-                {
-                    SetAgentControlStatus(HealthCodes.ApplicationNameMissing);
-                }
-
                 // schedule the health check and issue the first one immediately
                 _scheduler.ExecuteEvery(PublishAgentControlHealthCheck, TimeSpan.FromSeconds(_configuration.HealthFrequency), TimeSpan.Zero);
             }
@@ -416,6 +405,56 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportSupportabilityDistributedTraceHeadersAcceptedLate()
         {
             _distributedTraceHeadersAcceptedLateCounter.Increment();
+        }
+
+        /// <summary>
+        /// Validates the current agent configuration to ensure it is properly set up for operation.
+        /// </summary>
+        /// <remarks>This method checks several conditions to determine if the agent is correctly
+        /// configured: <list type="bullet"> <item>If the agent is disabled via configuration, the method logs an error
+        /// and returns <see langword="false"/>.</item> <item>If the agent is not in serverless mode and the license key
+        /// is not set, the method logs an error and returns <see langword="false"/>.</item> <item>If no application
+        /// name is configured, the method logs an error and returns <see langword="false"/>.</item> </list> If any of
+        /// these conditions are not met, the agent will fail to start.</remarks>
+        /// <returns><see langword="true"/> if the agent configuration is valid and the agent can start;  otherwise, <see
+        /// langword="false"/>.</returns>
+        public bool ValidateAgentConfiguration()
+        {
+            if (!_configuration.AgentEnabled)
+            {
+                var message = $"The New Relic agent is disabled via configuration. Update {_configuration.AgentEnabledAt} to re-enable it.";
+                FailStartup(message, HealthCodes.AgentDisabledByConfiguration);
+                return false;
+            }
+
+            if (!_configuration.ServerlessModeEnabled) // license key is not required to be set in serverless mode
+            {
+                if ("REPLACE_WITH_LICENSE_KEY".Equals(_configuration.AgentLicenseKey))
+                {
+                    FailStartup("Please set your license key.", HealthCodes.LicenseKeyMissing);
+                    return false;
+                }
+            }
+
+            // check for application names
+            if (!_configuration.TryGetApplicationNames(out _))
+            {
+                FailStartup("An application name is required.", HealthCodes.ApplicationNameMissing);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void FailStartup(string message, (bool IsHealthy, string Code, string Status) healthCode = default)
+        {
+            // have to log here because Shutdown() will terminate logging
+            Log.Error(message);
+
+            if (_configuration.AgentControlEnabled && healthCode != default)
+            {
+                SetAgentControlStatus(healthCode);
+            }
         }
 
         /// <summary>Limits Collect calls to once per harvest per metric.</summary>
@@ -780,7 +819,6 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void SetAgentControlStatus((bool IsHealthy, string Code, string Status) healthStatus, params string[] statusParams)
         {
-
             // Do nothing if agent control is not enabled
             if (!_configuration.AgentControlEnabled)
                 return;

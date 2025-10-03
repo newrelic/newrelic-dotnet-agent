@@ -24,14 +24,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public string AgentLicenseKey => "AgentLicenseKey";
 
-        public IEnumerable<string> ApplicationNames => new[] { "name1", "name2", "name3" };
+        public IEnumerable<string> ApplicationNames => ["name1", "name2", "name3"];
         public bool TryGetApplicationNames(out IEnumerable<string> names)
         {
             names = ApplicationNames;
             return true;
         }
-
-        public bool ApplicationNamesMissing => false;
 
         public string ApplicationNamesSource => "ApplicationNameSource";
 

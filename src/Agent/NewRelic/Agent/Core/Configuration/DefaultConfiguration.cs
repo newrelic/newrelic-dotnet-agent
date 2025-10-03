@@ -18,7 +18,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -263,9 +262,6 @@ namespace NewRelic.Agent.Core.Configuration
         private IEnumerable<string> _applicationNames;
         public virtual IEnumerable<string> ApplicationNames => _applicationNames ??= GetApplicationNames();
 
-        private bool _applicationNamesMissing;
-        public bool ApplicationNamesMissing => _applicationNamesMissing;
-
         private string _applicationNamesSource;
         public virtual string ApplicationNamesSource => _applicationNamesSource;
 
@@ -277,7 +273,6 @@ namespace NewRelic.Agent.Core.Configuration
                 return names;
             }
 
-            // TODO: do we really need this now? 
             throw new Exception("An application name must be provided");
         }
 
@@ -293,11 +288,9 @@ namespace NewRelic.Agent.Core.Configuration
         /// - Sets <see cref="_applicationNamesMissing"/> to true only when resolution fails.
         /// Logging behavior is preserved exactly from the original implementation.
         /// </remarks>
-        public bool TryGetApplicationNames(out IEnumerable<string> names)
+        public bool TryGetApplicationNames(out IEnumerable<string> names)  // CHANGED: was private
         {
-            _applicationNamesMissing = false;
-
-            // 1. Runtime API
+            // 1. Agent API
             var runtimeAppNames = _runTimeConfiguration.ApplicationNames.ToList();
             if (runtimeAppNames.Any())
             {
@@ -394,7 +387,6 @@ namespace NewRelic.Agent.Core.Configuration
             }
 
             // Failure path
-            _applicationNamesMissing = true;
             names = null;
             return false;
         }
@@ -554,7 +546,7 @@ namespace NewRelic.Agent.Core.Configuration
                 : _captureAttributesIncludes ??= [];
 
         private IEnumerable<string> _captureAttributesExcludes;
-        public virtual IEnumerable<string> CaptureAttributesExcludes => _captureAttributesExcludes ??= [.. EnvironmentOverrides(_localConfiguration.attributes.exclude, "NEW_RELIC_ATTRIBUTES_EXCLUDE")];
+        public virtual IEnumerable<string> CaptureAttributesExcludes => _captureAttributesExcludes ??= [.. _localConfiguration.attributes.exclude];
 
         private IEnumerable<string> _captureAttributesDefaultExcludes;
         public virtual IEnumerable<string> CaptureAttributesDefaultExcludes => _captureAttributesDefaultExcludes ??= ["identity.*"];
