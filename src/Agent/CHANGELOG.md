@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.45.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.44.1...v10.45.0) (2025-09-30)
+
+
+### New features
+
+* Add a new Distributed Tracing sampler, the TraceId Ratio-Based Sampler, which is based on the [OpenTelemetry implementation](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/src/OpenTelemetry/Trace/Sampler/TraceIdRatioBasedSampler.cs). This sampler makes its sampling decision using the TraceId (a random GUID) and a configured sampling ratio (a target percentage of traces to be sampled).  For more information, see the [OpenTelemetry specification](https://opentelemetry.io/docs/specs/otel/trace/tracestate-probability-sampling/). ([#3211](https://github.com/newrelic/newrelic-dotnet-agent/issues/3211)) ([63ca603](https://github.com/newrelic/newrelic-dotnet-agent/commit/63ca603ca6cb86110431413c03afbf8a8c8e9367))
+
+
+### Fixes
+
+* MSSQL connection string parsing can throw exceptions and disable Datastore instrumentation ([#3263](https://github.com/newrelic/newrelic-dotnet-agent/issues/3263)) ([cdf000b](https://github.com/newrelic/newrelic-dotnet-agent/commit/cdf000b73fe4beaa73fa4bfe3d338f8eb6698cf1))
+* Resolve issues with Kafka "Consume" instrumentation to ensure that automatic instrumentation works in conjunction with custom instrumentation. ([#3257](https://github.com/newrelic/newrelic-dotnet-agent/issues/3257)) ([1dbd1c5](https://github.com/newrelic/newrelic-dotnet-agent/commit/1dbd1c51aeaf6e2909d23b078029ee78b721b3bc))
+
 ## [10.44.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.44.0...v10.44.1) (2025-08-19)
 
 
