@@ -70,6 +70,28 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         [Test]
+        public void AgentControl_StartsScheduledTaskOnConnect_WhenAgentControlEnabled()
+        {
+            // Arrange
+            Setup(true, "file://foo", 5);
+            _agentHealthReporter.OnAgentConnected();
+
+            // Assert
+            Mock.Assert(() => _scheduler.ExecuteEvery(_agentHealthReporter.PublishAgentControlHealthCheck, TimeSpan.FromSeconds(5), Arg.IsAny<TimeSpan?>()), Occurs.Once());
+        }
+
+        [Test]
+        public void AgentControl_DoesNotStartScheduledTaskOnConnect_WhenAgentControlDisabled()
+        {
+            // Arrange
+            Setup(false, "file://foo", 5);
+            _agentHealthReporter.OnAgentConnected();
+
+            // Assert
+            Mock.Assert(() => _scheduler.ExecuteEvery(_agentHealthReporter.PublishAgentControlHealthCheck, TimeSpan.FromSeconds(5), Arg.IsAny<TimeSpan?>()), Occurs.Never());
+        }
+
+        [Test]
         public void AgentControl_HealthChecksSucceeded()
         {
             // Arrange
