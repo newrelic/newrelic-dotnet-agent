@@ -546,7 +546,7 @@ namespace NewRelic.Agent.Core.Configuration
                 : _captureAttributesIncludes ??= [];
 
         private IEnumerable<string> _captureAttributesExcludes;
-        public virtual IEnumerable<string> CaptureAttributesExcludes => _captureAttributesExcludes ??= [.. _localConfiguration.attributes.exclude];
+        public virtual IEnumerable<string> CaptureAttributesExcludes => _captureAttributesExcludes ??= [.. EnvironmentOverrides(_localConfiguration.attributes.exclude, "NEW_RELIC_ATTRIBUTES_EXCLUDE")];
 
         private IEnumerable<string> _captureAttributesDefaultExcludes;
         public virtual IEnumerable<string> CaptureAttributesDefaultExcludes => _captureAttributesDefaultExcludes ??= ["identity.*"];
