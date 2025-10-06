@@ -20,6 +20,8 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
+using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -68,9 +70,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var configuration = configurationService?.Configuration ?? GetDefaultConfiguration();
             var errorService = configurationService != null ? new ErrorService(configurationService) : new ErrorService(Mock.Create<IConfigurationService>());
 
+
+            var adaptiveSampler = Mock.Create<ISampler>();
+            var samplingResult = Mock.Create<ISamplingResult>();
+            Mock.Arrange(() => samplingResult.Sampled).Returns(sampled);
+            Mock.Arrange(() => adaptiveSampler.ShouldSample(Arg.IsAny<ISamplingParameters>())).Returns(samplingResult);
+            var samplerService = Mock.Create<ISamplerService>();
+            Mock.Arrange(() => samplerService.GetSampler(SamplerLevel.Root)).Returns(adaptiveSampler);
+
             var internalTransaction = new Transaction(configuration, immutableTransaction.TransactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(),
                 _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(),
-                errorService, _attribDefSvc.AttributeDefs);
+                errorService, _attribDefSvc.AttributeDefs, samplerService);
 
             if (exception != null)
             {
@@ -88,10 +98,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             {
                 internalTransaction.Add(SimpleSegmentDataTestHelpers.CreateSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, new MethodCallData("typeName", "methodName", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "MyMockedRootNode", false));
             }
-
-            var adaptiveSampler = Mock.Create<IAdaptiveSampler>();
-            Mock.Arrange(() => adaptiveSampler.ComputeSampled(ref priority)).Returns(sampled);
-            internalTransaction.SetSampled(adaptiveSampler);
+            internalTransaction.SetSampled();
             var transactionMetadata = internalTransaction.TransactionMetadata;
             PopulateTransactionMetadataBuilder(transactionMetadata, errorService, uri, statusCode, subStatusCode, referrerCrossProcessId);
 

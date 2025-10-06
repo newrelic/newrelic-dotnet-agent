@@ -1,6 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.SharedInterfaces;
@@ -8,17 +16,9 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Logging;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading;
-using System.IO;
-using System.Text;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
@@ -41,6 +41,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private InterlockedCounter _traceContextCreateSuccessCounter;
         private InterlockedCounter _traceContextAcceptSuccessCounter;
+        private InterlockedCounter _distributedTraceHeadersAcceptedLateCounter = new InterlockedCounter();
 
         private readonly InterlockedCounter _customInstrumentationCounter;
         private readonly HashSet<string> _customInstrumentationIds = new();
@@ -51,6 +52,9 @@ namespace NewRelic.Agent.Core.AgentHealth
         private bool _healthChecksFailed;
         private string _healthCheckPath;
 
+        /// <remarks>
+        /// This class is resolved very early during startup. Be careful about adding dependencies.
+        /// </remarks>
         public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler, IFileWrapper fileWrapper, IDirectoryWrapper directoryWrapper)
         {
             _metricBuilder = metricBuilder;
@@ -58,19 +62,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             _fileWrapper = fileWrapper;
             _directoryWrapper = directoryWrapper;
 
-            if (!_configuration.AgentControlEnabled)
-                Log.Debug("Agent Control is disabled. Health checks will not be reported.");
-            else
-            {
-                Log.Debug("Agent Control health checks will be published every {HealthCheckInterval} seconds", _configuration.HealthFrequency);
+            _subscriptions.Add<AgentConnectedEvent>(e => OnAgentConnected());
 
-                _healthCheck = new() { IsHealthy = true, Status = "Agent starting", LastError = string.Empty };
-
-                // schedule the health check and issue the first one immediately
-                _scheduler.ExecuteEvery(PublishAgentControlHealthCheck, TimeSpan.FromSeconds(_configuration.HealthFrequency), TimeSpan.Zero);
-            }
-
-            _scheduler.ExecuteEvery(LogPeriodicReport, _timeBetweenExecutions);
             var agentHealthEvents = Enum.GetValues(typeof(AgentHealthEvent)) as AgentHealthEvent[];
             foreach (var agentHealthEvent in agentHealthEvents)
             {
@@ -82,12 +75,33 @@ namespace NewRelic.Agent.Core.AgentHealth
             _traceContextAcceptSuccessCounter = new InterlockedCounter();
             _traceContextCreateSuccessCounter = new InterlockedCounter();
             _customInstrumentationCounter = new InterlockedCounter();
+
+            if (_configuration.AgentControlEnabled)
+                _healthCheck = new() { IsHealthy = true, Status = "Agent starting", LastError = string.Empty };
         }
 
         public override void Dispose()
         {
             _scheduler.StopExecuting(LogPeriodicReport);
             base.Dispose();
+        }
+
+        public void OnAgentConnected()
+        {
+            Log.Debug("AgentHealthReporter: Agent is connected. Initializing health checks.");
+
+            // start the heartbeat timer
+            _scheduler.ExecuteEvery(LogPeriodicReport, _timeBetweenExecutions);
+
+            if (!_configuration.AgentControlEnabled)
+                Log.Debug("Agent Control is disabled. Health checks will not be reported.");
+            else
+            {
+                Log.Debug("Agent Control health checks will be published every {HealthCheckInterval} seconds", _configuration.HealthFrequency);
+
+                // schedule the health check and issue the first one immediately
+                _scheduler.ExecuteEvery(PublishAgentControlHealthCheck, TimeSpan.FromSeconds(_configuration.HealthFrequency), TimeSpan.Zero);
+            }
         }
 
         private void LogPeriodicReport()
@@ -377,8 +391,63 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportSupportabilityDistributedTraceCreatePayloadException() =>
             TrySend(_metricBuilder.TryBuildCreatePayloadException);
 
+        public void ReportSupportabilityDistributedTraceHeadersAcceptedLate()
+        {
+            _distributedTraceHeadersAcceptedLateCounter.Increment();
+        }
+
+        /// <summary>
+        /// Validates the current agent configuration to ensure it is properly set up for operation.
+        /// </summary>
+        /// <remarks>This method checks several conditions to determine if the agent is correctly
+        /// configured: <list type="bullet"> <item>If the agent is disabled via configuration, the method logs an error
+        /// and returns <see langword="false"/>.</item> <item>If the agent is not in serverless mode and the license key
+        /// is not set, the method logs an error and returns <see langword="false"/>.</item> <item>If no application
+        /// name is configured, the method logs an error and returns <see langword="false"/>.</item> </list> If any of
+        /// these conditions are not met, the agent will fail to start.</remarks>
+        /// <returns><see langword="true"/> if the agent configuration is valid and the agent can start;  otherwise, <see
+        /// langword="false"/>.</returns>
+        public bool ValidateAgentConfiguration()
+        {
+            if (!_configuration.AgentEnabled)
+            {
+                var message = $"The New Relic agent is disabled via configuration. Update {_configuration.AgentEnabledAt} to re-enable it.";
+                FailStartup(message, HealthCodes.AgentDisabledByConfiguration);
+                return false;
+            }
+
+            if (!_configuration.ServerlessModeEnabled) // license key is not required to be set in serverless mode
+            {
+                if ("REPLACE_WITH_LICENSE_KEY".Equals(_configuration.AgentLicenseKey))
+                {
+                    FailStartup("Please set your license key.", HealthCodes.LicenseKeyMissing);
+                    return false;
+                }
+            }
+
+            // check for application names
+            if (!_configuration.TryGetApplicationNames(out _))
+            {
+                FailStartup("An application name is required.", HealthCodes.ApplicationNameMissing);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void FailStartup(string message, (bool IsHealthy, string Code, string Status) healthCode = default)
+        {
+            // have to log here because Shutdown() will terminate logging
+            Log.Error(message);
+
+            if (_configuration.AgentControlEnabled && healthCode != default)
+            {
+                SetAgentControlStatus(healthCode);
+            }
+        }
+
         /// <summary>Limits Collect calls to once per harvest per metric.</summary>
-        public void CollectDistributedTraceSuccessMetrics()
+        public void CollectDistributedTraceMetrics()
         {
             if (TryGetCount(_payloadCreateSuccessCounter, out var createCount))
             {
@@ -388,6 +457,11 @@ namespace NewRelic.Agent.Core.AgentHealth
             if (TryGetCount(_payloadAcceptSuccessCounter, out var acceptCount))
             {
                 TrySend(_metricBuilder.TryBuildAcceptPayloadSuccess(acceptCount));
+            }
+
+            if (TryGetCount(_distributedTraceHeadersAcceptedLateCounter, out var acceptedLateCount))
+            {
+                TrySend(_metricBuilder.TryBuildDistributedTraceHeadersAcceptedLate(acceptedLateCount));
             }
         }
 
@@ -760,7 +834,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
 
             // stop the scheduled task if agent control isn't enabled or health checks fail for any reason
-            if (!_configuration.AgentControlEnabled || _healthChecksFailed) 
+            if (!_configuration.AgentControlEnabled || _healthChecksFailed)
             {
                 _scheduler.StopExecuting(PublishAgentControlHealthCheck);
                 return;
@@ -798,8 +872,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             var fileUri = new Uri(_configuration.HealthDeliveryLocation);
             if (fileUri.Scheme != Uri.UriSchemeFile)
             {
-                Log.Warn(
-                    "Agent Control is enabled but the provided agent_control.health.delivery_location is not a file URL. Health checks will be disabled.");
+                Log.Warn("Agent Control is enabled but the provided agent_control.health.delivery_location is not a file URL. Health checks will be disabled.");
                 _healthChecksFailed = true;
                 return;
             }
@@ -849,7 +922,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void CollectMetrics()
         {
-            CollectDistributedTraceSuccessMetrics();
+            CollectDistributedTraceMetrics();
             CollectTraceContextSuccessMetrics();
             CollectInfiniteTracingMetrics();
             CollectLoggingMetrics();

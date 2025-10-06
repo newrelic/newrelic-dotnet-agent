@@ -150,7 +150,6 @@
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" Condition="'$(TargetFramework)' == 'net8.0'" />
 
-
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.7">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
@@ -172,7 +171,7 @@
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
     <!--<PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />-->
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
   </ItemGroup>
 
   <!-- The following section is used to specify particular versions of the RabbitMQ client to be tested with different

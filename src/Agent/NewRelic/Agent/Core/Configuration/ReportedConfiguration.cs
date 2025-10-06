@@ -53,6 +53,8 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.application_names")]
         public IEnumerable<string> ApplicationNames => _configuration.ApplicationNames;
 
+        public bool TryGetApplicationNames(out IEnumerable<string> names) => _configuration.TryGetApplicationNames(out names);
+
         [JsonProperty("agent.application_names_source")]
         public string ApplicationNamesSource => _configuration.ApplicationNamesSource;
 
@@ -207,10 +209,19 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("distributed_tracing.enabled")]
         public bool DistributedTracingEnabled => _configuration.DistributedTracingEnabled;
 
-        [JsonProperty("distributed_tracing.sampler.remote_parent_sampled")]
-        public RemoteParentSampledBehavior RemoteParentSampledBehavior { get; }
-        [JsonProperty("distributed_tracing.sampler.remote_parent_not_sampled")]
-        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior { get; }
+        [JsonProperty("distributed_tracing.sampler.root.sampler_type")]
+        public SamplerType RootSamplerType => _configuration.RootSamplerType;
+        [JsonProperty("distributed_tracing.sampler.remote_parent_sampled.sampler_type")]
+        public SamplerType RemoteParentSampledSamplerType => _configuration.RemoteParentSampledSamplerType;
+        [JsonProperty("distributed_tracing.sampler.remote_parent_not_sampled.sampler_type")]
+        public SamplerType RemoteParentNotSampledSamplerType => _configuration.RemoteParentNotSampledSamplerType;
+
+        [JsonProperty("distributed_tracing.sampler.root.trace_id_ratio_based.ratio")]
+        public float? RootTraceIdRatioSamplerRatio => _configuration.RootTraceIdRatioSamplerRatio;
+        [JsonProperty("distributed_tracing.sampler.remote_parent_sampled.trace_id_ratio_based.ratio")]
+        public float? RemoteParentSampledTraceIdRatioSamplerRatio => _configuration.RemoteParentSampledTraceIdRatioSamplerRatio;
+        [JsonProperty("distributed_tracing.sampler.remote_parent_not_sampled.trace_id_ratio_based.ratio")]
+        public float? RemoteParentNotSampledTraceIdRatioSamplerRatio => _configuration.RemoteParentNotSampledTraceIdRatioSamplerRatio;
 
         [JsonProperty("span_events.enabled")]
         public bool SpanEventsEnabled => _configuration.SpanEventsEnabled;

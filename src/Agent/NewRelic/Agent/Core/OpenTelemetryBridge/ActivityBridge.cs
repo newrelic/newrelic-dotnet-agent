@@ -8,13 +8,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge;
 
@@ -87,7 +85,6 @@ public class ActivityBridge : IDisposable
             try
             {
                 assembly = Assembly.Load("System.Diagnostics.DiagnosticSource");
-                Log.Debug($"System.Diagnostics.DiagnosticSource assembly version {assembly.GetName().Version} loaded successfully.");
             }
             catch (Exception ex)
             {
@@ -95,6 +92,8 @@ public class ActivityBridge : IDisposable
                 return false;
             }
         }
+
+        Log.Debug($"Found System.Diagnostics.DiagnosticSource assembly version {assembly.GetName().Version}.");
 
         // TODO: Identify the minimum version of the DiagnosticSource assembly that is compatible with the OpenTelemetry Bridge.
         if ((assembly.GetName().Version?.Major ?? 0) < 7)
@@ -217,7 +216,34 @@ public class ActivityBridge : IDisposable
         var parseTraceIdMethod = activityTraceIdType.GetMethod("CreateFromString", BindingFlags.Public | BindingFlags.Static);
         var parseTraceIdExpression = Expression.Call(null, parseTraceIdMethod, currentTraceIdAsSpanExpression);
 
-        var getOrCreateTraceIdExpression = Expression.Condition(hasCurrentTraceIdExpression, parseTraceIdExpression, generateNewTraceIdExpression);
+        var logFinestMethod = typeof(Log).GetMethod("Finest", new[] { typeof(string), typeof(object[]) });
+
+        var messageFormat = Expression.Constant("Using current traceId {0}");
+        var messageArgs = Expression.NewArrayInit(typeof(object), Expression.Convert(currentTraceIdVariable, typeof(object)));
+        var callLogFinestExpression = Expression.Call(logFinestMethod, messageFormat, messageArgs);
+
+        var ifBlockExpression = Expression.Block(
+            callLogFinestExpression,
+            parseTraceIdExpression
+        );
+
+        var newTraceIdVariable = Expression.Variable(activityTraceIdType, "newTraceId");
+        var assignNewTraceIdExpression = Expression.Assign(newTraceIdVariable, generateNewTraceIdExpression);
+        var toStringMethod = activityTraceIdType.GetMethod("ToString", Type.EmptyTypes);
+        var newTraceIdAsString = Expression.Call(newTraceIdVariable, toStringMethod);
+
+        var message2Format = Expression.Constant("Generated new traceId {0}");
+        var message2Args = Expression.NewArrayInit(typeof(object), Expression.Convert(newTraceIdAsString, typeof(object)));
+        var callLogFinestExpression2 = Expression.Call(logFinestMethod, message2Format, message2Args);
+
+        var elseBlockExpression = Expression.Block(
+            [newTraceIdVariable],
+            assignNewTraceIdExpression,
+            callLogFinestExpression2,
+            newTraceIdVariable
+        );
+
+        var getOrCreateTraceIdExpression = Expression.Condition(hasCurrentTraceIdExpression, ifBlockExpression, elseBlockExpression);
 
         var lambdaBodyExpression = Expression.Block([currentTraceIdVariable], assignCurrentTraceIdExpression, getOrCreateTraceIdExpression);
 
@@ -361,12 +387,22 @@ public class ActivityBridge : IDisposable
         dynamic dynamicActivitySource = activitySource;
         string activitySourceName = (string)dynamicActivitySource.Name;
 
+        if (string.IsNullOrWhiteSpace(activitySourceName))
+        {
+            Log.Finest("ShouldListenToActivitySource: Activity source name is null or empty. Not listening.");
+            return false;
+        }
+
         var includedActivitySources = _agent.Configuration.IncludedActivitySources;
         var excludedActivitySources = _agent.Configuration.ExcludedActivitySources;
 
-        return !string.IsNullOrEmpty(activitySourceName)
-               && includedActivitySources.Contains(activitySourceName)
-               && !excludedActivitySources.Contains(activitySourceName);
+        var shouldListenToActivitySource = !string.IsNullOrEmpty(activitySourceName)
+                                           && includedActivitySources.Contains(activitySourceName)
+                                           && !excludedActivitySources.Contains(activitySourceName);
+
+        Log.Finest($"ShouldListenToActivitySource: {(shouldListenToActivitySource ? "Listening to" : "Not listening to")} {activitySourceName}.");
+
+        return shouldListenToActivitySource;
     }
 
     private bool ShouldSampleActivity(int kind, object activityContext)
@@ -476,7 +512,7 @@ public class ActivityBridge : IDisposable
 
         if (segment != null)
         {
-            segment.AddActivityTagsToSegment(originalActivity, agent);
+            segment.ProcessActivityTags(originalActivity, agent, errorService);
             segment.AddExceptionEventInformationToSegment(originalActivity, errorService);
             segment.End();
         }

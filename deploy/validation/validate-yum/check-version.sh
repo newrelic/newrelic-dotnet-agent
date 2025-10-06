@@ -13,4 +13,4 @@ REPO
 
 yum install newrelic-dotnet-agent -y
 
-rpm -q newrelic-dotnet-agent
+rpm -q --queryformat '%{VERSION}\n' newrelic-dotnet-agent

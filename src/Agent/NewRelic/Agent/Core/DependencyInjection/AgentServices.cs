@@ -47,6 +47,7 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {
@@ -173,7 +174,9 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ITransactionTraceMaker, TransactionTraceMaker>();
             container.Register<ITransactionEventMaker, TransactionEventMaker>();
             container.Register<ICallStackManager, CallStackManager>();
-            container.Register<IAdaptiveSampler, AdaptiveSampler>();
+
+            container.Register<ISamplerFactory, SamplerFactory>();
+            container.Register<ISamplerService, SamplerService>();
 
             var transactionCollectors = new List<ITransactionCollector> {
                 new SlowestTransactionCollector(),
@@ -259,19 +262,16 @@ namespace NewRelic.Agent.Core.DependencyInjection
             samplerStartThread.IsBackground = true;
             samplerStartThread.Start();
 #else
-            if (!serverlessModeEnabled)
-            {
-                if (!gcSamplerV2Enabled)
-                    container.Resolve<GCSamplerNetCore>().Start();
-                else
-                    container.Resolve<GCSamplerV2>().Start();
-            }
+            if (!gcSamplerV2Enabled)
+                container.Resolve<GCSamplerNetCore>().Start();
+            else
+                container.Resolve<GCSamplerV2>().Start();
 #endif
+            container.Resolve<CpuSampler>().Start();
+            container.Resolve<MemorySampler>().Start();
+            container.Resolve<ThreadStatsSampler>().Start();
             if (!serverlessModeEnabled)
             {
-                container.Resolve<CpuSampler>().Start();
-                container.Resolve<MemorySampler>().Start();
-                container.Resolve<ThreadStatsSampler>().Start();
                 container.Resolve<ConfigurationTracker>();
                 container.Resolve<LiveInstrumentationServerConfigurationListener>();
                 container.Resolve<UpdatedLoadedModulesService>();

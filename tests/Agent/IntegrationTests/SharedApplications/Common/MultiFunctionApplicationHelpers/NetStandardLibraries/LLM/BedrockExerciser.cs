@@ -23,7 +23,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 { "amazonembed", BedrockModels.InvokeAmazonEmbedAsync },
                 { "amazonexpress", BedrockModels.InvokeAmazonExpressAsync },
                 { "cohere", BedrockModels.InvokeCohereAsync },
-                { "anthropic", BedrockModels.InvokeClaudeAsync },
+                // { "anthropic", BedrockModels.InvokeClaudeAsync }, // Model is EOLed as of 9/11/25
 #if NET481 || NET10_0
                 { "converse", BedrockModels.ConverseNovaMicro },
 #endif

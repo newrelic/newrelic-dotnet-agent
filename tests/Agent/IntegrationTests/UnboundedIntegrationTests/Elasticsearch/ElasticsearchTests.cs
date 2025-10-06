@@ -37,7 +37,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         const string SyncMethodSkipReason = "Synchronous methods are deprecated in latest Elastic.Clients.Elasticsearch";
 
 
-        protected ElasticsearchTestsBase(TFixture fixture, ITestOutputHelper output, ClientType clientType, bool syncMethodsOk = true) : base(fixture)
+        protected ElasticsearchTestsBase(TFixture fixture, ITestOutputHelper output, ClientType clientType,
+            bool syncMethodsOk = true, bool enableOTelBridge = false) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -58,7 +59,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.AddCommand($"ElasticsearchExerciser GenerateErrorAsync");
 
             // Sync operations
-            if (_syncMethodsOk )
+            if (_syncMethodsOk)
             {
                 _fixture.AddCommand($"ElasticsearchExerciser Index");
                 _fixture.AddCommand($"ElasticsearchExerciser Search");
@@ -72,12 +73,19 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
-                    configModifier.ConfigureFasterErrorTracesHarvestCycle(15);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
+                    var configModifier = new NewRelicConfigModifier(configPath)
+                    .SetLogLevel("finest")
+                    .ConfigureFasterMetricsHarvestCycle(15)
+                    .ConfigureFasterErrorTracesHarvestCycle(15)
+                    .ConfigureFasterSpanEventsHarvestCycle(15)
+                    .ForceTransactionTraces();
 
-                    configModifier.ForceTransactionTraces();
+                    if (enableOTelBridge)
+                    {
+                        configModifier
+                            .EnableOTelBridge(true)
+                            .IncludeActivitySource("Elastic.Transport");
+                    }
                 },
                 exerciseApplication: () =>
                 {
@@ -145,7 +153,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         [Fact]
         public void ErrorAsync()
         {
-            ValidateError("GenerateErrorAsync");
+            if (_fixture is not ConsoleDynamicMethodFixtureFWLatest)
+                ValidateError("GenerateErrorAsync");
+            else
+                Assert.Skip("Not supported in Framework OTelBridge (FWLatest).");
+
         }
 
         private void ValidateError(string operationName)
@@ -200,10 +212,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             );
         }
 
-        private static string GetHostFromElasticServer(ClientType clientType)
+        private string GetHostFromElasticServer(ClientType clientType)
         {
-            var elasticServer = clientType == ClientType.ElasticClients ? ElasticSearch8Configuration.ElasticServer : ElasticSearch7Configuration.ElasticServer;
-  
+            // core latest fixture tests elasticsearch 9, which requires a different server configuration
+            string elasticServer;
+            if (_fixture is ConsoleDynamicMethodFixtureCoreLatest)
+                elasticServer = clientType == ClientType.ElasticClients ? ElasticSearch9Configuration.ElasticServer : ElasticSearch7Configuration.ElasticServer;
+            else
+                elasticServer = clientType == ClientType.ElasticClients ? ElasticSearch8Configuration.ElasticServer : ElasticSearch7Configuration.ElasticServer;
+
             if (elasticServer.StartsWith("https://"))
             {
                 return elasticServer.Remove(0, "https://".Length);
@@ -321,7 +338,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchElasticClientTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ElasticsearchElasticClientTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticClients, syncMethodsOk : false)
+            : base(fixture, output, ClientType.ElasticClients, syncMethodsOk: false, enableOTelBridge: true)
         {
         }
     }
@@ -337,7 +354,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchElasticClientTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ElasticsearchElasticClientTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticClients, syncMethodsOk: false)
+            : base(fixture, output, ClientType.ElasticClients, syncMethodsOk: false, enableOTelBridge: true)
         {
         }
     }

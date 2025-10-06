@@ -33,6 +33,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Extensions.Api.Experimental;
 
@@ -119,16 +120,16 @@ namespace NewRelic.Agent.Core.Transactions
             internal set => _sampled = value;
         }
 
-        public void SetSampled(IAdaptiveSampler adaptiveSampler)
+        public void SetSampled()
         {
             lock (_sync)
             {
                 if (!Sampled.HasValue)
                 {
-                    var priority = _priority;
-                    Sampled = adaptiveSampler.ComputeSampled(ref priority);
-                    _priority = priority;
+                    var result = _samplerService.GetSampler(SamplerLevel.Root).ShouldSample(new SamplingParameters(TraceId, _priority));
 
+                    _sampled = result.Sampled;
+                    _priority = result.Priority;
                 }
             }
         }
@@ -315,8 +316,8 @@ namespace NewRelic.Agent.Core.Transactions
             if (brokerVendorName == null)
                 throw new ArgumentNullException("brokerVendorName");
 
-
             var segment = StartSegmentImpl(methodCall);
+
             var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName, cloudAccountId, cloudRegion, serverAddress, serverPort, routingKey);
 
             segment.SetSegmentData(messageBrokerSegmentData);
@@ -354,8 +355,8 @@ namespace NewRelic.Agent.Core.Transactions
             if (brokerVendorName == null)
                 throw new ArgumentNullException("brokerVendorName");
 
-            var action = AgentWrapperApiEnumToMetricNamesEnum(operation);
-            var destType = AgentWrapperApiEnumToMetricNamesEnum(destinationType);
+            var action = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(operation);
+            var destType = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(destinationType);
 
             return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action, messagingSystemName: messagingSystemName, cloudAccountId: cloudAccountId, cloudRegion: cloudRegion, serverAddress: serverAddress, serverPort: serverPort, routingKey: routingKey);
         }
@@ -365,8 +366,8 @@ namespace NewRelic.Agent.Core.Transactions
             if (brokerVendorName == null)
                 throw new ArgumentNullException("brokerVendorName");
 
-            var action = AgentWrapperApiEnumToMetricNamesEnum(operation);
-            var destType = AgentWrapperApiEnumToMetricNamesEnum(destinationType);
+            var action = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(operation);
+            var destType = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(destinationType);
 
             return new MessageBrokerSerializationSegmentData(brokerVendorName, destinationName, destType, action, kind);
         }
@@ -442,47 +443,6 @@ namespace NewRelic.Agent.Core.Transactions
         private static MethodCallData GetMethodCallData(string typeName, string methodName, int invocationTargetHashCode)
         {
             return new MethodCallData(typeName, methodName, invocationTargetHashCode, true); // assume async
-        }
-
-        private static MetricNames.MessageBrokerDestinationType AgentWrapperApiEnumToMetricNamesEnum(
-            MessageBrokerDestinationType wrapper)
-        {
-            switch (wrapper)
-            {
-                case MessageBrokerDestinationType.Queue:
-                    return MetricNames.MessageBrokerDestinationType.Queue;
-                case MessageBrokerDestinationType.Topic:
-                    return MetricNames.MessageBrokerDestinationType.Topic;
-                case MessageBrokerDestinationType.TempQueue:
-                    return MetricNames.MessageBrokerDestinationType.TempQueue;
-                case MessageBrokerDestinationType.TempTopic:
-                    return MetricNames.MessageBrokerDestinationType.TempTopic;
-                default:
-                    throw new InvalidOperationException("Unexpected enum value: " + wrapper);
-            }
-        }
-
-        private static MetricNames.MessageBrokerAction AgentWrapperApiEnumToMetricNamesEnum(MessageBrokerAction wrapper)
-        {
-            switch (wrapper)
-            {
-                case MessageBrokerAction.Consume:
-                    return MetricNames.MessageBrokerAction.Consume;
-                case MessageBrokerAction.Peek:
-                    return MetricNames.MessageBrokerAction.Peek;
-                case MessageBrokerAction.Produce:
-                    return MetricNames.MessageBrokerAction.Produce;
-                case MessageBrokerAction.Purge:
-                    return MetricNames.MessageBrokerAction.Purge;
-                case MessageBrokerAction.Process:
-                    return MetricNames.MessageBrokerAction.Process;
-                case MessageBrokerAction.Settle:
-                    return MetricNames.MessageBrokerAction.Settle;
-                case MessageBrokerAction.Cancel:
-                    return MetricNames.MessageBrokerAction.Cancel;
-                default:
-                    throw new InvalidOperationException("Unexpected enum value: " + wrapper);
-            }
         }
 
         private Dictionary<string, IConvertible> GetNormalizedQueryParameters(IDictionary<string, IConvertible> originalQueryParameters)
@@ -728,6 +688,7 @@ namespace NewRelic.Agent.Core.Transactions
                 if (Segments.Any())
                 {
                     Log.Finest($"Trx {Guid}: AcceptDistributedTraceHeaders should usually be called before any segments are started.");
+                    Agent._agentHealthReporter.ReportSupportabilityDistributedTraceHeadersAcceptedLate();
                 }
 
                 // Headers have already been received, do not allow multiple calls to AcceptDistributedTraceHeaders
@@ -1105,7 +1066,7 @@ namespace NewRelic.Agent.Core.Transactions
         public Transaction(IConfiguration configuration, ITransactionName initialTransactionName,
             ISimpleTimer timer, DateTime startTime, ICallStackManager callStackManager, IDatabaseService databaseService,
             float priority, IDatabaseStatementParser databaseStatementParser, IDistributedTracePayloadHandler distributedTracePayloadHandler,
-            IErrorService errorService, IAttributeDefinitions attribDefs)
+            IErrorService errorService, IAttributeDefinitions attribDefs, ISamplerService samplerService)
         {
             CandidateTransactionName = new CandidateTransactionName(this, initialTransactionName);
             _guid = GuidGenerator.GenerateNewRelicGuid();
@@ -1124,6 +1085,7 @@ namespace NewRelic.Agent.Core.Transactions
             _errorService = errorService;
             _distributedTracePayloadHandler = distributedTracePayloadHandler;
             _attribDefs = attribDefs;
+            _samplerService = samplerService;
         }
 
         public int Add(Segment segment)
@@ -1259,6 +1221,7 @@ namespace NewRelic.Agent.Core.Transactions
         public bool IsFinished { get; private set; } = false;
 
         private object _finishLock = new object();
+        private readonly ISamplerService _samplerService;
 
         public bool Finish()
         {

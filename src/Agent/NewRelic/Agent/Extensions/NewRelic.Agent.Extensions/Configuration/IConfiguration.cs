@@ -20,6 +20,8 @@ namespace NewRelic.Agent.Configuration
 
         string AgentLicenseKey { get; }
         IEnumerable<string> ApplicationNames { get; }
+        bool TryGetApplicationNames(out IEnumerable<string> names);
+
         string ApplicationNamesSource { get; }
         bool AutoStartAgent { get; }
         string BrowserMonitoringApplicationId { get; }
@@ -191,8 +193,13 @@ namespace NewRelic.Agent.Configuration
         bool EnableAspNetCore6PlusBrowserInjection { get; }
         bool ExcludeNewrelicHeader { get; }
 
-        RemoteParentSampledBehavior RemoteParentSampledBehavior { get; }
-        RemoteParentSampledBehavior RemoteParentNotSampledBehavior { get; }
+        SamplerType RootSamplerType { get; }
+        SamplerType RemoteParentSampledSamplerType { get; }
+        SamplerType RemoteParentNotSampledSamplerType { get; }
+
+        float? RootTraceIdRatioSamplerRatio { get; }
+        float? RemoteParentSampledTraceIdRatioSamplerRatio { get; }
+        float? RemoteParentNotSampledTraceIdRatioSamplerRatio { get; }
 
         bool ApplicationLoggingEnabled { get; }
         bool LogMetricsCollectorEnabled { get; }

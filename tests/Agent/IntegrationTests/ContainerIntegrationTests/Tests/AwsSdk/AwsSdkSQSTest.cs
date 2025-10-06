@@ -13,6 +13,7 @@ using Assert = Xunit.Assert;
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
 [Trait("Architecture", "amd64")]
+ [Trait("Distro", "Ubuntu")]
 public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixture>
 {
     private readonly AwsSdkContainerSQSTestFixture _fixture;

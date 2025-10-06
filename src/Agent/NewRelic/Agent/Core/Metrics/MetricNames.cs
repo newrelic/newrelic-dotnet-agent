@@ -199,8 +199,7 @@ namespace NewRelic.Agent.Core.Metrics
                         : MetricName.Create(DatastoreOperation, EnumNameCache<DatastoreVendor>.GetName(vendor), operation);
                 });
         }
-
-
+                
         public static MetricName GetCustom(string suffix)
         {
             return MetricName.Create(Custom, suffix);
@@ -346,6 +345,23 @@ namespace NewRelic.Agent.Core.Metrics
             TempQueue,
             TempTopic
         }
+        public static MetricNames.MessageBrokerDestinationType AgentWrapperApiEnumToMetricNamesEnum(NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerDestinationType destinationType)
+        {
+            switch (destinationType)
+            {
+                case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerDestinationType.Queue:
+                    return MetricNames.MessageBrokerDestinationType.Queue;
+                case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerDestinationType.Topic:
+                    return MetricNames.MessageBrokerDestinationType.Topic;
+                case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerDestinationType.TempQueue:
+                    return MetricNames.MessageBrokerDestinationType.TempQueue;
+                case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerDestinationType.TempTopic:
+                    return MetricNames.MessageBrokerDestinationType.TempTopic;
+                default:
+                    throw new InvalidOperationException("Unexpected enum value: " + destinationType);
+            }
+        }
+
 
         public enum MessageBrokerAction
         {
@@ -357,6 +373,31 @@ namespace NewRelic.Agent.Core.Metrics
             Settle,
             Cancel
         }
+
+        public static MetricNames.MessageBrokerAction AgentWrapperApiEnumToMetricNamesEnum(NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction actionType)
+        {
+            switch (actionType)
+            {
+                case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction.Consume:
+                    return MetricNames.MessageBrokerAction.Consume;
+                case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction.Peek:
+                    return MetricNames.MessageBrokerAction.Peek;
+                case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction.Produce:
+                    return MetricNames.MessageBrokerAction.Produce;
+                case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction.Purge:
+                    return MetricNames.MessageBrokerAction.Purge;
+                case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction.Process:
+                    return MetricNames.MessageBrokerAction.Process;
+                case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction.Settle:
+                    return MetricNames.MessageBrokerAction.Settle;
+                case NewRelic.Agent.Extensions.Providers.Wrapper.MessageBrokerAction.Cancel:
+                    return MetricNames.MessageBrokerAction.Cancel;
+                default:
+                    throw new InvalidOperationException("Unexpected enum value: " + actionType);
+            }
+        }
+
+
 
         public const string MessageBrokerPrefix = "MessageBroker";
         public const string MessageBrokerNamed = "Named";
@@ -976,6 +1017,8 @@ namespace NewRelic.Agent.Core.Metrics
             var prefix = GetDistributedTraceMetricPrefix(DistributedTraceTransportDurationPs, type, accountId, app, transport);
             return (all: MetricName.Create(prefix + All), webOrOther: MetricName.Create(prefix + (isWeb ? AllWeb : AllOther)));
         }
+
+        public static string SupportabilityDistributedTraceHeadersAcceptedLate => SupportabilityDistributedTracePs + "HeadersAcceptedLate";
 
         #endregion Distributed Trace Metrics
 

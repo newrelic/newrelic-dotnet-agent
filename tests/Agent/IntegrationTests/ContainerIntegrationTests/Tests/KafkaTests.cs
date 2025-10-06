@@ -39,11 +39,13 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             exerciseApplication: () =>
             {
                 _fixture.Delay(15); // wait long enough to ensure kafka and app are ready
+                _fixture.TestLogger.WriteLine("Starting exercise application");
                 _fixture.ExerciseApplication();
 
                 _bootstrapServer = _fixture.GetBootstrapServer();
 
-                _fixture.Delay(11); // wait long enough to ensure a metric harvest occurs after we exercise the app
+                _fixture.TestLogger.WriteLine("Waiting for metrics to be harvested");
+                _fixture.Delay(30); // wait long enough to ensure a metric harvest occurs after we exercise the app
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(11));
 
                 // shut down the container and wait for the agent log to see it
@@ -63,48 +65,59 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
 
         var messageBrokerConsume = "MessageBroker/Kafka/Topic/Consume/Named/" + _topicName;
 
-        var consumeTransactionName = @"OtherTransaction/Message/Kafka/Topic/Consume/Named/" + _topicName;
+        var consumeWithTimeoutTransactionName = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithTimeoutAsync";
+        var consumeWithCancellationTransactionName = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithCancellationTokenAsync";
         var produceWebTransactionName = @"WebTransaction/MVC/Kafka/Produce";
 
         var messageBrokerNode = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}";
         var messageBrokerNodeProduceTopic = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}/Produce/{_topicName}";
         var messageBrokerNodeConsumeTopic = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}/Consume/{_topicName}";
 
-        var metrics = _fixture.AgentLog.GetMetrics();
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+        
+
         var spans = _fixture.AgentLog.GetSpanEvents();
         var produceSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(messageBrokerProduce));
-        var consumeTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeTransactionName));
+        var consumeWithTimeoutTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeWithTimeoutTransactionName));
+        var consumeWithCancellationTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeWithCancellationTransactionName));
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = produceWebTransactionName, callCount = 2 }, // includes sync and async actions
-            new() { metricName = messageBrokerProduce, callCount = 2 },
-            new() { metricName = messageBrokerProduce, metricScope = produceWebTransactionName, callCount = 2 },
-            new() { metricName = messageBrokerProduceSerializationKey, callCount = 2 },
-            new() { metricName = messageBrokerProduceSerializationKey, metricScope = produceWebTransactionName, callCount = 2 },
-            new() { metricName = messageBrokerProduceSerializationValue, callCount = 2 },
-            new() { metricName = messageBrokerProduceSerializationValue, metricScope = produceWebTransactionName, callCount = 2 },
+            new() { metricName = produceWebTransactionName, CallCountAllHarvests = 4 }, // includes sync and async actions
+            new() { metricName = messageBrokerProduce, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduce, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduceSerializationKey, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduceSerializationKey, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduceSerializationValue, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduceSerializationValue, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
 
-            new() { metricName = consumeTransactionName, callCount = 2 },
-            new() { metricName = messageBrokerConsume, callCount = 2 },
-            new() { metricName = messageBrokerConsume, metricScope = consumeTransactionName, callCount = 2 },
-            new() { metricName = "Supportability/TraceContext/Create/Success", callCount = 2 },
-            new() { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 },
+            new() { metricName = consumeWithTimeoutTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = consumeWithCancellationTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = messageBrokerConsume, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = messageBrokerConsume, metricScope = consumeWithCancellationTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 4 },
+            new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 4 },
 
-            new() { metricName = messageBrokerNode, callCount = 4 },
-            new() { metricName = messageBrokerNodeProduceTopic, callCount = 2 },
-            new() { metricName = messageBrokerNodeConsumeTopic, callCount = 2 }
+            new() { metricName = messageBrokerNode, CallCountAllHarvests = 8 },
+            new() { metricName = messageBrokerNodeProduceTopic, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerNodeConsumeTopic, CallCountAllHarvests = 4 }
         };
 
         NrAssert.Multiple(
             () => Assertions.MetricsExist(expectedMetrics, metrics),
             () => Assert.True(produceSpan.IntrinsicAttributes.ContainsKey("traceId")),
             () => Assert.True(produceSpan.IntrinsicAttributes.ContainsKey("parentId")),
-            () => Assert.NotNull(consumeTxnSpan),
-            () => Assert.True(consumeTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
-            () => Assert.InRange((long)consumeTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 470), // includes headers
-            () => Assert.True(consumeTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
-            () => Assert.True(consumeTxnSpan.IntrinsicAttributes.ContainsKey("parentId"))
+            () => Assert.NotNull(consumeWithTimeoutTxnSpan),
+            () => Assert.True(consumeWithTimeoutTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
+            () => Assert.InRange((long)consumeWithTimeoutTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 470), // includes headers
+            () => Assert.True(consumeWithTimeoutTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
+            () => Assert.True(consumeWithTimeoutTxnSpan.IntrinsicAttributes.ContainsKey("parentId")),
+            () => Assert.NotNull(consumeWithCancellationTxnSpan),
+            () => Assert.True(consumeWithCancellationTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
+            () => Assert.InRange((long)consumeWithCancellationTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 470), // includes headers
+            () => Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
+            () => Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("parentId"))
         );
     }
 
@@ -122,6 +135,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
 }
 
 [Trait("Architecture", "amd64")]
+ [Trait("Distro", "Debian")]
 public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
 {
     public KafkaDotNet8Test(KafkaDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -130,6 +144,7 @@ public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
 }
 
 [Trait("Architecture", "amd64")]
+[Trait("Distro", "Debian")]
 public class KafkaDotNet10Test : LinuxKafkaTest<KafkaDotNet10TestFixture>
 {
     public KafkaDotNet10Test(KafkaDotNet10TestFixture fixture, ITestOutputHelper output) : base(fixture, output)

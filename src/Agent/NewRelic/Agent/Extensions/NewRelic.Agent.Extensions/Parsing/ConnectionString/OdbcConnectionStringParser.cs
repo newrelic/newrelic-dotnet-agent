@@ -4,7 +4,8 @@
 using NewRelic.Agent.Helpers;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Linq;
+using System;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 {
@@ -33,61 +34,124 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
 
         private string ParseHost()
         {
-            var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
-            if (host == null) return null;
+            try
+            {
+                var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
+                if (host == null) return null;
 
-            // Example of want we would need to process: win-database.pdx.vm.datanerd.us,1433\SQLEXPRESS
-            var splitIndex = host.IndexOf(StringSeparators.CommaChar);
-            if (splitIndex == -1) splitIndex = host.IndexOf(StringSeparators.BackslashChar);
-            host = splitIndex == -1 ? host : host.Substring(0, splitIndex);
-            var endOfHostname = host.IndexOf(StringSeparators.ColonChar);
-            return endOfHostname == -1 ? host : host.Substring(0, endOfHostname);
+                // Handle MSSQL-style patterns possibly present in ODBC:
+                // host,1234\instance
+                // host\instance,1234
+                var commaIndex = host.IndexOf(StringSeparators.CommaChar);
+                var backslashIndex = host.IndexOf(StringSeparators.BackslashChar);
+
+                int splitIndex;
+                if (commaIndex == -1 && backslashIndex == -1)
+                    splitIndex = -1;
+                else if (commaIndex == -1)
+                    splitIndex = backslashIndex;
+                else if (backslashIndex == -1)
+                    splitIndex = commaIndex;
+                else
+                    splitIndex = Math.Min(commaIndex, backslashIndex);
+
+                host = splitIndex == -1 ? host : host.Substring(0, splitIndex);
+                var endOfHostname = host.IndexOf(StringSeparators.ColonChar);
+                return endOfHostname == -1 ? host : host.Substring(0, endOfHostname);
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e, "Unhandled exception in OdbcConnectionStringParser.ParseHost");
+                return null;
+            }
         }
 
         private string ParsePortPathOrId()
         {
-            // Some ODBC drivers use the "port" key to specify the port number
-            var portPathOrId = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _portKeys)?.Value;
-            if (!string.IsNullOrWhiteSpace(portPathOrId))
+            try
             {
-                return portPathOrId;
+                // Prefer explicit "port" key
+                var portPathOrId = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _portKeys)?.Value;
+                if (!string.IsNullOrWhiteSpace(portPathOrId))
+                {
+                    return portPathOrId;
+                }
 
+                portPathOrId = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
+                if (portPathOrId == null) return null;
+
+                // host:1234 pattern
+                var colonIndex = portPathOrId.IndexOf(StringSeparators.ColonChar);
+                if (colonIndex != -1)
+                {
+                    var startOfValue = colonIndex + 1;
+                    if (startOfValue < portPathOrId.Length)
+                        return portPathOrId.Substring(startOfValue);
+                }
+
+                // Comma patterns, handling both host,port\instance and host\instance,port
+                var commaIndex = portPathOrId.LastIndexOf(StringSeparators.CommaChar);
+                if (commaIndex != -1)
+                {
+                    var start = commaIndex + 1;
+                    if (start >= portPathOrId.Length)
+                        return null;
+
+                    var firstBackslash = portPathOrId.IndexOf(StringSeparators.BackslashChar);
+                    var backslashAfterComma = portPathOrId.IndexOf(StringSeparators.BackslashChar, start);
+                    var useBackslash = backslashAfterComma;
+
+                    if (firstBackslash != -1 && firstBackslash < commaIndex)
+                    {
+                        // Pattern: host\instance,port
+                        useBackslash = -1;
+                    }
+
+                    var end = useBackslash == -1 ? portPathOrId.Length : useBackslash;
+                    if (end <= start) return null;
+
+                    var port = portPathOrId.Substring(start, end - start).Trim();
+                    return string.IsNullOrEmpty(port) ? null : port;
+                }
+                return "default";
             }
-
-            // Some ODBC drivers include the port in the "server" or "data source" key
-            portPathOrId = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
-            if (portPathOrId == null) return null;
-
-            if (portPathOrId.IndexOf(StringSeparators.ColonChar) != -1)
+            catch (Exception e)
             {
-                var startOfValue = portPathOrId.IndexOf(StringSeparators.ColonChar) + 1;
-                var endOfValue = portPathOrId.Length;
-                return portPathOrId.Substring(startOfValue, endOfValue - startOfValue);
+                Log.Debug(e, "Unhandled exception in OdbcConnectionStringParser.ParsePortPathOrId");
+                return null;
             }
-            if (portPathOrId.IndexOf(StringSeparators.CommaChar) != -1)
-            {
-                var startOfValue = portPathOrId.IndexOf(StringSeparators.CommaChar) + 1;
-                var endOfValue = portPathOrId.Contains(StringSeparators.BackslashChar)
-                    ? portPathOrId.IndexOf(StringSeparators.BackslashChar)
-                    : portPathOrId.Length;
-                return portPathOrId.Substring(startOfValue, endOfValue - startOfValue);
-            }
-            return "default";
         }
 
         private string ParseInstanceName()
         {
-            var instanceName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
-            if (instanceName == null) return null;
-
-            if (instanceName.IndexOf(StringSeparators.BackslashChar) != -1)
+            try
             {
-                var startOfValue = instanceName.IndexOf(StringSeparators.BackslashChar) + 1;
-                var endOfValue = instanceName.Length;
-                return instanceName.Substring(startOfValue, endOfValue - startOfValue);
-            }
+                var instanceName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
+                if (instanceName == null) return null;
 
-            return null;
+                // Support patterns:
+                //  host\instance
+                //  host\instance,port
+                //  host,port\instance
+                // Extract token after last backslash, before any comma (port delimiter).
+                var lastBackslash = instanceName.LastIndexOf(StringSeparators.BackslashChar);
+                if (lastBackslash == -1 || lastBackslash == instanceName.Length - 1)
+                    return null;
+
+                var start = lastBackslash + 1;
+                var commaAfterInstance = instanceName.IndexOf(StringSeparators.CommaChar, start);
+                var end = commaAfterInstance == -1 ? instanceName.Length : commaAfterInstance;
+
+                if (end <= start)
+                    return null;
+
+                return instanceName.Substring(start, end - start);
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e, "Unhandled exception in OdbcConnectionStringParser.ParseInstanceName");
+                return null;
+            }
         }
     }
 }

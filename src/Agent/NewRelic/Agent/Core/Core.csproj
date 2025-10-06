@@ -10,6 +10,7 @@
     <OutputPath>$(MSBuildThisFileDirectory)..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
@@ -37,24 +38,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="4.5.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.31.1" />
+    <!-- Autofac v6+ doesn't support framework. We could possibly upgrade to v5.x but there's no compelling reason for it. -->
+    <PackageReference Include="Autofac" Version="[4.5.0]" />
+    <PackageReference Include="Google.Protobuf" Version="3.32.1" />
     <PackageReference Include="Grpc.Tools" Version="2.72.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Serilog" Version="4.0.1" />
-    <PackageReference Include="Serilog.Sinks.Async" Version="2.0.0" />
+    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
-    <PackageReference Include="Serilog.Sinks.EventLog" Version="3.1.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.EventLog" Version="4.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.6.1" />
     <PackageReference Include="ILRepack" Version="2.0.44">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <!-- 1.3.3 is the latest package of SharpZipLib that still has a .NET Framework target. Later versions
     only have a .NET Standard target -->
     <PackageReference Include="SharpZipLib" Version="1.3.3" />
@@ -74,10 +76,10 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="Grpc.Net.Client" Version="2.63.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="[2.0.0]" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="[2.0.0]" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="[2.0.0]" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>

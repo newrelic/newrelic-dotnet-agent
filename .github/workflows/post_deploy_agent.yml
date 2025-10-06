@@ -12,7 +12,7 @@ on:
         default: true
         required: true
       test_mode:
-        description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue.'
+        description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue, and release tags will not be created.'
         type: boolean
         default: false
         required: true
@@ -27,7 +27,7 @@ on:
         default: true
         required: true
       test_mode:
-        description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue.'
+        description: 'Run workflow in test mode.  If set to true, the NugetVersionDeprecator will not create a GitHub issue, and release tags will not be created.'
         type: boolean
         default: false
         required: false
@@ -41,11 +41,11 @@ env:
 
 jobs:
   validate-apt-repo-ubuntu-latest:
-    name: Validate APT-based repo
+    name: Validate APT repo on latest Ubuntu with new key
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           disable-sudo: false
           egress-policy: audit
@@ -58,10 +58,10 @@ jobs:
       - name: Validate
         run: |
           echo 'deb [signed-by=/usr/share/keyrings/newrelic-apt.gpg] https://apt.newrelic.com/debian/ newrelic non-free' | sudo tee /etc/apt/sources.list.d/newrelic.list
-          wget -O- https://download.newrelic.com/NEWRELIC_APT_2DAD550E.public | sudo gpg --import --batch --no-default-keyring --keyring /usr/share/keyrings/newrelic-apt.gpg
+          curl -fsSL https://download.newrelic.com/NEWRELIC_APT_2DAD550E.public | gpg --dearmor | sudo tee /usr/share/keyrings/newrelic-apt.gpg >/dev/null
           sudo apt-get update
           sudo apt-get install newrelic-dotnet-agent
-          installed_version=$(dpkg -s newrelic-dotnet-agent | grep -i version)
+          installed_version=$(dpkg -s newrelic-dotnet-agent | grep '^Version:' |cut -d' ' -f2)
           if [ "$AGENT_VERSION" = "$installed_version" ]; then
               echo "Versions match."
               exit 0
@@ -71,14 +71,14 @@ jobs:
           fi
         shell: bash
         env:
-          AGENT_VERSION: "Version: ${{ inputs.agent_version }}"
+          AGENT_VERSION: "${{ inputs.agent_version }}"
 
   validate-apt-repo-ubuntu-2204:
-    name: Validate APT-based repo
+    name: Validate APT repo on older Ubuntu with old key
     runs-on: ubuntu-22.04
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           disable-sudo: false
           egress-policy: audit
@@ -91,10 +91,11 @@ jobs:
       - name: Validate
         run: |
           echo 'deb https://apt.newrelic.com/debian/ newrelic non-free' | sudo tee /etc/apt/sources.list.d/newrelic.list
+          # Test using the old key on an older OS to make sure it still works
           wget -O- https://download.newrelic.com/548C16BF.gpg | sudo apt-key add -
           sudo apt-get update
           sudo apt-get install newrelic-dotnet-agent
-          installed_version=$(dpkg -s newrelic-dotnet-agent | grep -i version)
+          installed_version=$(dpkg -s newrelic-dotnet-agent | grep '^Version:' |cut -d' ' -f2)
           if [ "$AGENT_VERSION" = "$installed_version" ]; then
               echo "Versions match."
               exit 0
@@ -104,20 +105,20 @@ jobs:
           fi
         shell: bash
         env:
-          AGENT_VERSION: "Version: ${{ inputs.agent_version }}"
+          AGENT_VERSION: "${{ inputs.agent_version }}"
 
   validate-yum-repo:
     name: Validate YUM-based repo
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
 
@@ -145,20 +146,102 @@ jobs:
           fi
         shell: bash
         env:
-          AGENT_VERSION: "newrelic-dotnet-agent-${{ inputs.agent_version }}-1.x86_64"
+          AGENT_VERSION: "${{ inputs.agent_version }}"
+
+  validate-apt-repo-debian-latest:
+    name: Validate APT repo on latest Debian
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Wait for APT to update
+        if: ${{ inputs.wait_for_apt_and_yum }} # only wait if requested
+        run: |
+          echo "Sleeping 5 minutes to wait for apt to update itself"
+          sleep 300
+        shell: bash
+
+      - name: Validate
+        run: |
+          cd deploy/validation/validate-debian-latest
+
+          # This will setup the New Relic apt repo and install the agent.
+          docker build -t localtesting/validate-debian-latest:latest .
+          docker run --name validate-debian-latest localtesting/validate-debian-latest:latest
+          installed_version=$(docker logs --tail 1 validate-debian-latest)
+          if [ "$AGENT_VERSION" = "$installed_version" ]; then
+              echo "Versions match."
+              exit 0
+          else
+              echo "ERROR: Version mismatch: Expected $AGENT_VERSION was $installed_version"
+              exit 1
+          fi
+        shell: bash
+        env:
+          AGENT_VERSION: "${{ inputs.agent_version }}"
+
+  validate-apt-repo-debian-oldest:
+    name: Validate APT repo on older Debian
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Wait for APT to update
+        if: ${{ inputs.wait_for_apt_and_yum }} # only wait if requested
+        run: |
+          echo "Sleeping 5 minutes to wait for apt to update itself"
+          sleep 300
+        shell: bash
+
+      - name: Validate
+        run: |
+          cd deploy/validation/validate-debian-oldest
+
+          # This will setup the New Relic apt repo and install the agent.
+          docker build -t localtesting/validate-debian-oldest:latest .
+          docker run --name validate-debian-oldest localtesting/validate-debian-oldest:latest
+          installed_version=$(docker logs --tail 1 validate-debian-oldest)
+          if [ "$AGENT_VERSION" = "$installed_version" ]; then
+              echo "Versions match."
+              exit 0
+          else
+              echo "ERROR: Version mismatch: Expected $AGENT_VERSION was $installed_version"
+              exit 1
+          fi
+        shell: bash
+        env:
+          AGENT_VERSION: "${{ inputs.agent_version }}"
 
   validate-download-site-s3:
     name: Validate S3-hosted Download Site
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
 
@@ -176,13 +259,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
 
@@ -204,13 +287,13 @@ jobs:
       
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
 
@@ -224,11 +307,12 @@ jobs:
           PUBLISH_PATH: ${{ github.workspace }}/publish
 
   release-tags:
+    if: ${{ inputs.test_mode == false }} # only run if not in test mode
     name: Create release tags
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           disable-sudo: true
           egress-policy: audit

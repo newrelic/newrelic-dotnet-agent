@@ -123,7 +123,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         void ReportSpanEventsSent(int count);
 
-        void CollectDistributedTraceSuccessMetrics();
+        void CollectDistributedTraceMetrics();
 
         void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint);
 
@@ -154,5 +154,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportLoggingEventsEmpty(int count = 1);
         void SetAgentControlStatus((bool IsHealthy, string Code, string Status) healthStatus, params string[] statusParams);
         void PublishAgentControlHealthCheck();
+        void ReportSupportabilityDistributedTraceHeadersAcceptedLate();
+        bool ValidateAgentConfiguration();
     }
 }

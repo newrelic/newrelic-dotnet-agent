@@ -21,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         {
             "amazonembed",
             "amazonexpress",
-            "anthropic"
+            //"anthropic" // Model is EOLed as of 9/11/25
         };
 
         private Dictionary<string, LlmMessageTypes> _expectedAttributes = new Dictionary<string, LlmMessageTypes>
@@ -111,7 +111,8 @@ namespace NewRelic.Agent.IntegrationTests.LLM
                 new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/Bedrock/InvokeModelAsync", CallCountAllHarvests = _bedrockModelsToTest.Count - 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/Llm/embedding/Bedrock/InvokeModelAsync", CallCountAllHarvests = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true},
-                new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/LLM/.*/.*", IsRegexName = true} // Supportability/DotNet/LLM/{vendor}/{model}
+                new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/LLM/.*/.*", IsRegexName = true}, // Supportability/DotNet/LLM/{vendor}/{model}
+                new() { metricName = @"Supportability/DotNet/LLM/Bedrock-Invoke"},
             };
 
             var customEvents = _fixture.AgentLog.GetCustomEvents().ToList();

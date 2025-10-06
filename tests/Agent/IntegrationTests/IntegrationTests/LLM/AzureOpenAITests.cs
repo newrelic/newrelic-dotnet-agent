@@ -116,7 +116,8 @@ namespace NewRelic.Agent.IntegrationTests.LLM
                 new() { metricName = @"Custom/Llm/completion/azureopenai/CompleteChatAsync", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.AzureOpenAIExerciser/CompleteChatAsync"},
                 new() { metricName = @"Custom/Llm/completion/azureopenai/CompleteChat" },
                 new() { metricName = @"Custom/Llm/completion/azureopenai/CompleteChat", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.AzureOpenAIExerciser/CompleteChat"},
-                new() { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true}
+                new() { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true},
+                new() { metricName = @"Supportability/DotNet/LLM/azureopenai-Chat"},
             };
 
             var customEventsSuccess = _fixture.AgentLog.GetCustomEvents().Where(ce => !ce.Attributes.Keys.Contains("error")).ToList();

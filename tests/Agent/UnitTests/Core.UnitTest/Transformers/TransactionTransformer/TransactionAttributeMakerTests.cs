@@ -33,6 +33,7 @@ using System.Linq;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -65,7 +66,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         private void UpdateConfiguration()
         {
-            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
         }
@@ -121,7 +122,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
             var priority = 0.5f;
-            var internalTransaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var internalTransaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             var immutableTransaction = internalTransaction.ConvertToImmutableTransaction();
             var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
             var apdexT = null as TimeSpan?;
@@ -161,7 +162,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
             var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
             var apdexT = null as TimeSpan?;
@@ -204,7 +205,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
             var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
             var apdexT = null as TimeSpan?;
@@ -250,7 +251,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
             var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
             var apdexT = null as TimeSpan?;
@@ -293,7 +294,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
             var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
             var apdexT = null as TimeSpan?;
@@ -341,7 +342,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var apdexT = TimeSpan.FromSeconds(2);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
             transaction.SetRequestParameters(new[]
@@ -464,7 +465,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var apdexT = TimeSpan.FromSeconds(2);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
 
             var headerCollection = new Dictionary<string, string>()
             {
@@ -517,7 +518,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var apdexT = TimeSpan.FromSeconds(2);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
@@ -588,7 +589,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var apdexT = TimeSpan.FromSeconds(2);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.TransactionMetadata.SetOriginalUri("SameUri");
             transaction.TransactionMetadata.SetUri("SameUri");
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
@@ -618,7 +619,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var apdexT = TimeSpan.FromSeconds(2);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
@@ -698,7 +699,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var apdexT = TimeSpan.FromSeconds(2);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
@@ -778,7 +779,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var apdexT = TimeSpan.FromSeconds(2);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
@@ -851,7 +852,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             // ARRANGE
             var priority = 0.5f;
-            var transactionBuilder = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transactionBuilder = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             var transaction = transactionBuilder.ConvertToImmutableTransaction();
 
             var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -882,7 +883,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             UpdateConfiguration();
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.SetHttpResponseStatusCode(400, null);
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
@@ -918,7 +919,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             UpdateConfiguration();
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
             var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
@@ -946,7 +947,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var apdexT = TimeSpan.FromSeconds(2);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData(isErrorExpected: isErrorExpected));
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
@@ -1082,7 +1083,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var expectedStartTime = DateTime.Now;
             var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
 
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
             var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
@@ -1400,7 +1401,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.AddLambdaAttribute("lambdaAttributeKey", "lambdaAttributeValue");
@@ -1478,7 +1479,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             UpdateConfiguration();
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData());
             transaction.SetHttpResponseStatusCode(400, null);
@@ -1506,7 +1507,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.TransactionMetadata.SetOriginalUri("SameUri");
             transaction.TransactionMetadata.SetUri("SameUri");
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
@@ -1544,7 +1545,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             UpdateConfiguration();
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData());
@@ -1613,7 +1614,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             transaction.SetRequestParameters(new[] { new KeyValuePair<string, string>("requestParameterKey", "requestParameterValue") });
             transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData());
@@ -1674,7 +1675,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
             var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
-            _configuration = new TestableDefaultConfiguration(environment, localConfig, serverConfig, runTimeConfig, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic, agentHealthReporter);
+            _configuration = new TestableDefaultConfiguration(environment, localConfig, serverConfig, runTimeConfig, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic);
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 
             Mock.Arrange(() => dnsStatic.GetHostName()).Returns("coconut");
@@ -1691,7 +1692,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
             var priority = 0.5f;
-            var internalTransaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var internalTransaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
             var immutableTransaction = internalTransaction.ConvertToImmutableTransaction();
             var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
             var apdexT = null as TimeSpan?;

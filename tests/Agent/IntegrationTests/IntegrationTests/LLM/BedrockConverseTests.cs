@@ -102,7 +102,8 @@ namespace NewRelic.Agent.IntegrationTests.LLM
             {
                 new() { metricName = @"Custom/Llm/completion/Bedrock/ConverseAsync", CallCountAllHarvests = 2 },
                 new() { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true},
-                new() { metricName = @"Supportability/DotNet/LLM/.*/.*", IsRegexName = true} // Supportability/DotNet/LLM/{vendor}/{model}
+                new() { metricName = @"Supportability/DotNet/LLM/.*/.*", IsRegexName = true}, // Supportability/DotNet/LLM/{vendor}/{model}
+                new() { metricName = @"Supportability/DotNet/LLM/Bedrock-Converse"},
             };
 
             var customEventsSuccess = _fixture.AgentLog.GetCustomEvents().Where(ce => !ce.Attributes.Keys.Contains("error")).ToList();

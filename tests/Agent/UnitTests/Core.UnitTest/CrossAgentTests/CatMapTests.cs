@@ -10,7 +10,6 @@ using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metrics;
@@ -32,6 +31,7 @@ using System.Linq;
 using System.Reflection;
 using Telerik.JustMock;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 
@@ -91,7 +91,10 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             var customEventTransformer = Mock.Create<ICustomEventTransformer>();
             var databaseService = Mock.Create<IDatabaseService>();
 
-            _agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()), catSupportabilityCounters, logEventAggregator, logContextDataFilter, simpleSchedulingService, customEventTransformer, new NewRelicActivitySourceProxy(), databaseService);
+            var samplerFactory = new SamplerFactory();
+            var samplerService = new SamplerService(samplerFactory);
+
+            _agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(), catSupportabilityCounters, logEventAggregator, logContextDataFilter, simpleSchedulingService, customEventTransformer, new NewRelicActivitySourceProxy(), databaseService);
 
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
             _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
@@ -208,7 +211,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             var transactionName = GetTransactionNameFromString(testCase.TransactionName);
 
             var priority = 0.5f;
-            var transaction = new Transaction(configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
+            var transaction = new Transaction(configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs, Mock.Create<ISamplerService>());
 
             SetGuid(transaction, testCase.TransactionGuid);
 
