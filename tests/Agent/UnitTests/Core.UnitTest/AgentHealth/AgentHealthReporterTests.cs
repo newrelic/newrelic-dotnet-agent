@@ -42,6 +42,8 @@ public class AgentHealthReporterTests
         _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
         _publishedMetrics = new List<MetricWireModel>();
         _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
+
+        _agentHealthReporter.OnAgentConnected();
     }
 
     [TearDown]
