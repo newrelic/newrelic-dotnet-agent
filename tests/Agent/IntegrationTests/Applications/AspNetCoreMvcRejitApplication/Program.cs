@@ -4,8 +4,8 @@
 
 using System.Threading;
 using ApplicationLifecycle;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 
 namespace AspNetCoreMvcRejitApplication
 {
@@ -18,7 +18,9 @@ namespace AspNetCoreMvcRejitApplication
             _port = AppLifecycleManager.GetPortFromArgs(args);
 
             var ct = new CancellationTokenSource();
-            var task = BuildWebHost(args).RunAsync(ct.Token);
+            var host = BuildHost(args);
+
+            var task = host.RunAsync(ct.Token);
 
             AppLifecycleManager.CreatePidFile();
 
@@ -29,11 +31,14 @@ namespace AspNetCoreMvcRejitApplication
             task.GetAwaiter().GetResult();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .UseUrls($@"http://127.0.0.1:{_port}/")
+        public static IHost BuildHost(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder
+                        .UseStartup<Startup>()
+                        .UseUrls($@"http://127.0.0.1:{_port}/");
+                })
                 .Build();
-
     }
 }

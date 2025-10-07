@@ -6,8 +6,8 @@ using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using ApplicationLifecycle;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 
 namespace AspNetCoreBasicWebApiApplication
 {
@@ -24,7 +24,8 @@ namespace AspNetCoreBasicWebApiApplication
             Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
             var ct = new CancellationTokenSource();
-            var task = BuildWebHost(args).RunAsync(ct.Token);
+            var host = BuildHost(args);
+            var task = host.RunAsync(ct.Token);
 
             AppLifecycleManager.CreatePidFile();
 
@@ -35,10 +36,14 @@ namespace AspNetCoreBasicWebApiApplication
             task.GetAwaiter().GetResult();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .UseUrls($@"http://127.0.0.1:{_port}/")
+        public static IHost BuildHost(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder
+                        .UseStartup<Startup>()
+                        .UseUrls($@"http://127.0.0.1:{_port}/");
+                })
                 .Build();
 
         /// <summary>
@@ -57,7 +62,5 @@ namespace AspNetCoreBasicWebApiApplication
             };
 #endif
         }
-
-
     }
 }

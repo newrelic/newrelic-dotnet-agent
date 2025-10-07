@@ -5,8 +5,8 @@
 using ApplicationLifecycle;
 using System.Net;
 using System.Threading;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 
 namespace AspNetCoreMvcBasicRequestsApplication
 {
@@ -21,7 +21,9 @@ namespace AspNetCoreMvcBasicRequestsApplication
             OverrideSslSettingsForMockNewRelic();
 
             var ct = new CancellationTokenSource();
-            var task = BuildWebHost(args).RunAsync(ct.Token);
+            var host = BuildHost(args);
+
+            var task = host.RunAsync(ct.Token);
 
             AppLifecycleManager.CreatePidFile();
 
@@ -32,10 +34,14 @@ namespace AspNetCoreMvcBasicRequestsApplication
             task.GetAwaiter().GetResult();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .UseUrls($@"http://127.0.0.1:{_port}/")
+        public static IHost BuildHost(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder
+                        .UseStartup<Startup>()
+                        .UseUrls($@"http://127.0.0.1:{_port}/");
+                })
                 .Build();
 
         /// <summary>
