@@ -723,6 +723,12 @@ jobs:
     runs-on: windows-2022
 
     steps:
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+  
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
