@@ -11,13 +11,20 @@ https://docs.docker.com/engine/reference/commandline/buildx_build/
 
 ## Azure container registry login via Docker
 From a Powershell command prompt in the same folder as this README file:
+
 0. Set the container registry name and login server in a variable
-`$acrName="{container registry name}"`
-`$acrLoginServer="{container registry login server}"`
+```
+$acrName="{container registry name}"
+$acrLoginServer="{container registry login server}"
+```
 1. Log in to the container repository
-`docker login -u $acrName -p {password} $acrLoginServer`
+```
+docker login -u $acrName -p {password} $acrLoginServer
+```
 2. Configure buildx in Docker Desktop
-`docker buildx create --use`
+```
+docker buildx create --use
+```
 3. Build the base images. The images will be pushed to the container registry with tags per .NET version
 
 ```
