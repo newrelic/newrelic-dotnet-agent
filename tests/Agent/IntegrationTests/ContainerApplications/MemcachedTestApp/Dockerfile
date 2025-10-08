@@ -1,12 +1,14 @@
 ARG DISTRO_TAG
 ARG BUILD_ARCH
+
 # TODO Use stable .NET 10.0 image when available
 FROM --platform=amd64 mcr.microsoft.com/dotnet/aspnet:10.0-preview-trixie-slim AS base
 WORKDIR /app
 EXPOSE 80
+# TODO: use packages.microsoft.com/config/debian/13 when available
 RUN apt-get update \
     && apt-get install -y wget \
-    && wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
+    && wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
     && dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
@@ -15,9 +17,10 @@ RUN apt-get update \
 # build arch may be different from target arch (i.e., when running locally with QEMU)
 # TODO Use stable .NET 10.0 image when available
 FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:10.0-preview-trixie-slim AS build
+# TODO: use packages.microsoft.com/config/debian/13 when available
 RUN apt-get update \
     && apt-get install -y wget \
-    && wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
+    && wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
     && dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
