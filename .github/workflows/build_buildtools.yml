@@ -20,10 +20,10 @@ jobs:
         steps:
         - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-        - name: Add msbuild to PATH (required for MsiInstaller build)
-          uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
-          with:
-            vs-prerelease: true
+        # - name: Add msbuild to PATH (required for MsiInstaller build)
+        #   uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
+        #   with:
+        #     vs-prerelease: true
     
         - name: Setup .NET 10 Preview
           uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
