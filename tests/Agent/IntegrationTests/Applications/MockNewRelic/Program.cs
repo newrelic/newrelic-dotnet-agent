@@ -4,8 +4,8 @@
 using System.Net;
 using System.Threading;
 using ApplicationLifecycle;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 
 namespace MockNewRelic
 {
@@ -18,7 +18,9 @@ namespace MockNewRelic
             _port = AppLifecycleManager.GetPortFromArgs(args);
 
             var ct = new CancellationTokenSource();
-            var task = BuildWebHost(args).RunAsync(ct.Token);
+            var host = BuildHost(args);
+
+            var runTask = host.RunAsync(ct.Token);
 
             AppLifecycleManager.CreatePidFile();
 
@@ -26,20 +28,23 @@ namespace MockNewRelic
 
             ct.Cancel();
 
-            task.GetAwaiter().GetResult();
+            runTask.GetAwaiter().GetResult();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .ConfigureKestrel(options =>
+        public static IHost BuildHost(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    options.Listen(IPAddress.Loopback, int.Parse(_port), listenOptions =>
-                    {
-                        listenOptions.UseHttps();
-                    });
+                    webBuilder
+                        .UseStartup<Startup>()
+                        .ConfigureKestrel(options =>
+                        {
+                            options.Listen(IPAddress.Loopback, int.Parse(_port), listenOptions =>
+                            {
+                                listenOptions.UseHttps();
+                            });
+                        });
                 })
                 .Build();
-
     }
 }

@@ -279,7 +279,7 @@ As previously mentioned, the agent solution needs to be built on Windows.  If yo
 
 ```
 cd {DOTNET_AGENT_REPO_PATH}/tests/Agent/IntegrationTests/IntegrationTests
-sudo dotnet test -f net9.0 -c Release --filter RuntimeFramework=NetCore
+sudo dotnet test -f net10.0 -c Release --filter RuntimeFramework=NetCore
 ```
 
 For more details on how to use dotnet test, see https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-test.

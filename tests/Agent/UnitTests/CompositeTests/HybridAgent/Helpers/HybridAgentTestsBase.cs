@@ -55,6 +55,11 @@ public abstract class HybridAgentTestsBase
 
         _activityBridge = new ActivityBridge(_agent, _compositeTestAgent.Container.Resolve<IErrorService>());
         _activityBridge.Start();
+
+#if NET10_0
+        // TODO: Temporary workaround for a bug that will be fixed in .NET 10 RC2. Remove this line and retest when RC2 is available.
+        DistributedContextPropagator.Current = DistributedContextPropagator.CreatePreW3CPropagator();
+#endif
     }
 
     [TearDown]

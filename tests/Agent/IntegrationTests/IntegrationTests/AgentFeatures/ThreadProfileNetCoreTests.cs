@@ -84,7 +84,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                 () => Assert.Contains(@"""OTHER"":[[[""Native"",""Function Call"",0]", _threadProfileString),
                 () => Assert.Contains(expectedMainMethodSignature, _threadProfileString),
                 () => Assert.Contains(@"System.Threading", _threadProfileString),
-                () => Assert.Contains(@"Microsoft.AspNetCore.Server.Kestrel", _threadProfileString)
+                () => Assert.Contains(@"WorkerThreadStart", _threadProfileString)
             );
         }
 

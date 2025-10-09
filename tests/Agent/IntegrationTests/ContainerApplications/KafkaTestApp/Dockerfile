@@ -1,25 +1,34 @@
 ARG DISTRO_TAG
 ARG BUILD_ARCH
-FROM --platform=amd64 mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim AS base
+# TODO Use stable .NET 10.0 image when available
+FROM --platform=amd64 mcr.microsoft.com/dotnet/aspnet:10.0-preview-trixie-slim AS base
 WORKDIR /app
 EXPOSE 80
+
+# TODO: use packages.microsoft.com/config/debian/13 when available
+# Install .NET 8 runtime side-by-side
 RUN apt-get update \
     && apt-get install -y wget \
-    && wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
+    && wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \ 
     && dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
     && apt-get install -y aspnetcore-runtime-8.0
 
 # build arch may be different from target arch (i.e., when running locally with QEMU)
-FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim AS build
+# TODO Use stable .NET 10.0 image when available
+FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:10.0-preview-trixie-slim AS build
+
+# TODO: use packages.microsoft.com/config/debian/13 when available
+# Install .NET 8 SDK side-by-side
 RUN apt-get update \
     && apt-get install -y wget \
-    && wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
+    && wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \ 
     && dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
     && apt-get install -y dotnet-sdk-8.0
+
 WORKDIR /src
 COPY ["KafkaTestApp/KafkaTestApp.csproj", "KafkaTestApp/"]
 ARG APP_DOTNET_VERSION

@@ -1,11 +1,11 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
 using System.Threading;
+using System.Threading.Tasks;
 using ApplicationLifecycle;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 
 namespace AspNetCoreMvcAsyncApplication
 {
@@ -19,9 +19,10 @@ namespace AspNetCoreMvcAsyncApplication
 
             _port = AppLifecycleManager.GetPortFromArgs(args);
 
-
             var ct = new CancellationTokenSource();
-            var task = BuildWebHost(args).RunAsync(ct.Token);
+            var host = BuildHost(args);
+
+            var task = host.RunAsync(ct.Token);
 
             AppLifecycleManager.CreatePidFile();
 
@@ -32,11 +33,13 @@ namespace AspNetCoreMvcAsyncApplication
             task.GetAwaiter().GetResult();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .UseUrls($@"http://127.0.0.1:{_port}/")
+        public static IHost BuildHost(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>()
+                              .UseUrls($@"http://127.0.0.1:{_port}/");
+                })
                 .Build();
-
     }
 }

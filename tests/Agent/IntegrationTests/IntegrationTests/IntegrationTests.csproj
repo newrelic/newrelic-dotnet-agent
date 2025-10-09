@@ -2,8 +2,8 @@
   <PropertyGroup>
     <RootNamespace>NewRelic.Agent.IntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.IntegrationTests</AssemblyName>
-    <TargetFramework>net9.0</TargetFramework>
-    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+	<OutputType>exe</OutputType>
   </PropertyGroup>
   <PropertyGroup>
     <PublishIEDriver>true</PublishIEDriver>

@@ -467,10 +467,10 @@ public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerT
     }
 }
 
-// the net9 target builds the function app with the aspnetcore pipeline package
-public class AzureFunctionHttpTriggerTestsCoreLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreLatest>
+// the net10 target builds the function app with the aspnetcore pipeline package
+public class AzureFunctionHttpTriggerTestsCore100 : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreLatest>
 {
-    public AzureFunctionHttpTriggerTestsCoreLatest(AzureFunctionApplicationFixtureHttpTriggerCoreLatest fixture, ITestOutputHelper output)
+    public AzureFunctionHttpTriggerTestsCore100(AzureFunctionApplicationFixtureHttpTriggerCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output, AzureFunctionHttpTriggerTestMode.AspNetCorePipeline)
     {
     }

@@ -29,7 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             : base(new RemoteService(
                 ApplicationDirectoryName,
                 ExecutableName,
-                "net9.0",
+                "net10.0",
                 ApplicationType.Bounded,
                 true,
                 true,
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var service = new RemoteService(
                 ApplicationDirectoryName,
                 ExecutableName,
-                "net9.0",
+                "net10.0",
                 ApplicationType.Bounded,
                 true,
                 true,
