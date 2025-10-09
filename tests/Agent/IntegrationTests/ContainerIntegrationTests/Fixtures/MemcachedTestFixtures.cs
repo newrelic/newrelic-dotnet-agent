@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using Xunit;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
