@@ -55,15 +55,6 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
                 agent.Logger.Debug($"Unable to extract HttpTrigger attributes from request argument(s): {argTypeNames}");
             }
         }
-        else if (trigger == "pubsub")
-        {
-            foreach (object arg in args)
-            {
-                var argType = arg?.GetType().FullName;
-                if (TryExtractServiceBusDTHeaders(arg, argType, transaction))
-                    break;
-            }
-        }
 
         var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, functionName);
 
@@ -92,13 +83,6 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
 
                 var resultType = result.GetType();
                 agent.Logger.Debug($"Azure Function response type: {resultType.FullName}");
-
-                // insert DT headers if the response object is a ServiceBusMessage
-                if (resultType.FullName == "Azure.Messaging.ServiceBus.ServiceBusMessage")
-                {
-                    TryInsertServiceBusDTHeaders(transaction, result);
-                    return;
-                }
 
                 // if the trigger is HTTP, try to set the StatusCode
                 if (trigger == "http" && handledHttpArg)
@@ -171,59 +155,6 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
         }
 
         return false;
-    }
-
-    /// <summary>
-    /// Extract ServiceBus DT headers from the ApplicationProperties collection, if available
-    /// </summary>
-    private bool TryExtractServiceBusDTHeaders(dynamic arg, string argTypeName, ITransaction transaction)
-    {
-        if (argTypeName == "Azure.Messaging.ServiceBus.ServiceBusReceivedMessage")
-        {
-            if (arg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
-            {
-                transaction.AcceptDistributedTraceHeaders(applicationProperties, GetServiceBusDTHeaders, TransportType.Queue);
-                return true;
-            }
-        }
-
-        return false;
-
-        IEnumerable<string> GetServiceBusDTHeaders(ReadOnlyDictionary<string, object> applicationProperties, string key)
-        {
-            var headerValues = new List<string>();
-            foreach (var item in applicationProperties)
-            {
-                if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-                {
-                    headerValues.Add(item.Value as string);
-                }
-            }
-
-            return headerValues;
-        }
-    }
-
-    /// <summary>
-    /// Insert ServiceBus DT headers into the ApplicationProperties collection
-    /// </summary>
-    private bool TryInsertServiceBusDTHeaders(ITransaction transaction, object result)
-    {
-        // inject distributed tracing headers into the response message
-        dynamic serviceBusMessage = result;
-        if (serviceBusMessage.ApplicationProperties is IDictionary<string, object> applicationProperties)
-        {
-            transaction.InsertDistributedTraceHeaders(applicationProperties, SetServiceBusDTHeaders);
-            return true;
-        }
-
-        return false;
-
-        void SetServiceBusDTHeaders(IDictionary<string, object> applicationProperties, string key, string value)
-        {
-            applicationProperties.Add(key, value);
-        }
-
     }
 
     private IEnumerable<string> GetHeaderValueFromIEnumerable(IEnumerable<KeyValuePair<string, IEnumerable<string>>> headers, string key)
