@@ -35,7 +35,7 @@ public class DebianX64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "trixie-slim"; // Debian 12
+    private const string DistroTag = "trixie-slim"; // Debian 13
 
     public DebianX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 }
@@ -61,7 +61,7 @@ public class DebianArm64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
-    private const string DistroTag = "trixie-slim"; // Debian 12
+    private const string DistroTag = "trixie-slim"; // Debian 13
 
     public DebianArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 }

@@ -128,7 +128,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
     }
 
     [Trait("Architecture", "amd64")]
-    [Trait("Distro", "Debian")]
+   [Trait("Distro", "Debian")]
     public class MemcachedDotNet8Test : LinuxMemcachedTest<MemcachedDotNet8TestFixture>
     {
         public MemcachedDotNet8Test(MemcachedDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -137,7 +137,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests
     }
 
     [Trait("Architecture", "amd64")]
-    [Trait("Distro", "Debian")]
+   [Trait("Distro", "Debian")]
     public class MemcachedDotNet10Test : LinuxMemcachedTest<MemcachedDotNet10TestFixture>
     {
         public MemcachedDotNet10Test(MemcachedDotNet10TestFixture fixture, ITestOutputHelper output) : base(fixture, output)

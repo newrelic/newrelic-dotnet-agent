@@ -36,6 +36,9 @@ public abstract class MemcachedTestFixtureBase : RemoteApplicationFixture
     }
 }
 
+
+[Trait("Architecture", "amd64")]
+[Trait("Distro", "Debian")]
 public class MemcachedDotNet8TestFixture : MemcachedTestFixtureBase
 {
     private const string Dockerfile = "MemcachedTestApp/Dockerfile";
@@ -45,6 +48,9 @@ public class MemcachedDotNet8TestFixture : MemcachedTestFixtureBase
 
     public MemcachedDotNet8TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
+
+[Trait("Architecture", "amd64")]
+[Trait("Distro", "Debian")]
 public class MemcachedDotNet10TestFixture : MemcachedTestFixtureBase
 {
     private const string Dockerfile = "MemcachedTestApp/Dockerfile";

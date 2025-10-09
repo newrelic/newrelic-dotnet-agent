@@ -118,7 +118,6 @@ jobs:
           dotnet-version: '10.0.x'
           dotnet-quality: 'preview'
     
-    
       - name: Build & Run Linux Container Integration Tests
         env:
           BUILD_ARCH: ${{ matrix.arch }}

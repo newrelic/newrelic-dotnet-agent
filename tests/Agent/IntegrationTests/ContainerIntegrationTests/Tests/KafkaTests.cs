@@ -135,7 +135,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
 }
 
 [Trait("Architecture", "amd64")]
- [Trait("Distro", "Debian")]
+[Trait("Distro", "Debian")]
 public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
 {
     public KafkaDotNet8Test(KafkaDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)

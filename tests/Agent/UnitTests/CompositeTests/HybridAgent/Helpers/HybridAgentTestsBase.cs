@@ -55,6 +55,9 @@ public abstract class HybridAgentTestsBase
 
         _activityBridge = new ActivityBridge(_agent, _compositeTestAgent.Container.Resolve<IErrorService>());
         _activityBridge.Start();
+#if NET10_0_OR_GREATER
+        DistributedContextPropagator.Current = DistributedContextPropagator.CreatePreW3CPropagator();
+#endif
     }
 
     [TearDown]
