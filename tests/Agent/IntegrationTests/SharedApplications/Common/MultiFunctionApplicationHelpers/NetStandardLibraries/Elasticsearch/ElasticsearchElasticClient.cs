@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Non-async client methods are deprecated in the latest Elastic.Clients.Elasticsearch
-#if (NETFRAMEWORK && !NET48_OR_GREATER) || (NET && !NET10_0_OR_GREATER)
+#if (NETFRAMEWORK && !NET48_OR_GREATER) || (NET && !NET10_0)
 #define SYNC_METHODS_OK
 #endif
 
@@ -213,7 +213,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override async Task<long> MultiSearchAsync()
         {
-#if NET10_0_OR_GREATER || NET481_OR_GREATER
+#if NET10_0 || NET481_OR_GREATER
             var req = new MultiSearchRequest
             {
                 Searches =

@@ -59,9 +59,7 @@ namespace BasicMvcApplication.Controllers
         [HttpGet]
         public async Task<ActionResult> SimulateLostTransaction()
         {
-#if !NET10_0_OR_GREATER
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-#endif
 
             using (var client = new HttpClient())
             {
@@ -101,9 +99,7 @@ namespace BasicMvcApplication.Controllers
         [HttpGet]
         public async Task<string> HttpClientTaskCancelled()
         {
-#if !NET10_0_OR_GREATER
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-#endif
 
             try
             {

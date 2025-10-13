@@ -5,12 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Net;
-using System.Net.Http;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.IntegrationTests.Models;
-using Newtonsoft.Json;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
@@ -49,7 +46,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                     MockNewRelicApplication.CopyToRemote();
                     MockNewRelicApplication.Start(string.Empty, environmentVariables, doProfile: false);
 
-#if !NET10_0_OR_GREATER
+#if !NET10_0
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                     ServicePointManager.ServerCertificateValidationCallback = delegate
                     {
