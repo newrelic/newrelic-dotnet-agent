@@ -58,18 +58,18 @@ public class KafkaDotNet8TestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "bookworm-slim";
+    private const string DistroTag = "trixie-slim";
     private const string DotnetVersion = "8.0";
 
     public KafkaDotNet8TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
 
-public class KafkaDotNet9TestFixture : KafkaTestFixtureBase
+public class KafkaDotNet10TestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "bookworm-slim";
-    private const string DotnetVersion = "9.0";
+    private const string DistroTag = "trixie-slim";
+    private const string DotnetVersion = "10.0";
 
-    public KafkaDotNet9TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public KafkaDotNet10TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }

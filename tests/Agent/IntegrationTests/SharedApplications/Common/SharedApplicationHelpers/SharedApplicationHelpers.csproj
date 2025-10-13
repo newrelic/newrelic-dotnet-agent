@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net462;net9.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net462;net10.0</TargetFrameworks>
     <Description>The code in this project is shared with every test application, and should not be used in a test runner.</Description>
   </PropertyGroup>
 

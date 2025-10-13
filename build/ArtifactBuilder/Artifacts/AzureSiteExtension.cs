@@ -23,9 +23,9 @@ namespace ArtifactBuilder.Artifacts
             _version = ReadVersionFromFile();
             var package = new NugetPackage(StagingDirectory, OutputDirectory);
             package.CopyAll($@"{PackageDirectory}");
-            package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\{NuGetHelperLibraryName}");
-            package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\{NuGetLibraryName}");
-            package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\{XmlLibraryName}");
+            package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\Release\net462\{NuGetHelperLibraryName}");
+            package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\Release\net462\{NuGetLibraryName}");
+            package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\Release\net462\{XmlLibraryName}");
             package.SetVersion(_version);
             _nuGetPackageName = package.Pack();
         }

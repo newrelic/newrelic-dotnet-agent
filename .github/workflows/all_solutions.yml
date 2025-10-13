@@ -79,6 +79,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+  
       - name: Build FullAgent.sln
         run: |
           Write-Host "dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
@@ -164,6 +170,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+  
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
         with:
@@ -206,6 +218,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+  
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
         with:
@@ -299,7 +317,7 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net9.0
+      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net10.0
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
@@ -314,6 +332,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+  
       - name: Disable TLS 1.3
         run: |
           $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client"
@@ -379,6 +403,12 @@ jobs:
           choco install azure-functions-core-tools -y --params "'/x64'"
         shell: powershell
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+  
       - name: Run Integration Tests
         run: |
           if ($Env:enhanced_logging -eq $True) {
@@ -447,7 +477,7 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net9.0
+      unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net10.0
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
@@ -526,6 +556,12 @@ jobs:
 #          Start-CosmosDbEmulator
 #        shell: pwsh
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+  
       - name: Run Unbounded Integration Tests
         run: |
           if ($Env:enhanced_logging -eq $True) {
@@ -687,6 +723,12 @@ jobs:
     runs-on: windows-2022
 
     steps:
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+  
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
