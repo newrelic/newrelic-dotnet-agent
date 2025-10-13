@@ -44,13 +44,11 @@ namespace BasicMvcApplication
         /// </summary>
         private static void OverrideSslSettingsForMockNewRelic()
         {
-#if !NET10_0_OR_GREATER
             ServicePointManager.ServerCertificateValidationCallback = delegate
             {
                 //force trust on all certificates for simplicity
                 return true;
             };
-#endif
         }
     }
 }

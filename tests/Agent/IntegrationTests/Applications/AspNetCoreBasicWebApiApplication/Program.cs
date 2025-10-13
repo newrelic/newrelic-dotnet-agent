@@ -19,8 +19,6 @@ namespace AspNetCoreBasicWebApiApplication
         {
             _port = AppLifecycleManager.GetPortFromArgs(args);
 
-            OverrideSslSettingsForMockNewRelic();
-
             Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
             var ct = new CancellationTokenSource();
@@ -45,22 +43,5 @@ namespace AspNetCoreBasicWebApiApplication
                         .UseUrls($@"http://127.0.0.1:{_port}/");
                 })
                 .Build();
-
-        /// <summary>
-        /// When the MockNewRelic app is used in place of the normal New Relic / Collector endpoints,
-        /// the mock version uses a self-signed cert that will not be "trusted."
-        ///
-        /// This forces all validation checks to pass.
-        /// </summary>
-        private static void OverrideSslSettingsForMockNewRelic()
-        {
-#if !NET10_0_OR_GREATER
-            ServicePointManager.ServerCertificateValidationCallback = delegate
-            {
-                //force trust on all certificates for simplicity
-                return true;
-            };
-#endif
-        }
     }
 }
