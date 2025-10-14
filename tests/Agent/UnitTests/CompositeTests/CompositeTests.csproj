@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net481;net10.0</TargetFrameworks>
     <RootNamespace>CompositeTests</RootNamespace>
@@ -24,9 +24,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.7"/>
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net481'">
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.7"/>
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
   </ItemGroup>  
