@@ -241,6 +241,11 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ActivityBridge, ActivityBridge>();
             container.Register<NewRelicActivitySourceProxy, NewRelicActivitySourceProxy>();
 
+            if (!serverlessModeEnabled)
+            {
+                container.Register<MeterListenerBridge, MeterListenerBridge>();
+            }
+
             container.Build();
         }
 
