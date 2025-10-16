@@ -129,13 +129,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                     .AddTelemetrySdk()
                     .AddAttributes([new KeyValuePair<string, object>("entity.guid", _configuration.EntityGuid)]))
                 .AddMeter("*")
-                .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
-                {
-                    exporterOptions.Targets = ConsoleExporterOutputTargets.Console;
-
-                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = DefaultOtlpExportIntervalSeconds * 1000;
-                    metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
-                })
                 .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
                 {
                     exporterOptions.Endpoint = uriBuilder.Uri;
