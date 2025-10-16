@@ -119,9 +119,9 @@ This repository contains the New Relic .NET Agent, which monitors .NET applicati
 ### Git and PR Conventions
 
 - **Always use conventional commit prefixes** for commits and pull request titles
-  - We typically only use `fix`, `feature`, `chore`, `test`, and `ci`
+  - We typically only use `fix`, `feat`, `chore`, `test`, and `ci`
   - Because we use Release Please, commit prefixes are important
-  - Only public-facing changes important to users should be prefixed with `feature` or `fix`
+  - Only public-facing changes important to users should be prefixed with `feat` or `fix`
   - Use `chore` for non-public-facing changes
 - **Branch naming conventions:**
   - Bug fixes: `fix/**`
