@@ -36,6 +36,7 @@ This repository contains the New Relic .NET Agent, which monitors .NET applicati
   // Copyright 2020 New Relic, Inc. All rights reserved.
   // SPDX-License-Identifier: Apache-2.0
   ```
+  Note: The year 2020 is specified in `.editorconfig` and should be used as-is
 - Always include required `using` directives at the top of the file
 - System usings should come first (per `.editorconfig`)
 
