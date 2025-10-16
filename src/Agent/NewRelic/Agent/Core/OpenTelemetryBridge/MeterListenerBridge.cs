@@ -138,6 +138,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                     // Configure HttpClient factory with proxy and retry logic
                     exporterOptions.HttpClientFactory = CreateHttpClientWithProxyAndRetry;
 
+                    // TODO: Determine if we still need this code block
 #if NETSTANDARD2_0_OR_GREATER
                     // Additional .NET Standard specific configurations can go here if needed
 #endif
@@ -770,6 +771,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                         upDownCounter.Add(measurement, tags);
                         Log.Finest($"Bridged measurement {measurement} to upDownCounter {upDownCounter.Meter.Name}.{upDownCounter.Name}");
                         break;
+                        // TODO: Add support for Gauge<T> and remove the gauge logic from the default case.
                     default:
                         // Runtime support for Gauge<T> (for .NET 8+) even if compiled against older frameworks
                         var stateType = state.GetType();
