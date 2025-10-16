@@ -11,6 +11,7 @@ This repository contains the New Relic .NET Agent, which monitors .NET applicati
 - **IntegrationTests.sln**: Integration tests for the agent (`tests/Agent/IntegrationTests/`)
 - **ContainerIntegrationTests.sln**: Container-based integration tests (`tests/Agent/IntegrationTests/`)
 - **UnboundedIntegrationTests.sln**: Unbounded integration tests (`tests/Agent/IntegrationTests/`)
+- **BuildTools.sln**: Build tools and utilities (`build/`)
 
 ### Important Directories
 
