@@ -47,8 +47,8 @@ This repository contains the New Relic .NET Agent, which monitors .NET applicati
 ### Backwards Compatibility
 
 - Code in `src/Agent/` and `src/NewRelic.Core/` must be compatible with:
-  - .NET Framework 4.5+ 
-  - .NET Core 2.0+
+  - .NET Framework 4.6.2+ 
+  - .NET Standard 2.0+
 - Avoid using newest-version-only features that break backwards compatibility
 - The instrumentation must work with a wide range of versions of instrumented modules
 - Read comments carefully - code that seems overcomplicated may be necessary for compatibility
