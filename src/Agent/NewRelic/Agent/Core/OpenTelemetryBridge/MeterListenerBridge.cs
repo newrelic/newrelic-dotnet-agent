@@ -111,6 +111,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// </summary>
         public void Start()
         {
+            if (!_configuration.OpenTelemetryBridgeEnabled)
+            {
+                Log.Debug("OpenTelemetry Meter Bridge is disabled via configuration.");
+                return;
+            }
+
             if (_sdkLogger == null)
             {
                 _sdkLogger = new OpenTelemetrySDKLogger();
