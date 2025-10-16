@@ -6,8 +6,11 @@ This repository contains the New Relic .NET Agent, which monitors .NET applicati
 
 ### Key Solutions
 
-- **FullAgent.sln**: Main solution containing the managed C# code for the agent
+- **FullAgent.sln**: Main solution containing the managed C# code for the agent, including all unit tests
 - **Profiler.sln**: Native profiler component that implements the .NET Profiling API
+- **IntegrationTests.sln**: Integration tests for the agent (`tests/Agent/IntegrationTests/`)
+- **ContainerIntegrationTests.sln**: Container-based integration tests (`tests/Agent/IntegrationTests/`)
+- **UnboundedIntegrationTests.sln**: Unbounded integration tests (`tests/Agent/IntegrationTests/`)
 
 ### Important Directories
 
