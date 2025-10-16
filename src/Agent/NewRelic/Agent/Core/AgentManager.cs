@@ -182,7 +182,7 @@ namespace NewRelic.Agent.Core
                 // We need to resolve the MeterListenerBridge before the connect event is triggered so that
                 // the MeterListenerBridge is ready to receive the connect event and start listening for
                 // metrics.
-                _container.Resolve<Samplers.MeterListenerBridge>();
+                _container.Resolve<OpenTelemetryBridge.MeterListenerBridge>();
 
                 _container.Resolve<IConnectionManager>().AttemptAutoStart();
             }

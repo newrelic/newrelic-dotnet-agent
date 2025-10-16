@@ -21,7 +21,7 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 
-namespace NewRelic.Agent.Core.Samplers
+namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
     // This class is used as a bridge between the DiagnosticSource library included with an application, and the version of the DiagnosticSource library
     // and OpenTelemetrySDK included with the New Relic agent. This allows the customer's application to use a different version of the DiagnosticSource
@@ -254,6 +254,7 @@ namespace NewRelic.Agent.Core.Samplers
         /// </summary>
         private void TryCreateMeterListener()
         {
+            // TODO: If the logic for this method is moved to another class, and with that class we can pass in either a separate AppDomain or assembly load context or just a separate assembly, we may be able to unit test more of the bridging logic.
             var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
             if (assembly == null)
             {
@@ -262,6 +263,16 @@ namespace NewRelic.Agent.Core.Samplers
             }
 
             var meterListenerType = assembly.GetType("System.Diagnostics.Metrics.MeterListener", throwOnError: false);
+            var ilRepackedMeterListenerType = typeof(MeterListener);
+
+            if (meterListenerType == ilRepackedMeterListenerType)
+            {
+                // This scenario should not happen in a customer application, but is possible in all of our
+                // unit tests, because our unit tests do not run against the ilrepacked version of the agent.
+                Log.Warn("MeterListener type in application matches ILRepacked MeterListener type.");
+                return;
+            }
+
             var instrumentType = assembly.GetType("System.Diagnostics.Metrics.Instrument", throwOnError: false);
 
             if (meterListenerType == null || instrumentType == null)
@@ -570,7 +581,7 @@ namespace NewRelic.Agent.Core.Samplers
         {
             var bridgedMeasurements = new List<Measurement<T>>();
             Func<object, Measurement<T>> createBridgedMeasurement = null;
-            foreach (object measurement in originalMeasurements)
+            foreach (var measurement in originalMeasurements)
             {
                 // Initializing the delegate to create the bridged measurment within the loop because the type of the original measurements
                 // is not IEnumerable<Measurement<T>> but is the concrete collection instead (which may change in the future).
@@ -627,7 +638,7 @@ namespace NewRelic.Agent.Core.Samplers
                 return null;
             }
 
-            string createInstrumentMethodName = originalInstrumentType.Name switch
+            var createInstrumentMethodName = originalInstrumentType.Name switch
             {
                 "Counter`1" => "CreateCounter",
                 "Histogram`1" => "CreateHistogram",
@@ -697,7 +708,7 @@ namespace NewRelic.Agent.Core.Samplers
                 return null;
             }
 
-            string createInstrumentMethodName = originalInstrumentType.Name switch
+            var createInstrumentMethodName = originalInstrumentType.Name switch
             {
                 "ObservableCounter`1" => nameof(CreateBridgedObservableCounter),
                 "ObservableGauge`1" => nameof(CreateBridgedObservableGauge),

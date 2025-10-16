@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
-using NewRelic.Agent.Core.Samplers;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 using Telerik.JustMock;
