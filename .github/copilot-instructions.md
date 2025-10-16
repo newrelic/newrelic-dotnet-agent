@@ -114,3 +114,15 @@ This repository contains the New Relic .NET Agent, which monitors .NET applicati
 - Use ecosystem tools (package managers, refactoring tools) to reduce mistakes
 - Run linters and tests early and often
 - For complex contributions, open a GitHub issue first to discuss with maintainers
+
+### Git and PR Conventions
+
+- **Always use conventional commit prefixes** for commits and pull request titles
+  - We typically only use `fix`, `feature`, `chore`, `test`, and `ci`
+  - Because we use Release Please, commit prefixes are important
+  - Only public-facing changes important to users should be prefixed with `feature` or `fix`
+  - Use `chore` for non-public-facing changes
+- **Branch naming conventions:**
+  - Bug fixes: `fix/**`
+  - Features: `feature/**`
+  - Other changes: Use appropriate prefixes like `test/**`, `chore/**`, etc.
