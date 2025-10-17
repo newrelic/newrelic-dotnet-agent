@@ -21,7 +21,7 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 
-namespace NewRelic.Agent.Core.Samplers
+namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
     // This class is used as a bridge between the DiagnosticSource library included with an application, and the version of the DiagnosticSource library
     // and OpenTelemetrySDK included with the New Relic agent. This allows the customer's application to use a different version of the DiagnosticSource
@@ -111,6 +111,12 @@ namespace NewRelic.Agent.Core.Samplers
         /// </summary>
         public void Start()
         {
+            if (!_configuration.OpenTelemetryBridgeEnabled)
+            {
+                Log.Debug("OpenTelemetry Meter Bridge is disabled via configuration.");
+                return;
+            }
+
             if (_sdkLogger == null)
             {
                 _sdkLogger = new OpenTelemetrySDKLogger();
@@ -129,13 +135,6 @@ namespace NewRelic.Agent.Core.Samplers
                     .AddTelemetrySdk()
                     .AddAttributes([new KeyValuePair<string, object>("entity.guid", _configuration.EntityGuid)]))
                 .AddMeter("*")
-                .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
-                {
-                    exporterOptions.Targets = ConsoleExporterOutputTargets.Console;
-
-                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = DefaultOtlpExportIntervalSeconds * 1000;
-                    metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
-                })
                 .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
                 {
                     exporterOptions.Endpoint = uriBuilder.Uri;
@@ -145,6 +144,7 @@ namespace NewRelic.Agent.Core.Samplers
                     // Configure HttpClient factory with proxy and retry logic
                     exporterOptions.HttpClientFactory = CreateHttpClientWithProxyAndRetry;
 
+                    // TODO: Determine if we still need this code block
 #if NETSTANDARD2_0_OR_GREATER
                     // Additional .NET Standard specific configurations can go here if needed
 #endif
@@ -254,6 +254,7 @@ namespace NewRelic.Agent.Core.Samplers
         /// </summary>
         private void TryCreateMeterListener()
         {
+            // TODO: If the logic for this method is moved to another class, and with that class we can pass in either a separate AppDomain or assembly load context or just a separate assembly, we may be able to unit test more of the bridging logic.
             var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
             if (assembly == null)
             {
@@ -262,6 +263,16 @@ namespace NewRelic.Agent.Core.Samplers
             }
 
             var meterListenerType = assembly.GetType("System.Diagnostics.Metrics.MeterListener", throwOnError: false);
+            var ilRepackedMeterListenerType = typeof(MeterListener);
+
+            if (meterListenerType == ilRepackedMeterListenerType)
+            {
+                // This scenario should not happen in a customer application, but is possible in all of our
+                // unit tests, because our unit tests do not run against the ilrepacked version of the agent.
+                Log.Warn("MeterListener type in application matches ILRepacked MeterListener type.");
+                return;
+            }
+
             var instrumentType = assembly.GetType("System.Diagnostics.Metrics.Instrument", throwOnError: false);
 
             if (meterListenerType == null || instrumentType == null)
@@ -570,7 +581,7 @@ namespace NewRelic.Agent.Core.Samplers
         {
             var bridgedMeasurements = new List<Measurement<T>>();
             Func<object, Measurement<T>> createBridgedMeasurement = null;
-            foreach (object measurement in originalMeasurements)
+            foreach (var measurement in originalMeasurements)
             {
                 // Initializing the delegate to create the bridged measurment within the loop because the type of the original measurements
                 // is not IEnumerable<Measurement<T>> but is the concrete collection instead (which may change in the future).
@@ -627,7 +638,7 @@ namespace NewRelic.Agent.Core.Samplers
                 return null;
             }
 
-            string createInstrumentMethodName = originalInstrumentType.Name switch
+            var createInstrumentMethodName = originalInstrumentType.Name switch
             {
                 "Counter`1" => "CreateCounter",
                 "Histogram`1" => "CreateHistogram",
@@ -697,7 +708,7 @@ namespace NewRelic.Agent.Core.Samplers
                 return null;
             }
 
-            string createInstrumentMethodName = originalInstrumentType.Name switch
+            var createInstrumentMethodName = originalInstrumentType.Name switch
             {
                 "ObservableCounter`1" => nameof(CreateBridgedObservableCounter),
                 "ObservableGauge`1" => nameof(CreateBridgedObservableGauge),
@@ -766,6 +777,7 @@ namespace NewRelic.Agent.Core.Samplers
                         upDownCounter.Add(measurement, tags);
                         Log.Finest($"Bridged measurement {measurement} to upDownCounter {upDownCounter.Meter.Name}.{upDownCounter.Name}");
                         break;
+                        // TODO: Add support for Gauge<T> and remove the gauge logic from the default case.
                     default:
                         // Runtime support for Gauge<T> (for .NET 8+) even if compiled against older frameworks
                         var stateType = state.GetType();
