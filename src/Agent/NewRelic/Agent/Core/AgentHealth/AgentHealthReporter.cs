@@ -77,7 +77,9 @@ namespace NewRelic.Agent.Core.AgentHealth
             _customInstrumentationCounter = new InterlockedCounter();
 
             if (_configuration.AgentControlEnabled)
+            {
                 _healthCheck = new() { IsHealthy = true, Status = "Agent starting", LastError = string.Empty };
+            }
         }
 
         public override void Dispose()
@@ -840,7 +842,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 return;
             }
 
-            var healthCheckYaml = _healthCheck.ToYaml();
+            var healthCheckYaml = _healthCheck.ToYaml(_configuration.EntityGuid);
 
             Log.Finest("Publishing Agent Control health check report: {HealthCheckYaml}", healthCheckYaml);
 
