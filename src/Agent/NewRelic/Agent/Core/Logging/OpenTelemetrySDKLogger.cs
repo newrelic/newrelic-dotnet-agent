@@ -58,46 +58,53 @@ namespace NewRelic.Agent.Core.Logging
                 }
             }
 
-            // TODO: Is this the correct mapping
+            // Map EventSource levels to New Relic agent log levels
+            // Based on https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Core/Logging/LogLevelExtensions.cs mapping: Verbose=FINEST, Debug=DEBUG, Information=INFO
             var logLevel = eventData.Level switch
             {
-                EventLevel.Critical => LogLevel.Error,
-                EventLevel.Error => LogLevel.Error,
-                EventLevel.Warning => LogLevel.Warn,
-                EventLevel.Informational => LogLevel.Info,
-                EventLevel.LogAlways => LogLevel.Info,
-                EventLevel.Verbose => LogLevel.Debug,
-                _ => LogLevel.Finest
+                EventLevel.Critical => LogLevel.Error,       // Critical errors → Error
+                EventLevel.Error => LogLevel.Error,          // Errors → Error  
+                EventLevel.Warning => LogLevel.Warn,         // Warnings → Warn
+                EventLevel.Informational => LogLevel.Info,   // Informational → Info (not Debug!)
+                EventLevel.LogAlways => LogLevel.Info,       // Always logged → Info
+                EventLevel.Verbose => LogLevel.Finest,       // Verbose diagnostics → Finest
+                _ => LogLevel.Debug                          // Unknown → Debug (safe default)
             };
 
             Log.LogMessage(logLevel, "OpenTelemetrySDK: EventSource: '{0}' Message: '{1}'", eventData.EventSource.Name, formattedMessage);
         }
 
-        // TODO: Is this the correct mapping
+        // Map New Relic agent log levels to EventSource levels
         private static EventLevel MapLoggingLevelToEventSourceLevel()
         {
             if (Log.IsFinestEnabled)
             {
+                // Finest: Capture all OTel diagnostic information including verbose details
                 return EventLevel.Verbose;
             }
             else if (Log.IsDebugEnabled)
             {
-                return EventLevel.Verbose;
+                // Debug: Capture informational and above, exclude verbose to reduce noise
+                return EventLevel.Informational;
             }
             else if (Log.IsInfoEnabled)
             {
+                // Info: Match informational level
                 return EventLevel.Informational;
             }
             else if (Log.IsWarnEnabled)
             {
+                // Warn: Only capture warnings and errors from OTel
                 return EventLevel.Warning;
             }
             else if (Log.IsErrorEnabled)
             {
+                // Error: Only capture errors and critical issues from OTel
                 return EventLevel.Error;
             }
             else
             {
+                // Off/None: Only capture critical messages that must always be logged
                 return EventLevel.LogAlways;
             }
         }
