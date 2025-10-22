@@ -957,7 +957,7 @@ namespace NewRelic.Agent.Core.Configuration
                 AdaptiveSamplerType => SamplerType.Adaptive,
                 AlwaysOnSamplerType => SamplerType.AlwaysOn,
                 AlwaysOffSamplerType => SamplerType.AlwaysOff,
-                TraceIdRatioSamplerType => SamplerType.TraceIdRatioBased,
+                TraceIdRatioBasedSamplerType => SamplerType.TraceIdRatioBased,
                 _ => throw new ArgumentOutOfRangeException(nameof(samplerItem), samplerItem, "Unknown sampler type in configuration.")
             };
 
@@ -981,16 +981,16 @@ namespace NewRelic.Agent.Core.Configuration
             switch (samplerLevel)
             {
                 case SamplerLevel.Root:
-                    if (_localConfiguration.distributedTracing.sampler.root.Item is TraceIdRatioSamplerType rootTraceIdRatioSamplerType)
-                        return (float)rootTraceIdRatioSamplerType.sampleRatio;
+                    if (_localConfiguration.distributedTracing.sampler.root.Item is TraceIdRatioBasedSamplerType rootTraceIdRatioSamplerType)
+                        return (float)rootTraceIdRatioSamplerType.ratio;
                     return null;
                 case SamplerLevel.RemoteParentSampled:
-                    if (_localConfiguration.distributedTracing.sampler.remoteParentSampled.Item is TraceIdRatioSamplerType remoteParentSampledTraceIdRatioSamplerType)
-                        return (float)remoteParentSampledTraceIdRatioSamplerType.sampleRatio;
+                    if (_localConfiguration.distributedTracing.sampler.remoteParentSampled.Item is TraceIdRatioBasedSamplerType remoteParentSampledTraceIdRatioSamplerType)
+                        return (float)remoteParentSampledTraceIdRatioSamplerType.ratio;
                     return null;
                 case SamplerLevel.RemoteParentNotSampled:
-                    if (_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item is TraceIdRatioSamplerType remoteParentNotSampledTraceIdRatioSamplerType)
-                        return (float)remoteParentNotSampledTraceIdRatioSamplerType.sampleRatio;
+                    if (_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item is TraceIdRatioBasedSamplerType remoteParentNotSampledTraceIdRatioSamplerType)
+                        return (float)remoteParentNotSampledTraceIdRatioSamplerType.ratio;
                     return null;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null);

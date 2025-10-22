@@ -17,7 +17,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void Constructor_WithZeroRatio_SetsIdUpperBoundToLongMinValue()
         {
             // Arrange & Act
-            var sampler = new TraceIdRatioSampler(0.0f);
+            var sampler = new TraceIdRatioBasedSampler(0.0f);
 
             // Assert
             // We can verify the behavior through sampling - should never sample with 0.0 ratio
@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void Constructor_WithOneRatio_SetsIdUpperBoundToLongMaxValue()
         {
             // Arrange & Act
-            var sampler = new TraceIdRatioSampler(1.0f);
+            var sampler = new TraceIdRatioBasedSampler(1.0f);
 
             // Assert
             // We can verify the behavior through sampling - should always sample with 1.0 ratio
@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void Constructor_WithNormalRatio_CalculatesCorrectIdUpperBound(float ratio)
         {
             // Arrange & Act
-            var sampler = new TraceIdRatioSampler(ratio);
+            var sampler = new TraceIdRatioBasedSampler(ratio);
 
             // Assert
             // Verify behavior through sampling - should sample some but not all trace IDs
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithNullTraceId_ThrowsArgumentNullException()
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(0.5f);
+            var sampler = new TraceIdRatioBasedSampler(0.5f);
 
             // Act & Assert
             var exception = Assert.Throws<ArgumentNullException>(() => sampler.ShouldSample(new SamplingParameters(null, 0.5f)));
@@ -97,7 +97,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithEmptyTraceId_ThrowsArgumentNullException()
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(0.5f);
+            var sampler = new TraceIdRatioBasedSampler(0.5f);
 
             // Act & Assert
             var exception = Assert.Throws<ArgumentNullException>(() => sampler.ShouldSample(new SamplingParameters(string.Empty, 0.5f)));
@@ -111,7 +111,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithShortTraceId_ThrowsFormatException(string shortTraceId)
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(0.5f);
+            var sampler = new TraceIdRatioBasedSampler(0.5f);
 
             // Act & Assert
             var exception = Assert.Throws<FormatException>(() => sampler.ShouldSample(new SamplingParameters(shortTraceId, 0.5f)));
@@ -125,7 +125,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithInvalidHexCharacters_ThrowsFormatException(string invalidTraceId)
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(0.5f);
+            var sampler = new TraceIdRatioBasedSampler(0.5f);
 
             // Act & Assert
             var exception = Assert.Throws<FormatException>(() => sampler.ShouldSample(new SamplingParameters(invalidTraceId, 0.5f)));
@@ -140,7 +140,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithUppercaseHexCharacters_ProcessesCorrectly()
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(1.0f); // Always sample to verify it processes
+            var sampler = new TraceIdRatioBasedSampler(1.0f); // Always sample to verify it processes
             var traceId = "ABCDEF1234567890ABCDEF1234567890";
 
             // Act & Assert
@@ -155,7 +155,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithLowercaseHexCharacters_ProcessesCorrectly()
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(1.0f); // Always sample to verify it processes
+            var sampler = new TraceIdRatioBasedSampler(1.0f); // Always sample to verify it processes
             var traceId = "abcdef1234567890abcdef1234567890";
 
             // Act & Assert
@@ -170,7 +170,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithMixedCaseHexCharacters_ProcessesCorrectly()
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(1.0f); // Always sample to verify it processes
+            var sampler = new TraceIdRatioBasedSampler(1.0f); // Always sample to verify it processes
             var traceId = "AbCdEf1234567890aBcDeF1234567890";
 
             // Act & Assert
@@ -185,7 +185,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithNumericCharacters_ProcessesCorrectly()
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(1.0f); // Always sample to verify it processes
+            var sampler = new TraceIdRatioBasedSampler(1.0f); // Always sample to verify it processes
             var traceId = "12345678901234567890123456789012";
 
             // Act & Assert
@@ -207,7 +207,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithZeroRatio_NeverSamples(string traceId)
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(0.0f);
+            var sampler = new TraceIdRatioBasedSampler(0.0f);
 
             // Act & Assert
             var result = sampler.ShouldSample(new SamplingParameters(traceId, 0.5f));
@@ -221,7 +221,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithOneRatio_AlwaysSamples(string traceId)
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(1.0f);
+            var sampler = new TraceIdRatioBasedSampler(1.0f);
 
             // Act & Assert
             var result = sampler.ShouldSample(new SamplingParameters(traceId, 0.5f));
@@ -232,7 +232,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithSameTraceId_ReturnsConsistentResult()
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(0.5f);
+            var sampler = new TraceIdRatioBasedSampler(0.5f);
             var traceId = "1234567890abcdef1234567890abcdef";
 
             // Act
@@ -249,7 +249,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_OnlyUsesFirst16Characters()
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(0.5f);
+            var sampler = new TraceIdRatioBasedSampler(0.5f);
             var baseTraceId = "1234567890abcdef";
             var traceId1 = baseTraceId + "0000000000000000"; // 32 chars
             var traceId2 = baseTraceId + "ffffffffffffffff"; // 32 chars, different suffix
@@ -275,7 +275,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithMinimumTraceId_HandlesCorrectly()
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(0.5f);
+            var sampler = new TraceIdRatioBasedSampler(0.5f);
             var minTraceId = "0000000000000000000000000000000000";
 
             // Act & Assert
@@ -291,7 +291,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithMaximumTraceId_HandlesCorrectly()
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(0.5f);
+            var sampler = new TraceIdRatioBasedSampler(0.5f);
             var maxTraceId = "ffffffffffffffff111111111111111111";
 
             // Act & Assert
@@ -307,7 +307,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithExactly16Characters_ProcessesCorrectly()
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(1.0f); // Use 1.0 to ensure sampling
+            var sampler = new TraceIdRatioBasedSampler(1.0f); // Use 1.0 to ensure sampling
             var exactTraceId = "1234567890abcdef"; // Exactly 16 characters
 
             // Act & Assert
@@ -329,7 +329,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         public void ShouldSample_WithDifferentRatios_ShowsExpectedDistribution(float ratio)
         {
             // Arrange
-            var sampler = new TraceIdRatioSampler(ratio);
+            var sampler = new TraceIdRatioBasedSampler(ratio);
             var testTraceIds = new[]
             {
                 "0000000000000000111111111111111111",

@@ -57,7 +57,7 @@ namespace NewRelic.Agent.Core.Configuration
                 case SamplerType.AlwaysOff:
                     return new AlwaysOffSamplerType();
                 case SamplerType.TraceIdRatioBased:
-                    return new TraceIdRatioSamplerType();
+                    return new TraceIdRatioBasedSamplerType();
                 default:
                     throw new ArgumentOutOfRangeException(nameof(samplerType), samplerType, null);
             }

@@ -400,7 +400,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                     SamplerType.Adaptive => null,
                     SamplerType.AlwaysOn => AlwaysOnSampler.Instance,
                     SamplerType.AlwaysOff => AlwaysOffSampler.Instance,
-                    SamplerType.TraceIdRatioBased => new TraceIdRatioSampler(r ?? 0.5f),
+                    SamplerType.TraceIdRatioBased => new TraceIdRatioBasedSampler(r ?? 0.5f),
                     _ => throw new ArgumentOutOfRangeException(nameof(behavior), behavior, null)
                 };
             }
@@ -426,7 +426,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
         }
 
         [Test]
-        public void AcceptDistributedTraceHeaders_AppliesTraceIdSampleRatioCorrectly()
+        public void AcceptDistributedTraceHeaders_AppliesTraceIdratioCorrectly()
         {
             // Arrange
             var headers = new Dictionary<string, string>()
@@ -436,7 +436,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             };
 
             Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
-                .Returns(new TraceIdRatioSampler(1.0f));
+                .Returns(new TraceIdRatioBasedSampler(1.0f));
 
 
             var tracingState = TracingState.AcceptDistributedTraceHeaders(
@@ -447,12 +447,12 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
 
             // Assert
-            Assert.That(tracingState.Sampled, Is.True, "Sampled should be true when sampleRatio is 1.0");
-            Assert.That(tracingState.Priority, Is.EqualTo(Priority + 1.0f), "Priority should be boosted when sampleRatio is 1.0");
+            Assert.That(tracingState.Sampled, Is.True, "Sampled should be true when ratio is 1.0");
+            Assert.That(tracingState.Priority, Is.EqualTo(Priority + 1.0f), "Priority should be boosted when ratio is 1.0");
         }
 
         [Test]
-        public void AcceptDistributedTraceHeaders_AppliesTraceIdSampleRatio_SampledFalse()
+        public void AcceptDistributedTraceHeaders_AppliesTraceIdratio_SampledFalse()
         {
             // Arrange
             var headers = new Dictionary<string, string>()
@@ -461,7 +461,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 { "tracestate", ValidTracestate },
             };
             Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
-                .Returns(new TraceIdRatioSampler(0.0f));
+                .Returns(new TraceIdRatioBasedSampler(0.0f));
 
             var tracingState = TracingState.AcceptDistributedTraceHeaders(
                 carrier: headers,
@@ -471,8 +471,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)), _samplerService);
 
             // Assert
-            Assert.That(tracingState.Sampled, Is.EqualTo(false), "Sampled should be false when sampleRatio is 0");
-            Assert.That(tracingState.Priority, Is.EqualTo(Priority), "Priority should use the tracestate priority value when sampleRatio is 0");
+            Assert.That(tracingState.Sampled, Is.EqualTo(false), "Sampled should be false when ratio is 0");
+            Assert.That(tracingState.Priority, Is.EqualTo(Priority), "Priority should use the tracestate priority value when ratio is 0");
         }
 
         [TestCase("0000000000000001", 0.01f, true, true, TestName = "TraceIdRatioBased_LowValue_AlwaysSamples_Ratio001_ParentSampled")]
@@ -503,7 +503,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             if (parentSampledFlag)
             {
                 Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
-                    .Returns(new TraceIdRatioSampler(ratio));
+                    .Returns(new TraceIdRatioBasedSampler(ratio));
                 Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
                     .Returns((ISampler)null);
             }
@@ -512,7 +512,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentSampled))
                     .Returns((ISampler)null);
                 Mock.Arrange(() => _samplerService.GetSampler(SamplerLevel.RemoteParentNotSampled))
-                    .Returns(new TraceIdRatioSampler(ratio));
+                    .Returns(new TraceIdRatioBasedSampler(ratio));
             }
 
             var tracingState = TracingState.AcceptDistributedTraceHeaders(

@@ -141,9 +141,9 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                         // This is not valid in our config so we need to treat it as if the sampler is not set
                         return null;
                     }
-                    return new TraceIdRatioSamplerType
+                    return new TraceIdRatioBasedSamplerType
                     {
-                        sampleRatio = (decimal)testData.Ratio
+                        ratio = (decimal)testData.Ratio
                     };
                 case "adaptive":
                 case "default":
