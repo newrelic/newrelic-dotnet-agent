@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Core.DistributedTracing.Samplers
                 case SamplerType.TraceIdRatioBased:
                     // if the ratio is not set, log a warning and use the default sampler
                     if (traceIdRatioSamplerRatio.HasValue)
-                        return new TraceIdRatioSampler(traceIdRatioSamplerRatio.Value); // always return a new instance since it is stateless
+                        return new TraceIdRatioBasedSampler(traceIdRatioSamplerRatio.Value); // always return a new instance since it is stateless
 
                     Log.Warn($"The configured TraceIdRatioBased sampler is missing a ratio value. Using default sampler.");
                     return _adaptiveSampler.Value;

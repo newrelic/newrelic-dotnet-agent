@@ -94,15 +94,15 @@
         </xs:annotation>
     </xs:complexType>
 
-    <xs:complexType name="TraceIdRatioSamplerType">
+    <xs:complexType name="TraceIdRatioBasedSamplerType">
         <xs:annotation>
             <xs:documentation>
                 Based on the OpenTelemetry TraceIdRatioBased sampler.
-                It samples traces with a probability defined by the sampleRatio attribute, which must be a decimal value between 0.0 (no sampling) and 1.0 (sample all).
+                It samples a percentage of traces defined by the ratio attribute, which must be a decimal value between 0.0 (no sampling) and 1.0 (sample all).
                 For more information, see the OpenTelemetry specification: https://opentelemetry.io/docs/specs/otel/trace/tracestate-probability-sampling/
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute name="sampleRatio" type="xs:decimal" use="required">
+        <xs:attribute name="ratio" type="xs:decimal" use="required">
             <xs:annotation>
                 <xs:documentation>
                     The percentage of traces to sample, between 0.0 and 1.0.
@@ -1311,7 +1311,7 @@
                                                 <xs:choice minOccurs="1" maxOccurs="1">
                                                     <xs:element name="default" type="tns:AdaptiveSamplerType"/>
                                                     <xs:element name="adaptive" type="tns:AdaptiveSamplerType"/>
-                                                    <xs:element name="traceIdRatio" type="tns:TraceIdRatioSamplerType"/>
+                                                    <xs:element name="traceIdRatioBased" type="tns:TraceIdRatioBasedSamplerType"/>
                                                     <xs:element name="alwaysOn" type="tns:AlwaysOnSamplerType"/>
                                                     <xs:element name="alwaysOff" type="tns:AlwaysOffSamplerType"/>
                                                 </xs:choice>
@@ -1327,7 +1327,7 @@
                                                 <xs:choice minOccurs="1" maxOccurs="1">
                                                     <xs:element name="default" type="tns:AdaptiveSamplerType"/>
                                                     <xs:element name="adaptive" type="tns:AdaptiveSamplerType"/>
-                                                    <xs:element name="traceIdRatio" type="tns:TraceIdRatioSamplerType"/>
+                                                    <xs:element name="traceIdRatioBased" type="tns:TraceIdRatioBasedSamplerType"/>
                                                     <xs:element name="alwaysOn" type="tns:AlwaysOnSamplerType"/>
                                                     <xs:element name="alwaysOff" type="tns:AlwaysOffSamplerType"/>
                                                 </xs:choice>
@@ -1343,7 +1343,7 @@
                                                 <xs:choice minOccurs="1" maxOccurs="1">
                                                     <xs:element name="default" type="tns:AdaptiveSamplerType"/>
                                                     <xs:element name="adaptive" type="tns:AdaptiveSamplerType"/>
-                                                    <xs:element name="traceIdRatio" type="tns:TraceIdRatioSamplerType"/>
+                                                    <xs:element name="traceIdRatioBased" type="tns:TraceIdRatioBasedSamplerType"/>
                                                     <xs:element name="alwaysOn" type="tns:AlwaysOnSamplerType"/>
                                                     <xs:element name="alwaysOff" type="tns:AlwaysOffSamplerType"/>
                                                 </xs:choice>

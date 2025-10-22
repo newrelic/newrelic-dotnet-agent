@@ -5,17 +5,17 @@ using System;
 
 namespace NewRelic.Agent.Core.DistributedTracing.Samplers;
 
-// based on the OpenTelemetry TraceIdRatioSampler https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/src/OpenTelemetry/Trace/Sampler/TraceIdRatioBasedSampler.cs
-public class TraceIdRatioSampler : ISampler
+// based on the OpenTelemetry TraceIdRatioBasedSampler https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/src/OpenTelemetry/Trace/Sampler/TraceIdRatioBasedSampler.cs
+public class TraceIdRatioBasedSampler : ISampler
 {
     private readonly long _idUpperBound;
     private const int TraceIdLength = 16;
 
     private const float PriorityBoost = 1.0f;
 
-    public TraceIdRatioSampler(float sampleRatio)
+    public TraceIdRatioBasedSampler(float ratio)
     {
-        _idUpperBound = sampleRatio switch
+        _idUpperBound = ratio switch
         {
             // Special case the limits, to avoid any possible issues with lack of precision across
             // double/long boundaries. For probability == 0.0, we use Long.MIN_VALUE as this guarantees
@@ -23,7 +23,7 @@ public class TraceIdRatioSampler : ISampler
             // Math.Abs(Long.MIN_VALUE) == Long.MIN_VALUE.
             0.0f => long.MinValue,
             1.0f => long.MaxValue,
-            _ => (long)(sampleRatio * long.MaxValue)
+            _ => (long)(ratio * long.MaxValue)
         };
     }
 
