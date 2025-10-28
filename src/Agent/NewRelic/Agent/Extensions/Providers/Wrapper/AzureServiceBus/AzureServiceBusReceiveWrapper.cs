@@ -17,10 +17,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
 {
     private static readonly ConcurrentDictionary<Type, Func<object, object>> _getResultFromGenericTask = new();
 
-    private static Func<object, object> _innerReceiverAccessor;
-    private static Func<object, bool> _innerReceiverIsProcessorAccessor;
-
-    public override bool IsTransactionRequired => false; // only partially true. See the code below...
+    public override bool IsTransactionRequired => true;
 
     public override CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
     {
@@ -37,13 +34,6 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         queueOrTopicName = GetQueueOrTopicName(destinationType, queueOrTopicName);
 
         string fqns = serviceBusReceiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
-
-        _innerReceiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(serviceBusReceiver.GetType(), "InnerReceiver");
-        object innerReceiver = _innerReceiverAccessor.Invoke(serviceBusReceiver);
-
-        // use reflection to access the _isProcessor field of the inner receiver
-        _innerReceiverIsProcessorAccessor ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<bool>(innerReceiver.GetType(), "_isProcessor");
-        var isProcessor = _innerReceiverIsProcessorAccessor.Invoke(innerReceiver);
 
         var instrumentedMethodName = instrumentedMethodCall.MethodCall.Method.MethodName;
 
@@ -62,42 +52,14 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                 _ => throw new ArgumentOutOfRangeException(nameof(action), $"Unexpected instrumented method call: {instrumentedMethodName}")
             };
 
-        // If the inner receiver is configured as a processor and this is a ReceiveMessagesAsync call, start a transaction.
-        // The transaction will end at the conclusion of ReceiverManager.ProcessOneMessageWithinScopeAsync()
-        if (isProcessor && instrumentedMethodName == "ReceiveMessagesAsync")
-        {
-            transaction = agent.CreateTransaction(
-                destinationType: destinationType,
-                BrokerVendorName,
-                destination: queueOrTopicName);
-
-            if (instrumentedMethodCall.IsAsync)
-            {
-                transaction.DetachFromPrimary();
-            }
-
-            transaction.LogFinest("Created transaction for ReceiveMessagesAsync in processor mode.");
-        }
-        else
-        {
-            transaction = agent.CurrentTransaction;
-
-            if (!transaction.IsValid)
-            {
-                // transaction is required when we're not in processor mode
-                transaction.LogFinest($"No transaction. Not creating MessageBroker segment for {instrumentedMethodName}.");
-                return Delegates.NoOp;
-            }
-
-            transaction.LogFinest($"Using existing transaction for {instrumentedMethodName}.");
-        }
+        transaction = agent.CurrentTransaction;
 
         if (instrumentedMethodCall.IsAsync)
         {
             transaction.AttachToAsync();
         }
 
-        // start a message broker segment (only happens if transaction is not NoOpTransaction)
+        // start a message broker segment
         var segment = transaction.StartMessageBrokerSegment(
             instrumentedMethodCall.MethodCall,
             destinationType,
@@ -115,7 +77,6 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                 false,
                 (responseTask) =>
                 {
-                    bool noMessagesReceived = false;
                     try
                     {
                         if (responseTask.IsFaulted)
@@ -123,22 +84,11 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                             transaction.NoticeError(responseTask.Exception);
                         }
 
-                        HandleReceiveResponse(responseTask, instrumentedMethodName, transaction, isProcessor, out noMessagesReceived);
+                        HandleReceiveResponse(responseTask, instrumentedMethodName, transaction);
                     }
                     finally
                     {
                         segment.End();
-
-                        // if we are in processor mode and the task was canceled or no messages were received, ignore the transaction
-                        if (isProcessor && (responseTask.IsCanceled || noMessagesReceived))
-                        {
-                            transaction.LogFinest($"{(responseTask.IsCanceled ? "ReceiveMessagesAsync task was canceled in processor mode" : "No messages received")}. Ignoring transaction.");
-
-                            // Ignore and end the transaction here since end in the AzureServiceBusReceiverManagerWrapper is never called
-                            // In FW this results in a transaction has been garbage collected message, probably due to different GC settings in FW vs. Core
-                            transaction.Ignore();
-                            transaction.End();
-                        }
                     }
                 },
                 TaskContinuationOptions.ExecuteSynchronously)
@@ -146,7 +96,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             Delegates.GetDelegateFor<object>(
                 onFailure: transaction.NoticeError,
                 onComplete: segment.End,
-                onSuccess: (resultObj) => ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName, isProcessor, out _));
+                onSuccess: (resultObj) => ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName));
     }
 
     private static object GetTaskResultFromObject(object taskObj)
@@ -169,16 +119,15 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
         return getResponse(task);
     }
 
-    private static void HandleReceiveResponse(Task responseTask, string instrumentedMethodName, ITransaction transaction, bool isProcessor, out bool noMessagesReceived)
+    private static void HandleReceiveResponse(Task responseTask, string instrumentedMethodName, ITransaction transaction)
     {
         var resultObj = GetTaskResultFromObject(responseTask);
-        ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName, isProcessor, out noMessagesReceived);
+        ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName);
     }
 
     // For more details on DT for this library see: https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/TROUBLESHOOTING.md#distributed-tracing
-    private static void ExtractDTHeadersIfAvailable(object resultObj, ITransaction transaction, string instrumentedMethodName, bool isProcessor, out bool noMessagesReceived)
+    private static void ExtractDTHeadersIfAvailable(object resultObj, ITransaction transaction, string instrumentedMethodName)
     {
-        noMessagesReceived = false;
         if (resultObj != null)
         {
             switch (instrumentedMethodName)
@@ -199,10 +148,6 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
                         {
                             transaction.AcceptDistributedTraceHeaders(applicationProperties, ProcessHeaders, TransportType.Queue);
                         }
-                    }
-                    else if (messageCount == 0 && isProcessor) // if there are no messages and the receiver is a processor, ignore the transaction we created
-                    {
-                        noMessagesReceived = true;
                     }
                     break;
             }

@@ -12,7 +12,7 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
     public class AzureServiceBusReceiverManagerWrapper : AzureServiceBusWrapperBase
     {
         private static Func<object, object> _receiverAccessor;
-        public override bool IsTransactionRequired => true;
+        public override bool IsTransactionRequired => false;
 
         public override CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
         {
@@ -30,10 +30,18 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
             string fqns = receiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
             var destinationType = GetMessageBrokerDestinationType(queueOrTopicName);
 
-            if (instrumentedMethodCall.IsAsync)
-                transaction.AttachToAsync();
+            transaction = agent.CreateTransaction(
+                destinationType: destinationType,
+                BrokerVendorName,
+                destination: queueOrTopicName);
 
-            // start a new MessageBroker segment that wraps ProcessOneMessageWithinScopeAsync
+            if (instrumentedMethodCall.IsAsync)
+            {
+                transaction.DetachFromPrimary();
+                transaction.AttachToAsync();
+            }
+
+            // start a new MessageBroker segment that wraps ProcessOneMessage
             var segment = transaction.StartMessageBrokerSegment(
                 instrumentedMethodCall.MethodCall,
                 destinationType,
