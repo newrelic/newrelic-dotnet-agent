@@ -18,10 +18,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
         private readonly string _queueOrTopicName;
         private readonly string _destinationType;
 
-        private readonly string _consumeMetricNameBase;
         private readonly string _processMetricNameBase;
         private readonly string _settleMetricNameBase;
         private readonly string _transactionNameBase;
+        private readonly string _topicScopeSuffix;
 
         protected AzureServiceBusProcessorTestsBase(TFixture fixture, string destinationType, ITestOutputHelper output) : base(fixture)
         {
@@ -32,8 +32,13 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
             _queueOrTopicName = $"test-queue-{Guid.NewGuid()}";
             _destinationType = destinationType;
 
-             _consumeMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named";
-             _processMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Process/Named";
+            _topicScopeSuffix = null;
+            if (_destinationType == "Topic")
+            {
+                _topicScopeSuffix = "/Subscriptions/test";
+            }
+
+            _processMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Process/Named";
              _settleMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named";
              _transactionNameBase = $"OtherTransaction/Message/ServiceBus/{_destinationType}/Named";
 
@@ -71,44 +76,34 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
         {
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-            // 2 messages, 1 consume segment, 1 process segment, 1 settle segment per message
+            // 2 messages, 1 process segment, 1 settle segment per message
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new() { metricName = $"{_consumeMetricNameBase}/{_queueOrTopicName}", callCount = 2 },
-                new()
-                {
-                    metricName = $"{_consumeMetricNameBase}/{_queueOrTopicName}",
-                    callCount = 2,
-                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}"
-                },
                 new()
                 {
                     metricName = $"{_processMetricNameBase}/{_queueOrTopicName}",
                     callCount = 2,
-                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}"
+                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
                 },
                 new()
                 {
                     metricName = $"{_settleMetricNameBase}/{_queueOrTopicName}",
                     callCount = 2,
-                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}"
+                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
                 },
             };
 
             var expectedTransactionEvent =
-                _fixture.AgentLog.TryGetTransactionEvent($"{_transactionNameBase}/{_queueOrTopicName}");
+                _fixture.AgentLog.TryGetTransactionEvent($"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}");
 
             var expectedTransactionTraceSegments = new List<string>
             {
-                $"{_consumeMetricNameBase}/{_queueOrTopicName}",
                 $"{_processMetricNameBase}/{_queueOrTopicName}",
-                "DotNet/ServiceBusProcessor/OnProcessMessageAsync",
                 $"{_settleMetricNameBase}/{_queueOrTopicName}",
             };
 
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_transactionNameBase}/{_queueOrTopicName}");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}");
 
-            var queueConsumeSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_consumeMetricNameBase}/{_queueOrTopicName}");
             var queueProcessSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_processMetricNameBase}/{_queueOrTopicName}");
 
             var expectedConsumeAgentAttributes = new List<string> { "server.address", "messaging.destination.name", };
@@ -120,18 +115,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
             NrAssert.Multiple(
                 () => Assert.NotNull(expectedTransactionEvent),
                 () => Assert.NotNull(transactionSample),
-                () => Assert.NotNull(queueConsumeSpanEvent),
                 () => Assert.NotNull(queueProcessSpanEvent),
-                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
-
-                () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
-                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvent),
-                () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvent),
-                () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
-                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvent),
-                () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvent)
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
             );
         }
     }
