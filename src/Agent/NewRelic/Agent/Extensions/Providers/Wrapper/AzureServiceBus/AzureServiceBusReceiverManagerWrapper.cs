@@ -30,6 +30,7 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
             string fqns = receiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
             var destinationType = GetMessageBrokerDestinationType(queueOrTopicName);
 
+            // create a transaction for this method call. This method invokes the ProcessMessageAsync handler
             transaction = agent.CreateTransaction(
                 destinationType: destinationType,
                 BrokerVendorName,

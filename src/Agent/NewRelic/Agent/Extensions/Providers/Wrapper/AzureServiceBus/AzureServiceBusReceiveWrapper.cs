@@ -96,7 +96,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             Delegates.GetDelegateFor<object>(
                 onFailure: transaction.NoticeError,
                 onComplete: segment.End,
-                onSuccess: (resultObj) => ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName));
+                onSuccess: (resultObj) => ExtractDtHeadersIfAvailable(resultObj, transaction, instrumentedMethodName));
     }
 
     private static object GetTaskResultFromObject(object taskObj)
@@ -122,11 +122,11 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
     private static void HandleReceiveResponse(Task responseTask, string instrumentedMethodName, ITransaction transaction)
     {
         var resultObj = GetTaskResultFromObject(responseTask);
-        ExtractDTHeadersIfAvailable(resultObj, transaction, instrumentedMethodName);
+        ExtractDtHeadersIfAvailable(resultObj, transaction, instrumentedMethodName);
     }
 
     // For more details on DT for this library see: https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/TROUBLESHOOTING.md#distributed-tracing
-    private static void ExtractDTHeadersIfAvailable(object resultObj, ITransaction transaction, string instrumentedMethodName)
+    private static void ExtractDtHeadersIfAvailable(object resultObj, ITransaction transaction, string instrumentedMethodName)
     {
         if (resultObj != null)
         {
