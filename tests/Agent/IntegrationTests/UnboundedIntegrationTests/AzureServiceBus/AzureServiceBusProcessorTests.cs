@@ -22,6 +22,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
         private readonly string _settleMetricNameBase;
         private readonly string _transactionNameBase;
         private readonly string _topicScopeSuffix;
+        private readonly string _onProcessMessageMethodSegmentMetricName;
 
         protected AzureServiceBusProcessorTestsBase(TFixture fixture, string destinationType, ITestOutputHelper output) : base(fixture)
         {
@@ -39,8 +40,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
             }
 
             _processMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Process/Named";
-             _settleMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named";
-             _transactionNameBase = $"OtherTransaction/Message/ServiceBus/{_destinationType}/Named";
+            _onProcessMessageMethodSegmentMetricName = "DotNet/ServiceBusProcessor/OnProcessMessageAsync";
+            _settleMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named";
+            _transactionNameBase = $"OtherTransaction/Message/ServiceBus/{_destinationType}/Named";
 
             _fixture.AddCommand($"AzureServiceBusExerciser Initialize{_destinationType} {_queueOrTopicName}");
             _fixture.AddCommand($"AzureServiceBusExerciser ExerciseServiceBusProcessorFor{_destinationType} {_queueOrTopicName}");
@@ -76,12 +78,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
         {
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-            // 2 messages, 1 process segment, 1 settle segment per message
+            // 2 messages, 1 process segment, 1 method segment, 1 settle segment per message
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new()
                 {
                     metricName = $"{_processMetricNameBase}/{_queueOrTopicName}",
+                    callCount = 2,
+                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
+                },
+                new()
+                {
+                    metricName = _onProcessMessageMethodSegmentMetricName,
                     callCount = 2,
                     metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
                 },
@@ -99,6 +107,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
             var expectedTransactionTraceSegments = new List<string>
             {
                 $"{_processMetricNameBase}/{_queueOrTopicName}",
+                _onProcessMessageMethodSegmentMetricName,
                 $"{_settleMetricNameBase}/{_queueOrTopicName}",
             };
 
