@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Core.Logging
 
     public class OpenTelemetrySDKLogger : EventListener
     {
-        // The OpenTelmetry SDK and documentation has a built in diagnostic logger, all code that wants to be compatible with the
+        // The OpenTelemetry SDK and documentation has a built in diagnostic logger, all code that wants to be compatible with the
         // OpenTelemetry SDK diagnostic logger needs to write events to an EventSource that has a name prefixed with "OpenTelemetry-".
         const string OpenTelemetryEventSourceNamePrefix = "OpenTelemetry-";
 
@@ -47,33 +47,35 @@ namespace NewRelic.Agent.Core.Logging
                 formattedMessage = eventData.Message;
                 if (eventData.Payload != null)
                 {
-                    if (eventData.Payload != null)
-                    {
-                        // Convert the payload collection to an array to to use the string.Format overload that takes an array of objects.
-                        var messageArguments = new object[eventData.Payload.Count];
-                        eventData.Payload.CopyTo(messageArguments, 0);
+                    // Convert the payload collection to an array to use the string.Format overload that takes an array of objects.
+                    var messageArguments = new object[eventData.Payload.Count];
+                    eventData.Payload.CopyTo(messageArguments, 0);
 
-                        formattedMessage = string.Format(eventData.Message, messageArguments);
-                    }
+                    formattedMessage = string.Format(eventData.Message, messageArguments);
                 }
             }
 
-            // TODO: Is this the correct mapping
+            // Map EventSource levels to New Relic agent log levels
+            // EventSource uses standard .NET diagnostics levels; we map them to our agent's LogLevel enum
+            // Reference: LogLevelExtensions.cs maps FINEST→Verbose, DEBUG→Debug, INFO→Information
             var logLevel = eventData.Level switch
             {
                 EventLevel.Critical => LogLevel.Error,
                 EventLevel.Error => LogLevel.Error,
                 EventLevel.Warning => LogLevel.Warn,
-                EventLevel.Informational => LogLevel.Info,
+                EventLevel.Informational => LogLevel.Debug,
                 EventLevel.LogAlways => LogLevel.Info,
-                EventLevel.Verbose => LogLevel.Debug,
-                _ => LogLevel.Finest
+                EventLevel.Verbose => LogLevel.Finest,
+                _ => LogLevel.Debug
             };
 
             Log.LogMessage(logLevel, "OpenTelemetrySDK: EventSource: '{0}' Message: '{1}'", eventData.EventSource.Name, formattedMessage);
         }
 
-        // TODO: Is this the correct mapping
+        // Map New Relic agent log levels to EventSource levels for subscribing to OpenTelemetry SDK events
+    
+        // EventSource API only has: Verbose, Informational, Warning, Error, Critical, LogAlways
+        // (no equivalent to Serilog.Debug), so we must choose the closest match for each level.
         private static EventLevel MapLoggingLevelToEventSourceLevel()
         {
             if (Log.IsFinestEnabled)
@@ -82,11 +84,11 @@ namespace NewRelic.Agent.Core.Logging
             }
             else if (Log.IsDebugEnabled)
             {
-                return EventLevel.Verbose;
+                return EventLevel.Informational;
             }
             else if (Log.IsInfoEnabled)
             {
-                return EventLevel.Informational;
+                return EventLevel.LogAlways;
             }
             else if (Log.IsWarnEnabled)
             {
