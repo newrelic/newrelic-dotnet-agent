@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -42,6 +44,9 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
                 transaction.AttachToAsync();
             }
 
+            // extract DT headers from the message and create a distributed trace payload
+            ExtractAndAcceptDistributedTracePayload(agent, transaction, instrumentedMethodCall.MethodCall.MethodArguments[0]);
+
             // start a new MessageBroker segment that wraps ProcessOneMessage
             var segment = transaction.StartMessageBrokerSegment(
                 instrumentedMethodCall.MethodCall,
@@ -69,5 +74,29 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
                     transaction.End();
                 });
         }
+
+        private void ExtractAndAcceptDistributedTracePayload(IAgent agent, ITransaction transaction, object receivedMessage)
+        {
+            dynamic msg = receivedMessage;
+            if (msg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
+            {
+                transaction.LogFinest("ReceiveManagerWrapper: Accepting distributed trace headers");
+                transaction.AcceptDistributedTraceHeaders(applicationProperties, ProcessHeaders, TransportType.Queue);
+            }
+        }
+        private static IEnumerable<string> ProcessHeaders(ReadOnlyDictionary<string, object> applicationProperties, string key)
+        {
+            var headerValues = new List<string>();
+            foreach (var item in applicationProperties)
+            {
+                if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+                {
+                    headerValues.Add(item.Value as string);
+                }
+            }
+
+            return headerValues;
+        }
+
     }
 }
