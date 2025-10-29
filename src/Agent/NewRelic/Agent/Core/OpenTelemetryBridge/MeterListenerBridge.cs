@@ -196,17 +196,28 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 }
 
 #if NETSTANDARD2_0_OR_GREATER
-                // For .NET Standard 2.0+: Add retry logic with exponential backoff
+                // For .NET Standard 2.0+: Add retry logic with exponential backoff and audit logging
                 var retryHandler = new CustomRetryHandler
                 {
                     InnerHandler = httpClientHandler
                 };
 
-                var httpClient = new HttpClient(retryHandler);
+                // Wrap the retry handler with audit logging for OTLP compliance
+                var auditHandler = new OtlpAuditHandler
+                {
+                    InnerHandler = retryHandler
+                };
+
+                var httpClient = new HttpClient(auditHandler);
 #else
-                // For .NET Framework: Direct HttpClient without retry wrapper
+                // For .NET Framework: Direct HttpClient with audit logging wrapper
                 // (CustomRetryHandler uses async/await patterns that work better in .NET Standard)
-                var httpClient = new HttpClient(httpClientHandler);
+                var auditHandler = new OtlpAuditHandler
+                {
+                    InnerHandler = httpClientHandler
+                };
+
+                var httpClient = new HttpClient(auditHandler);
 #endif
 
                 // Configure timeout (OTEL default is 10 seconds)

@@ -27,7 +27,8 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         {
             Collector = 1,
             Beacon = 2,
-            InstrumentedApp = 3
+            InstrumentedApp = 3,
+            OtlpExporter = 4
         }
 
         public const string AuditLogFormat = "Data {0} from the {1} : {2}";
