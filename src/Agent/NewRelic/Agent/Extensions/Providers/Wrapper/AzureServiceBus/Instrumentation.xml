@@ -81,7 +81,6 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
-
     <tracerFactory name="AzureServiceBusSendWrapper">
       <!--
             public virtual async Task SendMessagesAsync(
@@ -107,6 +106,7 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="CancelScheduledMessagesAsync" parameters="System.Collections.Generic.IEnumerable`1[System.Int64],System.Threading.CancellationToken" />
       </match>
     </tracerFactory>
+    
     <tracerFactory name="AzureServiceBusProcessorWrapper">
       <!--
       https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/src/Processor/ServiceBusProcessor.cs#L520
@@ -116,6 +116,7 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="OnProcessMessageAsync" parameters="Azure.Messaging.ServiceBus.ProcessMessageEventArgs" />
       </match>
     </tracerFactory>
+    
     <tracerFactory name="AzureServiceBusReceiverManagerWrapper">
       <!--
       https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/servicebus/Azure.Messaging.ServiceBus/src/Processor/ReceiverManager.cs#L164
