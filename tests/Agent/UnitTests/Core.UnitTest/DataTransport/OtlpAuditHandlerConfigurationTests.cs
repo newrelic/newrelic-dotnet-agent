@@ -26,48 +26,81 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
         }
 
         [Test]
-        public void OtlpAuditHandler_WhenAuditLogDisabled_DoesNotLog()
-        {
-            // Arrange - This simulates OpenTelemetry.Enabled=true but auditLog=false
-            AuditLog.IsAuditLogEnabled = false; // auditLog="false" (default)
-            
-            // Act & Assert
-            // OTLP audit handler will be in the pipeline when OpenTelemetry.Enabled=true
-            // But DataTransportAuditLogger.Log() will check AuditLog.IsAuditLogEnabled internally
-            // and skip logging when auditLog="false"
-            
-            // This test verifies the conditional logic works as expected
-            Assert.That(AuditLog.IsAuditLogEnabled, Is.False, 
-                "When auditLog=false, no OTLP audit logging should occur even with OpenTelemetry.Enabled=true");
-        }
-
-        [Test]
-        public void OtlpAuditHandler_WhenAuditLogEnabled_PerformsLogging()
-        {
-            // Arrange - This simulates both OpenTelemetry.Enabled=true AND auditLog=true
-            AuditLog.IsAuditLogEnabled = true; // auditLog="true"
-            
-            // Act & Assert
-            // When both settings are enabled, OTLP audit logging should work
-            Assert.That(AuditLog.IsAuditLogEnabled, Is.True, 
-                "When both OpenTelemetry.Enabled=true and auditLog=true, OTLP audit logging should occur");
-        }
-
-        [Test]
-        public void DataTransportAuditLogger_RespectsAuditLogEnabledFlag()
+        public void AuditLog_WhenDisabled_IsAuditLogEnabledReturnsFalse()
         {
             // Arrange
             AuditLog.IsAuditLogEnabled = false;
             
-            // Act - This should be a no-op when audit log is disabled
-            DataTransportAuditLogger.Log(
-                DataTransportAuditLogger.AuditLogDirection.Sent,
-                DataTransportAuditLogger.AuditLogSource.OtlpExporter,
-                "https://test.example.com"
-            );
+            // Act & Assert
+            Assert.That(AuditLog.IsAuditLogEnabled, Is.False, 
+                "AuditLog.IsAuditLogEnabled should return false when audit logging is disabled");
+        }
 
-            // Assert - No exception should be thrown, and logging should be skipped
-            Assert.Pass("DataTransportAuditLogger correctly respects AuditLog.IsAuditLogEnabled flag");
+        [Test]
+        public void AuditLog_WhenEnabled_IsAuditLogEnabledReturnsTrue()
+        {
+            // Arrange
+            AuditLog.IsAuditLogEnabled = true;
+            
+            // Act & Assert
+            Assert.That(AuditLog.IsAuditLogEnabled, Is.True, 
+                "AuditLog.IsAuditLogEnabled should return true when audit logging is enabled");
+        }
+
+        [Test]
+        public void DataTransportAuditLogger_WhenDisabled_DoesNotThrowForSentData()
+        {
+            // Arrange
+            AuditLog.IsAuditLogEnabled = false;
+            
+            // Act & Assert - This should be a no-op when audit log is disabled
+            Assert.DoesNotThrow(() => DataTransportAuditLogger.Log(
+                DataTransportAuditLogger.AuditLogDirection.Sent,
+                DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
+                "https://test.example.com"
+            ), "DataTransportAuditLogger.Log should not throw when audit logging is disabled for sent data");
+        }
+
+        [Test]
+        public void DataTransportAuditLogger_WhenDisabled_DoesNotThrowForReceivedData()
+        {
+            // Arrange
+            AuditLog.IsAuditLogEnabled = false;
+            
+            // Act & Assert - This should be a no-op when audit log is disabled
+            Assert.DoesNotThrow(() => DataTransportAuditLogger.Log(
+                DataTransportAuditLogger.AuditLogDirection.Received,
+                DataTransportAuditLogger.AuditLogSource.Collector,
+                "Response: 200 (OK) from https://test.example.com"
+            ), "DataTransportAuditLogger.Log should not throw when audit logging is disabled for received data");
+        }
+
+        [Test]
+        public void DataTransportAuditLogger_WhenEnabled_DoesNotThrowForSentData()
+        {
+            // Arrange
+            AuditLog.IsAuditLogEnabled = true;
+            
+            // Act & Assert - This should perform logging when audit log is enabled
+            Assert.DoesNotThrow(() => DataTransportAuditLogger.Log(
+                DataTransportAuditLogger.AuditLogDirection.Sent,
+                DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
+                "https://otlp.nr-data.net/v1/metrics"
+            ), "DataTransportAuditLogger.Log should not throw when audit logging is enabled for sent data");
+        }
+
+        [Test]
+        public void DataTransportAuditLogger_WhenEnabled_DoesNotThrowForReceivedData()
+        {
+            // Arrange
+            AuditLog.IsAuditLogEnabled = true;
+            
+            // Act & Assert - This should perform logging when audit log is enabled
+            Assert.DoesNotThrow(() => DataTransportAuditLogger.Log(
+                DataTransportAuditLogger.AuditLogDirection.Received,
+                DataTransportAuditLogger.AuditLogSource.Collector,
+                "Response: 200 (OK) for https://otlp.nr-data.net/v1/metrics"
+            ), "DataTransportAuditLogger.Log should not throw when audit logging is enabled for received data");
         }
     }
 }

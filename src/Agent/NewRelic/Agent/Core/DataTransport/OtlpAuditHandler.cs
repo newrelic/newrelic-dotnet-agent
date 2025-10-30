@@ -47,7 +47,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 // Log the request URI (with license key obfuscation)
                 DataTransportAuditLogger.Log(
                     DataTransportAuditLogger.AuditLogDirection.Sent,
-                    DataTransportAuditLogger.AuditLogSource.OtlpExporter,
+                    DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
                     request.RequestUri?.ToString() ?? "Unknown URI");
 
                 // Log request metadata (safe for binary content)
@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     DataTransportAuditLogger.Log(
                         DataTransportAuditLogger.AuditLogDirection.Sent,
-                        DataTransportAuditLogger.AuditLogSource.OtlpExporter,
+                        DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
                         contentInfo);
                 }
             }
@@ -75,7 +75,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 
                 DataTransportAuditLogger.Log(
                     DataTransportAuditLogger.AuditLogDirection.Received,
-                    DataTransportAuditLogger.AuditLogSource.OtlpExporter,
+                    DataTransportAuditLogger.AuditLogSource.Collector,
                     responseInfo);
 
                 // Log response content metadata if present
@@ -86,7 +86,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     {
                         DataTransportAuditLogger.Log(
                             DataTransportAuditLogger.AuditLogDirection.Received,
-                            DataTransportAuditLogger.AuditLogSource.OtlpExporter,
+                            DataTransportAuditLogger.AuditLogSource.Collector,
                             responseContentInfo);
                     }
                 }
@@ -106,7 +106,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 
                 DataTransportAuditLogger.Log(
                     DataTransportAuditLogger.AuditLogDirection.Sent,
-                    DataTransportAuditLogger.AuditLogSource.OtlpExporter,
+                    DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
                     errorInfo);
             }
             catch (Exception ex)
