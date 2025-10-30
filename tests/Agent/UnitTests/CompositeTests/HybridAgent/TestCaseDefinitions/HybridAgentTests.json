@@ -1587,7 +1587,7 @@
                                 "command": "AddOTelAttribute",
                                 "parameters": {
                                     "name": "messaging.system",
-                                    "value": "azure.servicebus"
+                                    "value": "servicebus"
                                 }
                             },
                             {
@@ -1640,7 +1640,7 @@
                         "server.address": "servicebus.local",
                         "server.port": 8080,
                         "messaging.destination.name": "ordersqueue",
-                        "messaging.system": "azure.servicebus"
+                        "messaging.system": "servicebus"
                     }
                 }
             ]

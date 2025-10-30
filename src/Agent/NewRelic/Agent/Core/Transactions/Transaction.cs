@@ -1292,12 +1292,14 @@ namespace NewRelic.Agent.Core.Transactions
 
                 if (segment.UniqueId >= _transactionTracerMaxSegments)
                 {
+                    if (Log.IsFinestEnabled) LogFinest($"Nulling out reference to this segment {{{segment.ToStringForFinestLogging()}}}");
                     // we're over the segment limit.  Null out the reference to the segment.
                     _segments[segment.UniqueId] = null;
                 }
 
                 if (segment.ParentUniqueId.HasValue)
                 {
+                    if (Log.IsFinestEnabled) LogFinest($"Trying to get parent segment for {{{segment.ToStringForFinestLogging()}}}");
                     var parentSegment = _segments[segment.ParentUniqueId.Value];
                     if (null != parentSegment)
                     {
