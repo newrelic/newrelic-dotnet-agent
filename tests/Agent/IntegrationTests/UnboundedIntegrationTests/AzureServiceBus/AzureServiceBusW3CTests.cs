@@ -87,6 +87,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
                 .Where(@event => @event.IntrinsicAttributes["name"].ToString()!
                     .Contains($"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/")).ToList();
 
+            Assert.NotNull(sendTx);
+            Assert.NotNull(receiveTx);
             Assert.NotNull(produceSpans);
             Assert.NotNull(consumeSpans);
 

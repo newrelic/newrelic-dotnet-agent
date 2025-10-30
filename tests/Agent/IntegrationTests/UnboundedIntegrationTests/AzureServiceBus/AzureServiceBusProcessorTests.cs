@@ -14,11 +14,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
     public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
-
-        const string TestTraceId = "12345678901234567890123456789012";
-        const bool Sampled = true;
-        const string Priority = "1.23456";
-
         private readonly TFixture _fixture;
         private readonly string _queueOrTopicName;
         private readonly string _destinationType;
@@ -50,7 +45,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
             _transactionNameBase = $"OtherTransaction/Message/ServiceBus/{_destinationType}/Named";
 
             _fixture.AddCommand($"AzureServiceBusExerciser Initialize{_destinationType} {_queueOrTopicName}");
-            _fixture.AddCommand($"AzureServiceBusExerciser ExerciseServiceBusProcessorFor{_destinationType} {_queueOrTopicName}");
+            _fixture.AddCommand($"AzureServiceBusExerciser ExerciseServiceBusProcessor_SendMessagesFor{_destinationType} {_queueOrTopicName}");
+            _fixture.AddCommand($"AzureServiceBusExerciser ExerciseServiceBusProcessor_ReceiveMessagesFor{_destinationType} {_queueOrTopicName}");
             _fixture.AddCommand($"AzureServiceBusExerciser Delete{_destinationType} {_queueOrTopicName}");
 
             _fixture.AddActions
@@ -65,12 +61,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
                         .ForceTransactionTraces()
                         .ConfigureFasterMetricsHarvestCycle(20)
                         .ConfigureFasterSpanEventsHarvestCycle(20)
-                        .ConfigureFasterTransactionTracesHarvestCycle(25)
-                        ;
+                        .ConfigureFasterTransactionTracesHarvestCycle(25);
+
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex,
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex,
                         TimeSpan.FromMinutes(1));
                 }
             );
@@ -108,8 +104,23 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
 
             };
 
-            var expectedTransactionEvent =
-                _fixture.AgentLog.TryGetTransactionEvent($"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}");
+            // get the send transaction events to retrieve the expected DT attributes
+            var expectedSendTransactionEvent =
+                _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus.AzureServiceBusExerciser/ExerciseServiceBusProcessor_SendMessagesFor{_destinationType}");
+
+            Assert.NotNull(expectedSendTransactionEvent);
+
+            var expectedTraceId = expectedSendTransactionEvent.IntrinsicAttributes["traceId"].ToString();
+            var expectedPriority = expectedSendTransactionEvent.IntrinsicAttributes["priority"].ToString();
+            var expectedSampled = expectedSendTransactionEvent.IntrinsicAttributes["sampled"];
+
+            // there should be two processor transactions (one for each message processed)
+            var processorTransactionEvents =
+                _fixture.AgentLog.GetTransactionEvents()
+                    .Where(te => te.IntrinsicAttributes["name"].ToString() ==
+                                          $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}").ToList();
+
+            var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
 
             var expectedTransactionTraceSegments = new List<string>
             {
@@ -119,48 +130,41 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
             };
 
             var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}");
-
             var queueProcessSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_processMetricNameBase}/{_queueOrTopicName}");
 
-            Assertions.MetricsExist(expectedMetrics, metrics);
 
-            NrAssert.Multiple(
-                () => Assert.NotNull(expectedTransactionEvent),
+            Assert.Multiple(
+                () => Assert.Equal(2, processorTransactionEvents.Count),
+                () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assert.NotNull(transactionSample),
                 () => Assert.NotNull(queueProcessSpanEvent),
-                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
-            );
-        
-            // get the transaction events and verify that all of them have the expected DT attributes
-            var transactionEvents = _fixture.AgentLog.GetTransactionEvents();
-            var spanEvents = _fixture.AgentLog.GetSpanEvents();
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+                () => Assert.NotEmpty(spanEvents));
 
-            Assert.NotEmpty(transactionEvents);
-            Assert.NotEmpty(spanEvents);
-
-            Assert.All(transactionEvents, transactionEvent =>
+            // verify processor transaction events have the expected DT attributes
+            Assert.All(processorTransactionEvents, transactionEvent =>
             {
                 Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("traceId", out var actualTraceId));
-                Assert.Equal(TestTraceId, actualTraceId);
+                Assert.Equal(expectedTraceId, actualTraceId);
 
                 Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
-                Assert.Equal(Priority, actualPriority.ToString().Substring(0, 7)); // keep the values the same length
+                Assert.Equal(expectedPriority, actualPriority.ToString());
 
                 Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
-                Assert.Equal(Sampled, actualSampled);
+                Assert.Equal(expectedSampled, actualSampled);
             });
 
-            // get the span events and verify that all of them have the expected DT attributes
+            // verify span events have the expected DT attributes
             Assert.All(spanEvents, spanEvent =>
             {
                 Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("traceId", out var actualTraceId));
-                Assert.Equal(TestTraceId, actualTraceId);
+                Assert.Equal(expectedTraceId, actualTraceId);
 
                 Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
-                Assert.Equal(Priority, actualPriority.ToString().Substring(0, 7)); // keep the values the same length
+                Assert.Equal(expectedPriority, actualPriority.ToString()); // keep the values the same length
 
                 Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
-                Assert.Equal(Sampled, actualSampled);
+                Assert.Equal(expectedSampled, actualSampled);
             });
         }
     }
