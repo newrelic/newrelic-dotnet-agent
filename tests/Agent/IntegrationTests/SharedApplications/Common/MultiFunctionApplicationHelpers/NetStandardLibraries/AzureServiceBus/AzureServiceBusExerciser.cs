@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
+using Microsoft.Identity.Client;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
@@ -46,15 +49,24 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static async Task SendAndReceiveAMessageForQueue(string queueName)
+        public static async Task ReceiveAMessageForQueue(string queueName)
         {
             await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
-            await SendAMessage(client, queueName, "Hello world!");
 
             await using var receiver = client.CreateReceiver(queueName,
                 new ServiceBusReceiverOptions() { ReceiveMode = ServiceBusReceiveMode.ReceiveAndDelete });
             await receiver.ReceiveMessageAsync();
         }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static async Task SendAMessageForQueue(string queueName)
+        {
+            await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
+            await SendAMessage(client, queueName, "Hello world!");
+        }
+
 
         [LibraryMethod]
         [Transaction]
@@ -138,15 +150,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
             // create the sender
             await using ServiceBusSender sender = client.CreateSender(queueName);
 
-            // create a set of messages that we can send
-            ServiceBusMessage[] messages = new ServiceBusMessage[]
-            {
-                new ServiceBusMessage("First"),
-                new ServiceBusMessage("Second")
-            };
+            var msgs = GetMessages(2);
 
             // send the message batch
-            await sender.SendMessagesAsync(messages);
+            await sender.SendMessagesAsync(msgs);
 
             // create the options to use for configuring the processor
             ServiceBusProcessorOptions options = new()
@@ -234,7 +241,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static async Task SendAndReceiveAMessageForTopic(string topicName)
+        public static async Task SendAMessageForTopic(string topicName)
         {
             await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
             await SendAMessage(client, topicName, "Hello world!");
@@ -307,14 +314,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
             // create the sender
             await using ServiceBusSender sender = client.CreateSender(topicName);
 
-            // create a set of messages that we can send
-            ServiceBusMessage[] messages = new ServiceBusMessage[]
-            {
-                new ServiceBusMessage("First"), new ServiceBusMessage("Second")
-            };
+            var msgs = GetMessages(2);
 
             // send the message batch
-            await sender.SendMessagesAsync(messages);
+            await sender.SendMessagesAsync(msgs);
 
             // create the options to use for configuring the processor
             ServiceBusProcessorOptions options = new()
@@ -398,6 +401,18 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
             await using var sender = client.CreateSender(queueOrTopicName);
             var message = new ServiceBusMessage(messageBody);
             await sender.SendMessageAsync(message);
+        }
+
+        private static IEnumerable<ServiceBusMessage> GetMessages(int count)
+        {
+            var msgs = new List<ServiceBusMessage>(count);
+
+            for (int i = 0; i < count; ++i)
+            {
+                var msg = new ServiceBusMessage($"Test Message {i}");
+                msgs.Add(msg);
+            }
+            return msgs;
         }
     }
 }

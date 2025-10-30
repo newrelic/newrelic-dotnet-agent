@@ -14,6 +14,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
     public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
+
+        const string TestTraceId = "12345678901234567890123456789012";
+        const bool Sampled = true;
+        const string Priority = "1.23456";
+
         private readonly TFixture _fixture;
         private readonly string _queueOrTopicName;
         private readonly string _destinationType;
@@ -99,6 +104,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
                     callCount = 2,
                     metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
                 },
+                new() { metricName = "Supportability/TraceContext/Accept/Success"},
+
             };
 
             var expectedTransactionEvent =
@@ -115,10 +122,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
 
             var queueProcessSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_processMetricNameBase}/{_queueOrTopicName}");
 
-            var expectedConsumeAgentAttributes = new List<string> { "server.address", "messaging.destination.name", };
-
-            var expectedIntrinsicAttributes = new List<string> { "span.kind", };
-
             Assertions.MetricsExist(expectedMetrics, metrics);
 
             NrAssert.Multiple(
@@ -127,6 +130,38 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
                 () => Assert.NotNull(queueProcessSpanEvent),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
             );
+        
+            // get the transaction events and verify that all of them have the expected DT attributes
+            var transactionEvents = _fixture.AgentLog.GetTransactionEvents();
+            var spanEvents = _fixture.AgentLog.GetSpanEvents();
+
+            Assert.NotEmpty(transactionEvents);
+            Assert.NotEmpty(spanEvents);
+
+            Assert.All(transactionEvents, transactionEvent =>
+            {
+                Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("traceId", out var actualTraceId));
+                Assert.Equal(TestTraceId, actualTraceId);
+
+                Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
+                Assert.Equal(Priority, actualPriority.ToString().Substring(0, 7)); // keep the values the same length
+
+                Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
+                Assert.Equal(Sampled, actualSampled);
+            });
+
+            // get the span events and verify that all of them have the expected DT attributes
+            Assert.All(spanEvents, spanEvent =>
+            {
+                Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("traceId", out var actualTraceId));
+                Assert.Equal(TestTraceId, actualTraceId);
+
+                Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
+                Assert.Equal(Priority, actualPriority.ToString().Substring(0, 7)); // keep the values the same length
+
+                Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
+                Assert.Equal(Sampled, actualSampled);
+            });
         }
     }
 
