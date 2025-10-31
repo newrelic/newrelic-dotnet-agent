@@ -226,7 +226,7 @@ namespace NewRelic.Agent.Core.DataTransport
                                         "ReplaceAll": true,
                                         "MatchRegex": {
                                             "Pattern": "match1",
-                                            "Options": "IgnoreCase, Multiline"
+                                            "Options": 3
                                         }
                                     }, {
                                         "MatchExpression": "match2",
@@ -238,7 +238,7 @@ namespace NewRelic.Agent.Core.DataTransport
                                         "ReplaceAll": false,
                                         "MatchRegex": {
                                             "Pattern": "match2",
-                                            "Options": "IgnoreCase, Multiline"
+                                            "Options": 3
                                         }
                                     }
                                 ],
@@ -283,7 +283,7 @@ namespace NewRelic.Agent.Core.DataTransport
                                         "ReplaceAll": true,
                                         "MatchRegex": {
                                             "Pattern": "matchTrans1",
-                                            "Options": "IgnoreCase, Multiline"
+                                            "Options": 3
                                         }
                                     }, {
                                         "MatchExpression": "matchTrans2",
@@ -295,7 +295,7 @@ namespace NewRelic.Agent.Core.DataTransport
                                         "ReplaceAll": false,
                                         "MatchRegex": {
                                             "Pattern": "matchTrans2",
-                                            "Options": "IgnoreCase, Multiline"
+                                            "Options": 3
                                         }
                                     }
                                 ],
@@ -324,7 +324,7 @@ namespace NewRelic.Agent.Core.DataTransport
                                         "ReplaceAll": true,
                                         "MatchRegex": {
                                             "Pattern": "matchUrl1",
-                                            "Options": "IgnoreCase, Multiline"
+                                            "Options": 3
                                         }
                                     }, {
                                         "MatchExpression": "matchUrl2",
@@ -336,19 +336,19 @@ namespace NewRelic.Agent.Core.DataTransport
                                         "ReplaceAll": false,
                                         "MatchRegex": {
                                             "Pattern": "matchUrl2",
-                                            "Options": "IgnoreCase, Multiline"
+                                            "Options": 3
                                         }
                                     }
                                 ],
                                 "agent.request_path_exclusion_list": [{
                                         "Pattern": "asdf",
-                                        "Options": "None"
+                                        "Options": 0
                                     }, {
                                         "Pattern": "qwerty",
-                                        "Options": "IgnoreCase"
+                                        "Options": 1
                                     }, {
                                         "Pattern": "yolo",
-                                        "Options": "ExplicitCapture"
+                                        "Options": 4
                                     }
                                 ],
                                 "agent.web_transactions_apdex": {
