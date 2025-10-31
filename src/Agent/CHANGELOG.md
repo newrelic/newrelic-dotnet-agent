@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.46.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.45.0...v10.46.0) (2025-10-28)
+
+
+### New features
+
+* .NET 10 Support ([#3271](https://github.com/newrelic/newrelic-dotnet-agent/issues/3271)) ([3b03e65](https://github.com/newrelic/newrelic-dotnet-agent/commit/3b03e65852475b59e3637081425c137d4f7cb914))
+* Add environment variable support to enable/disable browser agent ([#3279](https://github.com/newrelic/newrelic-dotnet-agent/issues/3279)) ([faec9a9](https://github.com/newrelic/newrelic-dotnet-agent/commit/faec9a9d19d5ced83ad4ec4f3b6a282d132906ed))
+
+
+### Fixes
+
+* AgentHealthReporter runs when the agent is disabled via config ([#3267](https://github.com/newrelic/newrelic-dotnet-agent/issues/3267)) ([76154c9](https://github.com/newrelic/newrelic-dotnet-agent/commit/76154c9e80ea77cd1b3e09bacbd48fa7be2894f1))
+* Remove service bus distributed trace header manipulation from Azure Function instrumentation. ([#3274](https://github.com/newrelic/newrelic-dotnet-agent/issues/3274)) ([e21eca0](https://github.com/newrelic/newrelic-dotnet-agent/commit/e21eca052261b415a8b194d917d11455a3b38a68))
+
 ## [10.45.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.44.1...v10.45.0) (2025-09-30)
 
 

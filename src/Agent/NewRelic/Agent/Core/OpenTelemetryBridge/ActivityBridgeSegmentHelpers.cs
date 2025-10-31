@@ -317,7 +317,7 @@ public static class ActivityBridgeSegmentHelpers
             "kafka" => "Kafka",
             "aws.sqs" => SqsHelper.VendorName,
             "aws.sns" => "SNS",
-            "azure.servicebus" => "ServiceBus",
+            "servicebus" => "ServiceBus",
             _ => messagingSystem.CapitalizeEachWord() // default to capitalizing each word in the messaging system name
         };
 
