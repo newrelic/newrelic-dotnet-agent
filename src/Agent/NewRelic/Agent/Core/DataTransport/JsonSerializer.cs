@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -9,12 +10,29 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         public string Serialize(object[] parameters)
         {
-            return JsonConvert.SerializeObject(parameters);
+            var settings = new JsonSerializerSettings
+            {
+                Converters =
+                [
+                    new StringEnumConverter()  // honors [EnumMember(Value=...)]
+                ],
+                NullValueHandling = NullValueHandling.Ignore
+            };
+            return JsonConvert.SerializeObject(parameters, settings);
         }
 
         public T Deserialize<T>(string responseBody)
         {
-            return JsonConvert.DeserializeObject<T>(responseBody);
+            var settings = new JsonSerializerSettings
+            {
+                Converters =
+                [
+                    new StringEnumConverter()  // honors [EnumMember(Value=...)]
+                ],
+                NullValueHandling = NullValueHandling.Ignore
+            };
+
+            return JsonConvert.DeserializeObject<T>(responseBody, settings);
         }
     }
 }
