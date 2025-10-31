@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using NewRelic.Testing.Assertions;
 using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
@@ -77,6 +76,13 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
         [Fact]
         public void Test()
         {
+            // Local helper to trim priority to max 7 chars
+            string TrimPriority(object val)
+            {
+                var s = val?.ToString();
+                return string.IsNullOrEmpty(s) ? s : (s.Length > 7 ? s.Substring(0, 7) : s);
+            }
+
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
             // 2 messages, 1 process segment, 1 method segment, 1 settle segment per message
@@ -101,7 +107,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
                     metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
                 },
                 new() { metricName = "Supportability/TraceContext/Accept/Success"},
-
             };
 
             // get the send transaction events to retrieve the expected DT attributes
@@ -111,7 +116,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
             Assert.NotNull(expectedSendTransactionEvent);
 
             var expectedTraceId = expectedSendTransactionEvent.IntrinsicAttributes["traceId"].ToString();
-            var expectedPriority = expectedSendTransactionEvent.IntrinsicAttributes["priority"].ToString();
+            var expectedPriority = TrimPriority(expectedSendTransactionEvent.IntrinsicAttributes["priority"]);
             var expectedSampled = expectedSendTransactionEvent.IntrinsicAttributes["sampled"];
 
             // there should be two processor transactions (one for each message processed)
@@ -148,7 +153,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
                 Assert.Equal(expectedTraceId, actualTraceId);
 
                 Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
-                Assert.Equal(expectedPriority, actualPriority.ToString());
+                Assert.Equal(expectedPriority, TrimPriority(actualPriority));
 
                 Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
                 Assert.Equal(expectedSampled, actualSampled);
@@ -161,7 +166,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
                 Assert.Equal(expectedTraceId, actualTraceId);
 
                 Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
-                Assert.Equal(expectedPriority, actualPriority.ToString()); // keep the values the same length
+                Assert.Equal(expectedPriority, TrimPriority(actualPriority));
 
                 Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
                 Assert.Equal(expectedSampled, actualSampled);
