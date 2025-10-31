@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
+using Microsoft.Identity.Client;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
@@ -46,15 +49,24 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static async Task SendAndReceiveAMessageForQueue(string queueName)
+        public static async Task ReceiveAMessageForQueue(string queueName)
         {
             await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
-            await SendAMessage(client, queueName, "Hello world!");
 
             await using var receiver = client.CreateReceiver(queueName,
                 new ServiceBusReceiverOptions() { ReceiveMode = ServiceBusReceiveMode.ReceiveAndDelete });
             await receiver.ReceiveMessageAsync();
         }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static async Task SendAMessageForQueue(string queueName)
+        {
+            await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
+            await SendAMessage(client, queueName, "Hello world!");
+        }
+
 
         [LibraryMethod]
         [Transaction]
@@ -131,27 +143,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
         [LibraryMethod]
         // [Transaction] no transaction on this one; we're testing that the ServiceBusProcessor is creating transactions
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static async Task ExerciseServiceBusProcessorForQueue(string queueName)
+        public static async Task ExerciseServiceBusProcessor_ReceiveMessagesForQueue(string queueName)
         {
             await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
-
-            // create the sender
-            await using ServiceBusSender sender = client.CreateSender(queueName);
-
-            // create a set of messages that we can send
-            ServiceBusMessage[] messages = new ServiceBusMessage[]
-            {
-                new ServiceBusMessage("First"),
-                new ServiceBusMessage("Second")
-            };
-
-            // send the message batch
-            await sender.SendMessagesAsync(messages);
 
             // create the options to use for configuring the processor
             ServiceBusProcessorOptions options = new()
             {
-                MaxConcurrentCalls = 1 // multi-threading. Yay!
+                MaxConcurrentCalls = 2 // multi-threading. Yay!
             };
 
             // create a processor that we can use to process the messages
@@ -169,9 +168,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
                 var threadId = Thread.CurrentThread.ManagedThreadId;
                 Console.WriteLine($"ThreadId: {threadId} - body: {body}");
 
-                Interlocked.Increment(ref receivedMessages);
+                await Task.Delay(5000); // simulate processing the message, ensure this transaction is sampled
 
-                await Task.Delay(1000); // simulate processing the message
+                Interlocked.Increment(ref receivedMessages);
             }
 
             Task ErrorHandler(ProcessErrorEventArgs args)
@@ -234,10 +233,18 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static async Task SendAndReceiveAMessageForTopic(string topicName)
+        public static async Task SendAMessageForTopic(string topicName)
         {
             await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
             await SendAMessage(client, topicName, "Hello world!");
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static async Task ReceiveAMessageForTopic(string topicName)
+        {
+            await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
 
             await using var receiver = client.CreateReceiver(topicName, Subscription,
                 new ServiceBusReceiverOptions() { ReceiveMode = ServiceBusReceiveMode.ReceiveAndDelete });
@@ -298,28 +305,41 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
         }
 
         [LibraryMethod]
-        // [Transaction] no transaction on this one; we're testing that the ServiceBusProcessor is creating transactions
+        [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static async Task ExerciseServiceBusProcessorForTopic(string topicName)
+        public static async Task ExerciseServiceBusProcessor_SendMessagesForTopic(string topicName)
         {
             await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
-
             // create the sender
             await using ServiceBusSender sender = client.CreateSender(topicName);
-
-            // create a set of messages that we can send
-            ServiceBusMessage[] messages = new ServiceBusMessage[]
-            {
-                new ServiceBusMessage("First"), new ServiceBusMessage("Second")
-            };
-
+            var msgs = GetMessages(2);
             // send the message batch
-            await sender.SendMessagesAsync(messages);
+            await sender.SendMessagesAsync(msgs);
+        }
+
+        [LibraryMethod, Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static async Task ExerciseServiceBusProcessor_SendMessagesForQueue(string queueName)
+        {
+            await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
+            // create the sender
+            await using ServiceBusSender sender = client.CreateSender(queueName);
+            var msgs = GetMessages(2);
+            // send the message batch
+            await sender.SendMessagesAsync(msgs);
+        }
+
+        [LibraryMethod]
+        // [Transaction] no transaction on this one; we're testing that the ServiceBusProcessor is creating transactions
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static async Task ExerciseServiceBusProcessor_ReceiveMessagesForTopic(string topicName)
+        {
+           await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
 
             // create the options to use for configuring the processor
             ServiceBusProcessorOptions options = new()
             {
-                MaxConcurrentCalls = 1 // multi-threading. Yay!
+                MaxConcurrentCalls = 2 // multi-threading. Yay!
             };
 
             // create a processor that we can use to process the messages
@@ -337,9 +357,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
                 var threadId = Thread.CurrentThread.ManagedThreadId;
                 Console.WriteLine($"ThreadId: {threadId} - body: {body}");
 
-                Interlocked.Increment(ref receivedMessages);
+                await Task.Delay(5000); // simulate processing the message, long delay to ensure this transaction is sampled
 
-                await Task.Delay(1000); // simulate processing the message
+                Interlocked.Increment(ref receivedMessages);
             }
 
             Task ErrorHandler(ProcessErrorEventArgs args)
@@ -398,6 +418,18 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus
             await using var sender = client.CreateSender(queueOrTopicName);
             var message = new ServiceBusMessage(messageBody);
             await sender.SendMessageAsync(message);
+        }
+
+        private static IEnumerable<ServiceBusMessage> GetMessages(int count)
+        {
+            var msgs = new List<ServiceBusMessage>(count);
+
+            for (int i = 0; i < count; ++i)
+            {
+                var msg = new ServiceBusMessage($"Test Message {i}");
+                msgs.Add(msg);
+            }
+            return msgs;
         }
     }
 }
