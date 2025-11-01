@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.DataTransport
 {
     /// <summary>
     /// DelegatingHandler that provides audit logging for OTLP (OpenTelemetry Protocol) HTTP communications.
-    /// Captures requests and responses for compliance auditing while handling binary protobuf content appropriately.
+    /// Captures requests and responses for compliance auditing while handling binary protobuf content.
     /// </summary>
     public class OtlpAuditHandler : DelegatingHandler
     {
@@ -34,8 +34,12 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                // Audit log failed requests for compliance
-                LogOtlpException(request, ex);
+                // Log HTTP-level error at finest level for debugging
+                Log.Finest(ex, "OTLP metrics export failed: {ExceptionType} - {Message}. Endpoint: {RequestUri}, Method: {Method}", 
+                    ex.GetType().Name, ex.Message, request.RequestUri, request.Method);
+                
+                // Exception will propagate to OpenTelemetry SDK, which will log its own error
+                // via EventSource that our OpenTelemetrySDKLogger captures
                 throw;
             }
         }
@@ -50,7 +54,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
                     request.RequestUri?.ToString() ?? "Unknown URI");
 
-                // Log request metadata (safe for binary content)
+                // Log request metadata (for binary content)
                 var contentInfo = GetSafeContentInfo(request.Content);
                 if (!string.IsNullOrEmpty(contentInfo))
                 {
@@ -62,7 +66,6 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                // Never let audit logging break OTLP export
                 Log.Debug(ex, "Failed to audit log OTLP request");
             }
         }
@@ -93,35 +96,16 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                // Never let audit logging break OTLP export
                 Log.Debug(ex, "Failed to audit log OTLP response");
             }
         }
 
-        private static void LogOtlpException(HttpRequestMessage request, Exception exception)
-        {
-            try
-            {
-                var errorInfo = $"OTLP Export Exception for {request.RequestUri}: {exception.GetType().Name} - {exception.Message}";
-                
-                DataTransportAuditLogger.Log(
-                    DataTransportAuditLogger.AuditLogDirection.Sent,
-                    DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
-                    errorInfo);
-            }
-            catch (Exception ex)
-            {
-                // Never let audit logging break OTLP export
-                Log.Debug(ex, "Failed to audit log OTLP exception");
-            }
-        }
-
         /// <summary>
-        /// Generates safe logging information for HTTP content, particularly for binary protobuf data.
+        /// Generates logging information for HTTP content, particularly for binary protobuf data.
         /// Avoids logging full binary content which would be unreadable and potentially large.
         /// </summary>
         /// <param name="content">The HTTP content to generate info for</param>
-        /// <returns>Safe string representation of the content metadata</returns>
+        /// <returns>string representation of the content metadata</returns>
         private static string GetSafeContentInfo(HttpContent content)
         {
             if (content == null)
@@ -135,22 +119,17 @@ namespace NewRelic.Agent.Core.DataTransport
                     ? string.Join(", ", content.Headers.ContentEncoding) 
                     : "none";
 
-                // For protobuf content, only log metadata, not the actual binary data
-                if (contentType.Contains("protobuf", StringComparison.OrdinalIgnoreCase) || 
-                    contentType.Contains("application/x-protobuf", StringComparison.OrdinalIgnoreCase))
+                var baseInfo = $"Content: {contentType}, Length: {contentLength} bytes, Encoding: {encoding}";
+
+                // For protobuf content, add warning about binary data not being logged
+                if (contentType.StartsWith("application/x-protobuf", StringComparison.OrdinalIgnoreCase) || 
+                    contentType.Contains("protobuf", StringComparison.OrdinalIgnoreCase))
                 {
-                    return $"Content: {contentType}, Length: {contentLength} bytes, Encoding: {encoding} [Binary Protobuf Data - Content Not Logged]";
+                    return $"{baseInfo} [Binary Protobuf Data - Content Not Logged]";
                 }
 
-                // For text content types, we could potentially log more detail if needed
-                if (contentType.Contains("json", StringComparison.OrdinalIgnoreCase) || 
-                    contentType.Contains("text", StringComparison.OrdinalIgnoreCase))
-                {
-                    return $"Content: {contentType}, Length: {contentLength} bytes, Encoding: {encoding}";
-                }
-
-                // Default: just metadata for other content types
-                return $"Content: {contentType}, Length: {contentLength} bytes, Encoding: {encoding}";
+                // All other content types (json, text, xml, etc.) just return basic metadata
+                return baseInfo;
             }
             catch (Exception ex)
             {
