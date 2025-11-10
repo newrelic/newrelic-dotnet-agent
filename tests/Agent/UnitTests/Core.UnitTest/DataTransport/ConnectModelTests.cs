@@ -427,7 +427,10 @@ namespace NewRelic.Agent.Core.DataTransport
                             "agent_control.health.frequency": 5,
                             "otel_bridge.included_activity_sources": ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"],
                             "otel_bridge.excluded_activity_sources": ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"],
-                            "otel_bridge.enabled": true
+                            "opentelemetry.enabled": true,
+                            "opentelemetry.metrics.enabled": true,
+                            "opentelemetry.metrics.include": ["IncludedMeter1","IncludedMeter2"],
+                            "opentelemetry.metrics.exclude": ["ExcludedMeter1","ExcludedMeter2"]
                         },
                         "metadata": {
                             "hello": "there"

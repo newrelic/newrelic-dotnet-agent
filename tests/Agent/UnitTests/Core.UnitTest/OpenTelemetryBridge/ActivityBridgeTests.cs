@@ -27,7 +27,7 @@ namespace NewRelic.Agent.UnitTests.Core.UnitTest.OpenTelemetryBridge
             _mockErrorService = Mock.Create<IErrorService>();
             _mockConfig = Mock.Create<IConfiguration>();
             Mock.Arrange(() => _mockAgent.Configuration).Returns(_mockConfig);
-            Mock.Arrange(() => _mockConfig.OpenTelemetryBridgeEnabled).Returns(true);
+            Mock.Arrange(() => _mockConfig.OpenTelemetryEnabled).Returns(true);
         }
 
         [Test]
@@ -48,10 +48,10 @@ namespace NewRelic.Agent.UnitTests.Core.UnitTest.OpenTelemetryBridge
         }
 
         [Test]
-        public void Start_ReturnsTrue_WhenOpenTelemetryBridgeDisabled()
+        public void Start_ReturnsTrue_WhenOpenTelemetryDisabled()
         {
             // Arrange
-            Mock.Arrange(() => _mockConfig.OpenTelemetryBridgeEnabled).Returns(false);
+            Mock.Arrange(() => _mockConfig.OpenTelemetryEnabled).Returns(false);
 
             var bridge = new ActivityBridge(_mockAgent, _mockErrorService);
 
@@ -59,7 +59,7 @@ namespace NewRelic.Agent.UnitTests.Core.UnitTest.OpenTelemetryBridge
             var result = bridge.Start();
 
             // Assert
-            Assert.That(result, Is.True, "Start should return true if OpenTelemetryBridge is disabled.");
+            Assert.That(result, Is.True, "Start should return true if OpenTelemetry is disabled.");
         }
 
         [Test]
