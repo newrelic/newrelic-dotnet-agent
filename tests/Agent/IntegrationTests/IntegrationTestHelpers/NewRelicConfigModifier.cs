@@ -547,7 +547,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public NewRelicConfigModifier EnableOTelBridge(bool enabled)
         {
-            CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.Enabled", enabled.ToString(), "urn:newrelic-config");
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "opentelemetry", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "enabled", enabled.ToString().ToLower());
             return this;
         }
 
