@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.46.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.46.0...v10.46.1) (2025-11-11)
+
+
+### Fixes
+
+* Remove "consume" span from Azure Service Bus transactions created in "processor" mode for more accurate transaction timing. ([faa591f](https://github.com/newrelic/newrelic-dotnet-agent/commit/faa591f19ef25fe51b3b006c45774f415fb3a780))
+* Update ReportedConfiguration to serialize certain enums as strings instead of integers for better clarity when viewing settings in the UI ([#3296](https://github.com/newrelic/newrelic-dotnet-agent/issues/3296)) ([e972745](https://github.com/newrelic/newrelic-dotnet-agent/commit/e97274582cdc4e8f6638b941ece8926116d0c04b))
+
 ## [10.46.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.45.0...v10.46.0) (2025-10-28)
 
 
