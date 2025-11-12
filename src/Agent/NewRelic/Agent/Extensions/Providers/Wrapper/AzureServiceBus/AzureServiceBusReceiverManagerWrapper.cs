@@ -111,35 +111,5 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
 
             return headerValues;
         }
-
-        private static bool IsType(object instance, string expectedFullTypeName)
-        {
-            if (instance == null || string.IsNullOrEmpty(expectedFullTypeName))
-            {
-                return false;
-            }
-
-            var type = instance.GetType();
-            while (type != null)
-            {
-                if (type.FullName == expectedFullTypeName)
-                {
-                    return true;
-                }
-                type = type.BaseType;
-            }
-
-            // check interfaces
-            type = instance.GetType();
-            foreach (var iface in type.GetInterfaces())
-            {
-                if (iface.FullName == expectedFullTypeName)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
     }
 }
