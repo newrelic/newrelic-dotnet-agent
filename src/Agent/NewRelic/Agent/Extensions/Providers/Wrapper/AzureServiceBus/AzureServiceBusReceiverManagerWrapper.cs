@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -14,6 +15,9 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
     public class AzureServiceBusReceiverManagerWrapper : AzureServiceBusWrapperBase
     {
         private static Func<object, object> _receiverAccessor;
+        private static Func<object, string> _entityPathAccessor;
+        private static Func<object, string> _fullyQualifiedNamespaceAccessor;
+
         public override bool IsTransactionRequired => false;
 
         public override CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
@@ -25,11 +29,22 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
         public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             var receiverManager = instrumentedMethodCall.MethodCall.InvocationTarget;
-            _receiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(receiverManager.GetType(), "Receiver");
-            dynamic receiver = _receiverAccessor(receiverManager);
 
-            string queueOrTopicName = receiver.EntityPath; // some-queue|topic-name
-            string fqns = receiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
+            var receiverManagerType = receiverManager.GetType();
+            _receiverAccessor = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(receiverManagerType, "Receiver");
+            object receiver = _receiverAccessor(receiverManager);
+            if (receiver == null)
+            {
+                agent.Logger.Warn("AzureServiceBusReceiverManagerWrapper: Unable to access Receiver property on ReceiverManager instance of type {ReceiverManagerType}.", receiverManagerType);
+                return Delegates.NoOp;
+            }
+
+            _entityPathAccessor = _entityPathAccessor ?? VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "EntityPath");
+            _fullyQualifiedNamespaceAccessor = _fullyQualifiedNamespaceAccessor ?? VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "FullyQualifiedNamespace");
+
+            string queueOrTopicName = _entityPathAccessor(receiver)?.ToString(); // some-queue|topic-name
+            string fqns = _fullyQualifiedNamespaceAccessor(receiver)?.ToString(); // some-service-bus-entity.servicebus.windows.net
+
             var destinationType = GetMessageBrokerDestinationType(queueOrTopicName);
 
             // create a transaction for this method call. This method invokes the ProcessMessageAsync handler
@@ -96,6 +111,35 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
             }
 
             return headerValues;
+        }
+
+        private static bool IsType(object instance, string expectedFullTypeName)
+        {
+            if (instance == null || string.IsNullOrEmpty(expectedFullTypeName))
+            {
+                return false;
+            }
+
+            var type = instance.GetType();
+            while (type != null)
+            {
+                if (type.FullName == expectedFullTypeName)
+                {
+                    return true;
+                }
+                type = type.BaseType;
+            }
+
+            // check interfaces
+            type = instance.GetType();
+            foreach (var iface in type.GetInterfaces())
+            {
+                if (iface.FullName == expectedFullTypeName)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
     }
