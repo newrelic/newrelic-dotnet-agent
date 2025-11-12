@@ -31,7 +31,7 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
             var receiverManager = instrumentedMethodCall.MethodCall.InvocationTarget;
 
             var receiverManagerType = receiverManager.GetType();
-            _receiverAccessor = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(receiverManagerType, "Receiver");
+            _receiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(receiverManagerType, "Receiver");
             object receiver = _receiverAccessor(receiverManager);
             if (receiver == null)
             {
@@ -43,11 +43,11 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
                 return Delegates.NoOp;
             }
 
-            _entityPathAccessor = _entityPathAccessor ?? VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "EntityPath");
-            _fullyQualifiedNamespaceAccessor = _fullyQualifiedNamespaceAccessor ?? VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "FullyQualifiedNamespace");
+            _entityPathAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "EntityPath");
+            _fullyQualifiedNamespaceAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "FullyQualifiedNamespace");
 
-            string queueOrTopicName = _entityPathAccessor(receiver)?.ToString() ?? "unknown"; // some-queue|topic-name
-            string fqns = _fullyQualifiedNamespaceAccessor(receiver)?.ToString() ?? "unknown"; // some-service-bus-entity.servicebus.windows.net
+            string queueOrTopicName = _entityPathAccessor(receiver)?.ToString(); // some-queue|topic-name
+            string fqns = _fullyQualifiedNamespaceAccessor(receiver)?.ToString(); // some-service-bus-entity.servicebus.windows.net
 
             var destinationType = GetMessageBrokerDestinationType(queueOrTopicName);
 
