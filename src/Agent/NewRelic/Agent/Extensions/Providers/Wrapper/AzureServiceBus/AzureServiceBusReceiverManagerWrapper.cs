@@ -45,7 +45,6 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
             }
             else
             {
-
                 _entityPathAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "EntityPath");
                 _fullyQualifiedNamespaceAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "FullyQualifiedNamespace");
 
