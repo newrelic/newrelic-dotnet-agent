@@ -16,6 +16,7 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
         private static Func<object, object> _receiverAccessor;
         private static Func<object, string> _entityPathAccessor;
         private static Func<object, string> _fullyQualifiedNamespaceAccessor;
+        private static bool _badReceiverWarningLogged;
 
         public override bool IsTransactionRequired => false;
 
@@ -34,15 +35,19 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
             object receiver = _receiverAccessor(receiverManager);
             if (receiver == null)
             {
-                agent.Logger.Warn("AzureServiceBusReceiverManagerWrapper: Unable to access Receiver property on ReceiverManager instance of type {ReceiverManagerType}.", receiverManagerType);
+                if (!_badReceiverWarningLogged)
+                {
+                    agent.Logger.Warn("AzureServiceBusReceiverManagerWrapper: Unable to access Receiver property on ReceiverManager instance of type {ReceiverManagerType}. Unable to instrument Azure ServiceBus Processor Mode.", receiverManagerType);
+                    _badReceiverWarningLogged = true;
+                }
                 return Delegates.NoOp;
             }
 
             _entityPathAccessor = _entityPathAccessor ?? VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "EntityPath");
             _fullyQualifiedNamespaceAccessor = _fullyQualifiedNamespaceAccessor ?? VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "FullyQualifiedNamespace");
 
-            string queueOrTopicName = _entityPathAccessor(receiver)?.ToString(); // some-queue|topic-name
-            string fqns = _fullyQualifiedNamespaceAccessor(receiver)?.ToString(); // some-service-bus-entity.servicebus.windows.net
+            string queueOrTopicName = _entityPathAccessor(receiver)?.ToString() ?? "unknown"; // some-queue|topic-name
+            string fqns = _fullyQualifiedNamespaceAccessor(receiver)?.ToString() ?? "unknown"; // some-service-bus-entity.servicebus.windows.net
 
             var destinationType = GetMessageBrokerDestinationType(queueOrTopicName);
 
