@@ -28,13 +28,13 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
 
         public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var receiverManager = instrumentedMethodCall.MethodCall.InvocationTarget;
+            string queueOrTopicName = null;
+            string fqns = null;
 
+            var receiverManager = instrumentedMethodCall.MethodCall.InvocationTarget;
             var receiverManagerType = receiverManager.GetType();
             _receiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(receiverManagerType, "Receiver");
             object receiver = _receiverAccessor(receiverManager);
-            string queueOrTopicName = null;
-            string fqns = null;
             if (receiver == null)
             {
                 if (!_badReceiverWarningLogged)
