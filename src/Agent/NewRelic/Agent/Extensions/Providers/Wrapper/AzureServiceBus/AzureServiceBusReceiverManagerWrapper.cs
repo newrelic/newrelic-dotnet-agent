@@ -14,6 +14,10 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
     public class AzureServiceBusReceiverManagerWrapper : AzureServiceBusWrapperBase
     {
         private static Func<object, object> _receiverAccessor;
+        private static Func<object, string> _entityPathAccessor;
+        private static Func<object, string> _fullyQualifiedNamespaceAccessor;
+        private static bool _badReceiverWarningLogged;
+
         public override bool IsTransactionRequired => false;
 
         public override CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
@@ -24,12 +28,30 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
 
         public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var receiverManager = instrumentedMethodCall.MethodCall.InvocationTarget;
-            _receiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(receiverManager.GetType(), "Receiver");
-            dynamic receiver = _receiverAccessor(receiverManager);
+            string queueOrTopicName = null;
+            string fqns = null;
 
-            string queueOrTopicName = receiver.EntityPath; // some-queue|topic-name
-            string fqns = receiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
+            var receiverManager = instrumentedMethodCall.MethodCall.InvocationTarget;
+            var receiverManagerType = receiverManager.GetType();
+            _receiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(receiverManagerType, "Receiver");
+            object receiver = _receiverAccessor(receiverManager);
+            if (receiver == null)
+            {
+                if (!_badReceiverWarningLogged)
+                {
+                    agent.Logger.Warn("AzureServiceBusReceiverManagerWrapper: Unable to access Receiver property on ReceiverManager instance of type {ReceiverManagerType}. Unable to access queue/topic name or fully qualified namespace.", receiverManagerType);
+                    _badReceiverWarningLogged = true;
+                }
+            }
+            else
+            {
+                _entityPathAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "EntityPath");
+                _fullyQualifiedNamespaceAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "FullyQualifiedNamespace");
+
+                queueOrTopicName = _entityPathAccessor(receiver)?.ToString(); // some-queue|topic-name
+                fqns = _fullyQualifiedNamespaceAccessor(receiver)?.ToString(); // some-service-bus-entity.servicebus.windows.net
+            }
+
             var destinationType = GetMessageBrokerDestinationType(queueOrTopicName);
 
             // create a transaction for this method call. This method invokes the ProcessMessageAsync handler
@@ -97,6 +119,5 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
 
             return headerValues;
         }
-
     }
 }
