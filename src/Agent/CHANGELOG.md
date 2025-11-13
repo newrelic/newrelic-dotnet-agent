@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.46.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.46.1...v10.46.2) (2025-11-13)
+
+
+### Fixes
+
+* Azure Service Bus instrumentation fails due to null reference exception ([#3305](https://github.com/newrelic/newrelic-dotnet-agent/issues/3305)) ([b2bf4df](https://github.com/newrelic/newrelic-dotnet-agent/commit/b2bf4dfc7e28c5a2ef4bdd8ede0e7d8d73bba0dc))
+
 ## [10.46.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.46.0...v10.46.1) (2025-11-11)
 
 
