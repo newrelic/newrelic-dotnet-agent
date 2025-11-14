@@ -11,6 +11,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Http;
 using System.Reflection;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
@@ -60,7 +61,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     // they rely on a Pull-based model. This pull typically happens when someone wants to export the metric data somewhere. In order to handle Observable
     // Instruments, we create a callback on the bridged observable Instrument' that will call the internal Observe() method on the original Instrument
     // to retrieve an IEnumerable<Measurement<T>> collection, that we can use to create a bridged IEnumerable<Measurement<T>'> collection returned by
-    // our callback. As a result, we do not rely on our MeterListener triggering the collection of all observable Instruments, and then forwaring the
+    // our callback. As a result, we do not rely on our MeterListener triggering the collection of all observable Instruments, and then forwarding the
     // data using the MeasurementEventCallback. We instead rely on the OpenTelemetry Exporter configured using the OpenTelemetry SDK to trigger the
     // collection of bridged observable Instruments', which will run our registered callbacks that bridge the data from the original observable
     // Instruments.
@@ -111,9 +112,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// </summary>
         public void Start()
         {
-            if (!_configuration.OpenTelemetryBridgeEnabled)
+            if (!_configuration.OpenTelemetryEnabled)
             {
-                Log.Debug("OpenTelemetry Meter Bridge is disabled via configuration.");
+                Log.Debug("OpenTelemetry Meter Bridge is disabled via global OpenTelemetry configuration.");
+                return;
+            }
+
+            if (!_configuration.OpenTelemetryMetricsEnabled)
+            {
+                Log.Debug("OpenTelemetry Meter Bridge is disabled via metrics-specific configuration.");
                 return;
             }
 
@@ -325,7 +332,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         ///
         /// void InstrumentPublished(Instrument instrument, MeterListener listener)
         /// {
-        ///    if (MeterListenerBridge.ShouldEnableInstrumentsInMeter(instrument.Meter.Name))
+        ///    if (MeterListenerBridge.ShouldEnableInstrumentsInMeterWithFilters(instrument.Meter.Name))
         ///    {
         ///      listener.EnableMeasurementEvents(instrument, MeterListenerBridge.GetStateForInstrument(instrument));
         ///    }
@@ -342,8 +349,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             var meterNameProperty = Expression.Property(Expression.Property(instrumentParameter, "Meter"), "Name");
 
-            var shouldEnableMethod = typeof(MeterListenerBridge).GetMethod(nameof(ShouldEnableInstrumentsInMeter), BindingFlags.NonPublic | BindingFlags.Static);
-            var shouldEnableCall = Expression.Call(null, shouldEnableMethod, meterNameProperty);
+            var shouldEnableMethod = typeof(MeterListenerBridge).GetMethod(nameof(ShouldEnableInstrumentsInMeterWithFilters), BindingFlags.NonPublic | BindingFlags.Instance);
+            var shouldEnableCall = Expression.Call(Expression.Constant(this), shouldEnableMethod, meterNameProperty);
 
             var getInstrumentStateMethod = typeof(MeterListenerBridge).GetMethod(nameof(GetStateForInstrument), BindingFlags.NonPublic | BindingFlags.Static);
             var getInstrumentStateCall = Expression.Call(null, getInstrumentStateMethod, instrumentParameter);
@@ -469,6 +476,51 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return false;
             }
 
+            return true;
+        }
+
+        /// <summary>
+        /// Determines whether instruments in the specified meter should be enabled based on the 
+        /// OpenTelemetry metrics configuration filters (include/exclude lists).
+        /// Follows the precedence logic:
+        /// 1. Built-in exclude list
+        /// 2. Customer configured include list  
+        /// 3. Customer configured exclude list
+        /// </summary>
+        /// <param name="meterName">The name of the meter to check</param>
+        /// <returns>True if the meter should be enabled; false otherwise</returns>
+        private bool ShouldEnableInstrumentsInMeterWithFilters(string meterName)
+        {
+            // First apply the built-in filtering logic
+            if (!ShouldEnableInstrumentsInMeter(meterName))
+            {
+                return false;
+            }
+
+            // Check if OpenTelemetry metrics are enabled
+            if (!_configuration.OpenTelemetryMetricsEnabled)
+            {
+                return false;
+            }
+
+            var includeFilters = _configuration.OpenTelemetryMetricsIncludeFilters?.ToList() ?? new List<string>();
+            var excludeFilters = _configuration.OpenTelemetryMetricsExcludeFilters?.ToList() ?? new List<string>();
+
+            // If include filters are specified, the meter must be in the include list
+            if (includeFilters.Any() && !includeFilters.Contains(meterName))
+            {
+                Log.Finest($"Meter '{meterName}' not in include list. Not enabling instruments.");
+                return false;
+            }
+
+            // If the meter is in the exclude list, don't enable it (exclude has highest precedence)
+            if (excludeFilters.Contains(meterName))
+            {
+                Log.Finest($"Meter '{meterName}' is in exclude list. Not enabling instruments.");
+                return false;
+            }
+
+            Log.Finest($"Meter '{meterName}' passed all filters. Enabling instruments.");
             return true;
         }
 

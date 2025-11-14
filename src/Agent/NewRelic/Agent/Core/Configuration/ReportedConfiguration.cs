@@ -766,11 +766,21 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("otel_bridge.excluded_activity_sources")]
         public List<string> ExcludedActivitySources => _configuration.ExcludedActivitySources;
 
-        [JsonProperty("otel_bridge.enabled")]
-        public bool OpenTelemetryBridgeEnabled => _configuration.OpenTelemetryBridgeEnabled;
-
         [JsonIgnore]
         public int MaxCustomInstrumentationSupportabilityMetrics { get; }
+
+        // OpenTelemetry Configuration Properties
+        [JsonProperty("opentelemetry.enabled")]
+        public bool OpenTelemetryEnabled => _configuration.OpenTelemetryEnabled;
+
+        [JsonProperty("opentelemetry.metrics.enabled")]
+        public bool OpenTelemetryMetricsEnabled => _configuration.OpenTelemetryMetricsEnabled;
+
+        [JsonProperty("opentelemetry.metrics.include")]
+        public IEnumerable<string> OpenTelemetryMetricsIncludeFilters => _configuration.OpenTelemetryMetricsIncludeFilters;
+
+        [JsonProperty("opentelemetry.metrics.exclude")]
+        public IEnumerable<string> OpenTelemetryMetricsExcludeFilters => _configuration.OpenTelemetryMetricsExcludeFilters;
 
         #endregion
     }

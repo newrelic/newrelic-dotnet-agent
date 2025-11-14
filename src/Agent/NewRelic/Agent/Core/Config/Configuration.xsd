@@ -2235,6 +2235,70 @@
                         </xs:all>
                     </xs:complexType>
                 </xs:element>
+
+                <xs:element name="opentelemetry" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            OpenTelemetry configuration for the hybrid agent. This section contains configuration options
+                            that control OpenTelemetry signal processing and export to New Relic.
+                        </xs:documentation>
+                    </xs:annotation>
+
+                    <xs:complexType>
+                        <xs:all>
+                            <xs:element name="metrics" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Configuration for OpenTelemetry metrics collection and export.
+                                    </xs:documentation>
+                                </xs:annotation>
+
+                                <xs:complexType>
+                                    <xs:attribute name="enabled" type="xs:boolean" default="false">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Set this to "true" to enable OpenTelemetry metrics collection and export to New Relic.
+                                                This feature that must be used together with the global opentelemetry enabled setting.
+                                                Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+
+                                    <xs:attribute name="include" type="xs:string" use="optional">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                A comma-delimited list of OpenTelemetry Meter names to include for metrics export to New Relic.
+                                                If specified, only meters matching these names will have their metrics exported.
+                                                Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_INCLUDE
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+
+                                    <xs:attribute name="exclude" type="xs:string" use="optional">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                A comma-delimited list of OpenTelemetry Meter names to exclude from metrics export to New Relic.
+                                                Meters matching these names will not have their metrics exported.
+                                                Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_EXCLUDE
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:all>
+
+                        <xs:attribute name="enabled" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Global setting for OpenTelemetry signal processing in the hybrid agent.
+                                    If set to "false", no OpenTelemetry signals will be processed or sent to New Relic.
+                                    If set to "true", individual signal types (e.g., metrics) can be controlled via their specific enabled settings.
+                                    Environment variable: NEW_RELIC_OPENTELEMETRY_ENABLED
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                    </xs:complexType>
+                </xs:element>
             </xs:all>
 
             <xs:attribute name="agentEnabled" type="xs:boolean" default="true">

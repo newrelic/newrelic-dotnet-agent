@@ -42,7 +42,7 @@ public abstract class HybridAgentTestsBase
         }
 
         // enable the OTel bridge
-        _compositeTestAgent.LocalConfiguration.appSettings.Add(new configurationAdd() { key = "OpenTelemetry.Enabled", value = "true" });
+        _compositeTestAgent.LocalConfiguration.opentelemetry.enabled = true;
         // configure the activity source we want to listen to
         _compositeTestAgent.LocalConfiguration.appSettings.Add(new configurationAdd() { key = "OpenTelemetry.ActivitySource.Include", value = "TestApp activity source" });
         // update configuration
