@@ -2239,7 +2239,7 @@
                 <xs:element name="opentelemetry" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>
-                            OpenTelemetry configuration for the hybrid agent. This section contains experimental configuration options
+                            OpenTelemetry configuration for the hybrid agent. This section contains configuration options
                             that control OpenTelemetry signal processing and export to New Relic.
                         </xs:documentation>
                     </xs:annotation>
@@ -2258,7 +2258,7 @@
                                         <xs:annotation>
                                             <xs:documentation>
                                                 Set this to "true" to enable OpenTelemetry metrics collection and export to New Relic.
-                                                This is an experimental feature that must be used together with the global opentelemetry enabled setting.
+                                                This feature that must be used together with the global opentelemetry enabled setting.
                                                 Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED
                                             </xs:documentation>
                                         </xs:annotation>
@@ -2293,7 +2293,6 @@
                                     Global setting for OpenTelemetry signal processing in the hybrid agent.
                                     If set to "false", no OpenTelemetry signals will be processed or sent to New Relic.
                                     If set to "true", individual signal types (e.g., metrics) can be controlled via their specific enabled settings.
-                                    This is an experimental configuration option that may change in future versions.
                                     Environment variable: NEW_RELIC_OPENTELEMETRY_ENABLED
                                 </xs:documentation>
                             </xs:annotation>
