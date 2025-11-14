@@ -85,6 +85,11 @@ namespace NewRelic.Agent.Core.Transactions
             _distributedTracePayloadHandler = distributedTracePayloadHandler;
             _attribDefSvc = attribDefSvc;
             _samplerService = samplerService;
+
+            if (_configuration.HybridHttpContextStorageEnabled && _sortedPrimaryContexts.First().GetType().Name.Contains("HybridHttpContext"))
+            {
+                Log.Info("HybridHttpContextStorage is enabled and will be used in place of AsyncLocalStorage and HttpContextStorage.");
+            }
         }
 
         public bool IsAttachedToAsyncStorage => TryGetInternalTransaction(_asyncContext) != null;
