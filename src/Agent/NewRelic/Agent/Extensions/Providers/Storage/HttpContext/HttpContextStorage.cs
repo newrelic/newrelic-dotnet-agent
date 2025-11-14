@@ -21,7 +21,7 @@ namespace NewRelic.Providers.Storage.HttpContext
             _key = key;
         }
 
-        byte IContextStorage<T>.Priority { get { return 10; } }
+        byte IContextStorage<T>.Priority => 10;
 
         bool IContextStorage<T>.CanProvide { get { return System.Web.HttpContext.Current != null; } }
 

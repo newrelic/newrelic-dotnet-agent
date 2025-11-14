@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+    <TargetFrameworks>net462</TargetFrameworks>
+    <AssemblyName>NewRelic.Providers.Storage.HybridHttpContext</AssemblyName>
+    <RootNamespace>NewRelic.Providers.Storage.HybridHttpContext</RootNamespace>
+    <Description>Hybrid HttpContext + AsyncLocal context storage for New Relic .NET Agent</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+  </ItemGroup>
+</Project>

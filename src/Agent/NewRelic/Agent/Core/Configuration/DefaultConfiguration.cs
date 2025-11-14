@@ -2862,6 +2862,9 @@ namespace NewRelic.Agent.Core.Configuration
 
         public int MaxCustomInstrumentationSupportabilityMetrics => 25; // in case we want to make this configurable in the future
 
+        // TODO: TESTING ONLY -- SET TO true FOR AN INTEGRATION TEST RUN. DO NOT MERGE THIS CHANGE!
+        public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", true), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");
+
         #endregion
 
         public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)

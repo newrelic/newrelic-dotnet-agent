@@ -10,6 +10,7 @@ namespace NewRelic.Providers.Storage.OperationContext
     public class OperationContextStorageFactory : IContextStorageFactory
     {
         public bool IsAsyncStorage => false;
+        public bool IsHybridStorage => false;
 
         bool IContextStorageFactory.IsValid
         {

@@ -60,5 +60,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             Assert.Equal(expectException, exceptionOccurred);
         }
+
+        public void GetWebFormWithTask()
+        {
+            var address = $"http://{DestinationServerName}:{Port}/WebFormWithTask.aspx";
+            GetStringAndAssertContains(address, "<html");
+        }
     }
 }

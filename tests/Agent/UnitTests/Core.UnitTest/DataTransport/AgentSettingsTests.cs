@@ -358,7 +358,8 @@ namespace NewRelic.Agent.Core.Configuration
                     "agent_control.health.frequency": 5,
                     "otel_bridge.included_activity_sources": ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"],
                     "otel_bridge.excluded_activity_sources": ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"],
-                    "otel_bridge.enabled": true
+                    "otel_bridge.enabled": true,
+                    "hybrid_http_context_storage.enabled":false
                 }
                 """;
 

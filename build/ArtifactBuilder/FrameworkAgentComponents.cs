@@ -24,6 +24,7 @@ namespace ArtifactBuilder
             {
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.CallContext.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.HttpContext.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.HybridHttpContext.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.OperationContext.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.AsyncLocal.dll",
             };

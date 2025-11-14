@@ -9,6 +9,7 @@ namespace NewRelic.Providers.Storage.AsyncLocal
     public class AsyncLocalStorageFactory : IContextStorageFactory
     {
         public bool IsAsyncStorage => true;
+        public bool IsHybridStorage => false;
 
         public string Name => GetType().FullName;
 

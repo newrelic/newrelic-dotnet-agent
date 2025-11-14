@@ -11,6 +11,7 @@ namespace NewRelic.Providers.Storage.CallContext
         private const bool ShouldSearchParentsForAttribute = false;
 
         public bool IsAsyncStorage => true;
+        public bool IsHybridStorage => false;
         public bool IsValid => true;
         public ContextStorageType Type => ContextStorageType.CallContextLogicalData;
 

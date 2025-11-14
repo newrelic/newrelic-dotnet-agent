@@ -5,6 +5,7 @@ using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.CallStack
 {
@@ -48,17 +49,24 @@ namespace NewRelic.Agent.Core.CallStack
     public class ResolvedCallStackManagerFactory : ICallStackManagerFactory
     {
         private readonly ICallStackManagerFactory _callStackManagerFactory;
+        private readonly IConfiguration _configuration;
 
-        public ResolvedCallStackManagerFactory(IEnumerable<IContextStorageFactory> storageFactories)
+        public ResolvedCallStackManagerFactory(IEnumerable<IContextStorageFactory> storageFactories, IConfigurationService configurationService)    
         {
+            _configuration = configurationService.Configuration;
             _callStackManagerFactory = CreateFactory(storageFactories);
         }
 
-        private static ICallStackManagerFactory CreateFactory(IEnumerable<IContextStorageFactory> storageFactories)
+        private ICallStackManagerFactory CreateFactory(IEnumerable<IContextStorageFactory> storageFactories)
         {
             var listOfFactories = storageFactories.ToList();
 
-            var asyncLocalFactory = listOfFactories.FirstOrDefault(f => f.Type == ContextStorageType.AsyncLocal);
+            // if hybrid http context storage is enabled, use it instead of asynclocal but fallback to asynclocal if it's not available
+            var asyncLocalFactory = 
+                listOfFactories.FirstOrDefault(f => _configuration.HybridHttpContextStorageEnabled  && f.IsHybridStorage)
+                ??
+                listOfFactories.FirstOrDefault(f => f.Type == ContextStorageType.AsyncLocal);
+
             if (asyncLocalFactory != null)
             {
                 Log.Debug("Using async storage {0} for call stack with AsyncCallStackManagerFactory", asyncLocalFactory.GetType().FullName);
