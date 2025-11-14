@@ -781,6 +781,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonIgnore]
         public int MaxCustomInstrumentationSupportabilityMetrics { get; }
 
+        [JsonProperty("hybrid_http_context_storage.enabled")]
+        public bool HybridHttpContextStorageEnabled => _configuration.HybridHttpContextStorageEnabled;
+
         #endregion
     }
 }

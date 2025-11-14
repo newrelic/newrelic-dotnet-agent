@@ -1,23 +1,21 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Providers;
 using System;
 using System.Runtime.CompilerServices;
+using NewRelic.Agent.Extensions.Providers;
 
-namespace NewRelic.Providers.Storage.HttpContext
+namespace NewRelic.Providers.Storage.HybridHttpContext
 {
-    public class HttpContextStorageFactory : IContextStorageFactory
+    public class HybridHttpContextStorageFactory : IContextStorageFactory
     {
-        public bool IsAsyncStorage => false;
+        public bool IsAsyncStorage => false; // not really true, since HttpContext can flow with async calls, but we don't mark it as async storage
+        public bool IsHybridStorage => true;
 
-        public bool IsHybridStorage => false;
-
-        bool IContextStorageFactory.IsValid
+        public bool IsValid
         {
             get
             {
-                // if attempting to access HttpContext throws an exception then this factory is invalid
                 try
                 {
                     AccessHttpContextClass();
@@ -30,11 +28,11 @@ namespace NewRelic.Providers.Storage.HttpContext
             }
         }
 
-        ContextStorageType IContextStorageFactory.Type => ContextStorageType.HttpContext;
+        public ContextStorageType Type => ContextStorageType.HttpContext; // same type category as HttpContext
 
-        IContextStorage<T> IContextStorageFactory.CreateContext<T>(string key)
+        public IContextStorage<T> CreateContext<T>(string key)
         {
-            return new HttpContextStorage<T>(key);
+            return new HybridHttpContextStorage<T>(key);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

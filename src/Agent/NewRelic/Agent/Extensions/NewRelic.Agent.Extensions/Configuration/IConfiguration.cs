@@ -261,5 +261,7 @@ namespace NewRelic.Agent.Configuration
 
         bool OpenTelemetryBridgeEnabled { get; }
         int MaxCustomInstrumentationSupportabilityMetrics { get; }
-    }
+
+        bool HybridHttpContextStorageEnabled { get; }
+        }
 }

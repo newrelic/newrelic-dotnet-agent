@@ -96,26 +96,34 @@ namespace NewRelic.Agent.Core.Transactions
 
         #region Private Helpers
 
-        private static IEnumerable<IContextStorage<IInternalTransaction>> GetPrimaryTransactionContexts(IEnumerable<IContextStorageFactory> factories)
+        private static readonly List<IContextStorage<IInternalTransaction>> _tlsStorageList =
+            [new ThreadLocalStorage<IInternalTransaction>("NewRelic.Transaction")];
+
+        private IEnumerable<IContextStorage<IInternalTransaction>> GetPrimaryTransactionContexts(IEnumerable<IContextStorageFactory> factories)
         {
-            var list = factories
-                .Where(factory => factory != null)
-                .Where(factory => !factory.IsAsyncStorage)
+            var nonHybridNonAsyncFactories = factories.Where(factory => factory is { IsAsyncStorage: false, IsHybridStorage: false });
+            var hybridFactories = factories.Where(factory => factory is { IsHybridStorage: true });
+
+            var candidateFactories =
+                nonHybridNonAsyncFactories
+                // only include hybrid factories if enabled via config
+                .Union(_configuration.HybridHttpContextStorageEnabled ? hybridFactories : [])
                 .Select(factory => factory.CreateContext<IInternalTransaction>("NewRelic.Transaction"))
-                .Where(transactionContext => transactionContext != null)
-                .ToList(); //ToList() is important to force evaluation only once
+                .Where(transactionContext => transactionContext != null);
 
-            list.Add(new ThreadLocalStorage<IInternalTransaction>("NewRelic.Transaction"));
-
-            return list
+            return candidateFactories.Union(_tlsStorageList)
                 .OrderByDescending(transactionContext => transactionContext.Priority).ToList();
         }
 
-        private static IContextStorage<IInternalTransaction> GetAsyncTransactionContext(IEnumerable<IContextStorageFactory> factories)
+        private IContextStorage<IInternalTransaction> GetAsyncTransactionContext(IEnumerable<IContextStorageFactory> factories)
         {
-            return factories
-                .Where(factory => factory != null)
-                .Where(factory => factory.IsAsyncStorage)
+            var asyncNonHybridFactories = factories.Where(factory => factory is { IsAsyncStorage: true, IsHybridStorage: false });
+            var hybridFactories = factories.Where(factory => factory is { IsHybridStorage: true });
+
+            return
+                asyncNonHybridFactories
+                // only include hybrid factories if enabled via config
+                .Union(_configuration.HybridHttpContextStorageEnabled ? hybridFactories : [])
                 .Select(factory => factory.CreateContext<IInternalTransaction>("NewRelic.Transaction"))
                 .Where(transactionContext => transactionContext != null)
                 .Where(transactionContext => transactionContext.CanProvide)
