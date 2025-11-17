@@ -513,7 +513,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return false;
             }
 
-            // If the meter is in the exclude list, don't enable it (exclude has highest precedence)
+            // If the meter is in the exclude list, don't enable it
             if (excludeFilters.Contains(meterName))
             {
                 Log.Finest($"Meter '{meterName}' is in exclude list. Not enabling instruments.");
