@@ -124,6 +124,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return;
             }
 
+            if (_connectionInfo == null)
+            {
+                Log.Debug("OpenTelemetry Meter Bridge cannot start: connection info not available.");
+                return;
+            }
+
             if (_sdkLogger == null)
             {
                 _sdkLogger = new OpenTelemetrySDKLogger();
@@ -493,6 +499,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             // First apply the built-in filtering logic
             if (!ShouldEnableInstrumentsInMeter(meterName))
+            {
+                return false;
+            }
+
+            // Check if OpenTelemetry is enabled overall
+            if (!_configuration.OpenTelemetryEnabled)
             {
                 return false;
             }
