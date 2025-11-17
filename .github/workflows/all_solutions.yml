@@ -286,6 +286,7 @@ jobs:
           DistributedTracing, 
           Errors, 
           HttpClientInstrumentation, 
+          HybridHttpContextStorage,
           InfiniteTracing,
           LLM,
           Logging.AuditLog,
