@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Threading;
+using System.Web.Hosting;
 using NewRelic.Agent.Extensions.Providers;
 
 namespace NewRelic.Providers.Storage.HybridHttpContext
@@ -18,8 +19,8 @@ namespace NewRelic.Providers.Storage.HybridHttpContext
 
         public byte Priority => 15; // Higher than HttpContext and AsyncLocal to prefer this storage when available.
 
-        // This storage is only available when HttpContext is available.
-        bool IContextStorage<T>.CanProvide { get { return System.Web.HttpContext.Current != null; } }
+        // This storage is only available when running in a hosted web application with HttpContext.
+        bool IContextStorage<T>.CanProvide { get { return HostingEnvironment.IsHosted && System.Web.HttpContext.Current != null; } }
 
         public T GetData()
         {

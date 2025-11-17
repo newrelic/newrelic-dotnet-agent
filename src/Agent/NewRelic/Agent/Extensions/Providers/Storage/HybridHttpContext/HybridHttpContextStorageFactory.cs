@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Web.Hosting;
 using NewRelic.Agent.Extensions.Providers;
 
 namespace NewRelic.Providers.Storage.HybridHttpContext
@@ -18,13 +19,12 @@ namespace NewRelic.Providers.Storage.HybridHttpContext
             {
                 try
                 {
-                    AccessHttpContextClass();
+                    return IsHostedWebApp();
                 }
                 catch (Exception)
                 {
                     return false;
                 }
-                return true;
             }
         }
 
@@ -36,10 +36,9 @@ namespace NewRelic.Providers.Storage.HybridHttpContext
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void AccessHttpContextClass()
+        private static bool IsHostedWebApp()
         {
-            if (System.Web.HttpContext.Current == null)
-                return;
+            return HostingEnvironment.IsHosted; // only returns true if running in a web application
         }
     }
 }
