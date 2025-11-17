@@ -19,8 +19,8 @@
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="NuGet.Protocol" Version="6.14.0" />
-    <PackageReference Include="System.Formats.Asn1" Version="9.0.10" /> <!-- For Nuget.Protocol transient depedency vulnerability -->
+    <PackageReference Include="NuGet.Protocol" Version="7.0.0" />
+    <PackageReference Include="System.Formats.Asn1" Version="10.0.0" /> <!-- For Nuget.Protocol transient depedency vulnerability -->
     <PackageReference Include="Octokit" Version="14.0.0" />
     <PackageReference Include="RestSharp" Version="112.1.0" />
     <PackageReference Include="RestSharp.Serializers.NewtonsoftJson" Version="112.1.0" />
