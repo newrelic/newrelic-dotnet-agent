@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
-using NewRelic.Testing.Assertions;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.HybridHttpContextStorage;
@@ -43,7 +42,7 @@ public class HybridHttpContextStorageTests : NewRelicIntegrationTest<RemoteServi
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = @"WebTransaction", CallCountAllHarvests = 1 },
+            new() { metricName = "WebTransaction", CallCountAllHarvests = 1 },
             new() { metricName = "External/all", CallCountAllHarvests = 1},
             new() { metricName = "External/allWeb", CallCountAllHarvests = 1},
             new() { metricName = "External/google.com/all", CallCountAllHarvests = 1},
@@ -52,7 +51,7 @@ public class HybridHttpContextStorageTests : NewRelicIntegrationTest<RemoteServi
 
         var endpointMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = $"WebTransaction/ASP/webformwithtask.aspx", callCount = 1 },
+            new() { metricName = "WebTransaction/ASP/webformwithtask.aspx", callCount = 1 },
             new() { metricName = "External/google.com/Stream/GET", CallCountAllHarvests = 1, metricScope = "WebTransaction/ASP/webformwithtask.aspx"}
         };
         expectedMetrics.AddRange(endpointMetrics);
@@ -77,7 +76,7 @@ public class HybridHttpContextStorageTests : NewRelicIntegrationTest<RemoteServi
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
         var transactionSample = _fixture.AgentLog
             .GetTransactionSamples()
-            .FirstOrDefault(sample => sample.Path == @"WebTransaction/ASP/webformwithtask.aspx");
+            .FirstOrDefault(sample => sample.Path == "WebTransaction/ASP/webformwithtask.aspx");
 
         //order transactions chronologically
         var selectedTransactionEvent = _fixture.AgentLog.GetTransactionEvents()
