@@ -173,7 +173,7 @@ namespace NewRelic.Agent.Core
             var agentApi = _container.Resolve<IAgentApi>();
             _wrapperService = _container.Resolve<IWrapperService>();
 
-            if (Configuration.OpenTelemetryBridgeEnabled)
+            if (Configuration.OpenTelemetryEnabled)
             {
                 _container.Resolve<OpenTelemetryBridge.ActivityBridge>().Start();
                 if (!bootstrapConfig.ServerlessModeEnabled)
