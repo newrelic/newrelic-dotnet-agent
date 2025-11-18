@@ -20,6 +20,11 @@ namespace NewRelic.Agent.Extensions.Providers
         /// </summary>
         bool IsAsyncStorage { get; }
 
+        /// <summary>
+        /// Returns true if this context uses hybrid storage (for example, HttpContext and AsyncLocal)
+        /// </summary>
+        bool IsHybridStorage { get; }
+
         /// Returns true if this context is valid (and possibly throws if it isn't).
         /// </summary>
         bool IsValid { get; }

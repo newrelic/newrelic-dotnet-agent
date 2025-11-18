@@ -525,5 +525,6 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool OpenTelemetryBridgeEnabled => true;
 
         public int MaxCustomInstrumentationSupportabilityMetrics => 25;
+        public bool HybridHttpContextStorageEnabled => false;
     }
 }

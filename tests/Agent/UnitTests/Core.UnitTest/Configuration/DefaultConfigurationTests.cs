@@ -4663,5 +4663,34 @@ namespace NewRelic.Agent.Core.Configuration
         {
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         }
+        [Test]
+        public void HybridHttpContextStorageEnabled_DefaultsToFalse()
+        {
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            Assert.That(defaultConfig.HybridHttpContextStorageEnabled, Is.False);
+        }
+
+        [TestCase(null, null, ExpectedResult = false)]
+        [TestCase(null, "true", ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("true", "false", ExpectedResult = false)] // environment overrides local
+        [TestCase("invalid", "true", ExpectedResult = true)]
+        [TestCase("invalid", null, ExpectedResult = false)]
+        public bool HybridHttpContextStorageEnabled_EnvironmentOverridesLocal(string appSettingValue, string environmentValue)
+        {
+            if (appSettingValue != null)
+            {
+                _localConfig.appSettings.Add(new configurationAdd { key = "HybridHttpContextStorageEnabled", value = appSettingValue });
+            }
+
+            if (environmentValue != null)
+            {
+                Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED")).Returns(environmentValue);
+            }
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            return defaultConfig.HybridHttpContextStorageEnabled;
+        }
+
     }
 }

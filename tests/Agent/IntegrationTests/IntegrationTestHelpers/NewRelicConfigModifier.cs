@@ -559,5 +559,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.ActivitySource.Include", activitySourceName, "urn:newrelic-config");
             return this;
         }
+
+        public NewRelicConfigModifier EnableHybridHttpContextStorage(bool enabled)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "HybridHttpContextStorageEnabled", enabled.ToString(), "urn:newrelic-config");
+            return this;
+        }
     }
 }

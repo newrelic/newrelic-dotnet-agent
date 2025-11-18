@@ -9,6 +9,7 @@ namespace NewRelic.Agent.Extensions.Providers
     public class ThreadLocalContextStorageFactory : IContextStorageFactory
     {
         public bool IsAsyncStorage => false;
+        public bool IsHybridStorage => false;
 
         bool IContextStorageFactory.IsValid => true;
 
