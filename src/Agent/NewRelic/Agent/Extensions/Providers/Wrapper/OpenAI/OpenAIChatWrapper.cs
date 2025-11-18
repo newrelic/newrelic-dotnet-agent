@@ -1,9 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Concurrent;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Helpers;
@@ -62,17 +63,23 @@ public class OpenAiChatWrapper : IWrapper
             transaction.AttachToAsync();
         }
 
-        Array chatMessages = instrumentedMethodCall.MethodCall.MethodArguments[0] as Array;
-        
-        if (chatMessages == null || chatMessages.Length == 0)
+        var chatMessagesEnumerable = instrumentedMethodCall.MethodCall.MethodArguments[0] as System.Collections.IEnumerable;
+        if (chatMessagesEnumerable == null)
         {
             agent.Logger.Debug("Ignoring chat completion: No chat messages found");
             return Delegates.NoOp;
         }
 
-        var lastMessage = ((dynamic)chatMessages.GetValue(chatMessages.Length - 1));
-        if (lastMessage.Content == null ||
-            lastMessage.Content.Count == 0)
+        // Materialize once to avoid multiple enumeration and enable indexing
+        var chatMessages = chatMessagesEnumerable.Cast<dynamic>().ToList();
+        if (chatMessages.Count == 0)
+        {
+            agent.Logger.Debug("Ignoring chat completion: No chat messages found");
+            return Delegates.NoOp;
+        }
+
+        var lastMessage = chatMessages[chatMessages.Count - 1];
+        if (lastMessage.Content == null || lastMessage.Content.Count == 0)
         {
             agent.Logger.Debug("Ignoring chat completion: No content found in chat messages");
             return Delegates.NoOp;
@@ -159,7 +166,7 @@ public class OpenAiChatWrapper : IWrapper
     }
 
 
-    private void ProcessResponse(ISegment segment, string model, dynamic chatMessages, dynamic clientResult, dynamic chatCompletionOptions, IAgent agent)
+    private void ProcessResponse(ISegment segment, string model, List<dynamic> chatMessages, dynamic clientResult, dynamic chatCompletionOptions, IAgent agent)
     {
         dynamic chatCompletionResponse = clientResult.Value;
         string finishReason = chatCompletionResponse.FinishReason.ToString();
@@ -167,7 +174,7 @@ public class OpenAiChatWrapper : IWrapper
         HandleSuccess(segment, model, chatMessages, clientResult, chatCompletionOptions, agent, chatCompletionResponse, finishReason);
     }
 
-    private void HandleSuccess(ISegment segment, string requestModel, dynamic chatMessages, dynamic clientResult, dynamic chatCompletionOptions, IAgent agent, dynamic chatCompletionResponse, string finishReason)
+    private void HandleSuccess(ISegment segment, string requestModel, List<dynamic> chatMessages, dynamic clientResult, dynamic chatCompletionOptions, IAgent agent, dynamic chatCompletionResponse, string finishReason)
     {
         _rolePropertyAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("OpenAI", "OpenAI.Chat.UserChatMessage", "Role");
         _responseFieldGetter ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>("System.ClientModel", "System.ClientModel.ClientResult", "_response");
@@ -175,7 +182,7 @@ public class OpenAiChatWrapper : IWrapper
         // typically there is only a single message in the outbound chat message list, but in a conversation, there can be multiple prompt and response message.
         // The last message is the most recent prompt
         // There can also be a refusal, which means there won't be a response message
-        dynamic lastChatMessage = chatMessages[chatMessages.Length - 1];
+        dynamic lastChatMessage = chatMessages.Last();
 
         string refusal = chatCompletionResponse.Refusal;
         string requestPrompt = refusal ?? lastChatMessage.Content[0].Text;
