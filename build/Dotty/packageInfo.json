@@ -137,7 +137,11 @@
         "ignoreReason": "net481 doesn't support v9.x"
     },
     {
-        "packageName": "openai"
+        "packageName": "openai",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "Breaks Azure.AI.OpenAI since 2.6.0. See https://github.com/Azure/azure-sdk-for-net/issues/53986"
     },
     {
         "packageName": "opensearch.client"
