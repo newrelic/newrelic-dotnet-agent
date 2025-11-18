@@ -26,8 +26,6 @@ public class HybridHttpContextStorageTests : NewRelicIntegrationTest<RemoteServi
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                 configModifier.EnableHybridHttpContextStorage(true)
                     .ForceTransactionTraces();
-
-                //_fixture.SetAdditionalEnvironmentVariable("NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED", "true");
             },
             exerciseApplication: () =>
             {
