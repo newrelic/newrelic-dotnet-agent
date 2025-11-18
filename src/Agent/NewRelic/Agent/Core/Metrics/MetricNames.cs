@@ -732,6 +732,31 @@ namespace NewRelic.Agent.Core.Metrics
             return SupportabilityAgentApiPs + methodName;
         }
 
+        // OpenTelemetry Bridge
+        private const string SupportabilityOtelBridgePs = SupportabilityPs + "Metrics" + PathSeparator + "DotNet" + PathSeparator + "OpenTelemetryBridge" + PathSeparator;
+        
+        public const string SupportabilityOtelBridgeEnabled = SupportabilityOtelBridgePs + "enabled";
+        public const string SupportabilityOtelBridgeDisabled = SupportabilityOtelBridgePs + "disabled";
+        public const string SupportabilityOtelBridgeGetMeter = SupportabilityOtelBridgePs + "getMeter";
+        
+        // Individual meter method supportability metrics
+        private const string SupportabilityOtelBridgeMeterPs = SupportabilityOtelBridgePs + "meter" + PathSeparator;
+        
+        public const string SupportabilityOtelBridgeMeterCreateCounter = SupportabilityOtelBridgeMeterPs + "CreateCounter";
+        public const string SupportabilityOtelBridgeMeterCreateHistogram = SupportabilityOtelBridgeMeterPs + "CreateHistogram";
+        public const string SupportabilityOtelBridgeMeterCreateUpDownCounter = SupportabilityOtelBridgeMeterPs + "CreateUpDownCounter";
+        public const string SupportabilityOtelBridgeMeterCreateGauge = SupportabilityOtelBridgeMeterPs + "CreateGauge";
+        public const string SupportabilityOtelBridgeMeterCreateObservableCounter = SupportabilityOtelBridgeMeterPs + "CreateObservableCounter";
+        public const string SupportabilityOtelBridgeMeterCreateObservableHistogram = SupportabilityOtelBridgeMeterPs + "CreateObservableHistogram";
+        public const string SupportabilityOtelBridgeMeterCreateObservableUpDownCounter = SupportabilityOtelBridgeMeterPs + "CreateObservableUpDownCounter";
+        public const string SupportabilityOtelBridgeMeterCreateObservableGauge = SupportabilityOtelBridgeMeterPs + "CreateObservableGauge";
+
+        // Additional debugging metrics for OpenTelemetry Bridge
+        public const string SupportabilityOtelBridgeInstrumentCreated = SupportabilityOtelBridgePs + "InstrumentCreated";
+        public const string SupportabilityOtelBridgeInstrumentBridgeFailure = SupportabilityOtelBridgePs + "InstrumentBridgeFailure";
+        public const string SupportabilityOtelBridgeMeasurementRecorded = SupportabilityOtelBridgePs + "MeasurementRecorded";
+        public const string SupportabilityOtelBridgeMeasurementBridgeFailure = SupportabilityOtelBridgePs + "MeasurementBridgeFailure";
+
         // CAT
         private const string SupportabilityCAT = SupportabilityPs + "CrossApplicationTracing" + PathSeparator;
         private const string SupportabilityCATRequest = SupportabilityCAT + "Request" + PathSeparator;

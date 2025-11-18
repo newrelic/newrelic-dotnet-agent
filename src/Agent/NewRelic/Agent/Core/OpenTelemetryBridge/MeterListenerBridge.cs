@@ -15,6 +15,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 using OpenTelemetry;
@@ -77,13 +78,21 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private OpenTelemetrySDKLogger _sdkLogger;
         private MeterProvider _meterProvider;
         private IConnectionInfo _connectionInfo;
+        
+        // Service dependencies
+        private readonly IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
 
         // Configuration constants for OTLP export
         private const int DefaultOtlpTimeoutSeconds = 10;
         private const int DefaultOtlpExportIntervalSeconds = 5;
 
-        public MeterListenerBridge()
+        public MeterListenerBridge() : this(null)
         {
+        }
+        
+        public MeterListenerBridge(IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters)
+        {
+            _supportabilityMetricCounters = supportabilityMetricCounters;
             _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
             _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
         }
@@ -112,23 +121,19 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// </summary>
         public void Start()
         {
-            if (!_configuration.OpenTelemetryEnabled)
-            {
-                Log.Debug("OpenTelemetry Meter Bridge is disabled via global OpenTelemetry configuration.");
-                return;
-            }
-
             if (!_configuration.OpenTelemetryMetricsEnabled)
-            {
-                Log.Debug("OpenTelemetry Meter Bridge is disabled via metrics-specific configuration.");
-                return;
-            }
-
-            if (_connectionInfo == null)
+        {
+            _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.BridgeDisabled);
+            Log.Debug("OpenTelemetry Meter Bridge is disabled via configuration.");
+            return;
+        }            if (_connectionInfo == null)
             {
                 Log.Debug("OpenTelemetry Meter Bridge cannot start: connection info not available.");
                 return;
             }
+			
+			// Record that the bridge is enabled
+            _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.BridgeEnabled);
 
             if (_sdkLogger == null)
             {
@@ -358,8 +363,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var shouldEnableMethod = typeof(MeterListenerBridge).GetMethod(nameof(ShouldEnableInstrumentsInMeterWithFilters), BindingFlags.NonPublic | BindingFlags.Instance);
             var shouldEnableCall = Expression.Call(Expression.Constant(this), shouldEnableMethod, meterNameProperty);
 
-            var getInstrumentStateMethod = typeof(MeterListenerBridge).GetMethod(nameof(GetStateForInstrument), BindingFlags.NonPublic | BindingFlags.Static);
-            var getInstrumentStateCall = Expression.Call(null, getInstrumentStateMethod, instrumentParameter);
+            var getInstrumentStateMethod = typeof(MeterListenerBridge).GetMethod(nameof(GetStateForInstrumentWithMetrics), BindingFlags.NonPublic | BindingFlags.Instance);
+            var getInstrumentStateCall = Expression.Call(Expression.Constant(this), getInstrumentStateMethod, instrumentParameter);
 
             var enableMeasurementEventsMethod = Expression.Call(listenerParameter, "EnableMeasurementEvents", null, instrumentParameter, getInstrumentStateCall);
 
@@ -503,13 +508,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return false;
             }
 
-            // Check if OpenTelemetry is enabled overall
-            if (!_configuration.OpenTelemetryEnabled)
-            {
-                return false;
-            }
-
-            // Check if OpenTelemetry metrics are enabled
+            // Check if OpenTelemetry metrics + global OpenTelemetry are enabled
             if (!_configuration.OpenTelemetryMetricsEnabled)
             {
                 return false;
@@ -565,7 +564,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 }
 
                 var createCallbackAndObservableInstrument = cacheData.CreateCallbackAndObservableInstrumentDelegate;
-                return createCallbackAndObservableInstrument(instrument, meter, cacheData);
+                var observableResult = createCallbackAndObservableInstrument(instrument, meter, cacheData);
+                return observableResult;
             }
 
             var createInstrumentDelegate = (Func<Meter, string, string, string, object>)_createInstrumentDelegates.GetOrAdd(instrumentType, CreateBridgedInstrumentDelegate);
@@ -576,11 +576,82 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 
             // TODO: Tags are not avaiilable on older instruments, need a way to dynamically get them for newer versions
-            return createInstrumentDelegate.Invoke(meter, dynamicInstrument.Name, dynamicInstrument.Unit, dynamicInstrument.Description);
+            var result = createInstrumentDelegate.Invoke(meter, dynamicInstrument.Name, dynamicInstrument.Unit, dynamicInstrument.Description);
+            return result;
 
             Meter CreateBridgedMeterFromInstrument(string _)
             {
                 return CreateBridgedMeter(dynamicInstrument.Meter);
+            }
+        }
+
+        /// <summary>
+        /// Instance method that wraps GetStateForInstrument with supportability metric tracking
+        /// </summary>
+        /// <param name="instrument">The original Instrument instance</param>
+        /// <returns>The state object for the MeterListener callbacks</returns>
+        private object GetStateForInstrumentWithMetrics(object instrument)
+        {
+            // Record getMeter usage
+            _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.GetMeter);
+            
+            // Get the result from the static method
+            var result = GetStateForInstrument(instrument);
+            
+            if (result != null)
+            {
+                if (Log.IsFinestEnabled)
+                {
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.InstrumentCreated);
+                }
+                
+                // Track specific instrument type
+                var instrumentType = instrument.GetType();
+                RecordSpecificInstrumentType(instrumentType.Name);
+            }
+            else
+            {
+                if (Log.IsFinestEnabled)
+                {
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.InstrumentBridgeFailure);
+                }
+            }
+            
+            return result;
+        }
+
+        /// <summary>
+        /// Record supportability metrics for specific instrument types
+        /// </summary>
+        /// <param name="instrumentTypeName">The name of the instrument type</param>
+        private void RecordSpecificInstrumentType(string instrumentTypeName)
+        {
+            switch (instrumentTypeName)
+            {
+                case "Counter`1":
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.CreateCounter);
+                    break;
+                case "Histogram`1":
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.CreateHistogram);
+                    break;
+                case "UpDownCounter`1":
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.CreateUpDownCounter);
+                    break;
+                case "Gauge`1":
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.CreateGauge);
+                    break;
+                case "ObservableCounter`1":
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.CreateObservableCounter);
+                    break;
+                case "ObservableGauge`1":
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.CreateObservableGauge);
+                    break;
+                case "ObservableUpDownCounter`1":
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.CreateObservableUpDownCounter);
+                    break;
+                case "ObservableHistogram`1":
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.CreateObservableHistogram);
+                    break;
             }
         }
 
@@ -760,19 +831,20 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                         m.GetParameters().Select(p => p.ParameterType)
                             .SequenceEqual(new[] { typeof(string), typeof(string), typeof(string) })
                     );
-                if (methodInfo != null)
+
+                if (methodInfo == null)
                 {
-                    methodInfo = methodInfo.MakeGenericMethod(genericType);
-                    return (Func<Meter, string, string, string, object>)methodInfo.CreateDelegate(typeof(Func<Meter, string, string, string, object>));
+                    return null;
                 }
+
+                methodInfo = methodInfo.MakeGenericMethod(genericType);
+                return (meter, name, unit, description) => methodInfo.Invoke(meter, new object[] { name, unit, description });
             }
             catch (Exception ex)
             {
-                Log.Debug(ex, $"Reflection failed for {createInstrumentMethodName}<{genericType}>");
+                Log.Error($"Failed to create bridged instrument delegate for {originalInstrumentType.Name}: {ex}");
+                return null;
             }
-
-            // If method not found, return null
-            return null;
         }
 
         private static Delegate CreateBridgedObservableInstrumentDelegate(Type originalInstrumentType)
@@ -797,9 +869,13 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 
             var delegateType = typeof(CreateObservableInstrumentDelegate<>).MakeGenericType(genericType);
-            var methodInfo = typeof(MeterListenerBridge).GetMethod(createInstrumentMethodName, BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(genericType);
+            var methodInfo = typeof(MeterListenerBridge).GetMethod(createInstrumentMethodName, BindingFlags.NonPublic | BindingFlags.Static)?.MakeGenericMethod(genericType);
+            if (methodInfo == null)
+            {
+                return null;
+            }
+            
             var createDelegate = methodInfo.CreateDelegate(delegateType);
-
             return createDelegate;
         }
 
@@ -837,7 +913,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 {
                     return;
                 }
-
+                
+                // Record that a measurement was successfully bridged
                 switch (state)
                 {
                     case Counter<T> counter:
