@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.47.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.46.1...v10.47.0) (2025-11-18)
+
+
+### New features
+
+* Add an optional transaction storage mechanism to allow transactions to flow with the ExecutionContext for ASP.NET web apps ([#3311](https://github.com/newrelic/newrelic-dotnet-agent/issues/3311)) ([d254ce9](https://github.com/newrelic/newrelic-dotnet-agent/commit/d254ce9f13cd918bc289c3a06f337e7cf0c11d3b))
+
+
+### Fixes
+
+* Azure Service Bus instrumentation fails due to null reference exception ([#3305](https://github.com/newrelic/newrelic-dotnet-agent/issues/3305)) ([b2bf4df](https://github.com/newrelic/newrelic-dotnet-agent/commit/b2bf4dfc7e28c5a2ef4bdd8ede0e7d8d73bba0dc))
+* OpenAI instrumentation ignores chat completions when `CompleteChatAsync()` or `CompleteChat()` `messages` parameter is not an `Array` ([#3317](https://github.com/newrelic/newrelic-dotnet-agent/issues/3317)) ([3df9570](https://github.com/newrelic/newrelic-dotnet-agent/commit/3df957095c61940c0e9713affc9699afaa31f8cb))
+
 ## [10.46.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.46.0...v10.46.1) (2025-11-11)
 
 
