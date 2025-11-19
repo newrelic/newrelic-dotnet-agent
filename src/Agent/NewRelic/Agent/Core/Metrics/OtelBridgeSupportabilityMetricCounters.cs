@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Core.Metrics
         {
             foreach (var kvp in _counters)
             {
-                if (TryGetCount(kvp.Value, out var count))
+                if (TryGetAndResetCount(kvp.Value, out var count))
                 {
                     var metricName = GetMetricName(kvp.Key);
                     var metric = _metricBuilder.TryBuildSupportabilityCountMetric(metricName, count);
@@ -122,7 +122,7 @@ namespace NewRelic.Agent.Core.Metrics
         /// <param name="counter">The counter to check and reset</param>
         /// <param name="count">The current count if greater than zero</param>
         /// <returns>True if there was a count to report, false otherwise</returns>
-        private static bool TryGetCount(InterlockedCounter counter, out int count)
+        private static bool TryGetAndResetCount(InterlockedCounter counter, out int count)
         {
             count = 0;
             if (counter.Value > 0)
