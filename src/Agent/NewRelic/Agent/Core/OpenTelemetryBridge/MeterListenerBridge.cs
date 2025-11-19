@@ -86,10 +86,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private const int DefaultOtlpTimeoutSeconds = 10;
         private const int DefaultOtlpExportIntervalSeconds = 5;
 
-        public MeterListenerBridge() : this(null)
-        {
-        }
-        
         public MeterListenerBridge(IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters)
         {
             _supportabilityMetricCounters = supportabilityMetricCounters;

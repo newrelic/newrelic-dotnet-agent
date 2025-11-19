@@ -47,7 +47,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _connectionInfo.Port).Returns(443);
             Mock.Arrange(() => _connectionInfo.Proxy).Returns((WebProxy)null);
 
-            _meterListenerBridge = new MeterListenerBridge();
+            _meterListenerBridge = new MeterListenerBridge(null);
         }
 
         [TearDown]
