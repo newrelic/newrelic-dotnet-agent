@@ -54,12 +54,6 @@ namespace NewRelic.Agent.Core.Metrics
 
         public void Record(OtelBridgeSupportabilityMetric metric)
         {
-            // Apply log level filtering for debugging metrics
-            if (IsDebuggingMetric(metric) && !Log.IsFinestEnabled)
-            {
-                return;
-            }
-            
             _counters[metric].Increment();
         }
 
@@ -73,12 +67,6 @@ namespace NewRelic.Agent.Core.Metrics
         {
             foreach (var kvp in _counters)
             {
-                // Skip debugging metrics if finest logging is not enabled (avoid processing overhead)
-                if (IsDebuggingMetric(kvp.Key) && !Log.IsFinestEnabled)
-                {
-                    continue;
-                }
-                
                 if (TryGetCount(kvp.Value, out var count))
                 {
                     var metricName = GetMetricName(kvp.Key);
@@ -101,17 +89,6 @@ namespace NewRelic.Agent.Core.Metrics
         #endregion
 
         #region Private Helper Methods
-
-        /// <summary>
-        /// Determines if a metric is a debugging metric that should only be recorded/collected when finest logging is enabled
-        /// </summary>
-        private static bool IsDebuggingMetric(OtelBridgeSupportabilityMetric metric)
-        {
-            return metric == OtelBridgeSupportabilityMetric.InstrumentCreated ||
-                   metric == OtelBridgeSupportabilityMetric.InstrumentBridgeFailure ||
-                   metric == OtelBridgeSupportabilityMetric.MeasurementRecorded ||
-                   metric == OtelBridgeSupportabilityMetric.MeasurementBridgeFailure;
-        }
 
         /// <summary>
         /// Gets the metric name for a given supportability metric enum value

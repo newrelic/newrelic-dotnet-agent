@@ -396,7 +396,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var stateParameter = Expression.Parameter(typeof(object), "state");
 
             var methodCall = Expression.Call(
-                typeof(MeterListenerBridge),
+                Expression.Constant(this),
                 nameof(OnMeasurementRecorded),
                 [typeof(T)],
                 instrumentParameter,
@@ -596,10 +596,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             
             if (result != null)
             {
-                if (Log.IsFinestEnabled)
-                {
-                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.InstrumentCreated);
-                }
+                _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.InstrumentCreated);
                 
                 // Track specific instrument type
                 var instrumentType = instrument.GetType();
@@ -607,10 +604,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
             else
             {
-                if (Log.IsFinestEnabled)
-                {
-                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.InstrumentBridgeFailure);
-                }
+                _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.InstrumentBridgeFailure);
             }
             
             return result;
@@ -900,7 +894,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             return new Meter(dynamicMeter.Name, dynamicMeter.Version);
         }
 
-        private static void OnMeasurementRecorded<T>(object instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
+        private void OnMeasurementRecorded<T>(object instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
             where T : struct
         {
             try
@@ -909,6 +903,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 {
                     return;
                 }
+                
+                // Record that a measurement was successfully recorded
+                _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeasurementRecorded);
                 
                 // Record that a measurement was successfully bridged
                 switch (state)
@@ -951,6 +948,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
             catch (Exception ex)
             {
+                _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeasurementBridgeFailure);
                 Log.Warn(ex, "Failed to record measurement for instrument type: {0}", state?.GetType()?.Name ?? "unknown");
             }
         }

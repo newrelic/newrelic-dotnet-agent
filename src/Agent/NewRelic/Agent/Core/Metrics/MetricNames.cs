@@ -751,7 +751,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityOtelBridgeMeterCreateObservableUpDownCounter = SupportabilityOtelBridgeMeterPs + "CreateObservableUpDownCounter";
         public const string SupportabilityOtelBridgeMeterCreateObservableGauge = SupportabilityOtelBridgeMeterPs + "CreateObservableGauge";
 
-        // Additional debugging metrics for OpenTelemetry Bridge
+        // Additional debugging metrics for OpenTelemetry Bridge operations
         public const string SupportabilityOtelBridgeInstrumentCreated = SupportabilityOtelBridgePs + "InstrumentCreated";
         public const string SupportabilityOtelBridgeInstrumentBridgeFailure = SupportabilityOtelBridgePs + "InstrumentBridgeFailure";
         public const string SupportabilityOtelBridgeMeasurementRecorded = SupportabilityOtelBridgePs + "MeasurementRecorded";
