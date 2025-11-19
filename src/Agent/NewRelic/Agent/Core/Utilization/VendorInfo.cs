@@ -344,7 +344,7 @@ namespace NewRelic.Agent.Core.Utilization
         {
             try
             {
-                var variableValue = _environment.GetEnvironmentVariable(variableName, EnvironmentVariableTarget.Process);
+                var variableValue = _environment.GetEnvironmentVariable(variableName);
                 return variableValue;
             }
             catch

@@ -39,10 +39,10 @@ namespace CompositeTests.CrossAgentTests.Utilization
         [TearDown]
         public static void TearDown()
         {
-            System.Environment.SetEnvironmentVariable(PcfMemoryLimit, null, EnvironmentVariableTarget.Process);
-            System.Environment.SetEnvironmentVariable(PcfInstanceIp, null, EnvironmentVariableTarget.Process);
-            System.Environment.SetEnvironmentVariable(PcfInstanceGuid, null, EnvironmentVariableTarget.Process);
-            System.Environment.SetEnvironmentVariable(KubernetesServiceHost, null, EnvironmentVariableTarget.Process);
+            System.Environment.SetEnvironmentVariable(PcfMemoryLimit, null);
+            System.Environment.SetEnvironmentVariable(PcfInstanceIp, null);
+            System.Environment.SetEnvironmentVariable(PcfInstanceGuid, null);
+            System.Environment.SetEnvironmentVariable(KubernetesServiceHost, null);
             _compositeTestAgent.Dispose();
 
         }
@@ -343,17 +343,17 @@ namespace CompositeTests.CrossAgentTests.Utilization
         {
             if (!string.IsNullOrEmpty(testData.InputPcfGuid))
             {
-                System.Environment.SetEnvironmentVariable(PcfInstanceGuid, testData.InputPcfGuid, EnvironmentVariableTarget.Process);
+                System.Environment.SetEnvironmentVariable(PcfInstanceGuid, testData.InputPcfGuid);
             }
 
             if (!string.IsNullOrEmpty(testData.InputPcfIp))
             {
-                System.Environment.SetEnvironmentVariable(PcfInstanceIp, testData.InputPcfIp, EnvironmentVariableTarget.Process);
+                System.Environment.SetEnvironmentVariable(PcfInstanceIp, testData.InputPcfIp);
             }
 
             if (!string.IsNullOrEmpty(testData.InputPcfMemLimit))
             {
-                System.Environment.SetEnvironmentVariable(PcfMemoryLimit, testData.InputPcfMemLimit, EnvironmentVariableTarget.Process);
+                System.Environment.SetEnvironmentVariable(PcfMemoryLimit, testData.InputPcfMemLimit);
             }
 
             return (PcfVendorModel)_vendorInfo.GetPcfVendorInfo();
@@ -363,7 +363,7 @@ namespace CompositeTests.CrossAgentTests.Utilization
         {
             if (!string.IsNullOrEmpty(testData.InputEnvironmentVariables?.KubernetesServiceHost))
             {
-                System.Environment.SetEnvironmentVariable(KubernetesServiceHost, testData.InputEnvironmentVariables.KubernetesServiceHost, EnvironmentVariableTarget.Process);
+                System.Environment.SetEnvironmentVariable(KubernetesServiceHost, testData.InputEnvironmentVariables.KubernetesServiceHost);
             }
 
             return (KubernetesVendorModel)_vendorInfo.GetKubernetesInfo();
