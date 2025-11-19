@@ -266,5 +266,7 @@ namespace NewRelic.Agent.Configuration
         bool OpenTelemetryMetricsEnabled { get; }
         IEnumerable<string> OpenTelemetryMetricsIncludeFilters { get; }
         IEnumerable<string> OpenTelemetryMetricsExcludeFilters { get; }
+
+        bool HybridHttpContextStorageEnabled { get; }
     }
 }

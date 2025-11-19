@@ -49,12 +49,12 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
         }
 
-        public string ToYaml()
+        public string ToYaml(string entityGuid)
         {
             lock (this)
             {
                 return
-                    $"healthy: {IsHealthy}\nstatus: {Status}\nlast_error: {LastError}\nstart_time_unix_nano: {StartTime.ToUnixTimeMilliseconds() * NanoSecondsPerMillisecond}\nstatus_time_unix_nano: {StatusTime.ToUnixTimeMilliseconds() * NanoSecondsPerMillisecond}";
+                    $"entity_guid: {entityGuid}\nhealthy: {IsHealthy}\nstatus: {Status}\nlast_error: {LastError}\nstart_time_unix_nano: {StartTime.ToUnixTimeMilliseconds() * NanoSecondsPerMillisecond}\nstatus_time_unix_nano: {StatusTime.ToUnixTimeMilliseconds() * NanoSecondsPerMillisecond}";
             }
         }
     }

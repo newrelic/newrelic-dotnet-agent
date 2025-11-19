@@ -62,7 +62,7 @@ public class AzureServiceBusSendWrapper : AzureServiceBusWrapperBase
 
             void ProcessHeaders(IDictionary<string, object> applicationProperties, string key, string value)
             {
-                applicationProperties.Add(key, value);
+                applicationProperties[key] = value; // overwrite any existing header with the same key
             }
         }
 

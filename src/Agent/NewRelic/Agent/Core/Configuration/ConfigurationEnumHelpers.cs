@@ -57,9 +57,41 @@ namespace NewRelic.Agent.Core.Configuration
                 case SamplerType.AlwaysOff:
                     return new AlwaysOffSamplerType();
                 case SamplerType.TraceIdRatioBased:
-                    return new TraceIdRatioSamplerType();
+                    return new TraceIdRatioBasedSamplerType();
                 default:
                     throw new ArgumentOutOfRangeException(nameof(samplerType), samplerType, null);
+            }
+        }
+
+        public static string ToSamplerTypeString(this SamplerType samplerType)
+        {
+            switch (samplerType)
+            {
+                case SamplerType.Adaptive:
+                    return "adaptive";
+                case SamplerType.AlwaysOn:
+                    return "always_on";
+                case SamplerType.AlwaysOff:
+                    return "always_off";
+                case SamplerType.TraceIdRatioBased:
+                    return "trace_id_ratio_based";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(samplerType), samplerType, null);
+            }
+        }
+
+        public static string ToSamplerLevelString(this SamplerLevel samplerLevel)
+        {
+            switch (samplerLevel)
+            {
+                case SamplerLevel.Root:
+                    return "root";
+                case SamplerLevel.RemoteParentSampled:
+                    return "remote_parent_sampled";
+                case SamplerLevel.RemoteParentNotSampled:
+                    return "remote_parent_not_sampled";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null);
             }
         }
     }

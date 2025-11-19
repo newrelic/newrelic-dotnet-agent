@@ -530,5 +530,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool OpenTelemetryMetricsEnabled => true;
         public IEnumerable<string> OpenTelemetryMetricsIncludeFilters => ["IncludedMeter1", "IncludedMeter2"];
         public IEnumerable<string> OpenTelemetryMetricsExcludeFilters => ["ExcludedMeter1", "ExcludedMeter2"];
+
+        public bool HybridHttpContextStorageEnabled => false;
     }
 }

@@ -361,7 +361,8 @@ namespace NewRelic.Agent.Core.Configuration
                     "opentelemetry.enabled": true,
                     "opentelemetry.metrics.enabled": true,
                     "opentelemetry.metrics.include": ["IncludedMeter1","IncludedMeter2"],
-                    "opentelemetry.metrics.exclude": ["ExcludedMeter1","ExcludedMeter2"]
+                    "opentelemetry.metrics.exclude": ["ExcludedMeter1","ExcludedMeter2"],
+                    "hybrid_http_context_storage.enabled":false
                 }
                 """;
 

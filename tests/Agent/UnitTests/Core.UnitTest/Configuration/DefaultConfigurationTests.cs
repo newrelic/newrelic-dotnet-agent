@@ -3631,6 +3631,54 @@ namespace NewRelic.Agent.Core.Configuration
             return defaultConfig.EnableAspNetCore6PlusBrowserInjection;
         }
 
+        [TestCase("true", "true", ExpectedResult = true)]
+        [TestCase("true", "false", ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("false", "true", ExpectedResult = false)]
+        [TestCase("false", "false", ExpectedResult = false)]
+        [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("1", "true", ExpectedResult = true)]
+        [TestCase("0", "false", ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", "true", ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", "false", ExpectedResult = false)]
+        [TestCase(null, "true", ExpectedResult = true)]
+        [TestCase(null, "false", ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = true)] // true by default test
+        public bool AspNetCore6PlusBrowserInjectionWithEnvironmentVariableTests(string environmentSetting, string localConfigValue)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ENABLE_ASPNETCORE6PLUS_BROWSER_INJECTION")).Returns(environmentSetting);
+
+            if (localConfigValue != null)
+            {
+                _localConfig.appSettings.Add(new configurationAdd { key = "EnableAspNetCore6PlusBrowserInjection", value = localConfigValue });
+            }
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            return defaultConfig.EnableAspNetCore6PlusBrowserInjection;
+        }
+
+        [TestCase("true", true, ExpectedResult = true)]
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("false", false, ExpectedResult = false)]
+        [TestCase("1", true, ExpectedResult = true)]
+        [TestCase("0", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        public bool BrowserMonitoringAutoInstrumentWithEnvironmentVariableTests(string environmentSetting, bool localConfigValue)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_BROWSER_MONITORING_AUTO_INSTRUMENT")).Returns(environmentSetting);
+
+            _localConfig.browserMonitoring.autoInstrument = localConfigValue;
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            return defaultConfig.BrowserMonitoringAutoInstrument;
+        }
+
         [TestCase("true", true, ExpectedResult = true)]
         [TestCase("true", false, ExpectedResult = true)]
         [TestCase("true", null, ExpectedResult = true)]
@@ -4615,5 +4663,34 @@ namespace NewRelic.Agent.Core.Configuration
         {
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         }
+        [Test]
+        public void HybridHttpContextStorageEnabled_DefaultsToFalse()
+        {
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            Assert.That(defaultConfig.HybridHttpContextStorageEnabled, Is.False);
+        }
+
+        [TestCase(null, null, ExpectedResult = false)]
+        [TestCase(null, "true", ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("true", "false", ExpectedResult = false)] // environment overrides local
+        [TestCase("invalid", "true", ExpectedResult = true)]
+        [TestCase("invalid", null, ExpectedResult = false)]
+        public bool HybridHttpContextStorageEnabled_EnvironmentOverridesLocal(string appSettingValue, string environmentValue)
+        {
+            if (appSettingValue != null)
+            {
+                _localConfig.appSettings.Add(new configurationAdd { key = "HybridHttpContextStorageEnabled", value = appSettingValue });
+            }
+
+            if (environmentValue != null)
+            {
+                Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED")).Returns(environmentValue);
+            }
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            return defaultConfig.HybridHttpContextStorageEnabled;
+        }
+
     }
 }

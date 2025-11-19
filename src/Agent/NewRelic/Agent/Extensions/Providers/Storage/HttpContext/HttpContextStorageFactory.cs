@@ -11,6 +11,8 @@ namespace NewRelic.Providers.Storage.HttpContext
     {
         public bool IsAsyncStorage => false;
 
+        public bool IsHybridStorage => false;
+
         bool IContextStorageFactory.IsValid
         {
             get

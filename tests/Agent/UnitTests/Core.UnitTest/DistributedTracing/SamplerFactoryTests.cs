@@ -60,8 +60,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
             var sampler2 = _samplerFactory.GetSampler(SamplerType.TraceIdRatioBased, 0.25f);
 
             Assert.That(sampler1, Is.Not.SameAs(sampler2), "TraceIdRatioSampler should be stateless and newly instantiated each call.");
-            Assert.That(sampler1, Is.TypeOf<TraceIdRatioSampler>());
-            Assert.That(sampler2, Is.TypeOf<TraceIdRatioSampler>());
+            Assert.That(sampler1, Is.TypeOf<TraceIdRatioBasedSampler>());
+            Assert.That(sampler2, Is.TypeOf<TraceIdRatioBasedSampler>());
         }
 
         [Test]
