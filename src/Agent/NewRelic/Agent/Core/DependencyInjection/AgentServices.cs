@@ -164,6 +164,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
             container.Register<IApiSupportabilityMetricCounters, IOutOfBandMetricSource, ApiSupportabilityMetricCounters>();
             container.Register<ICATSupportabilityMetricCounters, IOutOfBandMetricSource, CATSupportabilityMetricCounters>();
+            container.Register<IOtelBridgeSupportabilityMetricCounters, IOutOfBandMetricSource, OtelBridgeSupportabilityMetricCounters>();
             container.Register<IAgentTimerService, AgentTimerService>();
             container.Register<IThreadPoolStatic, ThreadPoolStatic>();
             container.Register<ITransactionTransformer, TransactionTransformer>();

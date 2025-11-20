@@ -732,6 +732,31 @@ namespace NewRelic.Agent.Core.Metrics
             return SupportabilityAgentApiPs + methodName;
         }
 
+        // OpenTelemetry Metrics Bridge
+        private const string SupportabilityOTelMetricsBridgePs = SupportabilityPs + "Metrics" + PathSeparator + "DotNet" + PathSeparator + "OpenTelemetryBridge" + PathSeparator;
+        
+        public const string SupportabilityOTelMetricsBridgeEnabled = SupportabilityOTelMetricsBridgePs + "enabled";
+        public const string SupportabilityOTelMetricsBridgeDisabled = SupportabilityOTelMetricsBridgePs + "disabled";
+        public const string SupportabilityOTelMetricsBridgeGetMeter = SupportabilityOTelMetricsBridgePs + "getMeter";
+        
+        // Individual meter method supportability metrics
+        private const string SupportabilityOTelMetricsBridgeMeterPs = SupportabilityOTelMetricsBridgePs + "meter" + PathSeparator;
+        
+        public const string SupportabilityOTelMetricsBridgeMeterCreateCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateHistogram = SupportabilityOTelMetricsBridgeMeterPs + "CreateHistogram";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateUpDownCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateUpDownCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateGauge = SupportabilityOTelMetricsBridgeMeterPs + "CreateGauge";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableHistogram = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableHistogram";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableUpDownCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableUpDownCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableGauge = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableGauge";
+
+        // Additional debugging metrics for OpenTelemetry Metrics Bridge operations
+        public const string SupportabilityOTelMetricsBridgeInstrumentCreated = SupportabilityOTelMetricsBridgePs + "InstrumentCreated";
+        public const string SupportabilityOTelMetricsBridgeInstrumentBridgeFailure = SupportabilityOTelMetricsBridgePs + "InstrumentBridgeFailure";
+        public const string SupportabilityOTelMetricsBridgeMeasurementRecorded = SupportabilityOTelMetricsBridgePs + "MeasurementRecorded";
+        public const string SupportabilityOTelMetricsBridgeMeasurementBridgeFailure = SupportabilityOTelMetricsBridgePs + "MeasurementBridgeFailure";
+
         // CAT
         private const string SupportabilityCAT = SupportabilityPs + "CrossApplicationTracing" + PathSeparator;
         private const string SupportabilityCATRequest = SupportabilityCAT + "Request" + PathSeparator;
