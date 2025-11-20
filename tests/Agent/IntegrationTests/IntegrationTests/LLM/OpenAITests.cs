@@ -54,6 +54,7 @@ namespace NewRelic.Agent.IntegrationTests.LLM
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"OpenAIExerciser CompleteChatAsync gpt-4o {LLMHelpers.ConvertToBase64(_prompt)}");
+            _fixture.AddCommand($"OpenAIExerciser CompleteChatEnumerableAsync gpt-4o {LLMHelpers.ConvertToBase64(_prompt)}");
             _fixture.AddCommand($"OpenAIExerciser CompleteChat gpt-4o {LLMHelpers.ConvertToBase64(_prompt)}");
             _fixture.AddCommand($"OpenAIExerciser CompleteChatFailureAsync gpt-4o {LLMHelpers.ConvertToBase64(_prompt)}");
 
@@ -112,8 +113,10 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new() { metricName = @"Custom/Llm/completion/openai/CompleteChatAsync" },
+                new() { metricName = @"Custom/Llm/completion/openai/CompleteChatAsync", CallCountAllHarvests = 3},
                 new() { metricName = @"Custom/Llm/completion/openai/CompleteChatAsync", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.OpenAIExerciser/CompleteChatAsync"},
+                new() { metricName = @"Custom/Llm/completion/openai/CompleteChatAsync", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.OpenAIExerciser/CompleteChatEnumerableAsync"},
+                new() { metricName = @"Custom/Llm/completion/openai/CompleteChatAsync", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.OpenAIExerciser/CompleteChatFailureAsync"},
                 new() { metricName = @"Custom/Llm/completion/openai/CompleteChat" },
                 new() { metricName = @"Custom/Llm/completion/openai/CompleteChat", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.OpenAIExerciser/CompleteChat"},
                 new() { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true},
@@ -129,12 +132,14 @@ namespace NewRelic.Agent.IntegrationTests.LLM
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
             var transactionEventAsync = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.OpenAIExerciser/CompleteChatAsync");
+            var transactionEventAsyncWithEnumerable = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.OpenAIExerciser/CompleteChatEnumerableAsync");
             var transactionEventSync = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.OpenAIExerciser/CompleteChat");
 
             Assert.Multiple(() =>
             {
                 Assertions.MetricsExist(expectedMetrics, metrics);
                 Assert.NotNull(transactionEventAsync);
+                Assert.NotNull(transactionEventAsyncWithEnumerable);
                 Assert.NotNull(transactionEventSync);
                 ValidateCommonAttributes(customEventsSuccess);
 

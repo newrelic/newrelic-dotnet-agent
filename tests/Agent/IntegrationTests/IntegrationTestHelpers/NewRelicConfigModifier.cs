@@ -230,7 +230,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         /// Sets or deletes the distributed trace enabled setting in the newrelic.config.
         /// </summary>
         /// <param name="enabled">If null, the setting will be deleted; otherwise, the setting will be set to the value of this parameter.</param>
-        public void SetOrDeleteDistributedTraceEnabled(bool? enabled)
+        public NewRelicConfigModifier SetOrDeleteDistributedTraceEnabled(bool? enabled)
         {
             const string config = "configuration";
             const string distributedTracing = "distributedTracing";
@@ -243,6 +243,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { config, distributedTracing },
                     "enabled", enabled.Value ? "true" : "false");
             }
+
+            return this;
         }
 
         /// <summary>
@@ -281,7 +283,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
-        public void SetOrDeleteSpanEventsEnabled(bool? enabled)
+        public NewRelicConfigModifier SetOrDeleteSpanEventsEnabled(bool? enabled)
         {
             const string config = "configuration";
             const string spanEvents = "spanEvents";
@@ -294,6 +296,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { config, spanEvents },
                     "enabled", enabled.Value ? "true" : "false");
             }
+            return this;
         }
 
         public void SetCustomHostName(string customHostName)
@@ -555,6 +558,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public NewRelicConfigModifier IncludeActivitySource(string activitySourceName)
         {
             CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.ActivitySource.Include", activitySourceName, "urn:newrelic-config");
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableHybridHttpContextStorage(bool enabled)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "HybridHttpContextStorageEnabled", enabled.ToString(), "urn:newrelic-config");
             return this;
         }
     }

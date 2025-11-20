@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.SharedInterfaces;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Configuration
@@ -73,7 +74,7 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("browser_monitoring.error_beacon_address")]
         public string BrowserMonitoringErrorBeaconAddress => _configuration.BrowserMonitoringErrorBeaconAddress;
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string BrowserMonitoringJavaScriptAgent => _configuration.BrowserMonitoringJavaScriptAgent;
 
         [JsonProperty("browser_monitoring.javascript_agent.populated")]
@@ -89,7 +90,7 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("browser_monitoring.loader_debug")]
         public bool LoaderDebug => false;
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string BrowserMonitoringKey => _configuration.BrowserMonitoringKey;
 
         [JsonProperty("browser_monitoring.monitoring_key.populated")]
@@ -210,10 +211,18 @@ namespace NewRelic.Agent.Core.Configuration
         public bool DistributedTracingEnabled => _configuration.DistributedTracingEnabled;
 
         [JsonProperty("distributed_tracing.sampler.root.sampler_type")]
+        public string RootSamplerName => RootSamplerType.ToSamplerTypeString();
+        [JsonIgnore]
         public SamplerType RootSamplerType => _configuration.RootSamplerType;
+
         [JsonProperty("distributed_tracing.sampler.remote_parent_sampled.sampler_type")]
+        public string RemoteParentSampledSamplerName => RemoteParentSampledSamplerType.ToSamplerTypeString();
+        [JsonIgnore]
         public SamplerType RemoteParentSampledSamplerType => _configuration.RemoteParentSampledSamplerType;
+
         [JsonProperty("distributed_tracing.sampler.remote_parent_not_sampled.sampler_type")]
+        public string RemoteParentNotSampledSamplerName => RemoteParentNotSampledSamplerType.ToSamplerTypeString();
+        [JsonIgnore]
         public SamplerType RemoteParentNotSampledSamplerType => _configuration.RemoteParentNotSampledSamplerType;
 
         [JsonProperty("distributed_tracing.sampler.root.trace_id_ratio_based.ratio")]
@@ -317,7 +326,7 @@ namespace NewRelic.Agent.Core.Configuration
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings => _configuration.ExpectedErrorMessagesForAgentSettings;
 
         // The following IConfiguration property `ExpectedErrorStatusCodesForAgentSettings` actually reports the same information in a more friendly way
-        [JsonIgnore()]
+        [JsonIgnore]
         public IEnumerable<MatchRule> ExpectedStatusCodes => _configuration.ExpectedStatusCodes;
 
         [JsonProperty("error_collector.expected_status_codes")]
@@ -336,7 +345,7 @@ namespace NewRelic.Agent.Core.Configuration
         public IDictionary<string, IEnumerable<string>> IgnoreErrorMessagesForAgentSettings => _configuration.IgnoreErrorMessagesForAgentSettings;
 
         // Serializing this Func doesn't provide us with more information than the supportability metrics
-        [JsonIgnore()]
+        [JsonIgnore]
         public Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback => _configuration.ErrorGroupCallback;
 
         [JsonProperty("agent.request_headers_map")]
@@ -381,37 +390,37 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.app_settings_config_file_path")]
         public string AppSettingsConfigFilePath => _configuration.AppSettingsConfigFilePath;
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string ProxyHost => _configuration.ProxyHost;
 
         [JsonProperty("proxy.host.configured")]
         public bool ProxyHostConfigured => !string.IsNullOrWhiteSpace(ProxyHost);
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string ProxyUriPath => _configuration.ProxyUriPath;
 
         [JsonProperty("proxy.uri_path.configured")]
         public bool ProxyUriPathConfigured => !string.IsNullOrWhiteSpace(ProxyUriPath);
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public int ProxyPort => _configuration.ProxyPort;
 
         [JsonProperty("proxy.port.configured")]
         public bool ProxyPortConfigured => true; // as this is an integer with a default value, it will always be 'configured'
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string ProxyUsername => _configuration.ProxyUsername;
 
         [JsonProperty("proxy.username.configured")]
         public bool ProxyUsernameConfigured => !string.IsNullOrWhiteSpace(ProxyUsername);
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string ProxyPassword => _configuration.ProxyPassword;
 
         [JsonProperty("proxy.password.configured")]
         public bool ProxyPasswordConfigured => !string.IsNullOrWhiteSpace(ProxyPassword);
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string ProxyDomain => _configuration.ProxyDomain;
 
         [JsonProperty("proxy.domain.configured")]
@@ -711,7 +720,7 @@ namespace NewRelic.Agent.Core.Configuration
         public bool AiMonitoringRecordContentEnabled => _configuration.AiMonitoringRecordContentEnabled;
 
         // Serializing this Func doesn't provide us with more information than the supportability metrics
-        [JsonIgnore()]
+        [JsonIgnore]
         public Func<string, string, int> LlmTokenCountingCallback => _configuration.LlmTokenCountingCallback;
 
         [JsonIgnore]
@@ -781,6 +790,9 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("opentelemetry.metrics.exclude")]
         public IEnumerable<string> OpenTelemetryMetricsExcludeFilters => _configuration.OpenTelemetryMetricsExcludeFilters;
+
+        [JsonProperty("hybrid_http_context_storage.enabled")]
+        public bool HybridHttpContextStorageEnabled => _configuration.HybridHttpContextStorageEnabled;
 
         #endregion
     }

@@ -72,10 +72,11 @@ namespace NewRelic.Agent.Core.UnitTests.AgentHealth
             var healthStatus = (IsHealthy: true, Code: "200", Status: "OK");
             _healthCheck.TrySetHealth(healthStatus);
 
-            var yaml = _healthCheck.ToYaml();
+            var yaml = _healthCheck.ToYaml("someEntityGuid");
 
             Assert.Multiple(() =>
             {
+                Assert.That(yaml, Does.Contain("entity_guid: someEntityGuid"));
                 Assert.That(yaml, Does.Contain("healthy: True"));
                 Assert.That(yaml, Does.Contain("status: OK"));
                 Assert.That(yaml, Does.Contain("last_error: 200"));
@@ -172,10 +173,11 @@ namespace NewRelic.Agent.Core.UnitTests.AgentHealth
         [Test]
         public void ToYaml_HandlesNullValues()
         {
-            var yaml = _healthCheck.ToYaml();
+            var yaml = _healthCheck.ToYaml(null);
 
             Assert.Multiple(() =>
             {
+                Assert.That(yaml, Does.Match(@"entity_guid:\s\n"));
                 Assert.That(yaml, Does.Match(@"healthy:\sFalse"));
                 Assert.That(yaml, Does.Match(@"status:\s\n"));
                 Assert.That(yaml, Does.Match(@"last_error:\s\n"));

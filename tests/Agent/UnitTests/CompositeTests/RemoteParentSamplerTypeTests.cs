@@ -48,13 +48,13 @@ namespace CompositeTests
             // If testing TraceIdRatioBased, inject the ratio into both sampled/not-sampled sampler configs then push config
             if (samplerType == SamplerType.TraceIdRatioBased && ratio.HasValue)
             {
-                if (_compositeTestAgent.LocalConfiguration.distributedTracing.sampler.remoteParentSampled.Item is TraceIdRatioSamplerType rpSampled)
+                if (_compositeTestAgent.LocalConfiguration.distributedTracing.sampler.remoteParentSampled.Item is TraceIdRatioBasedSamplerType rpSampled)
                 {
-                    rpSampled.sampleRatio = (decimal)ratio.Value;
+                    rpSampled.ratio = (decimal)ratio.Value;
                 }
-                if (_compositeTestAgent.LocalConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item is TraceIdRatioSamplerType rpNotSampled)
+                if (_compositeTestAgent.LocalConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item is TraceIdRatioBasedSamplerType rpNotSampled)
                 {
-                    rpNotSampled.sampleRatio = (decimal)ratio.Value;
+                    rpNotSampled.ratio = (decimal)ratio.Value;
                 }
                 _compositeTestAgent.PushConfiguration();
             }

@@ -286,6 +286,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="HttpContextProviderComponent" Guid="{D02A537E-3221-4DEB-BC77-E15DEFF15E81}">
         <File Id="HttpContextProviderFile" Name="NewRelic.Providers.Storage.HttpContext.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Storage.HttpContext.dll" />
       </Component>
+      <Component Id="HybridHttpContextProviderComponent" Guid="{E0C9D385-9560-42A7-BBF3-CAD0B8A1C081}">
+        <File Id="HybridHttpContextProviderFile" Name="NewRelic.Providers.Storage.HybridHttpContext.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Storage.HybridHttpContext.dll" />
+      </Component>
       <Component Id="OperationContextProviderComponent" Guid="{6BE8050A-0A01-4F5B-B3B6-274652DF24E6}">
         <File Id="OperationContextProviderFile" Name="NewRelic.Providers.Storage.OperationContext.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Storage.OperationContext.dll" />
       </Component>

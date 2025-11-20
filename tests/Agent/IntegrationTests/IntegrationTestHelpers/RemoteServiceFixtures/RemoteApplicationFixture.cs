@@ -112,7 +112,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             var filesToDelete = new List<string>
             {
                 DestinationNewRelicExtensionsDirectoryPath + @"\NewRelic.Providers.Storage.AsyncLocal.dll",
-                DestinationNewRelicExtensionsDirectoryPath + @"\NewRelic.Providers.Storage.CallContext.dll"
+                DestinationNewRelicExtensionsDirectoryPath + @"\NewRelic.Providers.Storage.CallContext.dll",
+                DestinationNewRelicExtensionsDirectoryPath + @"\NewRelic.Providers.Storage.HybridHttpContext.dll"
             };
 
             foreach (var file in filesToDelete)

@@ -428,7 +428,7 @@ namespace NewRelic.Agent.Core.Configuration
         #region Browser Monitoring
 
         public virtual string BrowserMonitoringApplicationId { get { return _serverConfiguration.RumSettingsApplicationId ?? string.Empty; } }
-        public virtual bool BrowserMonitoringAutoInstrument { get { return _localConfiguration.browserMonitoring.autoInstrument; } }
+        public virtual bool BrowserMonitoringAutoInstrument => EnvironmentOverrides(_localConfiguration.browserMonitoring.autoInstrument, "NEW_RELIC_BROWSER_MONITORING_AUTO_INSTRUMENT");
         public virtual string BrowserMonitoringBeaconAddress { get { return _serverConfiguration.RumSettingsBeacon ?? string.Empty; } }
         public virtual string BrowserMonitoringErrorBeaconAddress { get { return _serverConfiguration.RumSettingsErrorBeacon ?? string.Empty; } }
         public virtual string BrowserMonitoringJavaScriptAgent { get { return _serverConfiguration.RumSettingsJavaScriptAgentLoader ?? string.Empty; } }
@@ -957,7 +957,7 @@ namespace NewRelic.Agent.Core.Configuration
                 AdaptiveSamplerType => SamplerType.Adaptive,
                 AlwaysOnSamplerType => SamplerType.AlwaysOn,
                 AlwaysOffSamplerType => SamplerType.AlwaysOff,
-                TraceIdRatioSamplerType => SamplerType.TraceIdRatioBased,
+                TraceIdRatioBasedSamplerType => SamplerType.TraceIdRatioBased,
                 _ => throw new ArgumentOutOfRangeException(nameof(samplerItem), samplerItem, "Unknown sampler type in configuration.")
             };
 
@@ -981,16 +981,16 @@ namespace NewRelic.Agent.Core.Configuration
             switch (samplerLevel)
             {
                 case SamplerLevel.Root:
-                    if (_localConfiguration.distributedTracing.sampler.root.Item is TraceIdRatioSamplerType rootTraceIdRatioSamplerType)
-                        return (float)rootTraceIdRatioSamplerType.sampleRatio;
+                    if (_localConfiguration.distributedTracing.sampler.root.Item is TraceIdRatioBasedSamplerType rootTraceIdRatioSamplerType)
+                        return (float)rootTraceIdRatioSamplerType.ratio;
                     return null;
                 case SamplerLevel.RemoteParentSampled:
-                    if (_localConfiguration.distributedTracing.sampler.remoteParentSampled.Item is TraceIdRatioSamplerType remoteParentSampledTraceIdRatioSamplerType)
-                        return (float)remoteParentSampledTraceIdRatioSamplerType.sampleRatio;
+                    if (_localConfiguration.distributedTracing.sampler.remoteParentSampled.Item is TraceIdRatioBasedSamplerType remoteParentSampledTraceIdRatioSamplerType)
+                        return (float)remoteParentSampledTraceIdRatioSamplerType.ratio;
                     return null;
                 case SamplerLevel.RemoteParentNotSampled:
-                    if (_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item is TraceIdRatioSamplerType remoteParentNotSampledTraceIdRatioSamplerType)
-                        return (float)remoteParentNotSampledTraceIdRatioSamplerType.sampleRatio;
+                    if (_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item is TraceIdRatioBasedSamplerType remoteParentNotSampledTraceIdRatioSamplerType)
+                        return (float)remoteParentNotSampledTraceIdRatioSamplerType.ratio;
                     return null;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null);
@@ -2127,7 +2127,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private bool? _enableAspNetCore6PlusBrowserInjection;
         public bool EnableAspNetCore6PlusBrowserInjection =>
-            _enableAspNetCore6PlusBrowserInjection ??= TryGetAppSettingAsBoolWithDefault("EnableAspNetCore6PlusBrowserInjection", true);
+            _enableAspNetCore6PlusBrowserInjection ??= EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("EnableAspNetCore6PlusBrowserInjection", true), "NEW_RELIC_ENABLE_ASPNETCORE6PLUS_BROWSER_INJECTION");
 
         private TimeSpan? _metricsHarvestCycleOverride = null;
         public TimeSpan MetricsHarvestCycle
@@ -2910,6 +2910,8 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         #endregion
+
+        public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", false), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");
 
         #endregion
 

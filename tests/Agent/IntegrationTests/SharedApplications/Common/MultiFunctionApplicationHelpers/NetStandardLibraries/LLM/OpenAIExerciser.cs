@@ -50,6 +50,19 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task CompleteChatEnumerableAsync(string model, string base64Prompt)
+        {
+            ChatClient client = new(model, apiKey: OpenAIConfiguration.ApiKey);
+            var bytes = Convert.FromBase64String(base64Prompt);
+            var prompt = Encoding.UTF8.GetString(bytes);
+            var promptList = new[] { prompt };
+            ChatCompletion completion = await client.CompleteChatAsync(promptList.Select(p => new UserChatMessage(p)));
+            Console.WriteLine(completion.Content.Last().Text);
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task CompleteChatFailureAsync(string model, string base64Prompt)
         {
             ChatClient client = new(model, apiKey: OpenAIConfiguration.ApiKey + "BOGUS"); // will cause an authentication failure

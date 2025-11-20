@@ -1312,41 +1312,41 @@ namespace NewRelic.Agent.Core.Config
     
     /// <summary>
     /// Based on the OpenTelemetry TraceIdRatioBased sampler.
-    /// It samples traces with a probability defined by the sampleRatio attribute, which must be a decimal value between 0.0 (no sampling) and 1.0 (sample all).
+    /// It samples traces with a probability defined by the ratio attribute, which must be a decimal value between 0.0 (no sampling) and 1.0 (sample all).
     /// For more information, see the OpenTelemetry specification: https://opentelemetry.io/docs/specs/otel/trace/tracestate-probability-sampling/
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="urn:newrelic-config")]
-    public partial class TraceIdRatioSamplerType
+    public partial class TraceIdRatioBasedSamplerType
     {
         
-        private decimal sampleRatioField;
+        private decimal ratioField;
         
         /// <summary>
         /// The percentage of traces to sample, between 0.0 and 1.0.
         /// </summary>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public decimal sampleRatio
+        public decimal ratio
         {
             get
             {
-                return this.sampleRatioField;
+                return this.ratioField;
             }
             set
             {
-                this.sampleRatioField = value;
+                this.ratioField = value;
             }
         }
         
         #region Clone method
         /// <summary>
-        /// Create a clone of this TraceIdRatioSamplerType object
+        /// Create a clone of this TraceIdRatioBasedSamplerType object
         /// </summary>
-        public virtual TraceIdRatioSamplerType Clone()
+        public virtual TraceIdRatioBasedSamplerType Clone()
         {
-            return ((TraceIdRatioSamplerType)(this.MemberwiseClone()));
+            return ((TraceIdRatioBasedSamplerType)(this.MemberwiseClone()));
         }
         #endregion
     }
@@ -4230,7 +4230,7 @@ namespace NewRelic.Agent.Core.Config
         [System.Xml.Serialization.XmlElementAttribute("alwaysOff", typeof(AlwaysOffSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("alwaysOn", typeof(AlwaysOnSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("default", typeof(AdaptiveSamplerType))]
-        [System.Xml.Serialization.XmlElementAttribute("traceIdRatio", typeof(TraceIdRatioSamplerType))]
+        [System.Xml.Serialization.XmlElementAttribute("traceIdRatioBased", typeof(TraceIdRatioBasedSamplerType))]
         [System.Xml.Serialization.XmlChoiceIdentifierAttribute("ItemElementName")]
         public object Item
         {
@@ -4287,7 +4287,7 @@ namespace NewRelic.Agent.Core.Config
         @default,
         
         /// <remarks/>
-        traceIdRatio,
+        traceIdRatioBased
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
@@ -4305,7 +4305,7 @@ namespace NewRelic.Agent.Core.Config
         [System.Xml.Serialization.XmlElementAttribute("alwaysOff", typeof(AlwaysOffSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("alwaysOn", typeof(AlwaysOnSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("default", typeof(AdaptiveSamplerType))]
-        [System.Xml.Serialization.XmlElementAttribute("traceIdRatio", typeof(TraceIdRatioSamplerType))]
+        [System.Xml.Serialization.XmlElementAttribute("traceIdRatioBased", typeof(TraceIdRatioBasedSamplerType))]
         [System.Xml.Serialization.XmlChoiceIdentifierAttribute("ItemElementName")]
         public object Item
         {
@@ -4362,7 +4362,7 @@ namespace NewRelic.Agent.Core.Config
         @default,
         
         /// <remarks/>
-        traceIdRatio,
+        traceIdRatioBased,
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
@@ -4380,7 +4380,7 @@ namespace NewRelic.Agent.Core.Config
         [System.Xml.Serialization.XmlElementAttribute("alwaysOff", typeof(AlwaysOffSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("alwaysOn", typeof(AlwaysOnSamplerType))]
         [System.Xml.Serialization.XmlElementAttribute("default", typeof(AdaptiveSamplerType))]
-        [System.Xml.Serialization.XmlElementAttribute("traceIdRatio", typeof(TraceIdRatioSamplerType))]
+        [System.Xml.Serialization.XmlElementAttribute("traceIdRatioBased", typeof(TraceIdRatioBasedSamplerType))]
         [System.Xml.Serialization.XmlChoiceIdentifierAttribute("ItemElementName")]
         public object Item
         {
@@ -4437,7 +4437,7 @@ namespace NewRelic.Agent.Core.Config
         @default,
         
         /// <remarks/>
-        traceIdRatio,
+        traceIdRatioBased,
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
