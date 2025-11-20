@@ -43,6 +43,9 @@ namespace CompositeTests.CrossAgentTests.Utilization
             System.Environment.SetEnvironmentVariable(PcfInstanceIp, null);
             System.Environment.SetEnvironmentVariable(PcfInstanceGuid, null);
             System.Environment.SetEnvironmentVariable(KubernetesServiceHost, null);
+
+            NewRelic.Agent.Core.SharedInterfaces.Environment.ResetCache();
+
             _compositeTestAgent.Dispose();
 
         }

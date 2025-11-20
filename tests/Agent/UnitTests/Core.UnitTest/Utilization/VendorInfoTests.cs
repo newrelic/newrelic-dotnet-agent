@@ -45,6 +45,8 @@ namespace NewRelic.Agent.Core.Utilization
             _environment = Mock.Create<IEnvironment>();
             _vendorHttpApiRequestor = Mock.Create<VendorHttpApiRequestor>();
             _fileWrapper = Mock.Create<IFileWrapper>();
+
+            SharedInterfaces.Environment.ResetCache(); // clear cache before each test
         }
 
         [Test]

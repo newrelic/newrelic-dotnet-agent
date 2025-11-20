@@ -17,6 +17,7 @@ namespace CompositeTests
             System.Environment.SetEnvironmentVariable("NEW_RELIC_HOME", null);
 
             _env = new NewRelic.Agent.Core.SharedInterfaces.Environment();
+            NewRelic.Agent.Core.SharedInterfaces.Environment.ResetCache(); // clear cache before each test
         }
 
         [TearDown]

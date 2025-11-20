@@ -94,4 +94,9 @@ public class Environment : IEnvironment
 
         return result;
     }
+
+    /// <summary>
+    /// Resets the environment variable cache. Intended for testing purposes to ensure fresh reads of environment variables.
+    /// </summary>
+    public static void ResetCache() => _environmentVariableCache.Clear();
 }
