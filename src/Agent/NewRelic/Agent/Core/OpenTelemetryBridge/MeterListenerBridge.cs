@@ -119,7 +119,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             if (!_configuration.OpenTelemetryMetricsEnabled)
         {
-            _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.BridgeDisabled);
+            _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled);
             Log.Debug("OpenTelemetry Meter Bridge is disabled via configuration.");
             return;
         }            if (_connectionInfo == null)
@@ -129,7 +129,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 			
 			// Record that the bridge is enabled
-            _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.BridgeEnabled);
+            _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled);
 
             if (_sdkLogger == null)
             {

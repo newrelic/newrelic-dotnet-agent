@@ -77,3 +77,4 @@ build/Linux/keys
 # Build artifacts
 /build/BuildArtifacts
 /build/_staging
+global.json

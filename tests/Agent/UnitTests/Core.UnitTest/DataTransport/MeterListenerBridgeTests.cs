@@ -422,7 +422,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => _meterListenerBridge.Start());
             
             // Should record that bridge is enabled at least once
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.BridgeEnabled), Occurs.AtLeastOnce());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.AtLeastOnce());
         }
 
         #region Filter Logic Tests
@@ -638,7 +638,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => _meterListenerBridge.Start());
             
             // Verify supportability metric is recorded
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.BridgeDisabled), Occurs.Never());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled), Occurs.Never());
         }
 
         [Test]
@@ -651,8 +651,8 @@ namespace NewRelic.Agent.Core.DataTransport
             _meterListenerBridge.Start();
 
             // Assert - Should record disabled metric
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.BridgeDisabled), Occurs.Once());
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.BridgeEnabled), Occurs.Never());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled), Occurs.Once());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.Never());
         }
 
         [Test]
@@ -694,8 +694,8 @@ namespace NewRelic.Agent.Core.DataTransport
             _meterListenerBridge.Start();
 
             // Assert - Should record enabled metric at least once
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.BridgeEnabled), Occurs.AtLeastOnce());
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.BridgeDisabled), Occurs.Never());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.AtLeastOnce());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled), Occurs.Never());
         }
 
         [Test]
@@ -768,7 +768,7 @@ namespace NewRelic.Agent.Core.DataTransport
             });
             
             // Should record enabled metric at least once (restart scenario may cause multiple calls)
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.BridgeEnabled), Occurs.AtLeastOnce());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.AtLeastOnce());
         }
 
         [Test]

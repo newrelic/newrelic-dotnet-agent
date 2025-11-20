@@ -732,30 +732,30 @@ namespace NewRelic.Agent.Core.Metrics
             return SupportabilityAgentApiPs + methodName;
         }
 
-        // OpenTelemetry Bridge
-        private const string SupportabilityOtelBridgePs = SupportabilityPs + "Metrics" + PathSeparator + "DotNet" + PathSeparator + "OpenTelemetryBridge" + PathSeparator;
+        // OpenTelemetry Metrics Bridge
+        private const string SupportabilityOTelMetricsBridgePs = SupportabilityPs + "Metrics" + PathSeparator + "DotNet" + PathSeparator + "OpenTelemetryBridge" + PathSeparator;
         
-        public const string SupportabilityOtelBridgeEnabled = SupportabilityOtelBridgePs + "enabled";
-        public const string SupportabilityOtelBridgeDisabled = SupportabilityOtelBridgePs + "disabled";
-        public const string SupportabilityOtelBridgeGetMeter = SupportabilityOtelBridgePs + "getMeter";
+        public const string SupportabilityOTelMetricsBridgeEnabled = SupportabilityOTelMetricsBridgePs + "enabled";
+        public const string SupportabilityOTelMetricsBridgeDisabled = SupportabilityOTelMetricsBridgePs + "disabled";
+        public const string SupportabilityOTelMetricsBridgeGetMeter = SupportabilityOTelMetricsBridgePs + "getMeter";
         
         // Individual meter method supportability metrics
-        private const string SupportabilityOtelBridgeMeterPs = SupportabilityOtelBridgePs + "meter" + PathSeparator;
+        private const string SupportabilityOTelMetricsBridgeMeterPs = SupportabilityOTelMetricsBridgePs + "meter" + PathSeparator;
         
-        public const string SupportabilityOtelBridgeMeterCreateCounter = SupportabilityOtelBridgeMeterPs + "CreateCounter";
-        public const string SupportabilityOtelBridgeMeterCreateHistogram = SupportabilityOtelBridgeMeterPs + "CreateHistogram";
-        public const string SupportabilityOtelBridgeMeterCreateUpDownCounter = SupportabilityOtelBridgeMeterPs + "CreateUpDownCounter";
-        public const string SupportabilityOtelBridgeMeterCreateGauge = SupportabilityOtelBridgeMeterPs + "CreateGauge";
-        public const string SupportabilityOtelBridgeMeterCreateObservableCounter = SupportabilityOtelBridgeMeterPs + "CreateObservableCounter";
-        public const string SupportabilityOtelBridgeMeterCreateObservableHistogram = SupportabilityOtelBridgeMeterPs + "CreateObservableHistogram";
-        public const string SupportabilityOtelBridgeMeterCreateObservableUpDownCounter = SupportabilityOtelBridgeMeterPs + "CreateObservableUpDownCounter";
-        public const string SupportabilityOtelBridgeMeterCreateObservableGauge = SupportabilityOtelBridgeMeterPs + "CreateObservableGauge";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateHistogram = SupportabilityOTelMetricsBridgeMeterPs + "CreateHistogram";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateUpDownCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateUpDownCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateGauge = SupportabilityOTelMetricsBridgeMeterPs + "CreateGauge";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableHistogram = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableHistogram";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableUpDownCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableUpDownCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableGauge = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableGauge";
 
-        // Additional debugging metrics for OpenTelemetry Bridge operations
-        public const string SupportabilityOtelBridgeInstrumentCreated = SupportabilityOtelBridgePs + "InstrumentCreated";
-        public const string SupportabilityOtelBridgeInstrumentBridgeFailure = SupportabilityOtelBridgePs + "InstrumentBridgeFailure";
-        public const string SupportabilityOtelBridgeMeasurementRecorded = SupportabilityOtelBridgePs + "MeasurementRecorded";
-        public const string SupportabilityOtelBridgeMeasurementBridgeFailure = SupportabilityOtelBridgePs + "MeasurementBridgeFailure";
+        // Additional debugging metrics for OpenTelemetry Metrics Bridge operations
+        public const string SupportabilityOTelMetricsBridgeInstrumentCreated = SupportabilityOTelMetricsBridgePs + "InstrumentCreated";
+        public const string SupportabilityOTelMetricsBridgeInstrumentBridgeFailure = SupportabilityOTelMetricsBridgePs + "InstrumentBridgeFailure";
+        public const string SupportabilityOTelMetricsBridgeMeasurementRecorded = SupportabilityOTelMetricsBridgePs + "MeasurementRecorded";
+        public const string SupportabilityOTelMetricsBridgeMeasurementBridgeFailure = SupportabilityOTelMetricsBridgePs + "MeasurementBridgeFailure";
 
         // CAT
         private const string SupportabilityCAT = SupportabilityPs + "CrossApplicationTracing" + PathSeparator;

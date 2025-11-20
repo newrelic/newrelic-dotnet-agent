@@ -42,21 +42,21 @@ namespace NewRelic.Agent.Core.UnitTests.Metrics
             Assert.That(_publishedMetrics, Is.Empty);
         }
 
-        [TestCase(OtelBridgeSupportabilityMetric.BridgeEnabled, MetricNames.SupportabilityOtelBridgeEnabled)]
-        [TestCase(OtelBridgeSupportabilityMetric.BridgeDisabled, MetricNames.SupportabilityOtelBridgeDisabled)]
-        [TestCase(OtelBridgeSupportabilityMetric.GetMeter, MetricNames.SupportabilityOtelBridgeGetMeter)]
-        [TestCase(OtelBridgeSupportabilityMetric.CreateCounter, MetricNames.SupportabilityOtelBridgeMeterCreateCounter)]
-        [TestCase(OtelBridgeSupportabilityMetric.CreateHistogram, MetricNames.SupportabilityOtelBridgeMeterCreateHistogram)]
-        [TestCase(OtelBridgeSupportabilityMetric.CreateUpDownCounter, MetricNames.SupportabilityOtelBridgeMeterCreateUpDownCounter)]
-        [TestCase(OtelBridgeSupportabilityMetric.CreateGauge, MetricNames.SupportabilityOtelBridgeMeterCreateGauge)]
-        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableCounter, MetricNames.SupportabilityOtelBridgeMeterCreateObservableCounter)]
-        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableHistogram, MetricNames.SupportabilityOtelBridgeMeterCreateObservableHistogram)]
-        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableUpDownCounter, MetricNames.SupportabilityOtelBridgeMeterCreateObservableUpDownCounter)]
-        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableGauge, MetricNames.SupportabilityOtelBridgeMeterCreateObservableGauge)]
-        [TestCase(OtelBridgeSupportabilityMetric.InstrumentCreated, MetricNames.SupportabilityOtelBridgeInstrumentCreated)]
-        [TestCase(OtelBridgeSupportabilityMetric.InstrumentBridgeFailure, MetricNames.SupportabilityOtelBridgeInstrumentBridgeFailure)]
-        [TestCase(OtelBridgeSupportabilityMetric.MeasurementRecorded, MetricNames.SupportabilityOtelBridgeMeasurementRecorded)]
-        [TestCase(OtelBridgeSupportabilityMetric.MeasurementBridgeFailure, MetricNames.SupportabilityOtelBridgeMeasurementBridgeFailure)]
+        [TestCase(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled, MetricNames.SupportabilityOTelMetricsBridgeEnabled)]
+        [TestCase(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled, MetricNames.SupportabilityOTelMetricsBridgeDisabled)]
+        [TestCase(OtelBridgeSupportabilityMetric.GetMeter, MetricNames.SupportabilityOTelMetricsBridgeGetMeter)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateCounter, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateCounter)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateHistogram, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateHistogram)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateUpDownCounter, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateUpDownCounter)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateGauge, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateGauge)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableCounter, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableCounter)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableHistogram, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableHistogram)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableUpDownCounter, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableUpDownCounter)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableGauge, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableGauge)]
+        [TestCase(OtelBridgeSupportabilityMetric.InstrumentCreated, MetricNames.SupportabilityOTelMetricsBridgeInstrumentCreated)]
+        [TestCase(OtelBridgeSupportabilityMetric.InstrumentBridgeFailure, MetricNames.SupportabilityOTelMetricsBridgeInstrumentBridgeFailure)]
+        [TestCase(OtelBridgeSupportabilityMetric.MeasurementRecorded, MetricNames.SupportabilityOTelMetricsBridgeMeasurementRecorded)]
+        [TestCase(OtelBridgeSupportabilityMetric.MeasurementBridgeFailure, MetricNames.SupportabilityOTelMetricsBridgeMeasurementBridgeFailure)]
         public void Record_GeneratesCorrectMetric_ForAllEnumValues(OtelBridgeSupportabilityMetric metricType, string expectedMetricName)
         {
             // Arrange - Enable finest logging to ensure all metrics are recorded
@@ -89,7 +89,7 @@ namespace NewRelic.Agent.Core.UnitTests.Metrics
             Assert.That(_publishedMetrics, Has.Count.EqualTo(1));
             var metric = _publishedMetrics.Single();
             NrAssert.Multiple(
-                () => Assert.That(metric.MetricNameModel.Name, Is.EqualTo(MetricNames.SupportabilityOtelBridgeMeterCreateCounter)),
+                () => Assert.That(metric.MetricNameModel.Name, Is.EqualTo(MetricNames.SupportabilityOTelMetricsBridgeMeterCreateCounter)),
                 () => Assert.That(metric.DataModel.Value0, Is.EqualTo(3))
             );
         }
@@ -98,7 +98,7 @@ namespace NewRelic.Agent.Core.UnitTests.Metrics
         public void CollectMetrics_ResetsCounters()
         {
             // Act - Record metrics and collect
-            _metricCounters.Record(OtelBridgeSupportabilityMetric.BridgeEnabled);
+            _metricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled);
             _metricCounters.CollectMetrics();
             
             // Clear published metrics and collect again
@@ -136,7 +136,7 @@ namespace NewRelic.Agent.Core.UnitTests.Metrics
             
             // Record one debugging and one non-debugging metric
             _metricCounters.Record(OtelBridgeSupportabilityMetric.InstrumentCreated); // Debugging
-            _metricCounters.Record(OtelBridgeSupportabilityMetric.BridgeEnabled); // Non-debugging
+            _metricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled); // Non-debugging
             _metricCounters.CollectMetrics();
 
             // At minimum, we should have the non-debugging metric
@@ -145,7 +145,7 @@ namespace NewRelic.Agent.Core.UnitTests.Metrics
                 
             // Verify non-debugging metrics are always included
             var nonDebuggingPublished = _publishedMetrics.Any(m => 
-                m.MetricNameModel.Name == MetricNames.SupportabilityOtelBridgeEnabled);
+                m.MetricNameModel.Name == MetricNames.SupportabilityOTelMetricsBridgeEnabled);
             Assert.That(nonDebuggingPublished, Is.True,
                 "Non-debugging metrics should always be published");
         }

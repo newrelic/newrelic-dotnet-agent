@@ -13,8 +13,8 @@ namespace NewRelic.Agent.Core.Metrics
 {
     public enum OtelBridgeSupportabilityMetric
     {
-        BridgeEnabled,
-        BridgeDisabled,
+        MetricsBridgeEnabled,
+        MetricsBridgeDisabled,
         GetMeter,
         CreateCounter,
         CreateHistogram,
@@ -97,21 +97,21 @@ namespace NewRelic.Agent.Core.Metrics
         {
             return metric switch
             {
-                OtelBridgeSupportabilityMetric.BridgeEnabled => MetricNames.SupportabilityOtelBridgeEnabled,
-                OtelBridgeSupportabilityMetric.BridgeDisabled => MetricNames.SupportabilityOtelBridgeDisabled,
-                OtelBridgeSupportabilityMetric.GetMeter => MetricNames.SupportabilityOtelBridgeGetMeter,
-                OtelBridgeSupportabilityMetric.CreateCounter => MetricNames.SupportabilityOtelBridgeMeterCreateCounter,
-                OtelBridgeSupportabilityMetric.CreateHistogram => MetricNames.SupportabilityOtelBridgeMeterCreateHistogram,
-                OtelBridgeSupportabilityMetric.CreateUpDownCounter => MetricNames.SupportabilityOtelBridgeMeterCreateUpDownCounter,
-                OtelBridgeSupportabilityMetric.CreateGauge => MetricNames.SupportabilityOtelBridgeMeterCreateGauge,
-                OtelBridgeSupportabilityMetric.CreateObservableCounter => MetricNames.SupportabilityOtelBridgeMeterCreateObservableCounter,
-                OtelBridgeSupportabilityMetric.CreateObservableHistogram => MetricNames.SupportabilityOtelBridgeMeterCreateObservableHistogram,
-                OtelBridgeSupportabilityMetric.CreateObservableUpDownCounter => MetricNames.SupportabilityOtelBridgeMeterCreateObservableUpDownCounter,
-                OtelBridgeSupportabilityMetric.CreateObservableGauge => MetricNames.SupportabilityOtelBridgeMeterCreateObservableGauge,
-                OtelBridgeSupportabilityMetric.InstrumentCreated => MetricNames.SupportabilityOtelBridgeInstrumentCreated,
-                OtelBridgeSupportabilityMetric.InstrumentBridgeFailure => MetricNames.SupportabilityOtelBridgeInstrumentBridgeFailure,
-                OtelBridgeSupportabilityMetric.MeasurementRecorded => MetricNames.SupportabilityOtelBridgeMeasurementRecorded,
-                OtelBridgeSupportabilityMetric.MeasurementBridgeFailure => MetricNames.SupportabilityOtelBridgeMeasurementBridgeFailure,
+                OtelBridgeSupportabilityMetric.MetricsBridgeEnabled => MetricNames.SupportabilityOTelMetricsBridgeEnabled,
+                OtelBridgeSupportabilityMetric.MetricsBridgeDisabled => MetricNames.SupportabilityOTelMetricsBridgeDisabled,
+                OtelBridgeSupportabilityMetric.GetMeter => MetricNames.SupportabilityOTelMetricsBridgeGetMeter,
+                OtelBridgeSupportabilityMetric.CreateCounter => MetricNames.SupportabilityOTelMetricsBridgeMeterCreateCounter,
+                OtelBridgeSupportabilityMetric.CreateHistogram => MetricNames.SupportabilityOTelMetricsBridgeMeterCreateHistogram,
+                OtelBridgeSupportabilityMetric.CreateUpDownCounter => MetricNames.SupportabilityOTelMetricsBridgeMeterCreateUpDownCounter,
+                OtelBridgeSupportabilityMetric.CreateGauge => MetricNames.SupportabilityOTelMetricsBridgeMeterCreateGauge,
+                OtelBridgeSupportabilityMetric.CreateObservableCounter => MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableCounter,
+                OtelBridgeSupportabilityMetric.CreateObservableHistogram => MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableHistogram,
+                OtelBridgeSupportabilityMetric.CreateObservableUpDownCounter => MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableUpDownCounter,
+                OtelBridgeSupportabilityMetric.CreateObservableGauge => MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableGauge,
+                OtelBridgeSupportabilityMetric.InstrumentCreated => MetricNames.SupportabilityOTelMetricsBridgeInstrumentCreated,
+                OtelBridgeSupportabilityMetric.InstrumentBridgeFailure => MetricNames.SupportabilityOTelMetricsBridgeInstrumentBridgeFailure,
+                OtelBridgeSupportabilityMetric.MeasurementRecorded => MetricNames.SupportabilityOTelMetricsBridgeMeasurementRecorded,
+                OtelBridgeSupportabilityMetric.MeasurementBridgeFailure => MetricNames.SupportabilityOTelMetricsBridgeMeasurementBridgeFailure,
                 _ => throw new ArgumentOutOfRangeException(nameof(metric), metric, "Unknown OtelBridgeSupportabilityMetric")
             };
         }
