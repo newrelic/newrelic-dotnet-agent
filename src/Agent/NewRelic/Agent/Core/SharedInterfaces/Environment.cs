@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.SharedInterfaces;
 /// methods; thread safety is ensured for environment variable retrieval.</remarks>
 public class Environment : IEnvironment
 {
-    private readonly ConcurrentDictionary<string, string> _environmentVariableCache = new();
+    private static readonly ConcurrentDictionary<string, string> _environmentVariableCache = new();
 
     public string[] GetCommandLineArgs() => System.Environment.GetCommandLineArgs();
 
@@ -34,7 +34,8 @@ public class Environment : IEnvironment
     {
         if (variable == null)
             throw new ArgumentNullException(nameof(variable));
-        return _environmentVariableCache.GetOrAdd(variable, _ => System.Environment.GetEnvironmentVariable(variable));
+
+        return _environmentVariableCache.GetOrAdd(variable, System.Environment.GetEnvironmentVariable);
     }
 
     /// <summary>
@@ -52,7 +53,7 @@ public class Environment : IEnvironment
         if (variables == null || variables.Length == 0)
             throw new ArgumentNullException(nameof(variables));
 
-        var envValue = (variables ?? Enumerable.Empty<string>())
+        var envValue = variables
             .Select(GetEnvironmentVariable)
             .FirstOrDefault(v => v != null);
 
