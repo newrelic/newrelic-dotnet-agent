@@ -541,6 +541,8 @@ namespace NewRelic.Agent.Core.Metrics
         #region Supportability
 
         private const string Supportability = "Supportability";
+
+        [Obsolete("Deprecated. Do not use this prefix for new metrics. Prefer composing from SupportabilityPs or existing helper methods.")]
         private const string SupportabilityDotnetPs = Supportability + PathSeparator + "Dotnet" + PathSeparator;
         private const string SupportabilityPs = Supportability + PathSeparator;
         private const string SupportabilityNetFrameworkVersionPs = SupportabilityDotnetPs + "NetFramework" + PathSeparator;
@@ -1227,6 +1229,13 @@ namespace NewRelic.Agent.Core.Metrics
         private const string SupportabilityAgentControlPs = SupportabilityPs + AgentControl + PathSeparator;
         public const string SupportabilityAgentControlHealthEnabled = SupportabilityAgentControlPs + Health + PathSeparator + Enabled;
 
+        #endregion
+
+        #region Open Telemetry Bridge
+        public static string SupportabilityOpenTelemetryBridge(bool enabled)
+        {
+            return SupportabilityPs + "Tracing" + PathSeparator + DotNet + PathSeparator + "OpenTelemetryBridge" + PathSeparator + (enabled ? Enabled : Disabled);
+        }
         #endregion
     }
 }
