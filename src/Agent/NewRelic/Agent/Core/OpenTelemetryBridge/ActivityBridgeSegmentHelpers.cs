@@ -119,7 +119,7 @@ public static class ActivityBridgeSegmentHelpers
         if (activitySource != null)
         {
             string scopeName = activitySource.Name;
-            if (scopeName != "NewRelic.Agent") // don't add New Relic's own activity source as a scope
+            if (scopeName != NewRelicActivitySourceProxy.ActivitySourceName) // don't add New Relic's own activity source as a scope
             {
                 segment.AddAgentAttribute("otel.scope.name", scopeName);
                 // include the deprecated instrumentation library tags for backward compatibility
