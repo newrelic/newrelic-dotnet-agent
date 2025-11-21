@@ -115,17 +115,17 @@ public static class ActivityBridgeSegmentHelpers
 
     private static void GetInstrumentationScopeAttributes(ISegment segment, dynamic activity)
     {
-        var activitySource = activity.Source;
+        dynamic activitySource = activity.Source;
         if (activitySource != null)
         {
-            var scopeName = activitySource.Name;
+            string scopeName = activitySource.Name;
             if (scopeName != "NewRelic.Agent") // don't add New Relic's own activity source as a scope
             {
                 segment.AddCustomAttribute("otel.scope.name", scopeName);
                 // include the deprecated instrumentation library tags for backward compatibility
                 segment.AddCustomAttribute("otel.instrumentation_library.name", scopeName);
 
-                var scopeVersion = activitySource.Version;
+                string scopeVersion = activitySource.Version;
                 if (!string.IsNullOrEmpty(scopeVersion))
                 {
                     segment.AddCustomAttribute("otel.scope.version", scopeVersion);
