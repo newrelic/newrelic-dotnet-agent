@@ -125,6 +125,8 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<object, object> GetCustomAttributeForSpan(string name);
         AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name);
 
+        AttributeDefinition<object, object> GetAgentAttributeForSpan(string key);
+
         AttributeDefinition<object, object> GetLambdaAttribute(string name);
         AttributeDefinition<object, object> GetFaasAttribute(string name);
         AttributeDefinition<object, object> GetCloudSdkAttribute(string name);
@@ -139,7 +141,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         AttributeDefinition<string, string> CloudAccountId { get; }
         AttributeDefinition<string, string> CloudRegion { get; }
-         AttributeDefinition<string, string> MessagingSystemName { get; }
+        AttributeDefinition<string, string> MessagingSystemName { get; }
         AttributeDefinition<string, string> MessagingDestinationName { get; }
         AttributeDefinition<string, string> BrokerServerAddress { get; }
         AttributeDefinition<int, int> BrokerServerPort { get; }
@@ -193,6 +195,9 @@ namespace NewRelic.Agent.Core.Attributes
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _faasAttributes = new();
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _cloudSdkAttributes = new();
 
+        private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _spanAgentAttributes = new();
+
+
         private readonly ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>> _typeAttributes = new ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>>();
 
 
@@ -221,6 +226,13 @@ namespace NewRelic.Agent.Core.Attributes
         {
             return AttributeDefinitionBuilder
                 .CreateCustomAttribute(name, AttributeDestinations.SpanEvent)
+                .Build(_attribFilter);
+        }
+
+        private AttributeDefinition<object, object> CreateAgentAttributeForSpan(string name)
+        {
+            return AttributeDefinitionBuilder
+                .CreateAgentAttribute(name, AttributeDestinations.SpanEvent)
                 .Build(_attribFilter);
         }
 
@@ -315,6 +327,11 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<object, object> GetCustomAttributeForSpan(string name)
         {
             return _spanCustomAttributes.GetOrAdd(name, CreateCustomAttributeForSpan);
+        }
+
+        public AttributeDefinition<object, object> GetAgentAttributeForSpan(string name)
+        {
+            return _spanAgentAttributes.GetOrAdd(name, CreateAgentAttributeForSpan);
         }
 
         public AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName)
@@ -1179,7 +1196,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .AppliesTo(AttributeDestinations.TransactionTrace)
                 .Build(_attribFilter));
-        
+
         private AttributeDefinition<string, string> _messageQueueName;
         public AttributeDefinition<string, string> MessageQueueName => _messageQueueName ?? (_messageQueueName =
             AttributeDefinitionBuilder.CreateString("message.queueName", AttributeClassification.AgentAttributes)

@@ -121,16 +121,16 @@ public static class ActivityBridgeSegmentHelpers
             string scopeName = activitySource.Name;
             if (scopeName != "NewRelic.Agent") // don't add New Relic's own activity source as a scope
             {
-                segment.AddCustomAttribute("otel.scope.name", scopeName);
+                segment.AddAgentAttribute("otel.scope.name", scopeName);
                 // include the deprecated instrumentation library tags for backward compatibility
-                segment.AddCustomAttribute("otel.instrumentation_library.name", scopeName);
+                segment.AddAgentAttribute("otel.instrumentation_library.name", scopeName);
 
                 string scopeVersion = activitySource.Version;
                 if (!string.IsNullOrEmpty(scopeVersion))
                 {
-                    segment.AddCustomAttribute("otel.scope.version", scopeVersion);
+                    segment.AddAgentAttribute("otel.scope.version", scopeVersion);
                     // include the deprecated instrumentation library tags for backward compatibility
-                    segment.AddCustomAttribute("otel.instrumentation_library.version", scopeVersion);
+                    segment.AddAgentAttribute("otel.instrumentation_library.version", scopeVersion);
                 }
             }
         }

@@ -94,53 +94,63 @@ namespace NewRelic.Agent.Core.Attributes
 
             builder.AppliesTo(destination, true);
 
-            builder.WithConvert((input) =>
-            {
-                if (input == null)
-                {
-                    return null;
-                }
-
-                if (input is TimeSpan)
-                {
-                    return ((TimeSpan)input).TotalSeconds;
-                }
-                else if (input is DateTimeOffset)
-                {
-                    return ((DateTimeOffset)input).ToString("o");
-                }
-
-                switch (Type.GetTypeCode(input.GetType()))
-                {
-                    case TypeCode.SByte:
-                    case TypeCode.Byte:
-                    case TypeCode.UInt16:
-                    case TypeCode.UInt32:
-                    case TypeCode.UInt64:
-                    case TypeCode.Int16:
-                    case TypeCode.Int32:
-                        return Convert.ToInt64(input);
-
-                    // don't convert Decimal and Single to double.
-                    // The value ends up getting serialized as a string, so there's no need for the conversion
-                    case TypeCode.Decimal:
-                    case TypeCode.Single:
-
-                    case TypeCode.Double:
-                    case TypeCode.Int64:
-                    case TypeCode.Boolean:
-                    case TypeCode.String:
-                        return input;
-
-                    case TypeCode.DateTime:
-                        return ((DateTime)input).ToString("o");
-                }
-
-                return input.ToString();
-            });
+            builder.WithConvert(GenericConverter);
 
             return builder;
         }
+
+        public static AttributeDefinitionBuilder<object, object> CreateAgentAttribute(string name, AttributeDestinations destination)
+        {
+            var builder = Create<object, object>(name, AttributeClassification.AgentAttributes);
+
+            builder.AppliesTo(destination, true);
+
+            builder.WithConvert(GenericConverter);
+
+            return builder;
+        }
+
+        private static object GenericConverter(object input)
+        {
+            switch (input)
+            {
+                case null:
+                    return null;
+                case TimeSpan span:
+                    return span.TotalSeconds;
+                case DateTimeOffset offset:
+                    return offset.ToString("o");
+                default:
+                    switch (Type.GetTypeCode(input.GetType()))
+                    {
+                        case TypeCode.SByte:
+                        case TypeCode.Byte:
+                        case TypeCode.UInt16:
+                        case TypeCode.UInt32:
+                        case TypeCode.UInt64:
+                        case TypeCode.Int16:
+                        case TypeCode.Int32:
+                            return Convert.ToInt64(input);
+
+                        // don't convert Decimal and Single to double.
+                        // The value ends up getting serialized as a string, so there's no need for the conversion
+                        case TypeCode.Decimal:
+                        case TypeCode.Single:
+
+                        case TypeCode.Double:
+                        case TypeCode.Int64:
+                        case TypeCode.Boolean:
+                        case TypeCode.String:
+                            return input;
+
+                        case TypeCode.DateTime:
+                            return ((DateTime)input).ToString("o");
+                    }
+
+                    return input.ToString();
+            }
+        }
+
 
         private static string TruncateDatastoreStatement(string statement, int maxSizeBytes)
         {
@@ -179,6 +189,7 @@ namespace NewRelic.Agent.Core.Attributes
 
             return Encoding.UTF8.GetString(byteArray, 0, byteOffset) + "...";
         }
+
     }
 
     public class AttributeDefinitionBuilder<TInput, TOutput>
