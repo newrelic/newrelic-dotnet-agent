@@ -756,6 +756,8 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityOTelMetricsBridgeInstrumentBridgeFailure = SupportabilityOTelMetricsBridgePs + "InstrumentBridgeFailure";
         public const string SupportabilityOTelMetricsBridgeMeasurementRecorded = SupportabilityOTelMetricsBridgePs + "MeasurementRecorded";
         public const string SupportabilityOTelMetricsBridgeMeasurementBridgeFailure = SupportabilityOTelMetricsBridgePs + "MeasurementBridgeFailure";
+        public const string SupportabilityOTelMetricsBridgeEntityGuidChanged = SupportabilityOTelMetricsBridgePs + "EntityGuidChanged";
+        public const string SupportabilityOTelMetricsBridgeMeterProviderRecreated = SupportabilityOTelMetricsBridgePs + "MeterProviderRecreated";
 
         // CAT
         private const string SupportabilityCAT = SupportabilityPs + "CrossApplicationTracing" + PathSeparator;

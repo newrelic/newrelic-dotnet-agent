@@ -78,6 +78,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private OpenTelemetrySDKLogger _sdkLogger;
         private MeterProvider _meterProvider;
         private IConnectionInfo _connectionInfo;
+        private string _currentEntityGuid;
         
         // Service dependencies
         private readonly IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
@@ -90,6 +91,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             _supportabilityMetricCounters = supportabilityMetricCounters;
             _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
+            _subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
             _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
         }
 
@@ -97,12 +99,46 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             Stop();
             _connectionInfo = agentConnectedEvent.ConnectInfo;
+            
+            // Initialize EntityGuid tracking from current configuration 
+            // (ServerConfiguration will be processed separately via ServerConfigurationUpdatedEvent)
+            _currentEntityGuid = _configuration.EntityGuid;
+            
             Start();
         }
 
         private void OnPreCleanShutdown(PreCleanShutdownEvent preCleanShutdownEvent)
         {
             Stop();
+        }
+
+        private void OnServerConfigurationUpdated(ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
+        {
+            // Check if EntityGuid has changed and recreate MeterProvider if needed
+            var newEntityGuid = serverConfigurationUpdatedEvent.Configuration.EntityGuid;
+            
+            if (!string.IsNullOrEmpty(_currentEntityGuid) && 
+                !string.IsNullOrEmpty(newEntityGuid) && 
+                _currentEntityGuid != newEntityGuid)
+            {
+                Log.Debug($"EntityGuid changed from '{_currentEntityGuid}' to '{newEntityGuid}'. Recreating OTel MeterProvider.");
+                _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged);
+                
+                // Update the tracked EntityGuid
+                _currentEntityGuid = newEntityGuid;
+                
+                // Recreate the MeterProvider with the new EntityGuid if we have connection info
+                if (_connectionInfo != null && _configuration.OpenTelemetryMetricsEnabled)
+                {
+                    RecreateMetricsProvider();
+                }
+            }
+            else if (string.IsNullOrEmpty(_currentEntityGuid) && !string.IsNullOrEmpty(newEntityGuid))
+            {
+                // First time setting EntityGuid
+                _currentEntityGuid = newEntityGuid;
+                Log.Debug($"EntityGuid set to '{_currentEntityGuid}' for the first time.");
+            }
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -147,7 +183,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 .ConfigureResource(r => r
                     .AddService(_configuration.ApplicationNames.First())
                     .AddTelemetrySdk()
-                    .AddAttributes([new KeyValuePair<string, object>("entity.guid", _configuration.EntityGuid)]))
+                    .AddAttributes([new KeyValuePair<string, object>("entity.guid", _currentEntityGuid ?? _configuration.EntityGuid)]))
                 .AddMeter("*")
                 .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
                 {
@@ -182,6 +218,53 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                     Log.Warn(ex, "Failed to create MeterListener");
                 }
                 _meterListener?.Start();
+            }
+        }
+
+        /// <summary>
+        /// Recreates the OpenTelemetry MeterProvider when the EntityGuid changes.
+        /// This ensures that metrics are reported with the correct entity GUID after 
+        /// an application name change that results in a new entity.
+        /// </summary>
+        private void RecreateMetricsProvider()
+        {
+            Log.Debug("Recreating OTel MeterProvider due to EntityGuid change.");
+            
+            // Dispose existing meter provider if it exists
+            if (_meterProvider != null)
+            {
+                _meterProvider.Dispose();
+                _meterProvider = null;
+                _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated);
+            }
+
+            // Create new meter provider with updated EntityGuid
+            if (_connectionInfo != null)
+            {
+                var uriBuilder = new UriBuilder(_connectionInfo.HttpProtocol, _connectionInfo.Host, _connectionInfo.Port, "/v1/metrics");
+
+                var providerBuilder = Sdk.CreateMeterProviderBuilder()
+                    .ConfigureResource(r => r
+                        .AddService(_configuration.ApplicationNames.First())
+                        .AddTelemetrySdk()
+                        .AddAttributes([new KeyValuePair<string, object>("entity.guid", _currentEntityGuid)]))
+                    .AddMeter("*")
+                    .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
+                    {
+                        exporterOptions.Endpoint = uriBuilder.Uri;
+                        exporterOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
+                        exporterOptions.Headers = $"api-key={_configuration.AgentLicenseKey}";
+
+                        // Configure HttpClient factory with proxy and retry logic
+                        exporterOptions.HttpClientFactory = CreateHttpClientWithProxyAndRetry;
+
+                        // Configure metric collection and export settings
+                        metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = DefaultOtlpExportIntervalSeconds * 1000;
+                        metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
+                    });
+
+                _meterProvider = providerBuilder.Build();
+                Log.Debug($"OTel MeterProvider recreated with EntityGuid: {_currentEntityGuid}");
             }
         }
 

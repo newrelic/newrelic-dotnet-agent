@@ -27,7 +27,9 @@ namespace NewRelic.Agent.Core.Metrics
         InstrumentCreated,
         InstrumentBridgeFailure,
         MeasurementRecorded,
-        MeasurementBridgeFailure
+        MeasurementBridgeFailure,
+        EntityGuidChanged,
+        MeterProviderRecreated
     }
 
     public interface IOtelBridgeSupportabilityMetricCounters : IOutOfBandMetricSource
@@ -112,6 +114,8 @@ namespace NewRelic.Agent.Core.Metrics
                 OtelBridgeSupportabilityMetric.InstrumentBridgeFailure => MetricNames.SupportabilityOTelMetricsBridgeInstrumentBridgeFailure,
                 OtelBridgeSupportabilityMetric.MeasurementRecorded => MetricNames.SupportabilityOTelMetricsBridgeMeasurementRecorded,
                 OtelBridgeSupportabilityMetric.MeasurementBridgeFailure => MetricNames.SupportabilityOTelMetricsBridgeMeasurementBridgeFailure,
+                OtelBridgeSupportabilityMetric.EntityGuidChanged => MetricNames.SupportabilityOTelMetricsBridgeEntityGuidChanged,
+                OtelBridgeSupportabilityMetric.MeterProviderRecreated => MetricNames.SupportabilityOTelMetricsBridgeMeterProviderRecreated,
                 _ => throw new ArgumentOutOfRangeException(nameof(metric), metric, "Unknown OtelBridgeSupportabilityMetric")
             };
         }
