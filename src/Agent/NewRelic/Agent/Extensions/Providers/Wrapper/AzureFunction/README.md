@@ -23,40 +23,48 @@ FAAS and cloud attributes rely on Azure App Service / Functions environment vari
 These compose the Azure Functions resource id (`cloud.resource_id`) and function-level resource ids via `AzureFunctionResourceIdWithFunctionName(functionName)`.
 
 ## Instrumented Methods
-<table>
-<thead>
-<tr>
-<th style="width:32%">Method (Fully Qualified)</th>
-<th>Creates Transaction</th>
-<th>Requires Existing Transaction</th>
-<th>Min Version</th>
-<th>Max Version</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="https://github.com/Azure/azure-functions-dotnet-worker/blob/main/src/DotNetWorker/FunctionsApplication.cs">Microsoft.Azure.Functions.Worker.FunctionsApplication.InvokeFunctionAsync()</a></td>
-<td>Yes</td><td>No</td><td>n/a</td><td>n/a</td><td>Isolated entry point. Starts transaction, attaches async, sets FAAS attributes.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/Azure/azure-functions-host/blob/main/src/WebJobs.Host/Executors/FunctionExecutor.cs">Microsoft.Azure.WebJobs.Host.Executors.FunctionExecutor.ExecuteWithWatchersAsync(IFunctionInstanceEx, ParameterHelper, ILogger, CancellationTokenSource)</a></td>
-<td>Yes</td><td>No</td><td>n/a</td><td>n/a</td><td>In-process creation point. Resolves trigger; sets FAAS attributes (cold start only once).</td>
-</tr>
-<tr>
-<td><a href="https://github.com/Azure/azure-functions-host/blob/main/src/WebJobs.Host/Executors/FunctionInvoker.cs">Microsoft.Azure.WebJobs.Host.Executors.FunctionInvoker\`2.InvokeAsync(object, object[])</a></td>
-<td>No</td><td>Yes</td><td>n/a</td><td>n/a</td><td>Enriches existing in-process transaction (HTTP method, status, distributed trace headers).</td>
-</tr>
-<tr>
-<td><a href="https://github.com/Azure/azure-functions-dotnet-worker/blob/main/src/Extensions/Http/aspnetcore/FunctionsHttpProxyingMiddleware.cs">Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore.FunctionsHttpProxyingMiddleware.AddHttpContextToFunctionContext(); TryHandleHttpResult(); TryHandleOutputBindingsHttpResult()</a></td>
-<td>No</td><td>Yes</td><td>n/a</td><td>n/a</td><td>Isolated + ASP.NET Core pipeline enrichment (request method/path, status code, distributed tracing headers).</td>
-</tr>
-<tr>
-<td><a href="https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Hosting/src/HostBuilder.cs">Microsoft.Extensions.Hosting.HostBuilder.Build()</a></td>
-<td>No</td><td>No</td><td>n/a</td><td>n/a</td><td>Early load (isolated). No tracing; ensures agent initialization.</td>
-</tr>
-</tbody>
-</table>
+
+- Wrapper: [`AzureFunctionIsolatedInvokeAsyncWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/AzureFunctionIsolatedInvokeFunctionAsyncWrapper.cs)
+- Assembly: Microsoft.Azure.Functions.Worker.Core
+- Type: Microsoft.Azure.Functions.Worker.FunctionsApplication
+
+| Method (with parameters) | Creates Transaction | Requires Existing Transaction | Min Version | Max Version | Notes |
+|--------------------------|---------------------|-------------------------------|-------------|-------------|-------|
+| [InvokeFunctionAsync()](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/src/DotNetWorker/FunctionsApplication.cs) | Yes | No | n/a | n/a | Isolated entry point. Starts transaction, attaches async, sets FAAS attributes. |
+
+- Wrapper: [`AzureFunctionInProcessExecuteWithWatchersAsyncWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/AzureFunctionInProcessExecuteWithWatchersAsyncWrapper.cs)
+- Assembly: Microsoft.Azure.WebJobs.Host
+- Type: Microsoft.Azure.WebJobs.Host.Executors.FunctionExecutor
+
+| Method (with parameters) | Creates Transaction | Requires Existing Transaction | Min Version | Max Version | Notes |
+|--------------------------|---------------------|-------------------------------|-------------|-------------|-------|
+| [ExecuteWithWatchersAsync(Microsoft.Azure.WebJobs.Host.Executors.IFunctionInstanceEx, ParameterHelper, Microsoft.Extensions.Logging.ILogger, System.Threading.CancellationTokenSource)](https://github.com/Azure/azure-functions-host/blob/main/src/WebJobs.Host/Executors/FunctionExecutor.cs) | Yes | No | n/a | n/a | In-process creation point. Resolves trigger; sets FAAS attributes (cold start only once). |
+
+- Wrapper: [`AzureFunctionInProcessInvokeAsyncWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/AzureFunctionInProcessInvokeAsyncWrapper.cs)
+- Assembly: Microsoft.Azure.WebJobs.Host
+- Type: Microsoft.Azure.WebJobs.Host.Executors.FunctionInvoker\`2
+
+| Method (with parameters) | Creates Transaction | Requires Existing Transaction | Min Version | Max Version | Notes |
+|--------------------------|---------------------|-------------------------------|-------------|-------------|-------|
+| [InvokeAsync(System.Object, System.Object[])](https://github.com/Azure/azure-functions-host/blob/main/src/WebJobs.Host/Executors/FunctionInvoker.cs) | No | Yes | n/a | n/a | Enriches existing in-process transaction (HTTP method, status, distributed trace headers). |
+
+- Wrapper: [`FunctionsHttpProxyingMiddlewareWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/FunctionsHttpProxyingMiddlewareWrapper.cs)
+- Assembly: Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore
+- Type: Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore.FunctionsHttpProxyingMiddleware
+
+| Method (with parameters) | Creates Transaction | Requires Existing Transaction | Min Version | Max Version | Notes |
+|--------------------------|---------------------|-------------------------------|-------------|-------------|-------|
+| [AddHttpContextToFunctionContext()](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/src/Extensions/Http/aspnetcore/FunctionsHttpProxyingMiddleware.cs) | No | Yes | n/a | n/a | Adds HTTP context; captures request metadata & DT headers. |
+| [TryHandleHttpResult()](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/src/Extensions/Http/aspnetcore/FunctionsHttpProxyingMiddleware.cs) | No | Yes | n/a | n/a | Handles HTTP result mapping & status code. |
+| [TryHandleOutputBindingsHttpResult()](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/src/Extensions/Http/aspnetcore/FunctionsHttpProxyingMiddleware.cs) | No | Yes | n/a | n/a | Handles output bindings HTTP style responses. |
+
+- Wrapper: [`NewRelic.Agent.Core.Wrapper.NoOpWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Core/Wrapper/NoOpWrapper.cs)
+- Assembly: Microsoft.Extensions.Hosting
+- Type: Microsoft.Extensions.Hosting.HostBuilder
+
+| Method (with parameters) | Creates Transaction | Requires Existing Transaction | Min Version | Max Version | Notes |
+|--------------------------|---------------------|-------------------------------|-------------|-------------|-------|
+| [Build()](https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Hosting/src/HostBuilder.cs) | No | No | n/a | n/a | Early load only (isolated). Ensures agent initialization; no tracing. |
 
 Instrumentation XML: [Instrumentation.xml](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/Instrumentation.xml)
 
