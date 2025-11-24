@@ -148,38 +148,20 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         }
 
         /// <summary>
-        /// Starts the meter listener bridge to begin collecting and forwarding metrics.
-        /// Initializes the OpenTelemetry SDK, configures OTLP export, and sets up the MeterListener.
+        /// Creates and configures a new OpenTelemetry MeterProvider with the current configuration.
         /// </summary>
-        public void Start()
+        /// <returns>A configured MeterProvider instance, or null if connection info is not available</returns>
+        private MeterProvider CreateMeterProvider()
         {
-            if (!_configuration.OpenTelemetryMetricsEnabled)
-        {
-            _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled);
-            Log.Debug("OpenTelemetry Meter Bridge is disabled via configuration.");
-            return;
-        }            if (_connectionInfo == null)
+            if (_connectionInfo == null)
             {
-                Log.Debug("OpenTelemetry Meter Bridge cannot start: connection info not available.");
-                return;
-            }
-			
-			// Record that the bridge is enabled
-            _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled);
-
-            if (_sdkLogger == null)
-            {
-                _sdkLogger = new OpenTelemetrySDKLogger();
+                Log.Debug("Cannot create MeterProvider: connection info not available.");
+                return null;
             }
 
-            if (_meterProvider == null)
-            {
-                var uriBuilder = new UriBuilder(_connectionInfo.HttpProtocol, _connectionInfo.Host, _connectionInfo.Port, "/v1/metrics");
+            var uriBuilder = new UriBuilder(_connectionInfo.HttpProtocol, _connectionInfo.Host, _connectionInfo.Port, "/v1/metrics");
 
-
-
-                var providerBuilder = Sdk.CreateMeterProviderBuilder()
-
+            var providerBuilder = Sdk.CreateMeterProviderBuilder()
                 .ConfigureResource(r => r
                     .AddService(_configuration.ApplicationNames.First())
                     .AddTelemetrySdk()
@@ -201,10 +183,41 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                     // Configure metric collection and export settings
                     metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = DefaultOtlpExportIntervalSeconds * 1000;
                     metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
-
                 });
 
-                _meterProvider = providerBuilder.Build();
+            return providerBuilder.Build();
+        }
+
+        /// <summary>
+        /// Starts the meter listener bridge to begin collecting and forwarding metrics.
+        /// Initializes the OpenTelemetry SDK, configures OTLP export, and sets up the MeterListener.
+        /// </summary>
+        public void Start()
+        {
+            if (!_configuration.OpenTelemetryMetricsEnabled)
+            {
+                _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled);
+                Log.Debug("OpenTelemetry Meter Bridge is disabled via configuration.");
+                return;
+            }
+            
+            if (_connectionInfo == null)
+            {
+                Log.Debug("OpenTelemetry Meter Bridge cannot start: connection info not available.");
+                return;
+            }
+			
+			// Record that the bridge is enabled
+            _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled);
+
+            if (_sdkLogger == null)
+            {
+                _sdkLogger = new OpenTelemetrySDKLogger();
+            }
+
+            if (_meterProvider == null)
+            {
+                _meterProvider = CreateMeterProvider();
             }
 
             if (_meterListener == null)
@@ -239,32 +252,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 
             // Create new meter provider with updated EntityGuid
-            if (_connectionInfo != null)
+            _meterProvider = CreateMeterProvider();
+            
+            if (_meterProvider != null)
             {
-                var uriBuilder = new UriBuilder(_connectionInfo.HttpProtocol, _connectionInfo.Host, _connectionInfo.Port, "/v1/metrics");
-
-                var providerBuilder = Sdk.CreateMeterProviderBuilder()
-                    .ConfigureResource(r => r
-                        .AddService(_configuration.ApplicationNames.First())
-                        .AddTelemetrySdk()
-                        .AddAttributes([new KeyValuePair<string, object>("entity.guid", _currentEntityGuid)]))
-                    .AddMeter("*")
-                    .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
-                    {
-                        exporterOptions.Endpoint = uriBuilder.Uri;
-                        exporterOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
-                        exporterOptions.Headers = $"api-key={_configuration.AgentLicenseKey}";
-
-                        // Configure HttpClient factory with proxy and retry logic
-                        exporterOptions.HttpClientFactory = CreateHttpClientWithProxyAndRetry;
-
-                        // Configure metric collection and export settings
-                        metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = DefaultOtlpExportIntervalSeconds * 1000;
-                        metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
-                    });
-
-                _meterProvider = providerBuilder.Build();
                 Log.Debug($"OTel MeterProvider recreated with EntityGuid: {_currentEntityGuid}");
+            }
+            else
+            {
+                Log.Warn("Failed to recreate OTel MeterProvider: connection info not available");
             }
         }
 
