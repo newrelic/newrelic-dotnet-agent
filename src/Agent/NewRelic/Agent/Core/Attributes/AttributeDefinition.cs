@@ -110,7 +110,8 @@ namespace NewRelic.Agent.Core.Attributes
             return builder;
         }
 
-        private static object GenericConverter(object input)
+        // public to allow for testing
+        public static object GenericConverter(object input)
         {
             switch (input)
             {
