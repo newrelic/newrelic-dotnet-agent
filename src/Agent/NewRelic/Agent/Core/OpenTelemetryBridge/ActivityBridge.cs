@@ -53,7 +53,7 @@ public class ActivityBridge : IDisposable
             return false;
         }
 
-        Log.Debug("OpenTelemetry Bridge is enabled. Starting the activity listener.");
+        Log.Debug("OpenTelemetry Bridge Tracing is enabled. Starting the activity listener.");
         return TryCreateActivityListener();
     }
 
