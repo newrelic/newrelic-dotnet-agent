@@ -1186,15 +1186,15 @@ namespace NewRelic.Agent.Core.Metrics
 
         // don't use this casing for new code, use SupportabilityDotnetPs instead
         // we have to retain this for backward compatibility since we can't change existing metric names
-        private const string DotNetObsolete = "DotNET";
+        private const string DotNETObsolete = "DotNET";
 
         // use this casing for new code
         private const string DotNet = "DotNet";
 
-        private const string SupportabilityLogMetricsConfigPs = SupportabilityLoggingEventsPs + Metrics + PathSeparator + DotNetObsolete + PathSeparator;
-        private const string SupportabilityLogForwardingConfigPs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNetObsolete + PathSeparator;
-        private const string SupportabilityLogDecoratingConfigPs = SupportabilityLoggingEventsPs + LocalDecorating + PathSeparator + DotNetObsolete + PathSeparator;
-        private const string SupportabilityLogLabelsConfigPs = SupportabilityLoggingEventsPs + Labels + PathSeparator + DotNetObsolete + PathSeparator;
+        private const string SupportabilityLogMetricsConfigPs = SupportabilityLoggingEventsPs + Metrics + PathSeparator + DotNETObsolete + PathSeparator;
+        private const string SupportabilityLogForwardingConfigPs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNETObsolete + PathSeparator;
+        private const string SupportabilityLogDecoratingConfigPs = SupportabilityLoggingEventsPs + LocalDecorating + PathSeparator + DotNETObsolete + PathSeparator;
+        private const string SupportabilityLogLabelsConfigPs = SupportabilityLoggingEventsPs + Labels + PathSeparator + DotNETObsolete + PathSeparator;
 
         public static string GetSupportabilityLogMetricsConfiguredName(bool enabled)
         {
@@ -1216,14 +1216,14 @@ namespace NewRelic.Agent.Core.Metrics
             return SupportabilityLogDecoratingConfigPs + (enabled ? Enabled : Disabled);
         }
 
-        private const string SupportabilityLogFrameworkPs = SupportabilityLoggingEventsPs + DotNetObsolete + PathSeparator;
+        private const string SupportabilityLogFrameworkPs = SupportabilityLoggingEventsPs + DotNETObsolete + PathSeparator;
 
         public static string GetSupportabilityLogFrameworkName(string loggingFramework)
         {
             return SupportabilityLogFrameworkPs + loggingFramework + PathSeparator + Enabled;
         }
 
-        private const string SupportabilityLogForwardingEnabledWithFrameworkNamePs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNetObsolete + PathSeparator;
+        private const string SupportabilityLogForwardingEnabledWithFrameworkNamePs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNETObsolete + PathSeparator;
 
         public static string GetSupportabilityLogForwardingEnabledWithFrameworkName(string loggingFramework)
         {
