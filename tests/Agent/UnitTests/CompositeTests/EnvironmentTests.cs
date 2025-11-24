@@ -15,6 +15,7 @@ namespace CompositeTests
         {
             System.Environment.SetEnvironmentVariable("NEWRELIC_HOME", null);
             System.Environment.SetEnvironmentVariable("NEW_RELIC_HOME", null);
+            NewRelic.Agent.Core.SharedInterfaces.Environment.ResetCache();
 
             _env = new NewRelic.Agent.Core.SharedInterfaces.Environment();
         }
@@ -24,6 +25,7 @@ namespace CompositeTests
         {
             System.Environment.SetEnvironmentVariable("NEWRELIC_HOME", null);
             System.Environment.SetEnvironmentVariable("NEW_RELIC_HOME", null);
+            NewRelic.Agent.Core.SharedInterfaces.Environment.ResetCache();
         }
 
         [Test]

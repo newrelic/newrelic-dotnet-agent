@@ -47,7 +47,7 @@ public class OpenAiChatWrapper : IWrapper
 
         var invocationTargetType = instrumentedMethodCall.MethodCall.InvocationTarget.GetType();
         // Azure.OpenAI.ChatClient inherits from OpenAI.Chat.ChatClient, so we need to access the _model property from the base class
-        if (invocationTargetType.BaseType != null && invocationTargetType.BaseType.FullName == "OpenAI.Chat.ChatClient") 
+        if (invocationTargetType.BaseType != null && invocationTargetType.BaseType.FullName == "OpenAI.Chat.ChatClient")
         {
             agent.Logger.Debug("Instrumenting Azure.OpenAI.AzureChatClient.");
             invocationTargetType = invocationTargetType.BaseType;
@@ -63,33 +63,14 @@ public class OpenAiChatWrapper : IWrapper
             transaction.AttachToAsync();
         }
 
-        var chatMessagesEnumerable = instrumentedMethodCall.MethodCall.MethodArguments[0] as System.Collections.IEnumerable;
-        if (chatMessagesEnumerable == null)
-        {
-            agent.Logger.Debug("Ignoring chat completion: No chat messages found");
-            return Delegates.NoOp;
-        }
+        string model = _modelFieldAccessor(instrumentedMethodCall.MethodCall.InvocationTarget);
 
-        // Materialize once to avoid multiple enumeration and enable indexing
-        var chatMessages = chatMessagesEnumerable.Cast<dynamic>().ToList();
-        if (chatMessages.Count == 0)
-        {
-            agent.Logger.Debug("Ignoring chat completion: No chat messages found");
-            return Delegates.NoOp;
-        }
+        // capture metrics prior to validation so we can track usage even if we don't create events
+        RecordLlmMetrics(instrumentedMethodCall, agent, model);
 
-        var lastMessage = chatMessages[chatMessages.Count - 1];
-        if (lastMessage.Content == null || lastMessage.Content.Count == 0)
+        // get the chat messages from the first argument and validate
+        if (!GetAndValidateChatMessages(instrumentedMethodCall, agent, out var chatMessages))
         {
-            agent.Logger.Debug("Ignoring chat completion: No content found in chat messages");
-            return Delegates.NoOp;
-        }
-
-        // we only support text completions. Possible values are Text, Image and Refusal
-        var completionType = lastMessage.Content[0].Kind.ToString();
-        if (completionType != "Text")
-        {
-            agent.Logger.Debug($"Ignoring chat completion: Only text completions are supported, but got {completionType}");
             return Delegates.NoOp;
         }
 
@@ -98,16 +79,6 @@ public class OpenAiChatWrapper : IWrapper
         var operationType = "completion";
         var methodMethodName = $"Llm/{operationType}/{GetVendorName()}/{instrumentedMethodCall.MethodCall.Method.MethodName}";
         var segment = transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, methodMethodName);
-
-        // required per spec
-        var version = GetOrAddLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
-        agent.RecordSupportabilityMetric($"DotNet/ML/{GetVendorName()}/{version}");
-
-        string model = _modelFieldAccessor(instrumentedMethodCall.MethodCall.InvocationTarget);
-        SupportabilityHelpers.CreateModelIdSupportabilityMetricsForOpenAi(model, agent); // prepend vendor name to model id
-
-        // useful for tracking LLM usage by vendor
-        agent.RecordSupportabilityMetric($"DotNet/LLM/{GetVendorName()}-Chat");
 
         if (isAsync)
         {
@@ -145,6 +116,54 @@ public class OpenAiChatWrapper : IWrapper
 
             ProcessResponse(segment, model, chatMessages, clientResult, chatCompletionOptions, agent);
         }
+    }
+
+    private void RecordLlmMetrics(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, string model)
+    {
+        // required per spec
+        var version = GetOrAddLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
+        agent.RecordSupportabilityMetric($"DotNet/ML/{GetVendorName()}/{version}");
+
+        SupportabilityHelpers.CreateModelIdSupportabilityMetricsForOpenAi(model, agent); // prepend vendor name to model id
+
+        // useful for tracking LLM usage by vendor
+        agent.RecordSupportabilityMetric($"DotNet/LLM/{GetVendorName()}-Chat");
+    }
+
+    private static bool GetAndValidateChatMessages(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, out List<dynamic> chatMessages)
+    {
+        var chatMessagesEnumerable = instrumentedMethodCall.MethodCall.MethodArguments[0] as System.Collections.IEnumerable;
+        if (chatMessagesEnumerable == null)
+        {
+            agent.Logger.Debug("Ignoring chat completion: No chat messages found");
+            chatMessages = null;
+            return false;
+        }
+
+        // Materialize once to avoid multiple enumeration and enable indexing
+        chatMessages = chatMessagesEnumerable.Cast<dynamic>().ToList();
+        if (chatMessages.Count == 0)
+        {
+            agent.Logger.Debug("Ignoring chat completion: No chat messages found");
+            return false;
+        }
+
+        var lastMessage = chatMessages.Last();
+        if (lastMessage.Content == null || lastMessage.Content.Count == 0)
+        {
+            agent.Logger.Debug("Ignoring chat completion: No content found in chat messages");
+            return false;
+        }
+
+        // we only support text completions. Possible values are Text, Image and Refusal
+        var completionType = lastMessage.Content[0].Kind.ToString();
+        if (completionType != "Text")
+        {
+            agent.Logger.Debug($"Ignoring chat completion: Only text completions are supported, but got {completionType}");
+            return false;
+        }
+
+        return true;
     }
 
     private string GetVendorName() => _isAzureOpenAI ? AzureOpenAIVendorName : OpenAIVendorName;
@@ -321,7 +340,7 @@ public class OpenAiChatWrapper : IWrapper
         {
             HttpStatusCode = statusCode.ToString(),
             ErrorCode = null,
-            ErrorParam = null, 
+            ErrorParam = null,
             ErrorMessage = errorMessage
         };
 
