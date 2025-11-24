@@ -12,7 +12,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     {
         public const string SegmentCustomPropertyName = "NewRelicSegment";
 
-        private const string ActivitySourceName = "NewRelic.Agent";
+        public const string ActivitySourceName = "NewRelic.Agent";
+
         private static INewRelicActivitySource _activitySource = null;
         private static int _usingRuntimeActivitySource = 0;
 

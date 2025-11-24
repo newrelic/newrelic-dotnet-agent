@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -2799,7 +2800,7 @@ namespace NewRelic.Agent.Core.Configuration
         #region Otel Bridge
 
         // The activity sources we listen to by default - these are the sources that we will automatically instrument
-        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent","Elastic.Transport","RabbitMQ.Client.Subscriber","RabbitMQ.Client.Publisher"]; 
+        private static readonly string[] DefaultIncludedActivitySources = [NewRelicActivitySourceProxy.ActivitySourceName,"Elastic.Transport","RabbitMQ.Client.Subscriber","RabbitMQ.Client.Publisher"]; 
 
         private List<string> _includedActivitySources;
         public List<string> IncludedActivitySources
