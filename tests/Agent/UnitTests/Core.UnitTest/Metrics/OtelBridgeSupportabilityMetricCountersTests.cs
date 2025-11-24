@@ -57,6 +57,8 @@ namespace NewRelic.Agent.Core.UnitTests.Metrics
         [TestCase(OtelBridgeSupportabilityMetric.InstrumentBridgeFailure, MetricNames.SupportabilityOTelMetricsBridgeInstrumentBridgeFailure)]
         [TestCase(OtelBridgeSupportabilityMetric.MeasurementRecorded, MetricNames.SupportabilityOTelMetricsBridgeMeasurementRecorded)]
         [TestCase(OtelBridgeSupportabilityMetric.MeasurementBridgeFailure, MetricNames.SupportabilityOTelMetricsBridgeMeasurementBridgeFailure)]
+        [TestCase(OtelBridgeSupportabilityMetric.EntityGuidChanged, MetricNames.SupportabilityOTelMetricsBridgeEntityGuidChanged)]
+        [TestCase(OtelBridgeSupportabilityMetric.MeterProviderRecreated, MetricNames.SupportabilityOTelMetricsBridgeMeterProviderRecreated)]
         public void Record_GeneratesCorrectMetric_ForAllEnumValues(OtelBridgeSupportabilityMetric metricType, string expectedMetricName)
         {
             // Arrange - Enable finest logging to ensure all metrics are recorded
