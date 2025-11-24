@@ -1,4 +1,4 @@
-# RabbitMQ Instrumentation Wrapper
+# New Relic .NET Agent RabbitMQ Instrumentation
 
 ## Overview
 
