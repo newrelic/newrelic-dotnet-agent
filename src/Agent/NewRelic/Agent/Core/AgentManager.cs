@@ -25,6 +25,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 #endif
 using System.Threading;
+using NewRelic.Agent.Core.SharedInterfaces;
+using Process = System.Diagnostics.Process;
 
 namespace NewRelic.Agent.Core
 {
@@ -330,19 +332,21 @@ namespace NewRelic.Agent.Core
                 environmentVariables.AddRange(environmentVariablesDeprecated.Select(tuple => tuple.Item1));
 
                 // Add this one separately so we can report the deprecated name but not log the value
-                environmentVariablesDeprecated.Add(("NEWRELIC_LICENSEKEY", "NEW_RELIC_LICENSE_KEY")); 
+                environmentVariablesDeprecated.Add(("NEWRELIC_LICENSEKEY", "NEW_RELIC_LICENSE_KEY"));
+
+                var environment = new SharedInterfaces.Environment(); // ensures we use the agent's cached env var values
 
                 foreach (var ev in environmentVariables)
                 {
-                    if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(ev)))
+                    if (!string.IsNullOrEmpty(environment.GetEnvironmentVariable(ev)))
                     {
-                        Log.Debug("Environment Variable {0} value: {1}", ev, System.Environment.GetEnvironmentVariable(ev));
+                        Log.Debug("Environment Variable {0} value: {1}", ev, environment.GetEnvironmentVariable(ev));
                     }
                 }
 
                 foreach (var evs in environmentVariablesSensitive)
                 {
-                    if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(evs)))
+                    if (!string.IsNullOrEmpty(environment.GetEnvironmentVariable(evs)))
                     {
                         Log.Debug("Environment Variable {0} is configured with a value. Not logging potentially sensitive value", evs);
                     }
@@ -350,7 +354,7 @@ namespace NewRelic.Agent.Core
 
                 foreach (var ev in environmentVariablesDeprecated)
                 {
-                    if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(ev.Item1)))
+                    if (!string.IsNullOrEmpty(environment.GetEnvironmentVariable(ev.Item1)))
                     {
                         Log.Warn("Environment Variable {OldName} is deprecated and may be removed in a future major version. Please use {NewName} instead.", ev.Item1, ev.Item2);
                     }
