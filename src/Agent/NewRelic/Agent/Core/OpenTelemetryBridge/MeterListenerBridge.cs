@@ -11,6 +11,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -77,6 +78,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private OpenTelemetrySDKLogger _sdkLogger;
         private MeterProvider _meterProvider;
+        private readonly object _meterProviderLock = new object();
         private IConnectionInfo _connectionInfo;
         private string _currentEntityGuid;
         
@@ -214,10 +216,17 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             {
                 _sdkLogger = new OpenTelemetrySDKLogger();
             }
-
+            // The first if (_meterProvider == null) check avoids acquiring the lock when the provider is already initialized
+            // This prevents unnecessary lock contention on every Start() call after initialization
             if (_meterProvider == null)
             {
-                _meterProvider = CreateMeterProvider();
+                lock (_meterProviderLock)
+                {
+                    if (_meterProvider == null)
+                    {
+                        _meterProvider = CreateMeterProvider();
+                    }
+                }
             }
 
             if (_meterListener == null)
@@ -243,24 +252,27 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             Log.Debug("Recreating OTel MeterProvider due to EntityGuid change.");
             
-            // Dispose existing meter provider if it exists
-            if (_meterProvider != null)
+            lock (_meterProviderLock)
             {
-                _meterProvider.Dispose();
-                _meterProvider = null;
-                _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated);
-            }
+                // Dispose existing meter provider if it exists
+                if (_meterProvider != null)
+                {
+                    _meterProvider.Dispose();
+                    _meterProvider = null;
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated);
+                }
 
-            // Create new meter provider with updated EntityGuid
-            _meterProvider = CreateMeterProvider();
-            
-            if (_meterProvider != null)
-            {
-                Log.Debug($"OTel MeterProvider recreated with EntityGuid: {_currentEntityGuid}");
-            }
-            else
-            {
-                Log.Warn("Failed to recreate OTel MeterProvider: connection info not available");
+                // Create new meter provider with updated EntityGuid
+                _meterProvider = CreateMeterProvider();
+                
+                if (_meterProvider != null)
+                {
+                    Log.Debug($"OTel MeterProvider recreated with EntityGuid: {_currentEntityGuid}");
+                }
+                else
+                {
+                    Log.Warn("Failed to recreate OTel MeterProvider: connection info not available");
+                }
             }
         }
 
@@ -338,8 +350,11 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             _meterListener?.Dispose();
             _meterListener = null;
 
-            _meterProvider?.Dispose();
-            _meterProvider = null;
+            lock (_meterProviderLock)
+            {
+                _meterProvider?.Dispose();
+                _meterProvider = null;
+            }
 
             _sdkLogger?.Dispose();
             _sdkLogger = null;

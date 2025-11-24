@@ -1970,6 +1970,65 @@ namespace NewRelic.Agent.Core.DataTransport
 
         #region Helper Methods
 
+        [Test]
+        public void RecreateMetricsProvider_ShouldBeThreadSafe()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+            Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { "TestApp" });
+            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("test-license-key");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Start the meter listener to initialize the meter provider
+            _meterListenerBridge.Start();
+
+            var exceptions = new System.Collections.Concurrent.ConcurrentBag<System.Exception>();
+            const int threadCount = 10;
+            const int iterationsPerThread = 10;
+
+            // Act - simulate concurrent server configuration updates
+            var tasks = new System.Threading.Tasks.Task[threadCount];
+            for (int i = 0; i < threadCount; i++)
+            {
+                int threadId = i;
+                tasks[i] = System.Threading.Tasks.Task.Run(() =>
+                {
+                    try
+                    {
+                        for (int j = 0; j < iterationsPerThread; j++)
+                        {
+                            // Create a real ServerConfiguration object via JSON deserialization
+                            var serverConfigJson = $"{{\"entity_guid\": \"entity-guid-{threadId}-{j}\", \"agent_run_id\": \"run-id-{threadId}-{j}\"}}";
+                            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+
+                            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+                            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+                            // Small delay to increase chance of race conditions
+                            System.Threading.Thread.Sleep(1);
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        exceptions.Add(ex);
+                    }
+                });
+            }
+
+            // Wait for all tasks to complete
+            System.Threading.Tasks.Task.WaitAll(tasks);
+
+            // Assert - should not have any exceptions
+            Assert.That(exceptions.IsEmpty, Is.True, $"Thread safety test failed with {exceptions.Count} exceptions: {string.Join(", ", exceptions.Select(e => e.Message))}");
+
+            // Verify supportability metrics were recorded (should have many due to concurrent updates)
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.AtLeast(threadCount));
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.AtLeast(threadCount));
+        }
+
         private System.Reflection.MethodInfo GetShouldEnableMethod()
         {
             return typeof(MeterListenerBridge)
