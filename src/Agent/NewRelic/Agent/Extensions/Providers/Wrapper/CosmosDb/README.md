@@ -10,19 +10,19 @@ This wrapper adds datastore segments for Azure Cosmos DB client operations execu
 - Assembly: `Microsoft.Azure.Cosmos.Client`
 - Type: `Microsoft.Azure.Cosmos.Handlers.RequestInvokerHandler`
 
-| Method (name + parameters) | Creates Transaction | Requires Existing Transaction | Notes |
-|----------------------------|---------------------|-------------------------------|-------|
-| [`SendAsync(System.String, Microsoft.Azure.Documents.ResourceType, Microsoft.Azure.Documents.OperationType, Microsoft.Azure.Cosmos.RequestOptions, Microsoft.Azure.Cosmos.ContainerInternal, Microsoft.Azure.Cosmos.FeedRange, System.IO.Stream, System.Action\`1[Microsoft.Azure.Cosmos.RequestMessage], Microsoft.Azure.Cosmos.Tracing.ITrace, System.Threading.CancellationToken)`](https://github.com/Azure/azure-cosmos-dotnet-v3/blob/master/Microsoft.Azure.Cosmos/src/Handler/RequestInvokerHandler.cs) | No | Yes | Starts a Cosmos DB datastore segment. Parses resource address to extract database and container; operation name is concatenation of operationType + resourceType; captures endpoint host/port. |
+| Method | Creates Transaction | Requires Existing Transaction |
+|--------|---------------------|-------------------------------|
+| `SendAsync` | No | Yes |
 
 ### ExecuteItemQueryAsyncWrapper
 - Wrapper: [`ExecuteItemQueryAsyncWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/CosmosDb/ExecuteItemQueryAsyncWrapper.cs)
 - Assembly: `Microsoft.Azure.Cosmos.Client`
 - Type: `Microsoft.Azure.Cosmos.CosmosQueryClientCore`
 
-| Method (name + parameters) | Creates Transaction | Requires Existing Transaction | Notes |
-|----------------------------|---------------------|-------------------------------|-------|
-| [`ExecuteItemQueryAsync(System.String, Microsoft.Azure.Documents.ResourceType, Microsoft.Azure.Documents.OperationType, System.Guid, Microsoft.Azure.Cosmos.FeedRange, Microsoft.Azure.Cosmos.QueryRequestOptions, Microsoft.Azure.Cosmos.Query.Core.SqlQuerySpec, System.String, System.Boolean, System.Int32, Microsoft.Azure.Cosmos.Tracing.ITrace, System.Threading.CancellationToken)`](https://github.com/Azure/azure-cosmos-dotnet-v3/blob/master/Microsoft.Azure.Cosmos/src/Query/Core/CosmosQueryClientCore.cs) | No | Yes | Adds datastore segment with query text, database, container, operation (operationType + resourceType), endpoint host/port. |
-| [`ExecuteItemQueryAsync(System.String, Microsoft.Azure.Documents.ResourceType, Microsoft.Azure.Documents.OperationType, Microsoft.Azure.Cosmos.FeedRange, Microsoft.Azure.Cosmos.QueryRequestOptions, Microsoft.Azure.Cosmos.Query.Core.AdditionalRequestHeaders, Microsoft.Azure.Cosmos.Query.Core.SqlQuerySpec, System.String, System.Int32, Microsoft.Azure.Cosmos.Tracing.ITrace, System.Threading.CancellationToken)`](https://github.com/Azure/azure-cosmos-dotnet-v3/blob/master/Microsoft.Azure.Cosmos/src/Query/Core/CosmosQueryClientCore.cs) | No | Yes | Alternate overload; same enrichment behavior capturing query text and connection details. |
+| Method | Creates Transaction | Requires Existing Transaction |
+|--------|---------------------|-------------------------------|
+| `ExecuteItemQueryAsync` | No | Yes |
+| `ExecuteItemQueryAsync` | No | Yes |
 
 ## Instrumentation XML
 [`Instrumentation.xml`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/CosmosDb/Instrumentation.xml)

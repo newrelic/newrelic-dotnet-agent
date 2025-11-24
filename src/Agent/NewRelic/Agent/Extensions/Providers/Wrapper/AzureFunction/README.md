@@ -10,47 +10,47 @@ Automatic tracing and metadata capture for Azure Functions (in-process `FUNCTION
 - Assembly: `Microsoft.Azure.Functions.Worker.Core`
 - Type: `Microsoft.Azure.Functions.Worker.FunctionsApplication`
 
-| Method (name + parameters) | Creates Transaction | Requires Existing Transaction | Notes |
-|----------------------------|---------------------|-------------------------------|-------|
-| [`InvokeFunctionAsync()`](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/src/DotNetWorker/FunctionsApplication.cs) | Yes | No | Isolated entry point. Builds function details, sets FAAS attributes, accepts DT headers for HTTP triggers, handles cold start. |
+| Method | Creates Transaction | Requires Existing Transaction |
+|--------|---------------------|-------------------------------|
+| `InvokeFunctionAsync` | Yes | No |
 
 ### AzureFunctionInProcessExecuteWithWatchersAsyncWrapper
 - Wrapper: [`AzureFunctionInProcessExecuteWithWatchersAsyncWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/AzureFunctionInProcessExecuteWithWatchersAsyncWrapper.cs)
 - Assembly: `Microsoft.Azure.WebJobs.Host`
 - Type: `Microsoft.Azure.WebJobs.Host.Executors.FunctionExecutor`
 
-| Method (name + parameters) | Creates Transaction | Requires Existing Transaction | Notes |
-|----------------------------|---------------------|-------------------------------|-------|
-| [`ExecuteWithWatchersAsync(Microsoft.Azure.WebJobs.Host.Executors.IFunctionInstanceEx, ParameterHelper, Microsoft.Extensions.Logging.ILogger, System.Threading.CancellationTokenSource)`](https://github.com/Azure/azure-functions-host/blob/main/src/WebJobs.Host/Executors/FunctionExecutor.cs) | Yes | No | In-process creation point. Reflects trigger attribute, sets FAAS attributes, cold start, transaction naming. |
+| Method | Creates Transaction | Requires Existing Transaction |
+|--------|---------------------|-------------------------------|
+| `ExecuteWithWatchersAsync` | Yes | No |
 
 ### AzureFunctionInProcessInvokeAsyncWrapper
 - Wrapper: [`AzureFunctionInProcessInvokeAsyncWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/AzureFunctionInProcessInvokeAsyncWrapper.cs)
 - Assembly: `Microsoft.Azure.WebJobs.Host`
 - Type: `Microsoft.Azure.WebJobs.Host.Executors.FunctionInvoker`\`2
 
-| Method (name + parameters) | Creates Transaction | Requires Existing Transaction | Notes |
-|----------------------------|---------------------|-------------------------------|-------|
-| [`InvokeAsync(System.Object, System.Object[])`](https://github.com/Azure/azure-functions-host/blob/main/src/WebJobs.Host/Executors/FunctionInvoker.cs) | No | Yes | Enriches existing in-process transaction (HTTP method/path, DT headers, status code). |
+| Method | Creates Transaction | Requires Existing Transaction |
+|--------|---------------------|-------------------------------|
+| `InvokeAsync` | No | Yes |
 
 ### FunctionsHttpProxyingMiddlewareWrapper
 - Wrapper: [`FunctionsHttpProxyingMiddlewareWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/FunctionsHttpProxyingMiddlewareWrapper.cs)
 - Assembly: `Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore`
 - Type: `Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore.FunctionsHttpProxyingMiddleware`
 
-| Method (name + parameters) | Creates Transaction | Requires Existing Transaction | Notes |
-|----------------------------|---------------------|-------------------------------|-------|
-| [`AddHttpContextToFunctionContext()`](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/src/Extensions/Http/aspnetcore/FunctionsHttpProxyingMiddleware.cs) | No | Yes | Captures HTTP method/path, accepts DT headers (isolated HTTP trigger). |
-| [`TryHandleHttpResult()`](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/src/Extensions/Http/aspnetcore/FunctionsHttpProxyingMiddleware.cs) | No | Yes | Sets HTTP status code (isolated). Guards against multiple executions. |
-| [`TryHandleOutputBindingsHttpResult()`](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/src/Extensions/Http/aspnetcore/FunctionsHttpProxyingMiddleware.cs) | No | Yes | Alternative status code extraction for output bindings. |
+| Method | Creates Transaction | Requires Existing Transaction |
+|--------|---------------------|-------------------------------|
+| `AddHttpContextToFunctionContext` | No | Yes |
+| `TryHandleHttpResult` | No | Yes |
+| `TryHandleOutputBindingsHttpResult` | No | Yes |
 
 ### NoOpWrapper (early load)
 - Wrapper: [`NewRelic.Agent.Core.Wrapper.NoOpWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Core/Wrapper/NoOpWrapper.cs)
 - Assembly: `Microsoft.Extensions.Hosting`
 - Type: `Microsoft.Extensions.Hosting.HostBuilder`
 
-| Method (name + parameters) | Creates Transaction | Requires Existing Transaction | Notes |
-|----------------------------|---------------------|-------------------------------|-------|
-| [`Build()`](https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Hosting/src/HostBuilder.cs) | No | No | Early agent initialization for isolated worker startup (no tracing). |
+| Method | Creates Transaction | Requires Existing Transaction |
+|--------|---------------------|-------------------------------|
+| `Build` | No | No |
 
 ## Instrumentation XML
 [`Instrumentation.xml`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/Instrumentation.xml)
@@ -78,7 +78,7 @@ Trigger attribute short type names ending with `TriggerAttribute` are mapped to 
 Incoming HTTP triggers (in-process & isolated) accept W3C/New Relic headers once per transaction; response codes captured when present. Outbound propagation handled by other wrappers (e.g., HttpClient). Non-HTTP triggers may accept headers in future (e.g., ServiceBus) but are currently limited to HTTP.
 
 ## Early Load Strategy
-`HostBuilder.Build()` is wrapped with a no-op tracer to ensure early agent initialization in isolated worker scenarios.
+`HostBuilder.Build` is wrapped with a no-op tracer to ensure early agent initialization in isolated worker scenarios.
 
 ## License
 Copyright 2020 New Relic, Inc. All rights reserved.  

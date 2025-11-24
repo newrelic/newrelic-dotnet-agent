@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:rabbitmq.github.io)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
