@@ -422,8 +422,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act & Assert - Should configure all components without errors
             Assert.DoesNotThrow(() => _meterListenerBridge.Start());
             
-            // Should record that bridge is enabled at least once
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.AtLeastOnce());
+            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
         }
 
         #region Filter Logic Tests
@@ -651,9 +650,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             _meterListenerBridge.Start();
 
-            // Assert - Should record disabled metric
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled), Occurs.Once());
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.Never());
+            // Supportability metric for OTel bridge disabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
         }
 
         [Test]
@@ -694,9 +691,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             _meterListenerBridge.Start();
 
-            // Assert - Should record enabled metric at least once
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.AtLeastOnce());
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled), Occurs.Never());
+            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
         }
 
         [Test]
@@ -768,8 +763,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 EventBus<AgentConnectedEvent>.Publish(secondConnection);
             });
             
-            // Should record enabled metric at least once (restart scenario may cause multiple calls)
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.AtLeastOnce());
+            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
         }
 
         [Test]
