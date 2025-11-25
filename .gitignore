@@ -79,4 +79,4 @@ build/Linux/keys
 /build/_staging
 
 # Claude code settings
-.claude/
+/.claude/
