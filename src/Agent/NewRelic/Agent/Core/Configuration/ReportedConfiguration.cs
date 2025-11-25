@@ -778,6 +778,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("otel_bridge.enabled")]
         public bool OpenTelemetryBridgeEnabled => _configuration.OpenTelemetryBridgeEnabled;
 
+        [JsonProperty("otel_bridge.tracing.enabled")]
+        public bool OpenTelemetryBridgeTracingEnabled => _configuration.OpenTelemetryBridgeTracingEnabled;
+
         [JsonIgnore]
         public int MaxCustomInstrumentationSupportabilityMetrics { get; }
 

@@ -175,8 +175,11 @@ namespace NewRelic.Agent.Core
             var agentApi = _container.Resolve<IAgentApi>();
             _wrapperService = _container.Resolve<IWrapperService>();
 
+            // don't start any otel bridge services if the feature is disabled globally
             if (Configuration.OpenTelemetryBridgeEnabled)
+            {
                 _container.Resolve<OpenTelemetryBridge.ActivityBridge>().Start();
+            }
 
             // Attempt to auto start the agent once all services have resolved, except in serverless mode
             if (!bootstrapConfig.ServerlessModeEnabled)

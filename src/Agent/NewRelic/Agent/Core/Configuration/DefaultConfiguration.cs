@@ -2859,7 +2859,10 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        // globally enables/disables otel bridge
         public bool OpenTelemetryBridgeEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("OpenTelemetry.Enabled", false), "NEW_RELIC_OPEN_TELEMETRY_BRIDGE_ENABLED");
+        // defaults to enabled if otel bridge is enabled
+        public bool OpenTelemetryBridgeTracingEnabled => OpenTelemetryBridgeEnabled && EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("OpenTelemetry.Tracing.Enabled", true), "NEW_RELIC_OPEN_TELEMETRY_BRIDGE_TRACING_ENABLED");
 
         public int MaxCustomInstrumentationSupportabilityMetrics => 25; // in case we want to make this configurable in the future
 
