@@ -12,7 +12,7 @@ Automatic tracing and metadata capture for Azure Functions (in-process `FUNCTION
 
 | Method | Creates Transaction | Requires Existing Transaction |
 |--------|---------------------|-------------------------------|
-| `InvokeFunctionAsync` | Yes | No |
+| [`InvokeFunctionAsync`](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/src/DotNetWorker.Core/FunctionsApplication.cs) | Yes | No |
 
 ### AzureFunctionInProcessExecuteWithWatchersAsyncWrapper
 - Wrapper: [`AzureFunctionInProcessExecuteWithWatchersAsyncWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/AzureFunctionInProcessExecuteWithWatchersAsyncWrapper.cs)
@@ -21,7 +21,7 @@ Automatic tracing and metadata capture for Azure Functions (in-process `FUNCTION
 
 | Method | Creates Transaction | Requires Existing Transaction |
 |--------|---------------------|-------------------------------|
-| `ExecuteWithWatchersAsync` | Yes | No |
+| [`ExecuteWithWatchersAsync`](https://github.com/Azure/azure-webjobs-sdk/blob/65bc8a29e09cbeb3a7023c28be7a363a21d8199a/src/Microsoft.Azure.WebJobs.Host/Executors/FunctionExecutor.cs) | Yes | No |
 
 ### AzureFunctionInProcessInvokeAsyncWrapper
 - Wrapper: [`AzureFunctionInProcessInvokeAsyncWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/AzureFunctionInProcessInvokeAsyncWrapper.cs)
@@ -30,7 +30,7 @@ Automatic tracing and metadata capture for Azure Functions (in-process `FUNCTION
 
 | Method | Creates Transaction | Requires Existing Transaction |
 |--------|---------------------|-------------------------------|
-| `InvokeAsync` | No | Yes |
+| [`InvokeAsync`](https://github.com/Azure/azure-webjobs-sdk/blob/dev/src/Microsoft.Azure.WebJobs.Host/Executors/FunctionInvoker.cs) | No | Yes |
 
 ### FunctionsHttpProxyingMiddlewareWrapper
 - Wrapper: [`FunctionsHttpProxyingMiddlewareWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/FunctionsHttpProxyingMiddlewareWrapper.cs)
@@ -39,9 +39,9 @@ Automatic tracing and metadata capture for Azure Functions (in-process `FUNCTION
 
 | Method | Creates Transaction | Requires Existing Transaction |
 |--------|---------------------|-------------------------------|
-| `AddHttpContextToFunctionContext` | No | Yes |
-| `TryHandleHttpResult` | No | Yes |
-| `TryHandleOutputBindingsHttpResult` | No | Yes |
+| [`AddHttpContextToFunctionContext`](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/extensions/Worker.Extensions.Http.AspNetCore/src/FunctionsMiddleware/FunctionsHttpProxyingMiddleware.cs) | No | Yes |
+| [`TryHandleHttpResult`](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/extensions/Worker.Extensions.Http.AspNetCore/src/FunctionsMiddleware/FunctionsHttpProxyingMiddleware.cs) | No | Yes |
+| [`TryHandleOutputBindingsHttpResult`](https://github.com/Azure/azure-functions-dotnet-worker/blob/main/extensions/Worker.Extensions.Http.AspNetCore/src/FunctionsMiddleware/FunctionsHttpProxyingMiddleware.cs) | No | Yes |
 
 ### NoOpWrapper (early load)
 - Wrapper: [`NewRelic.Agent.Core.Wrapper.NoOpWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Core/Wrapper/NoOpWrapper.cs)
@@ -50,7 +50,7 @@ Automatic tracing and metadata capture for Azure Functions (in-process `FUNCTION
 
 | Method | Creates Transaction | Requires Existing Transaction |
 |--------|---------------------|-------------------------------|
-| `Build` | No | No |
+| [`Build`](https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Hosting/src/HostBuilder.cs) | No | No |
 
 ## Instrumentation XML
 [`Instrumentation.xml`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AzureFunction/Instrumentation.xml)

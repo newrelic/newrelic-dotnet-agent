@@ -12,9 +12,9 @@ This wrapper instruments outbound HTTP calls made via `System.Net.Http.HttpClien
 
 | Method | Creates Transaction | Requires Existing Transaction | Min Version | Max Version |
 |--------|---------------------|-------------------------------|-------------|-------------|
-| `SendAsync` | No | Yes |  | 5.0 |
-| `SendAsync` | No | Yes | 5.0 |  |
-| `Send` | No | Yes | 5.0 |  |
+| [`HttpClient.SendAsync`](https://github.com/dotnet/runtime/blob/main/src/libraries/System.Net.Http/src/System/Net/Http/HttpClient.cs) | No | Yes |  | 5.0 |
+| [`SocketsHttpHandler.SendAsync`](https://github.com/dotnet/runtime/blob/main/src/libraries/System.Net.Http/src/System/Net/Http/SocketsHttpHandler/SocketsHttpHandler.cs) | No | Yes | 5.0 |  |
+| [`SocketsHttpHandler.Send`](https://github.com/dotnet/runtime/blob/main/src/libraries/System.Net.Http/src/System/Net/Http/SocketsHttpHandler/SocketsHttpHandler.cs) | No | Yes | 5.0 |  |
 
 ## Instrumentation XML
 [`Instrumentation.xml`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/HttpClient/Instrumentation.xml)

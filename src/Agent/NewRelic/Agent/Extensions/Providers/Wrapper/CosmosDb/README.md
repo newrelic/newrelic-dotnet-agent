@@ -12,7 +12,7 @@ This wrapper adds datastore segments for Azure Cosmos DB client operations execu
 
 | Method | Creates Transaction | Requires Existing Transaction |
 |--------|---------------------|-------------------------------|
-| `SendAsync` | No | Yes |
+| [SendAsync](https://github.com/Azure/azure-cosmos-dotnet-v3/blob/master/Microsoft.Azure.Cosmos/src/Handler/RequestInvokerHandler.cs) | No | Yes |
 
 ### ExecuteItemQueryAsyncWrapper
 - Wrapper: [`ExecuteItemQueryAsyncWrapper`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/CosmosDb/ExecuteItemQueryAsyncWrapper.cs)
@@ -21,8 +21,7 @@ This wrapper adds datastore segments for Azure Cosmos DB client operations execu
 
 | Method | Creates Transaction | Requires Existing Transaction |
 |--------|---------------------|-------------------------------|
-| `ExecuteItemQueryAsync` | No | Yes |
-| `ExecuteItemQueryAsync` | No | Yes |
+| [ExecuteItemQueryAsync](https://github.com/Azure/azure-cosmos-dotnet-v3/blob/master/Microsoft.Azure.Cosmos/src/Query/v3Query/CosmosQueryClientCore.cs) | No | Yes |
 
 ## Instrumentation XML
 [`Instrumentation.xml`](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/CosmosDb/Instrumentation.xml)
