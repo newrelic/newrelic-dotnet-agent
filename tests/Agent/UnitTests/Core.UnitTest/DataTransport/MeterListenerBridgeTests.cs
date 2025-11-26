@@ -15,6 +15,7 @@ using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.Configuration;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -421,8 +422,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act & Assert - Should configure all components without errors
             Assert.DoesNotThrow(() => _meterListenerBridge.Start());
             
-            // Should record that bridge is enabled at least once
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.AtLeastOnce());
+            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
         }
 
         #region Filter Logic Tests
@@ -637,8 +637,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act & Assert 
             Assert.DoesNotThrow(() => _meterListenerBridge.Start());
             
-            // Verify supportability metric is recorded
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled), Occurs.Never());
+            // Supportability metric for OTel bridge disabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
         }
 
         [Test]
@@ -650,9 +649,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             _meterListenerBridge.Start();
 
-            // Assert - Should record disabled metric
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled), Occurs.Once());
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.Never());
+            // Supportability metric for OTel bridge disabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
         }
 
         [Test]
@@ -693,9 +690,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             _meterListenerBridge.Start();
 
-            // Assert - Should record enabled metric at least once
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.AtLeastOnce());
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled), Occurs.Never());
+            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
         }
 
         [Test]
@@ -767,8 +762,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 EventBus<AgentConnectedEvent>.Publish(secondConnection);
             });
             
-            // Should record enabled metric at least once (restart scenario may cause multiple calls)
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled), Occurs.AtLeastOnce());
+            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
         }
 
         [Test]
@@ -1559,7 +1553,474 @@ namespace NewRelic.Agent.Core.DataTransport
 
         #endregion
 
+        #region EntityGuid Change Detection Tests
+
+        [Test]
+        public void OnServerConfigurationUpdated_WhenEntityGuidChanges_ShouldRecordEntityGuidChangedMetric()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+            _meterListenerBridge.Start();
+
+            // Create a real ServerConfiguration object and set the EntityGuid via JSON deserialization
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Once());
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WhenEntityGuidChanges_ShouldRecordMeterProviderRecreatedMetric()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+            _meterListenerBridge.Start();
+
+            // Create a real ServerConfiguration object and set the EntityGuid via JSON deserialization
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Once());
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WhenEntityGuidUnchanged_ShouldNotRecordMetrics()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("same-entity-guid");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+            _meterListenerBridge.Start();
+
+            // Create a real ServerConfiguration object with the same EntityGuid
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""same-entity-guid""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Never());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Never());
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WhenFirstTimeEntityGuidSet_ShouldNotRecordChangeMetrics()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns((string)null);
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Create a real ServerConfiguration object with first-time EntityGuid
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""first-entity-guid""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Never());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Never());
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WhenEntityGuidChangesFromEmptyToValue_ShouldNotRecordChangeMetrics()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Create a real ServerConfiguration object with new EntityGuid
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Never());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Never());
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WhenEntityGuidChangesToNull_ShouldNotRecordMetrics()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Create a real ServerConfiguration object without EntityGuid (null)
+            var serverConfigJson = @"{""agent_run_id"": 12345}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Never());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Never());
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WhenEntityGuidChangesToEmpty_ShouldNotRecordMetrics()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Create a real ServerConfiguration object with empty EntityGuid
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": """"}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Never());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Never());
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WhenMetricsDisabled_ShouldNotRecreateProvider()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(false);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Create a real ServerConfiguration object with different EntityGuid
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert - Should record entity GUID change but not recreate provider since metrics are disabled
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Once());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Never());
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WhenNoConnectionInfo_ShouldNotRecreateProvider()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+
+            // Don't publish AgentConnectedEvent, so no connection info
+            // Create a real ServerConfiguration object with different EntityGuid
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert - Should not record entity GUID change since _currentEntityGuid is not initialized without AgentConnectedEvent
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Never());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Never());
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WhenEntityGuidChangesMultipleTimes_ShouldRecordEachChange()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+            _meterListenerBridge.Start();
+
+            // First change
+            var firstServerConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""second-entity-guid""}";
+            var firstServerConfig = ServerConfiguration.FromJson(firstServerConfigJson);
+            var firstConfigUpdateEvent = new ServerConfigurationUpdatedEvent(firstServerConfig);
+
+            // Second change
+            var secondServerConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""third-entity-guid""}";
+            var secondServerConfig = ServerConfiguration.FromJson(secondServerConfigJson);
+            var secondConfigUpdateEvent = new ServerConfigurationUpdatedEvent(secondServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(firstConfigUpdateEvent);
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(secondConfigUpdateEvent);
+
+            // Assert
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Exactly(2));
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Exactly(2));
+        }
+
+        [Test]
+        public void RecreateMetricsProvider_ShouldUseUpdatedEntityGuid()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+            Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { "TestApp" });
+            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("test-license-key");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+            _meterListenerBridge.Start();
+
+            // Create a real ServerConfiguration object with updated EntityGuid
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""updated-entity-guid""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act - Trigger entity GUID change
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert - The RecreateMetricsProvider method should have been called internally
+            // We can verify this by checking that the MeterProviderRecreated metric was recorded
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Once());
+        }
+
+        [Test]
+        public void RecreateMetricsProvider_ShouldNotThrow()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+            _meterListenerBridge.Start();
+
+            // Create a real ServerConfiguration object with new EntityGuid
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act & Assert - Should not throw during recreation
+            Assert.DoesNotThrow(() => EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent));
+        }
+
+        [Test]
+        public void OnAgentConnected_ShouldInitializeEntityGuidTracking()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("tracked-entity-guid");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+
+            // Act
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Assert - Verify that subsequent entity GUID changes are properly detected
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""changed-entity-guid""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Should record the change since tracking was initialized
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Once());
+        }
+
+        [Test]
+        public void EntityGuidChangeDetection_WorksAcrossAgentReconnection()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("original-entity-guid");
+
+            // Initial connection
+            var firstAgentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(firstAgentConnectedEvent);
+            _meterListenerBridge.Start();
+
+            // Agent reconnection (should reset tracking)
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("new-after-reconnect-entity-guid");
+            var secondAgentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(secondAgentConnectedEvent);
+
+            // Server configuration update with changed entity GUID
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""final-entity-guid""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert - Should detect change from the entity GUID set during reconnection
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Once());
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WithWhitespaceEntityGuids_ShouldHandleGracefully()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("  initial-entity-guid  ");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Create a real ServerConfiguration object with whitespace in EntityGuid
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""  different-entity-guid  ""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act & Assert - Should handle whitespace gracefully
+            Assert.DoesNotThrow(() => EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent));
+        }
+
+        [Test]
+        public void EntityGuidChangeDetection_FullApplicationNameChangeScenario()
+        {
+            // Arrange - Simulate the complete scenario described in the requirements
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { "MyApplication" });
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("original-entity-guid");
+            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("test-license-key");
+
+            // 1. Initial agent startup
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+            _meterListenerBridge.Start();
+
+            // 2. Application name change via API (this would cause reconnection in real scenario)
+            // Simulate what happens when SetApplicationName triggers a new entity GUID
+            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid-after-app-name-change""}";
+            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+
+            // Act
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+            // Assert - Should detect entity GUID change and recreate OTel resources
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Once());
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Once());
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WhenServerConfigIsNull_ShouldNotThrow()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+
+            // Act & Assert - Should handle null ServerConfigurationUpdatedEvent gracefully
+            Assert.DoesNotThrow(() => EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(null)));
+        }
+
+        [Test]
+        public void OnServerConfigurationUpdated_WithMinimalJsonConfiguration_ShouldHandleGracefully()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+
+            // Create minimal ServerConfiguration
+            var serverConfigJson = @"{""agent_run_id"": 12345}";
+            var serverConfig = ServerConfiguration.FromJson(serverConfigJson);
+            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(serverConfig);
+
+            // Act & Assert - Should handle minimal configuration without throwing
+            Assert.DoesNotThrow(() => EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent));
+        }
+
+        #endregion
+
         #region Helper Methods
+
+        [Test]
+        public void RecreateMetricsProvider_ShouldBeThreadSafe()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
+            Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { "TestApp" });
+            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("test-license-key");
+
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Start the meter listener to initialize the meter provider
+            _meterListenerBridge.Start();
+
+            var exceptions = new System.Collections.Concurrent.ConcurrentBag<System.Exception>();
+            const int threadCount = 10;
+            const int iterationsPerThread = 10;
+
+            // Act - simulate concurrent server configuration updates
+            var tasks = new System.Threading.Tasks.Task[threadCount];
+            for (int i = 0; i < threadCount; i++)
+            {
+                int threadId = i;
+                tasks[i] = System.Threading.Tasks.Task.Run(() =>
+                {
+                    try
+                    {
+                        for (int j = 0; j < iterationsPerThread; j++)
+                        {
+                            // Create a real ServerConfiguration object via JSON deserialization
+                            var serverConfigJson = $"{{\"entity_guid\": \"entity-guid-{threadId}-{j}\", \"agent_run_id\": \"run-id-{threadId}-{j}\"}}";
+                            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
+
+                            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+                            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
+
+                            // Small delay to increase chance of race conditions
+                            System.Threading.Thread.Sleep(1);
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        exceptions.Add(ex);
+                    }
+                });
+            }
+
+            // Wait for all tasks to complete
+            System.Threading.Tasks.Task.WaitAll(tasks);
+
+            // Assert - should not have any exceptions
+            Assert.That(exceptions.IsEmpty, Is.True, $"Thread safety test failed with {exceptions.Count} exceptions: {string.Join(", ", exceptions.Select(e => e.Message))}");
+
+            // Verify supportability metrics were recorded (should have many due to concurrent updates)
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.AtLeast(threadCount));
+            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.AtLeast(threadCount));
+        }
 
         private System.Reflection.MethodInfo GetShouldEnableMethod()
         {
