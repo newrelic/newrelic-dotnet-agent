@@ -175,12 +175,23 @@ namespace NewRelic.Agent.Core
             var agentApi = _container.Resolve<IAgentApi>();
             _wrapperService = _container.Resolve<IWrapperService>();
 
-            if (Configuration.OpenTelemetryBridgeEnabled)
+            if (Configuration.OpenTelemetryEnabled)
+            {
                 _container.Resolve<OpenTelemetryBridge.ActivityBridge>().Start();
+                if (!bootstrapConfig.ServerlessModeEnabled)
+                {
+                    // We need to resolve the MeterListenerBridge before the connect event is triggered so that
+                    // the MeterListenerBridge is ready to receive the connect event and start listening for
+                    // metrics.
+                    _container.Resolve<OpenTelemetryBridge.MeterListenerBridge>();
+                }
+            }
 
             // Attempt to auto start the agent once all services have resolved, except in serverless mode
             if (!bootstrapConfig.ServerlessModeEnabled)
+            {
                 _container.Resolve<IConnectionManager>().AttemptAutoStart();
+            }
             else
             {
                 Log.Info("The New Relic agent is operating in serverless mode.");

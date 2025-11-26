@@ -131,6 +131,7 @@ namespace NewRelic.Agent.Core.Config
 #else
             if (value?.Value == null)
             {
+                // Use configuration manager to access application's actual config system
                 var configMgrStatic = new ConfigurationManagerStatic();
                 var configValue = configMgrStatic.GetAppSetting(key);
                 if (configValue != null)
