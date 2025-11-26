@@ -920,7 +920,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportIfAgentControlHealthEnabled();
             ReportIfAspNetCore6PlusIsEnabled();
             ReportIfAzureFunctionModeIsDetected();
-            ReportOpenTelemetryMetricsBridgeEnabled();
+            ReportIfOpenTelemetryMetricsBridgeEnabled();
         }
 
         public void CollectMetrics()
@@ -1114,16 +1114,9 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportSupportabilityCountMetric(MetricNames.SupportabilityAspNetCore6PlusBrowserInjection(_configuration.EnableAspNetCore6PlusBrowserInjection));
         }
 
-        private void ReportOpenTelemetryMetricsBridgeEnabled()
+        private void ReportIfOpenTelemetryMetricsBridgeEnabled()
         {
-            if (_configuration.OpenTelemetryMetricsEnabled)
-            {
-                ReportSupportabilityCountMetric(MetricNames.SupportabilityOTelMetricsBridgeEnabled);
-            }
-            else
-            {
-                ReportSupportabilityCountMetric(MetricNames.SupportabilityOTelMetricsBridgeDisabled);
-            }
+            ReportSupportabilityCountMetric(MetricNames.SupportabilityOpenTelemetryMetricsBridgeState(_configuration.OpenTelemetryMetricsEnabled));
         }
 
         /// <summary>

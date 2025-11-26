@@ -42,8 +42,6 @@ namespace NewRelic.Agent.Core.UnitTests.Metrics
             Assert.That(_publishedMetrics, Is.Empty);
         }
 
-        [TestCase(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled, MetricNames.SupportabilityOTelMetricsBridgeEnabled)]
-        [TestCase(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled, MetricNames.SupportabilityOTelMetricsBridgeDisabled)]
         [TestCase(OtelBridgeSupportabilityMetric.GetMeter, MetricNames.SupportabilityOTelMetricsBridgeGetMeter)]
         [TestCase(OtelBridgeSupportabilityMetric.CreateCounter, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateCounter)]
         [TestCase(OtelBridgeSupportabilityMetric.CreateHistogram, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateHistogram)]
@@ -100,7 +98,9 @@ namespace NewRelic.Agent.Core.UnitTests.Metrics
         public void CollectMetrics_ResetsCounters()
         {
             // Act - Record metrics and collect
-            _metricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled);
+            // This test is not valid for MetricsBridgeEnabled, as it is now reported via configuration, not enum.
+            // Instead, test with a valid enum value:
+            _metricCounters.Record(OtelBridgeSupportabilityMetric.GetMeter);
             _metricCounters.CollectMetrics();
             
             // Clear published metrics and collect again
@@ -136,20 +136,13 @@ namespace NewRelic.Agent.Core.UnitTests.Metrics
         {
             // Test verifies debugging vs non-debugging metric behavior
             
-            // Record one debugging and one non-debugging metric
+            // Record one debugging metric
             _metricCounters.Record(OtelBridgeSupportabilityMetric.InstrumentCreated); // Debugging
-            _metricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeEnabled); // Non-debugging
             _metricCounters.CollectMetrics();
 
-            // At minimum, we should have the non-debugging metric
+            // At minimum, we should have the debugging metric
             Assert.That(_publishedMetrics.Count, Is.GreaterThanOrEqualTo(1),
-                "At least the non-debugging metric should be published");
-                
-            // Verify non-debugging metrics are always included
-            var nonDebuggingPublished = _publishedMetrics.Any(m => 
-                m.MetricNameModel.Name == MetricNames.SupportabilityOTelMetricsBridgeEnabled);
-            Assert.That(nonDebuggingPublished, Is.True,
-                "Non-debugging metrics should always be published");
+                "At least the debugging metric should be published");
         }
 
         [Test]

@@ -637,8 +637,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act & Assert 
             Assert.DoesNotThrow(() => _meterListenerBridge.Start());
             
-            // Verify supportability metric is recorded
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MetricsBridgeDisabled), Occurs.Never());
+            // Supportability metric for OTel bridge disabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
         }
 
         [Test]

@@ -13,8 +13,6 @@ namespace NewRelic.Agent.Core.Metrics
 {
     public enum OtelBridgeSupportabilityMetric
     {
-        MetricsBridgeEnabled,
-        MetricsBridgeDisabled,
         GetMeter,
         CreateCounter,
         CreateHistogram,
@@ -99,8 +97,6 @@ namespace NewRelic.Agent.Core.Metrics
         {
             return metric switch
             {
-                OtelBridgeSupportabilityMetric.MetricsBridgeEnabled => MetricNames.SupportabilityOTelMetricsBridgeEnabled,
-                OtelBridgeSupportabilityMetric.MetricsBridgeDisabled => MetricNames.SupportabilityOTelMetricsBridgeDisabled,
                 OtelBridgeSupportabilityMetric.GetMeter => MetricNames.SupportabilityOTelMetricsBridgeGetMeter,
                 OtelBridgeSupportabilityMetric.CreateCounter => MetricNames.SupportabilityOTelMetricsBridgeMeterCreateCounter,
                 OtelBridgeSupportabilityMetric.CreateHistogram => MetricNames.SupportabilityOTelMetricsBridgeMeterCreateHistogram,

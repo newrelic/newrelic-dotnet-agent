@@ -734,9 +734,11 @@ namespace NewRelic.Agent.Core.Metrics
 
         // OpenTelemetry Metrics Bridge
         private const string SupportabilityOTelMetricsBridgePs = SupportabilityPs + "Metrics" + PathSeparator + "DotNet" + PathSeparator + "OpenTelemetryBridge" + PathSeparator;
-        
-        public const string SupportabilityOTelMetricsBridgeEnabled = SupportabilityOTelMetricsBridgePs + "enabled";
-        public const string SupportabilityOTelMetricsBridgeDisabled = SupportabilityOTelMetricsBridgePs + "disabled";
+
+        public static string SupportabilityOpenTelemetryMetricsBridgeState(bool enabled)
+        {
+            return SupportabilityOTelMetricsBridgePs + (enabled ? Enabled : Disabled);
+        }
         public const string SupportabilityOTelMetricsBridgeGetMeter = SupportabilityOTelMetricsBridgePs + "getMeter";
         
         // Individual meter method supportability metrics
