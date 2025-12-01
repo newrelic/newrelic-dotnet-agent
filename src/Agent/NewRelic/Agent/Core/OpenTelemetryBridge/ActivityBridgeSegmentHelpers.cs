@@ -17,6 +17,7 @@ using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
+using static Grpc.Core.ServerServiceDefinition;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge;
 
@@ -474,7 +475,8 @@ public static class ActivityBridgeSegmentHelpers
             "redis" => DatastoreVendor.Redis,
             "azure.cosmosdb" => DatastoreVendor.CosmosDB,
             "elasticsearch" => DatastoreVendor.Elasticsearch,
-            "aws.dynamodb" => DatastoreVendor.DynamoDB,
+            "dynamodb" => DatastoreVendor.DynamoDB, // OpenTelemetry.Instrumentation.AWS produces "dynamodb" for db.system
+            "aws.dynamodb" => DatastoreVendor.DynamoDB, // the otel spec says "aws.dynamodb" is the correct value for DynamoDB
             _ => DatastoreVendor.Other
         };
 
@@ -484,6 +486,7 @@ public static class ActivityBridgeSegmentHelpers
         ISegmentData segmentData = vendor switch
         {
             DatastoreVendor.Elasticsearch => GetElasticSearchDatastoreSegmentData(agent, tags, vendor, activityLogPrefix),
+            DatastoreVendor.DynamoDB => GetDynamoDbDatastoreSegmentData(agent, activity, activityLogPrefix, tags, segment),
             _ => GetDefaultDatastoreSegmentData(agent, activity, activityLogPrefix, tags, vendor)
         };
 
@@ -566,6 +569,40 @@ public static class ActivityBridgeSegmentHelpers
 
         Log.Finest($"Created DatastoreSegmentData for Elasticsearch {activityLogPrefix}");
         return new DatastoreSegmentData(agent.GetExperimentalApi().DatabaseService, parsedSqlStatement, string.Empty, connectionInfo);
+    }
+
+    private static ISegmentData GetDynamoDbDatastoreSegmentData(IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, ISegment segment)
+    {
+        tags.TryGetAndRemoveTag<string>(["aws.dynamodb.table_names"], out var tableNames);
+        if (string.IsNullOrEmpty(tableNames))
+        {
+            Log.Finest($"DynamoDB {activityLogPrefix} is missing required tag for table names. Not creating a DatastoreSegmentData.");
+            return null;
+        }
+
+        // DynamoDB operation is in rpc.method
+        tags.TryGetAndRemoveTag<string>(["rpc.method"], out var dbOperation);
+        if (string.IsNullOrEmpty(dbOperation))
+        {
+            Log.Finest($"DynamoDB {activityLogPrefix} is missing required tag for operation. Not creating a DatastoreSegmentData.");
+            return null;
+        }
+
+        // Add DynamoDB specific attributes to the segment
+        segment.AddCloudSdkAttribute("aws.operation", dbOperation);
+
+        // spec says region is in cloud.region but it's not there currently
+        if (tags.TryGetAndRemoveTag<string>(["cloud.region"], out var awsRegion))
+            segment.AddCloudSdkAttribute("aws.region", awsRegion);
+
+        // requestId is in aws.request_id
+        if (tags.TryGetAndRemoveTag<string>(["aws.request_id"], out var requestId))
+            segment.AddCloudSdkAttribute("aws.requestId", requestId);
+
+        var parsedSqlStatement = new ParsedSqlStatement(DatastoreVendor.DynamoDB, tableNames, dbOperation);
+
+        Log.Finest($"Created DatastoreSegmentData for DynamoDB {activityLogPrefix}");
+        return new DatastoreSegmentData(agent.GetExperimentalApi().DatabaseService, parsedSqlStatement, string.Empty, null);
     }
 
     public static void AddExceptionEventInformationToSegment(this ISegment segment, object originalActivity, IErrorService errorService)
