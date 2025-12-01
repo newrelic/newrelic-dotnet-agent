@@ -541,10 +541,15 @@ namespace NewRelic.Agent.Core.Metrics
         #region Supportability
 
         private const string Supportability = "Supportability";
-        private const string SupportabilityDotnetPs = Supportability + PathSeparator + "Dotnet" + PathSeparator;
+
         private const string SupportabilityPs = Supportability + PathSeparator;
-        private const string SupportabilityNetFrameworkVersionPs = SupportabilityDotnetPs + "NetFramework" + PathSeparator;
-        private const string SupportabilityNetCoreVersionPs = SupportabilityDotnetPs + "NetCore" + PathSeparator;
+
+        // don't use this casing of "Dotnet" for new metrics; this is only for backward compatibility
+        private const string SupportabilityDotnetPsObsolete = Supportability + PathSeparator + "Dotnet" + PathSeparator;
+        private const string SupportabilityNetFrameworkVersionPs = SupportabilityDotnetPsObsolete + "NetFramework" + PathSeparator;
+        private const string SupportabilityNetCoreVersionPs = SupportabilityDotnetPsObsolete + "NetCore" + PathSeparator;
+
+        private const string SupportabilityDotNetPs = Supportability + PathSeparator + DotNet + PathSeparator;
 
         // Metrics
         // NOTE: This metric is REQUIRED by the collector (it is used as a heartbeat)
@@ -888,18 +893,18 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityLoggingDisabled = "Supportability/DotNET/AgentLogging/Disabled";
         public const string SupportabilityLoggingFatalError = "Supportability/DotNET/AgentLogging/DisabledDueToError";
 
-        public const string SupportabilityIgnoredInstrumentation = SupportabilityDotnetPs + "IgnoredInstrumentation";
-        public const string SupportabilityGCSamplerV2Enabled = SupportabilityDotnetPs + "GCSamplerV2/Enabled";
-        public const string SupportabilityAwsAccountIdProvided = SupportabilityDotnetPs + "AwsAccountId/Config";
+        public const string SupportabilityIgnoredInstrumentation = SupportabilityDotnetPsObsolete + "IgnoredInstrumentation";
+        public const string SupportabilityGCSamplerV2Enabled = SupportabilityDotnetPsObsolete + "GCSamplerV2/Enabled";
+        public const string SupportabilityAwsAccountIdProvided = SupportabilityDotnetPsObsolete + "AwsAccountId/Config";
 
         public static string SupportabilityAzureFunctionMode(bool enabled)
         {
-            return SupportabilityDotnetPs + "AzureFunctionMode" + PathSeparator + (enabled ? Enabled : Disabled);
+            return SupportabilityDotnetPsObsolete + "AzureFunctionMode" + PathSeparator + (enabled ? Enabled : Disabled);
         }
 
         public static string SupportabilityAspNetCore6PlusBrowserInjection(bool enabled)
         {
-            return SupportabilityDotnetPs + "AspNetCore6PlusBrowserInjection" + PathSeparator + (enabled ? Enabled : Disabled);
+            return SupportabilityDotnetPsObsolete + "AspNetCore6PlusBrowserInjection" + PathSeparator + (enabled ? Enabled : Disabled);
         }
 
         #endregion Supportability
@@ -1177,12 +1182,19 @@ namespace NewRelic.Agent.Core.Metrics
         private const string Forwarding = "Forwarding";
         private const string LocalDecorating = "LocalDecorating";
         private const string Labels = "Labels";
-        private const string DotNet = "DotNET";
 
-        private const string SupportabilityLogMetricsConfigPs = SupportabilityLoggingEventsPs + Metrics + PathSeparator + DotNet + PathSeparator;
-        private const string SupportabilityLogForwardingConfigPs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNet + PathSeparator;
-        private const string SupportabilityLogDecoratingConfigPs = SupportabilityLoggingEventsPs + LocalDecorating + PathSeparator + DotNet + PathSeparator;
-        private const string SupportabilityLogLabelsConfigPs = SupportabilityLoggingEventsPs + Labels + PathSeparator + DotNet + PathSeparator;
+
+        // don't use this casing for new code, use SupportabilityDotnetPs instead
+        // we have to retain this for backward compatibility since we can't change existing metric names
+        private const string DotNETObsolete = "DotNET";
+
+        // use this casing for new code
+        private const string DotNet = "DotNet";
+
+        private const string SupportabilityLogMetricsConfigPs = SupportabilityLoggingEventsPs + Metrics + PathSeparator + DotNETObsolete + PathSeparator;
+        private const string SupportabilityLogForwardingConfigPs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNETObsolete + PathSeparator;
+        private const string SupportabilityLogDecoratingConfigPs = SupportabilityLoggingEventsPs + LocalDecorating + PathSeparator + DotNETObsolete + PathSeparator;
+        private const string SupportabilityLogLabelsConfigPs = SupportabilityLoggingEventsPs + Labels + PathSeparator + DotNETObsolete + PathSeparator;
 
         public static string GetSupportabilityLogMetricsConfiguredName(bool enabled)
         {
@@ -1204,14 +1216,14 @@ namespace NewRelic.Agent.Core.Metrics
             return SupportabilityLogDecoratingConfigPs + (enabled ? Enabled : Disabled);
         }
 
-        private const string SupportabilityLogFrameworkPs = SupportabilityLoggingEventsPs + DotNet + PathSeparator;
+        private const string SupportabilityLogFrameworkPs = SupportabilityLoggingEventsPs + DotNETObsolete + PathSeparator;
 
         public static string GetSupportabilityLogFrameworkName(string loggingFramework)
         {
             return SupportabilityLogFrameworkPs + loggingFramework + PathSeparator + Enabled;
         }
 
-        private const string SupportabilityLogForwardingEnabledWithFrameworkNamePs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNet + PathSeparator;
+        private const string SupportabilityLogForwardingEnabledWithFrameworkNamePs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNETObsolete + PathSeparator;
 
         public static string GetSupportabilityLogForwardingEnabledWithFrameworkName(string loggingFramework)
         {
@@ -1227,6 +1239,21 @@ namespace NewRelic.Agent.Core.Metrics
         private const string SupportabilityAgentControlPs = SupportabilityPs + AgentControl + PathSeparator;
         public const string SupportabilityAgentControlHealthEnabled = SupportabilityAgentControlPs + Health + PathSeparator + Enabled;
 
+        #endregion
+
+        #region Open Telemetry Bridge
+
+        private const string OpenTelemetryBridge = "OpenTelemetryBridge";
+
+        public static string SupportabilityOpenTelemetryBridge(bool enabled) 
+        {
+            return SupportabilityDotNetPs + OpenTelemetryBridge + PathSeparator + (enabled ? Enabled : Disabled);
+        }
+
+        public static string SupportabilityOpenTelemetryBridgeTracing(bool enabled)
+        {
+            return SupportabilityPs + "Tracing" + PathSeparator + DotNet + PathSeparator + OpenTelemetryBridge + PathSeparator + (enabled ? Enabled : Disabled);
+        }
         #endregion
     }
 }

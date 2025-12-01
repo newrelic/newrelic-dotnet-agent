@@ -523,6 +523,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public List<string> IncludedActivitySources => ["SomeIncludedActivitySourceName", "AnotherIncludedActivitySourceName"];
         public List<string> ExcludedActivitySources => ["SomeExcludedActivitySourceName", "AnotherExcludedActivitySourceName"];
         public bool OpenTelemetryBridgeEnabled => true;
+        public bool OpenTelemetryBridgeTracingEnabled => true;
 
         public int MaxCustomInstrumentationSupportabilityMetrics => 25;
         public bool HybridHttpContextStorageEnabled => false;
