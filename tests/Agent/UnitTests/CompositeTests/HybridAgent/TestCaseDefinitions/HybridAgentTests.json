@@ -2516,5 +2516,98 @@
                 }
             ]
         }
+    },
+    {
+        "testDescription": "Client Database - AWS DynamoDB PutItem",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "DynamoDB.PutItem",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.method",
+                                    "value": "PutItem"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.system",
+                                    "value": "aws-api"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.service",
+                                    "value": "DynamoDB"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "dynamodb"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "aws.dynamodb.table_names",
+                                    "value": "Movies"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "aws.request_id",
+                                    "value": "f9926109-56fc-412f-a3b2-d27742d5f5c1"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "cloud.region",
+                                    "value": "us-east-1"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "Datastore/statement/DynamoDB/Movies/PutItem",
+                    "parentName": "Foo",
+                    "category": "datastore",
+                    "attributes": {
+                        "db.collection": "Movies",
+                        "db.operation": "PutItem",
+                        "db.system": "dynamodb",
+                        "aws.operation": "PutItem",
+                        "aws.requestId": "f9926109-56fc-412f-a3b2-d27742d5f5c1",
+                        "aws.region": "us-east-1"
+                    }
+                }
+            ]
+        }
     }
 ]
