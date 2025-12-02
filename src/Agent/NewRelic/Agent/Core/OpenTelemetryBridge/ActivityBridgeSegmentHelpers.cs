@@ -36,6 +36,8 @@ public static class ActivityBridgeSegmentHelpers
 
         Log.Debug($"{activityLogPrefix} has stopped.");
 
+        GetInstrumentationScopeAttributes(segment, activity);
+
         var tags = ((IEnumerable<KeyValuePair<string, object>>)activity.TagObjects).ToDictionary(t => t.Key, t => t.Value);
         if (tags.Count == 0)
         {
@@ -108,6 +110,29 @@ public static class ActivityBridgeSegmentHelpers
             // TODO: We may not want to add all tags to the segment. We may want to filter out some tags, especially
             // the ones that we map to intrinsic or agent attributes.
             segment.AddCustomAttribute(tag.Key, tag.Value);
+        }
+    }
+
+    private static void GetInstrumentationScopeAttributes(ISegment segment, dynamic activity)
+    {
+        dynamic activitySource = activity.Source;
+        if (activitySource != null)
+        {
+            string scopeName = activitySource.Name;
+            if (scopeName != NewRelicActivitySourceProxy.ActivitySourceName) // don't add New Relic's own activity source as a scope
+            {
+                segment.AddAgentAttribute("otel.scope.name", scopeName);
+                // include the deprecated instrumentation library tags for backward compatibility
+                segment.AddAgentAttribute("otel.instrumentation_library.name", scopeName);
+
+                string scopeVersion = activitySource.Version;
+                if (!string.IsNullOrEmpty(scopeVersion))
+                {
+                    segment.AddAgentAttribute("otel.scope.version", scopeVersion);
+                    // include the deprecated instrumentation library tags for backward compatibility
+                    segment.AddAgentAttribute("otel.instrumentation_library.version", scopeVersion);
+                }
+            }
         }
     }
 

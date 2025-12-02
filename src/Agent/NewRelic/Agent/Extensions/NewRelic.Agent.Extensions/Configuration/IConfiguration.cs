@@ -263,6 +263,7 @@ namespace NewRelic.Agent.Configuration
 
         // OpenTelemetry Configuration Properties
         bool OpenTelemetryEnabled { get; }
+        bool OpenTelemetryTracingEnabled { get; }
         bool OpenTelemetryMetricsEnabled { get; }
         IEnumerable<string> OpenTelemetryMetricsIncludeFilters { get; }
         IEnumerable<string> OpenTelemetryMetricsExcludeFilters { get; }

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
@@ -28,6 +27,8 @@ namespace NewRelic.Agent.UnitTests.Core.UnitTest.OpenTelemetryBridge
             _mockConfig = Mock.Create<IConfiguration>();
             Mock.Arrange(() => _mockAgent.Configuration).Returns(_mockConfig);
             Mock.Arrange(() => _mockConfig.OpenTelemetryEnabled).Returns(true);
+
+            Mock.Arrange(() => _mockConfig.OpenTelemetryTracingEnabled).Returns(true);
         }
 
         [Test]
@@ -48,10 +49,10 @@ namespace NewRelic.Agent.UnitTests.Core.UnitTest.OpenTelemetryBridge
         }
 
         [Test]
-        public void Start_ReturnsTrue_WhenOpenTelemetryDisabled()
+        public void Start_ReturnsTrue_WhenOpenTelemetryBridgeTracingDisabled()
         {
             // Arrange
-            Mock.Arrange(() => _mockConfig.OpenTelemetryEnabled).Returns(false);
+            Mock.Arrange(() => _mockConfig.OpenTelemetryTracingEnabled).Returns(false);
 
             var bridge = new ActivityBridge(_mockAgent, _mockErrorService);
 

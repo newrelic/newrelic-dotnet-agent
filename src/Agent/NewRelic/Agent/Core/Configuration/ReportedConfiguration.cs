@@ -768,19 +768,23 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonIgnore]
         public bool AwsLambdaApmModeEnabled => _configuration.AwsLambdaApmModeEnabled;
         
-
-        [JsonProperty("otel_bridge.included_activity_sources")]
-        public List<string> IncludedActivitySources => _configuration.IncludedActivitySources;
-
-        [JsonProperty("otel_bridge.excluded_activity_sources")]
-        public List<string> ExcludedActivitySources => _configuration.ExcludedActivitySources;
-
         [JsonIgnore]
         public int MaxCustomInstrumentationSupportabilityMetrics { get; }
 
         // OpenTelemetry Configuration Properties
         [JsonProperty("opentelemetry.enabled")]
         public bool OpenTelemetryEnabled => _configuration.OpenTelemetryEnabled;
+
+
+        [JsonProperty("opentelemetry.tracing.enabled")]
+        public bool OpenTelemetryTracingEnabled => _configuration.OpenTelemetryTracingEnabled;
+
+        [JsonProperty("opentelemetry.tracing.include")]
+        public List<string> IncludedActivitySources => _configuration.IncludedActivitySources;
+
+        [JsonProperty("opentelemetry.tracing.exclude")]
+        public List<string> ExcludedActivitySources => _configuration.ExcludedActivitySources;
+
 
         [JsonProperty("opentelemetry.metrics.enabled")]
         public bool OpenTelemetryMetricsEnabled => _configuration.OpenTelemetryMetricsEnabled;
