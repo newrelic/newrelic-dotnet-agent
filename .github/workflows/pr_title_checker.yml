@@ -33,4 +33,4 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           pass_on_octokit_error: false
-          local_configuration_path: .github/actions/enforce-pr-titles/config.json
+          local_configuration_path: .github/workflows/pr-title-checker-config.json
