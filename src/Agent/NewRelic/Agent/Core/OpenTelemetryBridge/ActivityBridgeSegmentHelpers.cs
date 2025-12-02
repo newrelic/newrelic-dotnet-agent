@@ -145,13 +145,13 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetAndRemoveTag<string>(["grpc.method"], out var grpcMethod);
 
         tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address"], out var host);
-        tags.TryGetAndRemoveTag<int>(["server.port", "network.peer.port"], out var port);
+        tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
 
         // TODO: Otel tracing spec says "component" should be set to the rpc system, but the grpc spec makes no mention of it.
         // TODO: ExternalSegmentData curently sets Component as an Intrinsic attribute on the span, with a value of _segmentData.TypeName (which ends up being `NewRelic.Agent.Core.OpenTelemetryBridge.ActivityBridge`)  with no override available. So there's no way for us to set the same attribute with a different value.
         //segment.AddCustomAttribute("component", rpcSystem);
 
-        var path = BuildRpcPath(host, port, service, method, grpcMethod);
+        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
         Uri uri = new Uri(path);
         var externalSegmentData = new ExternalSegmentData(uri, method);
 
@@ -195,7 +195,7 @@ public static class ActivityBridgeSegmentHelpers
 
         var transaction = hybridAgentSegment.GetTransactionFromSegment();
 
-        var path = BuildRpcPath(host, port, service, method, grpcMethod);
+        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
         transaction.SetUri(path);
 
         transaction.SetRequestMethod(method ?? grpcMethod ?? "Unknown"); // TODO: should we default to "Unknown" or leave it null?
