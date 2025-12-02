@@ -480,10 +480,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var setMeasurementEventCallbackMethodInfo = meterListenerType.GetMethod("SetMeasurementEventCallback").MakeGenericMethod(typeof(T));
             var callbackDelegateType = setMeasurementEventCallbackMethodInfo.GetParameters()[0].ParameterType;
 
-            var instrumentParameter = Expression.Parameter(instrumentType, "measurement");
-            var measurementParameter = Expression.Parameter(typeof(T), "measurement");
-            var tagsParameter = Expression.Parameter(typeof(ReadOnlySpan<KeyValuePair<string, object>>), "tags");
-            var stateParameter = Expression.Parameter(typeof(object), "state");
+            // Extract parameter types from the customer's delegate to avoid type identity issues
+            // The delegate's Invoke method signature tells us the exact types expected from the customer's assembly
+            var delegateParameters = callbackDelegateType.GetMethod("Invoke").GetParameters();
+            
+            var instrumentParameter = Expression.Parameter(delegateParameters[0].ParameterType, "instrument");
+            var measurementParameter = Expression.Parameter(delegateParameters[1].ParameterType, "measurement");
+            var tagsParameter = Expression.Parameter(delegateParameters[2].ParameterType, "tags");
+            var stateParameter = Expression.Parameter(delegateParameters[3].ParameterType, "state");
 
             var methodCall = Expression.Call(
                 Expression.Constant(this),
