@@ -3,7 +3,7 @@
       "name": ""
     },
     "CHECKS": {
-      "prefixes": ["fix: ", "feat: ", "security: ", "notice: ", "chore: ", "chore(deps): ", "chore(main): ", "ci: ", "docs: ", "test: ", "summary: "]
+      "regexp": "^(fix|feat|security|notice|chore|ci|docs|test|summary)(\([^)]+\))?: "
     },
     "MESSAGES": {
       "success": "Pull request title is properly formatted.",
