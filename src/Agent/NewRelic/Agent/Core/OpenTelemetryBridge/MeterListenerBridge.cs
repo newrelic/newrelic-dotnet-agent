@@ -654,15 +654,42 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return observableResult;
             }
 
-            var createInstrumentDelegate = (Func<Meter, string, string, string, object>)_createInstrumentDelegates.GetOrAdd(instrumentType, CreateBridgedInstrumentDelegate);
+            var createInstrumentDelegate = (Func<Meter, string, string, string, IEnumerable<KeyValuePair<string, object>>, object>)_createInstrumentDelegates.GetOrAdd(instrumentType, CreateBridgedInstrumentDelegate);
 
             if (createInstrumentDelegate == null)
             {
                 return null;
             }
 
-            // TODO: Tags are not avaiilable on older instruments, need a way to dynamically get them for newer versions
-            var result = createInstrumentDelegate.Invoke(meter, dynamicInstrument.Name, dynamicInstrument.Unit, dynamicInstrument.Description);
+            // Try to get Tags from the instrument if available (DiagnosticSource 8.0+)
+            IEnumerable<KeyValuePair<string, object>> instrumentTags = null;
+            var tagsProperty = instrumentType.GetProperty("Tags");
+            if (tagsProperty != null)
+            {
+                try
+                {
+                    var tagsValue = tagsProperty.GetValue(instrument);
+                    if (tagsValue != null)
+                    {
+                        var tagsList = new List<KeyValuePair<string, object>>();
+                        foreach (var tag in (dynamic)tagsValue)
+                        {
+                            tagsList.Add(new KeyValuePair<string, object>(tag.Key, tag.Value ?? string.Empty));
+                        }
+                        if (tagsList.Count > 0)
+                        {
+                            instrumentTags = tagsList;
+                            Log.Finest($"Bridged {tagsList.Count} tags from instrument '{dynamicInstrument.Name}'");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, $"Failed to bridge Tags from instrument '{dynamicInstrument.Name}'. Continuing without tags.");
+                }
+            }
+
+            var result = createInstrumentDelegate.Invoke(meter, dynamicInstrument.Name, dynamicInstrument.Unit, dynamicInstrument.Description, instrumentTags);
             return result;
 
             Meter CreateBridgedMeterFromInstrument(string _)
@@ -856,7 +883,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             return lambda.Compile();
         }
 
-        private static Func<Meter, string, string, string, object> CreateBridgedInstrumentDelegate(Type originalInstrumentType)
+        private static Func<Meter, string, string, string, IEnumerable<KeyValuePair<string, object>>, object> CreateBridgedInstrumentDelegate(Type originalInstrumentType)
         {
             var genericType = originalInstrumentType.GetGenericArguments().FirstOrDefault();
             if (genericType == null)
@@ -878,7 +905,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return null;
             }
 
-            // TODO: If we upgrade .NET or see test failures related to this reflection, revisit this logic.
             // Reflection logic for Meter.Create* methods:
             // 1. Try to match the latest public OTel signature (4 parameters: name, unit, description, tags)
             // 2. Fallback to 3-parameter version (name, unit, description) for backward compatibility
@@ -899,8 +925,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 if (methodInfo != null)
                 {
                     methodInfo = methodInfo.MakeGenericMethod(genericType);
-                    // Wrap in a delegate that ignores the 4th argument (tags) for now (pass null)
-                    return (meter, name, unit, description) => methodInfo.Invoke(meter, new object[] { name, unit, description, null });
+                    // Use the 4-parameter overload and pass through the tags
+                    return (meter, name, unit, description, tags) => methodInfo.Invoke(meter, new object[] { name, unit, description, tags });
                 }
 
                 // Fallback: Try 3-parameter overload (name, unit, description)
@@ -918,7 +944,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 }
 
                 methodInfo = methodInfo.MakeGenericMethod(genericType);
-                return (meter, name, unit, description) => methodInfo.Invoke(meter, new object[] { name, unit, description });
+                // Fallback to 3-parameter version, ignoring tags
+                return (meter, name, unit, description, tags) => methodInfo.Invoke(meter, new object[] { name, unit, description });
             }
             catch (Exception ex)
             {
@@ -978,10 +1005,71 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private static Meter CreateBridgedMeter(object meter)
         {
+            //https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter?view=net-10.0
             dynamic dynamicMeter = meter;
 
-            // TODO: Tags and Scope are not available on older meters, need a way to dynamically get them for newer versions
-            return new Meter(dynamicMeter.Name, dynamicMeter.Version);
+            var meterType = meter.GetType();
+            var name = (string)dynamicMeter.Name;
+            var version = (string)dynamicMeter.Version;
+
+            // Try to get Tags property if it exists (available in DiagnosticSource 8.0+)
+            IEnumerable<KeyValuePair<string, object>> tags = null;
+            var tagsProperty = meterType.GetProperty("Tags");
+            if (tagsProperty != null)
+            {
+                try
+                {
+                    var tagsValue = tagsProperty.GetValue(meter);
+                    if (tagsValue != null)
+                    {
+                        // Tags is IEnumerable<KeyValuePair<string, object?>>?, need to convert to non-nullable
+                        var tagsList = new List<KeyValuePair<string, object>>();
+                        foreach (var tag in (dynamic)tagsValue)
+                        {
+                            tagsList.Add(new KeyValuePair<string, object>(tag.Key, tag.Value ?? string.Empty));
+                        }
+                        if (tagsList.Count > 0)
+                        {
+                            tags = tagsList;
+                            Log.Finest($"Bridged {tagsList.Count} tags from meter '{name}'");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, $"Failed to bridge Tags from meter '{name}'. Continuing without tags.");
+                }
+            }
+
+            // Try to get Scope property if it exists (available in DiagnosticSource 8.0+)
+            object scope = null;
+            var scopeProperty = meterType.GetProperty("Scope");
+            if (scopeProperty != null)
+            {
+                try
+                {
+                    scope = scopeProperty.GetValue(meter);
+                    if (scope != null)
+                    {
+                        Log.Finest($"Bridged scope from meter '{name}': {scope}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, $"Failed to bridge Scope from meter '{name}'. Continuing without scope.");
+                }
+            }
+
+            // Create bridged meter with available properties
+            // Use the 4-parameter constructor if tags or scope are available, otherwise fall back to 2-parameter constructor
+            if (tags != null || scope != null)
+            {
+                return new Meter(name, version, tags, scope);
+            }
+            else
+            {
+                return new Meter(name, version);
+            }
         }
 
         private void OnMeasurementRecorded<T>(object instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
