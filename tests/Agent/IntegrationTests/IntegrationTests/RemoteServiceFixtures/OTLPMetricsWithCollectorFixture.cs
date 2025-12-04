@@ -29,6 +29,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 configModifier.EnableOpenTelemetryMetrics(true);
 
                 configModifier.IncludeOpenTelemetryMeters("OtelMetricsTest.App");
+
+                // disable event pipe integration due to a known conflict with the OTEL SDK logger
+                // TODO: Remove this line when the conflict is resolved
+                configModifier.EnableEventListenerSamplers(false);
             });
         }
 

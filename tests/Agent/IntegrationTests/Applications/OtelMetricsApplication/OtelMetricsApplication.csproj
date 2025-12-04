@@ -8,6 +8,13 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <!--the .NET 8 and 10 targets automatically include System.Diagnostics.DiagnosticSource appropriate to their versions -->
+
+  <!-- net481 target to align with DiagnosticSource 9.x -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net481'">
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.0" />
+  </ItemGroup>
+
   <!-- net472 target to align with DiagnosticSource 8.x -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
@@ -16,11 +23,6 @@
   <!-- net462 target to align with DiagnosticSource 7.x -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="7.0.2" />
-  </ItemGroup>
-
-  <!-- net481 target to align with DiagnosticSource 9.x -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net481'">
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

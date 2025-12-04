@@ -602,5 +602,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.SetConfigAppSetting(_configFilePath, "HybridHttpContextStorageEnabled", enabled.ToString(), "urn:newrelic-config");
             return this;
         }
+
+        public NewRelicConfigModifier EnableEventListenerSamplers(bool enabled)    
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "NewRelic.EventListenerSamplersEnabled", enabled.ToString(), "urn:newrelic-config");
+            return this;
+        }
     }
 }

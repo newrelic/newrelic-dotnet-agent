@@ -20,9 +20,6 @@ class Program
 
         AppLifecycleManager.CreatePidFile();
 
-        // start New Relic agent
-        NewRelic.Api.Agent.NewRelic.StartAgent();
-
         using var meter = new Meter("OtelMetricsTest.App", "1.0.0");
 
         // Instruments
