@@ -3,24 +3,13 @@
 
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using System.Reflection;
 using ApplicationLifecycle;
 using NewRelic.Api.Agent;
-using OpenTelemetry;
-using OpenTelemetry.Metrics;
 
 class Program
 {
     static async Task Main(string[] args)
     {
-
-        // Indicate target framework
-#if NETFRAMEWORK
-        Console.WriteLine("Running target: .NET Framework 4.7.2");
-#else
-        Console.WriteLine("Running target: .NET 10.0");
-#endif
-
         var port = AppLifecycleManager.GetPortFromArgs(args);
 
         var eventWaitHandleName = "app_server_wait_for_all_request_done_" + port;
@@ -31,7 +20,7 @@ class Program
 
         AppLifecycleManager.CreatePidFile();
 
-        // TODO: not sure this is necessary
+        // start New Relic agent
         NewRelic.Api.Agent.NewRelic.StartAgent();
 
         using var meter = new Meter("OtelMetricsTest.App", "1.0.0");
@@ -44,14 +33,7 @@ class Program
         meter.CreateObservableCounter("cpu_usage_percent", () => new Measurement<double>(GetCpuUsagePercent()), unit: "%", description: "CPU usage percentage");
         meter.CreateObservableUpDownCounter("active_connections", () => new Measurement<int>(CurrentActiveConnections), description: "Active connections observed");
 
-        // Build MeterProvider with Console and OTLP HTTP exporter
-        using var meterProvider = Sdk.CreateMeterProviderBuilder()
-            .AddMeter(meter.Name)
-            .AddConsoleExporter()
-            .Build();
-
-
-        Console.WriteLine("Starting OtelMetricsTest workload for 30 seconds...");
+        Console.WriteLine("Starting OtelMetricsTest workload for 10 seconds...");
 
         await DoStuffAsync(requestCounter, activeRequestsUpDown, payloadSizeHistogram);
 
@@ -65,7 +47,7 @@ class Program
         Histogram<long> payloadSizeHistogram)
     {
         var start = DateTime.UtcNow;
-        var end = start.AddSeconds(30);
+        var end = start.AddSeconds(10);
         var rand = new Random();
 
         while (DateTime.UtcNow < end)
