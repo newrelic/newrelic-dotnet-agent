@@ -162,6 +162,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 
             var uriBuilder = new UriBuilder(_connectionInfo.HttpProtocol, _connectionInfo.Host, _connectionInfo.Port, "/v1/metrics");
+            Log.Finest("OpenTelemetry Meter Bridge will export to {Uri}", uriBuilder.Uri);
 
             var providerBuilder = Sdk.CreateMeterProviderBuilder()
                 .ConfigureResource(r => r
