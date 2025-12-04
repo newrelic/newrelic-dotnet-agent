@@ -8,7 +8,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using MockNewRelic.Models;
+using NewRelic.IntegrationTests.Models;
 using Opentelemetry.Proto.Collector.Metrics.V1;
 using Opentelemetry.Proto.Common.V1;
 using Opentelemetry.Proto.Metrics.V1;

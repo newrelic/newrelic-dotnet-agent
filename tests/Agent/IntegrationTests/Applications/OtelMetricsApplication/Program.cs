@@ -1,22 +1,38 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using OpenTelemetry;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Exporter;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Reflection;
+using ApplicationLifecycle;
+using NewRelic.Api.Agent;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
 
 class Program
 {
     static async Task Main(string[] args)
     {
+
         // Indicate target framework
 #if NETFRAMEWORK
         Console.WriteLine("Running target: .NET Framework 4.7.2");
 #else
         Console.WriteLine("Running target: .NET 10.0");
 #endif
+
+        var port = AppLifecycleManager.GetPortFromArgs(args);
+
+        var eventWaitHandleName = "app_server_wait_for_all_request_done_" + port;
+
+        Console.WriteLine($"Setting EventWaitHandle name to: {eventWaitHandleName}");
+
+        using var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName);
+
+        AppLifecycleManager.CreatePidFile();
+
+        // TODO: not sure this is necessary
+        NewRelic.Api.Agent.NewRelic.StartAgent();
 
         using var meter = new Meter("OtelMetricsTest.App", "1.0.0");
 
@@ -32,13 +48,22 @@ class Program
         using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .AddMeter(meter.Name)
             .AddConsoleExporter()
-            //.AddOtlpExporter(options =>
-            //{
-            //    options.Protocol = OtlpExportProtocol.HttpProtobuf;
-            //    options.Endpoint = new Uri("http://localhost:24279/v1/metrics");
-            //})
             .Build();
 
+
+        Console.WriteLine("Starting OtelMetricsTest workload for 30 seconds...");
+
+        await DoStuffAsync(requestCounter, activeRequestsUpDown, payloadSizeHistogram);
+
+        Console.WriteLine("OtelMetricsTest complete. Waiting for signal to terminate.");
+
+        eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+    }
+
+    [Transaction]
+    private static async Task DoStuffAsync(Counter<long> requestCounter, UpDownCounter<long> activeRequestsUpDown,
+        Histogram<long> payloadSizeHistogram)
+    {
         var start = DateTime.UtcNow;
         var end = start.AddSeconds(30);
         var rand = new Random();
@@ -72,10 +97,6 @@ class Program
                 payloadSizeHistogram.Record(rand.Next(10, 10_000), otherRouteTags);
             }
         }
-
-        // Small final delay to allow exporter to flush on process end
-        await Task.Delay(250);
-        Console.WriteLine("OtelMetricsTest complete.");
     }
 
     // Backing data for observable instruments

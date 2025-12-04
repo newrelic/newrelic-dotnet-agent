@@ -1,10 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
+
 using System;
 using System.Collections.Generic;
 
-namespace MockNewRelic.Models
+namespace NewRelic.IntegrationTests.Models
 {
+    /// <summary>
+    /// Represents a summary of collected OpenTelemetry metrics, including the time received and aggregated counts.
+    /// </summary>
     public class MetricsSummaryDto
     {
         public DateTime ReceivedAtUtc { get; set; }

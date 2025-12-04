@@ -548,16 +548,52 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
-        public NewRelicConfigModifier EnableOTelBridge(bool enabled)
+        public NewRelicConfigModifier EnableOpenTelemetry(bool enabled)
         {
             CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "opentelemetry", string.Empty);
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "enabled", enabled.ToString().ToLower());
             return this;
         }
 
+        public NewRelicConfigModifier EnableOpenTelemetryTracing(bool enabled)
+        {
+            // TODO: correct this configuration when otel tracing config is moved from appSettings
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.Tracing.Enabled", enabled.ToString(), "urn:newrelic-config");
+            //CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "trace", string.Empty);
+            //CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "trace" }, "enabled", enabled.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableOpenTelemetryMetrics(bool enabled)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "metrics" }, "enabled", enabled.ToString().ToLower());
+            return this;
+        }
+
         public NewRelicConfigModifier IncludeActivitySource(string activitySourceName)
         {
             CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.ActivitySource.Include", activitySourceName, "urn:newrelic-config");
+            return this;
+        }
+
+        public NewRelicConfigModifier ExcludeActivitySource(string activitySourceName)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.ActivitySource.Exclude", activitySourceName, "urn:newrelic-config");
+            return this;
+        }
+
+        public NewRelicConfigModifier IncludeOpenTelemetryMeters(string meterNames)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "metrics" }, "include", meterNames);
+            return this;
+        }
+
+        public NewRelicConfigModifier ExcludeOpenTelemetryMeters(string meterNames)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "metrics" }, "exclude", meterNames);
             return this;
         }
 
