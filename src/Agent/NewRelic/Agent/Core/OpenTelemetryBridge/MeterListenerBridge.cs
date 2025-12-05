@@ -340,6 +340,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// <summary>
         /// Stops the meter listener bridge and disposes of all resources.
         /// Cleans up the MeterListener, MeterProvider, and SDK logger.
+        /// We do not dispose the SDK logger here to avoid EventPipe conflicts with other EventListeners
+        /// (specifically GCEventsListener). Disposing EventListeners can cause instability in the shared
+        /// EventPipe subsystem. The SDK logger will be cleaned up when the AppDomain unloads.
+        /// See: https://github.com/newrelic/newrelic-dotnet-agent/issues/234
         /// </summary>
         public void Stop()
         {
@@ -352,7 +356,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 _meterProvider = null;
             }
 
-            _sdkLogger?.Dispose();
+            // DO NOT dispose _sdkLogger to avoid EventPipe conflicts with GCEventsListener
+            // The EventListener will be garbage collected naturally when no longer referenced
+            // _sdkLogger?.Dispose();
             _sdkLogger = null;
         }
 

@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.Config
                 Assert.That(config.ServerlessModeEnabled, Is.False);
                 Assert.That(config.ServerlessFunctionName, Is.Null);
                 Assert.That(config.ServerlessFunctionVersion, Is.Null);
-                Assert.That(config.GCSamplerV2Enabled, Is.False);
+                Assert.That(config.GCSamplerV2Enabled, Is.True);
                 Assert.That(config.AgentControlEnabled, Is.False);
                 Assert.That(config.HealthDeliveryLocation, Is.Null);
                 Assert.That(config.HealthFrequency, Is.EqualTo(5));
@@ -159,11 +159,11 @@ namespace NewRelic.Agent.Core.Config
         }
 
         [Test]
-        public void GCSamplerV2_DisabledByDefault()
+        public void GCSamplerV2_EnabledByDefault()
         {
             var config = CreateBootstrapConfiguration();
 
-            Assert.That(config.GCSamplerV2Enabled, Is.False);
+            Assert.That(config.GCSamplerV2Enabled, Is.True);
         }
         [Test]
         public void GCSamplerV2_EnabledViaLocalConfig()

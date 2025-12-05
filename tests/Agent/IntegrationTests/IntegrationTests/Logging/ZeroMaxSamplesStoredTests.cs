@@ -37,7 +37,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
                     configModifier
                     .SetLogForwardingMaxSamplesStored(1) // must be 1 since 0 causes it to return the default
                     .SetLogLevel("debug");
-                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 }
             );
 

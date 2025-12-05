@@ -37,7 +37,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
                     // applicationLogging metrics and forwarding enabled by default
                     configModifier
                     .SetLogLevel("debug");
-                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
 
                     if (typeof(TFixture).ToString().Contains("HSM"))
                     {

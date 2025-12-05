@@ -56,7 +56,6 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
-                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
 
                     var instrumentationXmlFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "TestCustomInstrumetnation.xml");
 

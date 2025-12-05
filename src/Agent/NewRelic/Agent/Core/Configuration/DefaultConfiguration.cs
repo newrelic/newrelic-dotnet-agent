@@ -112,7 +112,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
 
-            EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
+            EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", false);
 
             ParseExpectedErrorConfigurations();
             ParseIgnoreErrorConfigurations();

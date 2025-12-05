@@ -168,11 +168,18 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
                 setupConfiguration: () =>
                 {
                     Fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
+                    
+                    // Always enable EventListenerSamplers for EventPipe-based metrics (GC and threadpool)
                     Fixture.RemoteApplication.AddAppSetting("NewRelic.EventListenerSamplersEnabled", "true");
+                    
                     Fixture.RemoteApplication.NewRelicConfig.ConfigureFasterMetricsHarvestCycle(10);
 
+                    // Only enable GCSamplerV2 if explicitly requested
+                    // Otherwise, use EventPipe-based GC metrics (requires disabling GCSamplerV2 since it's now default=true)
                     if (_gcSamplerV2Enabled)
                         Fixture.RemoteApplication.NewRelicConfig.EnableGCSamplerV2(true);
+                    else
+                        Fixture.RemoteApplication.NewRelicConfig.EnableGCSamplerV2(false);  // Explicitly disable since default is now true
                 },
                 exerciseApplication: () =>
                 {

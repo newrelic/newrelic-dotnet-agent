@@ -43,7 +43,6 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 }
             );
             _fixture.Initialize();

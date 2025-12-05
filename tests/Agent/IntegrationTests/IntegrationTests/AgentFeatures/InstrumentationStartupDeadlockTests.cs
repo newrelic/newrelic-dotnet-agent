@@ -33,7 +33,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 
                     configModifier.ForceTransactionTraces();
                     configModifier.SetLogLevel("finest");
-                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 },
                 exerciseApplication: () =>
                 {

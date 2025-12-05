@@ -51,6 +51,7 @@ namespace NewRelic.Agent.Core.Config
         private BootstrapConfiguration()
         {
             _agentEnabledWithProvenance = new ValueWithProvenance<bool>(true, "Default value");
+            GCSamplerV2Enabled = true;
             LogConfig = new BootstrapLogConfig(new configurationLog(), new ProcessStatic(), Directory.Exists, Path.GetFullPath);
         }
 
@@ -72,7 +73,7 @@ namespace NewRelic.Agent.Core.Config
         public BootstrapConfiguration(configuration localConfiguration, string configurationFileName, Func<string, ValueWithProvenance<string>> getWebConfigSettingWithProvenance, IConfigurationManagerStatic configurationManagerStatic, IProcessStatic processStatic, Predicate<string> checkDirectoryExists, Func<string, string> getFullPath)
         {
             ServerlessModeEnabled = CheckServerlessModeEnabled(localConfiguration);
-            GCSamplerV2Enabled = CheckGCSamplerV2Enabled(TryGetAppSettingAsBoolWithDefault(localConfiguration, "GCSamplerV2Enabled", false));
+            GCSamplerV2Enabled = CheckGCSamplerV2Enabled(TryGetAppSettingAsBoolWithDefault(localConfiguration, "GCSamplerV2Enabled", true));
             DebugStartupDelaySeconds = localConfiguration.debugStartupDelaySeconds;
             ConfigurationFileName = configurationFileName;
             LogConfig = new BootstrapLogConfig(localConfiguration.log, processStatic, checkDirectoryExists, getFullPath);

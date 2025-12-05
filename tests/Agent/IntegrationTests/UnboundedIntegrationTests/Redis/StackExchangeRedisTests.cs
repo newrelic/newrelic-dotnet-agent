@@ -32,7 +32,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
-                    configModifier.ForceTransactionTraces().DisableEventListenerSamplers()
+                    configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
 
                 },
