@@ -520,12 +520,19 @@ namespace NewRelic.Agent.Core.DataTransport
         public int HealthFrequency => 5;
 
         public bool AwsLambdaApmModeEnabled => true;
+        public int MaxCustomInstrumentationSupportabilityMetrics => 25;
+
+        // OpenTelemetry Configuration Properties
+        public bool OpenTelemetryEnabled => true;
+
+        public bool OpenTelemetryTracingEnabled => true;
         public List<string> IncludedActivitySources => ["SomeIncludedActivitySourceName", "AnotherIncludedActivitySourceName"];
         public List<string> ExcludedActivitySources => ["SomeExcludedActivitySourceName", "AnotherExcludedActivitySourceName"];
-        public bool OpenTelemetryBridgeEnabled => true;
-        public bool OpenTelemetryBridgeTracingEnabled => true;
 
-        public int MaxCustomInstrumentationSupportabilityMetrics => 25;
+        public bool OpenTelemetryMetricsEnabled => true;
+        public IEnumerable<string> OpenTelemetryMetricsIncludeFilters => ["IncludedMeter1", "IncludedMeter2"];
+        public IEnumerable<string> OpenTelemetryMetricsExcludeFilters => ["ExcludedMeter1", "ExcludedMeter2"];
+
         public bool HybridHttpContextStorageEnabled => false;
     }
 }
