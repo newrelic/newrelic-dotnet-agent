@@ -178,5 +178,11 @@
     },
     {
         "packageName": "system.data.odbc"
+    },
+    {
+        "packageName": "opentelemetry"
+    },
+    {
+        "packageName": "opentelemetry.exporter.opentelemetryprotocol"
     }
 ]
