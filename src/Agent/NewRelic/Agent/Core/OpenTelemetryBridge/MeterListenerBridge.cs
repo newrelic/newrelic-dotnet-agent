@@ -11,6 +11,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Http;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Threading;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
@@ -81,13 +82,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private readonly object _meterProviderLock = new object();
         private IConnectionInfo _connectionInfo;
         private string _currentEntityGuid;
-        
+
         // Service dependencies
         private readonly IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
 
         // Configuration constants for OTLP export
         private const int DefaultOtlpTimeoutSeconds = 10;
         private const int DefaultOtlpExportIntervalSeconds = 5;
+
+        private static MeterListenerBridge _bridgeInstance;
 
         public MeterListenerBridge(IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters)
         {
@@ -101,11 +104,11 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             Stop();
             _connectionInfo = agentConnectedEvent.ConnectInfo;
-            
+
             // Initialize EntityGuid tracking from current configuration 
             // (ServerConfiguration will be processed separately via ServerConfigurationUpdatedEvent)
             _currentEntityGuid = _configuration.EntityGuid;
-            
+
             Start();
         }
 
@@ -118,17 +121,17 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             // Check if EntityGuid has changed and recreate MeterProvider if needed
             var newEntityGuid = serverConfigurationUpdatedEvent.Configuration.EntityGuid;
-            
-            if (!string.IsNullOrEmpty(_currentEntityGuid) && 
-                !string.IsNullOrEmpty(newEntityGuid) && 
+
+            if (!string.IsNullOrEmpty(_currentEntityGuid) &&
+                !string.IsNullOrEmpty(newEntityGuid) &&
                 _currentEntityGuid != newEntityGuid)
             {
                 Log.Debug($"EntityGuid changed from '{_currentEntityGuid}' to '{newEntityGuid}'. Recreating OTel MeterProvider.");
                 _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged);
-                
+
                 // Update the tracked EntityGuid
                 _currentEntityGuid = newEntityGuid;
-                
+
                 // Recreate the MeterProvider with the new EntityGuid if we have connection info
                 if (_connectionInfo != null && _configuration.OpenTelemetryMetricsEnabled)
                 {
@@ -201,7 +204,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 Log.Debug("OpenTelemetry Meter Bridge is disabled via configuration.");
                 return;
             }
-            
+
             if (_connectionInfo == null)
             {
                 Log.Debug("OpenTelemetry Meter Bridge cannot start: connection info not available.");
@@ -229,6 +232,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             {
                 try
                 {
+                    // Capture bridge instance for dynamic callbacks
+                    _bridgeInstance = this;
                     TryCreateMeterListener();
                 }
                 catch (Exception ex)
@@ -247,7 +252,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private void RecreateMetricsProvider()
         {
             Log.Debug("Recreating OTel MeterProvider due to EntityGuid change.");
-            
+
             lock (_meterProviderLock)
             {
                 // Dispose existing meter provider if it exists
@@ -260,7 +265,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
                 // Create new meter provider with updated EntityGuid
                 _meterProvider = CreateMeterProvider();
-                
+
                 if (_meterProvider != null)
                 {
                     Log.Debug($"OTel MeterProvider recreated with EntityGuid: {_currentEntityGuid}");
@@ -477,29 +482,135 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// <param name="instrumentType">The Type representing the Instrument class in the customer's application</param>
         private void SubscribeToMeasurementUpdates<T>(Type meterListenerType, Type instrumentType)
         {
-            var setMeasurementEventCallbackMethodInfo = meterListenerType.GetMethod("SetMeasurementEventCallback").MakeGenericMethod(typeof(T));
-            var callbackDelegateType = setMeasurementEventCallbackMethodInfo.GetParameters()[0].ParameterType;
+            try
+            {
 
-            // Extract parameter types from the customer's delegate to avoid type identity issues
-            // The delegate's Invoke method signature tells us the exact types expected from the customer's assembly
-            var delegateParameters = callbackDelegateType.GetMethod("Invoke").GetParameters();
-            
-            var instrumentParameter = Expression.Parameter(delegateParameters[0].ParameterType, "instrument");
-            var measurementParameter = Expression.Parameter(delegateParameters[1].ParameterType, "measurement");
-            var tagsParameter = Expression.Parameter(delegateParameters[2].ParameterType, "tags");
-            var stateParameter = Expression.Parameter(delegateParameters[3].ParameterType, "state");
+                var setMeasurementEventCallbackMethodInfo = meterListenerType.GetMethod("SetMeasurementEventCallback").MakeGenericMethod(typeof(T));
 
-            var methodCall = Expression.Call(
-                Expression.Constant(this),
-                nameof(OnMeasurementRecorded),
-                [typeof(T)],
-                instrumentParameter,
-                measurementParameter,
-                tagsParameter,
-                stateParameter);
-            var measurementRecordedLambda = Expression.Lambda(callbackDelegateType, methodCall, instrumentParameter, measurementParameter, tagsParameter, stateParameter);
+                // Build a callback using the customer's delegate signature that copies the customer's ReadOnlySpan to an array
+                var dynamicCallback = CreateOnMeasurementRecordedWedgeDynamic<T>(meterListenerType);
 
-            setMeasurementEventCallbackMethodInfo.Invoke(_meterListener, new object[] { measurementRecordedLambda.Compile() });
+                // Register the generated callback with the customer's MeterListener
+                setMeasurementEventCallbackMethodInfo.Invoke(_meterListener, new object[] { dynamicCallback });
+            }
+            catch (Exception e)
+            {
+                var foo = e.ToString();
+                Console.WriteLine(foo);
+                throw;
+            }
+        }
+
+        public Delegate CreateOnMeasurementRecordedWedgeDynamic<T>(Type customerMeterListenerType)
+        {
+            var setCallback = customerMeterListenerType.GetMethod("SetMeasurementEventCallback").MakeGenericMethod(typeof(T));
+            var callbackDelegateType = setCallback.GetParameters()[0].ParameterType;
+
+            var invokeParams = callbackDelegateType.GetMethod("Invoke").GetParameters();
+            var instrumentParamType = invokeParams[0].ParameterType;
+            var measurementParamType = invokeParams[1].ParameterType;
+            var customerSpanParamType = invokeParams[2].ParameterType;
+            var stateParamType = invokeParams[3].ParameterType;
+
+            var getItem = customerSpanParamType.GetMethod("get_Item", new[] { typeof(int) });
+            var customerByRefKvpType = getItem?.ReturnType;
+            var customerKvpType = customerByRefKvpType != null && customerByRefKvpType.IsByRef
+                ? customerByRefKvpType.GetElementType()
+                : typeof(KeyValuePair<string, object>);
+
+            // Resolve agent KVP type from Core if available
+            Type agentKvpType;
+            var coreAsm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => string.Equals(a.GetName().Name, "NewRelic.Agent.Core", StringComparison.Ordinal));
+            if (coreAsm != null)
+            {
+                var kvpDef = coreAsm.GetType("System.Collections.Generic.KeyValuePair`2", throwOnError: false);
+                agentKvpType = kvpDef != null ? kvpDef.MakeGenericType(typeof(string), typeof(object)) : typeof(KeyValuePair<string, object>);
+            }
+            else
+            {
+                agentKvpType = typeof(KeyValuePair<string, object>);
+            }
+
+            // Create an open dynamic method (no target bound) matching the customer delegate signature
+            var dm = new DynamicMethod("OnMeasurementRecordedWedge_IL", typeof(void),
+                new[] { instrumentParamType, measurementParamType, customerSpanParamType, stateParamType }, typeof(MeterListenerBridge).Module, true);
+            var il = dm.GetILGenerator();
+
+            var lenLocal = il.DeclareLocal(typeof(int));
+            var arrLocal = il.DeclareLocal(agentKvpType.MakeArrayType());
+            var iLocal = il.DeclareLocal(typeof(int));
+            var customerKvpLocal = il.DeclareLocal(customerKvpType); // local to hold copied KVP value
+
+            // len = tags.Length
+            var lengthProp = customerSpanParamType.GetProperty("Length");
+            il.Emit(OpCodes.Ldarg_2);
+            il.Emit(OpCodes.Call, lengthProp.GetGetMethod());
+            il.Emit(OpCodes.Stloc, lenLocal);
+
+            // arr = new agentKVP[len]
+            il.Emit(OpCodes.Ldloc, lenLocal);
+            il.Emit(OpCodes.Newarr, agentKvpType);
+            il.Emit(OpCodes.Stloc, arrLocal);
+
+            // i = 0
+            il.Emit(OpCodes.Ldc_I4_0);
+            il.Emit(OpCodes.Stloc, iLocal);
+
+            var loopCheck = il.DefineLabel();
+            var loopStart = il.DefineLabel();
+            il.Emit(OpCodes.Br_S, loopCheck);
+
+            il.MarkLabel(loopStart);
+            // arr[i] = new agentKvp(tags[i].Key, tags[i].Value)
+            il.Emit(OpCodes.Ldloc, arrLocal);      // arr
+            il.Emit(OpCodes.Ldloc, iLocal);        // i
+            il.Emit(OpCodes.Ldarg_2);              // tags
+            il.Emit(OpCodes.Ldloc, iLocal);        // i
+            il.Emit(OpCodes.Call, getItem);        // by-ref KVP
+            // copy by-ref struct to local value: ldobj customerKvpType; stloc customerKvpLocal
+            il.Emit(OpCodes.Ldobj, customerKvpType);
+            il.Emit(OpCodes.Stloc, customerKvpLocal);
+            // load local and call getters
+            il.Emit(OpCodes.Ldloc, customerKvpLocal);
+            var keyGetter = customerKvpType.GetProperty("Key").GetGetMethod();
+            il.Emit(OpCodes.Call, keyGetter);
+            il.Emit(OpCodes.Ldloc, customerKvpLocal);
+            var valueGetter = customerKvpType.GetProperty("Value").GetGetMethod();
+            il.Emit(OpCodes.Call, valueGetter);
+            var agentKvpCtor = agentKvpType.GetConstructor(new[] { typeof(string), typeof(object) });
+            il.Emit(OpCodes.Newobj, agentKvpCtor);
+            il.Emit(OpCodes.Stelem, agentKvpType);
+
+            il.Emit(OpCodes.Ldloc, iLocal);
+            il.Emit(OpCodes.Ldc_I4_1);
+            il.Emit(OpCodes.Add);
+            il.Emit(OpCodes.Stloc, iLocal);
+
+            il.MarkLabel(loopCheck);
+            il.Emit(OpCodes.Ldloc, iLocal);
+            il.Emit(OpCodes.Ldloc, lenLocal);
+            il.Emit(OpCodes.Clt);
+            il.Emit(OpCodes.Brtrue_S, loopStart);
+
+            // Load bridge instance from static and call instance method
+            var bridgeField = typeof(MeterListenerBridge).GetField("_bridgeInstance", BindingFlags.NonPublic | BindingFlags.Static);
+            il.Emit(OpCodes.Ldsfld, bridgeField);
+            il.Emit(OpCodes.Ldarg_0); // instrument -> object
+            if (instrumentParamType.IsValueType)
+            {
+                il.Emit(OpCodes.Box, instrumentParamType);
+            }
+            il.Emit(OpCodes.Ldarg_1); // measurement
+            il.Emit(OpCodes.Ldloc, arrLocal); // tags (array)
+            il.Emit(OpCodes.Ldarg_3); // state
+
+            var onRecorded = typeof(MeterListenerBridge)
+                .GetMethod("OnMeasurementRecorded", BindingFlags.NonPublic | BindingFlags.Instance)
+                .MakeGenericMethod(typeof(T));
+            il.Emit(OpCodes.Call, onRecorded);
+            il.Emit(OpCodes.Ret);
+
+            return dm.CreateDelegate(callbackDelegateType);
         }
 
         /// <summary>
@@ -634,18 +745,38 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// Instrument' instance corresponding to the original instrument.</returns>
         private static object GetStateForInstrument(object instrument)
         {
-            dynamic dynamicInstrument = instrument;
+            // Use reflection instead of dynamic to avoid runtime binder issues across mixed assemblies
             var instrumentType = instrument.GetType();
             var genericType = instrumentType.GetGenericArguments().FirstOrDefault();
-
             if (genericType == null)
             {
                 return null;
             }
 
-            Meter meter = _bridgedMeters.GetOrAdd(dynamicInstrument.Meter.Name, (Func<string, Meter>)CreateBridgedMeterFromInstrument);
+            // Resolve commonly used properties via reflection
+            var meterProp = instrumentType.GetProperty("Meter");
+            var nameProp = instrumentType.GetProperty("Name");
+            var unitProp = instrumentType.GetProperty("Unit");
+            var descProp = instrumentType.GetProperty("Description");
+            var isObservableProp = instrumentType.GetProperty("IsObservable");
 
-            if (dynamicInstrument.IsObservable)
+            var meterObj = meterProp?.GetValue(instrument);
+            var meterName = meterObj?.GetType().GetProperty("Name")?.GetValue(meterObj) as string;
+
+            // Create or get bridged meter using the concrete meter name
+            Meter meter = null;
+            if (!string.IsNullOrEmpty(meterName))
+            {
+                meter = _bridgedMeters.GetOrAdd(meterName, (Func<string, Meter>)CreateBridgedMeterFromInstrument);
+            }
+            else
+            {
+                // Fallback create directly if name missing
+                meter = CreateBridgedMeter(meterObj);
+            }
+
+            var isObservable = (bool?)isObservableProp?.GetValue(instrument) ?? false;
+            if (isObservable)
             {
                 var cacheData = _createObservableInstrumentCache.GetOrAdd(instrumentType, GetObservableInstrumentCacheData);
                 if (cacheData == null)
@@ -659,7 +790,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 
             var createInstrumentDelegate = (Func<Meter, string, string, string, IEnumerable<KeyValuePair<string, object>>, object>)_createInstrumentDelegates.GetOrAdd(instrumentType, CreateBridgedInstrumentDelegate);
-
             if (createInstrumentDelegate == null)
             {
                 return null;
@@ -676,29 +806,37 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                     if (tagsValue != null)
                     {
                         var tagsList = new List<KeyValuePair<string, object>>();
-                        foreach (var tag in (dynamic)tagsValue)
+                        foreach (var tag in (IEnumerable)tagsValue)
                         {
-                            tagsList.Add(new KeyValuePair<string, object>(tag.Key, tag.Value ?? string.Empty));
+                            var tagType = tag.GetType();
+                            var key = (string)tagType.GetProperty("Key")?.GetValue(tag);
+                            var value = tagType.GetProperty("Value")?.GetValue(tag) ?? string.Empty;
+                            tagsList.Add(new KeyValuePair<string, object>(key, value));
                         }
                         if (tagsList.Count > 0)
                         {
                             instrumentTags = tagsList;
-                            Log.Finest($"Bridged {tagsList.Count} tags from instrument '{dynamicInstrument.Name}'");
+                            Log.Finest($"Bridged {tagsList.Count} tags from instrument '{nameProp?.GetValue(instrument)}'");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Debug(ex, $"Failed to bridge Tags from instrument '{dynamicInstrument.Name}'. Continuing without tags.");
+                    Log.Debug(ex, $"Failed to bridge Tags from instrument '{nameProp?.GetValue(instrument)}'. Continuing without tags.");
                 }
             }
 
-            var result = createInstrumentDelegate.Invoke(meter, dynamicInstrument.Name, dynamicInstrument.Unit, dynamicInstrument.Description, instrumentTags);
+            var name = nameProp?.GetValue(instrument) as string;
+            var unit = unitProp?.GetValue(instrument) as string;
+            var description = descProp?.GetValue(instrument) as string;
+
+            var result = createInstrumentDelegate.Invoke(meter, name, unit, description, instrumentTags);
             return result;
 
             Meter CreateBridgedMeterFromInstrument(string _)
             {
-                return CreateBridgedMeter(dynamicInstrument.Meter);
+                // Avoid dynamic in closure to prevent runtime binder issues
+                return CreateBridgedMeter(meterObj);
             }
         }
 
@@ -711,14 +849,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             // Record getMeter usage
             _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.GetMeter);
-            
+
             // Get the result from the static method
             var result = GetStateForInstrument(instrument);
-            
+
             if (result != null)
             {
                 _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.InstrumentCreated);
-                
+
                 // Track specific instrument type
                 var instrumentType = instrument.GetType();
                 RecordSpecificInstrumentType(instrumentType.Name);
@@ -727,7 +865,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             {
                 _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.InstrumentBridgeFailure);
             }
-            
+
             return result;
         }
 
@@ -820,13 +958,19 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return null;
             }
 
-            dynamic dynamicInstrument = instrument;
+            // Use reflection to avoid dynamic runtime binder issues across mixed assemblies
+            var instType = instrument.GetType();
+            var nameProp = instType.GetProperty("Name");
+            var unitProp = instType.GetProperty("Unit");
+            var descProp = instType.GetProperty("Description");
+            var name = (string)nameProp?.GetValue(instrument);
+            var unit = (string)unitProp?.GetValue(instrument);
+            var description = (string)descProp?.GetValue(instrument);
 
             // Need to create a function that can call the Observe() method on the instrument (the protected parameterless method)
             // and transform the IEnumerable<Measurement<T>> into the bridged IEnumerable<Measurement<T>> that the ilrepacked code expects
-
             var observeMethod = cacheData.ObserveMethodDelegate;
-            return createObservableInstrument(meter, (string)dynamicInstrument.Name, ForwardObservedMeasurements, (string)dynamicInstrument.Unit, (string)dynamicInstrument.Description);
+            return createObservableInstrument(meter, name, ForwardObservedMeasurements, unit, description);
 
             IEnumerable<Measurement<T>> ForwardObservedMeasurements()
             {
@@ -869,22 +1013,76 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// <returns>A delegate that takes the original Measurement instance and returns a bridged Measurement' instance</returns>
         private static Func<object, Measurement<T>> GetMethodToBridgeMeasurement<T>(Type originalMeasurementType) where T : struct
         {
-            var measurementConstructor = typeof(Measurement<T>).GetConstructor([typeof(T), typeof(ReadOnlySpan<KeyValuePair<string, object>>)]);
-            if (measurementConstructor == null)
+            // Build a runtime delegate that copies customer's Tags (ReadOnlySpan<customerKvp>) to
+            // agent KeyValuePair<string, object>[] and constructs Measurement<T>(value, tagsArray).
+            return (object originalMeasurement) =>
             {
-                return null;
-            }
+                if (originalMeasurement == null)
+                {
+                    return default;
+                }
 
-            var originalMeasurementParameter = Expression.Parameter(typeof(object), "originalMeasurement");
-            var typedOriginalMeasurement = Expression.Convert(originalMeasurementParameter, originalMeasurementType);
+                // Get value and tags via reflection to avoid dynamic binder issues
+                var valueProp = originalMeasurementType.GetProperty("Value");
+                var tagsProp = originalMeasurementType.GetProperty("Tags");
+                var valueObj = valueProp?.GetValue(originalMeasurement);
+                var tagsSpanObj = tagsProp?.GetValue(originalMeasurement);
 
-            var valuePropertyAccess = Expression.Property(typedOriginalMeasurement, originalMeasurementType, "Value");
-            var tagsPropertyAccess = Expression.Property(typedOriginalMeasurement, originalMeasurementType, "Tags");
+                // Convert measurement value to T
+                var value = (T)Convert.ChangeType(valueObj, typeof(T));
 
-            var newMeasurement = Expression.New(measurementConstructor, valuePropertyAccess, tagsPropertyAccess);
-            var lambda = Expression.Lambda<Func<object, Measurement<T>>>(newMeasurement, originalMeasurementParameter);
+                // Default empty tags
+                KeyValuePair<string, object>[] agentTagsArray = Array.Empty<KeyValuePair<string, object>>();
 
-            return lambda.Compile();
+                if (tagsSpanObj != null)
+                {
+                    var spanType = tagsSpanObj.GetType();
+                    // Length
+                    var lengthProp = spanType.GetProperty("Length");
+                    var len = (int)(lengthProp?.GetValue(tagsSpanObj) ?? 0);
+
+                    if (len > 0)
+                    {
+                        // Determine customer KVP type from indexer return (by-ref)
+                        var getItem = spanType.GetMethod("get_Item", new[] { typeof(int) });
+                        var byRefKvpType = getItem?.ReturnType;
+                        var customerKvpType = byRefKvpType != null && byRefKvpType.IsByRef ? byRefKvpType.GetElementType() : null;
+
+                        // Resolve agent KVP type (prefer Core if present)
+                        Type agentKvpType;
+                        var coreAsm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => string.Equals(a.GetName().Name, "NewRelic.Agent.Core", StringComparison.Ordinal));
+                        if (coreAsm != null)
+                        {
+                            var kvpDef = coreAsm.GetType("System.Collections.Generic.KeyValuePair`2", throwOnError: false);
+                            agentKvpType = kvpDef != null ? kvpDef.MakeGenericType(typeof(string), typeof(object)) : typeof(KeyValuePair<string, object>);
+                        }
+                        else
+                        {
+                            agentKvpType = typeof(KeyValuePair<string, object>);
+                        }
+
+                        agentTagsArray = (KeyValuePair<string, object>[])Array.CreateInstance(agentKvpType, len);
+
+                        var keyGetter = customerKvpType?.GetProperty("Key")?.GetGetMethod();
+                        var valueGetter = customerKvpType?.GetProperty("Value")?.GetGetMethod();
+                        var agentCtor = agentKvpType.GetConstructor(new[] { typeof(string), typeof(object) });
+
+                        for (int i = 0; i < len; i++)
+                        {
+                            // Access by-ref customer KVP via indexer
+                            var kvpByRef = getItem.Invoke(tagsSpanObj, new object[] { i });
+                            // kvpByRef is boxed; call Key/Value getters via reflection
+                            var key = (string)keyGetter.Invoke(kvpByRef, null);
+                            var objVal = valueGetter.Invoke(kvpByRef, null);
+                            var agentKvp = (KeyValuePair<string, object>)agentCtor.Invoke(new object[] { key, objVal ?? string.Empty });
+                            agentTagsArray[i] = agentKvp;
+                        }
+                    }
+                }
+
+                // Construct bridged Measurement with array (will be consumed as ReadOnlySpan by overload)
+                return new Measurement<T>(value, agentTagsArray);
+            };
         }
 
         private static Func<Meter, string, string, string, IEnumerable<KeyValuePair<string, object>>, object> CreateBridgedInstrumentDelegate(Type originalInstrumentType)
@@ -985,7 +1183,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             {
                 return null;
             }
-            
+
             var createDelegate = methodInfo.CreateDelegate(delegateType);
             return createDelegate;
         }
@@ -1009,28 +1207,37 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private static Meter CreateBridgedMeter(object meter)
         {
-            //https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter?view=net-10.0
-            dynamic dynamicMeter = meter;
+            // Use reflection instead of dynamic to avoid runtime binder issues across mixed assemblies
+            if (meter == null)
+            {
+                return null;
+            }
 
             var meterType = meter.GetType();
-            var name = (string)dynamicMeter.Name;
-            var version = (string)dynamicMeter.Version;
+            var nameProp = meterType.GetProperty("Name");
+            var versionProp = meterType.GetProperty("Version");
+            var tagsProp = meterType.GetProperty("Tags");
+            var scopeProp = meterType.GetProperty("Scope");
+
+            var name = (string)nameProp?.GetValue(meter);
+            var version = (string)versionProp?.GetValue(meter);
 
             // Try to get Tags property if it exists (available in DiagnosticSource 8.0+)
             IEnumerable<KeyValuePair<string, object>> tags = null;
-            var tagsProperty = meterType.GetProperty("Tags");
-            if (tagsProperty != null)
+            if (tagsProp != null)
             {
                 try
                 {
-                    var tagsValue = tagsProperty.GetValue(meter);
+                    var tagsValue = tagsProp.GetValue(meter);
                     if (tagsValue != null)
                     {
-                        // Tags is IEnumerable<KeyValuePair<string, object?>>?, need to convert to non-nullable
                         var tagsList = new List<KeyValuePair<string, object>>();
-                        foreach (var tag in (dynamic)tagsValue)
+                        foreach (var tag in (IEnumerable)tagsValue)
                         {
-                            tagsList.Add(new KeyValuePair<string, object>(tag.Key, tag.Value ?? string.Empty));
+                            var tagType = tag.GetType();
+                            var key = (string)tagType.GetProperty("Key")?.GetValue(tag);
+                            var value = tagType.GetProperty("Value")?.GetValue(tag) ?? string.Empty;
+                            tagsList.Add(new KeyValuePair<string, object>(key, value));
                         }
                         if (tagsList.Count > 0)
                         {
@@ -1047,12 +1254,11 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             // Try to get Scope property if it exists (available in DiagnosticSource 8.0+)
             object scope = null;
-            var scopeProperty = meterType.GetProperty("Scope");
-            if (scopeProperty != null)
+            if (scopeProp != null)
             {
                 try
                 {
-                    scope = scopeProperty.GetValue(meter);
+                    scope = scopeProp.GetValue(meter);
                     if (scope != null)
                     {
                         Log.Finest($"Bridged scope from meter '{name}': {scope}");
@@ -1065,7 +1271,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 
             // Create bridged meter with available properties
-            // Use the 4-parameter constructor if tags or scope are available, otherwise fall back to 2-parameter constructor
             if (tags != null || scope != null)
             {
                 return new Meter(name, version, tags, scope);
@@ -1076,7 +1281,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
         }
 
-        private void OnMeasurementRecorded<T>(object instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
+        private void OnMeasurementRecorded<T>(object instrument, T measurement, KeyValuePair<string, object>[] tags, object state)
             where T : struct
         {
             try
@@ -1085,10 +1290,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 {
                     return;
                 }
-                
+
                 // Record that a measurement was successfully recorded
                 _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeasurementRecorded);
-                
+
                 // Record that a measurement was successfully bridged
                 switch (state)
                 {
@@ -1104,7 +1309,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                         upDownCounter.Add(measurement, tags);
                         Log.Finest($"Bridged measurement {measurement} to upDownCounter {upDownCounter.Meter.Name}.{upDownCounter.Name}");
                         break;
-                        // TODO: Add support for Gauge<T> and remove the gauge logic from the default case.
+                    // TODO: Add support for Gauge<T> and remove the gauge logic from the default case.
                     default:
                         // Runtime support for Gauge<T> (for .NET 8+) even if compiled against older frameworks
                         var stateType = state.GetType();
