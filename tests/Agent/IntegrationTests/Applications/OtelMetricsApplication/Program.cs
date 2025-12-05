@@ -10,6 +10,8 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        Debugger.Launch();
+
         var port = AppLifecycleManager.GetPortFromArgs(args);
 
         var eventWaitHandleName = "app_server_wait_for_all_request_done_" + port;

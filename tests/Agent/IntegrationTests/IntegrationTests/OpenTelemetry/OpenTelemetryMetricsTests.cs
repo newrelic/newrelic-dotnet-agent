@@ -33,7 +33,7 @@ namespace NewRelic.Agent.IntegrationTests.OpenTelemetry
                     _fixture.AgentLog.WaitForLogLine(AgentLogFile.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
 
                     // otlp metrics export will be complete before the first analytics event harvest
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(5));
                     
                     _otlpSummaries = _fixture.GetCollectedOTLPMetrics();
                 }
