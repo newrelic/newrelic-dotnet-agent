@@ -162,6 +162,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 
             var uriBuilder = new UriBuilder(_connectionInfo.HttpProtocol, _connectionInfo.Host, _connectionInfo.Port, "/v1/metrics");
+            Log.Finest("OpenTelemetry Meter Bridge will export to {Uri}", uriBuilder.Uri);
 
             var providerBuilder = Sdk.CreateMeterProviderBuilder()
                 .ConfigureResource(r => r
@@ -489,10 +490,16 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var tagsParameter = Expression.Parameter(delegateParameters[2].ParameterType, "tags");
             var stateParameter = Expression.Parameter(delegateParameters[3].ParameterType, "state");
 
+            // Get the OnMeasurementRecorded method and make it generic for type T
+            // Use GetMethod with BindingFlags to properly resolve the generic method with constraints
+            var onMeasurementRecordedMethod = typeof(MeterListenerBridge)
+                .GetMethod(nameof(OnMeasurementRecorded), BindingFlags.NonPublic | BindingFlags.Instance)
+                .MakeGenericMethod(typeof(T));
+
+
             var methodCall = Expression.Call(
                 Expression.Constant(this),
-                nameof(OnMeasurementRecorded),
-                [typeof(T)],
+                onMeasurementRecordedMethod,
                 instrumentParameter,
                 measurementParameter,
                 tagsParameter,

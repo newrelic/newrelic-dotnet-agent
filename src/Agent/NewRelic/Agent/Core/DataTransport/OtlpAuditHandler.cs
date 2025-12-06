@@ -18,6 +18,7 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            Log.Finest("Exporting OTLP metrics to {RequestUri}", request.RequestUri);
             // Audit log the outgoing request
             LogOtlpRequest(request);
 
@@ -30,6 +31,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 // Audit log the response
                 LogOtlpResponse(request, response);
 
+                Log.Debug("Exported OTLP metrics to {RequestUri} with status {ResponseStatusCode}", request.RequestUri, response.StatusCode);
                 return response;
             }
             catch (Exception ex)
