@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.47.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.47.0...v10.47.1) (2025-12-02)
+
+
+### Fixes
+
+* Cache all environment variable access to reduce possible thread contention ([#3322](https://github.com/newrelic/newrelic-dotnet-agent/issues/3322)) ([e2a8109](https://github.com/newrelic/newrelic-dotnet-agent/commit/e2a81097d94a12e9dd06992f32302699073ad870))
+* Ensure OpenAI LLM supportability metrics are recorded on all invocations. ([#3320](https://github.com/newrelic/newrelic-dotnet-agent/issues/3320)) ([a4d7af8](https://github.com/newrelic/newrelic-dotnet-agent/commit/a4d7af84f24a530c0c264db439f49bf5be4771e5))
+
 ## [10.47.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.46.1...v10.47.0) (2025-11-18)
 
 
