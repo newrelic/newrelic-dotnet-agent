@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31825.309
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11222.15 d18.0
 MinimumVisualStudioVersion = 15.0.26228.04
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTests", "IntegrationTests\IntegrationTests.csproj", "{EE939277-76B4-4099-B3D6-300C8D70F3C1}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -194,6 +194,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureFunctionApplication", "Applications\AzureFunctionApplication\AzureFunctionApplication.csproj", "{79BB2AEE-39BF-4855-8270-71BFD35BC397}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureFunctionInProcApplication", "Applications\AzureFunctionInProcApplication\AzureFunctionInProcApplication.csproj", "{05078BA6-DADF-4DDE-3339-62C1D9924642}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OtelMetricsApplication", "Applications\OtelMetricsApplication\OtelMetricsApplication.csproj", "{1487F78C-0669-107A-1061-1A4DDC8F1E06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -445,6 +447,10 @@ Global
 		{05078BA6-DADF-4DDE-3339-62C1D9924642}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{05078BA6-DADF-4DDE-3339-62C1D9924642}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{05078BA6-DADF-4DDE-3339-62C1D9924642}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1487F78C-0669-107A-1061-1A4DDC8F1E06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1487F78C-0669-107A-1061-1A4DDC8F1E06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1487F78C-0669-107A-1061-1A4DDC8F1E06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1487F78C-0669-107A-1061-1A4DDC8F1E06}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -504,6 +510,7 @@ Global
 		{D7E78459-8139-4CB4-B830-E8914454CD60} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{79BB2AEE-39BF-4855-8270-71BFD35BC397} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{05078BA6-DADF-4DDE-3339-62C1D9924642} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
+		{1487F78C-0669-107A-1061-1A4DDC8F1E06} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3830ABDF-4AEA-4D91-83A2-13F091D1DF5F}
