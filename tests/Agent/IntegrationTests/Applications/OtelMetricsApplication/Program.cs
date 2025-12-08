@@ -10,7 +10,7 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        Debugger.Launch();
+        //Debugger.Launch();
 
         var port = AppLifecycleManager.GetPortFromArgs(args);
 
