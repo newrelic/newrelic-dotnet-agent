@@ -11,9 +11,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Http;
 using System.Reflection;
-#if NETFRAMEWORK
-using System.Reflection.Emit;
-#endif
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
@@ -522,26 +519,35 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 #else
             try
             {
-
                 var setMeasurementEventCallbackMethodInfo = meterListenerType.GetMethod("SetMeasurementEventCallback").MakeGenericMethod(typeof(T));
 
-                // Build a callback using the customer's delegate signature that copies the customer's ReadOnlySpan to an array
-                var dynamicCallback = CreateOnMeasurementRecordedWedgeDynamic<T>(meterListenerType);
+                // Build a callback using reflection-based approach (simpler than IL generation)
+                var dynamicCallback = CreateOnMeasurementRecordedReflection<T>(meterListenerType);
+
+                Log.Debug($"Created reflection-based callback delegate for type {typeof(T).Name}");
 
                 // Register the generated callback with the customer's MeterListener
                 setMeasurementEventCallbackMethodInfo.Invoke(_meterListener, new object[] { dynamicCallback });
+
+                Log.Debug($"Successfully called SetMeasurementEventCallback<{typeof(T).Name}> on MeterListener");
             }
             catch (Exception e)
             {
-                var foo = e.ToString();
-                Console.WriteLine(foo);
+                Log.Error(e, $"Failed to subscribe to measurement updates for type {typeof(T).Name}");
                 throw;
             }
 #endif
         }
 
 #if NETFRAMEWORK
-        public Delegate CreateOnMeasurementRecordedWedgeDynamic<T>(Type customerMeterListenerType)
+        /// <summary>
+        /// Creates a callback delegate using reflection to convert the customer's ReadOnlySpan to an array.
+        /// This approach avoids IL emission for better debuggability.
+        /// 
+        /// Note: ReadOnlySpan is a ref struct and cannot be boxed, so we must handle it specially.
+        /// We create a delegate that matches the exact signature and passes the span by reference.
+        /// </summary>
+        public Delegate CreateOnMeasurementRecordedReflection<T>(Type customerMeterListenerType)
         {
             var setCallback = customerMeterListenerType.GetMethod("SetMeasurementEventCallback").MakeGenericMethod(typeof(T));
             var callbackDelegateType = setCallback.GetParameters()[0].ParameterType;
@@ -552,105 +558,124 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var customerSpanParamType = invokeParams[2].ParameterType;
             var stateParamType = invokeParams[3].ParameterType;
 
-            var getItem = customerSpanParamType.GetMethod("get_Item", new[] { typeof(int) });
-            var customerByRefKvpType = getItem?.ReturnType;
-            var customerKvpType = customerByRefKvpType != null && customerByRefKvpType.IsByRef
-                ? customerByRefKvpType.GetElementType()
-                : typeof(KeyValuePair<string, object>);
+            // Since ReadOnlySpan is a ref struct and cannot be boxed, we need to create a strongly-typed delegate
+            // that matches the customer's signature exactly, then use reflection inside it
 
-            // Resolve agent KVP type from Core if available
-            Type agentKvpType;
-            var coreAsm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => string.Equals(a.GetName().Name, "NewRelic.Agent.Core", StringComparison.Ordinal));
-            if (coreAsm != null)
-            {
-                var kvpDef = coreAsm.GetType("System.Collections.Generic.KeyValuePair`2", throwOnError: false);
-                agentKvpType = kvpDef != null ? kvpDef.MakeGenericType(typeof(string), typeof(object)) : typeof(KeyValuePair<string, object>);
-            }
-            else
-            {
-                agentKvpType = typeof(KeyValuePair<string, object>);
-            }
+            // Get the span's element type (KeyValuePair<string, object>)
+            var spanElementType = customerSpanParamType.GenericTypeArguments.FirstOrDefault();
 
-            // Create an open dynamic method (no target bound) matching the customer delegate signature
-            var dm = new DynamicMethod("OnMeasurementRecordedWedge_IL", typeof(void),
-                new[] { instrumentParamType, measurementParamType, customerSpanParamType, stateParamType }, typeof(MeterListenerBridge).Module, true);
-            var il = dm.GetILGenerator();
-
-            var lenLocal = il.DeclareLocal(typeof(int));
-            var arrLocal = il.DeclareLocal(agentKvpType.MakeArrayType());
-            var iLocal = il.DeclareLocal(typeof(int));
-            var customerKvpLocal = il.DeclareLocal(customerKvpType); // local to hold copied KVP value
-
-            // len = tags.Length
             var lengthProp = customerSpanParamType.GetProperty("Length");
-            il.Emit(OpCodes.Ldarg_2);
-            il.Emit(OpCodes.Call, lengthProp.GetGetMethod());
-            il.Emit(OpCodes.Stloc, lenLocal);
+            var getItemMethod = customerSpanParamType.GetMethod("get_Item", new[] { typeof(int) });
 
-            // arr = new agentKVP[len]
-            il.Emit(OpCodes.Ldloc, lenLocal);
-            il.Emit(OpCodes.Newarr, agentKvpType);
-            il.Emit(OpCodes.Stloc, arrLocal);
+            if (lengthProp == null || getItemMethod == null || spanElementType == null)
+            {
+                Log.Error($"Failed to analyze span type {customerSpanParamType.FullName}");
+                throw new InvalidOperationException($"Cannot create callback for span type {customerSpanParamType.FullName}");
+            }
 
-            // i = 0
-            il.Emit(OpCodes.Ldc_I4_0);
-            il.Emit(OpCodes.Stloc, iLocal);
+            var keyProp = spanElementType.GetProperty("Key");
+            var valueProp = spanElementType.GetProperty("Value");
 
-            var loopCheck = il.DefineLabel();
-            var loopStart = il.DefineLabel();
-            il.Emit(OpCodes.Br_S, loopCheck);
+            if (keyProp == null || valueProp == null)
+            {
+                Log.Error($"Failed to get Key/Value properties from {spanElementType.FullName}");
+                throw new InvalidOperationException($"Invalid KeyValuePair type {spanElementType.FullName}");
+            }
 
-            il.MarkLabel(loopStart);
-            // arr[i] = new agentKvp(tags[i].Key, tags[i].Value)
-            il.Emit(OpCodes.Ldloc, arrLocal);      // arr
-            il.Emit(OpCodes.Ldloc, iLocal);        // i
-            il.Emit(OpCodes.Ldarg_2);              // tags
-            il.Emit(OpCodes.Ldloc, iLocal);        // i
-            il.Emit(OpCodes.Call, getItem);        // by-ref KVP
-            // copy by-ref struct to local value: ldobj customerKvpType; stloc customerKvpLocal
-            il.Emit(OpCodes.Ldobj, customerKvpType);
-            il.Emit(OpCodes.Stloc, customerKvpLocal);
-            // load local address and call getters on valuetype
-            il.Emit(OpCodes.Ldloca_S, customerKvpLocal);
-            var keyGetter = customerKvpType.GetProperty("Key").GetGetMethod();
-            il.Emit(OpCodes.Call, keyGetter);
-            il.Emit(OpCodes.Ldloca_S, customerKvpLocal);
-            var valueGetter = customerKvpType.GetProperty("Value").GetGetMethod();
-            il.Emit(OpCodes.Call, valueGetter);
-            var agentKvpCtor = agentKvpType.GetConstructor(new[] { typeof(string), typeof(object) });
-            il.Emit(OpCodes.Newobj, agentKvpCtor);
-            il.Emit(OpCodes.Stelem, agentKvpType);
+            // Create parameters for the lambda expression
+            var instrumentParam = Expression.Parameter(instrumentParamType, "instrument");
+            var measurementParam = Expression.Parameter(measurementParamType, "measurement");
+            var tagsSpanParam = Expression.Parameter(customerSpanParamType, "tagsSpan"); // Not boxed - kept as ref struct
+            var stateParam = Expression.Parameter(stateParamType, "state");
 
-            il.Emit(OpCodes.Ldloc, iLocal);
-            il.Emit(OpCodes.Ldc_I4_1);
-            il.Emit(OpCodes.Add);
-            il.Emit(OpCodes.Stloc, iLocal);
+            // Create a call to our helper method
+            var helperMethod = typeof(MeterListenerBridge)
+                .GetMethod(nameof(HandleMeasurementCallbackWithSpan), BindingFlags.NonPublic | BindingFlags.Instance)
+                .MakeGenericMethod(typeof(T), customerSpanParamType, spanElementType);
 
-            il.MarkLabel(loopCheck);
-            il.Emit(OpCodes.Ldloc, iLocal);
-            il.Emit(OpCodes.Ldloc, lenLocal);
-            il.Emit(OpCodes.Clt);
-            il.Emit(OpCodes.Brtrue_S, loopStart);
-
-            // Load bridge instance from static and call instance method
-            var bridgeField = typeof(MeterListenerBridge).GetField("_bridgeInstance", BindingFlags.NonPublic | BindingFlags.Static);
-            il.Emit(OpCodes.Ldsfld, bridgeField);
-            il.Emit(OpCodes.Ldarg_0); // instrument -> object
+            // Box the instrument parameter if needed
+            Expression instrumentBoxed = instrumentParam;
             if (instrumentParamType.IsValueType)
             {
-                il.Emit(OpCodes.Box, instrumentParamType);
+                instrumentBoxed = Expression.Convert(instrumentParam, typeof(object));
             }
-            il.Emit(OpCodes.Ldarg_1); // measurement
-            il.Emit(OpCodes.Ldloc, arrLocal); // tags (array)
-            il.Emit(OpCodes.Ldarg_3); // state
 
-            var onRecorded = typeof(MeterListenerBridge)
-                .GetMethod("OnMeasurementRecorded", BindingFlags.NonPublic | BindingFlags.Instance)
-                .MakeGenericMethod(typeof(T));
-            il.Emit(OpCodes.Call, onRecorded);
-            il.Emit(OpCodes.Ret);
+            var callHelper = Expression.Call(
+                Expression.Constant(this),
+                helperMethod,
+                instrumentBoxed,
+                measurementParam,
+                tagsSpanParam, // Pass span directly without boxing
+                stateParam
+            );
 
-            return dm.CreateDelegate(callbackDelegateType);
+            var lambda = Expression.Lambda(callbackDelegateType, callHelper, instrumentParam, measurementParam, tagsSpanParam, stateParam);
+
+            Log.Debug($"Created expression-tree callback lambda for type {typeof(T).Name}");
+
+            return lambda.Compile();
+        }
+
+        /// <summary>
+        /// Helper method that handles the actual measurement callback with a strongly-typed span parameter.
+        /// This avoids boxing the ref struct ReadOnlySpan.
+        /// </summary>
+        private void HandleMeasurementCallbackWithSpan<T, TSpan, TKvp>(object instrument, T measurement, TSpan tagsSpan, object state)
+            where T : struct
+        {
+            try
+            {
+
+                // Use reflection to get the span's length and items
+                var spanType = typeof(TSpan);
+                var lengthProp = spanType.GetProperty("Length");
+                var getItemMethod = spanType.GetMethod("get_Item", new[] { typeof(int) });
+
+                // Get key/value properties from the KVP type
+                var kvpType = typeof(TKvp);
+                var keyProp = kvpType.GetProperty("Key");
+                var valueProp = kvpType.GetProperty("Value");
+
+                if (lengthProp == null || getItemMethod == null || keyProp == null || valueProp == null)
+                {
+                    Log.Error($"Missing properties on span or KVP type");
+                    OnMeasurementRecorded(instrument, measurement, Array.Empty<KeyValuePair<string, object>>(), state);
+                    return;
+                }
+
+                int length = (int)lengthProp.GetValue(tagsSpan);
+
+                if (length == 0)
+                {
+                    Log.Debug("No tags to convert");
+                    OnMeasurementRecorded(instrument, measurement, Array.Empty<KeyValuePair<string, object>>(), state);
+                    return;
+                }
+
+                Log.Debug($"Converting {length} tags from ReadOnlySpan<{kvpType.Name}>");
+
+                var tags = new KeyValuePair<string, object>[length];
+
+                // Convert each item from the customer's span to our array
+                for (int i = 0; i < length; i++)
+                {
+                    var kvp = getItemMethod.Invoke(tagsSpan, new object[] { i });
+
+                    var key = (string)keyProp.GetValue(kvp);
+                    var value = valueProp.GetValue(kvp);
+
+                    tags[i] = new KeyValuePair<string, object>(key, value);
+                }
+
+                Log.Debug($"Converted {length} tags successfully, calling OnMeasurementRecorded");
+
+                // Call the actual handler with converted tags
+                OnMeasurementRecorded(instrument, measurement, tags, state);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"EXCEPTION in measurement callback for type {typeof(T).Name}");
+            }
         }
 #endif
         /// <summary>
