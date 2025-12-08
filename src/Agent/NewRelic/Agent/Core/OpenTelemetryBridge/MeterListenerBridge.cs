@@ -570,11 +570,11 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             // copy by-ref struct to local value: ldobj customerKvpType; stloc customerKvpLocal
             il.Emit(OpCodes.Ldobj, customerKvpType);
             il.Emit(OpCodes.Stloc, customerKvpLocal);
-            // load local and call getters
-            il.Emit(OpCodes.Ldloc, customerKvpLocal);
+            // load local address and call getters on valuetype
+            il.Emit(OpCodes.Ldloca_S, customerKvpLocal);
             var keyGetter = customerKvpType.GetProperty("Key").GetGetMethod();
             il.Emit(OpCodes.Call, keyGetter);
-            il.Emit(OpCodes.Ldloc, customerKvpLocal);
+            il.Emit(OpCodes.Ldloca_S, customerKvpLocal);
             var valueGetter = customerKvpType.GetProperty("Value").GetGetMethod();
             il.Emit(OpCodes.Call, valueGetter);
             var agentKvpCtor = agentKvpType.GetConstructor(new[] { typeof(string), typeof(object) });
