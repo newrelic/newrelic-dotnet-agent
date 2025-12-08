@@ -11,9 +11,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Http;
 using System.Reflection;
+#if NETFRAMEWORK
 using System.Reflection.Emit;
-using System.Threading;
-using NewRelic.Agent.Configuration;
+#endif
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
