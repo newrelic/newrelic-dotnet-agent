@@ -482,6 +482,43 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// <param name="instrumentType">The Type representing the Instrument class in the customer's application</param>
         private void SubscribeToMeasurementUpdates<T>(Type meterListenerType, Type instrumentType)
         {
+#if NETSTANDARD
+            var setMeasurementEventCallbackMethodInfo = meterListenerType.GetMethod("SetMeasurementEventCallback").MakeGenericMethod(typeof(T));
+            var callbackDelegateType = setMeasurementEventCallbackMethodInfo.GetParameters()[0].ParameterType;
+
+            // Extract parameter types from the customer's delegate to avoid type identity issues
+            // The delegate's Invoke method signature tells us the exact types expected from the customer's assembly
+            var delegateParameters = callbackDelegateType.GetMethod("Invoke").GetParameters();
+
+            var instrumentParameter = Expression.Parameter(delegateParameters[0].ParameterType, "instrument");
+            var measurementParameter = Expression.Parameter(delegateParameters[1].ParameterType, "measurement");
+            var tagsParameter = Expression.Parameter(delegateParameters[2].ParameterType, "tags");
+            var stateParameter = Expression.Parameter(delegateParameters[3].ParameterType, "state");
+
+            // Convert ReadOnlySpan<KeyValuePair<string, object>> to array if needed
+            Expression tagsArrayExpr = tagsParameter;
+            var roSpanType = typeof(ReadOnlySpan<>).MakeGenericType(typeof(KeyValuePair<string, object>));
+            if (tagsParameter.Type == roSpanType)
+            {
+                var toArrayMethod = typeof(MeterListenerBridge).GetMethod(nameof(ToArray), BindingFlags.NonPublic | BindingFlags.Static);
+                tagsArrayExpr = Expression.Call(toArrayMethod, tagsParameter);
+            }
+
+            var onMeasurementRecordedMethod = typeof(MeterListenerBridge)
+                .GetMethod(nameof(OnMeasurementRecorded), BindingFlags.NonPublic | BindingFlags.Instance)
+                .MakeGenericMethod(typeof(T));
+
+            var methodCall = Expression.Call(
+                Expression.Constant(this),
+                onMeasurementRecordedMethod,
+                instrumentParameter,
+                measurementParameter,
+                tagsArrayExpr,
+                stateParameter);
+
+            var measurementRecordedLambda = Expression.Lambda(callbackDelegateType, methodCall, instrumentParameter, measurementParameter, tagsParameter, stateParameter);
+            setMeasurementEventCallbackMethodInfo.Invoke(_meterListener, new object[] { measurementRecordedLambda.Compile() });
+#else
             try
             {
 
@@ -499,8 +536,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 Console.WriteLine(foo);
                 throw;
             }
+#endif
         }
 
+#if NETFRAMEWORK
         public Delegate CreateOnMeasurementRecordedWedgeDynamic<T>(Type customerMeterListenerType)
         {
             var setCallback = customerMeterListenerType.GetMethod("SetMeasurementEventCallback").MakeGenericMethod(typeof(T));
@@ -612,7 +651,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             return dm.CreateDelegate(callbackDelegateType);
         }
-
+#endif
         /// <summary>
         /// Dynamically contructs a lambda that will be used to subscribe to the MeasurementsCompleted event and then registers the lambda
         /// with the MeterListener.
@@ -1013,6 +1052,25 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// <returns>A delegate that takes the original Measurement instance and returns a bridged Measurement' instance</returns>
         private static Func<object, Measurement<T>> GetMethodToBridgeMeasurement<T>(Type originalMeasurementType) where T : struct
         {
+#if NETSTANDARD
+            var measurementConstructor = typeof(Measurement<T>).GetConstructor([typeof(T), typeof(ReadOnlySpan<KeyValuePair<string, object>>)]);
+            if (measurementConstructor == null)
+            {
+                return null;
+            }
+
+            var originalMeasurementParameter = Expression.Parameter(typeof(object), "originalMeasurement");
+            var typedOriginalMeasurement = Expression.Convert(originalMeasurementParameter, originalMeasurementType);
+
+            var valuePropertyAccess = Expression.Property(typedOriginalMeasurement, originalMeasurementType, "Value");
+            var tagsPropertyAccess = Expression.Property(typedOriginalMeasurement, originalMeasurementType, "Tags");
+
+            var newMeasurement = Expression.New(measurementConstructor, valuePropertyAccess, tagsPropertyAccess);
+            var lambda = Expression.Lambda<Func<object, Measurement<T>>>(newMeasurement, originalMeasurementParameter);
+
+            return lambda.Compile();
+#else
+
             // Build a runtime delegate that copies customer's Tags (ReadOnlySpan<customerKvp>) to
             // agent KeyValuePair<string, object>[] and constructs Measurement<T>(value, tagsArray).
             return (object originalMeasurement) =>
@@ -1083,6 +1141,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 // Construct bridged Measurement with array (will be consumed as ReadOnlySpan by overload)
                 return new Measurement<T>(value, agentTagsArray);
             };
+#endif
         }
 
         private static Func<Meter, string, string, string, IEnumerable<KeyValuePair<string, object>>, object> CreateBridgedInstrumentDelegate(Type originalInstrumentType)
@@ -1338,6 +1397,20 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeasurementBridgeFailure);
                 Log.Warn(ex, "Failed to record measurement for instrument type: {0}", state?.GetType()?.Name ?? "unknown");
             }
+        }
+
+        private static KeyValuePair<string, object>[] ToArray(ReadOnlySpan<KeyValuePair<string, object>> tags)
+        {
+            if (tags.Length == 0)
+            {
+                return Array.Empty<KeyValuePair<string, object>>();
+            }
+            var arr = new KeyValuePair<string, object>[tags.Length];
+            for (int i = 0; i < tags.Length; i++)
+            {
+                arr[i] = tags[i];
+            }
+            return arr;
         }
 
         public class ObservableInstrumentCacheData
