@@ -11,6 +11,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading;
 #if NETFRAMEWORK
 using System.Reflection.Emit;
 #endif
@@ -82,9 +83,11 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private readonly object _meterProviderLock = new object();
         private IConnectionInfo _connectionInfo;
         private string _currentEntityGuid;
+        private int _isDisposed = 0;
 
         // Service dependencies
         private readonly IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
+        private readonly Func<OpenTelemetrySDKLogger> _loggerFactory;
 
         // Configuration constants for OTLP export
         private const int DefaultOtlpTimeoutSeconds = 10;
@@ -92,9 +95,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private static MeterListenerBridge _bridgeInstance;
 
-        public MeterListenerBridge(IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters)
+        public MeterListenerBridge(IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters) : this(supportabilityMetricCounters, () => new OpenTelemetrySDKLogger())
+        {
+        }
+
+        public MeterListenerBridge(IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters, Func<OpenTelemetrySDKLogger> loggerFactory)
         {
             _supportabilityMetricCounters = supportabilityMetricCounters;
+            _loggerFactory = loggerFactory;
             _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
             _subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
             _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
@@ -213,7 +221,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             if (_sdkLogger == null)
             {
-                _sdkLogger = new OpenTelemetrySDKLogger();
+                _sdkLogger = _loggerFactory();
             }
             // The first if (_meterProvider == null) check avoids acquiring the lock when the provider is already initialized
             // This prevents unnecessary lock contention on every Start() call after initialization
@@ -346,6 +354,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// Stops the meter listener bridge and disposes of all resources.
         /// Cleans up the MeterListener, MeterProvider, and SDK logger.
         /// </summary>
+
         public void Stop()
         {
             _meterListener?.Dispose();
@@ -356,14 +365,20 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 _meterProvider?.Dispose();
                 _meterProvider = null;
             }
-
-            _sdkLogger?.Dispose();
-            _sdkLogger = null;
         }
 
         public override void Dispose()
         {
+            // Ensure Dispose runs only once
+            if (Interlocked.Exchange(ref _isDisposed, 1) == 1)
+            {
+                return;
+            }
+
             Stop();
+
+            _sdkLogger?.Dispose();
+            _sdkLogger = null;
 
             base.Dispose();
         }

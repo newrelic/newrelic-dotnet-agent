@@ -9,6 +9,8 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Metrics;
 
 namespace NewRelic.Agent.Core.Samplers
 {
@@ -67,12 +69,15 @@ namespace NewRelic.Agent.Core.Samplers
             return new SamplerIsApplicableToFrameworkResult(_fxSamplerIsApplicableToFrameworkDefaultValue.Value);
         }
 
-        public GCSamplerNetCore(IScheduler scheduler, Func<ISampledEventListener<Dictionary<GCSampleType, float>>> eventListenerFactory, IGcSampleTransformer transformer, Func<SamplerIsApplicableToFrameworkResult> fxSamplerIsApplicableToFramework) : base(scheduler, TimeSpan.FromSeconds(GCSampleNetCoreIntervalSeconds))
+        public GCSamplerNetCore(IScheduler scheduler, Func<ISampledEventListener<Dictionary<GCSampleType, float>>> eventListenerFactory, IGcSampleTransformer transformer, Func<SamplerIsApplicableToFrameworkResult> fxSamplerIsApplicableToFramework, IAgentHealthReporter agentHealthReporter) : base(scheduler, TimeSpan.FromSeconds(GCSampleNetCoreIntervalSeconds))
         {
             _eventListenerFactory = eventListenerFactory;
             _transformer = transformer;
             _fxSamplerIsApplicableToFramework = fxSamplerIsApplicableToFramework;
+
+            agentHealthReporter.ReportSupportabilityCountMetric(MetricNames.SupportabilityGCSamplerNetCoreEnabled, 1);
         }
+
 
         public override void Sample()
         {

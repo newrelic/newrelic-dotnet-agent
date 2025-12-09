@@ -173,6 +173,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 
                     if (_gcSamplerV2Enabled)
                         Fixture.RemoteApplication.NewRelicConfig.EnableGCSamplerV2(true);
+                    else
+                        Fixture.RemoteApplication.NewRelicConfig.EnableGCSamplerV2(false);
                 },
                 exerciseApplication: () =>
                 {

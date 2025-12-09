@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core.Config
         public BootstrapConfiguration(configuration localConfiguration, string configurationFileName, Func<string, ValueWithProvenance<string>> getWebConfigSettingWithProvenance, IConfigurationManagerStatic configurationManagerStatic, IProcessStatic processStatic, Predicate<string> checkDirectoryExists, Func<string, string> getFullPath)
         {
             ServerlessModeEnabled = CheckServerlessModeEnabled(localConfiguration);
-            GCSamplerV2Enabled = CheckGCSamplerV2Enabled(TryGetAppSettingAsBoolWithDefault(localConfiguration, "GCSamplerV2Enabled", false));
+            GCSamplerV2Enabled = CheckGCSamplerV2Enabled(TryGetAppSettingAsBoolWithDefault(localConfiguration, "GCSamplerV2Enabled", true));
             DebugStartupDelaySeconds = localConfiguration.debugStartupDelaySeconds;
             ConfigurationFileName = configurationFileName;
             LogConfig = new BootstrapLogConfig(localConfiguration.log, processStatic, checkDirectoryExists, getFullPath);
@@ -141,7 +141,10 @@ namespace NewRelic.Agent.Core.Config
         public ILogConfig LogConfig { get; private set; }
 
         public bool AzureFunctionModeDetected => ConfigLoaderHelpers.GetEnvironmentVar("FUNCTIONS_WORKER_RUNTIME") != null;
-
+        
+        /// <summary>
+        /// Gets whether the GCSamplerV2 is enabled. Defaults to true on .NET Core 3.0+.
+        /// </summary>
         public bool GCSamplerV2Enabled { get; private set;}
         public bool AgentControlEnabled => ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_AGENT_CONTROL_ENABLED").TryToBoolean(out var enabled) && enabled;
         public string HealthDeliveryLocation => ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_AGENT_CONTROL_HEALTH_DELIVERY_LOCATION");

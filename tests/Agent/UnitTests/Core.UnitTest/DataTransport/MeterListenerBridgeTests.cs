@@ -16,6 +16,7 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Configuration;
+using NewRelic.Agent.Core.Logging;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -29,6 +30,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private IConfiguration _configuration;
         private IConnectionInfo _connectionInfo;
         private IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
+
 
         [SetUp]
         public void SetUp()
@@ -56,7 +58,9 @@ namespace NewRelic.Agent.Core.DataTransport
             // Setup supportability metrics mock
             _supportabilityMetricCounters = Mock.Create<IOtelBridgeSupportabilityMetricCounters>();
 
-            _meterListenerBridge = new MeterListenerBridge(_supportabilityMetricCounters);
+            // Setup default logger factory (mocks not needed for most tests, but we can return null or a mock)
+            // For general tests, we use the default constructor or a dummy factory
+             _meterListenerBridge = new MeterListenerBridge(_supportabilityMetricCounters);
         }
 
         [TearDown]
@@ -792,23 +796,79 @@ namespace NewRelic.Agent.Core.DataTransport
         #region Edge Case Tests
 
         [Test]
-        public void Dispose_ShouldCleanupGracefully()
+        public void Stop_ShouldNotDisposeSdkLogger()
         {
             // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
+            var mockLogger = Mock.Create<OpenTelemetrySDKLogger>();
+            Mock.Arrange(() => mockLogger.Dispose()).OccursOnce(); // Verify Dispose is called exactly once (during bridge.Dispose)
+
+            var bridge = new MeterListenerBridge(_supportabilityMetricCounters, () => mockLogger);
+            
+            // Start to initialize the logger
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-
             var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent); // Publishes connection info
+            
+            // We need to call Start explicitly or rely on the event. The event calls Stop then Start.
+            // Since we created a new bridge instance locally, we need to manually simulate the start or inject it into the event bus?
+            // Actually, the EventBus is static/global in this context? 
+            // The tests seem to assume EventBus is global. But wait, `bridge` subscribes on construction.
+            // So publishing the event will check `_configuration` (mocked global?) and ConnectionInfo.
+            // But we used a local `bridge`. 
+            // Let's just call Start directly after setting connection info manually if possible, or trigger event.
+            // `OnAgentConnected` sets connection info.
+            
+            // To be safe and isolated:
+            // 1. We start the bridge (which creates the logger via factory)
+            // 2. We stop the bridge
+            // 3. We assert logger.Dispose was NOT called.
+            
+            // Simulate connection via reflection or just call OnAgentConnected via EventBus
+            // Note: subscribing to EventBus in Constructor might duplicate if we have multiple bridges?
+            // The SetUp creates one `_meterListenerBridge`. This test creates another `bridge`.
+            // Both might receive the event. That's fine.
+            
+            bridge.Start(); // Needs connection info. 
+            // Let's inject connection info via OnAgentConnected
+            // 1. Start (simulated or explicit)
+            var method = typeof(MeterListenerBridge).GetMethod("OnAgentConnected", BindingFlags.NonPublic | BindingFlags.Instance);
+            method.Invoke(bridge, new object[] { agentConnectedEvent });
 
-            _meterListenerBridge.Start();
+            // 2. Stop - Should NOT dispose logger
+            bridge.Stop();
 
-            // Act & Assert
-            Assert.DoesNotThrow(() => _meterListenerBridge.Dispose());
+            // 3. Dispose - Should dispose logger
+            bridge.Dispose();
 
-            // Should be safe to dispose multiple times
-            Assert.DoesNotThrow(() => _meterListenerBridge.Dispose());
+            // Assert - Total calls should be 1 (from Dispose only)
+            Mock.Assert(mockLogger);
+
         }
+
+        [Test]
+        public void Dispose_ShouldDisposeSdkLogger()
+        {
+            // Arrange
+            var mockLogger = Mock.Create<OpenTelemetrySDKLogger>();
+            Mock.Arrange(() => mockLogger.Dispose()).OccursOnce(); // Verify Dispose IS called
+
+            var bridge = new MeterListenerBridge(_supportabilityMetricCounters, () => mockLogger);
+            
+            // Initialize
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            var method = typeof(MeterListenerBridge).GetMethod("OnAgentConnected", BindingFlags.NonPublic | BindingFlags.Instance);
+            method.Invoke(bridge, new object[] { agentConnectedEvent });
+
+            // Act
+            bridge.Dispose();
+
+            // Assert
+            Mock.Assert(mockLogger);
+        }
+
+
+
 
         [Test]
         public void Start_WithNullConnectionInfo_ShouldHandleGracefully()
@@ -821,6 +881,88 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Act & Assert - Should handle null connection info
             Assert.DoesNotThrow(() => EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent));
+        }
+
+        [Test]
+        public void Dispose_IsIdempotent()
+        {
+            // Arrange
+            var mockLogger = Mock.Create<OpenTelemetrySDKLogger>();
+            Mock.Arrange(() => mockLogger.Dispose()).OccursOnce(); // Should still only occur once
+
+            var bridge = new MeterListenerBridge(_supportabilityMetricCounters, () => mockLogger);
+            
+            // Initialize
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            var method = typeof(MeterListenerBridge).GetMethod("OnAgentConnected", BindingFlags.NonPublic | BindingFlags.Instance);
+            method.Invoke(bridge, new object[] { agentConnectedEvent });
+
+            // Act
+            bridge.Dispose();
+            bridge.Dispose(); // Second call should be no-op
+
+            // Assert
+            Mock.Assert(mockLogger);
+        }
+
+        [Test]
+        public void StopStart_Cycle_Works()
+        {
+            // Arrange
+            var mockLogger = Mock.Create<OpenTelemetrySDKLogger>();
+            // Dispose should NOT be called during Stop/Start cycle, only at final Dispose
+            Mock.Arrange(() => mockLogger.Dispose()).OccursOnce();
+
+            var bridge = new MeterListenerBridge(_supportabilityMetricCounters, () => mockLogger);
+            
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            var method = typeof(MeterListenerBridge).GetMethod("OnAgentConnected", BindingFlags.NonPublic | BindingFlags.Instance);
+            
+            // 1. Start (via event)
+            method.Invoke(bridge, new object[] { agentConnectedEvent });
+
+            // 2. Stop
+            bridge.Stop();
+
+            // 3. Start again
+            bridge.Start();
+
+            // 4. Final Dispose
+            bridge.Dispose();
+
+            // Assert
+            Mock.Assert(mockLogger);
+        }
+
+        [Test]
+        public void Dispose_Concurrent_Safety()
+        {
+            // Arrange
+            var mockLogger = Mock.Create<OpenTelemetrySDKLogger>();
+            Mock.Arrange(() => mockLogger.Dispose()).OccursOnce();
+
+            var bridge = new MeterListenerBridge(_supportabilityMetricCounters, () => mockLogger);
+            
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            var method = typeof(MeterListenerBridge).GetMethod("OnAgentConnected", BindingFlags.NonPublic | BindingFlags.Instance);
+            method.Invoke(bridge, new object[] { agentConnectedEvent });
+
+            // Act - Concurrent Dispose
+            var threads = new List<Thread>();
+            for (int i = 0; i < 10; i++)
+            {
+                var t = new Thread(() => bridge.Dispose());
+                threads.Add(t);
+                t.Start();
+            }
+
+            foreach (var t in threads) t.Join();
+
+            // Assert
+            Mock.Assert(mockLogger);
         }
 
         [Test]

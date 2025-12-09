@@ -538,12 +538,7 @@ public class AgentHealthReporterTests
         Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/IgnoredInstrumentation"), Is.False);
     }
 
-    [Test]
-    public void GCSamplerV2EnabledSupportabilityMetricPresent()
-    {
-        _agentHealthReporter.CollectMetrics();
-        Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/GCSamplerV2/Enabled"), Is.True);
-    }
+
 
     [Test]
     public void AwsAccountIdSupportabilityMetricPresent()

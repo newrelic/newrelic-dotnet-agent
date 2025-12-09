@@ -155,23 +155,6 @@ namespace NewRelic.Agent.Core.Config
 
             var config = CreateBootstrapConfiguration();
 
-            Assert.That(config.AgentEnabled, Is.True);
-        }
-
-        [Test]
-        public void GCSamplerV2_DisabledByDefault()
-        {
-            var config = CreateBootstrapConfiguration();
-
-            Assert.That(config.GCSamplerV2Enabled, Is.False);
-        }
-        [Test]
-        public void GCSamplerV2_EnabledViaLocalConfig()
-        {
-            _localConfiguration.appSettings.Add(new configurationAdd { key = "GCSamplerV2Enabled", value = "true" });
-
-            var config = CreateBootstrapConfiguration();
-
             Assert.Multiple(() =>
             {
                 Assert.That(config.GCSamplerV2Enabled, Is.True);

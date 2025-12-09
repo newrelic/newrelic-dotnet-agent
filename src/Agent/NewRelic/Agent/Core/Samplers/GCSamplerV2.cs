@@ -7,6 +7,8 @@ using System;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Metrics;
 
 namespace NewRelic.Agent.Core.Samplers
 {
@@ -20,12 +22,15 @@ namespace NewRelic.Agent.Core.Samplers
 
         private const int GCSamplerV2IntervalSeconds = 60;
 
-        public GCSamplerV2(IScheduler scheduler, IGCSampleTransformerV2 transformer, IGCSamplerV2ReflectionHelper gCSamplerV2ReflectionHelper)
+        public GCSamplerV2(IScheduler scheduler, IGCSampleTransformerV2 transformer, IGCSamplerV2ReflectionHelper gCSamplerV2ReflectionHelper, IAgentHealthReporter agentHealthReporter)
             : base(scheduler, TimeSpan.FromSeconds(GCSamplerV2IntervalSeconds))
         {
             _transformer = transformer;
             _gCSamplerV2ReflectionHelper = gCSamplerV2ReflectionHelper;
             _lastSampleTime = DateTime.UtcNow;
+            
+            // Record that this sampler is enabled
+            agentHealthReporter.ReportSupportabilityCountMetric(MetricNames.SupportabilityGCSamplerV2Enabled, 1);
         }
 
         public override void Sample()

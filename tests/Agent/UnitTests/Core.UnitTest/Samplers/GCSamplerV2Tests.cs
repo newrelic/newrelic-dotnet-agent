@@ -5,6 +5,7 @@
 using System;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
+using NewRelic.Agent.Core.AgentHealth;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -24,8 +25,9 @@ namespace NewRelic.Agent.Core.Samplers
             _scheduler = Mock.Create<IScheduler>();
             _transformer = Mock.Create<IGCSampleTransformerV2>();
             _reflectionHelper = Mock.Create<IGCSamplerV2ReflectionHelper>();
+            var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
-            _gcSamplerV2 = new GCSamplerV2(_scheduler, _transformer, _reflectionHelper);
+            _gcSamplerV2 = new GCSamplerV2(_scheduler, _transformer, _reflectionHelper, agentHealthReporter);
         }
 
         [TearDown]

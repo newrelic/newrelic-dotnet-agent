@@ -915,7 +915,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportInfiniteTracingOneTimeMetrics();
             ReportIfLoggingDisabled();
             ReportIfInstrumentationIsDisabled();
-            ReportIfGCSamplerV2IsEnabled();
+
             ReportIfAwsAccountIdProvided();
             ReportIfAgentControlHealthEnabled();
             ReportIfAspNetCore6PlusIsEnabled();
@@ -1087,13 +1087,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
         }
 
-        private void ReportIfGCSamplerV2IsEnabled()
-        {
-            if (_configuration.GCSamplerV2Enabled)
-            {
-                ReportSupportabilityCountMetric(MetricNames.SupportabilityGCSamplerV2Enabled);
-            }
-        }
+
 
         private void ReportIfAwsAccountIdProvided()
         {

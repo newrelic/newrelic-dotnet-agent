@@ -4,6 +4,7 @@
 using CompositeTests;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
+using NewRelic.Agent.Core.AgentHealth;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace NewRelic.Agent.Core.Samplers
         private ISampledEventListener<Dictionary<GCSampleType, float>> _mockEventListener;
         private Func<ISampledEventListener<Dictionary<GCSampleType, float>>> _mockEventListenerFactory;
         private IGcSampleTransformer _mockTransformer;
+        private IAgentHealthReporter _mockAgentHealthReporter;
 
         private readonly static Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult> _fxSamplerValidForFrameworkOverride = () => new GCSamplerNetCore.SamplerIsApplicableToFrameworkResult(true);
 
@@ -60,6 +62,7 @@ namespace NewRelic.Agent.Core.Samplers
             _mockEventListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
             _mockEventListenerFactory = () => _mockEventListener;
             _mockTransformer = Mock.Create<IGcSampleTransformer>();
+            _mockAgentHealthReporter = Mock.Create<IAgentHealthReporter>();
         }
 
         [TearDown]
@@ -72,7 +75,7 @@ namespace NewRelic.Agent.Core.Samplers
         [Test]
         public void SamplerStartsWithoutException()
         {
-            var sampler = new GCSamplerNetCore(_mockScheduler, _mockEventListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
+            var sampler = new GCSamplerNetCore(_mockScheduler, _mockEventListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride, _mockAgentHealthReporter);
             sampler.Start();
         }
 
@@ -108,7 +111,7 @@ namespace NewRelic.Agent.Core.Samplers
             Mock.Arrange(() => mockScheduler.StopExecuting(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan?>()))
                 .DoInstead<Action, TimeSpan?>((a, t) => { samplerWasStopped = true; });
 
-            var sampler = new GCSamplerNetCore(mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
+            var sampler = new GCSamplerNetCore(mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride, _mockAgentHealthReporter);
 
             //Act
             sampler.Start();
@@ -139,7 +142,7 @@ namespace NewRelic.Agent.Core.Samplers
                 return mockListener;
             };
 
-            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
+            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride, _mockAgentHealthReporter);
 
             //Act
             sampler.Start();
@@ -160,7 +163,7 @@ namespace NewRelic.Agent.Core.Samplers
                 return _mockEventListener;
             };
 
-            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
+            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride, _mockAgentHealthReporter);
 
             //Act
             sampler.Start();
@@ -177,7 +180,7 @@ namespace NewRelic.Agent.Core.Samplers
                 throw new Exception();
             };
 
-            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
+            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride, _mockAgentHealthReporter);
 
             Assert.DoesNotThrow(sampler.Start);
         }
@@ -217,7 +220,7 @@ namespace NewRelic.Agent.Core.Samplers
 
 
             //Act
-            var sampler = new GCSamplerNetCore(mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
+            var sampler = new GCSamplerNetCore(mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride, _mockAgentHealthReporter);
 
             sampler.Start();
             sampler.Sample();
@@ -243,7 +246,7 @@ namespace NewRelic.Agent.Core.Samplers
 
 
             //Act
-            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, () => new GCSamplerNetCore.SamplerIsApplicableToFrameworkResult(false));
+            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, () => new GCSamplerNetCore.SamplerIsApplicableToFrameworkResult(false), _mockAgentHealthReporter);
             sampler.Start();
 
             Assert.That(listenerWasStarted, Is.False);
@@ -263,7 +266,7 @@ namespace NewRelic.Agent.Core.Samplers
 
 
             //Act
-            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
+            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride, _mockAgentHealthReporter);
             sampler.Start();
 
             Assert.That(listenerWasStarted, Is.True);
@@ -288,7 +291,7 @@ namespace NewRelic.Agent.Core.Samplers
             Mock.Arrange(() => mockTransfomer.Transform(Arg.IsAny<Dictionary<GCSampleType, float>>()))
                 .DoInstead<Dictionary<GCSampleType, float>>((sampleValues) => { collectedSamples.Add(sampleValues); });
 
-            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, mockTransfomer, _fxSamplerValidForFrameworkOverride);
+            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, mockTransfomer, _fxSamplerValidForFrameworkOverride, _mockAgentHealthReporter);
 
             sampler.Start();
             sampler.Sample();
@@ -315,7 +318,7 @@ namespace NewRelic.Agent.Core.Samplers
             Mock.Arrange(() => mockTransfomer.Transform(Arg.IsAny<Dictionary<GCSampleType, float>>()))
                 .DoInstead<Dictionary<GCSampleType, float>>((sampleValues) => { collectedSamples.Add(sampleValues); });
 
-            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, mockTransfomer, _fxSamplerValidForFrameworkOverride);
+            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, mockTransfomer, _fxSamplerValidForFrameworkOverride, _mockAgentHealthReporter);
 
             sampler.Start();
             sampler.Sample();

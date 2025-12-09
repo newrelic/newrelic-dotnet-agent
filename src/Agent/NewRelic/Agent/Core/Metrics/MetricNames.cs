@@ -766,6 +766,11 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityOTelMetricsBridgeEntityGuidChanged = SupportabilityOTelMetricsBridgePs + "EntityGuidChanged";
         public const string SupportabilityOTelMetricsBridgeMeterProviderRecreated = SupportabilityOTelMetricsBridgePs + "MeterProviderRecreated";
 
+        // GC Samplers
+        private const string SupportabilityGCSamplerPs = SupportabilityPs + "GCSampler" + PathSeparator;
+        public const string SupportabilityGCSamplerV2Enabled = SupportabilityGCSamplerPs + "V2" + PathSeparator + Enabled;
+        public const string SupportabilityGCSamplerNetCoreEnabled = SupportabilityGCSamplerPs + "NetCore" + PathSeparator + Enabled;
+
         // CAT
         private const string SupportabilityCAT = SupportabilityPs + "CrossApplicationTracing" + PathSeparator;
         private const string SupportabilityCATRequest = SupportabilityCAT + "Request" + PathSeparator;
@@ -923,7 +928,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityLoggingFatalError = "Supportability/DotNET/AgentLogging/DisabledDueToError";
 
         public const string SupportabilityIgnoredInstrumentation = SupportabilityDotnetPsObsolete + "IgnoredInstrumentation";
-        public const string SupportabilityGCSamplerV2Enabled = SupportabilityDotnetPsObsolete + "GCSamplerV2/Enabled";
+
         public const string SupportabilityAwsAccountIdProvided = SupportabilityDotnetPsObsolete + "AwsAccountId/Config";
 
         public static string SupportabilityAzureFunctionMode(bool enabled)
