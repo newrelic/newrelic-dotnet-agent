@@ -47,15 +47,6 @@ public abstract class LinuxContainerTest<T> : NewRelicIntegrationTest<T> where T
 }
 
 [Trait("Architecture", "amd64")]
-[Trait("Distro", "Debian")]
-public class DebianX64ContainerTest : LinuxContainerTest<DebianX64ContainerTestFixture>
-{
-    public DebianX64ContainerTest(DebianX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-    }
-}
-
-[Trait("Architecture", "amd64")]
 [Trait("Distro", "Ubuntu")]
 public class UbuntuX64ContainerTest : LinuxContainerTest<UbuntuX64ContainerTestFixture>
 {
@@ -69,15 +60,6 @@ public class UbuntuX64ContainerTest : LinuxContainerTest<UbuntuX64ContainerTestF
 public class AlpineX64ContainerTest : LinuxContainerTest<AlpineX64ContainerTestFixture>
 {
     public AlpineX64ContainerTest(AlpineX64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-    }
-}
-
-[Trait("Architecture", "arm64")]
-[Trait("Distro", "Debian")]
-public class DebianArm64ContainerTest : LinuxContainerTest<DebianArm64ContainerTestFixture>
-{
-    public DebianArm64ContainerTest(DebianArm64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }

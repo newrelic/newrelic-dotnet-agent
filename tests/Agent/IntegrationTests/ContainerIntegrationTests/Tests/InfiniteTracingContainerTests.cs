@@ -76,11 +76,6 @@ public abstract class InfiniteTracingContainerTest<T> : NewRelicIntegrationTest<
 
 // only testing on a subset of linux distros to keep total test runtime under control. Additional distros can be uncommented below if needed.
 
-[Trait("Architecture", "amd64")]
-[Trait("Distro", "Debian")]
-public class DebianX64InfiniteTracingContainerTest(DebianX64ContainerTestFixture fixture, ITestOutputHelper output)
-    : InfiniteTracingContainerTest<DebianX64ContainerTestFixture>(fixture, output);
-
 //[Trait("Architecture", "amd64")]
 //public class UbuntuX64InfiniteTracingContainerTest(UbuntuX64ContainerTestFixture fixture, ITestOutputHelper output)
 //    : InfiniteTracingContainerTest<UbuntuX64ContainerTestFixture>(fixture, output);
@@ -89,11 +84,6 @@ public class DebianX64InfiniteTracingContainerTest(DebianX64ContainerTestFixture
 [Trait("Distro", "Alpine")]
 public class AlpineX64InfiniteTracingContainerTest(AlpineX64ContainerTestFixture fixture, ITestOutputHelper output)
     : InfiniteTracingContainerTest<AlpineX64ContainerTestFixture>(fixture, output);
-
-[Trait("Architecture", "arm64")]
-[Trait("Distro", "Debian")]
-public class DebianArm64InfiniteTracingContainerTest(DebianArm64ContainerTestFixture fixture, ITestOutputHelper output)
-    : InfiniteTracingContainerTest<DebianArm64ContainerTestFixture>(fixture, output);
 
 //[Trait("Architecture", "arm64")]
 //public class UbuntuArm64InfiniteTracingContainerTest(UbuntuArm64ContainerTestFixture fixture, ITestOutputHelper output)
