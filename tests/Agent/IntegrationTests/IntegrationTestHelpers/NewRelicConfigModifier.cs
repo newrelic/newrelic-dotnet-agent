@@ -4,7 +4,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Text;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -564,6 +567,21 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             CommonUtils.SetConfigAppSetting(_configFilePath, "HybridHttpContextStorageEnabled", enabled.ToString(), "urn:newrelic-config");
             return this;
+        }
+
+        public void AddBomToConfig()
+        {
+            var encodingWithBom = Encoding.UTF8;
+            var bomBytes = encodingWithBom.GetPreamble();
+            var content = File.ReadAllText(_configFilePath);
+            var contentBytes = encodingWithBom.GetBytes(content);
+
+            using var fs = new FileStream(_configFilePath, FileMode.Create);
+            // Write the BOM bytes first
+            fs.Write(bomBytes, 0, bomBytes.Length);
+
+            // Then write the actual content bytes
+            fs.Write(contentBytes, 0, contentBytes.Length);
         }
     }
 }
