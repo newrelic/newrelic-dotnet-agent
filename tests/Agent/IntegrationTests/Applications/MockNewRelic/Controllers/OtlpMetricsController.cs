@@ -33,6 +33,12 @@ public class OtlpMetricsController : ControllerBase
             return StatusCode(415, "{}");
         }
 
+        // validate that the request header includes api-key
+        if (!Request.Headers.ContainsKey("api-key"))
+        {
+            return StatusCode(401, "{}");
+        }
+
         byte[] bodyBytes = await ReadRequestBodyAsync(Request);
 
         ExportMetricsServiceRequest request;
