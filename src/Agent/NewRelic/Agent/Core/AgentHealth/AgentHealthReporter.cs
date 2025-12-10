@@ -922,7 +922,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportIfAzureFunctionModeIsDetected();
             ReportIfOpenTelemetryIsEnabled();
             ReportIfOpenTelemetryTracingIsEnabled();
-            ReportIfOpenTelemetryMetricsBridgeEnabled();
+            ReportIfOpenTelemetryMetricsEnabled();
         }
 
         public void CollectMetrics()
@@ -1126,9 +1126,9 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportSupportabilityCountMetric(MetricNames.SupportabilityOpenTelemetry(_configuration.OpenTelemetryEnabled));
         }
 
-        private void ReportIfOpenTelemetryMetricsBridgeEnabled()
+        private void ReportIfOpenTelemetryMetricsEnabled()
         {
-            ReportSupportabilityCountMetric(MetricNames.SupportabilityOpenTelemetryMetricsBridge(_configuration.OpenTelemetryMetricsEnabled));
+            ReportSupportabilityCountMetric(MetricNames.SupportabilityOpenTelemetryMetrics(_configuration.OpenTelemetryMetricsEnabled));
         }
 
         /// <summary>

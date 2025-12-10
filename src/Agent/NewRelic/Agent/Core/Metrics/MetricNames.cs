@@ -737,26 +737,17 @@ namespace NewRelic.Agent.Core.Metrics
             return SupportabilityAgentApiPs + methodName;
         }
 
-        // OpenTelemetry Metrics Bridge
+        #region Open Telemetry Bridge
         private const string OpenTelemetryBridge = "OpenTelemetryBridge";
         private const string SupportabilityOTelPs = SupportabilityPs + "OpenTelemetry" + PathSeparator;
         private const string SupportabilityOTelMetricsBridgePs = SupportabilityPs + "Metrics" + PathSeparator + "DotNet" + PathSeparator + OpenTelemetryBridge + PathSeparator;
         private const string SupportabilityOTelTracingBridgePs = SupportabilityPs + "Tracing" + PathSeparator + "DotNet" + PathSeparator + OpenTelemetryBridge + PathSeparator;
 
-        public static string SupportabilityOpenTelemetry(bool enabled)
-        {
-            return SupportabilityOTelPs + (enabled ? Enabled : Disabled);
-        }
+        public static string SupportabilityOpenTelemetry(bool enabled) => SupportabilityOTelPs + (enabled ? Enabled : Disabled);
 
-        public static string SupportabilityOpenTelemetryTracing(bool enabled)
-        {
-            return SupportabilityOTelTracingBridgePs + (enabled ? Enabled : Disabled);
-        }
+        public static string SupportabilityOpenTelemetryTracing(bool enabled) => SupportabilityOTelTracingBridgePs + (enabled ? Enabled : Disabled);
 
-        public static string SupportabilityOpenTelemetryMetricsBridge(bool enabled)
-        {
-            return SupportabilityOTelMetricsBridgePs + (enabled ? Enabled : Disabled);
-        }
+        public static string SupportabilityOpenTelemetryMetrics(bool enabled) => SupportabilityOTelMetricsBridgePs + (enabled ? Enabled : Disabled);
 
         public const string SupportabilityOTelMetricsBridgeGetMeter = SupportabilityOTelMetricsBridgePs + "getMeter";
         
@@ -779,6 +770,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityOTelMetricsBridgeMeasurementBridgeFailure = SupportabilityOTelMetricsBridgePs + "MeasurementBridgeFailure";
         public const string SupportabilityOTelMetricsBridgeEntityGuidChanged = SupportabilityOTelMetricsBridgePs + "EntityGuidChanged";
         public const string SupportabilityOTelMetricsBridgeMeterProviderRecreated = SupportabilityOTelMetricsBridgePs + "MeterProviderRecreated";
+        #endregion
 
         // CAT
         private const string SupportabilityCAT = SupportabilityPs + "CrossApplicationTracing" + PathSeparator;

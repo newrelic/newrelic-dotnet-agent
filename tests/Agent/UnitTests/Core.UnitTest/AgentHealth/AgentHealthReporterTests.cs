@@ -699,8 +699,8 @@ public class AgentHealthReporterTests
         _agentHealthReporter.CollectMetrics();
 
         // Assert
-        var disabledMetric = _publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetricsBridge(false));
-        var enabledMetric = _publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetricsBridge(true));
+        var disabledMetric = _publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetrics(false));
+        var enabledMetric = _publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetrics(true));
         
         Assert.Multiple(() =>
         {
@@ -729,8 +729,8 @@ public class AgentHealthReporterTests
         agentHealthReporter.CollectMetrics();
 
         // Assert
-        var enabledMetric = publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetricsBridge(true));
-        var disabledMetric = publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetricsBridge(false));
+        var enabledMetric = publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetrics(true));
+        var disabledMetric = publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetrics(false));
 
         Assert.Multiple(() =>
         {
