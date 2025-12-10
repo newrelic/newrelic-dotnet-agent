@@ -1128,7 +1128,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private void ReportIfOpenTelemetryMetricsBridgeEnabled()
         {
-            ReportSupportabilityCountMetric(MetricNames.SupportabilityOpenTelemetryMetricsBridgeState(_configuration.OpenTelemetryMetricsEnabled));
+            ReportSupportabilityCountMetric(MetricNames.SupportabilityOpenTelemetryMetricsBridge(_configuration.OpenTelemetryMetricsEnabled));
         }
 
         /// <summary>

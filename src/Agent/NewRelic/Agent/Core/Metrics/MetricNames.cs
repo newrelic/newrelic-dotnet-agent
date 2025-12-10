@@ -738,12 +738,26 @@ namespace NewRelic.Agent.Core.Metrics
         }
 
         // OpenTelemetry Metrics Bridge
-        private const string SupportabilityOTelMetricsBridgePs = SupportabilityPs + "Metrics" + PathSeparator + "DotNet" + PathSeparator + "OpenTelemetryBridge" + PathSeparator;
+        private const string OpenTelemetryBridge = "OpenTelemetryBridge";
+        private const string SupportabilityOTelPs = SupportabilityPs + "OpenTelemetry" + PathSeparator;
+        private const string SupportabilityOTelMetricsBridgePs = SupportabilityPs + "Metrics" + PathSeparator + "DotNet" + PathSeparator + OpenTelemetryBridge + PathSeparator;
+        private const string SupportabilityOTelTracingBridgePs = SupportabilityPs + "Tracing" + PathSeparator + "DotNet" + PathSeparator + OpenTelemetryBridge + PathSeparator;
 
-        public static string SupportabilityOpenTelemetryMetricsBridgeState(bool enabled)
+        public static string SupportabilityOpenTelemetry(bool enabled)
+        {
+            return SupportabilityOTelPs + (enabled ? Enabled : Disabled);
+        }
+
+        public static string SupportabilityOpenTelemetryTracing(bool enabled)
+        {
+            return SupportabilityOTelTracingBridgePs + (enabled ? Enabled : Disabled);
+        }
+
+        public static string SupportabilityOpenTelemetryMetricsBridge(bool enabled)
         {
             return SupportabilityOTelMetricsBridgePs + (enabled ? Enabled : Disabled);
         }
+
         public const string SupportabilityOTelMetricsBridgeGetMeter = SupportabilityOTelMetricsBridgePs + "getMeter";
         
         // Individual meter method supportability metrics
@@ -1268,21 +1282,6 @@ namespace NewRelic.Agent.Core.Metrics
         private const string SupportabilityAgentControlPs = SupportabilityPs + AgentControl + PathSeparator;
         public const string SupportabilityAgentControlHealthEnabled = SupportabilityAgentControlPs + Health + PathSeparator + Enabled;
 
-        #endregion
-
-        #region Open Telemetry
-
-        private const string OpenTelemetry = "OpenTelemetry";
-
-        public static string SupportabilityOpenTelemetry(bool enabled) 
-        {
-            return SupportabilityDotNetPs + OpenTelemetry + PathSeparator + (enabled ? Enabled : Disabled);
-        }
-
-        public static string SupportabilityOpenTelemetryTracing(bool enabled)
-        {
-            return SupportabilityPs + "Tracing" + PathSeparator + DotNet + PathSeparator + OpenTelemetry + PathSeparator + (enabled ? Enabled : Disabled);
-        }
         #endregion
     }
 }
