@@ -276,7 +276,7 @@ jobs:
         uses: NuGet/login@d22cc5f58ff5b88bf9bd452535b4335137e24544 # v1.1.0
         id: login
         with:
-          user: tippmar-nr
+          user: ${{ secrets.NUGET_TRUSTED_PUBLISH_POLICY_USER }}
       
       - name: Validate NuGet API key
         run: |
