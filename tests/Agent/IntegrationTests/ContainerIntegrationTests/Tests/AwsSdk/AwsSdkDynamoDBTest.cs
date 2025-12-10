@@ -11,7 +11,7 @@ using Xunit;
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
 [Trait("Architecture", "amd64")]
- [Trait("Distro", "Ubuntu")]
+[Trait("Distro", "Ubuntu")]
 public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoDBTestFixture>
 {
     private readonly AwsSdkContainerDynamoDBTestFixture _fixture;

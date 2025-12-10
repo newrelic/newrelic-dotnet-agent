@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using NewRelic.Testing.Assertions;
 using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
@@ -18,10 +17,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
         private readonly string _queueOrTopicName;
         private readonly string _destinationType;
 
-        private readonly string _consumeMetricNameBase;
         private readonly string _processMetricNameBase;
         private readonly string _settleMetricNameBase;
         private readonly string _transactionNameBase;
+        private readonly string _topicScopeSuffix;
+        private readonly string _onProcessMessageMethodSegmentMetricName;
 
         protected AzureServiceBusProcessorTestsBase(TFixture fixture, string destinationType, ITestOutputHelper output) : base(fixture)
         {
@@ -32,13 +32,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
             _queueOrTopicName = $"test-queue-{Guid.NewGuid()}";
             _destinationType = destinationType;
 
-             _consumeMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named";
-             _processMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Process/Named";
-             _settleMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named";
-             _transactionNameBase = $"OtherTransaction/Message/ServiceBus/{_destinationType}/Named";
+            _topicScopeSuffix = null;
+            if (_destinationType == "Topic")
+            {
+                _topicScopeSuffix = "/Subscriptions/test";
+            }
+
+            _processMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Process/Named";
+            _onProcessMessageMethodSegmentMetricName = "DotNet/ServiceBusProcessor/OnProcessMessageAsync";
+            _settleMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named";
+            _transactionNameBase = $"OtherTransaction/Message/ServiceBus/{_destinationType}/Named";
 
             _fixture.AddCommand($"AzureServiceBusExerciser Initialize{_destinationType} {_queueOrTopicName}");
-            _fixture.AddCommand($"AzureServiceBusExerciser ExerciseServiceBusProcessorFor{_destinationType} {_queueOrTopicName}");
+            _fixture.AddCommand($"AzureServiceBusExerciser ExerciseServiceBusProcessor_SendMessagesFor{_destinationType} {_queueOrTopicName}");
+            _fixture.AddCommand($"AzureServiceBusExerciser ExerciseServiceBusProcessor_ReceiveMessagesFor{_destinationType} {_queueOrTopicName}");
             _fixture.AddCommand($"AzureServiceBusExerciser Delete{_destinationType} {_queueOrTopicName}");
 
             _fixture.AddActions
@@ -53,12 +60,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
                         .ForceTransactionTraces()
                         .ConfigureFasterMetricsHarvestCycle(20)
                         .ConfigureFasterSpanEventsHarvestCycle(20)
-                        .ConfigureFasterTransactionTracesHarvestCycle(25)
-                        ;
+                        .ConfigureFasterTransactionTracesHarvestCycle(25);
+
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex,
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex,
                         TimeSpan.FromMinutes(1));
                 }
             );
@@ -69,70 +76,101 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus
         [Fact]
         public void Test()
         {
+            // Local helper to trim priority to max 7 chars
+            string TrimPriority(object val)
+            {
+                var s = val?.ToString();
+                return string.IsNullOrEmpty(s) ? s : (s.Length > 7 ? s.Substring(0, 7) : s);
+            }
+
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-            // 2 messages, 1 consume segment, 1 process segment, 1 settle segment per message
+            // 2 messages, 1 process segment, 1 method segment, 1 settle segment per message
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new() { metricName = $"{_consumeMetricNameBase}/{_queueOrTopicName}", callCount = 2 },
-                new()
-                {
-                    metricName = $"{_consumeMetricNameBase}/{_queueOrTopicName}",
-                    callCount = 2,
-                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}"
-                },
                 new()
                 {
                     metricName = $"{_processMetricNameBase}/{_queueOrTopicName}",
                     callCount = 2,
-                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}"
+                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
+                },
+                new()
+                {
+                    metricName = _onProcessMessageMethodSegmentMetricName,
+                    callCount = 2,
+                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
                 },
                 new()
                 {
                     metricName = $"{_settleMetricNameBase}/{_queueOrTopicName}",
                     callCount = 2,
-                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}"
+                    metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
                 },
+                new() { metricName = "Supportability/TraceContext/Accept/Success"},
             };
 
-            var expectedTransactionEvent =
-                _fixture.AgentLog.TryGetTransactionEvent($"{_transactionNameBase}/{_queueOrTopicName}");
+            // get the send transaction events to retrieve the expected DT attributes
+            var expectedSendTransactionEvent =
+                _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus.AzureServiceBusExerciser/ExerciseServiceBusProcessor_SendMessagesFor{_destinationType}");
+
+            Assert.NotNull(expectedSendTransactionEvent);
+
+            var expectedTraceId = expectedSendTransactionEvent.IntrinsicAttributes["traceId"].ToString();
+            var expectedPriority = TrimPriority(expectedSendTransactionEvent.IntrinsicAttributes["priority"]);
+            var expectedSampled = expectedSendTransactionEvent.IntrinsicAttributes["sampled"];
+
+            // there should be two processor transactions (one for each message processed)
+            var processorTransactionEvents =
+                _fixture.AgentLog.GetTransactionEvents()
+                    .Where(te => te.IntrinsicAttributes["name"].ToString() ==
+                                          $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}").ToList();
+
+            var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
 
             var expectedTransactionTraceSegments = new List<string>
             {
-                $"{_consumeMetricNameBase}/{_queueOrTopicName}",
                 $"{_processMetricNameBase}/{_queueOrTopicName}",
-                "DotNet/ServiceBusProcessor/OnProcessMessageAsync",
+                _onProcessMessageMethodSegmentMetricName,
                 $"{_settleMetricNameBase}/{_queueOrTopicName}",
             };
 
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_transactionNameBase}/{_queueOrTopicName}");
-
-            var queueConsumeSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_consumeMetricNameBase}/{_queueOrTopicName}");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}");
             var queueProcessSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_processMetricNameBase}/{_queueOrTopicName}");
 
-            var expectedConsumeAgentAttributes = new List<string> { "server.address", "messaging.destination.name", };
 
-            var expectedIntrinsicAttributes = new List<string> { "span.kind", };
-
-            Assertions.MetricsExist(expectedMetrics, metrics);
-
-            NrAssert.Multiple(
-                () => Assert.NotNull(expectedTransactionEvent),
+            Assert.Multiple(
+                () => Assert.Equal(2, processorTransactionEvents.Count),
+                () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assert.NotNull(transactionSample),
-                () => Assert.NotNull(queueConsumeSpanEvent),
                 () => Assert.NotNull(queueProcessSpanEvent),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+                () => Assert.NotEmpty(spanEvents));
 
-                () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
-                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvent),
-                () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvent),
-                () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
-                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvent),
-                () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvent)
-            );
+            // verify processor transaction events have the expected DT attributes
+            Assert.All(processorTransactionEvents, transactionEvent =>
+            {
+                Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("traceId", out var actualTraceId));
+                Assert.Equal(expectedTraceId, actualTraceId);
+
+                Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
+                Assert.Equal(expectedPriority, TrimPriority(actualPriority));
+
+                Assert.True(transactionEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
+                Assert.Equal(expectedSampled, actualSampled);
+            });
+
+            // verify span events have the expected DT attributes
+            Assert.All(spanEvents, spanEvent =>
+            {
+                Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("traceId", out var actualTraceId));
+                Assert.Equal(expectedTraceId, actualTraceId);
+
+                Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("priority", out var actualPriority));
+                Assert.Equal(expectedPriority, TrimPriority(actualPriority));
+
+                Assert.True(spanEvent.IntrinsicAttributes.TryGetValue("sampled", out var actualSampled));
+                Assert.Equal(expectedSampled, actualSampled);
+            });
         }
     }
 

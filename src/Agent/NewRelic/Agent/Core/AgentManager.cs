@@ -21,8 +21,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+#if NETSTANDARD
 using System.Runtime.InteropServices;
+#endif
 using System.Threading;
+using NewRelic.Agent.Core.SharedInterfaces;
+using Process = System.Diagnostics.Process;
 
 namespace NewRelic.Agent.Core
 {
@@ -59,13 +63,16 @@ namespace NewRelic.Agent.Core
                 {
                     try
                     {
+                        // this log message may not get written if the exception happened during logger initialization
+                        // or as a result of the ValidateAgentConfiguration() check
                         Log.Error(exception, "There was an error initializing the agent");
-                        return DisabledAgentManager;
                     }
                     catch
                     {
-                        return DisabledAgentManager;
+                        // ignored
                     }
+
+                    return DisabledAgentManager;
                 }
             }
         }
@@ -111,7 +118,10 @@ namespace NewRelic.Agent.Core
                 {
                     LoggerBootstrapper.ConfigureLogger(BootstrapConfiguration.GetDefault().LogConfig);
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
 
                 throw;
             }
@@ -122,7 +132,6 @@ namespace NewRelic.Agent.Core
             // Resolve IConfigurationService (so that it starts listening to config change events) and then publish the serialized event
             _container.Resolve<IConfigurationService>();
             ConfigurationLoader.PublishDeserializedEvent(localConfig);
-
 
             // delay agent startup to allow a debugger to be attached. Used primarily for local debugging of AWS Lambda functions
             if (bootstrapConfig.DebugStartupDelaySeconds > 0)
@@ -138,7 +147,17 @@ namespace NewRelic.Agent.Core
 
             // At this point all configuration checks should use Configuration instead of the local and bootstrap configs.
 
-            AssertAgentEnabled();
+            // Start the AgentHealthReporter early so that we can potentially report health issues during startup
+            _agentHealthReporter = _container.Resolve<IAgentHealthReporter>();
+
+            // Validate the configuration to ensure that the agent can start and shutdown if not
+            if (!_agentHealthReporter.ValidateAgentConfiguration())
+            {
+                Shutdown(false);
+
+                // this exception won't get logged, but it will get caught by the AgentSingleton and prevent the agent from starting
+                throw new Exception("There was a fatal configuration problem preventing the agent from starting. Please see previous log messages for details.");
+            }
 
             EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
 
@@ -156,11 +175,11 @@ namespace NewRelic.Agent.Core
             var agentApi = _container.Resolve<IAgentApi>();
             _wrapperService = _container.Resolve<IWrapperService>();
 
-            // Start the AgentHealthReporter early so that we can potentially report health issues during startup
-            _agentHealthReporter = _container.Resolve<IAgentHealthReporter>();
-
+            // don't start any otel bridge services if the feature is disabled globally
             if (Configuration.OpenTelemetryBridgeEnabled)
+            {
                 _container.Resolve<OpenTelemetryBridge.ActivityBridge>().Start();
+            }
 
             // Attempt to auto start the agent once all services have resolved, except in serverless mode
             if (!bootstrapConfig.ServerlessModeEnabled)
@@ -178,18 +197,6 @@ namespace NewRelic.Agent.Core
 
             Initialize(bootstrapConfig.ServerlessModeEnabled);
             _isInitialized = true;
-        }
-
-        private void AssertAgentEnabled()
-        {
-            if (!Configuration.AgentEnabled)
-                throw new Exception(string.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", Configuration.AgentEnabledAt));
-
-            if (!Configuration.ServerlessModeEnabled) // license key is not required to be set in serverless mode
-            {
-                if ("REPLACE_WITH_LICENSE_KEY".Equals(Configuration.AgentLicenseKey))
-                    throw new Exception("Please set your license key.");
-            }
         }
 
         private void Initialize(bool serverlessModeEnabled)
@@ -328,19 +335,21 @@ namespace NewRelic.Agent.Core
                 environmentVariables.AddRange(environmentVariablesDeprecated.Select(tuple => tuple.Item1));
 
                 // Add this one separately so we can report the deprecated name but not log the value
-                environmentVariablesDeprecated.Add(("NEWRELIC_LICENSEKEY", "NEW_RELIC_LICENSE_KEY")); 
+                environmentVariablesDeprecated.Add(("NEWRELIC_LICENSEKEY", "NEW_RELIC_LICENSE_KEY"));
+
+                var environment = new SharedInterfaces.Environment(); // ensures we use the agent's cached env var values
 
                 foreach (var ev in environmentVariables)
                 {
-                    if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(ev)))
+                    if (!string.IsNullOrEmpty(environment.GetEnvironmentVariable(ev)))
                     {
-                        Log.Debug("Environment Variable {0} value: {1}", ev, System.Environment.GetEnvironmentVariable(ev));
+                        Log.Debug("Environment Variable {0} value: {1}", ev, environment.GetEnvironmentVariable(ev));
                     }
                 }
 
                 foreach (var evs in environmentVariablesSensitive)
                 {
-                    if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(evs)))
+                    if (!string.IsNullOrEmpty(environment.GetEnvironmentVariable(evs)))
                     {
                         Log.Debug("Environment Variable {0} is configured with a value. Not logging potentially sensitive value", evs);
                     }
@@ -348,7 +357,7 @@ namespace NewRelic.Agent.Core
 
                 foreach (var ev in environmentVariablesDeprecated)
                 {
-                    if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(ev.Item1)))
+                    if (!string.IsNullOrEmpty(environment.GetEnvironmentVariable(ev.Item1)))
                     {
                         Log.Warn("Environment Variable {OldName} is deprecated and may be removed in a future major version. Please use {NewName} instead.", ev.Item1, ev.Item2);
                     }
@@ -382,7 +391,7 @@ namespace NewRelic.Agent.Core
 
         private void StopServices()
         {
-            _threadProfilingService.Stop();
+            _threadProfilingService?.Stop();
         }
 
         /// <summary>

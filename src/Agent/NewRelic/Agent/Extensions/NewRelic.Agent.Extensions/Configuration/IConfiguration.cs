@@ -20,6 +20,8 @@ namespace NewRelic.Agent.Configuration
 
         string AgentLicenseKey { get; }
         IEnumerable<string> ApplicationNames { get; }
+        bool TryGetApplicationNames(out IEnumerable<string> names);
+
         string ApplicationNamesSource { get; }
         bool AutoStartAgent { get; }
         string BrowserMonitoringApplicationId { get; }
@@ -258,6 +260,10 @@ namespace NewRelic.Agent.Configuration
         List<string> ExcludedActivitySources { get; }
 
         bool OpenTelemetryBridgeEnabled { get; }
+        bool OpenTelemetryBridgeTracingEnabled { get; }
+        
         int MaxCustomInstrumentationSupportabilityMetrics { get; }
-    }
+
+        bool HybridHttpContextStorageEnabled { get; }
+        }
 }

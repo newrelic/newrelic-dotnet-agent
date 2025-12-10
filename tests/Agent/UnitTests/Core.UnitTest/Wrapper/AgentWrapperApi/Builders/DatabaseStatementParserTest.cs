@@ -89,8 +89,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
                 Mock.Create<IProcessStatic>(),
                 Mock.Create<IHttpRuntimeStatic>(),
                 Mock.Create<IConfigurationManagerStatic>(),
-                Mock.Create<IDnsStatic>(),
-                Mock.Create<IAgentHealthReporter>());
+                Mock.Create<IDnsStatic>());
 
             const string sql1 = "select * from table1";
             const string sql2 = "select * from table2";

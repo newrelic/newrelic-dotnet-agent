@@ -29,7 +29,7 @@ namespace NewRelic {
             }
 
             // Configure locale for UTF-8 and handle BOM
-            file.imbue(std::locale(file.getloc(), new std::codecvt_utf8_utf16<wchar_t, 0x10ffff, std::consume_header>()));
+            file.imbue(std::locale(file.getloc(), new std::codecvt_utf8_utf16<xchar_t, 0x10ffff, std::consume_header>())); // xchar_t is wchar_t on Windows, char16_t on Linux
 
             // Read file content
             xstringstream ss;

@@ -20,7 +20,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             : base(new RemoteService(
                 "AspNetCoreMvcRejitApplication",
                 "AspNetCoreMvcRejitApplication.exe",
-                "net9.0",
+                "net10.0",
                 ApplicationType.Bounded,
                 true,
                 true,

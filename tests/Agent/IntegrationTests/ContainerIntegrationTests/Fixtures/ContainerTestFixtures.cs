@@ -10,7 +10,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
 public abstract class ContainerTestFixtureBase : RemoteApplicationFixture
 {
-    private const string DotnetVersion = "9.0";
+    private const string DotnetVersion = "10.0";
 
     protected override int MaxTries => 1;
 
@@ -31,15 +31,6 @@ public abstract class ContainerTestFixtureBase : RemoteApplicationFixture
     }
 }
 
-public class DebianX64ContainerTestFixture : ContainerTestFixtureBase
-{
-    private const string Dockerfile = "SmokeTestApp/Dockerfile";
-    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "bookworm-slim"; // Debian 12
-
-    public DebianX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
-}
-
 public class UbuntuX64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
@@ -55,15 +46,6 @@ public class AlpineX64ContainerTestFixture : ContainerTestFixtureBase
     private const string DistroTag = "alpine";
 
     public AlpineX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
-}
-
-public class DebianArm64ContainerTestFixture : ContainerTestFixtureBase
-{
-    private const string Dockerfile = "SmokeTestApp/Dockerfile";
-    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
-    private const string DistroTag = "bookworm-slim"; // Debian 12
-
-    public DebianArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 }
 
 public class UbuntuArm64ContainerTestFixture : ContainerTestFixtureBase

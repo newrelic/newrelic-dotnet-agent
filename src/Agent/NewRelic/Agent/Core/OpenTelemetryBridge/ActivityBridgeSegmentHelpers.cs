@@ -17,6 +17,7 @@ using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
+using static Grpc.Core.ServerServiceDefinition;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge;
 
@@ -35,6 +36,8 @@ public static class ActivityBridgeSegmentHelpers
         string activityLogPrefix = ActivityLogPrefixHelpers.ActivityLogPrefix(activityId, activityKind, displayName);
 
         Log.Debug($"{activityLogPrefix} has stopped.");
+
+        GetInstrumentationScopeAttributes(segment, activity);
 
         var tags = ((IEnumerable<KeyValuePair<string, object>>)activity.TagObjects).ToDictionary(t => t.Key, t => t.Value);
         if (tags.Count == 0)
@@ -111,6 +114,29 @@ public static class ActivityBridgeSegmentHelpers
         }
     }
 
+    private static void GetInstrumentationScopeAttributes(ISegment segment, dynamic activity)
+    {
+        dynamic activitySource = activity.Source;
+        if (activitySource != null)
+        {
+            string scopeName = activitySource.Name;
+            if (scopeName != NewRelicActivitySourceProxy.ActivitySourceName) // don't add New Relic's own activity source as a scope
+            {
+                segment.AddAgentAttribute("otel.scope.name", scopeName);
+                // include the deprecated instrumentation library tags for backward compatibility
+                segment.AddAgentAttribute("otel.instrumentation_library.name", scopeName);
+
+                string scopeVersion = activitySource.Version;
+                if (!string.IsNullOrEmpty(scopeVersion))
+                {
+                    segment.AddAgentAttribute("otel.scope.version", scopeVersion);
+                    // include the deprecated instrumentation library tags for backward compatibility
+                    segment.AddAgentAttribute("otel.instrumentation_library.version", scopeVersion);
+                }
+            }
+        }
+    }
+
     private static void ProcessRpcClientTags(ISegment segment, IAgent agent, IErrorService errorService, Dictionary<string, object> tags, string activityLogPrefix, string rpcSystem)
     {
         tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code"], out var statusCode);
@@ -120,13 +146,13 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetAndRemoveTag<string>(["grpc.method"], out var grpcMethod);
 
         tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address"], out var host);
-        tags.TryGetAndRemoveTag<int>(["server.port", "network.peer.port"], out var port);
+        tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
 
         // TODO: Otel tracing spec says "component" should be set to the rpc system, but the grpc spec makes no mention of it.
         // TODO: ExternalSegmentData curently sets Component as an Intrinsic attribute on the span, with a value of _segmentData.TypeName (which ends up being `NewRelic.Agent.Core.OpenTelemetryBridge.ActivityBridge`)  with no override available. So there's no way for us to set the same attribute with a different value.
         //segment.AddCustomAttribute("component", rpcSystem);
 
-        var path = BuildRpcPath(host, port, service, method, grpcMethod);
+        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
         Uri uri = new Uri(path);
         var externalSegmentData = new ExternalSegmentData(uri, method);
 
@@ -170,7 +196,7 @@ public static class ActivityBridgeSegmentHelpers
 
         var transaction = hybridAgentSegment.GetTransactionFromSegment();
 
-        var path = BuildRpcPath(host, port, service, method, grpcMethod);
+        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
         transaction.SetUri(path);
 
         transaction.SetRequestMethod(method ?? grpcMethod ?? "Unknown"); // TODO: should we default to "Unknown" or leave it null?
@@ -317,7 +343,7 @@ public static class ActivityBridgeSegmentHelpers
             "kafka" => "Kafka",
             "aws.sqs" => SqsHelper.VendorName,
             "aws.sns" => "SNS",
-            "azure.servicebus" => "ServiceBus",
+            "servicebus" => "ServiceBus",
             _ => messagingSystem.CapitalizeEachWord() // default to capitalizing each word in the messaging system name
         };
 
@@ -449,7 +475,8 @@ public static class ActivityBridgeSegmentHelpers
             "redis" => DatastoreVendor.Redis,
             "azure.cosmosdb" => DatastoreVendor.CosmosDB,
             "elasticsearch" => DatastoreVendor.Elasticsearch,
-            "aws.dynamodb" => DatastoreVendor.DynamoDB,
+            "dynamodb" => DatastoreVendor.DynamoDB, // OpenTelemetry.Instrumentation.AWS produces "dynamodb" for db.system
+            "aws.dynamodb" => DatastoreVendor.DynamoDB, // the otel spec says "aws.dynamodb" is the correct value for DynamoDB
             _ => DatastoreVendor.Other
         };
 
@@ -459,6 +486,7 @@ public static class ActivityBridgeSegmentHelpers
         ISegmentData segmentData = vendor switch
         {
             DatastoreVendor.Elasticsearch => GetElasticSearchDatastoreSegmentData(agent, tags, vendor, activityLogPrefix),
+            DatastoreVendor.DynamoDB => GetDynamoDbDatastoreSegmentData(agent, activity, activityLogPrefix, tags, segment),
             _ => GetDefaultDatastoreSegmentData(agent, activity, activityLogPrefix, tags, vendor)
         };
 
@@ -541,6 +569,40 @@ public static class ActivityBridgeSegmentHelpers
 
         Log.Finest($"Created DatastoreSegmentData for Elasticsearch {activityLogPrefix}");
         return new DatastoreSegmentData(agent.GetExperimentalApi().DatabaseService, parsedSqlStatement, string.Empty, connectionInfo);
+    }
+
+    private static ISegmentData GetDynamoDbDatastoreSegmentData(IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, ISegment segment)
+    {
+        tags.TryGetAndRemoveTag<string>(["aws.dynamodb.table_names"], out var tableNames);
+        if (string.IsNullOrEmpty(tableNames))
+        {
+            Log.Finest($"DynamoDB {activityLogPrefix} is missing required tag for table names. Not creating a DatastoreSegmentData.");
+            return null;
+        }
+
+        // DynamoDB operation is in rpc.method
+        tags.TryGetAndRemoveTag<string>(["rpc.method"], out var dbOperation);
+        if (string.IsNullOrEmpty(dbOperation))
+        {
+            Log.Finest($"DynamoDB {activityLogPrefix} is missing required tag for operation. Not creating a DatastoreSegmentData.");
+            return null;
+        }
+
+        // Add DynamoDB specific attributes to the segment
+        segment.AddCloudSdkAttribute("aws.operation", dbOperation);
+
+        // spec says region is in cloud.region but it's not there currently
+        if (tags.TryGetAndRemoveTag<string>(["cloud.region"], out var awsRegion))
+            segment.AddCloudSdkAttribute("aws.region", awsRegion);
+
+        // requestId is in aws.request_id
+        if (tags.TryGetAndRemoveTag<string>(["aws.request_id"], out var requestId))
+            segment.AddCloudSdkAttribute("aws.requestId", requestId);
+
+        var parsedSqlStatement = new ParsedSqlStatement(DatastoreVendor.DynamoDB, tableNames, dbOperation);
+
+        Log.Finest($"Created DatastoreSegmentData for DynamoDB {activityLogPrefix}");
+        return new DatastoreSegmentData(agent.GetExperimentalApi().DatabaseService, parsedSqlStatement, string.Empty, null);
     }
 
     public static void AddExceptionEventInformationToSegment(this ISegment segment, object originalActivity, IErrorService errorService)

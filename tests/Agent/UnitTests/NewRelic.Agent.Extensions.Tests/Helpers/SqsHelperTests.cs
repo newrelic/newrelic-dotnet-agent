@@ -221,6 +221,11 @@ namespace Agent.Extensions.Tests.Helpers
             throw new NotImplementedException();
         }
 
+        public ISpan AddAgentAttribute(string key, object value)
+        {
+            throw new NotImplementedException();
+        }
+
         public ISpan SetName(string name)
         {
             throw new NotImplementedException();

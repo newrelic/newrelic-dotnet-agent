@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.47.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.47.0...v10.47.1) (2025-12-02)
+
+
+### Fixes
+
+* Cache all environment variable access to reduce possible thread contention ([#3322](https://github.com/newrelic/newrelic-dotnet-agent/issues/3322)) ([e2a8109](https://github.com/newrelic/newrelic-dotnet-agent/commit/e2a81097d94a12e9dd06992f32302699073ad870))
+* Ensure OpenAI LLM supportability metrics are recorded on all invocations. ([#3320](https://github.com/newrelic/newrelic-dotnet-agent/issues/3320)) ([a4d7af8](https://github.com/newrelic/newrelic-dotnet-agent/commit/a4d7af84f24a530c0c264db439f49bf5be4771e5))
+
+## [10.47.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.46.1...v10.47.0) (2025-11-18)
+
+
+### New features
+
+* Add an optional transaction storage mechanism to allow transactions to flow with the ExecutionContext for ASP.NET web apps ([#3311](https://github.com/newrelic/newrelic-dotnet-agent/issues/3311)) ([d254ce9](https://github.com/newrelic/newrelic-dotnet-agent/commit/d254ce9f13cd918bc289c3a06f337e7cf0c11d3b))
+
+
+### Fixes
+
+* Azure Service Bus instrumentation fails due to null reference exception ([#3305](https://github.com/newrelic/newrelic-dotnet-agent/issues/3305)) ([b2bf4df](https://github.com/newrelic/newrelic-dotnet-agent/commit/b2bf4dfc7e28c5a2ef4bdd8ede0e7d8d73bba0dc))
+* OpenAI instrumentation ignores chat completions when `CompleteChatAsync()` or `CompleteChat()` `messages` parameter is not an `Array` ([#3317](https://github.com/newrelic/newrelic-dotnet-agent/issues/3317)) ([3df9570](https://github.com/newrelic/newrelic-dotnet-agent/commit/3df957095c61940c0e9713affc9699afaa31f8cb))
+
+## [10.46.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.46.0...v10.46.1) (2025-11-11)
+
+
+### Fixes
+
+* Remove "consume" span from Azure Service Bus transactions created in "processor" mode for more accurate transaction timing. ([faa591f](https://github.com/newrelic/newrelic-dotnet-agent/commit/faa591f19ef25fe51b3b006c45774f415fb3a780))
+* Update ReportedConfiguration to serialize certain enums as strings instead of integers for better clarity when viewing settings in the UI ([#3296](https://github.com/newrelic/newrelic-dotnet-agent/issues/3296)) ([e972745](https://github.com/newrelic/newrelic-dotnet-agent/commit/e97274582cdc4e8f6638b941ece8926116d0c04b))
+
+## [10.46.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.45.0...v10.46.0) (2025-10-28)
+
+
+### New features
+
+* .NET 10 Support ([#3271](https://github.com/newrelic/newrelic-dotnet-agent/issues/3271)) ([3b03e65](https://github.com/newrelic/newrelic-dotnet-agent/commit/3b03e65852475b59e3637081425c137d4f7cb914))
+* Add environment variable support to enable/disable browser agent ([#3279](https://github.com/newrelic/newrelic-dotnet-agent/issues/3279)) ([faec9a9](https://github.com/newrelic/newrelic-dotnet-agent/commit/faec9a9d19d5ced83ad4ec4f3b6a282d132906ed))
+
+
+### Fixes
+
+* AgentHealthReporter runs when the agent is disabled via config ([#3267](https://github.com/newrelic/newrelic-dotnet-agent/issues/3267)) ([76154c9](https://github.com/newrelic/newrelic-dotnet-agent/commit/76154c9e80ea77cd1b3e09bacbd48fa7be2894f1))
+* Remove service bus distributed trace header manipulation from Azure Function instrumentation. ([#3274](https://github.com/newrelic/newrelic-dotnet-agent/issues/3274)) ([e21eca0](https://github.com/newrelic/newrelic-dotnet-agent/commit/e21eca052261b415a8b194d917d11455a3b38a68))
+
+## [10.45.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.44.1...v10.45.0) (2025-09-30)
+
+
+### New features
+
+* Add a new Distributed Tracing sampler, the TraceId Ratio-Based Sampler, which is based on the [OpenTelemetry implementation](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/src/OpenTelemetry/Trace/Sampler/TraceIdRatioBasedSampler.cs). This sampler makes its sampling decision using the TraceId (a random GUID) and a configured sampling ratio (a target percentage of traces to be sampled).  For more information, see the [OpenTelemetry specification](https://opentelemetry.io/docs/specs/otel/trace/tracestate-probability-sampling/). ([#3211](https://github.com/newrelic/newrelic-dotnet-agent/issues/3211)) ([63ca603](https://github.com/newrelic/newrelic-dotnet-agent/commit/63ca603ca6cb86110431413c03afbf8a8c8e9367))
+
+
+### Fixes
+
+* MSSQL connection string parsing can throw exceptions and disable Datastore instrumentation ([#3263](https://github.com/newrelic/newrelic-dotnet-agent/issues/3263)) ([cdf000b](https://github.com/newrelic/newrelic-dotnet-agent/commit/cdf000b73fe4beaa73fa4bfe3d338f8eb6698cf1))
+* Resolve issues with Kafka "Consume" instrumentation to ensure that automatic instrumentation works in conjunction with custom instrumentation. ([#3257](https://github.com/newrelic/newrelic-dotnet-agent/issues/3257)) ([1dbd1c5](https://github.com/newrelic/newrelic-dotnet-agent/commit/1dbd1c51aeaf6e2909d23b078029ee78b721b3bc))
+
 ## [10.44.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.44.0...v10.44.1) (2025-08-19)
 
 

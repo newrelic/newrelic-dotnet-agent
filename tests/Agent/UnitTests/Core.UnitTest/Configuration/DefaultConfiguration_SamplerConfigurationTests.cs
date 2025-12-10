@@ -53,7 +53,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
         }
 
         [TestCase("alwaysOn", SamplerType.AlwaysOn, TestName = "RootSamplerType_AlwaysOn_EnvironmentVariableOverride")]
@@ -122,7 +122,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             // Arrange
             var ratio = 0.42m;
-            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioSamplerType { sampleRatio = ratio };
+            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioBasedSamplerType { ratio = ratio };
 
             // Act
             var value = _config.RootTraceIdRatioSamplerRatio;
@@ -157,12 +157,12 @@ namespace NewRelic.Agent.Core.Configuration
             // Arrange
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT"))
                 .Returns("traceIdRatioBased");
-            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioSamplerType { sampleRatio = 0.7m };
+            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioBasedSamplerType { ratio = 0.7m };
 
             // Recreate config to apply env override
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RootTraceIdRatioSamplerRatio;
@@ -175,13 +175,13 @@ namespace NewRelic.Agent.Core.Configuration
         public void RootTraceIdRatioSamplerRatio_IsNull_WhenEnvOverridesSamplerTypeToNonRatioBased()
         {
             // Arrange
-            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioSamplerType { sampleRatio = 0.15m }; // should be ignored
+            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioBasedSamplerType { ratio = 0.15m }; // should be ignored
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT"))
                 .Returns("alwaysOn");
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RootTraceIdRatioSamplerRatio;
@@ -200,7 +200,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RootTraceIdRatioSamplerRatio;
@@ -218,7 +218,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             // Arrange
             var ratio = 0.33m;
-            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioSamplerType { sampleRatio = ratio };
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioBasedSamplerType { ratio = ratio };
 
             // Act
             var value = _config.RemoteParentSampledTraceIdRatioSamplerRatio;
@@ -253,11 +253,11 @@ namespace NewRelic.Agent.Core.Configuration
             // Arrange
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED"))
                 .Returns("traceIdRatioBased");
-            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioSamplerType { sampleRatio = 0.55m };
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioBasedSamplerType { ratio = 0.55m };
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentSampledTraceIdRatioSamplerRatio;
@@ -270,13 +270,13 @@ namespace NewRelic.Agent.Core.Configuration
         public void RemoteParentSampledTraceIdRatioSamplerRatio_IsNull_WhenEnvOverridesSamplerTypeToNonRatioBased()
         {
             // Arrange
-            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioSamplerType { sampleRatio = 0.25m }; // should be ignored
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioBasedSamplerType { ratio = 0.25m }; // should be ignored
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED"))
                 .Returns("alwaysOff");
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentSampledTraceIdRatioSamplerRatio;
@@ -295,7 +295,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentSampledTraceIdRatioSamplerRatio;
@@ -313,7 +313,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             // Arrange
             var ratio = 0.61m;
-            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioSamplerType { sampleRatio = ratio };
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioBasedSamplerType { ratio = ratio };
 
             // Act
             var value = _config.RemoteParentNotSampledTraceIdRatioSamplerRatio;
@@ -348,11 +348,11 @@ namespace NewRelic.Agent.Core.Configuration
             // Arrange
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED"))
                 .Returns("traceIdRatioBased");
-            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioSamplerType { sampleRatio = 0.9m };
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioBasedSamplerType { ratio = 0.9m };
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentNotSampledTraceIdRatioSamplerRatio;
@@ -365,13 +365,13 @@ namespace NewRelic.Agent.Core.Configuration
         public void RemoteParentNotSampledTraceIdRatioSamplerRatio_IsNull_WhenEnvOverridesSamplerTypeToNonRatioBased()
         {
             // Arrange
-            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioSamplerType { sampleRatio = 0.11m }; // should be ignored
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioBasedSamplerType { ratio = 0.11m }; // should be ignored
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED"))
                 .Returns("default");
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentNotSampledTraceIdRatioSamplerRatio;
@@ -390,7 +390,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act
             var value = _config.RemoteParentNotSampledTraceIdRatioSamplerRatio;
@@ -413,7 +413,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOn));
@@ -429,7 +429,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentSampledSamplerType, Is.EqualTo(SamplerType.TraceIdRatioBased));
@@ -445,7 +445,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOff));
@@ -461,7 +461,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentNotSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOff));
@@ -477,7 +477,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentNotSampledSamplerType, Is.EqualTo(SamplerType.Adaptive));
@@ -493,7 +493,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
                 _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
-                _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+                _configurationManagerStatic, _dnsStatic);
 
             // Act / Assert
             Assert.That(_config.RemoteParentNotSampledSamplerType, Is.EqualTo(SamplerType.AlwaysOn));
@@ -506,7 +506,7 @@ namespace NewRelic.Agent.Core.Configuration
         public void RootSampler_Ratio_EnvironmentOverride_TakesPrecedence()
         {
             // local config ratio (should be overridden)
-            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioSamplerType { sampleRatio = 0.33m };
+            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioBasedSamplerType { ratio = 0.33m };
 
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT"))
                 .Returns("traceIdRatioBased");
@@ -525,7 +525,7 @@ namespace NewRelic.Agent.Core.Configuration
         [Test]
         public void RootSampler_Ratio_InvalidEnv_FallsBackToLocal()
         {
-            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioSamplerType { sampleRatio = 0.25m };
+            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioBasedSamplerType { ratio = 0.25m };
 
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT"))
                 .Returns("traceIdRatioBased");
@@ -544,7 +544,7 @@ namespace NewRelic.Agent.Core.Configuration
         [Test]
         public void RootSampler_Ratio_EnvSamplerNotRatioBased_ReturnsNull()
         {
-            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioSamplerType { sampleRatio = 0.20m };
+            _localConfig.distributedTracing.sampler.root.Item = new TraceIdRatioBasedSamplerType { ratio = 0.20m };
 
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT"))
                 .Returns("alwaysOn");
@@ -563,7 +563,7 @@ namespace NewRelic.Agent.Core.Configuration
         [Test]
         public void RemoteParentSampled_Ratio_EnvironmentOverride_TakesPrecedence()
         {
-            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioSamplerType { sampleRatio = 0.10m };
+            _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioBasedSamplerType { ratio = 0.10m };
 
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED"))
                 .Returns("traceIdRatioBased");
@@ -582,7 +582,7 @@ namespace NewRelic.Agent.Core.Configuration
         [Test]
         public void RemoteParentNotSampled_Ratio_LocalOnly()
         {
-            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioSamplerType { sampleRatio = 0.60m };
+            _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioBasedSamplerType { ratio = 0.60m };
 
             CreateConfig();
 

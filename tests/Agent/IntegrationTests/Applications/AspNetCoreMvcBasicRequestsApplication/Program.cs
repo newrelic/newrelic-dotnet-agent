@@ -5,8 +5,8 @@
 using ApplicationLifecycle;
 using System.Net;
 using System.Threading;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 
 namespace AspNetCoreMvcBasicRequestsApplication
 {
@@ -18,10 +18,10 @@ namespace AspNetCoreMvcBasicRequestsApplication
         {
             _port = AppLifecycleManager.GetPortFromArgs(args);
 
-            OverrideSslSettingsForMockNewRelic();
-
             var ct = new CancellationTokenSource();
-            var task = BuildWebHost(args).RunAsync(ct.Token);
+            var host = BuildHost(args);
+
+            var task = host.RunAsync(ct.Token);
 
             AppLifecycleManager.CreatePidFile();
 
@@ -32,27 +32,14 @@ namespace AspNetCoreMvcBasicRequestsApplication
             task.GetAwaiter().GetResult();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .UseUrls($@"http://127.0.0.1:{_port}/")
+        public static IHost BuildHost(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder
+                        .UseStartup<Startup>()
+                        .UseUrls($@"http://127.0.0.1:{_port}/");
+                })
                 .Build();
-
-        /// <summary>
-        /// When the MockNewRelic app is used in place of the normal New Relic / Collector endpoints,
-        /// the mock version uses a self-signed cert that will not be "trusted."
-        ///
-        /// This forces all validation checks to pass.
-        /// </summary>
-        private static void OverrideSslSettingsForMockNewRelic()
-        {
-#if !NET9_0_OR_GREATER
-            ServicePointManager.ServerCertificateValidationCallback = delegate
-            {
-                //force trust on all certificates for simplicity
-                return true;
-            };
-#endif
-        }
     }
 }

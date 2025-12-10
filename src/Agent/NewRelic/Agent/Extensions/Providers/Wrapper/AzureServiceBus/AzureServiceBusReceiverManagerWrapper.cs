@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -12,7 +14,11 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
     public class AzureServiceBusReceiverManagerWrapper : AzureServiceBusWrapperBase
     {
         private static Func<object, object> _receiverAccessor;
-        public override bool IsTransactionRequired => true;
+        private static Func<object, string> _entityPathAccessor;
+        private static Func<object, string> _fullyQualifiedNamespaceAccessor;
+        private static bool _badReceiverWarningLogged;
+
+        public override bool IsTransactionRequired => false;
 
         public override CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
         {
@@ -22,18 +28,48 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
 
         public override AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var receiverManager = instrumentedMethodCall.MethodCall.InvocationTarget;
-            _receiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(receiverManager.GetType(), "Receiver");
-            dynamic receiver = _receiverAccessor(receiverManager);
+            string queueOrTopicName = null;
+            string fqns = null;
 
-            string queueOrTopicName = receiver.EntityPath; // some-queue|topic-name
-            string fqns = receiver.FullyQualifiedNamespace; // some-service-bus-entity.servicebus.windows.net
+            var receiverManager = instrumentedMethodCall.MethodCall.InvocationTarget;
+            var receiverManagerType = receiverManager.GetType();
+            _receiverAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(receiverManagerType, "Receiver");
+            object receiver = _receiverAccessor(receiverManager);
+            if (receiver == null)
+            {
+                if (!_badReceiverWarningLogged)
+                {
+                    agent.Logger.Warn("AzureServiceBusReceiverManagerWrapper: Unable to access Receiver property on ReceiverManager instance of type {ReceiverManagerType}. Unable to access queue/topic name or fully qualified namespace.", receiverManagerType);
+                    _badReceiverWarningLogged = true;
+                }
+            }
+            else
+            {
+                _entityPathAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "EntityPath");
+                _fullyQualifiedNamespaceAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(receiver.GetType(), "FullyQualifiedNamespace");
+
+                queueOrTopicName = _entityPathAccessor(receiver)?.ToString(); // some-queue|topic-name
+                fqns = _fullyQualifiedNamespaceAccessor(receiver)?.ToString(); // some-service-bus-entity.servicebus.windows.net
+            }
+
             var destinationType = GetMessageBrokerDestinationType(queueOrTopicName);
 
-            if (instrumentedMethodCall.IsAsync)
-                transaction.AttachToAsync();
+            // create a transaction for this method call. This method invokes the ProcessMessageAsync handler
+            transaction = agent.CreateTransaction(
+                destinationType: destinationType,
+                BrokerVendorName,
+                destination: queueOrTopicName);
 
-            // start a new MessageBroker segment that wraps ProcessOneMessageWithinScopeAsync
+            if (instrumentedMethodCall.IsAsync)
+            {
+                transaction.DetachFromPrimary();
+                transaction.AttachToAsync();
+            }
+
+            // extract DT headers from the message and create a distributed trace payload
+            ExtractAndAcceptDistributedTracePayload(agent, transaction, instrumentedMethodCall.MethodCall.MethodArguments[0]);
+
+            // start a new MessageBroker segment that wraps ProcessOneMessage
             var segment = transaction.StartMessageBrokerSegment(
                 instrumentedMethodCall.MethodCall,
                 destinationType,
@@ -59,6 +95,29 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
                     segment.End();
                     transaction.End();
                 });
+        }
+
+        private void ExtractAndAcceptDistributedTracePayload(IAgent agent, ITransaction transaction, object receivedMessage)
+        {
+            dynamic msg = receivedMessage;
+            if (msg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
+            {
+                transaction.LogFinest("ReceiveManagerWrapper: Accepting distributed trace headers");
+                transaction.AcceptDistributedTraceHeaders(applicationProperties, ProcessHeaders, TransportType.Queue);
+            }
+        }
+        private static IEnumerable<string> ProcessHeaders(ReadOnlyDictionary<string, object> applicationProperties, string key)
+        {
+            var headerValues = new List<string>();
+            foreach (var item in applicationProperties)
+            {
+                if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+                {
+                    headerValues.Add(item.Value as string);
+                }
+            }
+
+            return headerValues;
         }
     }
 }
