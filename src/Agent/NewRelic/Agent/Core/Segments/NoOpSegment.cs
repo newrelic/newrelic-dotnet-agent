@@ -68,6 +68,11 @@ namespace NewRelic.Agent.Core.Segments
             return this;
         }
 
+        public ISpan AddAgentAttribute(string key, object value)
+        {
+            return this;
+        }
+
         public ISpan SetName(string name)
         {
             return this;

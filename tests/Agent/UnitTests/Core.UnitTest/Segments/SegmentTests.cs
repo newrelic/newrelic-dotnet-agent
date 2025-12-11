@@ -112,6 +112,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
             Assert.DoesNotThrow(() => segment.SetSegmentData(null));
             Assert.DoesNotThrow(() => segment.AddCustomAttribute("key", "value"));
             Assert.DoesNotThrow(() => segment.AddCloudSdkAttribute("key", "value"));
+            Assert.DoesNotThrow(() => segment.AddAgentAttribute("key", "value"));
             Assert.DoesNotThrow(() => segment.SetName("name"));
             Assert.That(segment.GetCategory(), Is.EqualTo(string.Empty));
             Assert.That(segment.DurationOrZero, Is.EqualTo(TimeSpan.Zero));

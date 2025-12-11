@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
@@ -27,7 +26,10 @@ namespace NewRelic.Agent.UnitTests.Core.UnitTest.OpenTelemetryBridge
             _mockErrorService = Mock.Create<IErrorService>();
             _mockConfig = Mock.Create<IConfiguration>();
             Mock.Arrange(() => _mockAgent.Configuration).Returns(_mockConfig);
+            // enable globally
             Mock.Arrange(() => _mockConfig.OpenTelemetryBridgeEnabled).Returns(true);
+
+            Mock.Arrange(() => _mockConfig.OpenTelemetryBridgeTracingEnabled).Returns(true);
         }
 
         [Test]
@@ -48,10 +50,10 @@ namespace NewRelic.Agent.UnitTests.Core.UnitTest.OpenTelemetryBridge
         }
 
         [Test]
-        public void Start_ReturnsTrue_WhenOpenTelemetryBridgeDisabled()
+        public void Start_ReturnsTrue_WhenOpenTelemetryBridgeTracingDisabled()
         {
             // Arrange
-            Mock.Arrange(() => _mockConfig.OpenTelemetryBridgeEnabled).Returns(false);
+            Mock.Arrange(() => _mockConfig.OpenTelemetryBridgeTracingEnabled).Returns(false);
 
             var bridge = new ActivityBridge(_mockAgent, _mockErrorService);
 
@@ -59,7 +61,7 @@ namespace NewRelic.Agent.UnitTests.Core.UnitTest.OpenTelemetryBridge
             var result = bridge.Start();
 
             // Assert
-            Assert.That(result, Is.True, "Start should return true if OpenTelemetryBridge is disabled.");
+            Assert.That(result, Is.True, "Start should return true if OpenTelemetryBridgeTracing is disabled.");
         }
 
         [Test]

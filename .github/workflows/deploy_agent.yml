@@ -48,6 +48,7 @@ on:
 permissions:
   contents: read
   packages: read
+  id-token: write
   
 env:
   DOTNET_NOLOGO: true
@@ -61,14 +62,14 @@ jobs:
       workflow_run_id: ${{ steps.step2.outputs.workflow_run_id }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
         if: ${{ inputs.get-version-automatically }}
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           fetch-depth: 0
       
@@ -155,7 +156,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           disable-sudo: true
           egress-policy: audit
@@ -257,6 +258,8 @@ jobs:
     if: ${{ inputs.nuget }}
     name: Deploy Agent to NuGet
     runs-on: windows-2022
+    permissions:
+      id-token: write #enable GitHub OIDC token issuance for this job
 
     env:
       nuget_source: https://www.nuget.org
@@ -267,19 +270,21 @@ jobs:
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir
-
-      - name: Setup NuGet API Key
-        run: |
-          nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
-        shell: pwsh
-
+          
+      # Get a short-lived NuGet API key
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@d22cc5f58ff5b88bf9bd452535b4335137e24544 # v1.1.0
+        id: login
+        with:
+          user: ${{ secrets.NUGET_TRUSTED_PUBLISH_POLICY_USER }}
+        
       - name: Deploy Agent to Nuget
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgent\NewRelic.Agent.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgent\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+            nuget.exe push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
@@ -293,7 +298,7 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgentApi\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Api').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+            nuget.exe push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
@@ -307,7 +312,7 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureCloudServices\$packageName
           $version = $packageName.TrimStart('NewRelicWindowsAzure').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+            nuget.exe push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
@@ -321,7 +326,7 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+            nuget.exe push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
@@ -335,7 +340,7 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+            nuget.exe push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
@@ -350,7 +355,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           egress-policy: audit
 
@@ -361,7 +366,7 @@ jobs:
         shell: bash
 
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           fetch-depth: 0
 

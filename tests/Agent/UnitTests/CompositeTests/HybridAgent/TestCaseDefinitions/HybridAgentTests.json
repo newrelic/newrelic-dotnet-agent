@@ -2391,12 +2391,41 @@
                 "childOperations": [
                     {
                         "command": "DoWorkInSpan",
-                        "parameters": { "spanName": "Grpc Server Minimal", "spanKind": "Server" },
+                        "parameters": {
+                            "spanName": "Grpc Server Minimal",
+                            "spanKind": "Server"
+                        },
                         "childOperations": [
-                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.system", "value": "grpc" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.grpc.status_code", "value": 3, "type": "int" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "server.address", "value": "bare.example.com" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "server.port", "value": 7777, "type": "int" } }
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.system",
+                                    "value": "grpc"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.grpc.status_code",
+                                    "value": 3,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "bare.example.com"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 7777,
+                                    "type": "int"
+                                }
+                            }
                         ]
                     }
                 ]
@@ -2424,6 +2453,158 @@
                     "category": "generic",
                     "attributes": {
                         //"component": "grpc" -- doesn't work currently
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Simple With Extra Attributes and scope tags",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "TxnWithExtras"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "SpanWithExtras",
+                            "spanKind": "Internal"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "custom.attribute",
+                                    "value": "customValue"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "another.attribute",
+                                    "value": 12345,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "TxnWithExtras"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "SpanWithExtras",
+                    "parentName": "TxnWithExtras",
+                    "category": "generic",
+                    "attributes": {
+                        "custom.attribute": "customValue",
+                        "another.attribute": 12345,
+                        "otel.scope.name": "TestApp activity source",
+                        "otel.scope.version": "1.2.3",
+                        "otel.instrumentation_library.name": "TestApp activity source",
+                        "otel.instrumentation_library.version": "1.2.3"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Client Database - AWS DynamoDB PutItem",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "DynamoDB.PutItem",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.method",
+                                    "value": "PutItem"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.system",
+                                    "value": "aws-api"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.service",
+                                    "value": "DynamoDB"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "db.system",
+                                    "value": "dynamodb"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "aws.dynamodb.table_names",
+                                    "value": "Movies"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "aws.request_id",
+                                    "value": "f9926109-56fc-412f-a3b2-d27742d5f5c1"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "cloud.region",
+                                    "value": "us-east-1"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "Datastore/statement/DynamoDB/Movies/PutItem",
+                    "parentName": "Foo",
+                    "category": "datastore",
+                    "attributes": {
+                        "db.collection": "Movies",
+                        "db.operation": "PutItem",
+                        "db.system": "dynamodb",
+                        "aws.operation": "PutItem",
+                        "aws.requestId": "f9926109-56fc-412f-a3b2-d27742d5f5c1",
+                        "aws.region": "us-east-1"
                     }
                 }
             ]
