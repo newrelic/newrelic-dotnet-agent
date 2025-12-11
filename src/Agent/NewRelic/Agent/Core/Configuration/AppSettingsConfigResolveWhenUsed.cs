@@ -40,42 +40,19 @@ namespace NewRelic.Agent.Core.Configuration
                 applicationDirectory = Directory.GetCurrentDirectory();
             }
 
-            try
-            {
-                // add default appsettings.json files to config builder using dynamic for runtime type resolution
-                dynamic builder = Activator.CreateInstance(typeof(ConfigurationBuilder));
-                builder = builder.SetBasePath(applicationDirectory)
-                                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
+            // add default appsettings.json files to config builder
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(applicationDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
 
-                _appSettingsFilePaths = Path.Combine(applicationDirectory, "appsettings.json");
+            _appSettingsFilePaths = Path.Combine(applicationDirectory, "appsettings.json");
 
-                // Determine if there is a .NET environment configured, or default to "Production"
-                var environment = GetDotnetEnvironment();
-                builder = builder.AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false);
-                var appSettingsEnvPath = Path.Combine(applicationDirectory, $"appsettings.{environment}.json");
-                _appSettingsFilePaths = string.Join(", ", _appSettingsFilePaths, appSettingsEnvPath);
+            var environment = GetDotnetEnvironment();
+            builder.AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false);
+            var appSettingsEnvPath = Path.Combine(applicationDirectory, $"appsettings.{environment}.json");
+            _appSettingsFilePaths = string.Join(", ", _appSettingsFilePaths, appSettingsEnvPath);
 
-                // Explicitly cast the dynamic result to IConfigurationRoot
-                return (IConfigurationRoot)builder.Build();
-            }
-            catch (Exception ex)
-            {
-                Log.Debug(ex, "Failed to create configuration using dynamic approach, falling back to static approach");
-                
-                // Fallback to compile-time approach if dynamic fails
-                var builder = new ConfigurationBuilder()
-                    .SetBasePath(applicationDirectory)
-                    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
-
-                _appSettingsFilePaths = Path.Combine(applicationDirectory, "appsettings.json");
-
-                var environment = GetDotnetEnvironment();
-                builder.AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false);
-                var appSettingsEnvPath = Path.Combine(applicationDirectory, $"appsettings.{environment}.json");
-                _appSettingsFilePaths = string.Join(", ", _appSettingsFilePaths, appSettingsEnvPath);
-
-                return builder.Build();
-            }
+            return builder.Build();
         }
 
         private static string GetDotnetEnvironment()

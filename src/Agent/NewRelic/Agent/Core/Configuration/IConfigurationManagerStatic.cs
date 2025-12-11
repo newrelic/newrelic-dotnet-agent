@@ -90,27 +90,10 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                try
-                {
-                    if (!localConfigChecksDisabled)
-                    {
-                        // Use internal bridge to access application's configuration
-                        try
-                        {
-                            return ConfigurationBridge.GetAppSettingsFilePath();
-                        }
-                        catch
-                        {
-                            // Fall back to existing logic
-                            return AppSettingsConfigResolveWhenUsed.AppSettingsFilePath;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Debug(ex, "ConfigurationManagerStatic: Error getting AppSettingsFilePath.");
-                }
-                return null;
+                if (localConfigChecksDisabled)
+                    return null;
+
+                return ConfigurationBridge.GetAppSettingsFilePath();
             }
         }
 
@@ -121,32 +104,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             try
             {
-                // Use internal bridge first to access application's configuration
-                try
-                {
-                    return ConfigurationBridge.GetAppSetting(key);
-                }
-                catch
-                {
-                    // Fall back to existing logic - We're wrapping this in a try/catch to deal with the case where the necessary assemblies, in this case
-                    // Microsoft.Extensions.Configuration, aren't present in the application being instrumented
-                    try
-                    {
-                        return AppSettingsConfigResolveWhenUsed.GetAppSetting(key);
-                    }
-                    catch (FileNotFoundException e)
-                    {
-                        Log.Debug(e, "appsettings.json will not be searched for config values because this application does not reference: {e.FileName}.");
-                        localConfigChecksDisabled = true;
-                        return null;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Debug(e, "appsettings.json will not be searched for config values because an error was encountered");
-                        localConfigChecksDisabled = true;
-                        return null;
-                    }
-                }
+                return ConfigurationBridge.GetAppSetting(key);
             }
             catch (Exception ex)
             {

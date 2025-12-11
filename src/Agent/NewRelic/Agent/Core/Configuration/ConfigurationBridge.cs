@@ -220,7 +220,7 @@ namespace NewRelic.Agent.Core.Configuration
                         }
                         catch (Exception ex)
                         {
-                            Log.Finest(ex, $"ConfigurationBridge: Error examining assembly {assembly.FullName}");
+                            Log.Debug(ex, $"ConfigurationBridge: Error examining assembly {assembly.FullName}");
                         }
                     }
 
@@ -325,7 +325,7 @@ namespace NewRelic.Agent.Core.Configuration
                     }
                     catch (Exception ex)
                     {
-                        Log.Finest(ex, $"ConfigurationBridge: Error examining assembly {assembly.FullName} for ServiceProvider.");
+                        Log.Debug(ex, $"ConfigurationBridge: Error examining assembly {assembly.FullName} for ServiceProvider.");
                     }
                 }
 
@@ -419,13 +419,13 @@ namespace NewRelic.Agent.Core.Configuration
                             }
                             catch (Exception ex)
                             {
-                                Log.Finest(ex, $"ConfigurationBridge: Error examining type {type.FullName}");
+                                Log.Debug(ex, $"ConfigurationBridge: Error examining type {type.FullName}");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Finest(ex, $"ConfigurationBridge: Error examining assembly {assembly.FullName} for static configuration.");
+                        Log.Debug(ex, $"ConfigurationBridge: Error examining assembly {assembly.FullName} for static configuration.");
                     }
                 }
 

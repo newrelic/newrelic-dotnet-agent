@@ -40,6 +40,7 @@ namespace NewRelic.Agent.Core.Metrics
         private readonly Dictionary<OtelBridgeSupportabilityMetric, InterlockedCounter> _counters;
         private readonly IMetricBuilder _metricBuilder;
         private PublishMetricDelegate _publishMetricDelegate;
+        private bool _loggedMissingDelegateError = false;
 
         public OtelBridgeSupportabilityMetricCounters(IMetricBuilder metricBuilder)
         {
@@ -145,7 +146,11 @@ namespace NewRelic.Agent.Core.Metrics
 
             if (_publishMetricDelegate == null)
             {
-                Log.Warn("No PublishMetricDelegate to flush metric '{0}' through.", metric.MetricNameModel.Name);
+                if (!_loggedMissingDelegateError)
+                {
+                    Log.Error("No PublishMetricDelegate registered. OpenTelemetry bridge supportability metrics will not be reported. This indicates an agent initialization error.");
+                    _loggedMissingDelegateError = true;
+                }
                 return;
             }
 
