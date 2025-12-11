@@ -1,24 +1,17 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Core.Config;
-using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using System.Linq;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.UnitTest.Configuration
+namespace NewRelic.Agent.Core.Configuration
 {
-    internal class TestableDefaultConfiguration : DefaultConfiguration
-    {
-        public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
-            : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic)
-        { }
-    }
-
     [TestFixture]
     public class OpenTelemetryConfigurationTests
     {
@@ -61,6 +54,7 @@ namespace NewRelic.Agent.Core.UnitTest.Configuration
             );
         }
 
+        #region Metrics Tests
         [Test]
         public void OpenTelemetryMetricsEnabled_RequiresBothGlobalAndMetricsSettings_ToBeTrue()
         {
@@ -183,5 +177,140 @@ namespace NewRelic.Agent.Core.UnitTest.Configuration
                 () => Assert.That(configuration.OpenTelemetryMetricsExcludeFilters, Is.Empty)
             );
         }
+        #endregion
+
+        #region Tracing tests
+        [Test]
+        public void OpenTelemetryTracesEnabled_RequiresBothGlobalAndTracesSettings_ToBeTrue()
+        {
+            // Arrange
+            _localConfig.opentelemetry = new configurationOpentelemetry
+            {
+                enabled = true,
+                traces = new configurationOpentelemetryTraces
+                {
+                    enabled = true
+                }
+            };
+
+            var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Act & Assert
+            NrAssert.Multiple(
+                () => Assert.That(configuration.OpenTelemetryEnabled, Is.True),
+                () => Assert.That(configuration.OpenTelemetryTracingEnabled, Is.True)
+            );
+        }
+
+        [Test]
+        public void OpenTelemetryTracesEnabled_WithOnlyGlobalSettingTrue_ShouldBeFalse()
+        {
+            // Arrange
+            _localConfig.opentelemetry = new configurationOpentelemetry
+            {
+                enabled = true,
+                traces = new configurationOpentelemetryTraces
+                {
+                    enabled = false // traces specific setting is false
+                }
+            };
+
+            var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Act & Assert
+            NrAssert.Multiple(
+                () => Assert.That(configuration.OpenTelemetryEnabled, Is.True),
+                () => Assert.That(configuration.OpenTelemetryTracingEnabled, Is.False)
+            );
+        }
+
+        [Test]
+        public void OpenTelemetryTracingIncludedActivitySources_ParsesPoorlyFormedLocalString()
+        {
+            _localConfig.opentelemetry.traces.include = "  Foo , ,Bar,,  baz , Foo  ";
+
+            var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var result = configuration.OpenTelemetryTracingIncludedActivitySources;
+
+            Assert.That(result, Is.EqualTo(new List<string> { "Foo", "Bar", "baz" }));
+        }
+
+        [Test]
+        public void OpenTelemetryTracingIncludedActivitySources_EnvironmentOverridesLocal_AndParses()
+        {
+            _localConfig.opentelemetry.traces.include = "LocalA,LocalB";
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_TRACES_INCLUDE"))
+                .Returns(" A , , B , C , A ");
+
+            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var result = cfg.OpenTelemetryTracingIncludedActivitySources;
+
+            Assert.That(result, Is.EqualTo(new List<string> { "A", "B", "C" }));
+        }
+
+        [Test]
+        public void OpenTelemetryTracingIncludedActivitySources_EmptyOrWhitespaceTokens_AreIgnored()
+        {
+            _localConfig.opentelemetry.traces.include = " , ,   , ";
+            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.That(cfg.OpenTelemetryTracingIncludedActivitySources, Is.Empty);
+        }
+
+        [Test]
+        public void OpenTelemetryTracingIncludedActivitySources_RemovesExactDuplicates_PreservesCase()
+        {
+            _localConfig.opentelemetry.traces.include = "api,API,api,Api";
+            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Distinct is case-sensitive; only exact duplicates removed
+            Assert.That(cfg.OpenTelemetryTracingIncludedActivitySources, Is.EqualTo(new List<string> { "api", "API", "Api" }));
+        }
+
+
+        [Test]
+        public void OpenTelemetryTracingExcludedActivitySources_ParsesPoorlyFormedLocalString()
+        {
+            _localConfig.opentelemetry.traces.exclude = "  Ex1 , , Ex2,,  Ex3 , Ex1  ";
+
+            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var result = cfg.OpenTelemetryTracingExcludedActivitySources;
+
+            Assert.That(result, Is.EqualTo(new List<string> { "Ex1", "Ex2", "Ex3" }));
+        }
+
+        [Test]
+        public void OpenTelemetryTracingExcludedActivitySources_EnvironmentOverridesLocal_AndParses()
+        {
+            _localConfig.opentelemetry.traces.exclude = "LocalX,LocalY";
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_TRACES_EXCLUDE"))
+                .Returns(" X , , Y , Z , X ");
+
+            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            var result = cfg.OpenTelemetryTracingExcludedActivitySources;
+
+            Assert.That(result, Is.EqualTo(new List<string> { "X", "Y", "Z" }));
+        }
+
+        [Test]
+        public void OpenTelemetryTracingExcludedActivitySources_EmptyOrWhitespaceTokens_AreIgnored()
+        {
+            _localConfig.opentelemetry.traces.exclude = " , ,   , ";
+            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.That(cfg.OpenTelemetryTracingExcludedActivitySources, Is.Empty);
+        }
+
+        [Test]
+        public void OpenTelemetryTracingExcludedActivitySources_RemovesExactDuplicates_PreservesCase()
+        {
+            _localConfig.opentelemetry.traces.exclude = "db,DB,db,Db";
+            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // Distinct is case-sensitive; only exact duplicates removed
+            Assert.That(cfg.OpenTelemetryTracingExcludedActivitySources, Is.EqualTo(new List<string> { "db", "DB", "Db" }));
+        }
+
+        #endregion
     }
 }

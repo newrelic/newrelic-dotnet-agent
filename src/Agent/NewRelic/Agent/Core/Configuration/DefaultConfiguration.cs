@@ -2797,75 +2797,59 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
-        #region Otel Bridge
-
-        // The activity sources we listen to by default - these are the sources that we will automatically instrument
-        private static readonly string[] DefaultIncludedActivitySources = [NewRelicActivitySourceProxy.ActivitySourceName,"Elastic.Transport","RabbitMQ.Client.Subscriber","RabbitMQ.Client.Publisher"]; 
-
-        private List<string> _includedActivitySources;
-        public List<string> IncludedActivitySources
-        {
-            get
-            {
-                if (_includedActivitySources == null)
-                {
-                    var includedActivitySources = DefaultIncludedActivitySources.ToList();
-
-                    var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Include");
-                    if (!string.IsNullOrEmpty(appSetting))
-                    {
-                        includedActivitySources.AddRange(
-                 appSetting
-                            .Split([','], StringSplitOptions.RemoveEmptyEntries)
-                            .Select(s => s.Trim())
-                            .Where(s => !string.IsNullOrEmpty(s))
-                        );
-                    }
-
-                    _includedActivitySources = includedActivitySources.Distinct().ToList();
-                }
-
-                return _includedActivitySources;
-            }
-        }
-
-        // The activity sources we do not want to listen to - these sources will not be instrumented even if they are in the include list
-        // TODO: we probably want to have a default set of excluded activity sources at some point
-        private static readonly string[] DefaultExcludedActivitySources = [];
-
-        private List<string> _excludedActivitySources;
-        public List<string> ExcludedActivitySources
-        {
-            get
-            {
-                if (_excludedActivitySources == null)
-                {
-                    var excludedActivitySources = DefaultExcludedActivitySources.ToList();
-
-                    var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Exclude");
-                    if (!string.IsNullOrEmpty(appSetting))
-                    {
-                        excludedActivitySources.AddRange(
-                          appSetting
-                            .Split([','], StringSplitOptions.RemoveEmptyEntries)
-                            .Select(s => s.Trim())
-                            .Where(s => !string.IsNullOrEmpty(s))
-                        );
-                    }
-                    _excludedActivitySources = excludedActivitySources.Distinct().ToList();
-                }
-
-                return _excludedActivitySources;
-            }
-        }
-
         public int MaxCustomInstrumentationSupportabilityMetrics => 25; // in case we want to make this configurable in the future
 
         #region OpenTelemetry Configuration
 
         public bool OpenTelemetryEnabled => EnvironmentOverrides(_localConfiguration.opentelemetry.enabled, "NEW_RELIC_OPENTELEMETRY_ENABLED");
 
-        public bool OpenTelemetryTracingEnabled => OpenTelemetryEnabled && EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("OpenTelemetry.Tracing.Enabled", true), "NEW_RELIC_OPENTELEMETRY_TRACING_ENABLED");
+        public bool OpenTelemetryTracingEnabled => OpenTelemetryEnabled && EnvironmentOverrides(_localConfiguration.opentelemetry.traces.enabled, "NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED");
+
+        public List<string> OpenTelemetryTracingIncludedActivitySources
+        {
+            get
+            {
+                if (field == null)
+                {
+                    var includeString = EnvironmentOverrides(_localConfiguration.opentelemetry.traces.include, "NEW_RELIC_OPENTELEMETRY_TRACES_INCLUDE") ?? string.Empty;
+                    field = includeString
+                        .Split([','], StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .Distinct()
+                        .ToList();
+                }
+
+                return field;
+            }
+        }
+
+        // These are activity sources that are excluded by default unless explicitly included via configuration
+        public List<string> OpenTelemetryTracingDefaultExcludedActivitySources => new List<string>()
+        // TODO: Add the default set of excluded activity source names here
+        //  { "foo", "bar" }
+        ;
+
+        public List<string> OpenTelemetryTracingExcludedActivitySources
+        {
+            get
+            {
+                if (field == null)
+                {
+                    var excludeString = EnvironmentOverrides(_localConfiguration.opentelemetry.traces.exclude, "NEW_RELIC_OPENTELEMETRY_TRACES_EXCLUDE") ?? string.Empty;
+
+                    field = excludeString
+                        .Split([','], StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .Distinct()
+                        .ToList();
+                }
+
+                return field;
+            }
+        }
+
 
         public bool OpenTelemetryMetricsEnabled
         {
@@ -2876,46 +2860,42 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        private IEnumerable<string> _openTelemetryMetricsIncludeFilters;
         public IEnumerable<string> OpenTelemetryMetricsIncludeFilters
         {
             get
             {
-                if (_openTelemetryMetricsIncludeFilters == null)
+                if (field == null)
                 {
                     var includeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.include, "NEW_RELIC_OPENTELEMETRY_METRICS_INCLUDE") ?? string.Empty;
-                    _openTelemetryMetricsIncludeFilters = includeString
+                    field = includeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
                         .Where(s => !string.IsNullOrEmpty(s))
                         .ToList();
                 }
-                return _openTelemetryMetricsIncludeFilters;
+                return field;
             }
         }
 
-        private IEnumerable<string> _openTelemetryMetricsExcludeFilters;
         public IEnumerable<string> OpenTelemetryMetricsExcludeFilters
         {
             get
             {
-                if (_openTelemetryMetricsExcludeFilters == null)
+                if (field == null)
                 {
                     var excludeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.exclude, "NEW_RELIC_OPENTELEMETRY_METRICS_EXCLUDE") ?? string.Empty;
-                    _openTelemetryMetricsExcludeFilters = excludeString
+                    field = excludeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
                         .Where(s => !string.IsNullOrEmpty(s))
                         .ToList();
                 }
-                return _openTelemetryMetricsExcludeFilters;
+                return field;
             }
         }
         #endregion
 
         public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", false), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");
-
-        #endregion
 
         public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
         {

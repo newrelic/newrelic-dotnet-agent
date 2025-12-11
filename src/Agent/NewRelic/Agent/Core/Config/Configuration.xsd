@@ -2246,6 +2246,47 @@
 
                     <xs:complexType>
                         <xs:all>
+                            <xs:element name="traces" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Configuration for OpenTelemetry tracing.
+                                    </xs:documentation>
+                                </xs:annotation>
+
+                                <xs:complexType>
+                                    <xs:attribute name="enabled" type="xs:boolean" default="true">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                This setting controls whether OpenTelemetry tracing is enabled.
+                                                Defaults to "true".
+                                                This feature must be used together with the global opentelemetry enabled setting.
+                                                Environment variable: NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+
+                                    <xs:attribute name="include" type="xs:string" use="optional">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                A comma-delimited list of OpenTelemetry Tracers (Activity Source Names) to include for tracing.
+                                                This setting can override the built-in exclusion list, but can be overridden by the user-configured 'exclude' list (exclude has highest precedence).
+                                                Environment variable: NEW_RELIC_OPENTELEMETRY_TRACES_INCLUDE
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+
+                                    <xs:attribute name="exclude" type="xs:string" use="optional">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                A comma-delimited list of OpenTelemetry Tracers (Activity Source Names) to exclude from tracing.
+                                                Tracers matching these names will not have their traces exported.
+                                                This has the highest precedence and can override items in the include list.
+                                                Environment variable: NEW_RELIC_OPENTELEMETRY_TRACES_EXCLUDE
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
                             <xs:element name="metrics" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>

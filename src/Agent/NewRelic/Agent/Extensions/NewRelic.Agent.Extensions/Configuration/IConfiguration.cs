@@ -256,14 +256,17 @@ namespace NewRelic.Agent.Configuration
 
         bool AwsLambdaApmModeEnabled { get; }
 
-        List<string> IncludedActivitySources { get; }
-        List<string> ExcludedActivitySources { get; }
-
         int MaxCustomInstrumentationSupportabilityMetrics { get; }
 
         // OpenTelemetry Configuration Properties
         bool OpenTelemetryEnabled { get; }
+
         bool OpenTelemetryTracingEnabled { get; }
+
+        List<string> OpenTelemetryTracingDefaultExcludedActivitySources { get; }
+        List<string> OpenTelemetryTracingIncludedActivitySources { get; }
+        List<string> OpenTelemetryTracingExcludedActivitySources { get; }
+
         bool OpenTelemetryMetricsEnabled { get; }
         IEnumerable<string> OpenTelemetryMetricsIncludeFilters { get; }
         IEnumerable<string> OpenTelemetryMetricsExcludeFilters { get; }
