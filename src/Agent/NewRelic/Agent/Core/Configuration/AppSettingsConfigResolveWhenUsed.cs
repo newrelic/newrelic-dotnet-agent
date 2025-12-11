@@ -47,6 +47,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             _appSettingsFilePaths = Path.Combine(applicationDirectory, "appsettings.json");
 
+            // Determine if there is a .NET environment configured, or default to "Production"
             var environment = GetDotnetEnvironment();
             builder.AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false);
             var appSettingsEnvPath = Path.Combine(applicationDirectory, $"appsettings.{environment}.json");
