@@ -22,15 +22,7 @@ RUN dotnet publish "SmokeTestApp.csproj" -c Release -o /app/publish /p:UseAppHos
 FROM base AS final
 ARG DOTNET_VERSION
 # install asp.netcore
-#TODO: Manually install .NET 10 Preview until official images are available
-RUN curl -L https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh \
-  && chmod +x ./dotnet-install.sh \
-  && ./dotnet-install.sh --channel 10.0 --quality preview \
-  && dnf install libicu -y
-ENV PATH="${PATH}:/root/.dotnet:/root/.dotnet/tools"
-
-# TODO Use this line instead of the block above when official .NET 10 images are available
-#RUN dnf install aspnetcore-runtime-${DOTNET_VERSION} -y
+RUN dnf install aspnetcore-runtime-${DOTNET_VERSION} -y
 
 # Enable the agent
 ARG NEW_RELIC_HOST

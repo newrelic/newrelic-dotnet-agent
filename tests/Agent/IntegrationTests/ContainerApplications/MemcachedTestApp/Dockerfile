@@ -1,43 +1,27 @@
-ARG DISTRO_TAG
+ARG DOTNET_VERSION
 ARG BUILD_ARCH
-
-# TODO Use stable .NET 10.0 image when available
-FROM --platform=amd64 mcr.microsoft.com/dotnet/aspnet:10.0-preview-trixie-slim AS base
+FROM --platform=amd64 mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION} AS base
 WORKDIR /app
 EXPOSE 80
-# TODO: use packages.microsoft.com/config/debian/13 when available
-RUN apt-get update \
-    && apt-get install -y wget \
-    && wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
-    && dpkg -i packages-microsoft-prod.deb \
-    && rm packages-microsoft-prod.deb \
-    && apt-get update \
-    && apt-get install -y aspnetcore-runtime-8.0
 
 # build arch may be different from target arch (i.e., when running locally with QEMU)
-# TODO Use stable .NET 10.0 image when available
-FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:10.0-preview-trixie-slim AS build
-# TODO: use packages.microsoft.com/config/debian/13 when available
-RUN apt-get update \
-    && apt-get install -y wget \
-    && wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
-    && dpkg -i packages-microsoft-prod.deb \
-    && rm packages-microsoft-prod.deb \
-    && apt-get update \
-    && apt-get install -y dotnet-sdk-8.0
+ARG DOTNET_VERSION
+ARG BUILD_ARCH
+FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build
+
 WORKDIR /src
 COPY ["MemcachedTestApp/MemcachedTestApp.csproj", "MemcachedTestApp/"]
 ARG APP_DOTNET_VERSION
-RUN dotnet restore "MemcachedTestApp/MemcachedTestApp.csproj" -p:TargetFramework=net${APP_DOTNET_VERSION}
+RUN dotnet restore "MemcachedTestApp/MemcachedTestApp.csproj" -p:TargetFramework=net${APP_DOTNET_VERSION} -p:TargetFrameworks=net${APP_DOTNET_VERSION} --runtime linux-x64
 
 COPY . .
 WORKDIR "/src/MemcachedTestApp"
-RUN dotnet build "MemcachedTestApp.csproj" -c Release -o /app/build --self-contained --os linux --framework net${APP_DOTNET_VERSION}
+RUN dotnet build "MemcachedTestApp.csproj" -c Release -o /app/build --self-contained --framework net${APP_DOTNET_VERSION} -p:TargetFramework=net${APP_DOTNET_VERSION} -p:TargetFrameworks=net${APP_DOTNET_VERSION} --runtime linux-x64 --no-restore
 
 
 FROM build AS publish
 ARG APP_DOTNET_VERSION
-RUN dotnet publish "MemcachedTestApp.csproj" -c Release -o /app/publish --self-contained --os linux --framework net${APP_DOTNET_VERSION}
+RUN dotnet publish "MemcachedTestApp.csproj" -c Release -o /app/publish --self-contained --framework net${APP_DOTNET_VERSION} -p:TargetFramework=net${APP_DOTNET_VERSION} -p:TargetFrameworks=net${APP_DOTNET_VERSION} --runtime linux-x64 --no-restore
 
 
 FROM base AS final

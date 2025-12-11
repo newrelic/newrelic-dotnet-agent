@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -2799,7 +2800,7 @@ namespace NewRelic.Agent.Core.Configuration
         #region Otel Bridge
 
         // The activity sources we listen to by default - these are the sources that we will automatically instrument
-        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent","Elastic.Transport","RabbitMQ.Client.Subscriber","RabbitMQ.Client.Publisher"]; 
+        private static readonly string[] DefaultIncludedActivitySources = [NewRelicActivitySourceProxy.ActivitySourceName,"Elastic.Transport","RabbitMQ.Client.Subscriber","RabbitMQ.Client.Publisher"]; 
 
         private List<string> _includedActivitySources;
         public List<string> IncludedActivitySources
@@ -2858,7 +2859,10 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        // globally enables/disables otel bridge
         public bool OpenTelemetryBridgeEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("OpenTelemetry.Enabled", false), "NEW_RELIC_OPEN_TELEMETRY_BRIDGE_ENABLED");
+        // defaults to enabled if otel bridge is enabled
+        public bool OpenTelemetryBridgeTracingEnabled => OpenTelemetryBridgeEnabled && EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("OpenTelemetry.Tracing.Enabled", true), "NEW_RELIC_OPEN_TELEMETRY_BRIDGE_TRACING_ENABLED");
 
         public int MaxCustomInstrumentationSupportabilityMetrics => 25; // in case we want to make this configurable in the future
 
