@@ -495,7 +495,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_NotInIncludeList_ShouldDisable()
+        public void ShouldEnableInstrumentsInMeterWithFilters_NotInIncludeList_ShouldDisableByDefault()
         {
             // Arrange
             Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
@@ -508,7 +508,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
 
-            // Assert
+            // Assert - Meters not in include list are disabled
             Assert.That(result, Is.False);
         }
 
@@ -531,7 +531,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_InBothLists_ExcludeTakesPrecedence()
+        public void ShouldEnableInstrumentsInMeterWithFilters_InBothLists_IncludeTakesPrecedence()
         {
             // Arrange
             Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
@@ -544,8 +544,8 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
 
-            // Assert
-            Assert.That(result, Is.False);
+            // Assert - Include list has higher precedence than exclude list
+            Assert.That(result, Is.True);
         }
 
         [Test]
@@ -564,6 +564,26 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.That(result, Is.True);
+        }
+
+        [Test]
+        public void ShouldEnableInstrumentsInMeterWithFilters_InIncludeList_OverridesBuiltInExclusions()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "NewRelic.TestMeter", "OpenTelemetry.TestMeter" });
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
+
+            var method = GetShouldEnableMethod();
+
+            // Act - Test that include list can override built-in exclusions
+            var newRelicResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.TestMeter" });
+            var otelResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OpenTelemetry.TestMeter" });
+
+            // Assert - Include list overrides built-in exclusions
+            Assert.That(newRelicResult, Is.True);
+            Assert.That(otelResult, Is.True);
         }
 
         [Test]

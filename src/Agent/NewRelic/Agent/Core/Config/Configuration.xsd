@@ -2239,7 +2239,7 @@
                 <xs:element name="opentelemetry" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>
-                            OpenTelemetry configuration for the hybrid agent. This section contains configuration options
+                            OpenTelemetry configuration for the agent. This section contains configuration options
                             that control OpenTelemetry signal processing and export to New Relic.
                         </xs:documentation>
                     </xs:annotation>
@@ -2258,7 +2258,7 @@
                                         <xs:annotation>
                                             <xs:documentation>
                                                 Set this to "true" to enable OpenTelemetry metrics collection and export to New Relic.
-                                                This feature that must be used together with the global opentelemetry enabled setting.
+                                                This feature must be used together with the global opentelemetry enabled setting.
                                                 Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED
                                             </xs:documentation>
                                         </xs:annotation>
@@ -2268,7 +2268,8 @@
                                         <xs:annotation>
                                             <xs:documentation>
                                                 A comma-delimited list of OpenTelemetry Meter names to include for metrics export to New Relic.
-                                                If specified, only meters matching these names will have their metrics exported.
+                                                Meter defined in this list this list will be enabled
+                                                This setting can override the built-in exclusion list, but not override the user-configured 'exclude' list.
                                                 Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_INCLUDE
                                             </xs:documentation>
                                         </xs:annotation>
@@ -2279,6 +2280,7 @@
                                             <xs:documentation>
                                                 A comma-delimited list of OpenTelemetry Meter names to exclude from metrics export to New Relic.
                                                 Meters matching these names will not have their metrics exported.
+                                                This has the lowest precedence and can be overridden by the include list.
                                                 Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_EXCLUDE
                                             </xs:documentation>
                                         </xs:annotation>
@@ -2290,7 +2292,7 @@
                         <xs:attribute name="enabled" type="xs:boolean" default="false">
                             <xs:annotation>
                                 <xs:documentation>
-                                    Global setting for OpenTelemetry signal processing in the hybrid agent.
+                                    Global setting for OpenTelemetry signal processing in the agent.
                                     If set to "false", no OpenTelemetry signals will be processed or sent to New Relic.
                                     If set to "true", individual signal types (e.g., metrics) can be controlled via their specific enabled settings.
                                     Environment variable: NEW_RELIC_OPENTELEMETRY_ENABLED

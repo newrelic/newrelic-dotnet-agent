@@ -759,23 +759,17 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// <summary>
         /// Determines whether instruments in the specified meter should be enabled based on the 
         /// OpenTelemetry metrics configuration filters (include/exclude lists).
-        /// Follows the precedence logic:
-        /// 1. Built-in exclude list
-        /// 2. Customer configured include list  
-        /// 3. Customer configured exclude list
+        /// Precedence order (highest to lowest):
+        /// 1. Built-in exclusions (can be overridden by include list)
+        /// 2. Customer include list (overrides built-in exclusions)
+        /// 3. Customer exclude list (lowest priority)
         /// </summary>
         /// <param name="meterName">The name of the meter to check</param>
         /// <returns>True if the meter should be enabled; false otherwise</returns>
         private bool ShouldEnableInstrumentsInMeterWithFilters(string meterName)
         {
-            // First apply the built-in filtering logic
-            if (!ShouldEnableInstrumentsInMeter(meterName))
-            {
-                return false;
-            }
-
-            // Check if OpenTelemetry metrics + global OpenTelemetry are enabled
-            if (!_configuration.OpenTelemetryMetricsEnabled)
+            // Skip meters with empty names
+            if (string.IsNullOrEmpty(meterName))
             {
                 return false;
             }
@@ -783,22 +777,32 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var includeFilters = _configuration.OpenTelemetryMetricsIncludeFilters?.ToList() ?? new List<string>();
             var excludeFilters = _configuration.OpenTelemetryMetricsExcludeFilters?.ToList() ?? new List<string>();
 
-            // If include filters are specified, the meter must be in the include list
-            if (includeFilters.Any() && !includeFilters.Contains(meterName))
+            // Priority 1: Check built-in exclusions (highest priority)
+            var isBuiltInExcluded = !ShouldEnableInstrumentsInMeter(meterName);
+
+            // Priority 2: Check customer include list (can override built-in exclusions)
+            if (includeFilters.Contains(meterName))
             {
-                Log.Finest($"Meter '{meterName}' not in include list. Not enabling instruments.");
+                Log.Finest($"Meter '{meterName}' is in include list. Enabling instruments.");
+                return true;
+            }
+
+            // If built-in excluded and not in include list, exclude it
+            if (isBuiltInExcluded)
+            {
                 return false;
             }
 
-            // If the meter is in the exclude list, don't enable it
+            // Priority 3: Check customer exclude list (lowest priority)
             if (excludeFilters.Contains(meterName))
             {
                 Log.Finest($"Meter '{meterName}' is in exclude list. Not enabling instruments.");
                 return false;
             }
 
-            Log.Finest($"Meter '{meterName}' passed all filters. Enabling instruments.");
-            return true;
+            // Default: disable if not in either list (allowlist behavior)
+            Log.Finest($"Meter '{meterName}' not in include or exclude lists. Not enabling instruments by default.");
+            return false;
         }
 
         /// <summary>
@@ -818,7 +822,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return null;
             }
 
-            // Resolve commonly used properties via reflection
             var meterProp = instrumentType.GetProperty("Meter");
             var nameProp = instrumentType.GetProperty("Name");
             var unitProp = instrumentType.GetProperty("Unit");
