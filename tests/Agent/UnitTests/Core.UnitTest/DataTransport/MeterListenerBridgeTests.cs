@@ -459,7 +459,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_NoFilters_ShouldEnable()
+        public void ShouldEnableInstrumentsInMeterWithFilters_EmptyFilters_ShouldDisable()
         {
             // Arrange
             Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
@@ -472,8 +472,8 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
 
-            // Assert
-            Assert.That(result, Is.True);
+            // Assert - Empty list configured = allowlist behavior: disabled if not in include list
+            Assert.That(result, Is.False);
         }
 
         [Test]
@@ -567,7 +567,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_InIncludeList_OverridesBuiltInExclusions()
+        public void ShouldEnableInstrumentsInMeterWithFilters_InIncludeList_CannotOverrideBuiltInExclusions()
         {
             // Arrange
             Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
@@ -577,13 +577,13 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var method = GetShouldEnableMethod();
 
-            // Act - Test that include list can override built-in exclusions
+            // Act - Test that built-in exclusions CANNOT be overridden by include list
             var newRelicResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.TestMeter" });
             var otelResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OpenTelemetry.TestMeter" });
 
-            // Assert - Include list overrides built-in exclusions
-            Assert.That(newRelicResult, Is.True);
-            Assert.That(otelResult, Is.True);
+            // Assert - Built-in exclusions have highest priority
+            Assert.That(newRelicResult, Is.False);
+            Assert.That(otelResult, Is.False);
         }
 
         [Test]
@@ -618,8 +618,8 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "System.Net.Http.test" });
 
-            // Assert
-            Assert.That(result, Is.True);
+            // Assert - Include list configured as empty = allowlist behavior, meter not in list = disabled
+            Assert.That(result, Is.False);
         }
 
         [Test]

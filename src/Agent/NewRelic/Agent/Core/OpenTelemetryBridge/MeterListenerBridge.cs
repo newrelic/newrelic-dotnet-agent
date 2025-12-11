@@ -760,9 +760,13 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// Determines whether instruments in the specified meter should be enabled based on the 
         /// OpenTelemetry metrics configuration filters (include/exclude lists).
         /// Precedence order (highest to lowest):
-        /// 1. Built-in exclusions (can be overridden by include list)
-        /// 2. Customer include list (overrides built-in exclusions)
+        /// 1. Built-in exclusions (highest priority, CANNOT be overridden)
+        /// 2. Customer include list
         /// 3. Customer exclude list (lowest priority)
+        /// 
+        /// Behavior:
+        /// - If filters not configured (null): enable by default (permissive)
+        /// - If filters configured (empty list): allowlist behavior (disable by default)
         /// </summary>
         /// <param name="meterName">The name of the meter to check</param>
         /// <returns>True if the meter should be enabled; false otherwise</returns>
@@ -774,35 +778,46 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return false;
             }
 
-            var includeFilters = _configuration.OpenTelemetryMetricsIncludeFilters?.ToList() ?? new List<string>();
-            var excludeFilters = _configuration.OpenTelemetryMetricsExcludeFilters?.ToList() ?? new List<string>();
+            // Get filter lists - distinguish between null (not configured) and empty (configured but empty)
+            var includeFilters = _configuration.OpenTelemetryMetricsIncludeFilters?.ToList();
+            var excludeFilters = _configuration.OpenTelemetryMetricsExcludeFilters?.ToList();
+            
+            var includeConfigured = includeFilters != null;
+            var excludeConfigured = excludeFilters != null;
 
-            // Priority 1: Check built-in exclusions (highest priority)
-            var isBuiltInExcluded = !ShouldEnableInstrumentsInMeter(meterName);
+            // Priority 1: Check built-in exclusions (HIGHEST priority, cannot be overridden)
+            if (!ShouldEnableInstrumentsInMeter(meterName))
+            {
+                return false;
+            }
 
-            // Priority 2: Check customer include list (can override built-in exclusions)
-            if (includeFilters.Contains(meterName))
+            // Priority 2: Check customer include list
+            if (includeConfigured && includeFilters.Contains(meterName))
             {
                 Log.Finest($"Meter '{meterName}' is in include list. Enabling instruments.");
                 return true;
             }
 
-            // If built-in excluded and not in include list, exclude it
-            if (isBuiltInExcluded)
-            {
-                return false;
-            }
-
-            // Priority 3: Check customer exclude list (lowest priority)
-            if (excludeFilters.Contains(meterName))
+            // Priority 3: Check customer exclude list
+            if (excludeConfigured && excludeFilters.Contains(meterName))
             {
                 Log.Finest($"Meter '{meterName}' is in exclude list. Not enabling instruments.");
                 return false;
             }
 
-            // Default: disable if not in either list (allowlist behavior)
-            Log.Finest($"Meter '{meterName}' not in include or exclude lists. Not enabling instruments by default.");
-            return false;
+            // Default behavior depends on whether filters are configured
+            if (includeConfigured)
+            {
+                // Include list configured: allowlist behavior - disable if not in list
+                Log.Finest($"Meter '{meterName}' not in include list. Not enabling instruments (allowlist behavior).");
+                return false;
+            }
+            else
+            {
+                // Include list not configured: permissive behavior - enable by default
+                Log.Finest($"Meter '{meterName}' not in any filter lists and no include list configured. Enabling instruments by default.");
+                return true;
+            }
         }
 
         /// <summary>
