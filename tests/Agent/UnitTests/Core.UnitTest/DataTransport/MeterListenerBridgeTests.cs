@@ -438,8 +438,8 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
 
-            // Assert
-            Assert.That(result, Is.False);
+            // Assert - Filter method doesn't check config state, returns permissive default
+            Assert.That(result, Is.True);
         }
 
         [Test]
@@ -454,8 +454,8 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "System.Net.Http.test" });
 
-            // Assert
-            Assert.That(result, Is.False);
+            // Assert - Filter method doesn't check config state, returns permissive default  
+            Assert.That(result, Is.True);
         }
 
         [Test]
@@ -472,8 +472,8 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
 
-            // Assert - Empty list configured = allowlist behavior: disabled if not in include list
-            Assert.That(result, Is.False);
+            // Assert - New permissive behavior: enabled by default even with empty filter lists
+            Assert.That(result, Is.True);
         }
 
         [Test]
@@ -508,8 +508,8 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
 
-            // Assert - Meters not in include list are disabled
-            Assert.That(result, Is.False);
+            // Assert - New permissive behavior: enabled by default even if not in include list
+            Assert.That(result, Is.True);
         }
 
         [Test]
@@ -544,8 +544,8 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
 
-            // Assert - Include list has higher precedence than exclude list
-            Assert.That(result, Is.True);
+            // Assert - Exclude list has higher precedence than include list
+            Assert.That(result, Is.False);
         }
 
         [Test]
@@ -567,7 +567,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_InIncludeList_CannotOverrideBuiltInExclusions()
+        public void ShouldEnableInstrumentsInMeterWithFilters_InIncludeList_CanOverrideBuiltInExclusions()
         {
             // Arrange
             Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
@@ -577,13 +577,13 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var method = GetShouldEnableMethod();
 
-            // Act - Test that built-in exclusions CANNOT be overridden by include list
+            // Act - Test that customer include list CAN override built-in exclusions
             var newRelicResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.TestMeter" });
             var otelResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OpenTelemetry.TestMeter" });
 
-            // Assert - Built-in exclusions have highest priority
-            Assert.That(newRelicResult, Is.False);
-            Assert.That(otelResult, Is.False);
+            // Assert - Customer include list overrides built-in exclusions
+            Assert.That(newRelicResult, Is.True, "Customer include list should override built-in exclusion for NewRelic meters");
+            Assert.That(otelResult, Is.True, "Customer include list should override built-in exclusion for OpenTelemetry meters");
         }
 
         [Test]
@@ -618,26 +618,28 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act
             var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "System.Net.Http.test" });
 
-            // Assert - Include list configured as empty = allowlist behavior, meter not in list = disabled
-            Assert.That(result, Is.False);
+            // Assert - Permissive default: meter not in lists is enabled
+            Assert.That(result, Is.True);
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_BuiltInFiltersHavePrecedence()
+        public void ShouldEnableInstrumentsInMeterWithFilters_CustomerExcludeHasHighestPrecedence()
         {
             // Arrange
             Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            // Include list includes NewRelic.Agent.Core.test
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "NewRelic.Agent.Core.test" });
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
+            // Exclude list also includes NewRelic.Agent.Core.test - should win due to highest precedence
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string> { "NewRelic.Agent.Core.test" });
 
             var method = GetShouldEnableMethod();
 
-            // Act - Built-in filter should exclude NewRelic meters regardless of include list
+            // Act - Customer exclude should override customer include
             var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.Agent.Core.test" });
 
-            // Assert
-            Assert.That(result, Is.False);
+            // Assert - Customer exclude has highest precedence
+            Assert.That(result, Is.False, "Customer exclude list should override customer include list");
         }
 
         #endregion
