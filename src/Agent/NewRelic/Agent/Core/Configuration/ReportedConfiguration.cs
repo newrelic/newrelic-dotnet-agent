@@ -768,21 +768,32 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonIgnore]
         public bool AwsLambdaApmModeEnabled => _configuration.AwsLambdaApmModeEnabled;
         
-
-        [JsonProperty("otel_bridge.included_activity_sources")]
-        public List<string> IncludedActivitySources => _configuration.IncludedActivitySources;
-
-        [JsonProperty("otel_bridge.excluded_activity_sources")]
-        public List<string> ExcludedActivitySources => _configuration.ExcludedActivitySources;
-
-        [JsonProperty("otel_bridge.enabled")]
-        public bool OpenTelemetryBridgeEnabled => _configuration.OpenTelemetryBridgeEnabled;
-
-        [JsonProperty("otel_bridge.tracing.enabled")]
-        public bool OpenTelemetryBridgeTracingEnabled => _configuration.OpenTelemetryBridgeTracingEnabled;
-
         [JsonIgnore]
         public int MaxCustomInstrumentationSupportabilityMetrics { get; }
+
+        // OpenTelemetry Configuration Properties
+        [JsonProperty("opentelemetry.enabled")]
+        public bool OpenTelemetryEnabled => _configuration.OpenTelemetryEnabled;
+
+
+        [JsonProperty("opentelemetry.tracing.enabled")]
+        public bool OpenTelemetryTracingEnabled => _configuration.OpenTelemetryTracingEnabled;
+
+        [JsonProperty("opentelemetry.tracing.include")]
+        public List<string> IncludedActivitySources => _configuration.IncludedActivitySources;
+
+        [JsonProperty("opentelemetry.tracing.exclude")]
+        public List<string> ExcludedActivitySources => _configuration.ExcludedActivitySources;
+
+
+        [JsonProperty("opentelemetry.metrics.enabled")]
+        public bool OpenTelemetryMetricsEnabled => _configuration.OpenTelemetryMetricsEnabled;
+
+        [JsonProperty("opentelemetry.metrics.include")]
+        public IEnumerable<string> OpenTelemetryMetricsIncludeFilters => _configuration.OpenTelemetryMetricsIncludeFilters;
+
+        [JsonProperty("opentelemetry.metrics.exclude")]
+        public IEnumerable<string> OpenTelemetryMetricsExcludeFilters => _configuration.OpenTelemetryMetricsExcludeFilters;
 
         [JsonProperty("hybrid_http_context_storage.enabled")]
         public bool HybridHttpContextStorageEnabled => _configuration.HybridHttpContextStorageEnabled;

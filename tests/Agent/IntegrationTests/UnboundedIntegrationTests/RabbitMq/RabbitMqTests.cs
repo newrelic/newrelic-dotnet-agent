@@ -49,7 +49,8 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
                 configModifier
                 .ForceTransactionTraces()
                 .SetLogLevel("Finest")
-                .EnableOTelBridge(true)
+                .EnableOpenTelemetry(true)
+                .EnableOpenTelemetryTracing(true)
                 .IncludeActivitySource("RabbitMQ.Client.Subscriber, RabbitMQ.Client.Publisher");
             },
             exerciseApplication: () =>

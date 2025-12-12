@@ -27,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 if (TestSettingOverrides.TryGetValue(_configurationCategory, out var item) && !string.IsNullOrEmpty(item.LicenseKey))
                 {
                     return item.LicenseKey;
-                };
+                }
 
                 return DefaultSetting.LicenseKey;
             }
@@ -56,7 +56,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 if (TestSettingOverrides.TryGetValue(_configurationCategory, out var item) && !string.IsNullOrEmpty(item.TraceObserverUrl))
                 {
                     return item.TraceObserverUrl;
-                };
+                }
 
                 return DefaultSetting.TraceObserverUrl;
             }
@@ -68,7 +68,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 if (TestSettingOverrides.TryGetValue(_configurationCategory, out var item) && !string.IsNullOrEmpty(item.TraceObserverPort))
                 {
                     return item.TraceObserverPort;
-                };
+                }
 
                 return DefaultSetting.TraceObserverPort;
             }

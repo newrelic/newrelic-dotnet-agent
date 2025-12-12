@@ -427,10 +427,13 @@ namespace NewRelic.Agent.Core.DataTransport
                                 "agent_control.enabled" : true,
                                 "agent_control.health.delivery_location": "file:///tmp/health",
                                 "agent_control.health.frequency": 5,
-                                "otel_bridge.included_activity_sources": ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"],
-                                "otel_bridge.excluded_activity_sources": ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"],
-                                "otel_bridge.enabled": true,
-                                "otel_bridge.tracing.enabled": true,
+                                "opentelemetry.enabled": true,
+                                "opentelemetry.tracing.enabled": true,
+                                "opentelemetry.tracing.include": ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"],
+                                "opentelemetry.tracing.exclude": ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"],
+                                "opentelemetry.metrics.enabled": true,
+                                "opentelemetry.metrics.include": ["IncludedMeter1","IncludedMeter2"],
+                                "opentelemetry.metrics.exclude": ["ExcludedMeter1","ExcludedMeter2"],
                                 "hybrid_http_context_storage.enabled":false
                             },
                             "metadata": {

@@ -737,6 +737,41 @@ namespace NewRelic.Agent.Core.Metrics
             return SupportabilityAgentApiPs + methodName;
         }
 
+        #region Open Telemetry Bridge
+        private const string OpenTelemetryBridge = "OpenTelemetryBridge";
+        private const string SupportabilityOTelPs = SupportabilityPs + OpenTelemetryBridge + PathSeparator;
+        private const string SupportabilityOTelMetricsBridgePs = SupportabilityPs + "Metrics" + PathSeparator + "DotNet" + PathSeparator + OpenTelemetryBridge + PathSeparator;
+        private const string SupportabilityOTelTracingBridgePs = SupportabilityPs + "Tracing" + PathSeparator + "DotNet" + PathSeparator + OpenTelemetryBridge + PathSeparator;
+
+        public static string SupportabilityOpenTelemetry(bool enabled) => SupportabilityOTelPs + (enabled ? Enabled : Disabled);
+
+        public static string SupportabilityOpenTelemetryTracing(bool enabled) => SupportabilityOTelTracingBridgePs + (enabled ? Enabled : Disabled);
+
+        public static string SupportabilityOpenTelemetryMetrics(bool enabled) => SupportabilityOTelMetricsBridgePs + (enabled ? Enabled : Disabled);
+
+        public const string SupportabilityOTelMetricsBridgeGetMeter = SupportabilityOTelMetricsBridgePs + "getMeter";
+        
+        // Individual meter method supportability metrics
+        private const string SupportabilityOTelMetricsBridgeMeterPs = SupportabilityOTelMetricsBridgePs + "meter" + PathSeparator;
+        
+        public const string SupportabilityOTelMetricsBridgeMeterCreateCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateHistogram = SupportabilityOTelMetricsBridgeMeterPs + "CreateHistogram";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateUpDownCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateUpDownCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateGauge = SupportabilityOTelMetricsBridgeMeterPs + "CreateGauge";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableHistogram = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableHistogram";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableUpDownCounter = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableUpDownCounter";
+        public const string SupportabilityOTelMetricsBridgeMeterCreateObservableGauge = SupportabilityOTelMetricsBridgeMeterPs + "CreateObservableGauge";
+
+        // Additional debugging metrics for OpenTelemetry Metrics Bridge operations
+        public const string SupportabilityOTelMetricsBridgeInstrumentCreated = SupportabilityOTelMetricsBridgePs + "InstrumentCreated";
+        public const string SupportabilityOTelMetricsBridgeInstrumentBridgeFailure = SupportabilityOTelMetricsBridgePs + "InstrumentBridgeFailure";
+        public const string SupportabilityOTelMetricsBridgeMeasurementRecorded = SupportabilityOTelMetricsBridgePs + "MeasurementRecorded";
+        public const string SupportabilityOTelMetricsBridgeMeasurementBridgeFailure = SupportabilityOTelMetricsBridgePs + "MeasurementBridgeFailure";
+        public const string SupportabilityOTelMetricsBridgeEntityGuidChanged = SupportabilityOTelMetricsBridgePs + "EntityGuidChanged";
+        public const string SupportabilityOTelMetricsBridgeMeterProviderRecreated = SupportabilityOTelMetricsBridgePs + "MeterProviderRecreated";
+        #endregion
+
         // CAT
         private const string SupportabilityCAT = SupportabilityPs + "CrossApplicationTracing" + PathSeparator;
         private const string SupportabilityCATRequest = SupportabilityCAT + "Request" + PathSeparator;
@@ -1239,21 +1274,6 @@ namespace NewRelic.Agent.Core.Metrics
         private const string SupportabilityAgentControlPs = SupportabilityPs + AgentControl + PathSeparator;
         public const string SupportabilityAgentControlHealthEnabled = SupportabilityAgentControlPs + Health + PathSeparator + Enabled;
 
-        #endregion
-
-        #region Open Telemetry Bridge
-
-        private const string OpenTelemetryBridge = "OpenTelemetryBridge";
-
-        public static string SupportabilityOpenTelemetryBridge(bool enabled) 
-        {
-            return SupportabilityDotNetPs + OpenTelemetryBridge + PathSeparator + (enabled ? Enabled : Disabled);
-        }
-
-        public static string SupportabilityOpenTelemetryBridgeTracing(bool enabled)
-        {
-            return SupportabilityPs + "Tracing" + PathSeparator + DotNet + PathSeparator + OpenTelemetryBridge + PathSeparator + (enabled ? Enabled : Disabled);
-        }
         #endregion
     }
 }
