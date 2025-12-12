@@ -258,7 +258,7 @@ namespace NewRelic.Agent.Configuration
 
         int MaxCustomInstrumentationSupportabilityMetrics { get; }
 
-        // OpenTelemetry Configuration Properties
+        #region OpenTelemetry Configuration Properties
         bool OpenTelemetryEnabled { get; }
 
         bool OpenTelemetryTracingEnabled { get; }
@@ -270,6 +270,7 @@ namespace NewRelic.Agent.Configuration
         bool OpenTelemetryMetricsEnabled { get; }
         IEnumerable<string> OpenTelemetryMetricsIncludeFilters { get; }
         IEnumerable<string> OpenTelemetryMetricsExcludeFilters { get; }
+        #endregion
 
         bool HybridHttpContextStorageEnabled { get; }
     }
