@@ -44,26 +44,94 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 _isContentLengthSet = true;
             }
 
-            return _baseStream?.FlushAsync(cancellationToken) ?? Task.CompletedTask;
+            try
+            {
+                return _baseStream?.FlushAsync(cancellationToken) ?? Task.CompletedTask;
+            }
+            catch (ObjectDisposedException)
+            {
+                _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: FlushAsync failed; base stream is disposed.");
+                return Task.CompletedTask;
+            }
         }
 
-        public override void Flush() => _baseStream?.Flush();
+        public override void Flush()
+        {
+            try
+            {
+                _baseStream?.Flush();
+            }
+            catch (ObjectDisposedException)
+            {
+                _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: Flush failed; base stream is disposed.");
+            }
+        }
 
-        public override int Read(byte[] buffer, int offset, int count) => _baseStream?.Read(buffer, offset, count) ?? 0;
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            try
+            {
+                return _baseStream?.Read(buffer, offset, count) ?? 0;
+            }
+            catch (ObjectDisposedException)
+            {
+                _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: Read failed; base stream is disposed.");
+                return 0;
+            }
+        }
 
-        public override long Seek(long offset, SeekOrigin origin) => _baseStream?.Seek(offset, origin) ?? 0;
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            try
+            {
+                return _baseStream?.Seek(offset, origin) ?? 0;
+            }
+            catch (ObjectDisposedException)
+            {
+                _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: Seek failed; base stream is disposed.");
+                return 0;
+            }
+        }
 
         public override void SetLength(long value)
         {
-            _baseStream?.SetLength(value);
+            try
+            {
+                _baseStream?.SetLength(value);
+            }
+            catch (ObjectDisposedException)
+            {
+                _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: SetLength failed; base stream is disposed.");
+                return;
+            }
 
             if (!Disabled)
                 IsHtmlResponse(forceReCheck: true);
         }
 
-        public override void Write(ReadOnlySpan<byte> buffer) => _baseStream?.Write(buffer);
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            try
+            {
+                _baseStream?.Write(buffer);
+            }
+            catch (ObjectDisposedException)
+            {
+                _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: Write(ReadOnlySpan<byte>) failed; base stream is disposed.");
+            }
+        }
 
-        public override void WriteByte(byte value) => _baseStream?.WriteByte(value);
+        public override void WriteByte(byte value)
+        {
+            try
+            {
+                _baseStream?.WriteByte(value);
+            }
+            catch (ObjectDisposedException)
+            {
+                _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: WriteByte failed; base stream is disposed.");
+            }
+        }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
@@ -86,7 +154,14 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 return;
             }
 
-            _baseStream?.Write(buffer, offset, count);
+            try
+            {
+                _baseStream?.Write(buffer, offset, count);
+            }
+            catch (ObjectDisposedException)
+            {
+                _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: Write(byte[], int, int) failed; base stream is disposed.");
+            }
         }
 
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) => WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
@@ -112,14 +187,56 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             }
 
             if (_baseStream != null)
-                await _baseStream.WriteAsync(buffer, cancellationToken);
+            {
+                try
+                {
+                    await _baseStream.WriteAsync(buffer, cancellationToken);
+                }
+                catch (ObjectDisposedException)
+                {
+                    _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: WriteAsync(ReadOnlyMemory<byte>) failed; base stream is disposed.");
+                }
+            }
         }
 
         private const string InjectingRUM = "InjectingRUM";
 
-        private void FinishInjecting() => _context?.Items.Remove(InjectingRUM);
-        private void StartInjecting() => _context?.Items.Add(InjectingRUM, null);
-        private bool CurrentlyInjecting() => _context?.Items.ContainsKey(InjectingRUM) ?? false;
+        private void FinishInjecting()
+        {
+            try
+            {
+                _context?.Items.Remove(InjectingRUM);
+            }
+            catch (ObjectDisposedException)
+            {
+                _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: Unable to remove RUM injection flag, _context.Items was disposed.");
+            }
+        }
+
+        private void StartInjecting()
+        {
+            try
+            {
+                _context?.Items.Add(InjectingRUM, null);
+            }
+            catch (ObjectDisposedException)
+            {
+                _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: Unable to insert RUM injection flag, _context.Items was disposed.");
+            }
+        }
+
+        private bool CurrentlyInjecting()
+        {
+            try
+            {
+                return _context?.Items.ContainsKey(InjectingRUM) ?? false;
+            }
+            catch (ObjectDisposedException)
+            {
+                _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: Unable to check for RUM injection flag, _context.Items was disposed.");
+                return false;
+            }
+        }
 
         public override async ValueTask DisposeAsync()
         {
@@ -127,8 +244,18 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
             if (_baseStream != null)
             {
-                await _baseStream.DisposeAsync();
-                _baseStream = null;
+                try
+                {
+                    await _baseStream.DisposeAsync();
+                }
+                catch (ObjectDisposedException)
+                {
+                    _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: DisposeAsync failed; base stream is already disposed.");
+                }
+                finally
+                {
+                    _baseStream = null;
+                }
             }
         }
 
@@ -158,7 +285,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 // * UTF-8 formatted (either explicitly or no charset defined)
                 var responseContentType = _context.Response.ContentType;
                 _isHtmlResponse =
-                    !string.IsNullOrEmpty(responseContentType) && 
+                    !string.IsNullOrEmpty(responseContentType) &&
                     responseContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
                     (responseContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
                      !responseContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));

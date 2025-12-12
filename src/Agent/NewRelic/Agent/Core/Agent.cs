@@ -325,7 +325,14 @@ namespace NewRelic.Agent.Core
             if (rumBytes == null)
             {
                 transaction?.LogFinest("Skipping RUM Injection: No script was available.");
-                await baseStream.WriteAsync(buffer, 0, buffer.Length);
+                try
+                {
+                    await baseStream.WriteAsync(buffer, 0, buffer.Length);
+                }
+                catch (ObjectDisposedException)
+                {
+                    transaction?.LogFinest("Skipping RUM Injection: Base stream was disposed.");
+                }
             }
             else
                 await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, baseStream, rumBytes, transaction);
