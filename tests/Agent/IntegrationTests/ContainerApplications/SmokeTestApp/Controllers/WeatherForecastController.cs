@@ -34,6 +34,10 @@ public class WeatherForecastController : ControllerBase
         // This name of this method call contains characters outside of the ascii
         // range of characters.
         MethodWithSpecialCharacter\u0435();
+
+        // Call a method with Japanese characters in the name
+        何かをする();
+
         return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateTime.Now.AddDays(index),
@@ -53,6 +57,16 @@ public class WeatherForecastController : ControllerBase
     private void MethodWithSpecialCharacter\u0435()
     {
         // This just similates doing a blocking external call
+        Thread.Sleep(100);
+    }
+
+
+    // Do not add Trace attribute here
+    // Will be instrumented with an xml file containing Japanese characters in specific tests
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void 何かをする()
+    {
+        Console.WriteLine("何かをする in 日本語アプリ.");
         Thread.Sleep(100);
     }
 }
