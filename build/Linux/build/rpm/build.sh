@@ -1,23 +1,26 @@
 #!/bin/bash
 set -e # Halt the build script on any error
 
-# subroutine for signing .rpm
+# subroutine for signing .rpm.  NB: this should not be called multiple times!
 function sign_rpm {
     rpm_file="$1"
-    # unpack the tarball, rename it and set perms
-    dtrx --one here "$GPG_KEYS"
-    mv gpg-conf "$HOME/.gnupg"
-    chown root:root "$HOME/.gnupg"
-    chmod 0700 "$HOME/.gnupg"
+
+    # import the private gpg key
+    gpg --import --batch --pinentry-mode loopback --passphrase "$GPG_KEY_PASSPHRASE" "$GPG_KEY"
+
+    # create a passphrase file
+    echo "$GPG_KEY_PASSPHRASE" > /tmp/gpg-passphrase.txt && chmod 400 /tmp/gpg-passphrase.txt
 
     # append the necessary lines to ~/.rpmmacros for signing
     cat << MACROS | tee -a "${HOME}/.rpmmacros"
 %_signature gpg
 %_gpg_path ${HOME}/.gnupg
-%_gpg_name New Relic <support@newrelic.com>
+%_gpg_name New Relic Signing Key (2025) <support@newrelic.com>
 %_gpgbin /usr/bin/gpg
+%_gpg_sign_cmd_extra_args --batch --pinentry-mode loopback --passphrase-file /tmp/gpg-passphrase.txt
 MACROS
 
+    # sign the rpm
     rpm --addsign $rpm_file
 }
 
@@ -26,7 +29,7 @@ AGENT_HOMEDIR='newrelichome_x64_coreclr_linux'
 
 if [ -z "$AGENT_VERSION" ]; then
     # Get the agent version from the core .dll
-    version_from_dll=$(exiftool ./${AGENT_HOMEDIR}/NewRelic.Agent.Core.dll |grep "Product Version Number" |cut -d':' -f2 |tr -d ' ')
+    version_from_dll=$(/exiftool/exiftool ./${AGENT_HOMEDIR}/NewRelic.Agent.Core.dll |grep "Product Version Number" |cut -d':' -f2 |tr -d ' ')
     if [[ "$version_from_dll" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
         major=$(echo $version_from_dll | cut -d'.' -f1)
         minor=$(echo $version_from_dll | cut -d'.' -f2)
@@ -84,9 +87,14 @@ cp RPMS/x86_64/* /release
 rpm_file=$(ls -1 /release/*.rpm |tail -n 1)
 echo "rpm_file=$rpm_file"
 
-# If the $GPG_KEYS env var is set, sign the rpm(s)
-if [[ ! -z "$GPG_KEYS" ]]; then
-    echo "GPG_KEYS is set, signing .rpms"
+# If the $GPG_KEY env var is set, sign the rpm(s)
+if [[ ! -z "$GPG_KEY" ]]; then
+    echo "GPG_KEY is set, signing .rpms"
+    # make sure the passphrase is also set
+    if [[ -z "$GPG_KEY_PASSPHRASE" ]]; then
+        echo "GPG_KEY_PASSPHRASE is not set, cannot sign .rpms"
+        exit 1
+    fi
     sign_rpm "$rpm_file"
 fi
 
