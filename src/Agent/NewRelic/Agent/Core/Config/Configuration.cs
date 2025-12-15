@@ -1312,7 +1312,7 @@ namespace NewRelic.Agent.Core.Config
     
     /// <summary>
     /// Based on the OpenTelemetry TraceIdRatioBased sampler.
-    /// It samples a percentage of traces defined by the ratio attribute, which must be a decimal value between 0.0 (no sampling) and 1.0 (sample all).
+    /// It samples traces with a probability defined by the ratio attribute, which must be a decimal value between 0.0 (no sampling) and 1.0 (sample all).
     /// For more information, see the OpenTelemetry specification: https://opentelemetry.io/docs/specs/otel/trace/tracestate-probability-sampling/
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
@@ -4287,7 +4287,7 @@ namespace NewRelic.Agent.Core.Config
         @default,
         
         /// <remarks/>
-        traceIdRatioBased,
+        traceIdRatioBased
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
