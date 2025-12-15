@@ -15,7 +15,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
 RUN apt-get update && apt-get install -y --no-install-recommends \
 # wget to download New Relic's public key
     wget \
- && wget -O /tmp/newrelic-public.gpg https://download.newrelic.com/548C16BF.gpg \
+ && wget -O /tmp/newrelic-public.gpg https://download.newrelic.com/NEWRELIC_APT_2DAD550E.public \
  && rpm --import /tmp/newrelic-public.gpg \
 # cleanup temporary state to save on final image size
  && apt-get autoremove -y wget \

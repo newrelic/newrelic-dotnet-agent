@@ -10,7 +10,7 @@ The Linux CoreCLR agent can be packaged into .rpm (for Red Hat/Centos/Oracle/SUS
 
 Optional: sign the .rpm
 
-1. `docker compose run -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm`
+1. `docker compose run -e GPG_KEY=/keys/private_gpg_key.gpg build_rpm`
 
 You can do ad hoc testing inside containers using the `test_debian` and/or `test_centos` services and `bash`.
 
