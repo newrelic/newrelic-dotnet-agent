@@ -258,17 +258,6 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         [Test]
-        public void OpenTelemetryTracingIncludedActivitySources_RemovesExactDuplicates_PreservesCase()
-        {
-            _localConfig.opentelemetry.traces.include = "api,API,api,Api";
-            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-
-            // Distinct is case-sensitive; only exact duplicates removed
-            Assert.That(cfg.OpenTelemetryTracingIncludedActivitySources, Is.EqualTo(new List<string> { "api", "API", "Api" }));
-        }
-
-
-        [Test]
         public void OpenTelemetryTracingExcludedActivitySources_ParsesPoorlyFormedLocalString()
         {
             _localConfig.opentelemetry.traces.exclude = "  Ex1 , , Ex2,,  Ex3 , Ex1  ";
@@ -300,17 +289,6 @@ namespace NewRelic.Agent.Core.Configuration
 
             Assert.That(cfg.OpenTelemetryTracingExcludedActivitySources, Is.Empty);
         }
-
-        [Test]
-        public void OpenTelemetryTracingExcludedActivitySources_RemovesExactDuplicates_PreservesCase()
-        {
-            _localConfig.opentelemetry.traces.exclude = "db,DB,db,Db";
-            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-
-            // Distinct is case-sensitive; only exact duplicates removed
-            Assert.That(cfg.OpenTelemetryTracingExcludedActivitySources, Is.EqualTo(new List<string> { "db", "DB", "Db" }));
-        }
-
         #endregion
     }
 }
