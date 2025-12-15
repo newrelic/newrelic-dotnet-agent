@@ -780,14 +780,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return false;
             }
 
-            // Get filter lists - distinguish between null (not configured) and empty (configured but empty)
+            // Get filter lists
             var includeFilters = _configuration.OpenTelemetryMetricsIncludeFilters?.ToList();
             var excludeFilters = _configuration.OpenTelemetryMetricsExcludeFilters?.ToList();
-            
-            var includeConfigured = includeFilters != null && includeFilters.Count > 0;
-            var excludeConfigured = excludeFilters != null && excludeFilters.Count > 0;
 
-            //Check customer exclude list (overrides everything)
+            var excludeConfigured = excludeFilters != null && excludeFilters.Count > 0;
+            var includeConfigured = includeFilters != null && includeFilters.Count > 0;
+
+            // Check customer exclude list (highest precedence)
             if (excludeConfigured && excludeFilters.Contains(meterName))
             {
                 Log.Finest($"Meter '{meterName}' is in customer exclude list. Not enabling instruments.");
@@ -801,22 +801,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return true;
             }
 
-            // Check built-in exclusions
+            // Built-in exclude list (lowest precedence)
             if (!ShouldEnableInstrumentsInMeter(meterName))
             {
                 Log.Finest($"Meter '{meterName}' matches built-in exclusion pattern. Not enabling instruments.");
                 return false;
             }
 
-            // If an include list is configured, only meters in that list should be enabled (unless explicitly excluded)
-            // If no include list is configured, all meters are enabled by default (unless excluded)
-            if (includeConfigured)
-            {
-                Log.Finest($"Meter '{meterName}' is not in customer include list. Not enabling instruments.");
-                return false;
-            }
-
-            //If no include list defined and meter is not defined in any of the lists, so meter is included by default.
+            // Default: All meters should be captured by default
             return true;
         }
 
