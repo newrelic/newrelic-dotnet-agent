@@ -9,8 +9,8 @@
     <!-- We use the different targets to test a range of library versions. Note that the minimum versions can't drift too far apart
     from each other due to a shared dependency on AWSSDK.Core -->
     <!-- 2.0.0 is from March 2020 -->
-    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.2" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.2" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.3" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.3" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- 2.0.0 is from April 2020 -->
     <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="2.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="2.2.0" Condition="'$(TargetFramework)' == 'net10.0'" />
