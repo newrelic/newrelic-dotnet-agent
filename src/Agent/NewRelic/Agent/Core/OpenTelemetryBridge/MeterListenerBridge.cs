@@ -759,7 +759,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// <summary>
         /// Determines whether instruments in the specified meter should be enabled based on the 
         /// OpenTelemetry metrics configuration filters (include/exclude lists).
-        /// Precedence order (highest to lowest):
+        /// Precedence order (lowest to highest):
         /// 1. Built-in exclusions 
         /// 2. Customer include list
         /// 3. Customer exclude list (highest priority, overrides all other settings)
@@ -784,8 +784,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var includeFilters = _configuration.OpenTelemetryMetricsIncludeFilters?.ToList();
             var excludeFilters = _configuration.OpenTelemetryMetricsExcludeFilters?.ToList();
             
-            var includeConfigured = includeFilters != null;
-            var excludeConfigured = excludeFilters != null;
+            var includeConfigured = includeFilters != null && includeFilters.Count > 0;
+            var excludeConfigured = excludeFilters != null && excludeFilters.Count > 0;
 
             //Check customer exclude list (overrides everything)
             if (excludeConfigured && excludeFilters.Contains(meterName))
@@ -808,8 +808,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return false;
             }
 
+            // If an include list is configured, only meters in that list should be enabled (unless explicitly excluded)
+            // If no include list is configured, all meters are enabled by default (unless excluded)
+            if (includeConfigured)
+            {
+                Log.Finest($"Meter '{meterName}' is not in customer include list. Not enabling instruments.");
+                return false;
+            }
 
-            //If meter is not defined in any of the lists, so meter is included by default.
+            //If no include list defined and meter is not defined in any of the lists, so meter is included by default.
             return true;
         }
 

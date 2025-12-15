@@ -428,218 +428,231 @@ namespace NewRelic.Agent.Core.DataTransport
         #region Filter Logic Tests
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_WhenOpenTelemetryMetricsDisabled_ShouldReturnFalse()
+        public void ShouldEnableInstrumentsInMeterWithFilters_NullMeterName_ShouldReturnFalse()
         {
             // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(false);
-
             var method = GetShouldEnableMethod();
 
             // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
+            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { null });
 
-            // Assert - Filter method doesn't check config state, returns permissive default
-            Assert.That(result, Is.True);
+            // Assert
+            Assert.That(result, Is.False, "Null meter name should always return false");
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_WhenMetricsDisabled_ShouldReturnFalse()
+        public void ShouldEnableInstrumentsInMeterWithFilters_EmptyMeterName_ShouldReturnFalse()
         {
             // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(false);
-
             var method = GetShouldEnableMethod();
 
             // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "System.Net.Http.test" });
+            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "" });
 
-            // Assert - Filter method doesn't check config state, returns permissive default  
-            Assert.That(result, Is.True);
+            // Assert
+            Assert.That(result, Is.False, "Empty meter name should always return false");
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_EmptyFilters_ShouldDisable()
+        public void ShouldEnableInstrumentsInMeterWithFilters_InExcludeList_ShouldReturnFalse()
         {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            // Arrange - Exclude list has highest priority
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string> { "TestMeter" });
+
+            var method = GetShouldEnableMethod();
+
+            // Act
+            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "TestMeter" });
+
+            // Assert
+            Assert.That(result, Is.False, "Meter in exclude list should be disabled");
+        }
+
+        [Test]
+        public void ShouldEnableInstrumentsInMeterWithFilters_InExcludeAndIncludeList_ExcludeWins()
+        {
+            // Arrange - When meter is in both lists, exclude takes precedence
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "TestMeter" });
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string> { "TestMeter" });
+
+            var method = GetShouldEnableMethod();
+
+            // Act
+            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "TestMeter" });
+
+            // Assert
+            Assert.That(result, Is.False, "Exclude list should have higher precedence than include list");
+        }
+
+        [Test]
+        public void ShouldEnableInstrumentsInMeterWithFilters_InIncludeListOnly_ShouldReturnTrue()
+        {
+            // Arrange - Include list overrides built-in exclusions
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "TestMeter" });
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
 
             var method = GetShouldEnableMethod();
 
             // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
+            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "TestMeter" });
 
-            // Assert - New permissive behavior: enabled by default even with empty filter lists
-            Assert.That(result, Is.True);
+            // Assert
+            Assert.That(result, Is.True, "Meter in include list should be enabled");
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_InIncludeList_ShouldEnable()
+        public void ShouldEnableInstrumentsInMeterWithFilters_NotInIncludeList_ShouldReturnFalse()
         {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "Microsoft.AspNetCore.Hosting.test" });
+            // Arrange - When include list is configured, ONLY meters in that list should be enabled
+            // This is the restrictive mode that fixes the integration test failure
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "OtelMetricsTest.App" });
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
 
             var method = GetShouldEnableMethod();
 
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
+            // Act - Test meters that are NOT in the include list
+            var systemNetHttpResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "System.Net.Http" });
+            var dotnetRuntimeResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "dotnet.runtime" });
+            var customAppResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OtherApp.Meter" });
+            
+            // Act - Test meter that IS in the include list
+            var includedMeterResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OtelMetricsTest.App" });
 
-            // Assert
-            Assert.That(result, Is.True);
+            // Assert - When include list is configured, only meters in that list should be enabled
+            Assert.That(systemNetHttpResult, Is.False, "System.Net.Http meter not in include list should be disabled");
+            Assert.That(dotnetRuntimeResult, Is.False, "dotnet.runtime meter not in include list should be disabled");
+            Assert.That(customAppResult, Is.False, "OtherApp.Meter not in include list should be disabled");
+            Assert.That(includedMeterResult, Is.True, "OtelMetricsTest.App in include list should be enabled");
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_NotInIncludeList_ShouldDisableByDefault()
+        public void ShouldEnableInstrumentsInMeterWithFilters_IncludeListOverridesBuiltInExclusions()
         {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "System.Net.Http.test" });
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
-
-            var method = GetShouldEnableMethod();
-
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
-
-            // Assert - New permissive behavior: enabled by default even if not in include list
-            Assert.That(result, Is.True);
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_InExcludeList_ShouldDisable()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string> { "Microsoft.AspNetCore.Hosting.test" });
-
-            var method = GetShouldEnableMethod();
-
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_InBothLists_IncludeTakesPrecedence()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "Microsoft.AspNetCore.Hosting.test" });
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string> { "Microsoft.AspNetCore.Hosting.test" });
-
-            var method = GetShouldEnableMethod();
-
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
-
-            // Assert - Exclude list has higher precedence than include list
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_InIncludeNotInExclude_ShouldEnable()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "Microsoft.AspNetCore.Hosting.test", "System.Net.Http.test" });
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string> { "Microsoft.EntityFrameworkCore.test" });
-
-            var method = GetShouldEnableMethod();
-
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.AspNetCore.Hosting.test" });
-
-            // Assert
-            Assert.That(result, Is.True);
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_InIncludeList_CanOverrideBuiltInExclusions()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            // Arrange - Include list allows customer to opt into meters that are built-in excluded
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "NewRelic.TestMeter", "OpenTelemetry.TestMeter" });
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
 
             var method = GetShouldEnableMethod();
 
-            // Act - Test that customer include list CAN override built-in exclusions
+            // Act
             var newRelicResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.TestMeter" });
             var otelResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OpenTelemetry.TestMeter" });
 
-            // Assert - Customer include list overrides built-in exclusions
-            Assert.That(newRelicResult, Is.True, "Customer include list should override built-in exclusion for NewRelic meters");
-            Assert.That(otelResult, Is.True, "Customer include list should override built-in exclusion for OpenTelemetry meters");
+            // Assert
+            Assert.That(newRelicResult, Is.True, "Include list should override built-in exclusion for NewRelic meters");
+            Assert.That(otelResult, Is.True, "Include list should override built-in exclusion for OpenTelemetry meters");
         }
 
         [Test]
-        public void WithNullIncludeFilters_ShouldWork()
+        public void ShouldEnableInstrumentsInMeterWithFilters_BuiltInExclusionWithoutInclude_ShouldReturnFalse()
         {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns((List<string>)null);
+            // Arrange - Built-in exclusions work when not in include list
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
 
             var method = GetShouldEnableMethod();
 
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "Microsoft.EntityFrameworkCore.test" });
+            // Act - Test all built-in exclusion patterns
+            var newRelicResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.InternalMeter" });
+            var otelResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OpenTelemetry.InternalMeter" });
+            var diagnosticsResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "System.Diagnostics.Metrics.Runtime" });
 
             // Assert
-            Assert.That(result, Is.True);
+            Assert.That(newRelicResult, Is.False, "NewRelic meters should be excluded by built-in filter");
+            Assert.That(otelResult, Is.False, "OpenTelemetry meters should be excluded by built-in filter");
+            Assert.That(diagnosticsResult, Is.False, "System.Diagnostics.Metrics meters should be excluded by built-in filter");
         }
 
         [Test]
-        public void WithNullExcludeFilters_ShouldWork()
+        public void ShouldEnableInstrumentsInMeterWithFilters_NotInAnyList_PermissiveDefault_ShouldReturnTrue()
         {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            // Arrange - Permissive mode: meters not in any list are enabled by default
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
+
+            var method = GetShouldEnableMethod();
+
+            // Act - Test application meters that aren't in any list
+            var result1 = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.Metrics" });
+            var result2 = (bool)method.Invoke(_meterListenerBridge, new object[] { "CustomLibrary.Performance" });
+
+            // Assert - Default permissive behavior allows all application metrics
+            Assert.That(result1, Is.True, "Application meter not in any list should be enabled by default");
+            Assert.That(result2, Is.True, "Custom library meter not in any list should be enabled by default");
+        }
+
+        [Test]
+        public void ShouldEnableInstrumentsInMeterWithFilters_NullFilterLists_PermissiveDefault()
+        {
+            // Arrange - Null filter lists should work the same as empty lists
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns((List<string>)null);
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns((List<string>)null);
 
             var method = GetShouldEnableMethod();
 
             // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "System.Net.Http.test" });
+            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.Metrics" });
 
-            // Assert - Permissive default: meter not in lists is enabled
-            Assert.That(result, Is.True);
+            // Assert
+            Assert.That(result, Is.True, "Null filter lists should enable application meters by default");
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_CustomerExcludeHasHighestPrecedence()
+        public void ShouldEnableInstrumentsInMeterWithFilters_EmptyFilterLists_PermissiveDefault()
         {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            // Include list includes NewRelic.Agent.Core.test
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "NewRelic.Agent.Core.test" });
-            // Exclude list also includes NewRelic.Agent.Core.test - should win due to highest precedence
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string> { "NewRelic.Agent.Core.test" });
+            // Arrange - Empty filter lists should enable application meters
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
 
             var method = GetShouldEnableMethod();
 
-            // Act - Customer exclude should override customer include
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.Agent.Core.test" });
+            // Act
+            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.Metrics" });
 
-            // Assert - Customer exclude has highest precedence
-            Assert.That(result, Is.False, "Customer exclude list should override customer include list");
+            // Assert
+            Assert.That(result, Is.True, "Empty filter lists should enable application meters by default");
+        }
+
+        [Test]
+        public void ShouldEnableInstrumentsInMeterWithFilters_ComplexScenario_AllPrecedenceLevels()
+        {
+            // Arrange - Test all 4 precedence levels in a realistic scenario
+            // Scenario: Customer wants to exclude specific meters, include NewRelic diagnostics, 
+            // and let all other app metrics through by default
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> 
+            { 
+                "NewRelic.Diagnostics"  // Override built-in exclusion
+            });
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string> 
+            { 
+                "MyApp.NoisyMeter",     // Exclude specific app meter
+                "NewRelic.Diagnostics"  // Also in include - exclude should win
+            });
+
+            var method = GetShouldEnableMethod();
+
+            // Act & Assert
+            // Priority 1: Customer exclude (highest)
+            var excludedAppMeter = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.NoisyMeter" });
+            Assert.That(excludedAppMeter, Is.False, "Meter in exclude list should be disabled (Priority 1)");
+
+            var excludeWins = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.Diagnostics" });
+            Assert.That(excludeWins, Is.False, "Exclude should override include (Priority 1 > Priority 2)");
+
+            // Priority 2: Customer include (overrides built-in)
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
+            var includedNewRelicMeter = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.Diagnostics" });
+            Assert.That(includedNewRelicMeter, Is.True, "Include should override built-in exclusion (Priority 2)");
+
+            // Priority 3: Built-in exclusions
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
+            var builtInExcluded = (bool)method.Invoke(_meterListenerBridge, new object[] { "OpenTelemetry.Internal" });
+            Assert.That(builtInExcluded, Is.False, "Built-in exclusions should block meters (Priority 3)");
+
+            // Priority 4: Permissive default
+            var appMeter = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.BusinessMetrics" });
+            Assert.That(appMeter, Is.True, "Application meter not in any list should be enabled (Priority 4)");
         }
 
         #endregion
