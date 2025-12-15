@@ -15,7 +15,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
  && rm -rf /var/lib/apt/lists/*
 
 # Install New Relic's public key to verify RPM signature
- RUN wget -O /tmp/newrelic-public.gpg https://download.newrelic.com/NEWRELIC_APT_2DAD550E.public \
+RUN wget -O /tmp/newrelic-public.gpg https://download.newrelic.com/NEWRELIC_APT_2DAD550E.public \
  && rpm --import /tmp/newrelic-public.gpg
 
  # Install exiftool

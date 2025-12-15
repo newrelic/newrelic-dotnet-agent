@@ -22,6 +22,9 @@ MACROS
 
     # sign the rpm
     rpm --addsign $rpm_file
+
+    # check the signature (the public key that matches the private key used to sign was imported in the Dockerfile)
+    rpm --checksig $rpm_file
 }
 
 PACKAGE_NAME='newrelic-dotnet-agent'

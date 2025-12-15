@@ -655,7 +655,7 @@ jobs:
 
           cd ${{ github.workspace }}/build/Linux
           docker compose build build_rpm
-          docker compose run -e AGENT_VERSION=$agentVersion -e GPG_KEY=/keys/private_gpg_key.gpg build_rpm
+          docker compose run -e AGENT_VERSION=$agentVersion -e GPG_KEY=/keys/private_gpg_key.gpg -e GPG_KEY_PASSPHRASE=${{ secrets.NEW_GPG_KEY_PASSPHRASE }} build_rpm
         shell: bash
 
       - name: Archive RPM Package Artifacts
