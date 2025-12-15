@@ -739,7 +739,7 @@ namespace NewRelic.Agent.Core.Metrics
 
         #region Open Telemetry Bridge
         private const string OpenTelemetryBridge = "OpenTelemetryBridge";
-        private const string SupportabilityOTelPs = SupportabilityPs + "OpenTelemetry" + PathSeparator;
+        private const string SupportabilityOTelPs = SupportabilityPs + OpenTelemetryBridge + PathSeparator;
         private const string SupportabilityOTelMetricsBridgePs = SupportabilityPs + "Metrics" + PathSeparator + "DotNet" + PathSeparator + OpenTelemetryBridge + PathSeparator;
         private const string SupportabilityOTelTracingBridgePs = SupportabilityPs + "Tracing" + PathSeparator + "DotNet" + PathSeparator + OpenTelemetryBridge + PathSeparator;
 

@@ -2309,7 +2309,7 @@
                                         <xs:annotation>
                                             <xs:documentation>
                                                 A comma-delimited list of OpenTelemetry Meter names to include for metrics export to New Relic.
-                                                Meters defined in this list this list will be enabled
+                                                Meters defined in this list will be enabled
                                                 This setting can override the built-in exclusion list, but can be overridden by the user-configured 'exclude' list (exclude has highest precedence).
                                                 Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_INCLUDE
                                             </xs:documentation>
