@@ -2826,9 +2826,45 @@ namespace NewRelic.Agent.Core.Configuration
 
         // These are activity sources that are excluded by default unless explicitly included via configuration
         public List<string> OpenTelemetryTracingDefaultExcludedActivitySources => new List<string>()
-        // TODO: Add the default set of excluded activity source names here
-        //  { "foo", "bar" }
-        ;
+        { "AWSSDK.Bedrock Runtime",
+          "AWSSDK.Bedrock",
+          "AWSSDK.DynamoDB",
+          "AWSSDK.Firehose",
+          "AWSSDK.Kinesis",
+          "AWSSDK.Lambda",
+          "AWSSDK.SQS",
+          "Azure.Cosmos.Operation",
+          "Azure.Messaging.ServiceBus.Message",
+          "Azure.Messaging.ServiceBus.ServiceBusProcessor",
+          "Azure.Messaging.ServiceBus.ServiceBusReceiver",
+          "Azure.Messaging.ServiceBus.ServiceBusSender",
+          "connector-net",
+          "Couchbase.DotnetSdk.OpenTelemetryRequestTracer",
+          "MassTransit",
+          "Microsoft.AspNetCore",
+          "Microsoft.AspNetCore.Components",
+          "Microsoft.AspNetCore.Components.Server.Circuits",
+          "Microsoft.AspNetCore.SignalR.Server",
+          "Microsoft.Azure.Functions.Worker",
+          "Microsoft.Data.SqlClient",
+          "MongoDB.Driver.Core.Extensions.DiagnosticSources",
+          "MySqlConnector",
+          "Npgsql",
+          "NServiceBus.Core",
+          "OpenAI.ChatClient",
+          "OpenTelemetry.AutoInstrumentation.Kafka",
+          "OpenTelemetry.AutoInstrumentation.MongoDB",
+          "OpenTelemetry.Instrumentation.AspNet",
+          "OpenTelemetry.Instrumentation.AWSLambda",
+          "OpenTelemetry.Instrumentation.Owin",
+          "OpenTelemetry.Instrumentation.StackExchangeRedis",
+          "OpenTelemetry.Instrumentation.Wcf",
+          "Oracle.ManagedDataAccess",
+          "Oracle.ManagedDataAccess.Core",
+          "System.Data",
+          "System.Data.SqlClient",
+          "System.Net.Http",
+          "System.Web.Mvc" };
 
         public List<string> OpenTelemetryTracingExcludedActivitySources
         {
