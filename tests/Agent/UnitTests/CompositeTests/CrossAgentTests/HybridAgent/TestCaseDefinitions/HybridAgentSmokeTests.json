@@ -275,6 +275,8 @@
                             {
                                 "command": "RecordExceptionOnSpan",
                                 "parameters": {
+                                    "status.code": "error",
+                                    "status.description": "Test exception message",
                                     "errorMessage": "Test exception message"
                                 }
                             }
