@@ -4605,46 +4605,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
-        [Test]
-        public void IncludedActivitySources_IncludesDefaultPlusConfigured()
-        {
-            _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Include", value = "Foo,Bar,Baz" });
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-
-            var includedActivitySources = defaultConfig.IncludedActivitySources;
-
-            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Elastic.Transport", "RabbitMQ.Client.Subscriber", "RabbitMQ.Client.Publisher", "Foo", "Bar", "Baz"]));
-        }
-
-        [Test]
-        public void IncludedActivitySources_ParsesPoorlyFormedInputCorrectly()
-        {
-            _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Include", value = "  , Foo , , Bar,Baz,, " });
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-            var includedActivitySources = defaultConfig.IncludedActivitySources;
-            Assert.That(includedActivitySources, Is.EquivalentTo(["NewRelic.Agent", "Elastic.Transport", "RabbitMQ.Client.Subscriber", "RabbitMQ.Client.Publisher", "Foo", "Bar", "Baz"]));
-        }
-
-        [Test]
-        public void ExcludedActivitySources_IncludesConfigured()
-        {
-            _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Exclude", value = "Foo,Bar,Baz" });
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-
-            var excludedActivitySources = defaultConfig.ExcludedActivitySources;
-
-            Assert.That(excludedActivitySources, Is.EquivalentTo(["Foo", "Bar", "Baz"]));
-        }
-
-        [Test]
-        public void ExcludedActivitySources_ParsesPoorlyFormedInputCorrectly()
-        {
-            _localConfig.appSettings.Add(new configurationAdd { key = "OpenTelemetry.ActivitySource.Exclude", value = "  , Foo , , Bar,Baz,, " });
-            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-            var excludedActivitySources = defaultConfig.ExcludedActivitySources;
-            Assert.That(excludedActivitySources, Is.EquivalentTo(["Foo", "Bar", "Baz"]));
-        }
-
         private DefaultConfiguration GenerateConfigFromXml(string xml)
         {
             var root = new XmlRootAttribute { ElementName = "configuration", Namespace = "urn:newrelic-config" };

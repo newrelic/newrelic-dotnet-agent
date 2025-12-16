@@ -526,8 +526,9 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool OpenTelemetryEnabled => true;
 
         public bool OpenTelemetryTracingEnabled => true;
-        public List<string> IncludedActivitySources => ["SomeIncludedActivitySourceName", "AnotherIncludedActivitySourceName"];
-        public List<string> ExcludedActivitySources => ["SomeExcludedActivitySourceName", "AnotherExcludedActivitySourceName"];
+        public List<string> OpenTelemetryTracingIncludedActivitySources => ["SomeIncludedActivitySourceName", "AnotherIncludedActivitySourceName"];
+        public List<string> OpenTelemetryTracingExcludedActivitySources => ["SomeExcludedActivitySourceName", "AnotherExcludedActivitySourceName"];
+        public List<string> OpenTelemetryTracingDefaultExcludedActivitySources => ["SomeDefaultExcludedActivitySourceName", "AnotherDefaultExcludedActivitySourceName"];
 
         public bool OpenTelemetryMetricsEnabled => true;
         public IEnumerable<string> OpenTelemetryMetricsIncludeFilters => ["IncludedMeter1", "IncludedMeter2"];

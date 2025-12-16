@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Core.Segments;
@@ -41,19 +40,18 @@ public abstract class HybridAgentTestsBase
             _compositeTestAgent.LocalConfiguration.cloud.aws.accountId = "123456";
         }
 
-        // enable the OTel bridge
-        // tracing is enabled by default when the OTel bridge is enabled
+        // enable the OTel bridge and include our test activity source
         _compositeTestAgent.LocalConfiguration.opentelemetry.enabled = true;
+        _compositeTestAgent.LocalConfiguration.opentelemetry.traces.enabled = true;
+        _compositeTestAgent.LocalConfiguration.opentelemetry.traces.include = OpenTelemetryOperations.TestAppActivitySource.Name;
 
-        // configure the activity source we want to listen to
-        _compositeTestAgent.LocalConfiguration.appSettings.Add(new configurationAdd() { key = "OpenTelemetry.ActivitySource.Include", value = "TestApp activity source" });
         // update configuration
         _compositeTestAgent.PushConfiguration();
 
         _agent = _compositeTestAgent.GetAgent();
         _newRelicAgentOperations = new NewRelicAgentOperations(_agent);
 
-        Console.WriteLine("OTel activity source is ready", OpenTelemetryOperations.TestAppActivitySource.Name);
+        Console.WriteLine($"OTel activity source is ready: {OpenTelemetryOperations.TestAppActivitySource.Name}");
 
         _activityBridge = new ActivityBridge(_agent, _compositeTestAgent.Container.Resolve<IErrorService>());
         _activityBridge.Start();

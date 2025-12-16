@@ -776,15 +776,18 @@ namespace NewRelic.Agent.Core.Configuration
         public bool OpenTelemetryEnabled => _configuration.OpenTelemetryEnabled;
 
 
-        [JsonProperty("opentelemetry.tracing.enabled")]
+        [JsonProperty("opentelemetry.traces.enabled")]
         public bool OpenTelemetryTracingEnabled => _configuration.OpenTelemetryTracingEnabled;
 
-        [JsonProperty("opentelemetry.tracing.include")]
-        public List<string> IncludedActivitySources => _configuration.IncludedActivitySources;
+        [JsonProperty("opentelemetry.traces.include")]
+        public List<string> OpenTelemetryTracingIncludedActivitySources => _configuration.OpenTelemetryTracingIncludedActivitySources;
 
-        [JsonProperty("opentelemetry.tracing.exclude")]
-        public List<string> ExcludedActivitySources => _configuration.ExcludedActivitySources;
+        [JsonProperty("opentelemetry.traces.exclude")]
+        public List<string> OpenTelemetryTracingExcludedActivitySources => _configuration.OpenTelemetryTracingExcludedActivitySources;
 
+        [JsonProperty("opentelemetry.traces.default_exclude")]
+        public List<string> OpenTelemetryTracingDefaultExcludedActivitySources =>
+            _configuration.OpenTelemetryTracingDefaultExcludedActivitySources;
 
         [JsonProperty("opentelemetry.metrics.enabled")]
         public bool OpenTelemetryMetricsEnabled => _configuration.OpenTelemetryMetricsEnabled;

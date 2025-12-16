@@ -6693,6 +6693,8 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationOpentelemetry
     {
         
+        private configurationOpentelemetryTraces tracesField;
+        
         private configurationOpentelemetryMetrics metricsField;
         
         private bool enabledField;
@@ -6703,7 +6705,20 @@ namespace NewRelic.Agent.Core.Config
         public configurationOpentelemetry()
         {
             this.metricsField = new configurationOpentelemetryMetrics();
+            this.tracesField = new configurationOpentelemetryTraces();
             this.enabledField = false;
+        }
+        
+        public configurationOpentelemetryTraces traces
+        {
+            get
+            {
+                return this.tracesField;
+            }
+            set
+            {
+                this.tracesField = value;
+            }
         }
         
         public configurationOpentelemetryMetrics metrics
@@ -6739,6 +6754,78 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationOpentelemetry Clone()
         {
             return ((configurationOpentelemetry)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationOpentelemetryTraces
+    {
+        
+        private bool enabledField;
+        
+        private string includeField;
+        
+        private string excludeField;
+        
+        /// <summary>
+        /// configurationOpentelemetryTraces class constructor
+        /// </summary>
+        public configurationOpentelemetryTraces()
+        {
+            this.enabledField = false;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string include
+        {
+            get
+            {
+                return this.includeField;
+            }
+            set
+            {
+                this.includeField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string exclude
+        {
+            get
+            {
+                return this.excludeField;
+            }
+            set
+            {
+                this.excludeField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationOpentelemetryTraces object
+        /// </summary>
+        public virtual configurationOpentelemetryTraces Clone()
+        {
+            return ((configurationOpentelemetryTraces)(this.MemberwiseClone()));
         }
         #endregion
     }
