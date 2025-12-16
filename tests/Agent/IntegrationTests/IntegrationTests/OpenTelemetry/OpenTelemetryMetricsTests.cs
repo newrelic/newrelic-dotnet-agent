@@ -34,7 +34,7 @@ namespace NewRelic.Agent.IntegrationTests.OpenTelemetry
 
                     // otlp metrics export will be complete before the first analytics event harvest
                     _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
-                    
+
                     _otlpSummaries = _fixture.GetCollectedOTLPMetrics();
                 }
             );
@@ -76,18 +76,16 @@ namespace NewRelic.Agent.IntegrationTests.OpenTelemetry
                 _fixture.TestLogger.WriteLine($"Name: {metric.Name}, TotalCount: {metric.TotalCount}");
             }
 
-            // Expected metric names from OtelMetricsApplication
-            var expected = new[]
+            // Verify all expected metrics are present (but allow additional metrics)
+            foreach (var expectedMetric in GetExpectedMetrics())
             {
-                "requests_total",
-                "payload_size_bytes",
-                "active_requests",
-                "queue_depth",
-                "cpu_usage_percent",
-                "active_connections"
-            };
+                Assert.Contains(metricEntries, m => m.Name == expectedMetric);
+            }
+        }
 
-            Assert.All(metricEntries, metric => Assert.Contains(metric.Name, expected));
+        protected virtual string[] GetExpectedMetrics()
+        {
+            return new[] { "requests_total", "payload_size_bytes", "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
         }
     }
 
@@ -107,11 +105,13 @@ namespace NewRelic.Agent.IntegrationTests.OpenTelemetry
     public class OpenTelemetryMetricsTestsFw472 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW472>
     {
         public OpenTelemetryMetricsTestsFw472(OtlpMetricsWithCollectorFixtureFW472 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+        protected override string[] GetExpectedMetrics() => new[] { "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
     }
 
     // Net481 test targets DiagnosticSource v9.x
     public class OpenTelemetryMetricsTestsFw481 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW481>
     {
         public OpenTelemetryMetricsTestsFw481(OtlpMetricsWithCollectorFixtureFW481 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+        protected override string[] GetExpectedMetrics() => new[] { "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
     }
 }

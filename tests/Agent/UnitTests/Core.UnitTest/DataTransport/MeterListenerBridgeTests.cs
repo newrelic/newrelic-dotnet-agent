@@ -502,10 +502,10 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_NotInIncludeList_ShouldReturnFalse()
+        public void ShouldEnableInstrumentsInMeterWithFilters_NotInIncludeList_ShouldReturnTrue()
         {
-            // Arrange - When include list is configured, ONLY meters in that list should be enabled
-            // This is the restrictive mode that fixes the integration test failure
+            // Arrange - When include list is configured, it only overrides built-in exclusions
+            // Other meters follow default permissive behavior
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "OtelMetricsTest.App" });
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
 
@@ -519,10 +519,10 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act - Test meter that IS in the include list
             var includedMeterResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OtelMetricsTest.App" });
 
-            // Assert - When include list is configured, only meters in that list should be enabled
-            Assert.That(systemNetHttpResult, Is.False, "System.Net.Http meter not in include list should be disabled");
-            Assert.That(dotnetRuntimeResult, Is.False, "dotnet.runtime meter not in include list should be disabled");
-            Assert.That(customAppResult, Is.False, "OtherApp.Meter not in include list should be disabled");
+            // Assert - Permissive default: meters not in any list are enabled
+            Assert.That(systemNetHttpResult, Is.True, "System.Net.Http meter not in any list should be enabled by default");
+            Assert.That(dotnetRuntimeResult, Is.True, "dotnet.runtime meter not in any list should be enabled by default");
+            Assert.That(customAppResult, Is.True, "OtherApp.Meter not in any list should be enabled by default");
             Assert.That(includedMeterResult, Is.True, "OtelMetricsTest.App in include list should be enabled");
         }
 
@@ -633,26 +633,26 @@ namespace NewRelic.Agent.Core.DataTransport
             var method = GetShouldEnableMethod();
 
             // Act & Assert
-            // Priority 1: Customer exclude (highest)
+            // Priority 3: Customer exclude (highest)
             var excludedAppMeter = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.NoisyMeter" });
-            Assert.That(excludedAppMeter, Is.False, "Meter in exclude list should be disabled (Priority 1)");
+            Assert.That(excludedAppMeter, Is.False, "Meter in exclude list should be disabled (Priority 3)");
 
             var excludeWins = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.Diagnostics" });
-            Assert.That(excludeWins, Is.False, "Exclude should override include (Priority 1 > Priority 2)");
+            Assert.That(excludeWins, Is.False, "Exclude should override include (Priority 3 > Priority 2)");
 
             // Priority 2: Customer include (overrides built-in)
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
             var includedNewRelicMeter = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.Diagnostics" });
             Assert.That(includedNewRelicMeter, Is.True, "Include should override built-in exclusion (Priority 2)");
 
-            // Priority 3: Built-in exclusions
+            // Priority 1: Built-in exclusions
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
             var builtInExcluded = (bool)method.Invoke(_meterListenerBridge, new object[] { "OpenTelemetry.Internal" });
-            Assert.That(builtInExcluded, Is.False, "Built-in exclusions should block meters (Priority 3)");
+            Assert.That(builtInExcluded, Is.False, "Built-in exclusions should block meters (Priority 1)");
 
-            // Priority 4: Permissive default
+            // Default: Permissive default
             var appMeter = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.BusinessMetrics" });
-            Assert.That(appMeter, Is.True, "Application meter not in any list should be enabled (Priority 4)");
+            Assert.That(appMeter, Is.True, "Application meter not in any list should be enabled (Default)");
         }
 
         #endregion
