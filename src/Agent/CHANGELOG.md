@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.47.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.47.1...v10.47.2) (2025-12-16)
+
+
+### Fixes
+
+* Handle disposed streams in browser script injection ([#3352](https://github.com/newrelic/newrelic-dotnet-agent/issues/3352)) ([32fb80c](https://github.com/newrelic/newrelic-dotnet-agent/commit/32fb80ce35a0049d2e336403c6afee238b082ca4))
+* Profiler doesn't handle UTF-8 files with BOM correctly. ([#3347](https://github.com/newrelic/newrelic-dotnet-agent/issues/3347)) ([c18ff11](https://github.com/newrelic/newrelic-dotnet-agent/commit/c18ff11a5a2798e8f7f2863d0f897b6127a50f79))
+
 ## [10.47.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.47.0...v10.47.1) (2025-12-02)
 
 
