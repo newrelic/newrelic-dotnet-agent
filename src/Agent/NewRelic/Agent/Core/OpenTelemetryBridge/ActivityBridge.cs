@@ -512,6 +512,19 @@ public class ActivityBridge : IDisposable
 
         if (segment != null)
         {
+            // set status code (and description, if available) as agent attributes on the segment
+            dynamic activity = originalActivity;
+            int activityStatusCode = (int)activity.Status;
+            segment.AddAgentAttribute("status.code", activityStatusCode.ToActivityStatusCodeString());
+            if (activityStatusCode == (int)ActivityStatusCode.Error)
+            {
+                string activityStatusDescription = (string)activity.StatusDescription;
+                if (!string.IsNullOrWhiteSpace(activityStatusDescription))
+                {
+                    segment.AddAgentAttribute("status.description", activityStatusDescription);
+                }
+            }
+
             segment.ProcessActivityTags(originalActivity, agent, errorService);
             segment.AddExceptionEventInformationToSegment(originalActivity, errorService);
             segment.End();
@@ -525,4 +538,23 @@ public class ActivityBridge : IDisposable
     }
     #endregion
 
+}
+
+internal static class ActivityStatusCodeExtensions
+{
+    public static string ToActivityStatusCodeString(this int statusCode)
+    {
+        if (statusCode < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(statusCode));
+        }
+
+        return statusCode switch
+        {
+            0 => "unset",
+            1 => "ok",
+            2 => "error",
+            _ => "unknown"
+        };
+    }
 }

@@ -132,6 +132,12 @@ public static class OpenTelemetryOperations
 
         work();
     }
+
+    public static void SetActivityStatusOk()
+    {
+        Activity.Current?.SetStatus(ActivityStatusCode.Ok);
+    }
+
     public static void SetErrorStatusOnSpan(string statusDescription, Action work)
     {
         Activity.Current?.SetStatus(ActivityStatusCode.Error, statusDescription);
