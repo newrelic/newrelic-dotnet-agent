@@ -23,6 +23,8 @@ jobs:
   deploy-nuget:
     name: Deploy to NuGet
     runs-on: windows-2022
+    permissions:
+      id-token: write #enable GitHub OIDC token issuance for this job
 
     env:
       nuget_source: https://www.nuget.org
@@ -37,20 +39,22 @@ jobs:
           path: ${{ github.workspace }}
           repository: ${{ github.repository }}
 
-      - name: Setup NuGet API Key
-        run: |
-          nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
-        shell: pwsh
+      # Get a short-lived NuGet API key
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@d22cc5f58ff5b88bf9bd452535b4335137e24544 # v1.1.0
+        id: login
+        with:
+          user: ${{ secrets.NUGET_TRUSTED_PUBLISH_POLICY_USER }}
 
       - name: Deploy New Relic Azure Site Extension to Nuget
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\build\BuildArtifacts\AzureSiteExtension\NewRelic.Azure.WebSites.Extension.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\build\BuildArtifacts\AzureSiteExtension\$packageName
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true (${{ inputs.deploy }}).  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "dotnet nuget push $packagePath --source ${{ env.nuget_source }}"
           }
         shell: powershell
