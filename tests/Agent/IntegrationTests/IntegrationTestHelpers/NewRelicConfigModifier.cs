@@ -560,10 +560,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public NewRelicConfigModifier EnableOpenTelemetryTracing(bool enabled)
         {
-            // TODO: correct this configuration when otel tracing config is moved from appSettings
-            CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.Tracing.Enabled", enabled.ToString(), "urn:newrelic-config");
-            //CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "trace", string.Empty);
-            //CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "trace" }, "enabled", enabled.ToString().ToLower());
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "traces", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "traces" }, "enabled", enabled.ToString().ToLower());
             return this;
         }
 
