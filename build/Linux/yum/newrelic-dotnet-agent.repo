@@ -3,5 +3,4 @@ name=New Relic .NET agent for Linux
 baseurl=https://yum.newrelic.com/pub/newrelic/el7/$basearch
 enabled=1
 gpgcheck=1
-gpgkey=https://download.newrelic.com/548C16BF.gpg
-https://download.newrelic.com/NEWRELIC_APT_2DAD550E.public
+gpgkey=https://download.newrelic.com/548C16BF.gpg https://download.newrelic.com/NEWRELIC_APT_2DAD550E.public
