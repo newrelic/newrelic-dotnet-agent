@@ -119,8 +119,8 @@ public abstract class HybridAgentTestsBase
                 var errorMessage = operation.Parameters!["errorMessage"] as string;
                 return (work) => OpenTelemetryOperations.RecordExceptionOnSpan(errorMessage!, work);
 
-            case { Command: "SetActivityStatusOk" }:
-                return (work) => OpenTelemetryOperations.SetActivityStatusOk();
+            case { Command: "SetOkStatusOnSpan" }:
+                return OpenTelemetryOperations.SetOkStatusOnSpan;
 
             case { Command: "SetErrorStatusOnSpan" }:
                 var statusDescription = operation.Parameters!["statusDescription"] as string;
@@ -131,7 +131,7 @@ public abstract class HybridAgentTestsBase
                 return (work) => SimulatedOperations.ExternalCall(url!, work);
 
             case { Command: "OTelInjectHeaders" }:
-                return (work) => OpenTelemetryOperations.InjectHeaders(work);
+                return OpenTelemetryOperations.InjectHeaders;
 
             case { Command: "NRInjectHeaders" }:
                 return (work) => _newRelicAgentOperations.InjectHeaders(work);

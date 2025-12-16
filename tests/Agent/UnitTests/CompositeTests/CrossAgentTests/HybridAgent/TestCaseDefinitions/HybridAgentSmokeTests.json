@@ -56,7 +56,7 @@
                         },
                         "childOperations": [
                             {
-                                "command": "SetActivityStatusOk"
+                                "command": "SetOkStatusOnSpan"
                             }
                         ],
                         "assertions": [
