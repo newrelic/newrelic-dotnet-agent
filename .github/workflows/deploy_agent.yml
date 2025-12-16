@@ -284,11 +284,11 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgent\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
+            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "dotnet nuget push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
 
@@ -298,11 +298,11 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgentApi\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Api').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
+            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "dotnet nuget push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
 
@@ -312,11 +312,11 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureCloudServices\$packageName
           $version = $packageName.TrimStart('NewRelicWindowsAzure').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
+            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "dotnet nuget push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
 
@@ -326,11 +326,11 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
+            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "dotnet nuget push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
 
@@ -340,11 +340,11 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
+            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" -Source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "dotnet nuget push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
 
