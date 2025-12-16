@@ -268,9 +268,6 @@ namespace NewRelic.Agent.Core.Transactions
             var simpleSegmentData = new SimpleSegmentData(activity.DisplayName);
             segment.SetSegmentData(simpleSegmentData);
 
-            // Add an agent attribute for span status code, defaulting to "unset"
-            segment.AddAgentAttribute("status.code", "unset");
-
             if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
 
             return segment;
