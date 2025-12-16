@@ -4,23 +4,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.Config;
-using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using System.Linq;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Configuration
 {
-    internal class TestableDefaultConfiguration : DefaultConfiguration
-    {
-        public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
-            : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic)
-        { }
-    }
-
     [TestFixture]
     public class OpenTelemetryConfigurationTests
     {

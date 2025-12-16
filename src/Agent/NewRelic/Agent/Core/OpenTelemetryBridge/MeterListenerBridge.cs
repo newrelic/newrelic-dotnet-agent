@@ -786,7 +786,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             var excludeConfigured = excludeFilters != null && excludeFilters.Count > 0;
             var includeConfigured = includeFilters != null && includeFilters.Count > 0;
-            var excludeConfigured = excludeFilters != null && excludeFilters.Count > 0;
 
             // Check customer exclude list (highest precedence)
             if (excludeConfigured && excludeFilters.Contains(meterName))
