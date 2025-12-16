@@ -45,16 +45,17 @@ public class ActivityBridge : IDisposable
     {
         if (!_agent.Configuration.OpenTelemetryTracingEnabled)
         {
+            Log.Debug("Open Telemetry Tracing Bridge is disabled via configuration.");
             return true;
         }
 
         if (_activityListener != null)
         {
-            Log.Debug("Activity listener has already been created. Not starting a new one.");
+            Log.Debug("OpenTelemetry Tracing Bridge has already been created. Not starting a new one.");
             return false;
         }
 
-        Log.Debug("OpenTelemetry Bridge Tracing is enabled. Starting the activity listener.");
+        Log.Debug("OpenTelemetry Tracing Bridge is enabled. Starting the activity listener.");
         return TryCreateActivityListener();
     }
 
