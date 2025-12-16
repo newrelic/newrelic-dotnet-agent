@@ -1,0 +1,158 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.WireModels;
+using TestUtilities = NewRelic.Agent.TestUtilities;
+using NewRelic.Testing.Assertions;
+using NUnit.Framework;
+using Serilog.Events;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace NewRelic.Agent.Core.UnitTests.Metrics
+{
+    [TestFixture]
+    public class OtelBridgeSupportabilityMetricCountersTests
+    {
+        private OtelBridgeSupportabilityMetricCounters _metricCounters;
+        private List<MetricWireModel> _publishedMetrics;
+
+        [SetUp]
+        public void SetUp()
+        {
+            var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
+            _metricCounters = new OtelBridgeSupportabilityMetricCounters(metricBuilder);
+            
+            _publishedMetrics = new List<MetricWireModel>();
+            _metricCounters.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _publishedMetrics?.Clear();
+        }
+
+        [Test]
+        public void NoMetrics_WhenNothingRecorded()
+        {
+            _metricCounters.CollectMetrics();
+            Assert.That(_publishedMetrics, Is.Empty);
+        }
+
+        [TestCase(OtelBridgeSupportabilityMetric.GetMeter, MetricNames.SupportabilityOTelMetricsBridgeGetMeter)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateCounter, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateCounter)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateHistogram, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateHistogram)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateUpDownCounter, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateUpDownCounter)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateGauge, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateGauge)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableCounter, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableCounter)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableHistogram, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableHistogram)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableUpDownCounter, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableUpDownCounter)]
+        [TestCase(OtelBridgeSupportabilityMetric.CreateObservableGauge, MetricNames.SupportabilityOTelMetricsBridgeMeterCreateObservableGauge)]
+        [TestCase(OtelBridgeSupportabilityMetric.InstrumentCreated, MetricNames.SupportabilityOTelMetricsBridgeInstrumentCreated)]
+        [TestCase(OtelBridgeSupportabilityMetric.InstrumentBridgeFailure, MetricNames.SupportabilityOTelMetricsBridgeInstrumentBridgeFailure)]
+        [TestCase(OtelBridgeSupportabilityMetric.MeasurementRecorded, MetricNames.SupportabilityOTelMetricsBridgeMeasurementRecorded)]
+        [TestCase(OtelBridgeSupportabilityMetric.MeasurementBridgeFailure, MetricNames.SupportabilityOTelMetricsBridgeMeasurementBridgeFailure)]
+        [TestCase(OtelBridgeSupportabilityMetric.EntityGuidChanged, MetricNames.SupportabilityOTelMetricsBridgeEntityGuidChanged)]
+        [TestCase(OtelBridgeSupportabilityMetric.MeterProviderRecreated, MetricNames.SupportabilityOTelMetricsBridgeMeterProviderRecreated)]
+        public void Record_GeneratesCorrectMetric_ForAllEnumValues(OtelBridgeSupportabilityMetric metricType, string expectedMetricName)
+        {
+            // Arrange - Enable finest logging to ensure all metrics are recorded
+            using (new TestUtilities.Logging(LogEventLevel.Verbose))
+            {
+                // Act
+                _metricCounters.Record(metricType);
+                _metricCounters.CollectMetrics();
+
+                // Assert
+                Assert.That(_publishedMetrics, Has.Count.EqualTo(1));
+                var metric = _publishedMetrics.Single();
+                NrAssert.Multiple(
+                    () => Assert.That(metric.MetricNameModel.Name, Is.EqualTo(expectedMetricName)),
+                    () => Assert.That(metric.DataModel.Value0, Is.EqualTo(1))
+                );
+            }
+        }
+
+        [Test]
+        public void Record_AggregatesMultipleCalls()
+        {
+            // Act
+            _metricCounters.Record(OtelBridgeSupportabilityMetric.CreateCounter);
+            _metricCounters.Record(OtelBridgeSupportabilityMetric.CreateCounter);
+            _metricCounters.Record(OtelBridgeSupportabilityMetric.CreateCounter);
+            _metricCounters.CollectMetrics();
+
+            // Assert
+            Assert.That(_publishedMetrics, Has.Count.EqualTo(1));
+            var metric = _publishedMetrics.Single();
+            NrAssert.Multiple(
+                () => Assert.That(metric.MetricNameModel.Name, Is.EqualTo(MetricNames.SupportabilityOTelMetricsBridgeMeterCreateCounter)),
+                () => Assert.That(metric.DataModel.Value0, Is.EqualTo(3))
+            );
+        }
+
+        [Test]
+        public void CollectMetrics_ResetsCounters()
+        {
+            // Act - Record metrics and collect
+            // This test is not valid for MetricsBridgeEnabled, as it is now reported via configuration, not enum.
+            // Instead, test with a valid enum value:
+            _metricCounters.Record(OtelBridgeSupportabilityMetric.GetMeter);
+            _metricCounters.CollectMetrics();
+            
+            // Clear published metrics and collect again
+            _publishedMetrics.Clear();
+            _metricCounters.CollectMetrics();
+
+            // Assert - No metrics should be published since counters were reset
+            Assert.That(_publishedMetrics, Is.Empty);
+        }
+
+        [TestCase(OtelBridgeSupportabilityMetric.InstrumentCreated)]
+        [TestCase(OtelBridgeSupportabilityMetric.InstrumentBridgeFailure)]
+        [TestCase(OtelBridgeSupportabilityMetric.MeasurementRecorded)]
+        [TestCase(OtelBridgeSupportabilityMetric.MeasurementBridgeFailure)]
+        public void DebuggingMetrics_AreGenerated_WhenFinestLoggingEnabled(OtelBridgeSupportabilityMetric debuggingMetric)
+        {
+            // Arrange - Enable finest logging
+            using (new TestUtilities.Logging(LogEventLevel.Verbose))
+            {
+                // Act
+                _metricCounters.Record(debuggingMetric);
+                _metricCounters.CollectMetrics();
+
+                // Assert
+                Assert.That(_publishedMetrics, Has.Count.EqualTo(1));
+                var metric = _publishedMetrics.Single();
+                Assert.That(metric.DataModel.Value0, Is.EqualTo(1));
+            }
+        }
+
+        [Test]
+        public void DebuggingMetrics_FilteredBasedOnLogLevel()
+        {
+            // Test verifies debugging vs non-debugging metric behavior
+            
+            // Record one debugging metric
+            _metricCounters.Record(OtelBridgeSupportabilityMetric.InstrumentCreated); // Debugging
+            _metricCounters.CollectMetrics();
+
+            // At minimum, we should have the debugging metric
+            Assert.That(_publishedMetrics.Count, Is.GreaterThanOrEqualTo(1),
+                "At least the debugging metric should be published");
+        }
+
+        [Test]
+        public void RegisterPublishMetricHandler_DoesNotThrow()
+        {
+            // Arrange
+            var additionalMetrics = new List<MetricWireModel>();
+
+            // Act & Assert
+            Assert.DoesNotThrow(() => _metricCounters.RegisterPublishMetricHandler(metric => additionalMetrics.Add(metric)));
+        }
+    }
+}

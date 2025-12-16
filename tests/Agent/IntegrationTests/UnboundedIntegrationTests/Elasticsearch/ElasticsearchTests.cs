@@ -83,7 +83,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
                     if (enableOTelBridge)
                     {
                         configModifier
-                            .EnableOTelBridge(true)
+                            .EnableOpenTelemetry(true)
+                            .EnableOpenTelemetryTracing(true)
                             .IncludeActivitySource("Elastic.Transport");
                     }
                 },

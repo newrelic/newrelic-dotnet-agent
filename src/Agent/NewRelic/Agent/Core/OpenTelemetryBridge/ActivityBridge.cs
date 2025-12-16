@@ -42,7 +42,7 @@ public class ActivityBridge : IDisposable
 
     public bool Start()
     {
-        if (!_agent.Configuration.OpenTelemetryBridgeTracingEnabled)
+        if (!_agent.Configuration.OpenTelemetryTracingEnabled)
         {
             return true;
         }

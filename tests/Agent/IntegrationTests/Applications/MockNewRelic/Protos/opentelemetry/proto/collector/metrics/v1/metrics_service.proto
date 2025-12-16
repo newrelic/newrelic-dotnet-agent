@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package opentelemetry.proto.collector.metrics.v1;
+
+import "opentelemetry/proto/metrics/v1/metrics.proto";
+import "opentelemetry/proto/common/v1/common.proto";
+
+// ExportMetricsServiceRequest is the request for the Export rpc.
+message ExportMetricsServiceRequest {
+  // An array of ResourceMetrics.
+  repeated opentelemetry.proto.metrics.v1.ResourceMetrics resource_metrics = 1;
+  // This is a list of Fields, each Field has a key and a value, all fields are optional.
+  // This is a place to carry any OTLP metric related metadata.
+  opentelemetry.proto.common.v1.KeyValueList metadata = 2;
+}
+
+// ExportMetricsServiceResponse is the response for the Export rpc.
+message ExportMetricsServiceResponse {
+  // We may include some description of the dropped metrics, e.g. number of events dropped.
+}

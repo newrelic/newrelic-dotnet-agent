@@ -108,7 +108,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 _dataRequestWire = _collectorWireFactory.GetCollectorWire(_configuration, serverConfiguration.RequestHeadersMap, _agentHealthReporter);
                 SendAgentSettings();
 
-                EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+                EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = _connectionInfo });
                 Log.Info("Agent fully connected.");
                 _agentHealthReporter.SetAgentControlStatus(HealthCodes.Healthy);
             }

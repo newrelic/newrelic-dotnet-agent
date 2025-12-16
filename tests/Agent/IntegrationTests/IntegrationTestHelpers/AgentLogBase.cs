@@ -90,6 +90,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         // explain plan failure
         public const string ExplainPlainFailureLogLineRegex = DebugLogLinePrefixRegex + "Unable to execute explain plan for query: (.*)";
 
+        // OTLP metrics export
+        public const string OtlpMetricsExportedLogLineRegex = DebugLogLinePrefixRegex + "Exported OTLP metrics to (.*) with status (.*)";
+
         public AgentLogBase(ITestOutputHelper testLogger)
         {
             _testLogger = testLogger;
