@@ -1,29 +1,37 @@
 #!/bin/bash
 set -e # Halt the build script on any error
 
-# subroutine for signing .rpm.  NB: this should not be called multiple times!
+# subroutine for signing .rpm. NB: this should not be called multiple times!
 function sign_rpm {
     rpm_file="$1"
 
-    # import the private gpg key
-    gpg --import --batch --pinentry-mode loopback --passphrase "$GPG_KEY_PASSPHRASE" "$GPG_KEY"
-
     # create a passphrase file
-    echo "$GPG_KEY_PASSPHRASE" > /tmp/gpg-passphrase.txt && chmod 400 /tmp/gpg-passphrase.txt
+    tmp_passphrase_file=$(mktemp)
+    echo "$GPG_KEY_PASSPHRASE" > "$tmp_passphrase_file" && chmod 400 "$tmp_passphrase_file"
+
+    # import the private gpg key
+    gpg_import_output=$(gpg --import --batch --pinentry-mode loopback --passphrase-file "$tmp_passphrase_file" "$GPG_KEY" 2>&1)
+    key_id=$(echo "$gpg_import_output" | sed -n 's/.*public key "\([^"]*\)" imported.*/\1/p')
+    
+    echo "Imported GPG key ID: $key_id"
 
     # append the necessary lines to ~/.rpmmacros for signing
     cat << MACROS | tee -a "${HOME}/.rpmmacros"
 %_signature gpg
 %_gpg_path ${HOME}/.gnupg
-%_gpg_name New Relic Signing Key (2025) <support@newrelic.com>
+%_gpg_name ${key_id}
 %_gpgbin /usr/bin/gpg
-%_gpg_sign_cmd_extra_args --batch --pinentry-mode loopback --passphrase-file /tmp/gpg-passphrase.txt
+%_gpg_sign_cmd_extra_args --batch --pinentry-mode loopback --passphrase-file ${tmp_passphrase_file}
 MACROS
 
     # sign the rpm
     rpm --addsign $rpm_file
 
+    # cleanup the passphrase file
+    rm -f $tmp_passphrase_file
+
     # check the signature (the public key that matches the private key used to sign was imported in the Dockerfile)
+    # since we set -e at the top of the script, if the signature is invalid this will cause the script to exit with an error
     rpm --checksig $rpm_file
 }
 
