@@ -24,22 +24,22 @@ namespace NewRelic.Agent.Core.Configuration
 
         public ConfigurationManagerStaticMock(Func<string, string> getAppSetting = null)
         {
-            _getAppSetting = getAppSetting ?? (variable => null);
+            _getAppSetting = getAppSetting ?? (key => null);
         }
 
         public string AppSettingsFilePath => throw new NotImplementedException();
 
-        public string GetAppSetting(string variable)
+        public string GetAppSetting(string key)
         {
-            return _getAppSetting(variable);
+            return _getAppSetting(key);
         }
     }
 
 #if NETFRAMEWORK
 
-	public class ConfigurationManagerStatic : IConfigurationManagerStatic
-	{
-		private bool localConfigChecksDisabled;
+    public class ConfigurationManagerStatic : IConfigurationManagerStatic
+    {
+        private bool localConfigChecksDisabled;
 
         public string AppSettingsFilePath
         {
@@ -50,54 +50,66 @@ namespace NewRelic.Agent.Core.Configuration
                     if (!localConfigChecksDisabled)
                         return AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    // Ignore exceptions when accessing configuration file path
+                    Log.Debug(ex, "Failed to get application configuration file path");
+                }
 
                 return null;
             }
         }
 
-		public string GetAppSetting(string key)
-		{
-			if (localConfigChecksDisabled || key == null) return null;
-
-			try
-			{
-				return System.Configuration.ConfigurationManager.AppSettings.Get(key);
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex, $"Failed to read '{key}' using System.Configuration.ConfigurationManager.AppSettings. Reading New Relic configuration values using System.Configuration.ConfigurationManager.AppSettings will be disabled.");
-				localConfigChecksDisabled = true;
-				return null;
-			}
-		}
-	}
-#else
-    public class ConfigurationManagerStatic : IConfigurationManagerStatic
-    {
-        private bool localConfigChecksDisabled;
-
-        public string AppSettingsFilePath => AppSettingsConfigResolveWhenUsed.AppSettingsFilePath;
-
         public string GetAppSetting(string key)
         {
             if (localConfigChecksDisabled || key == null) return null;
 
-            // We're wrapping this in a try/catch to deal with the case where the necessary assemblies, in this case
-            // Microsoft.Extensions.Configuration, aren't present in the application being instrumented
             try
             {
-                return AppSettingsConfigResolveWhenUsed.GetAppSetting(key);
+                return System.Configuration.ConfigurationManager.AppSettings.Get(key);
             }
-            catch (FileNotFoundException e)
+            catch (Exception ex)
             {
-                Log.Debug(e, "appsettings.json will not be searched for config values because this application does not reference: {e.FileName}.");
+                Log.Error(ex, $"Failed to read '{key}' using System.Configuration.ConfigurationManager.AppSettings. Reading New Relic configuration values using System.Configuration.ConfigurationManager.AppSettings will be disabled.");
                 localConfigChecksDisabled = true;
                 return null;
             }
-            catch (Exception e)
+        }
+    }
+#else
+    /// <summary>
+    /// Provides configuration access for .NET Standard applications.
+    /// Uses internal bridging logic to access the application's Microsoft.Extensions.Configuration
+    /// system when available, with fallback to ILRepacked configuration.
+    /// </summary>
+    public class ConfigurationManagerStatic : IConfigurationManagerStatic
+    {
+        private bool localConfigChecksDisabled;
+
+        public string AppSettingsFilePath
+        {
+            get
             {
-                Log.Debug(e, "appsettings.json will not be searched for config values because an error was encountered");
+                if (localConfigChecksDisabled)
+                    return null;
+
+                return ConfigurationBridge.GetAppSettingsFilePath();
+            }
+        }
+
+        public string GetAppSetting(string key)
+        {
+            if (localConfigChecksDisabled || key == null)
+                return null;
+
+            try
+            {
+                return ConfigurationBridge.GetAppSetting(key);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"ConfigurationManagerStatic: Failed to read '{key}'. " +
+                             $"Reading New Relic configuration values will be disabled.");
                 localConfigChecksDisabled = true;
                 return null;
             }

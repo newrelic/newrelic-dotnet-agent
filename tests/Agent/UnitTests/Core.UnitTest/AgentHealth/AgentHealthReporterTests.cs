@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.Metrics;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.AgentHealth;
@@ -70,6 +71,7 @@ public class AgentHealthReporterTests
         Mock.Arrange(() => configuration.HealthDeliveryLocation).Returns("file://foo");
         Mock.Arrange(() => configuration.HealthFrequency).Returns(12);
         Mock.Arrange(() => configuration.MaxCustomInstrumentationSupportabilityMetrics).Returns(25);
+        Mock.Arrange(() => configuration.OpenTelemetryMetricsEnabled).Returns(false);
 
         return configuration;
     }
@@ -687,6 +689,54 @@ public class AgentHealthReporterTests
             Assert.That(expectedMetricNamesAndValues, Is.SubsetOf(actualMetricNamesAndValues));
             // verify the third metric is not reported
             Assert.That(_publishedMetrics.Any(m => m.MetricNameModel.Name == "Supportability/CustomInst/AssemblyName3/ClassName3/MethodName3"), Is.False, "Third custom instrumentation metric should not be reported when exceeding limit.");
+        });
+    }
+
+    [Test]
+    public void ReportsOpenTelemetryMetricsBridgeDisabledByDefault()
+    {
+        // Act
+        _agentHealthReporter.CollectMetrics();
+
+        // Assert
+        var disabledMetric = _publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetrics(false));
+        var enabledMetric = _publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetrics(true));
+        
+        Assert.Multiple(() =>
+        {
+            Assert.That(disabledMetric, Is.Not.Null, "OpenTelemetry metrics bridge disabled metric should be reported");
+            Assert.That(disabledMetric.DataModel.Value0, Is.EqualTo(1), "OpenTelemetry metrics bridge disabled metric should have value 1");
+            Assert.That(enabledMetric, Is.Null, "OpenTelemetry metrics bridge enabled metric should not be reported when disabled");
+        });
+    }
+
+    [Test]
+    public void ReportsOpenTelemetryMetricsBridgeEnabledWhenConfigured()
+    {
+        // Arrange - Create a new instance with OpenTelemetry enabled
+        var configuration = GetDefaultConfiguration();
+        Mock.Arrange(() => configuration.OpenTelemetryMetricsEnabled).Returns(true);
+        
+        using var configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+        var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
+        using var agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
+        agentHealthReporter.OverrideConfigForTesting(configuration);
+        var publishedMetrics = new List<MetricWireModel>();
+        agentHealthReporter.RegisterPublishMetricHandler(metric => publishedMetrics.Add(metric));
+        agentHealthReporter.OnAgentConnected();
+
+        // Act
+        agentHealthReporter.CollectMetrics();
+
+        // Assert
+        var enabledMetric = publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetrics(true));
+        var disabledMetric = publishedMetrics.FirstOrDefault(m => m.MetricNameModel.Name == MetricNames.SupportabilityOpenTelemetryMetrics(false));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(enabledMetric, Is.Not.Null, "OpenTelemetry metrics bridge enabled metric should be reported");
+            Assert.That(enabledMetric.DataModel.Value0, Is.EqualTo(1), "OpenTelemetry metrics bridge enabled metric should have value 1");
+            Assert.That(disabledMetric, Is.Null, "OpenTelemetry metrics bridge disabled metric should not be reported when enabled");
         });
     }
 }

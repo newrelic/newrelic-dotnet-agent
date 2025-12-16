@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package opentelemetry.proto.metrics.v1;
+
+import "opentelemetry/proto/common/v1/common.proto";
+import "opentelemetry/proto/resource/v1/resource.proto";
+
+message ResourceMetrics {
+  opentelemetry.proto.resource.v1.Resource resource = 1;
+  repeated ScopeMetrics scope_metrics = 2;
+}
+
+message ScopeMetrics {
+  opentelemetry.proto.common.v1.InstrumentationScope scope = 1;
+  repeated Metric metrics = 2;
+}
+
+message Metric {
+  string name = 1;
+  string description = 2;
+  string unit = 3;
+
+  oneof data {
+    Gauge gauge = 5;
+    Sum sum = 6;
+    Histogram histogram = 7;
+    ExponentialHistogram exponential_histogram = 8;
+    Summary summary = 9;
+  }
+}
+
+message Gauge { repeated NumberDataPoint data_points = 1; }
+message Sum { repeated NumberDataPoint data_points = 1; }
+message Histogram { repeated HistogramDataPoint data_points = 1; }
+message ExponentialHistogram { repeated ExponentialHistogramDataPoint data_points = 1; }
+message Summary { repeated SummaryDataPoint data_points = 1; }
+
+message NumberDataPoint { int64 time_unix_nano = 1; double as_double = 2; sint64 as_int = 3; repeated opentelemetry.proto.common.v1.KeyValue attributes = 4; }
+message HistogramDataPoint { int64 time_unix_nano = 1; repeated double bucket_counts = 2; repeated opentelemetry.proto.common.v1.KeyValue attributes = 3; }
+message ExponentialHistogramDataPoint { int64 time_unix_nano = 1; repeated double bucket_counts = 2; repeated opentelemetry.proto.common.v1.KeyValue attributes = 3; }
+message SummaryDataPoint { int64 time_unix_nano = 1; double count = 2; double sum = 3; repeated Quantile quantile_values = 4; repeated opentelemetry.proto.common.v1.KeyValue attributes = 5; }
+message Quantile { double quantile = 1; double value = 2; }

@@ -2859,12 +2859,59 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        // globally enables/disables otel bridge
-        public bool OpenTelemetryBridgeEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("OpenTelemetry.Enabled", false), "NEW_RELIC_OPEN_TELEMETRY_BRIDGE_ENABLED");
-        // defaults to enabled if otel bridge is enabled
-        public bool OpenTelemetryBridgeTracingEnabled => OpenTelemetryBridgeEnabled && EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("OpenTelemetry.Tracing.Enabled", true), "NEW_RELIC_OPEN_TELEMETRY_BRIDGE_TRACING_ENABLED");
-
         public int MaxCustomInstrumentationSupportabilityMetrics => 25; // in case we want to make this configurable in the future
+
+        #region OpenTelemetry Configuration
+
+        public bool OpenTelemetryEnabled => EnvironmentOverrides(_localConfiguration.opentelemetry.enabled, "NEW_RELIC_OPENTELEMETRY_ENABLED");
+
+        public bool OpenTelemetryTracingEnabled => OpenTelemetryEnabled && EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("OpenTelemetry.Tracing.Enabled", true), "NEW_RELIC_OPENTELEMETRY_TRACING_ENABLED");
+
+        public bool OpenTelemetryMetricsEnabled
+        {
+            get
+            {
+                // Both the global OpenTelemetry setting and the metrics-specific setting must be true
+                return OpenTelemetryEnabled && EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.enabled, "NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED");
+            }
+        }
+
+        private IEnumerable<string> _openTelemetryMetricsIncludeFilters;
+        public IEnumerable<string> OpenTelemetryMetricsIncludeFilters
+        {
+            get
+            {
+                if (_openTelemetryMetricsIncludeFilters == null)
+                {
+                    var includeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.include, "NEW_RELIC_OPENTELEMETRY_METRICS_INCLUDE") ?? string.Empty;
+                    _openTelemetryMetricsIncludeFilters = includeString
+                        .Split([','], StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .ToList();
+                }
+                return _openTelemetryMetricsIncludeFilters;
+            }
+        }
+
+        private IEnumerable<string> _openTelemetryMetricsExcludeFilters;
+        public IEnumerable<string> OpenTelemetryMetricsExcludeFilters
+        {
+            get
+            {
+                if (_openTelemetryMetricsExcludeFilters == null)
+                {
+                    var excludeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.exclude, "NEW_RELIC_OPENTELEMETRY_METRICS_EXCLUDE") ?? string.Empty;
+                    _openTelemetryMetricsExcludeFilters = excludeString
+                        .Split([','], StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .ToList();
+                }
+                return _openTelemetryMetricsExcludeFilters;
+            }
+        }
+        #endregion
 
         public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", false), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");
 

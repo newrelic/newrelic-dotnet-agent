@@ -124,8 +124,7 @@ namespace ApplicationLifecycle
         {
             var pid = Process.GetCurrentProcess().Id;
             var applicationDirectory =
-                Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath),
-                    _applicationName);
+                Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath), ApplicationName);
             var pidFilePath = applicationDirectory + ".pid";
 
             using (var file = File.CreateText(pidFilePath))

@@ -99,6 +99,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationCloud cloudField;
         
+        private configurationOpentelemetry opentelemetryField;
+        
         private bool agentEnabledField;
         
         private bool rootAgentEnabledField;
@@ -122,6 +124,7 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configuration()
         {
+            this.opentelemetryField = new configurationOpentelemetry();
             this.cloudField = new configurationCloud();
             this.codeLevelMetricsField = new configurationCodeLevelMetrics();
             this.processHostField = new configurationProcessHost();
@@ -611,6 +614,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.cloudField = value;
+            }
+        }
+        
+        public configurationOpentelemetry opentelemetry
+        {
+            get
+            {
+                return this.opentelemetryField;
+            }
+            set
+            {
+                this.opentelemetryField = value;
             }
         }
         
@@ -6667,6 +6682,135 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationCloudAws Clone()
         {
             return ((configurationCloudAws)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationOpentelemetry
+    {
+        
+        private configurationOpentelemetryMetrics metricsField;
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationOpentelemetry class constructor
+        /// </summary>
+        public configurationOpentelemetry()
+        {
+            this.metricsField = new configurationOpentelemetryMetrics();
+            this.enabledField = false;
+        }
+        
+        public configurationOpentelemetryMetrics metrics
+        {
+            get
+            {
+                return this.metricsField;
+            }
+            set
+            {
+                this.metricsField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationOpentelemetry object
+        /// </summary>
+        public virtual configurationOpentelemetry Clone()
+        {
+            return ((configurationOpentelemetry)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationOpentelemetryMetrics
+    {
+        
+        private bool enabledField;
+        
+        private string includeField;
+        
+        private string excludeField;
+        
+        /// <summary>
+        /// configurationOpentelemetryMetrics class constructor
+        /// </summary>
+        public configurationOpentelemetryMetrics()
+        {
+            this.enabledField = false;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string include
+        {
+            get
+            {
+                return this.includeField;
+            }
+            set
+            {
+                this.includeField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string exclude
+        {
+            get
+            {
+                return this.excludeField;
+            }
+            set
+            {
+                this.excludeField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationOpentelemetryMetrics object
+        /// </summary>
+        public virtual configurationOpentelemetryMetrics Clone()
+        {
+            return ((configurationOpentelemetryMetrics)(this.MemberwiseClone()));
         }
         #endregion
     }
