@@ -487,10 +487,6 @@ jobs:
       CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
 
     steps:
-      - name: My IP
-        run: (Invoke-WebRequest -uri "http://ifconfig.me/ip").Content
-        shell: powershell
-
       - name: Checkout
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
