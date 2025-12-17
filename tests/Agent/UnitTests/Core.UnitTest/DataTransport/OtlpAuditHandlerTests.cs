@@ -107,21 +107,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             Assert.ThrowsAsync<HttpRequestException>(async () => await httpClient.SendAsync(request));
         }
 
-        [Test]
-        public void GetSafeContentInfo_WithProtobufContent_ReturnsMetadataOnly()
-        {
-            // This test would need access to the private GetSafeContentInfo method
-            // In practice, we can verify this through integration tests
-            Assert.Pass("Protobuf content safety verified through integration tests");
-        }
 
-        [Test]
-        public void GetSafeContentInfo_WithJsonContent_ReturnsMetadataWithContentType()
-        {
-            // This test would need access to the private GetSafeContentInfo method
-            // In practice, we can verify this through integration tests
-            Assert.Pass("JSON content metadata verified through integration tests");
-        }
 
         /// <summary>
         /// Test helper that provides a controllable HttpMessageHandler for unit testing
