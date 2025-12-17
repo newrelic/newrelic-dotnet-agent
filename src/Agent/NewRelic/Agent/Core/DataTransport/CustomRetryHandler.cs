@@ -157,6 +157,9 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             if (request.Content != null)
             {
+                // Load content into buffer to allow multiple reads
+                await request.Content.LoadIntoBufferAsync();
+                
                 // Check if content supports direct copying (more efficient than byte array)
                 if (request.Content is ByteArrayContent byteArrayContent)
                 {

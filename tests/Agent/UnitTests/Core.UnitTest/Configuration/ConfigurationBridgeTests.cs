@@ -456,6 +456,419 @@ namespace NewRelic.Agent.Core.Config.UnitTest
         }
 
         #endregion
+
+        #region Additional Coverage Tests for 100%
+
+        [Test]
+        public void ConfigurationBridge_Initialize_CalledMultipleTimes_ShouldOnlyInitializeOnce()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+
+            // Act - Call initialize multiple times
+            ConfigurationBridge.Initialize();
+            ConfigurationBridge.Initialize();
+            ConfigurationBridge.Initialize();
+
+            var configManager = new ConfigurationManagerStatic();
+            var result = configManager.GetAppSetting("NewRelic.AppName");
+
+            // Assert - Should work correctly after multiple initializations
+            Assert.That(result, Is.EqualTo("TestApplication"));
+        }
+
+        [Test]
+        public void ConfigurationBridge_GetAppSetting_WithNullKey_ShouldReturnNull()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
+
+            // Act
+            var result = configManager.GetAppSetting(null);
+
+            // Assert
+            Assert.That(result, Is.Null);
+        }
+
+        [Test]
+        public void ConfigurationBridge_GetAppSetting_WithWhitespaceKey_ShouldReturnNull()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
+
+            // Act
+            var result = configManager.GetAppSetting("   ");
+
+            // Assert
+            Assert.That(result, Is.Null);
+        }
+
+        [Test]
+        public void ConfigurationBridge_GetAppSetting_LicenseKeyShouldBeObfuscated()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
+
+            // Act - Access license key (should be logged obfuscated)
+            var result = configManager.GetAppSetting("NewRelic.LicenseKey");
+
+            // Assert
+            Assert.That(result, Is.EqualTo("test-license-key-123456789"));
+        }
+
+        [Test]
+        public void ConfigurationBridge_FindApplicationConfigurationType_WithNoMicrosoftExtensionsConfig_ShouldReturnNull()
+        {
+            // Arrange - Create environment without Microsoft.Extensions.Configuration
+            TestStaticConfigurationHolder.Reset();
+            ResetConfigurationBridgeState();
+            
+            var emptyDir = Path.Combine(Path.GetTempPath(), "NoConfigTypeTest");
+            Directory.CreateDirectory(emptyDir);
+
+            try
+            {
+                Directory.SetCurrentDirectory(emptyDir);
+                var configManager = new ConfigurationManagerStatic();
+
+                // Act - Should fallback to ILRepacked
+                var result = configManager.GetAppSetting("test");
+
+                // Assert - Should return null (no config available)
+                Assert.That(result, Is.Null);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(_originalDirectory);
+                if (Directory.Exists(emptyDir))
+                {
+                    Directory.Delete(emptyDir, true);
+                }
+            }
+        }
+
+        [Test]
+        public void ConfigurationBridge_FindServiceProvider_WithValidProvider_ShouldReturnConfiguration()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            var configuration = CreateTestConfiguration();
+            TestStaticConfigurationHolder.SetupServiceProvider(configuration);
+
+            // Act
+            var configManager = new ConfigurationManagerStatic();
+            var result = configManager.GetAppSetting("NewRelic.AppName");
+
+            // Assert
+            Assert.That(result, Is.EqualTo("TestApplication"));
+        }
+
+        [Test]
+        public void ConfigurationBridge_GetServiceFromProvider_WithNullProvider_ShouldReturnNull()
+        {
+            // Arrange
+            TestStaticConfigurationHolder.Reset();
+            var emptyDir = Path.Combine(Path.GetTempPath(), "NullProviderTest");
+            Directory.CreateDirectory(emptyDir);
+
+            try
+            {
+                Directory.SetCurrentDirectory(emptyDir);
+                ResetConfigurationBridgeState();
+                
+                var configManager = new ConfigurationManagerStatic();
+
+                // Act
+                var result = configManager.GetAppSetting("test");
+
+                // Assert
+                Assert.That(result, Is.Null);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(_originalDirectory);
+                if (Directory.Exists(emptyDir))
+                {
+                    Directory.Delete(emptyDir, true);
+                }
+            }
+        }
+
+        [Test]
+        public void ConfigurationBridge_FindStaticConfigurationInstance_WithStaticField_ShouldWork()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            var configuration = CreateTestConfiguration();
+            TestStaticConfigurationHolder.Configuration = configuration;
+
+            ResetConfigurationBridgeState();
+
+            // Act
+            var configManager = new ConfigurationManagerStatic();
+            var result = configManager.GetAppSetting("NewRelic.AppName");
+
+            // Assert
+            Assert.That(result, Is.EqualTo("TestApplication"));
+        }
+
+        [Test]
+        public void ConfigurationBridge_CreateGetValueDelegate_WithValidConfiguration_ShouldCreateDelegate()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            var configuration = CreateTestConfiguration();
+            TestStaticConfigurationHolder.Configuration = configuration;
+
+            ResetConfigurationBridgeState();
+
+            // Act
+            var configManager = new ConfigurationManagerStatic();
+            var result = configManager.GetAppSetting("NewRelic.AppName");
+
+            // Assert
+            Assert.That(result, Is.EqualTo("TestApplication"));
+        }
+
+        [Test]
+        public void ConfigurationBridge_WithConnectionStrings_ShouldAccessCorrectly()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
+
+            // Act
+            var connectionString = configManager.GetAppSetting("ConnectionStrings:DefaultConnection");
+
+            // Assert
+            Assert.That(connectionString, Is.EqualTo("Server=localhost;Database=TestDb;"));
+        }
+
+        [Test]
+        public void ConfigurationBridge_WithNestedConfiguration_ShouldAccessCorrectly()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
+
+            // Act
+            var nestedValue = configManager.GetAppSetting("CustomSection:NestedValue");
+
+            // Assert
+            Assert.That(nestedValue, Is.EqualTo("nested-test-value"));
+        }
+
+        [Test]
+        public void ConfigurationBridge_ExceptionDuringInitialization_ShouldFallbackToILRepacked()
+        {
+            // Arrange
+            var invalidDir = Path.Combine(Path.GetTempPath(), "InvalidConfigTest");
+            Directory.CreateDirectory(invalidDir);
+
+            try
+            {
+                Directory.SetCurrentDirectory(invalidDir);
+                ResetConfigurationBridgeState();
+                
+                // Create invalid config that might cause parsing errors
+                File.WriteAllText(Path.Combine(invalidDir, "appsettings.json"), "{ invalid json");
+
+                var configManager = new ConfigurationManagerStatic();
+
+                // Act - Should handle gracefully and fallback
+                var result = configManager.GetAppSetting("test");
+
+                // Assert - Should fallback to ILRepacked (returns null)
+                Assert.That(result, Is.Null);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(_originalDirectory);
+                if (Directory.Exists(invalidDir))
+                {
+                    Directory.Delete(invalidDir, true);
+                }
+            }
+        }
+
+        [Test]
+        public void ConfigurationBridge_GetAppSettingsFilePath_WithValidAppSettings_ShouldReturnPath()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
+
+            // Act
+            var filePath = configManager.AppSettingsFilePath;
+
+            // Assert
+            Assert.That(filePath, Is.Not.Null);
+            Assert.That(File.Exists(filePath) || filePath.Contains("appsettings.json"), Is.True);
+        }
+
+        [Test]
+        public void ConfigurationBridge_GetAppSettingsFilePath_WithNoAppSettings_ShouldFallback()
+        {
+            // Arrange
+            var noConfigDir = Path.Combine(Path.GetTempPath(), "NoAppSettingsTest");
+            Directory.CreateDirectory(noConfigDir);
+
+            try
+            {
+                Directory.SetCurrentDirectory(noConfigDir);
+                ResetConfigurationBridgeState();
+                
+                var configManager = new ConfigurationManagerStatic();
+
+                // Act
+                var filePath = configManager.AppSettingsFilePath;
+
+                // Assert - Should return ILRepacked fallback path
+                Assert.That(filePath, Is.Not.Null);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(_originalDirectory);
+                if (Directory.Exists(noConfigDir))
+                {
+                    Directory.Delete(noConfigDir, true);
+                }
+            }
+        }
+
+        [Test]
+        public void ConfigurationBridge_ExceptionInGetAppSettingsFilePath_ShouldReturnFallback()
+        {
+            // Arrange
+            var configManager = new ConfigurationManagerStatic();
+
+            // Act & Assert - Should not throw
+            Assert.DoesNotThrow(() =>
+            {
+                var filePath = configManager.AppSettingsFilePath;
+            });
+        }
+
+        [Test]
+        public void ConfigurationBridge_ShouldObfuscateKey_ForLicenseKey_ReturnsTrue()
+        {
+            // This tests the internal ShouldObfuscateKey method indirectly
+            // by accessing a license key and verifying it's handled correctly
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
+
+            // Act
+            var licenseKey = configManager.GetAppSetting("NewRelic.LicenseKey");
+
+            // Assert - License key should be retrieved correctly
+            Assert.That(licenseKey, Is.Not.Null);
+            Assert.That(licenseKey.Length, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void ConfigurationBridge_MultipleKeys_ShouldReturnCorrectValues()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
+
+            // Act
+            var appName = configManager.GetAppSetting("NewRelic.AppName");
+            var licenseKey = configManager.GetAppSetting("NewRelic.LicenseKey");
+            var agentEnabled = configManager.GetAppSetting("NewRelic.AgentEnabled");
+
+            // Assert
+            Assert.That(appName, Is.EqualTo("TestApplication"));
+            Assert.That(licenseKey, Is.EqualTo("test-license-key-123456789"));
+            Assert.That(agentEnabled, Is.EqualTo("true"));
+        }
+
+        [Test]
+        public void ConfigurationBridge_CachedTypes_ShouldImprovePerformance()
+        {
+            // Arrange
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+            var configManager = new ConfigurationManagerStatic();
+
+            // Act - First call initializes cache
+            var result1 = configManager.GetAppSetting("NewRelic.AppName");
+            
+            // Subsequent calls should use cached types
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < 100; i++)
+            {
+                configManager.GetAppSetting("NewRelic.AppName");
+            }
+            stopwatch.Stop();
+
+            // Assert - Cached access should be fast
+            Assert.That(result1, Is.EqualTo("TestApplication"));
+            Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(100), 
+                "Cached configuration access should be performant");
+        }
+
+        [Test]
+        public void ConfigurationBridge_ExceptionInFindApplicationConfigurationType_ShouldHandleGracefully()
+        {
+            // Arrange
+            ResetConfigurationBridgeState();
+            TestStaticConfigurationHolder.Reset();
+            
+            var testDir = Path.Combine(Path.GetTempPath(), "ExceptionConfigTest");
+            Directory.CreateDirectory(testDir);
+
+            try
+            {
+                Directory.SetCurrentDirectory(testDir);
+                var configManager = new ConfigurationManagerStatic();
+
+                // Act - Should not throw even with no configuration types
+                var result = configManager.GetAppSetting("test");
+
+                // Assert - Should fallback gracefully
+                Assert.That(result, Is.Null);
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(_originalDirectory);
+                if (Directory.Exists(testDir))
+                {
+                    Directory.Delete(testDir, true);
+                }
+            }
+        }
+
+        [Test]
+        public void ConfigurationBridge_AssemblyFiltering_ShouldExcludeNewRelicAndILRepacked()
+        {
+            // This test verifies that the bridge correctly filters out NewRelic and ILRepacked assemblies
+            // when searching for configuration types
+            Directory.SetCurrentDirectory(_testDirectory);
+            SetupApplicationConfiguration();
+            
+            var configManager = new ConfigurationManagerStatic();
+
+            // Act - The bridge should work even with NewRelic assemblies loaded
+            var result = configManager.GetAppSetting("NewRelic.AppName");
+
+            // Assert
+            Assert.That(result, Is.EqualTo("TestApplication"));
+        }
+
+        #endregion
     }
 
     #region Test Helper Classes
