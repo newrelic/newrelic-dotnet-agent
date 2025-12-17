@@ -505,6 +505,18 @@ public class ActivityBridge : IDisposable
 
         if (segment != null)
         {
+            // set status code (and description, if available) as agent attributes on the segment
+            dynamic activity = originalActivity;
+            int activityStatusCode = (int)activity.Status;
+            segment.AddAgentAttribute("status.code", activityStatusCode.ToActivityStatusCodeString());
+
+            // description is currently only available when status is Error
+            string activityStatusDescription = (string)activity.StatusDescription;
+            if (!string.IsNullOrWhiteSpace(activityStatusDescription))
+            {
+                segment.AddAgentAttribute("status.description", activityStatusDescription);
+            }
+
             segment.ProcessActivityTags(originalActivity, agent, errorService);
             segment.AddExceptionEventInformationToSegment(originalActivity, errorService);
             segment.End();
