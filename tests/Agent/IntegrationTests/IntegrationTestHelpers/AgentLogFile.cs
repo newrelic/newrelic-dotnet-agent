@@ -72,6 +72,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public string GetFullLogAsString()
         {
+            // verify file exists - return empty string if it does not
+            if (!Found)
+                return "Agent Log File Not Found";
+
             using (var fileStream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var streamReader = new StreamReader(fileStream))
             {
