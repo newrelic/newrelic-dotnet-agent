@@ -3,14 +3,9 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using NewRelic.Agent.IntegrationTests.Shared;
-using NewRelic.Testing.Assertions;
 using Xunit;
 
 
@@ -20,22 +15,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
-        private readonly string _expectedTransactionName;
-        private readonly string _excerciserName;
 
         // SQL statement maximum length is 4096 bytes, including 3-character ellipsis ("...") if truncation occurs
         private const int MaxSqlLength = 4096;
         private const string Ellipsis = "...";
 
-        public MsSqlTruncationTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName) : base(fixture)
+        public MsSqlTruncationTestsBase(TFixture fixture, ITestOutputHelper output, string exerciserName) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _excerciserName = excerciserName;
-            _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlWithLongQuery";
 
-            _fixture.AddCommand($"{excerciserName} MsSqlWithLongQuery");
-            _fixture.AddCommand($"{excerciserName} Wait 5000");
+            _fixture.AddCommand($"{exerciserName} MsSqlWithLongQuery");
+            _fixture.AddCommand($"{exerciserName} Wait 5000");
 
             _fixture.AddActions
             (
@@ -86,7 +77,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser")
+                  exerciserName: "MicrosoftDataSqlClientExerciser")
         {
         }
     }
