@@ -82,10 +82,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         // Service dependencies
         private readonly IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
-
-        // Configuration constants for OTLP export
-        private const int DefaultOtlpTimeoutSeconds = 10;
-        private const int DefaultOtlpExportIntervalSeconds = 5;
+        private MeterBridgeConfiguration _bridgeConfiguration;
 
         private static MeterListenerBridge _bridgeInstance;
 
@@ -161,8 +158,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return null;
             }
 
-            var uriBuilder = new UriBuilder(_connectionInfo.HttpProtocol, _connectionInfo.Host, _connectionInfo.Port, "/v1/metrics");
-            Log.Finest("OpenTelemetry Meter Bridge will export to {Uri}", uriBuilder.Uri);
+            _bridgeConfiguration ??= new MeterBridgeConfiguration(_configuration);
+            var endpoint = _bridgeConfiguration.BuildOtlpEndpoint(_connectionInfo);
+            Log.Finest("OpenTelemetry Meter Bridge will export to {Uri}", endpoint);
 
             var providerBuilder = Sdk.CreateMeterProviderBuilder()
                 .ConfigureResource(r => r
@@ -172,7 +170,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 .AddMeter("*")
                 .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
                 {
-                    exporterOptions.Endpoint = uriBuilder.Uri;
+                    exporterOptions.Endpoint = endpoint;
                     exporterOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
                     exporterOptions.Headers = $"api-key={_configuration.AgentLicenseKey}";
 
@@ -184,7 +182,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                     // Additional .NET Standard specific configurations can go here if needed
 #endif
                     // Configure metric collection and export settings
-                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = DefaultOtlpExportIntervalSeconds * 1000;
+                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = _configuration.OpenTelemetryOtlpExportIntervalSeconds * 1000;
                     metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
                 });
 
@@ -324,8 +322,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 var httpClient = new HttpClient(auditHandler);
 #endif
 
-                // Configure timeout (OTEL default is 10 seconds)
-                httpClient.Timeout = TimeSpan.FromSeconds(DefaultOtlpTimeoutSeconds);
+                httpClient.Timeout = TimeSpan.FromSeconds(_configuration.OpenTelemetryOtlpTimeoutSeconds);
 
                 // Add User-Agent for New Relic identification
                 httpClient.DefaultRequestHeaders.Add("User-Agent",
@@ -763,53 +760,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// 1. Built-in exclusions 
         /// 2. Customer include list
         /// 3. Customer exclude list (highest priority, overrides all other settings)
-        /// 
-        /// Examples:
-        /// - Built-in exclude: Meter1, Meter2, Meter3
-        /// - Customer include: Meter2, Meter3
-        /// - Customer exclude: Meter3
-        /// Results: Meter1=excluded, Meter2=included, Meter3=excluded, Meter4=included
-        ///
         /// </summary>
         /// <param name="meterName">The name of the meter to check</param>
         /// <returns>True if the meter should be enabled; false otherwise</returns>
         private bool ShouldEnableInstrumentsInMeterWithFilters(string meterName)
         {
-            if (string.IsNullOrEmpty(meterName))
-            {
-                return false;
-            }
-
-            // Get filter lists
-            var includeFilters = _configuration.OpenTelemetryMetricsIncludeFilters?.ToList();
-            var excludeFilters = _configuration.OpenTelemetryMetricsExcludeFilters?.ToList();
-
-            var excludeConfigured = excludeFilters != null && excludeFilters.Count > 0;
-            var includeConfigured = includeFilters != null && includeFilters.Count > 0;
-
-            // Check customer exclude list (highest precedence)
-            if (excludeConfigured && excludeFilters.Contains(meterName))
-            {
-                Log.Finest($"Meter '{meterName}' is in customer exclude list. Not enabling instruments.");
-                return false;
-            }
-
-            //  Check customer include list (overrides built-in exclusions)
-            if (includeConfigured && includeFilters.Contains(meterName))
-            {
-                Log.Finest($"Meter '{meterName}' is in customer include list. Enabling instruments.");
-                return true;
-            }
-
-            // Built-in exclude list (lowest precedence)
-            if (!ShouldEnableInstrumentsInMeter(meterName))
-            {
-                Log.Finest($"Meter '{meterName}' matches built-in exclusion pattern. Not enabling instruments.");
-                return false;
-            }
-
-            // Default: All meters should be captured by default
-            return true;
+            return _bridgeConfiguration.ShouldEnableInstrumentsInMeter(meterName);
         }
 
         /// <summary>
@@ -922,10 +878,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         /// <returns>The state object for the MeterListener callbacks</returns>
         private object GetStateForInstrumentWithMetrics(object instrument)
         {
-            // Record getMeter usage
             _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.GetMeter);
 
-            // Get the result from the static method
             var result = GetStateForInstrument(instrument);
 
             if (result != null)

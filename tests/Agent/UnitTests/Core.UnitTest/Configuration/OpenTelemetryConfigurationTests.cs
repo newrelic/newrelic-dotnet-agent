@@ -290,5 +290,52 @@ namespace NewRelic.Agent.Core.Configuration
             Assert.That(cfg.OpenTelemetryTracingExcludedActivitySources, Is.Empty);
         }
         #endregion
+
+        #region OTLP Configuration Tests
+        [Test]
+        public void OpenTelemetryOtlpTimeoutSeconds_DefaultValue_ShouldBe10()
+        {
+            Assert.That(_configuration.OpenTelemetryOtlpTimeoutSeconds, Is.EqualTo(10));
+        }
+
+        [Test]
+        public void OpenTelemetryOtlpExportIntervalSeconds_DefaultValue_ShouldBe5()
+        {
+            Assert.That(_configuration.OpenTelemetryOtlpExportIntervalSeconds, Is.EqualTo(5));
+        }
+
+        [Test]
+        public void OpenTelemetryOtlpTimeoutSeconds_WithNegativeValue_ShouldReturnDefault()
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_OTLP_TIMEOUT_SECONDS"))
+                .Returns("-5");
+
+            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.That(cfg.OpenTelemetryOtlpTimeoutSeconds, Is.EqualTo(10));
+        }
+
+        [Test]
+        public void OpenTelemetryOtlpExportIntervalSeconds_WithNegativeValue_ShouldReturnDefault()
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_OTLP_EXPORT_INTERVAL_SECONDS"))
+                .Returns("-3");
+
+            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.That(cfg.OpenTelemetryOtlpExportIntervalSeconds, Is.EqualTo(5));
+        }
+
+        [Test]
+        public void OpenTelemetryOtlpTimeoutSeconds_WithZeroValue_ShouldReturnDefault()
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_OTLP_TIMEOUT_SECONDS"))
+                .Returns("0");
+
+            var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.That(cfg.OpenTelemetryOtlpTimeoutSeconds, Is.EqualTo(10));
+        }
+        #endregion
     }
 }

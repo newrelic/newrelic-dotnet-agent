@@ -46,6 +46,8 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
+            Mock.Arrange(() => _configuration.OpenTelemetryOtlpExportIntervalSeconds).Returns(60);
+            Mock.Arrange(() => _configuration.OpenTelemetryOtlpTimeoutSeconds).Returns(10);
 
             // Setup connection info mock
             _connectionInfo = Mock.Create<IConnectionInfo>();
