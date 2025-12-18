@@ -82,10 +82,10 @@ namespace NewRelic.Agent.Core.Attributes
 
         public static AttributeDefinitionBuilder<string, string> CreateDBStatement(string name, AttributeClassification classification)
         {
-            const int dbStmtMaxLength = 1999;
+            const int dbStmtMaxLengthBytes = 4096; // max byte length, per agent spec
 
             return new AttributeDefinitionBuilder<string, string>(name, classification)
-                .WithConvert((dbStmt) => TruncateDatastoreStatement(dbStmt, dbStmtMaxLength));
+                .WithConvert((dbStmt) => TruncateDatastoreStatement(dbStmt, dbStmtMaxLengthBytes));
         }
 
         public static AttributeDefinitionBuilder<object, object> CreateCustomAttribute(string name, AttributeDestinations destination)
@@ -152,43 +152,42 @@ namespace NewRelic.Agent.Core.Attributes
             }
         }
 
-
-        private static string TruncateDatastoreStatement(string statement, int maxSizeBytes)
+        /// <summary>
+        /// Truncates the specified statement to ensure its UTF-8 encoded byte length does not exceed the given maximum
+        /// size, appending an ellipsis if truncation occurs.
+        /// Assumes <paramref name="maxSizeBytes"/> is strictly greater than the UTF-8 byte length of the ellipsis.
+        /// </summary>
+        /// <param name="statement">The input string to be truncated. Can be null.</param>
+        /// <param name="maxSizeBytes">The maximum allowed size, in bytes, of the UTF-8 encoded result.</param>
+        /// <returns>A string whose UTF-8 encoded byte length is less than or equal to the specified maximum. If truncation
+        /// occurs, the result ends with an ellipsis ("..."). Returns null if the input statement is null.</returns>
+        public static string TruncateDatastoreStatement(string statement, int maxSizeBytes)
         {
-            const int maxBytesPerUtf8Char = 4;
-            const byte firstByte = 0b11000000;
-            const byte highBit = 0b10000000;
+            if (statement == null)
+            {
+                return null;
+            }
 
-            var maxCharactersWillFitWithoutTruncation = maxSizeBytes / maxBytesPerUtf8Char;
+            const string ellipsis = "...";
+            var ellipsisBytes = Encoding.UTF8.GetByteCount(ellipsis);
 
-            if (statement.Length <= maxCharactersWillFitWithoutTruncation)
+            var bytes = Encoding.UTF8.GetBytes(statement);
+            if (bytes.Length <= maxSizeBytes)
             {
                 return statement;
             }
 
-            var byteArray = Encoding.UTF8.GetBytes(statement);
+            // Budget for content to leave room for the ellipsis.
+            var offset = maxSizeBytes - ellipsisBytes;
 
-            if (byteArray.Length <= maxSizeBytes)
+            // Back up if the first excluded byte is a UTF-8 continuation byte (10xxxxxx)
+            while (offset > 0 && (bytes[offset] & 0b1100_0000) == 0b1000_0000)
             {
-                return statement;
+                offset--;
             }
 
-            var actualMaxStatementLength = maxSizeBytes - 3;
-
-            var byteOffset = actualMaxStatementLength;
-
-            // Check high bit to see if we're [potentially] in the middle of a multi-byte char
-            if ((byteArray[byteOffset] & highBit) == highBit)
-            {
-                // If so, keep walking back until we have a byte starting with `11`,
-                // which means the first byte of a multi-byte UTF8 character.
-                while (firstByte != (byteArray[byteOffset] & firstByte))
-                {
-                    byteOffset--;
-                }
-            }
-
-            return Encoding.UTF8.GetString(byteArray, 0, byteOffset) + "...";
+            var truncated = Encoding.UTF8.GetString(bytes, 0, offset);
+            return truncated + ellipsis;
         }
 
     }

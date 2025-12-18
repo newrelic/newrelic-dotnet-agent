@@ -334,5 +334,33 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                 command.ExecuteNonQuery();
             }
         }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public string MsSqlWithLongQuery()
+        {
+            var longQuery = GenerateLongSqlQuery();
+            
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                using (var command = new SqlCommand(longQuery, connection))
+                {
+                    // Execute the query - it will return no results because the WHERE conditions won't match
+                    using (var reader = command.ExecuteReader())
+                    {
+                        // Read through any results (there shouldn't be any)
+                        while (reader.Read())
+                        {
+                            // Just iterate, don't need to process results
+                        }
+                    }
+                }
+            }
+
+            return "LongQueryExecuted";
+        }
     }
 }
