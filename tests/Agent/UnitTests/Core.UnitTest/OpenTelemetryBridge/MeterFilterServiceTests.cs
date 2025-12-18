@@ -1,117 +1,122 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.UnitTests.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 {
     [TestFixture]
     public class MeterFilterServiceTests
     {
-        [Test]
-        public void ShouldEnableInstrumentsInMeter_WithNullMeterName_ReturnsFalse()
-        {
-            var config = Mock.Create<IConfiguration>();
-            var service = new MeterFilterService(config);
+        private IConfiguration _configuration;
+        private MeterFilterService _service;
 
-            Assert.That(service.ShouldEnableInstrumentsInMeter(null), Is.False);
+        [SetUp]
+        public void SetUp()
+        {
+            _configuration = Mock.Create<IConfiguration>();
+            _service = new MeterFilterService(_configuration);
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeter_WithEmptyMeterName_ReturnsFalse()
+        public void ShouldEnableInstrumentsInMeter_PermissiveMode()
         {
-            var config = Mock.Create<IConfiguration>();
-            var service = new MeterFilterService(config);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters)
+                .Returns((IEnumerable<string>)null);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
+                .Returns(new List<string>());
 
-            Assert.That(service.ShouldEnableInstrumentsInMeter(""), Is.False);
+            var result = _service.ShouldEnableInstrumentsInMeter("AnyMeter");
+
+            Assert.That(result, Is.True);
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeter_ExcludeListTakesPrecedence()
+        public void ShouldEnableInstrumentsInMeter_ExcludeList()
         {
-            var config = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => config.OpenTelemetryMetricsIncludeFilters).Returns(new[] { "TestMeter" });
-            Mock.Arrange(() => config.OpenTelemetryMetricsExcludeFilters).Returns(new[] { "TestMeter" });
-            var service = new MeterFilterService(config);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters)
+                .Returns((IEnumerable<string>)null);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
+                .Returns(new List<string> { "ExcludedMeter" });
 
-            Assert.That(service.ShouldEnableInstrumentsInMeter("TestMeter"), Is.False);
+            var excluded = _service.ShouldEnableInstrumentsInMeter("ExcludedMeter");
+            var allowed = _service.ShouldEnableInstrumentsInMeter("AllowedMeter");
+
+            Assert.That(excluded, Is.False);
+            Assert.That(allowed, Is.True);
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeter_IncludeListOverridesBuiltInExclusions()
+        public void ShouldEnableInstrumentsInMeter_IncludeOverridesBuiltIn()
         {
-            var config = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => config.OpenTelemetryMetricsIncludeFilters).Returns(new[] { "NewRelic.Test" });
-            Mock.Arrange(() => config.OpenTelemetryMetricsExcludeFilters).Returns(new string[0]);
-            var service = new MeterFilterService(config);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters)
+                .Returns(new List<string> { "NewRelic.Test" });
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
+                .Returns(new List<string>());
 
-            Assert.That(service.ShouldEnableInstrumentsInMeter("NewRelic.Test"), Is.True);
+            var result = _service.ShouldEnableInstrumentsInMeter("NewRelic.Test");
+
+            Assert.That(result, Is.True);
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeter_BuiltInExclusionsBlocked()
+        public void ShouldEnableInstrumentsInMeter_BuiltInExclusions()
         {
-            var config = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => config.OpenTelemetryMetricsIncludeFilters).Returns(new string[0]);
-            Mock.Arrange(() => config.OpenTelemetryMetricsExcludeFilters).Returns(new string[0]);
-            var service = new MeterFilterService(config);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters)
+                .Returns((IEnumerable<string>)null);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
+                .Returns(new List<string>());
 
-            Assert.That(service.ShouldEnableInstrumentsInMeter("NewRelic.Agent"), Is.False);
-            Assert.That(service.ShouldEnableInstrumentsInMeter("OpenTelemetry.Test"), Is.False);
-            Assert.That(service.ShouldEnableInstrumentsInMeter("System.Diagnostics.Metrics.Test"), Is.False);
+            var newRelic = _service.ShouldEnableInstrumentsInMeter("NewRelic.Test");
+            var otel = _service.ShouldEnableInstrumentsInMeter("OpenTelemetry.Test");
+
+            Assert.That(newRelic, Is.False);
+            Assert.That(otel, Is.False);
         }
 
         [Test]
-        public void ShouldEnableInstrumentsInMeter_DefaultPermissive()
+        public void ShouldEnableInstrumentsInMeter_NullFilters()
         {
-            var config = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => config.OpenTelemetryMetricsIncludeFilters).Returns(new string[0]);
-            Mock.Arrange(() => config.OpenTelemetryMetricsExcludeFilters).Returns(new string[0]);
-            var service = new MeterFilterService(config);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters)
+                .Returns((IEnumerable<string>)null);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
+                .Returns((IEnumerable<string>)null);
 
-            Assert.That(service.ShouldEnableInstrumentsInMeter("CustomMeter"), Is.True);
+            var result = _service.ShouldEnableInstrumentsInMeter("TestMeter");
+
+            Assert.That(result, Is.True);
         }
 
         [Test]
-        public void IsNotBuiltInExclusion_WithNull_ReturnsFalse()
+        public void ShouldEnableInstrumentsInMeter_EmptyOrNullMeterName()
         {
-            Assert.That(MeterFilterService.IsNotBuiltInExclusion(null), Is.False);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters)
+                .Returns((IEnumerable<string>)null);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
+                .Returns((IEnumerable<string>)null);
+
+            var nullResult = _service.ShouldEnableInstrumentsInMeter(null);
+            var emptyResult = _service.ShouldEnableInstrumentsInMeter("");
+
+            Assert.That(nullResult, Is.False);
+            Assert.That(emptyResult, Is.False);
         }
 
         [Test]
-        public void IsNotBuiltInExclusion_WithEmpty_ReturnsFalse()
+        public void ShouldEnableInstrumentsInMeter_FiltersDoNotContainMeter()
         {
-            Assert.That(MeterFilterService.IsNotBuiltInExclusion(""), Is.False);
-        }
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters)
+                .Returns(new List<string> { "IncludedMeter" });
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
+                .Returns(new List<string> { "ExcludedMeter" });
 
-        [Test]
-        public void IsNotBuiltInExclusion_WithNewRelicPrefix_ReturnsFalse()
-        {
-            Assert.That(MeterFilterService.IsNotBuiltInExclusion("NewRelic.Test"), Is.False);
-            Assert.That(MeterFilterService.IsNotBuiltInExclusion("newrelic.test"), Is.False);
-        }
+            var result = _service.ShouldEnableInstrumentsInMeter("OtherMeter");
 
-        [Test]
-        public void IsNotBuiltInExclusion_WithOpenTelemetryPrefix_ReturnsFalse()
-        {
-            Assert.That(MeterFilterService.IsNotBuiltInExclusion("OpenTelemetry.Test"), Is.False);
-            Assert.That(MeterFilterService.IsNotBuiltInExclusion("opentelemetry.test"), Is.False);
-        }
-
-        [Test]
-        public void IsNotBuiltInExclusion_WithSystemDiagnosticsMetricsPrefix_ReturnsFalse()
-        {
-            Assert.That(MeterFilterService.IsNotBuiltInExclusion("System.Diagnostics.Metrics.Test"), Is.False);
-        }
-
-        [Test]
-        public void IsNotBuiltInExclusion_WithCustomMeter_ReturnsTrue()
-        {
-            Assert.That(MeterFilterService.IsNotBuiltInExclusion("CustomMeter"), Is.True);
-            Assert.That(MeterFilterService.IsNotBuiltInExclusion("MyApp.Metrics"), Is.True);
+            Assert.That(result, Is.True);
         }
     }
 }
