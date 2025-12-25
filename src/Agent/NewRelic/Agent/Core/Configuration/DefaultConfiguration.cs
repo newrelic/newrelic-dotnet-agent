@@ -2929,6 +2929,24 @@ namespace NewRelic.Agent.Core.Configuration
                 return field;
             }
         }
+
+        public int OpenTelemetryOtlpTimeoutSeconds
+        {
+            get
+            {
+                var value = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("OpenTelemetryOtlpTimeoutSeconds", 10), "NEW_RELIC_OPENTELEMETRY_OTLP_TIMEOUT_SECONDS").GetValueOrDefault(10);
+                return value > 0 ? value : 10;
+            }
+        }
+
+        public int OpenTelemetryOtlpExportIntervalSeconds
+        {
+            get
+            {
+                var value = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("OpenTelemetryOtlpExportIntervalSeconds", 5), "NEW_RELIC_OPENTELEMETRY_OTLP_EXPORT_INTERVAL_SECONDS").GetValueOrDefault(5);
+                return value > 0 ? value : 5;
+            }
+        }
         #endregion
 
         public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", false), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");

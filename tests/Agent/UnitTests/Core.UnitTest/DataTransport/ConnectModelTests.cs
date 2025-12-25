@@ -435,6 +435,8 @@ namespace NewRelic.Agent.Core.DataTransport
                                 "opentelemetry.metrics.enabled": true,
                                 "opentelemetry.metrics.include": ["IncludedMeter1","IncludedMeter2"],
                                 "opentelemetry.metrics.exclude": ["ExcludedMeter1","ExcludedMeter2"],
+                                "opentelemetry.otlp.timeout_seconds": 10,
+                                "opentelemetry.otlp.export_interval_seconds": 5,
                                 "hybrid_http_context_storage.enabled":false
                             },
                             "metadata": {

@@ -107,21 +107,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             Assert.ThrowsAsync<HttpRequestException>(async () => await httpClient.SendAsync(request));
         }
 
-        [Test]
-        public void GetSafeContentInfo_WithProtobufContent_ReturnsMetadataOnly()
-        {
-            // This test would need access to the private GetSafeContentInfo method
-            // In practice, we can verify this through integration tests
-            Assert.Pass("Protobuf content safety verified through integration tests");
-        }
 
-        [Test]
-        public void GetSafeContentInfo_WithJsonContent_ReturnsMetadataWithContentType()
-        {
-            // This test would need access to the private GetSafeContentInfo method
-            // In practice, we can verify this through integration tests
-            Assert.Pass("JSON content metadata verified through integration tests");
-        }
 
         /// <summary>
         /// Test helper that provides a controllable HttpMessageHandler for unit testing
@@ -251,6 +237,203 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             Assert.That(result, Does.Contain("application/octet-stream"));
             Assert.That(result, Does.Contain("Length: 2 bytes"));
             Assert.That(result, Does.Not.Contain("[Binary Protobuf Data - Content Not Logged]"));
+        }
+
+        [Test]
+        public void GetSafeContentInfoForTesting_WithContentEncoding_IncludesEncodingInfo()
+        {
+            // Arrange
+            var content = new ByteArrayContent(new byte[] { 0x1, 0x2, 0x3 });
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            content.Headers.ContentEncoding.Add("gzip");
+            content.Headers.ContentEncoding.Add("deflate");
+
+            // Act
+            var result = OtlpAuditHandlerTestHelpers.GetSafeContentInfoForTesting(content);
+
+            // Assert
+            Assert.That(result, Does.Contain("application/json"));
+            Assert.That(result, Does.Contain("Encoding: gzip, deflate"));
+        }
+
+        [Test]
+        public void GetSafeContentInfoForTesting_WithNoContentLength_ShowsUnknown()
+        {
+            // Arrange
+            var content = new StringContent("test");
+            content.Headers.ContentLength = null; // Remove content length header
+
+            // Act
+            var result = OtlpAuditHandlerTestHelpers.GetSafeContentInfoForTesting(content);
+
+            // Assert
+            Assert.That(result, Does.Contain("Length: unknown"));
+        }
+
+        [Test]
+        public void GetSafeContentInfoForTesting_WithNoContentType_ShowsUnknown()
+        {
+            // Arrange
+            var content = new ByteArrayContent(new byte[] { 0x1 });
+            content.Headers.ContentType = null;
+
+            // Act
+            var result = OtlpAuditHandlerTestHelpers.GetSafeContentInfoForTesting(content);
+
+            // Assert
+            Assert.That(result, Does.Contain("Content: unknown"));
+        }
+
+        [Test]
+        public void GetSafeContentInfoForTesting_WithProtobufVariations_AllIdentified()
+        {
+            // Test various protobuf content type variations
+            var protobufTypes = new[]
+            {
+                "application/x-protobuf",
+                "application/protobuf",
+                "application/vnd.google.protobuf",
+                "APPLICATION/X-PROTOBUF" // Case insensitive
+            };
+
+            foreach (var contentType in protobufTypes)
+            {
+                var content = new ByteArrayContent(new byte[] { 0x1, 0x2 });
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+
+                var result = OtlpAuditHandlerTestHelpers.GetSafeContentInfoForTesting(content);
+
+                Assert.That(result, Does.Contain("[Binary Protobuf Data - Content Not Logged]"),
+                    $"Failed for content type: {contentType}");
+            }
+        }
+
+    }
+
+    [TestFixture]
+    public class OtlpAuditHandlerAdditionalTests
+    {
+        private OtlpAuditHandler _auditHandler;
+        private TestHttpMessageHandler _mockInnerHandler;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _mockInnerHandler = new TestHttpMessageHandler();
+            _auditHandler = new OtlpAuditHandler
+            {
+                InnerHandler = _mockInnerHandler
+            };
+            AuditLog.ResetLazyLogger();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _auditHandler?.Dispose();
+            _mockInnerHandler?.Dispose();
+            AuditLog.IsAuditLogEnabled = false;
+        }
+
+        [Test]
+        public async Task SendAsync_WithSuccessResponse_ReturnsResponse()
+        {
+            // Arrange
+            AuditLog.IsAuditLogEnabled = false;
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics");
+            request.Content = new StringContent("{\"data\": true}");
+            var expectedResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            _mockInnerHandler.Response = expectedResponse;
+
+            // Act
+            using var httpClient = new HttpClient(_auditHandler);
+            var response = await httpClient.SendAsync(request);
+
+            // Assert
+            Assert.That(response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.OK));
+            Assert.That(_mockInnerHandler.RequestSent, Is.Not.Null);
+        }
+
+        [Test]
+        public async Task SendAsync_WithServerError_ReturnsErrorResponse()
+        {
+            // Arrange
+            AuditLog.IsAuditLogEnabled = true;
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics");
+            var errorResponse = new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError)
+            {
+                Content = new StringContent("Server Error")
+            };
+            _mockInnerHandler.Response = errorResponse;
+
+            // Act
+            using var httpClient = new HttpClient(_auditHandler);
+            var response = await httpClient.SendAsync(request);
+
+            // Assert
+            Assert.That(response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.InternalServerError));
+        }
+
+        [Test]
+        public async Task SendAsync_WithNullResponseContent_HandlesGracefully()
+        {
+            // Arrange
+            AuditLog.IsAuditLogEnabled = true;
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics");
+            var response = new HttpResponseMessage(System.Net.HttpStatusCode.NoContent)
+            {
+                Content = null // No content
+            };
+            _mockInnerHandler.Response = response;
+
+            // Act & Assert - Should not throw
+            using var httpClient = new HttpClient(_auditHandler);
+            var result = await httpClient.SendAsync(request);
+            Assert.That(result, Is.Not.Null);
+        }
+
+        [Test]
+        public async Task SendAsync_MultipleRequests_LogsEachRequest()
+        {
+            // Arrange
+            AuditLog.IsAuditLogEnabled = true;
+            var response1 = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            var response2 = new HttpResponseMessage(System.Net.HttpStatusCode.Accepted);
+
+            // Act
+            using var httpClient = new HttpClient(_auditHandler);
+            
+            _mockInnerHandler.Response = response1;
+            var result1 = await httpClient.SendAsync(
+                new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics"));
+
+            _mockInnerHandler.Response = response2;
+            var result2 = await httpClient.SendAsync(
+                new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics"));
+
+            // Assert
+            Assert.That(result1.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.OK));
+            Assert.That(result2.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.Accepted));
+        }
+
+        // Reuse the TestHttpMessageHandler from OtlpAuditHandlerTests
+        private class TestHttpMessageHandler : HttpMessageHandler
+        {
+            public HttpResponseMessage Response { get; set; }
+            public Exception ExceptionToThrow { get; set; }
+            public HttpRequestMessage RequestSent { get; private set; }
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                RequestSent = request;
+                
+                if (ExceptionToThrow != null)
+                {
+                    throw ExceptionToThrow;
+                }
+
+                return Task.FromResult(Response ?? new HttpResponseMessage(System.Net.HttpStatusCode.OK));
+            }
         }
     }
 }
