@@ -21,7 +21,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
                 { "meta70", BedrockModels.InvokeLlama270Async },
                 { "ai21", BedrockModels.InvokeJurassicAsync },
                 { "amazonembed", BedrockModels.InvokeAmazonEmbedAsync },
-                { "amazonexpress", BedrockModels.InvokeAmazonExpressAsync },
+                //{ "amazonexpress", BedrockModels.InvokeAmazonExpressAsync }, // Model is EOLed as of 12/29/25
                 { "cohere", BedrockModels.InvokeCohereAsync },
                 // { "anthropic", BedrockModels.InvokeClaudeAsync }, // Model is EOLed as of 9/11/25
 #if NET481 || NET10_0
