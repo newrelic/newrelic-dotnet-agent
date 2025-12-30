@@ -270,6 +270,8 @@ namespace NewRelic.Agent.Configuration
         bool OpenTelemetryMetricsEnabled { get; }
         IEnumerable<string> OpenTelemetryMetricsIncludeFilters { get; }
         IEnumerable<string> OpenTelemetryMetricsExcludeFilters { get; }
+        int OpenTelemetryOtlpTimeoutSeconds { get; }
+        int OpenTelemetryOtlpExportIntervalSeconds { get; }
         #endregion
 
         bool HybridHttpContextStorageEnabled { get; }

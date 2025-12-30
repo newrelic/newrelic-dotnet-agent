@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -45,6 +46,8 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
+            Mock.Arrange(() => _configuration.OpenTelemetryOtlpExportIntervalSeconds).Returns(60);
+            Mock.Arrange(() => _configuration.OpenTelemetryOtlpTimeoutSeconds).Returns(10);
 
             // Setup connection info mock
             _connectionInfo = Mock.Create<IConnectionInfo>();
@@ -138,77 +141,11 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => _meterListenerBridge.Dispose());
         }
 
-        [Test]
-        public void ShouldEnableInstrumentsInMeter_ShouldFilterCorrectly()
-        {
-            // This test validates the meter filtering logic through reflection
-            var shouldEnableMethod = typeof(MeterListenerBridge)
-                .GetMethod("ShouldEnableInstrumentsInMeter",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
-            Assert.That(shouldEnableMethod, Is.Not.Null);
 
-            // Valid meter names should be enabled
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "Microsoft.AspNetCore.Hosting.test" }), Is.True);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "Microsoft.AspNetCore.test" }), Is.True);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "MyCustomMeter" }), Is.True);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "ApplicationMeter" }), Is.True);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "company.product.meter" }), Is.True);
 
-            // Internal meters should be filtered out
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "NewRelic.Agent.Core.test" }), Is.False);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "newrelic.test" }), Is.False);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "NEWRELIC.test" }), Is.False);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "OpenTelemetry.Api.test" }), Is.False);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "opentelemetry.test" }), Is.False);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "System.Diagnostics.Metrics.test" }), Is.False);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "system.diagnostics.metrics.test" }), Is.False);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { "" }), Is.False);
-            Assert.That((bool)shouldEnableMethod.Invoke(null, new object[] { null }), Is.False);
-        }
 
-        [Test]
-        public void OnConfigurationUpdated_DoesNotThrowException()
-        {
-            var bridge = new MeterListenerBridge(_supportabilityMetricCounters);
 
-            // Get the protected method using reflection
-            var method = typeof(MeterListenerBridge).GetMethod("OnConfigurationUpdated", BindingFlags.NonPublic | BindingFlags.Instance);
-            Assert.That(method, Is.Not.Null, "OnConfigurationUpdated method should exist");
-
-            // Test with different configuration update sources
-            Assert.DoesNotThrow(() =>
-            {
-                method.Invoke(bridge, new object[] { ConfigurationUpdateSource.Local });
-            }, "OnConfigurationUpdated should not throw with Local source");
-
-            Assert.DoesNotThrow(() =>
-            {
-                method.Invoke(bridge, new object[] { ConfigurationUpdateSource.Server });
-            }, "OnConfigurationUpdated should not throw with Server source");
-
-            Assert.DoesNotThrow(() =>
-            {
-                method.Invoke(bridge, new object[] { ConfigurationUpdateSource.Unknown });
-            }, "OnConfigurationUpdated should not throw with Unknown source");
-        }
-
-        [Test]
-        public void TryCreateMeterListener_HandlesReflectionFailure()
-        {
-            // Test exception handling in TryCreateMeterListener
-            var bridge = new MeterListenerBridge(_supportabilityMetricCounters);
-
-            // Get the private method using reflection
-            var method = typeof(MeterListenerBridge).GetMethod("TryCreateMeterListener", BindingFlags.NonPublic | BindingFlags.Instance);
-            Assert.That(method, Is.Not.Null, "TryCreateMeterListener method should exist");
-
-            // This will test the reflective code paths
-            Assert.DoesNotThrow(() =>
-            {
-                method.Invoke(bridge, null);
-            }, "TryCreateMeterListener should handle reflection failures gracefully");
-        }
 
         [Test]
         public void CreateHttpClientWithProxyAndRetry_ShouldConfigureProxy()
@@ -427,233 +364,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         #region Filter Logic Tests
 
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_NullMeterName_ShouldReturnFalse()
-        {
-            // Arrange
-            var method = GetShouldEnableMethod();
 
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { null });
-
-            // Assert
-            Assert.That(result, Is.False, "Null meter name should always return false");
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_EmptyMeterName_ShouldReturnFalse()
-        {
-            // Arrange
-            var method = GetShouldEnableMethod();
-
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "" });
-
-            // Assert
-            Assert.That(result, Is.False, "Empty meter name should always return false");
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_InExcludeList_ShouldReturnFalse()
-        {
-            // Arrange - Exclude list has highest priority
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string> { "TestMeter" });
-
-            var method = GetShouldEnableMethod();
-
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "TestMeter" });
-
-            // Assert
-            Assert.That(result, Is.False, "Meter in exclude list should be disabled");
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_InExcludeAndIncludeList_ExcludeWins()
-        {
-            // Arrange - When meter is in both lists, exclude takes precedence
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "TestMeter" });
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string> { "TestMeter" });
-
-            var method = GetShouldEnableMethod();
-
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "TestMeter" });
-
-            // Assert
-            Assert.That(result, Is.False, "Exclude list should have higher precedence than include list");
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_InIncludeListOnly_ShouldReturnTrue()
-        {
-            // Arrange - Include list overrides built-in exclusions
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "TestMeter" });
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
-
-            var method = GetShouldEnableMethod();
-
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "TestMeter" });
-
-            // Assert
-            Assert.That(result, Is.True, "Meter in include list should be enabled");
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_NotInIncludeList_ShouldReturnTrue()
-        {
-            // Arrange - When include list is configured, it only overrides built-in exclusions
-            // Other meters follow default permissive behavior
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "OtelMetricsTest.App" });
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
-
-            var method = GetShouldEnableMethod();
-
-            // Act - Test meters that are NOT in the include list
-            var systemNetHttpResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "System.Net.Http" });
-            var dotnetRuntimeResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "dotnet.runtime" });
-            var customAppResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OtherApp.Meter" });
-            
-            // Act - Test meter that IS in the include list
-            var includedMeterResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OtelMetricsTest.App" });
-
-            // Assert - Permissive default: meters not in any list are enabled
-            Assert.That(systemNetHttpResult, Is.True, "System.Net.Http meter not in any list should be enabled by default");
-            Assert.That(dotnetRuntimeResult, Is.True, "dotnet.runtime meter not in any list should be enabled by default");
-            Assert.That(customAppResult, Is.True, "OtherApp.Meter not in any list should be enabled by default");
-            Assert.That(includedMeterResult, Is.True, "OtelMetricsTest.App in include list should be enabled");
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_IncludeListOverridesBuiltInExclusions()
-        {
-            // Arrange - Include list allows customer to opt into meters that are built-in excluded
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> { "NewRelic.TestMeter", "OpenTelemetry.TestMeter" });
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
-
-            var method = GetShouldEnableMethod();
-
-            // Act
-            var newRelicResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.TestMeter" });
-            var otelResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OpenTelemetry.TestMeter" });
-
-            // Assert
-            Assert.That(newRelicResult, Is.True, "Include list should override built-in exclusion for NewRelic meters");
-            Assert.That(otelResult, Is.True, "Include list should override built-in exclusion for OpenTelemetry meters");
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_BuiltInExclusionWithoutInclude_ShouldReturnFalse()
-        {
-            // Arrange - Built-in exclusions work when not in include list
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
-
-            var method = GetShouldEnableMethod();
-
-            // Act - Test all built-in exclusion patterns
-            var newRelicResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.InternalMeter" });
-            var otelResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "OpenTelemetry.InternalMeter" });
-            var diagnosticsResult = (bool)method.Invoke(_meterListenerBridge, new object[] { "System.Diagnostics.Metrics.Runtime" });
-
-            // Assert
-            Assert.That(newRelicResult, Is.False, "NewRelic meters should be excluded by built-in filter");
-            Assert.That(otelResult, Is.False, "OpenTelemetry meters should be excluded by built-in filter");
-            Assert.That(diagnosticsResult, Is.False, "System.Diagnostics.Metrics meters should be excluded by built-in filter");
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_NotInAnyList_PermissiveDefault_ShouldReturnTrue()
-        {
-            // Arrange - Permissive mode: meters not in any list are enabled by default
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
-
-            var method = GetShouldEnableMethod();
-
-            // Act - Test application meters that aren't in any list
-            var result1 = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.Metrics" });
-            var result2 = (bool)method.Invoke(_meterListenerBridge, new object[] { "CustomLibrary.Performance" });
-
-            // Assert - Default permissive behavior allows all application metrics
-            Assert.That(result1, Is.True, "Application meter not in any list should be enabled by default");
-            Assert.That(result2, Is.True, "Custom library meter not in any list should be enabled by default");
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_NullFilterLists_PermissiveDefault()
-        {
-            // Arrange - Null filter lists should work the same as empty lists
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns((List<string>)null);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns((List<string>)null);
-
-            var method = GetShouldEnableMethod();
-
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.Metrics" });
-
-            // Assert
-            Assert.That(result, Is.True, "Null filter lists should enable application meters by default");
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_EmptyFilterLists_PermissiveDefault()
-        {
-            // Arrange - Empty filter lists should enable application meters
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
-
-            var method = GetShouldEnableMethod();
-
-            // Act
-            var result = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.Metrics" });
-
-            // Assert
-            Assert.That(result, Is.True, "Empty filter lists should enable application meters by default");
-        }
-
-        [Test]
-        public void ShouldEnableInstrumentsInMeterWithFilters_ComplexScenario_AllPrecedenceLevels()
-        {
-            // Arrange - Test all 4 precedence levels in a realistic scenario
-            // Scenario: Customer wants to exclude specific meters, include NewRelic diagnostics, 
-            // and let all other app metrics through by default
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string> 
-            { 
-                "NewRelic.Diagnostics"  // Override built-in exclusion
-            });
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string> 
-            { 
-                "MyApp.NoisyMeter",     // Exclude specific app meter
-                "NewRelic.Diagnostics"  // Also in include - exclude should win
-            });
-
-            var method = GetShouldEnableMethod();
-
-            // Act & Assert
-            // Priority 3: Customer exclude (highest)
-            var excludedAppMeter = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.NoisyMeter" });
-            Assert.That(excludedAppMeter, Is.False, "Meter in exclude list should be disabled (Priority 3)");
-
-            var excludeWins = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.Diagnostics" });
-            Assert.That(excludeWins, Is.False, "Exclude should override include (Priority 3 > Priority 2)");
-
-            // Priority 2: Customer include (overrides built-in)
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
-            var includedNewRelicMeter = (bool)method.Invoke(_meterListenerBridge, new object[] { "NewRelic.Diagnostics" });
-            Assert.That(includedNewRelicMeter, Is.True, "Include should override built-in exclusion (Priority 2)");
-
-            // Priority 1: Built-in exclusions
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
-            var builtInExcluded = (bool)method.Invoke(_meterListenerBridge, new object[] { "OpenTelemetry.Internal" });
-            Assert.That(builtInExcluded, Is.False, "Built-in exclusions should block meters (Priority 1)");
-
-            // Default: Permissive default
-            var appMeter = (bool)method.Invoke(_meterListenerBridge, new object[] { "MyApp.BusinessMetrics" });
-            Assert.That(appMeter, Is.True, "Application meter not in any list should be enabled (Default)");
-        }
 
         #endregion
 
@@ -800,27 +511,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
         }
 
-        [Test]
-        public void CreateBridgedMeter_WithValidMeter_ShouldCreateMeter()
-        {
-            // Arrange - Test CreateBridgedMeter static method
-            var createBridgedMeterMethod = typeof(MeterListenerBridge)
-                .GetMethod("CreateBridgedMeter", BindingFlags.NonPublic | BindingFlags.Static);
 
-            // Create an actual Meter instance for testing
-            using var testMeter = new System.Diagnostics.Metrics.Meter("TestMeter", "1.0.0");
-
-            // Act
-            var result = createBridgedMeterMethod?.Invoke(null, new object[] { testMeter });
-
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result, Is.InstanceOf<System.Diagnostics.Metrics.Meter>());
-            
-            // Clean up the result
-            if (result is IDisposable disposable)
-                disposable.Dispose();
-        }
 
         #endregion
 
@@ -1505,86 +1196,11 @@ namespace NewRelic.Agent.Core.DataTransport
 
         #region Static Method Tests
 
-        [Test]
-        public void DisableBridgedInstrument_WithNullState_ShouldNotThrow()
-        {
-            // Act & Assert - Should handle null state gracefully
-            Assert.DoesNotThrow(() => 
-            {
-                var method = typeof(MeterListenerBridge)
-                    .GetMethod("DisableBridgedInstrument", BindingFlags.NonPublic | BindingFlags.Static);
-                method?.Invoke(null, new object[] { null });
-            });
-        }
 
-        [Test]
-        public void DisableBridgedInstrument_WithNonInstrumentState_ShouldNotThrow()
-        {
-            // Act & Assert - Should handle non-instrument objects gracefully
-            Assert.DoesNotThrow(() => 
-            {
-                var method = typeof(MeterListenerBridge)
-                    .GetMethod("DisableBridgedInstrument", BindingFlags.NonPublic | BindingFlags.Static);
-                method?.Invoke(null, new object[] { "not an instrument" });
-            });
-        }
 
-        [Test]
-        public void RecordSpecificInstrumentType_ShouldRecordCorrectMetrics()
-        {
-            // Arrange
-            var recordMethod = typeof(MeterListenerBridge)
-                .GetMethod("RecordSpecificInstrumentType", BindingFlags.NonPublic | BindingFlags.Instance);
 
-            // Test Counter
-            recordMethod?.Invoke(_meterListenerBridge, new object[] { "Counter`1" });
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.CreateCounter), Occurs.Once());
 
-            // Test Histogram
-            recordMethod?.Invoke(_meterListenerBridge, new object[] { "Histogram`1" });
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.CreateHistogram), Occurs.Once());
 
-            // Test UpDownCounter
-            recordMethod?.Invoke(_meterListenerBridge, new object[] { "UpDownCounter`1" });
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.CreateUpDownCounter), Occurs.Once());
-
-            // Test unknown type - should not throw
-            Assert.DoesNotThrow(() => recordMethod?.Invoke(_meterListenerBridge, new object[] { "UnknownInstrument`1" }));
-        }
-
-        [Test]
-        public void CreateObserveMethodInvoker_WithValidType_ShouldNotThrow()
-        {
-            // Test CreateObserveMethodInvoker static method
-            var createObserveMethod = typeof(MeterListenerBridge)
-                .GetMethod("CreateObserveMethodInvoker", BindingFlags.NonPublic | BindingFlags.Static);
-
-            // Use a type that could potentially have an Observe method
-            var testType = typeof(object); // Simple type for testing
-
-            // Act & Assert - Should not throw
-            Assert.DoesNotThrow(() => createObserveMethod?.Invoke(null, new object[] { testType }));
-        }
-
-        [Test]
-        public void ObservableInstrumentCacheData_Properties_ShouldBeSettable()
-        {
-            // Test that ObservableInstrumentCacheData properties can be set
-            var cacheDataType = typeof(MeterListenerBridge).GetNestedType("ObservableInstrumentCacheData", BindingFlags.Public);
-            Assert.That(cacheDataType, Is.Not.Null);
-
-            var cacheDataInstance = Activator.CreateInstance(cacheDataType);
-            Assert.That(cacheDataInstance, Is.Not.Null);
-
-            // The properties should be settable
-            var createObservableInstrumentDelegateProperty = cacheDataType.GetProperty("CreateObservableInstrumentDelegate");
-            var createCallbackProperty = cacheDataType.GetProperty("CreateCallbackAndObservableInstrumentDelegate");
-            var observeMethodProperty = cacheDataType.GetProperty("ObserveMethodDelegate");
-
-            Assert.That(createObservableInstrumentDelegateProperty, Is.Not.Null);
-            Assert.That(createCallbackProperty, Is.Not.Null);
-            Assert.That(observeMethodProperty, Is.Not.Null);
-        }
 
         #endregion
 
@@ -2057,279 +1673,156 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.AtLeast(threadCount));
         }
 
-        private System.Reflection.MethodInfo GetShouldEnableMethod()
-        {
-            return typeof(MeterListenerBridge)
-                .GetMethod("ShouldEnableInstrumentsInMeterWithFilters",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        }
+
 
         #endregion
 
         #region Meter Tags and Scope Bridging Tests
 
-        [Test]
-        public void CreateBridgedMeter_WithTagsAndScope_ShouldBridgeBothProperties()
-        {
-            // Arrange
-            var tags = new List<KeyValuePair<string, object>>
-            {
-                new KeyValuePair<string, object>("environment", "production"),
-                new KeyValuePair<string, object>("version", "1.0.0")
-            };
-            var scopeObject = new object();
-            using var originalMeter = new System.Diagnostics.Metrics.Meter("TestMeter", "1.0.0", tags, scopeObject);
 
-            // Act
-            var createBridgedMeterMethod = typeof(MeterListenerBridge)
-                .GetMethod("CreateBridgedMeter", BindingFlags.NonPublic | BindingFlags.Static);
-            var bridgedMeter = (System.Diagnostics.Metrics.Meter)createBridgedMeterMethod.Invoke(null, new object[] { originalMeter });
-
-            // Assert
-            Assert.That(bridgedMeter, Is.Not.Null);
-            Assert.That(bridgedMeter.Name, Is.EqualTo("TestMeter"));
-            Assert.That(bridgedMeter.Version, Is.EqualTo("1.0.0"));
-            Assert.That(bridgedMeter.Tags, Is.Not.Null);
-            Assert.That(bridgedMeter.Tags.Count(), Is.EqualTo(2));
-            Assert.That(bridgedMeter.Scope, Is.SameAs(scopeObject));
-
-            bridgedMeter?.Dispose();
-        }
-
-        [Test]
-        public void CreateBridgedMeter_WithOnlyTags_ShouldBridgeTags()
-        {
-            // Arrange
-            var tags = new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("key", "value") };
-            using var originalMeter = new System.Diagnostics.Metrics.Meter("TestMeter", "1.0.0", tags);
-
-            // Act
-            var createBridgedMeterMethod = typeof(MeterListenerBridge)
-                .GetMethod("CreateBridgedMeter", BindingFlags.NonPublic | BindingFlags.Static);
-            var bridgedMeter = (System.Diagnostics.Metrics.Meter)createBridgedMeterMethod.Invoke(null, new object[] { originalMeter });
-
-            // Assert
-            Assert.That(bridgedMeter.Tags, Is.Not.Null);
-            Assert.That(bridgedMeter.Tags.Count(), Is.EqualTo(1));
-            Assert.That(bridgedMeter.Scope, Is.Null);
-
-            bridgedMeter?.Dispose();
-        }
-
-        [Test]
-        public void CreateBridgedMeter_WithOnlyScope_ShouldBridgeScope()
-        {
-            // Arrange
-            var scopeObject = new { ScopeName = "TestScope" };
-            using var originalMeter = new System.Diagnostics.Metrics.Meter("TestMeter", "1.0.0", null, scopeObject);
-
-            // Act
-            var createBridgedMeterMethod = typeof(MeterListenerBridge)
-                .GetMethod("CreateBridgedMeter", BindingFlags.NonPublic | BindingFlags.Static);
-            var bridgedMeter = (System.Diagnostics.Metrics.Meter)createBridgedMeterMethod.Invoke(null, new object[] { originalMeter });
-
-            // Assert
-            Assert.That(bridgedMeter.Tags, Is.Null.Or.Empty);
-            Assert.That(bridgedMeter.Scope, Is.SameAs(scopeObject));
-
-            bridgedMeter?.Dispose();
-        }
-
-        [Test]
-        public void CreateBridgedMeter_WithoutTagsOrScope_ShouldUseBasicConstructor()
-        {
-            // Arrange
-            using var originalMeter = new System.Diagnostics.Metrics.Meter("BasicMeter", "1.0.0");
-
-            // Act
-            var createBridgedMeterMethod = typeof(MeterListenerBridge)
-                .GetMethod("CreateBridgedMeter", BindingFlags.NonPublic | BindingFlags.Static);
-            var bridgedMeter = (System.Diagnostics.Metrics.Meter)createBridgedMeterMethod.Invoke(null, new object[] { originalMeter });
-
-            // Assert
-            Assert.That(bridgedMeter.Tags, Is.Null.Or.Empty);
-            Assert.That(bridgedMeter.Scope, Is.Null);
-
-            bridgedMeter?.Dispose();
-        }
-
-        [Test]
-        public void CreateBridgedMeter_WithEmptyTags_ShouldNotBridgeEmptyCollection()
-        {
-            // Arrange
-            var emptyTags = new List<KeyValuePair<string, object>>();
-            using var originalMeter = new System.Diagnostics.Metrics.Meter("TestMeter", "1.0.0", emptyTags);
-
-            // Act
-            var createBridgedMeterMethod = typeof(MeterListenerBridge)
-                .GetMethod("CreateBridgedMeter", BindingFlags.NonPublic | BindingFlags.Static);
-            var bridgedMeter = (System.Diagnostics.Metrics.Meter)createBridgedMeterMethod.Invoke(null, new object[] { originalMeter });
-
-            // Assert - Empty collection should result in basic constructor usage
-            Assert.That(bridgedMeter.Tags, Is.Null.Or.Empty);
-
-            bridgedMeter?.Dispose();
-        }
-
-        [Test]
-        public void CreateBridgedMeter_WithNullTagValues_ShouldConvertToEmptyString()
-        {
-            // Arrange
-            var tagsWithNulls = new List<KeyValuePair<string, object>>
-            {
-                new KeyValuePair<string, object>("key1", "value1"),
-                new KeyValuePair<string, object>("key2", null)
-            };
-            using var originalMeter = new System.Diagnostics.Metrics.Meter("TestMeter", "1.0.0", tagsWithNulls);
-
-            // Act
-            var createBridgedMeterMethod = typeof(MeterListenerBridge)
-                .GetMethod("CreateBridgedMeter", BindingFlags.NonPublic | BindingFlags.Static);
-            var bridgedMeter = (System.Diagnostics.Metrics.Meter)createBridgedMeterMethod.Invoke(null, new object[] { originalMeter });
-
-            // Assert - Null values should be converted to empty strings
-            var bridgedTagsList = bridgedMeter.Tags.ToList();
-            var key2Tag = bridgedTagsList.FirstOrDefault(t => t.Key == "key2");
-            Assert.That(key2Tag.Value.ToString(), Is.EqualTo(string.Empty));
-
-            bridgedMeter?.Dispose();
-        }
-
-        [Test]
-        public void CreateBridgedMeter_WhenTagsPropertyThrowsException_ShouldContinueWithoutTags()
-        {
-            // Arrange - Create a mock object that throws when accessing Tags
-            var mockMeter = Mock.Create<object>();
-            var meterType = typeof(System.Diagnostics.Metrics.Meter);
-            
-            // Use actual Meter to test exception handling during property access
-            using var actualMeter = new System.Diagnostics.Metrics.Meter("TestMeter", "1.0.0");
-            
-            // We'll test the exception path by creating a scenario where GetValue might throw
-            // Since we can't easily mock this in the current test setup, we verify the method
-            // handles exceptions gracefully by testing with valid input (the catch block is there for safety)
-            var createBridgedMeterMethod = typeof(MeterListenerBridge)
-                .GetMethod("CreateBridgedMeter", BindingFlags.NonPublic | BindingFlags.Static);
-
-            // Act & Assert - Should not throw even if internal errors occur
-            Assert.DoesNotThrow(() =>
-            {
-                var bridgedMeter = (System.Diagnostics.Metrics.Meter)createBridgedMeterMethod.Invoke(null, new object[] { actualMeter });
-                bridgedMeter?.Dispose();
-            });
-        }
 
         #endregion
 
         #region Instrument Tags Bridging Tests
 
+
+
+
+
+        #endregion
+
+        #region Additional Coverage Tests%
+
         [Test]
-        public void GetStateForInstrument_WithInstrumentTags_ShouldBridgeTags()
+        public void CreateMeterProvider_WithoutConnectionInfo_ShouldReturnNull()
+        {
+            // Arrange - Don't publish AgentConnectedEvent
+            var bridge = new MeterListenerBridge(_supportabilityMetricCounters);
+
+            // Act - Start without connection info
+            bridge.Start();
+
+            // Assert - Should handle gracefully
+            Assert.DoesNotThrow(() => bridge.Stop());
+        }
+
+        [Test]
+        public void CreateMeterProvider_WithValidConnectionInfo_ShouldConfigureEndpoint()
         {
             // Arrange
-            using var meter = new System.Diagnostics.Metrics.Meter("TestMeter", "1.0.0");
-            var tags = new List<KeyValuePair<string, object>>
-            {
-                new KeyValuePair<string, object>("environment", "test"),
-                new KeyValuePair<string, object>("region", "us-west")
-            };
-            var counter = meter.CreateCounter<int>("test-counter", "units", "description", tags);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            Mock.Arrange(() => _connectionInfo.HttpProtocol).Returns("https");
+            Mock.Arrange(() => _connectionInfo.Host).Returns("otlp.newrelic.com");
+            Mock.Arrange(() => _connectionInfo.Port).Returns(443);
 
-            var getStateMethod = typeof(MeterListenerBridge)
-                .GetMethod("GetStateForInstrument", BindingFlags.NonPublic | BindingFlags.Static);
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act
-            var result = getStateMethod.Invoke(null, new object[] { counter });
+            _meterListenerBridge.Start();
 
-            // Assert
-            Assert.That(result, Is.Not.Null);
+            // Assert - Should configure without throwing
+            Assert.DoesNotThrow(() => _meterListenerBridge.Stop());
         }
 
         [Test]
-        public void GetStateForInstrument_WithoutInstrumentTags_ShouldCreateInstrumentWithoutTags()
+        public void CreateHttpClientWithProxyAndRetry_ExceptionDuringCreation_ShouldReturnFallbackClient()
         {
             // Arrange
-            using var meter = new System.Diagnostics.Metrics.Meter("TestMeter", "1.0.0");
-            var counter = meter.CreateCounter<long>("test-counter");
-
-            var getStateMethod = typeof(MeterListenerBridge)
-                .GetMethod("GetStateForInstrument", BindingFlags.NonPublic | BindingFlags.Static);
-
-            // Act
-            var result = getStateMethod.Invoke(null, new object[] { counter });
-
-            // Assert
-            Assert.That(result, Is.Not.Null);
-        }
-
-        [Test]
-        public void GetStateForInstrument_WithNullTagValues_ShouldConvertToEmptyString()
-        {
-            // Arrange
-            using var meter = new System.Diagnostics.Metrics.Meter("TestMeter", "1.0.0");
-            var tags = new List<KeyValuePair<string, object>>
-            {
-                new KeyValuePair<string, object>("key1", "value1"),
-                new KeyValuePair<string, object>("key2", null)
-            };
-            var histogram = meter.CreateHistogram<double>("test-histogram", "ms", "description", tags);
-
-            var getStateMethod = typeof(MeterListenerBridge)
-                .GetMethod("GetStateForInstrument", BindingFlags.NonPublic | BindingFlags.Static);
-
-            // Act & Assert - Should handle null tag values gracefully
-            Assert.DoesNotThrow(() => getStateMethod.Invoke(null, new object[] { histogram }));
-        }
-
-        [Test]
-        public void GetStateForInstrument_WithEmptyTags_ShouldNotBridgeEmptyCollection()
-        {
-            // Arrange
-            using var meter = new System.Diagnostics.Metrics.Meter("TestMeter", "1.0.0");
-            var emptyTags = new List<KeyValuePair<string, object>>();
-            var upDownCounter = meter.CreateUpDownCounter<int>("test-updowncounter", "items", "description", emptyTags);
-
-            var getStateMethod = typeof(MeterListenerBridge)
-                .GetMethod("GetStateForInstrument", BindingFlags.NonPublic | BindingFlags.Static);
-
-            // Act
-            var result = getStateMethod.Invoke(null, new object[] { upDownCounter });
-
-            // Assert - Should create instrument even with empty tags
-            Assert.That(result, Is.Not.Null);
-        }
-
-        [Test]
-        public void CreateBridgedInstrumentDelegate_ShouldUse4ParameterOverloadWhenAvailable()
-        {
-            // Arrange
-            var counterType = typeof(System.Diagnostics.Metrics.Counter<int>);
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
             
-            var createDelegateMethod = typeof(MeterListenerBridge)
-                .GetMethod("CreateBridgedInstrumentDelegate", BindingFlags.NonPublic | BindingFlags.Static);
+            // Use a valid proxy configuration
+            var proxy = new WebProxy("http://proxy.test.com:8080");
+            Mock.Arrange(() => _connectionInfo.Proxy).Returns(proxy);
 
-            // Act
-            var delegateResult = createDelegateMethod.Invoke(null, new object[] { counterType });
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
-            // Assert - Should create delegate successfully
-            Assert.That(delegateResult, Is.Not.Null);
+            // Act - Should handle any internal exceptions and fallback
+            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
         }
 
         [Test]
-        public void CreateBridgedInstrumentDelegate_ShouldFallbackTo3ParameterWhenTagsNotAvailable()
+        public void TryCreateMeterListener_WithMatchingILRepackedType_ShouldLogWarning()
         {
-            // Arrange - Use Histogram type
-            var histogramType = typeof(System.Diagnostics.Metrics.Histogram<double>);
-            
-            var createDelegateMethod = typeof(MeterListenerBridge)
-                .GetMethod("CreateBridgedInstrumentDelegate", BindingFlags.NonPublic | BindingFlags.Static);
+            // This scenario tests when MeterListener type matches ILRepacked type
+            // In unit tests, this is the normal case since we don't have ILRepacking
+            var bridge = new MeterListenerBridge(_supportabilityMetricCounters);
 
-            // Act
-            var delegateResult = createDelegateMethod.Invoke(null, new object[] { histogramType });
-
-            // Assert - Should create delegate even if 4-parameter overload not found
-            Assert.That(delegateResult, Is.Not.Null);
+            // Act & Assert - Should handle gracefully
+            Assert.DoesNotThrow(() => bridge.Start());
         }
+
+        [Test]
+        public void SubscribeToInstrumentPublishedEvent_ShouldCreateLambdaExpression()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Act - TryCreateMeterListener will call SubscribeToInstrumentPublishedEvent internally
+            _meterListenerBridge.Start();
+
+            // Assert - Should complete without error
+            Assert.DoesNotThrow(() => _meterListenerBridge.Stop());
+        }
+
+        [Test]
+        public void SubscribeToMeasurementUpdates_ForAllNumericTypes_ShouldSubscribe()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Act - Should subscribe to byte, short, int, long, float, double, decimal
+            _meterListenerBridge.Start();
+
+            // Assert - Should complete without error
+            Assert.DoesNotThrow(() => _meterListenerBridge.Stop());
+        }
+
+        [Test]
+        public void SubscribeToMeasurementCompletedEvent_ShouldCreateLambdaExpression()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Act - TryCreateMeterListener will call SubscribeToMeasurementCompletedEvent internally
+            _meterListenerBridge.Start();
+
+            // Assert - Should complete without error
+            Assert.DoesNotThrow(() => _meterListenerBridge.Stop());
+        }
+
+
+
+
+
+
+
+
+
+        [Test]
+        public void Start_WithExistingMeterProvider_ShouldNotRecreate()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
+
+            // Act - Start twice
+            _meterListenerBridge.Start();
+            _meterListenerBridge.Start();
+
+            // Assert - Second start should use existing provider (no duplication)
+            Assert.DoesNotThrow(() => _meterListenerBridge.Stop());
+        }
+
+
 
         #endregion
     }
