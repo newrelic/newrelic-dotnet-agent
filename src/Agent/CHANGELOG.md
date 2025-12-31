@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.48.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.47.2...v10.48.0) (2025-12-30)
+
+
+### Notice
+
+* Add YUM repo/RPM package signing key rotation announcement ([#3369](https://github.com/newrelic/newrelic-dotnet-agent/issues/3369)) ([ef5f329](https://github.com/newrelic/newrelic-dotnet-agent/commit/ef5f3296ee4580d73437243f5437d86fafcac4ce))
+* The GPG key used to sign .NET Agent RPM packages in our YUM repo has been rotated. Please update your systems to trust the new key by downloading our updated repository definition file from https://download.newrelic.com/dot_net_agent/yum/newrelic-dotnet-agent.repo and placing it in /etc/yum.repos.d/, overwriting any existing version of that file. ([ef5f329](https://github.com/newrelic/newrelic-dotnet-agent/commit/ef5f3296ee4580d73437243f5437d86fafcac4ce))
+
+
+### New features
+
+* Increase maximum length of `db.statement` span attribute to 4096 bytes ([#3364](https://github.com/newrelic/newrelic-dotnet-agent/issues/3364)) ([#3365](https://github.com/newrelic/newrelic-dotnet-agent/issues/3365)) ([bbac2f4](https://github.com/newrelic/newrelic-dotnet-agent/commit/bbac2f49fc5094036b97f25689b07611fefde40a))
+
 ## [10.47.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.47.1...v10.47.2) (2025-12-16)
 
 
