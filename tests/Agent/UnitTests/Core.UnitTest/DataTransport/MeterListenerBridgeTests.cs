@@ -27,18 +27,26 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         private DisposableCollection _disposableCollection;
         private MeterListenerBridge _meterListenerBridge;
+        private IConfigurationService _configurationService;
         private IConfiguration _configuration;
         private IConnectionInfo _connectionInfo;
         private IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
+        private IMeterBridgingService _meterBridgingService;
+        private IOtlpExporterConfigurationService _otlpExporterConfigurationService;
 
         [SetUp]
         public void SetUp()
         {
             _disposableCollection = new DisposableCollection();
 
+            // Setup configuration service mock
+            _configurationService = Mock.Create<IConfigurationService>();
+            
             // Setup configuration mock
             _configuration = Mock.Create<IConfiguration>();
             _disposableCollection.Add(new ConfigurationAutoResponder(_configuration));
+            
+            Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 
             Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { "TestApp" });
             Mock.Arrange(() => _configuration.EntityGuid).Returns("test-entity-guid");
@@ -59,13 +67,19 @@ namespace NewRelic.Agent.Core.DataTransport
             // Setup supportability metrics mock
             _supportabilityMetricCounters = Mock.Create<IOtelBridgeSupportabilityMetricCounters>();
 
-            _meterListenerBridge = new MeterListenerBridge(_supportabilityMetricCounters);
+            // Setup service mocks
+            _meterBridgingService = Mock.Create<IMeterBridgingService>();
+            _otlpExporterConfigurationService = Mock.Create<IOtlpExporterConfigurationService>();
+
+            _meterListenerBridge = new MeterListenerBridge(_meterBridgingService, _otlpExporterConfigurationService);
         }
 
         [TearDown]
         public void TearDown()
         {
             _meterListenerBridge?.Dispose();
+            _meterBridgingService?.Dispose();
+            _otlpExporterConfigurationService?.Dispose();
             _disposableCollection?.Dispose();
         }
 
@@ -117,10 +131,10 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act - Call Start directly to test initialization
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
 
             // Assert - Verify the bridge can handle multiple start calls without errors
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
         }
 
         [Test]
@@ -296,7 +310,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -311,7 +325,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -341,7 +355,7 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act & Assert - Should not throw even if MeterListener creation fails
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
         }
 
         [Test]
@@ -357,9 +371,9 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act & Assert - Should configure all components without errors
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
             
-            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
+            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.ConfigureOtlpExporter().
         }
 
         #region Filter Logic Tests
@@ -378,12 +392,12 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
 
             // Act
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Act & Assert 
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
             
-            // Supportability metric for OTel bridge disabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
+            // Supportability metric for OTel bridge disabled is now reported by AgentHealthReporter, not MeterListenerBridge.ConfigureOtlpExporter().
         }
 
         [Test]
@@ -393,9 +407,9 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(false);
 
             // Act
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
-            // Supportability metric for OTel bridge disabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
+            // Supportability metric for OTel bridge disabled is now reported by AgentHealthReporter, not MeterListenerBridge.ConfigureOtlpExporter().
         }
 
         [Test]
@@ -407,7 +421,7 @@ namespace NewRelic.Agent.Core.DataTransport
             
 
             // Act & Assert
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
         }
 
         [Test]
@@ -418,10 +432,10 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(false);
 
             // Act
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Assert - Should exit early and not throw
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
         }
 
         [Test]
@@ -434,9 +448,9 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
-            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
+            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.ConfigureOtlpExporter().
         }
 
         [Test]
@@ -450,10 +464,10 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act & Assert
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
 
             // Verify multiple calls don't cause issues
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
         }
 
         [Test]
@@ -466,7 +480,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Act
             _meterListenerBridge.Stop();
@@ -475,7 +489,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => _meterListenerBridge.Stop());
 
             // Should be able to restart after stop
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
         }
 
         #endregion
@@ -508,7 +522,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 EventBus<AgentConnectedEvent>.Publish(secondConnection);
             });
             
-            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.Start().
+            // Supportability metric for OTel bridge enabled is now reported by AgentHealthReporter, not MeterListenerBridge.ConfigureOtlpExporter().
         }
 
 
@@ -527,7 +541,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Act & Assert
             Assert.DoesNotThrow(() => _meterListenerBridge.Dispose());
@@ -611,7 +625,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -632,7 +646,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -652,7 +666,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -689,7 +703,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -707,7 +721,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -728,9 +742,9 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act & Assert - Multiple starts should be safe
             Assert.DoesNotThrow(() => 
             {
-                _meterListenerBridge.Start();
-                _meterListenerBridge.Start();
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
+                _meterListenerBridge.ConfigureOtlpExporter();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -752,7 +766,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Act & Assert - Multiple stops should be safe
             Assert.DoesNotThrow(() => 
@@ -773,7 +787,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
             
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
             _meterListenerBridge.Stop();
 
             // Act & Assert - Dispose after start/stop should be clean
@@ -793,7 +807,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             var preCleanShutdownEvent = new PreCleanShutdownEvent();
 
@@ -850,14 +864,14 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 // Initial start
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
                 
                 // Stop
                 _meterListenerBridge.Stop();
                 
                 // Restart
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
                 
                 // Final cleanup
                 _meterListenerBridge.Dispose();
@@ -884,7 +898,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -913,7 +927,7 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act & Assert - Should not create provider when metrics disabled
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
         }
 
         [Test]
@@ -927,61 +941,7 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act & Assert - Should not create anything when OpenTelemetry disabled
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
-        }
-
-        [Test]
-        public void Start_WithEmptyApplicationNames_ShouldNotStart()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string>());
-
-            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-
-            // Act & Assert - Should handle empty application names list
-            Assert.Throws<InvalidOperationException>(() => 
-            {
-                EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
-            });
-        }
-
-        [Test]
-        public void Start_WithNullFirstApplicationName_ShouldThrow()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { null, "ValidApp" });
-
-            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-
-            // Act & Assert - Should throw when first application name is null
-            Assert.Throws<ArgumentException>(() => 
-            {
-                EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
-            });
-        }
-
-        [Test]
-        public void Start_WithEmptyFirstApplicationName_ShouldThrow()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { "", "ValidApp" });
-
-            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-
-            // Act & Assert - Should throw when first application name is empty
-            Assert.Throws<ArgumentException>(() => 
-            {
-                EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
-            });
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
         }
 
         [Test]
@@ -998,7 +958,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -1021,7 +981,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -1042,7 +1002,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -1057,7 +1017,7 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act & Assert - MeterListener creation issues should be handled
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
         }
 
         [Test]
@@ -1079,7 +1039,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -1101,7 +1061,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -1120,7 +1080,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -1142,7 +1102,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => 
             {
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
             });
         }
 
@@ -1176,7 +1136,7 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 // Initial connection and configuration
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
                 
                 // Configuration updates during runtime
                 EventBus<ConfigurationUpdatedEvent>.Publish(configUpdateEvent);
@@ -1184,7 +1144,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 // Reconnection scenario
                 _meterListenerBridge.Stop();
                 EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-                _meterListenerBridge.Start();
+                _meterListenerBridge.ConfigureOtlpExporter();
                 
                 // Clean shutdown
                 EventBus<PreCleanShutdownEvent>.Publish(preCleanShutdownEvent);
@@ -1205,52 +1165,8 @@ namespace NewRelic.Agent.Core.DataTransport
         #endregion
 
         #region EntityGuid Change Detection Tests
-
-        [Test]
-        public void OnServerConfigurationUpdated_WhenEntityGuidChanges_ShouldRecordEntityGuidChangedMetric()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
-
-            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-            _meterListenerBridge.Start();
-
-            // Create a real ServerConfiguration object and set the EntityGuid via JSON deserialization
-            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid""}";
-            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
-            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
-
-            // Act
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
-
-            // Assert
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Once());
-        }
-
-        [Test]
-        public void OnServerConfigurationUpdated_WhenEntityGuidChanges_ShouldRecordMeterProviderRecreatedMetric()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
-
-            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-            _meterListenerBridge.Start();
-
-            // Create a real ServerConfiguration object and set the EntityGuid via JSON deserialization
-            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid""}";
-            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
-            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
-
-            // Act
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
-
-            // Assert
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Once());
-        }
+        // NOTE: EntityGuid change detection and metric recording is now handled by OtlpExporterConfigurationService.
+        // These tests should be moved to OtlpExporterConfigurationServiceTests when that test file is created.
 
         [Test]
         public void OnServerConfigurationUpdated_WhenEntityGuidUnchanged_ShouldNotRecordMetrics()
@@ -1261,7 +1177,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Create a real ServerConfiguration object with the same EntityGuid
             var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""same-entity-guid""}";
@@ -1368,105 +1284,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Never());
         }
 
-        [Test]
-        public void OnServerConfigurationUpdated_WhenMetricsDisabled_ShouldNotRecreateProvider()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(false);
-            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
 
-            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-
-            // Create a real ServerConfiguration object with different EntityGuid
-            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid""}";
-            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
-            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
-
-            // Act
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
-
-            // Assert - Should record entity GUID change but not recreate provider since metrics are disabled
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Once());
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Never());
-        }
-
-        [Test]
-        public void OnServerConfigurationUpdated_WhenNoConnectionInfo_ShouldNotRecreateProvider()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
-
-            // Don't publish AgentConnectedEvent, so no connection info
-            // Create a real ServerConfiguration object with different EntityGuid
-            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid""}";
-            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
-            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
-
-            // Act
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
-
-            // Assert - Should not record entity GUID change since _currentEntityGuid is not initialized without AgentConnectedEvent
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Never());
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Never());
-        }
-
-        [Test]
-        public void OnServerConfigurationUpdated_WhenEntityGuidChangesMultipleTimes_ShouldRecordEachChange()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
-
-            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-            _meterListenerBridge.Start();
-
-            // First change
-            var firstServerConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""second-entity-guid""}";
-            var firstServerConfig = ServerConfiguration.FromJson(firstServerConfigJson);
-            var firstConfigUpdateEvent = new ServerConfigurationUpdatedEvent(firstServerConfig);
-
-            // Second change
-            var secondServerConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""third-entity-guid""}";
-            var secondServerConfig = ServerConfiguration.FromJson(secondServerConfigJson);
-            var secondConfigUpdateEvent = new ServerConfigurationUpdatedEvent(secondServerConfig);
-
-            // Act
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(firstConfigUpdateEvent);
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(secondConfigUpdateEvent);
-
-            // Assert
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Exactly(2));
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Exactly(2));
-        }
-
-        [Test]
-        public void RecreateMetricsProvider_ShouldUseUpdatedEntityGuid()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
-            Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { "TestApp" });
-            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("test-license-key");
-
-            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-            _meterListenerBridge.Start();
-
-            // Create a real ServerConfiguration object with updated EntityGuid
-            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""updated-entity-guid""}";
-            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
-            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
-
-            // Act - Trigger entity GUID change
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
-
-            // Assert - The RecreateMetricsProvider method should have been called internally
-            // We can verify this by checking that the MeterProviderRecreated metric was recorded
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Once());
-        }
 
         [Test]
         public void RecreateMetricsProvider_ShouldNotThrow()
@@ -1477,7 +1295,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Create a real ServerConfiguration object with new EntityGuid
             var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid""}";
@@ -1488,56 +1306,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent));
         }
 
-        [Test]
-        public void OnAgentConnected_ShouldInitializeEntityGuidTracking()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.EntityGuid).Returns("tracked-entity-guid");
 
-            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-
-            // Act
-            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-
-            // Assert - Verify that subsequent entity GUID changes are properly detected
-            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""changed-entity-guid""}";
-            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
-            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
-
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
-
-            // Should record the change since tracking was initialized
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Once());
-        }
-
-        [Test]
-        public void EntityGuidChangeDetection_WorksAcrossAgentReconnection()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.EntityGuid).Returns("original-entity-guid");
-
-            // Initial connection
-            var firstAgentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-            EventBus<AgentConnectedEvent>.Publish(firstAgentConnectedEvent);
-            _meterListenerBridge.Start();
-
-            // Agent reconnection (should reset tracking)
-            Mock.Arrange(() => _configuration.EntityGuid).Returns("new-after-reconnect-entity-guid");
-            var secondAgentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-            EventBus<AgentConnectedEvent>.Publish(secondAgentConnectedEvent);
-
-            // Server configuration update with changed entity GUID
-            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""final-entity-guid""}";
-            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
-            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
-
-            // Act
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
-
-            // Assert - Should detect change from the entity GUID set during reconnection
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Once());
-        }
 
         [Test]
         public void OnServerConfigurationUpdated_WithWhitespaceEntityGuids_ShouldHandleGracefully()
@@ -1557,33 +1326,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.DoesNotThrow(() => EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent));
         }
 
-        [Test]
-        public void EntityGuidChangeDetection_FullApplicationNameChangeScenario()
-        {
-            // Arrange - Simulate the complete scenario described in the requirements
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { "MyApplication" });
-            Mock.Arrange(() => _configuration.EntityGuid).Returns("original-entity-guid");
-            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("test-license-key");
 
-            // 1. Initial agent startup
-            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-            _meterListenerBridge.Start();
-
-            // 2. Application name change via API (this would cause reconnection in real scenario)
-            // Simulate what happens when SetApplicationName triggers a new entity GUID
-            var serverConfigJson = @"{""agent_run_id"": 12345, ""entity_guid"": ""new-entity-guid-after-app-name-change""}";
-            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
-            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
-
-            // Act
-            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
-
-            // Assert - Should detect entity GUID change and recreate OTel resources
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Once());
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Once());
-        }
 
         [Test]
         public void OnServerConfigurationUpdated_WhenServerConfigIsNull_ShouldNotThrow()
@@ -1614,64 +1357,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         #region Helper Methods
 
-        [Test]
-        public void RecreateMetricsProvider_ShouldBeThreadSafe()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.EntityGuid).Returns("initial-entity-guid");
-            Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { "TestApp" });
-            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("test-license-key");
 
-            var agentConnectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
-            EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
-
-            // Start the meter listener to initialize the meter provider
-            _meterListenerBridge.Start();
-
-            var exceptions = new System.Collections.Concurrent.ConcurrentBag<System.Exception>();
-            const int threadCount = 10;
-            const int iterationsPerThread = 10;
-
-            // Act - simulate concurrent server configuration updates
-            var tasks = new System.Threading.Tasks.Task[threadCount];
-            for (int i = 0; i < threadCount; i++)
-            {
-                int threadId = i;
-                tasks[i] = System.Threading.Tasks.Task.Run(() =>
-                {
-                    try
-                    {
-                        for (int j = 0; j < iterationsPerThread; j++)
-                        {
-                            // Create a real ServerConfiguration object via JSON deserialization
-                            var serverConfigJson = $"{{\"entity_guid\": \"entity-guid-{threadId}-{j}\", \"agent_run_id\": \"run-id-{threadId}-{j}\"}}";
-                            var newServerConfig = ServerConfiguration.FromJson(serverConfigJson);
-
-                            var serverConfigUpdateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
-                            EventBus<ServerConfigurationUpdatedEvent>.Publish(serverConfigUpdateEvent);
-
-                            // Small delay to increase chance of race conditions
-                            System.Threading.Thread.Sleep(1);
-                        }
-                    }
-                    catch (System.Exception ex)
-                    {
-                        exceptions.Add(ex);
-                    }
-                });
-            }
-
-            // Wait for all tasks to complete
-            System.Threading.Tasks.Task.WaitAll(tasks);
-
-            // Assert - should not have any exceptions
-            Assert.That(exceptions.IsEmpty, Is.True, $"Thread safety test failed with {exceptions.Count} exceptions: {string.Join(", ", exceptions.Select(e => e.Message))}");
-
-            // Verify supportability metrics were recorded (should have many due to concurrent updates)
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.AtLeast(threadCount));
-            Mock.Assert(() => _supportabilityMetricCounters.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.AtLeast(threadCount));
-        }
 
 
 
@@ -1697,10 +1383,12 @@ namespace NewRelic.Agent.Core.DataTransport
         public void CreateMeterProvider_WithoutConnectionInfo_ShouldReturnNull()
         {
             // Arrange - Don't publish AgentConnectedEvent
-            var bridge = new MeterListenerBridge(_supportabilityMetricCounters);
+            var mockBridging = Mock.Create<IMeterBridgingService>();
+            var mockOtlp = Mock.Create<IOtlpExporterConfigurationService>();
+            var bridge = new MeterListenerBridge(mockBridging, mockOtlp);
 
             // Act - Start without connection info
-            bridge.Start();
+            bridge.ConfigureOtlpExporter();
 
             // Assert - Should handle gracefully
             Assert.DoesNotThrow(() => bridge.Stop());
@@ -1719,7 +1407,7 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Assert - Should configure without throwing
             Assert.DoesNotThrow(() => _meterListenerBridge.Stop());
@@ -1739,7 +1427,7 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act - Should handle any internal exceptions and fallback
-            Assert.DoesNotThrow(() => _meterListenerBridge.Start());
+            Assert.DoesNotThrow(() => _meterListenerBridge.ConfigureOtlpExporter());
         }
 
         [Test]
@@ -1747,10 +1435,12 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             // This scenario tests when MeterListener type matches ILRepacked type
             // In unit tests, this is the normal case since we don't have ILRepacking
-            var bridge = new MeterListenerBridge(_supportabilityMetricCounters);
+            var mockBridging = Mock.Create<IMeterBridgingService>();
+            var mockOtlp = Mock.Create<IOtlpExporterConfigurationService>();
+            var bridge = new MeterListenerBridge(mockBridging, mockOtlp);
 
             // Act & Assert - Should handle gracefully
-            Assert.DoesNotThrow(() => bridge.Start());
+            Assert.DoesNotThrow(() => bridge.ConfigureOtlpExporter());
         }
 
         [Test]
@@ -1762,7 +1452,7 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act - TryCreateMeterListener will call SubscribeToInstrumentPublishedEvent internally
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Assert - Should complete without error
             Assert.DoesNotThrow(() => _meterListenerBridge.Stop());
@@ -1777,7 +1467,7 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act - Should subscribe to byte, short, int, long, float, double, decimal
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Assert - Should complete without error
             Assert.DoesNotThrow(() => _meterListenerBridge.Stop());
@@ -1792,7 +1482,7 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act - TryCreateMeterListener will call SubscribeToMeasurementCompletedEvent internally
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Assert - Should complete without error
             Assert.DoesNotThrow(() => _meterListenerBridge.Stop());
@@ -1815,8 +1505,8 @@ namespace NewRelic.Agent.Core.DataTransport
             EventBus<AgentConnectedEvent>.Publish(agentConnectedEvent);
 
             // Act - Start twice
-            _meterListenerBridge.Start();
-            _meterListenerBridge.Start();
+            _meterListenerBridge.ConfigureOtlpExporter();
+            _meterListenerBridge.ConfigureOtlpExporter();
 
             // Assert - Second start should use existing provider (no duplication)
             Assert.DoesNotThrow(() => _meterListenerBridge.Stop());

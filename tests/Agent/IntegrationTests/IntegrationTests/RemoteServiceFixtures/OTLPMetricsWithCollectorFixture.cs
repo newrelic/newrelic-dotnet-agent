@@ -11,10 +11,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public abstract class OtlpMetricsWithCollectorFixtureBase : MockNewRelicFixture
     {
-        protected OtlpMetricsWithCollectorFixtureBase(string targetFramework, bool isCoreApp) :
+        protected OtlpMetricsWithCollectorFixtureBase(string targetFramework, bool isCoreApp, string applicationDirectoryName = "OTelMetricsApplication", string executableName = "OTelMetricsApplication.exe") :
             base(new RemoteService(
-                "OTelMetricsApplication",
-                "OTelMetricsApplication.exe",
+                applicationDirectoryName,
+                executableName,
                 targetFramework,
                 ApplicationType.Bounded,
                 true,
