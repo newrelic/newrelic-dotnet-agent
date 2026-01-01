@@ -7,14 +7,14 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.Kinesis" Version="4.0.7.9" />
     <PackageReference Include="AWSSDK.KinesisFirehose" Version="4.0.3.8" />
-    <PackageReference Include="AWSSDK.S3" Version="4.0.14.3" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.16.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="AWSSDK.SQS" Version="4.0.2.8" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.10.4" />
-    <PackageReference Include="NewRelic.Agent.Api" Version="10.47.1" />
+    <PackageReference Include="AWSSDK.SQS" Version="4.0.2.9" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.10.5" />
+    <PackageReference Include="NewRelic.Agent.Api" Version="10.47.2" />
   </ItemGroup>
 </Project>
