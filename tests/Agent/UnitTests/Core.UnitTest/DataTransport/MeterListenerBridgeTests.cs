@@ -149,6 +149,32 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
+        public void OnServerConfigurationUpdated_WhenFirstTimeEntityGuidSetWithConnectionInfo_CreatesProvider()
+        {
+            // Arrange - Create new bridge instance to ensure clean state
+            var bridge = new MeterListenerBridge(_meterBridgingService, _otlpExporterConfigurationService);
+            
+            // Simulate agent connected (sets connection info) - this will call GetOrCreateMeterProvider once with initial GUID
+            var connectedEvent = new AgentConnectedEvent { ConnectInfo = _connectionInfo };
+            EventBus<AgentConnectedEvent>.Publish(connectedEvent);
+            
+            // Create server config with NEW entity GUID (simulating first time it's set)
+            var newServerConfig = new ServerConfiguration { EntityGuid = "new-entity-guid" };
+            
+            // Act
+            var updateEvent = new ServerConfigurationUpdatedEvent(newServerConfig);
+            EventBus<ServerConfigurationUpdatedEvent>.Publish(updateEvent);
+            
+            // Assert - Verify GetOrCreateMeterProvider was called at least once with the new entity GUID
+            // (The method may be called multiple times: once on connect, once on server config update)
+            Mock.Assert(() => _otlpExporterConfigurationService.GetOrCreateMeterProvider(
+                Arg.IsAny<IConnectionInfo>(), "new-entity-guid"), Occurs.AtLeastOnce());
+            
+            // Cleanup
+            bridge?.Dispose();
+        }
+
+        [Test]
         public void Service_ShouldBeDisposable()
         {
             // Act & Assert

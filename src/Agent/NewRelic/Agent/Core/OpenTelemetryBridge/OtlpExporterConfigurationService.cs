@@ -53,14 +53,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return null;
             }
 
-            if (_meterProvider != null && _lastConnectionInfo == connectionInfo && _lastEntityGuid == entityGuid)
+            if (_meterProvider != null && ConnectionInfoEquals(_lastConnectionInfo, connectionInfo) && _lastEntityGuid == entityGuid)
             {
                 return _meterProvider;
             }
 
             lock (_meterProviderLock)
             {
-                if (_meterProvider != null && _lastConnectionInfo == connectionInfo && _lastEntityGuid == entityGuid)
+                if (_meterProvider != null && ConnectionInfoEquals(_lastConnectionInfo, connectionInfo) && _lastEntityGuid == entityGuid)
                 {
                     return _meterProvider;
                 }
@@ -95,23 +95,24 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             if (_lastConnectionInfo == null) return;
 
             var endpoint = _bridgeConfiguration.BuildOtlpEndpoint(_lastConnectionInfo);
+            var config = _configurationService.Configuration;
             
             _httpClient = CreateHttpClientWithProxyAndRetry(_lastConnectionInfo);
 
             var providerBuilder = Sdk.CreateMeterProviderBuilder()
                 .ConfigureResource(r => r
-                    .AddService(_configurationService.Configuration.ApplicationNames.First())
+                    .AddService(config.ApplicationNames.First())
                     .AddTelemetrySdk()
-                    .AddAttributes(new[] { new KeyValuePair<string, object>("entity.guid", _lastEntityGuid ?? _configurationService.Configuration.EntityGuid) }))
+                    .AddAttributes(new[] { new KeyValuePair<string, object>("entity.guid", _lastEntityGuid ?? config.EntityGuid) }))
                 .AddMeter("*")
                 .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
                 {
                     exporterOptions.Endpoint = endpoint;
                     exporterOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
-                    exporterOptions.Headers = $"api-key={_configurationService.Configuration.AgentLicenseKey}";
+                    exporterOptions.Headers = $"api-key={config.AgentLicenseKey}";
                     exporterOptions.HttpClientFactory = () => _httpClient;
 
-                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = _configurationService.Configuration.OpenTelemetryOtlpExportIntervalSeconds * 1000;
+                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = config.OpenTelemetryOtlpExportIntervalSeconds * 1000;
                     metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
                 });
 
@@ -159,6 +160,16 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             _meterProvider?.Dispose();
             _httpClient?.Dispose();
             base.Dispose();
+        }
+
+        /// <summary>
+        /// Compares connection info by value instead of reference to avoid unnecessary provider recreation.
+        /// </summary>
+        private static bool ConnectionInfoEquals(IConnectionInfo a, IConnectionInfo b)
+        {
+            if (ReferenceEquals(a, b)) return true;
+            if (a == null || b == null) return false;
+            return a.Host == b.Host && a.Port == b.Port && a.HttpProtocol == b.HttpProtocol;
         }
     }
 }

@@ -128,5 +128,57 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             // Assert
             Assert.That(result1, Is.Not.SameAs(result2));
         }
+
+        [Test]
+        public void GetOrCreateMeterProvider_WithDifferentConnectionInfoInstance_SameValues_ReusesMeterProvider()
+        {
+            // Arrange
+            var connectionInfo1 = Mock.Create<IConnectionInfo>();
+            Mock.Arrange(() => connectionInfo1.HttpProtocol).Returns("https");
+            Mock.Arrange(() => connectionInfo1.Host).Returns("collector.newrelic.com");
+            Mock.Arrange(() => connectionInfo1.Port).Returns(443);
+            Mock.Arrange(() => connectionInfo1.Proxy).Returns<System.Net.IWebProxy>(null);
+            
+            var connectionInfo2 = Mock.Create<IConnectionInfo>(); // Different instance
+            Mock.Arrange(() => connectionInfo2.HttpProtocol).Returns("https");
+            Mock.Arrange(() => connectionInfo2.Host).Returns("collector.newrelic.com");
+            Mock.Arrange(() => connectionInfo2.Port).Returns(443);
+            Mock.Arrange(() => connectionInfo2.Proxy).Returns<System.Net.IWebProxy>(null);
+            
+            // Act
+            var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid");
+            var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid");
+            
+            // Assert
+            Assert.That(result1, Is.SameAs(result2), "Should reuse provider for same connection values");
+            Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), 
+                Occurs.Once()); // Only created once
+        }
+
+        [Test]
+        public void GetOrCreateMeterProvider_WithDifferentConnectionValues_RecreatesMeterProvider()
+        {
+            // Arrange
+            var connectionInfo1 = Mock.Create<IConnectionInfo>();
+            Mock.Arrange(() => connectionInfo1.HttpProtocol).Returns("https");
+            Mock.Arrange(() => connectionInfo1.Host).Returns("collector1.newrelic.com");
+            Mock.Arrange(() => connectionInfo1.Port).Returns(443);
+            Mock.Arrange(() => connectionInfo1.Proxy).Returns<System.Net.IWebProxy>(null);
+            
+            var connectionInfo2 = Mock.Create<IConnectionInfo>();
+            Mock.Arrange(() => connectionInfo2.HttpProtocol).Returns("https");
+            Mock.Arrange(() => connectionInfo2.Host).Returns("collector2.newrelic.com"); // Different host
+            Mock.Arrange(() => connectionInfo2.Port).Returns(443);
+            Mock.Arrange(() => connectionInfo2.Proxy).Returns<System.Net.IWebProxy>(null);
+            
+            // Act
+            var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid");
+            var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid");
+            
+            // Assert
+            Assert.That(result1, Is.Not.SameAs(result2), "Should recreate for different hosts");
+            Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), 
+                Occurs.AtLeast(2)); // Created twice
+        }
     }
 }

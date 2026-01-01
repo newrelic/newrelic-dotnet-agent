@@ -73,6 +73,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             else if (string.IsNullOrEmpty(_currentEntityGuid) && !string.IsNullOrEmpty(newEntityGuid))
             {
                 _currentEntityGuid = newEntityGuid;
+                
+                // Create provider if we have connection info and metrics enabled
+                if (_connectionInfo != null && _configuration.OpenTelemetryMetricsEnabled)
+                {
+                    _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid);
+                }
             }
         }
 

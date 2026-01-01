@@ -9,7 +9,6 @@ using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.IO;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Logging;
@@ -28,8 +27,13 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private readonly Meter _newRelicBridgeMeter = new Meter("NewRelicOTelBridgeMeter");
         private readonly ConcurrentDictionary<string, Meter> _bridgedMeters = new ConcurrentDictionary<string, Meter>();
+        // NOTE: These caches are unbounded and grow with the number of unique instrument types encountered.
+        // This is acceptable because the set of instrument types is typically small and bounded by application code.
         private readonly ConcurrentDictionary<Type, object> _createInstrumentDelegates = new ConcurrentDictionary<Type, object>();
         private readonly ConcurrentDictionary<Type, ObservableInstrumentCacheData> _createObservableInstrumentCache = new ConcurrentDictionary<Type, ObservableInstrumentCacheData>();
+        private readonly ConcurrentDictionary<Type, PropertyAccessorCache> _propertyAccessorCache = new ConcurrentDictionary<Type, PropertyAccessorCache>();
+        private readonly ConcurrentDictionary<Type, Func<object, string>> _meterNameAccessorCache = new ConcurrentDictionary<Type, Func<object, string>>();
+        private readonly ConcurrentDictionary<Type, MeasurementAccessors> _measurementAccessorsCache = new ConcurrentDictionary<Type, MeasurementAccessors>();
 
         public MeterBridgingService(
             IMeterListenerWrapper meterListener,
@@ -46,8 +50,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             RegisterMeasurementCallbacks();
         }
 
-        public void StartListening(object meter)
+        public void StartListening(object meter = null)
         {
+            // Note: meter parameter is unused but kept for interface compatibility
             _meterListener.Start();
         }
 
@@ -71,12 +76,25 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             try
             {
+                if (instrument == null) return;
+
                 var instrumentType = instrument.GetType();
-                var meterProp = instrumentType.GetProperty("Meter");
-                var meterObj = meterProp?.GetValue(instrument);
+                var accessors = GetOrCreatePropertyAccessors(instrumentType);
+                
+                var meterObj = accessors.MeterAccessor?.Invoke(instrument);
                 if (meterObj == null) return;
 
-                var meterName = meterObj.GetType().GetProperty("Name")?.GetValue(meterObj) as string;
+                var meterType = meterObj.GetType();
+                var meterNameAccessor = _meterNameAccessorCache.GetOrAdd(meterType, type =>
+                {
+                    var prop = type.GetProperty("Name");
+                    if (prop == null) return null;
+                    return obj => prop.GetValue(obj) as string;
+                });
+                
+                if (meterNameAccessor == null) return;
+                var meterName = meterNameAccessor(meterObj);
+                if (meterName == null) return;
                 if (string.IsNullOrEmpty(meterName)) return;
 
                 if (_filterService.ShouldEnableInstrumentsInMeter(_configurationService.Configuration, meterName))
@@ -87,7 +105,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error in OnInstrumentPublished callback");
+                Log.Error(ex, $"Error in OnInstrumentPublished callback for instrument type: {instrument?.GetType().Name}");
             }
         }
 
@@ -144,24 +162,25 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return result;
             }
 
-            var createDelegate = (Func<Meter, string, string, string, IEnumerable<KeyValuePair<string, object>>, object>)_createInstrumentDelegates.GetOrAdd(instrumentType, CreateBridgedInstrumentDelegate);
+            var createDelegate = (Func<Meter, string, string, string, IEnumerable<KeyValuePair<string, object>>, object, object>)_createInstrumentDelegates.GetOrAdd(instrumentType, CreateBridgedInstrumentDelegate);
             
             var name = nameProp?.GetValue(instrument) as string;
             var unit = unitProp?.GetValue(instrument) as string;
             var description = descProp?.GetValue(instrument) as string;
             var tags = GetInstrumentTags(instrument);
+            var advice = GetInstrumentAdvice(instrument);
 
-            return createDelegate?.Invoke(meter, name, unit, description, tags);
+            return createDelegate?.Invoke(meter, name, unit, description, tags, advice);
         }
 
         private IEnumerable<KeyValuePair<string, object>> GetInstrumentTags(object instrument)
         {
-            var tagsProp = instrument.GetType().GetProperty("Tags");
-            if (tagsProp == null) return null;
+            var accessors = GetOrCreatePropertyAccessors(instrument.GetType());
+            if (accessors.TagsAccessor == null) return null;
             
             try
             {
-                var tagsValue = tagsProp.GetValue(instrument) as IEnumerable;
+                var tagsValue = accessors.TagsAccessor(instrument) as IEnumerable;
                 if (tagsValue == null) return null;
 
                 var list = new List<KeyValuePair<string, object>>();
@@ -175,31 +194,69 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 }
                 return list.Count > 0 ? list : null;
             }
-            catch { return null; }
+            catch (Exception ex)
+            {
+                Log.Debug($"Failed to extract tags from instrument: {ex.Message}");
+                return null;
+            }
         }
+
+        /// <summary>
+        /// Extracts the Advice property from an instrument using reflection.
+        /// The Advice property is only available in .NET 9.0/DiagnosticSource 9.0+.
+        /// Returns null if the property doesn't exist or cannot be accessed.
+        /// </summary>
+        private object GetInstrumentAdvice(object instrument)
+        {
+            try
+            {
+                // Look for the Advice property on the instrument instance
+                var adviceProp = instrument.GetType().GetProperty("Advice");
+                return adviceProp?.GetValue(instrument);
+            }
+            catch (Exception ex)
+            {
+                // Expected to fail on .NET versions < 9.0 where Advice property doesn't exist
+                Log.Finest($"Advice property not available on instrument (expected on .NET < 9.0): {ex.Message}");
+                return null;
+            }
+        }
+
 
         private void OnMeasurementRecorded<T>(object instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state) where T : struct
         {
             if (state is Instrument bridgedInstrument)
             {
                 // Filter out tags with null keys to prevent NullReferenceException
-                var validTags = tags.ToArray().Where(t => t.Key != null).ToArray();
+                var validTags = FilterValidTags(tags);
                 var validTagsSpan = new ReadOnlySpan<KeyValuePair<string, object>>(validTags);
 
+                var handled = false;
                 if (bridgedInstrument is Counter<T> counter)
                 {
                     counter.Add(measurement, validTagsSpan);
+                    handled = true;
                 }
                 else if (bridgedInstrument is Histogram<T> histogram)
                 {
                     histogram.Record(measurement, validTagsSpan);
+                    handled = true;
                 }
                 else if (bridgedInstrument is UpDownCounter<T> upDownCounter)
                 {
                     upDownCounter.Add(measurement, validTagsSpan);
+                    handled = true;
                 }
                 
-                _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeasurementRecorded);
+                if (handled)
+                {
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeasurementRecorded);
+                }
+                else
+                {
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeasurementBridgeFailure);
+                    Log.Debug($"Unsupported bridged instrument type: {bridgedInstrument.GetType().Name}");
+                }
             }
         }
 
@@ -212,13 +269,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var tags = GetInstrumentTags(originalMeter);
             var scope = GetMeterScope(originalMeter);
 
-            // Reflection logic for Meter constructor:
-            // 1. Try 4-parameter constructor (name, version, tags, scope) if scope is available
-            // 2. Try 3-parameter constructor (name, version, tags) if tags are available
-            // 3. Fallback to 2-parameter constructor (name, version) for backward compatibility
-            // Always match by parameter types, not just count
+            // Reflection logic for Meter constructor compatibility across .NET versions:
+            // - .NET 9.0+/DiagnosticSource 9.0+: 4-parameter constructor with scope support
+            // - .NET 8.0+/DiagnosticSource 8.0+: 3-parameter constructor with tags support
+            // - Earlier versions: 2-parameter constructor (name, version) only
+            // We attempt each overload in order from newest to oldest to gracefully degrade on older runtimes.
+            // Always match by parameter types, not just count, to avoid ambiguity.
             
-            // Try 4-parameter constructor (name, version, tags, scope) - newest
+            // Try 4-parameter constructor (name, version, tags, scope) - .NET 9.0+
             if (scope != null || tags != null)
             {
                 var constructor4 = typeof(Meter).GetConstructor(new[] 
@@ -257,7 +315,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         /// <summary>
         /// Extracts the Scope property from a meter using reflection.
-        /// The Scope property is only available in newer versions of System.Diagnostics.DiagnosticSource.
+        /// The Scope property is only available in .NET 9.0+/DiagnosticSource 9.0+.
         /// Returns null if the property doesn't exist or cannot be accessed.
         /// </summary>
         private object GetMeterScope(object meter)
@@ -269,8 +327,10 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 var scopeProp = meter.GetType().GetProperty("Scope");
                 return scopeProp?.GetValue(meter);
             }
-            catch
+            catch (Exception ex)
             {
+                // Expected to fail on .NET versions < 9.0 where Scope property doesn't exist
+                Log.Finest($"Scope property not available on meter (expected on .NET < 9.0): {ex.Message}");
                 return null;
             }
         }
@@ -312,6 +372,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             cacheData.CreateObservableInstrumentDelegate = CreateBridgedObservableInstrumentDelegate(instrumentType);
             cacheData.CreateCallbackAndObservableInstrumentDelegate = CreateCallbackAndBridgedObservableInstrumentAction(instrumentType);
             cacheData.ObserveMethodDelegate = CreateObserveMethodInvoker(instrumentType);
+            cacheData.ServiceInstance = this; // Pass service instance for BridgeMeasurements access
             return cacheData;
         }
 
@@ -393,32 +454,52 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var desc = type.GetProperty("Description")?.GetValue(instrument) as string;
 
             var observeMethod = cacheData.ObserveMethodDelegate;
+            var serviceInstance = cacheData.ServiceInstance;
             return createObservableInstrument(meter, name, ForwardObservedMeasurements, unit, desc);
 
             IEnumerable<Measurement<T>> ForwardObservedMeasurements()
             {
-                return BridgeMeasurements<T>(observeMethod(instrument));
+                return serviceInstance.BridgeMeasurements<T>(observeMethod(instrument));
             }
         }
 
-        private static IEnumerable<Measurement<T>> BridgeMeasurements<T>(IEnumerable originalMeasurements) where T : struct
+        private IEnumerable<Measurement<T>> BridgeMeasurements<T>(IEnumerable originalMeasurements) where T : struct
         {
             var list = new List<Measurement<T>>();
             try
             {
+                MeasurementAccessors accessors = null;
+                
                 foreach (var m in originalMeasurements)
                 {
-                    var t = m.GetType();
+                    // Cache accessors on first iteration to avoid repeated reflection
+                    if (accessors == null)
+                    {
+                        var measurementType = m.GetType();
+                        accessors = _measurementAccessorsCache.GetOrAdd(measurementType, type =>
+                        {
+                            // Compatibility workaround: Access private fields to support Measurement<T> across different .NET versions
+                            // The Measurement<T> struct layout may vary between .NET Framework, .NET Core, and newer .NET versions.
+                            // We try private fields first (more reliable for value types), then fall back to public properties.
+                            var valueField = type.GetField("_value", BindingFlags.NonPublic | BindingFlags.Instance);
+                            var valueProp = type.GetProperty("Value");
+                            var tagsField = type.GetField("_tags", BindingFlags.NonPublic | BindingFlags.Instance);
+                            var tagsProp = type.GetProperty("Tags");
+                            
+                            return new MeasurementAccessors
+                            {
+                                ValueAccessor = valueField != null 
+                                    ? (Func<object, object>)(obj => valueField.GetValue(obj))
+                                    : (valueProp != null ? (obj => valueProp.GetValue(obj)) : null),
+                                TagsAccessor = tagsField != null
+                                    ? (Func<object, IEnumerable<KeyValuePair<string, object>>>)(obj => tagsField.GetValue(obj) as IEnumerable<KeyValuePair<string, object>>)
+                                    : (tagsProp != null ? (obj => tagsProp.GetValue(obj) as IEnumerable<KeyValuePair<string, object>>) : null)
+                            };
+                        });
+                    }
                     
-                    // Try to get value using field first (more reliable for structs)
-                    var valueField = t.GetField("_value", BindingFlags.NonPublic | BindingFlags.Instance);
-                    var val = valueField != null ? (T)valueField.GetValue(m) : (T)t.GetProperty("Value").GetValue(m);
-                    
-                    // Try to get tags using field first
-                    var tagsField = t.GetField("_tags", BindingFlags.NonPublic | BindingFlags.Instance);
-                    var tags = tagsField != null 
-                        ? tagsField.GetValue(m) as IEnumerable<KeyValuePair<string, object>>
-                        : t.GetProperty("Tags")?.GetValue(m) as IEnumerable<KeyValuePair<string, object>>;
+                    var val = accessors.ValueAccessor != null ? (T)accessors.ValueAccessor(m) : default(T);
+                    var tags = accessors.TagsAccessor?.Invoke(m);
                     
                     // Filter out tags with null keys
                     var validTags = tags?.Where(tag => tag.Key != null);
@@ -428,7 +509,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error bridging observable instrument measurements");
+                Log.Error(ex, "Error bridging observable instrument measurements. Returning partial results.");
             }
             return list;
         }
@@ -443,12 +524,13 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             var unitParam = Expression.Parameter(typeof(string), "unit");
             var descParam = Expression.Parameter(typeof(string), "desc");
             var tagsParam = Expression.Parameter(typeof(IEnumerable<KeyValuePair<string, object>>), "tags");
+            var adviceParam = Expression.Parameter(typeof(object), "advice");
             
-            var call = Expression.Call(Expression.Constant(this), method, Expression.Constant(instrumentType), meterParam, nameParam, unitParam, descParam, tagsParam);
-            return Expression.Lambda(call, meterParam, nameParam, unitParam, descParam, tagsParam).Compile();
+            var call = Expression.Call(Expression.Constant(this), method, Expression.Constant(instrumentType), meterParam, nameParam, unitParam, descParam, tagsParam, adviceParam);
+            return Expression.Lambda(call, meterParam, nameParam, unitParam, descParam, tagsParam, adviceParam).Compile();
         }
 
-        private object CreateBridgedInstrumentInternal<T>(Type instrumentType, Meter meter, string name, string unit, string desc, IEnumerable<KeyValuePair<string, object>> tags) where T : struct
+        private object CreateBridgedInstrumentInternal<T>(Type instrumentType, Meter meter, string name, string unit, string desc, IEnumerable<KeyValuePair<string, object>> tags, object advice) where T : struct
         {
             var createInstrumentMethodName = instrumentType.Name switch
             {
@@ -463,20 +545,38 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return null;
             }
 
-            // Reflection logic for Meter.Create* methods:
-            // 1. Try to match the latest public OTel signature (4 parameters: name, unit, description, tags)
-            // 2. Fallback to 3-parameter version (name, unit, description) for backward compatibility
-            // 3. Always match by parameter types, not just count
+            // Reflection logic for Meter.Create* methods across .NET versions:
+            // - .NET 9.0+/DiagnosticSource 9.0+: 5-parameter overload with InstrumentAdvice support
+            // - .NET 8.0+/DiagnosticSource 8.0+: 4-parameter overload with tags support
+            // - Earlier versions: 3-parameter overload (name, unit, description) only
+            // We attempt each overload in order from newest to oldest to gracefully degrade on older runtimes.
+            // Note: We match InstrumentAdvice by name (not type) because it may not exist in earlier versions.
+            // Always match by parameter types, not just count, to avoid ambiguity.
             // See: https://github.com/dotnet/runtime/blob/main/src/libraries/System.Diagnostics.DiagnosticSource/src/System/Diagnostics/Metrics/Meter.cs
             
-            // Try 4-parameter overload (name, unit, description, tags)
-            var method4Param = typeof(Meter).GetMethods()
-                .FirstOrDefault(m =>
-                    m.Name == createInstrumentMethodName &&
-                    m.IsGenericMethod &&
-                    m.GetParameters().Select(p => p.ParameterType)
-                        .SequenceEqual(new[] { typeof(string), typeof(string), typeof(string), typeof(IEnumerable<KeyValuePair<string, object>>) })
-                );
+            // Try 5-parameter overload (name, unit, description, tags, advice) - .NET 9.0+
+            var method5Param = FindCreateInstrumentMethod(
+                createInstrumentMethodName,
+                typeof(string),
+                typeof(string),
+                typeof(string),
+                typeof(IEnumerable<KeyValuePair<string, object>>),
+                "InstrumentAdvice"); // Match by name for compatibility
+            
+            if (method5Param != null)
+            {
+                var genericMethod = method5Param.MakeGenericMethod(typeof(T));
+                // Pass the advice parameter we extracted
+                return genericMethod.Invoke(meter, new object[] { name, unit, desc, tags, advice });
+            }
+            
+            // Try 4-parameter overload (name, unit, description, tags) - .NET 8.0+
+            var method4Param = FindCreateInstrumentMethod(
+                createInstrumentMethodName,
+                typeof(string),
+                typeof(string),
+                typeof(string),
+                typeof(IEnumerable<KeyValuePair<string, object>>));
             
             if (method4Param != null)
             {
@@ -484,14 +584,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 return genericMethod.Invoke(meter, new object[] { name, unit, desc, tags });
             }
 
-            // Fallback: Try 3-parameter overload (name, unit, description)
-            var method3Param = typeof(Meter).GetMethods()
-                .FirstOrDefault(m =>
-                    m.Name == createInstrumentMethodName &&
-                    m.IsGenericMethod &&
-                    m.GetParameters().Select(p => p.ParameterType)
-                        .SequenceEqual(new[] { typeof(string), typeof(string), typeof(string) })
-                );
+            // Fallback: Try 3-parameter overload (name, unit, description) - Earlier versions
+            var method3Param = FindCreateInstrumentMethod(
+                createInstrumentMethodName,
+                typeof(string),
+                typeof(string),
+                typeof(string));
 
             if (method3Param != null)
             {
@@ -510,11 +608,150 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             base.Dispose();
         }
 
+        #region Helper Methods
+
+        /// <summary>
+        /// Filters tags to remove entries with null keys, preventing NullReferenceExceptions.
+        /// Optimized to avoid double array allocation.
+        /// </summary>
+        private static KeyValuePair<string, object>[] FilterValidTags(ReadOnlySpan<KeyValuePair<string, object>> tags)
+        {
+            // Single-pass: count valid tags, allocate once, populate
+            var count = 0;
+            for (var i = 0; i < tags.Length; i++)
+            {
+                if (tags[i].Key != null) count++;
+            }
+            
+            if (count == 0) return Array.Empty<KeyValuePair<string, object>>();
+            if (count == tags.Length) return tags.ToArray(); // All valid, direct copy
+            
+            var result = new KeyValuePair<string, object>[count];
+            var index = 0;
+            for (var i = 0; i < tags.Length; i++)
+            {
+                if (tags[i].Key != null)
+                {
+                    result[index++] = tags[i];
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Finds a Create* method on the Meter type that matches the specified name and parameter types.
+        /// Supports matching by parameter type name for types that may not exist in earlier .NET versions.
+        /// </summary>
+        private MethodInfo FindCreateInstrumentMethod(string methodName, params object[] parameterTypesOrNames)
+        {
+            return typeof(Meter).GetMethods()
+                .FirstOrDefault(m =>
+                {
+                    if (m.Name != methodName || !m.IsGenericMethod)
+                        return false;
+
+                    var parameters = m.GetParameters();
+                    if (parameters.Length != parameterTypesOrNames.Length)
+                        return false;
+
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        if (parameterTypesOrNames[i] is Type expectedType)
+                        {
+                            if (parameters[i].ParameterType != expectedType)
+                                return false;
+                        }
+                        else if (parameterTypesOrNames[i] is string expectedName)
+                        {
+                            if (parameters[i].ParameterType.Name != expectedName)
+                                return false;
+                        }
+                    }
+
+                    return true;
+                });
+        }
+
+        /// <summary>
+        /// Gets or creates cached property accessors for an instrument type to improve reflection performance.
+        /// Uses compiled expression trees for better performance than closure-based accessors.
+        /// </summary>
+        private PropertyAccessorCache GetOrCreatePropertyAccessors(Type instrumentType)
+        {
+            return _propertyAccessorCache.GetOrAdd(instrumentType, type =>
+            {
+                var cache = new PropertyAccessorCache();
+                try
+                {
+                    cache.MeterAccessor = CreatePropertyAccessor(type, "Meter");
+                    cache.NameAccessor = CreateTypedPropertyAccessor<string>(type, "Name");
+                    cache.UnitAccessor = CreateTypedPropertyAccessor<string>(type, "Unit");
+                    cache.DescriptionAccessor = CreateTypedPropertyAccessor<string>(type, "Description");
+                    cache.TagsAccessor = CreatePropertyAccessor(type, "Tags");
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug($"Failed to create property accessors for type {type.Name}: {ex.Message}");
+                }
+                return cache;
+            });
+        }
+
+        /// <summary>
+        /// Creates a compiled property accessor using expression trees for optimal performance.
+        /// </summary>
+        private static Func<object, object> CreatePropertyAccessor(Type type, string propertyName)
+        {
+            var prop = type.GetProperty(propertyName);
+            if (prop == null) return null;
+
+            var param = Expression.Parameter(typeof(object), "obj");
+            var typedParam = Expression.Convert(param, type);
+            var propertyAccess = Expression.Property(typedParam, prop);
+            var convertToObject = Expression.Convert(propertyAccess, typeof(object));
+            
+            return Expression.Lambda<Func<object, object>>(convertToObject, param).Compile();
+        }
+
+        /// <summary>
+        /// Creates a compiled typed property accessor using expression trees.
+        /// </summary>
+        private static Func<object, T> CreateTypedPropertyAccessor<T>(Type type, string propertyName)
+        {
+            var prop = type.GetProperty(propertyName);
+            if (prop == null) return null;
+
+            var param = Expression.Parameter(typeof(object), "obj");
+            var typedParam = Expression.Convert(param, type);
+            var propertyAccess = Expression.Property(typedParam, prop);
+            var convertToType = Expression.Convert(propertyAccess, typeof(T));
+            
+            return Expression.Lambda<Func<object, T>>(convertToType, param).Compile();
+        }
+
+        #endregion
+
+        internal class PropertyAccessorCache
+        {
+            public Func<object, object> MeterAccessor { get; set; }
+            public Func<object, string> NameAccessor { get; set; }
+            public Func<object, string> UnitAccessor { get; set; }
+            public Func<object, string> DescriptionAccessor { get; set; }
+            public Func<object, object> TagsAccessor { get; set; }
+        }
+
+        internal class MeasurementAccessors
+        {
+            public Func<object, object> ValueAccessor { get; set; }
+            public Func<object, IEnumerable<KeyValuePair<string, object>>> TagsAccessor { get; set; }
+        }
+
         internal class ObservableInstrumentCacheData
         {
             public Delegate CreateObservableInstrumentDelegate { get; set; }
             public Func<object, Meter, ObservableInstrumentCacheData, Instrument> CreateCallbackAndObservableInstrumentDelegate { get; set; }
             public Func<object, IEnumerable> ObserveMethodDelegate { get; set; }
+            public MeterBridgingService ServiceInstance { get; set; }
         }
     }
 }
