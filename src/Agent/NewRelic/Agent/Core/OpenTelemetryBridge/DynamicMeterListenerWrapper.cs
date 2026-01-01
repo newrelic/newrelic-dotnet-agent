@@ -42,18 +42,34 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             try
             {
+                Assembly assembly = null;
+                
+                // First, try to find an already-loaded assembly
                 var assemblies = _assemblyProvider.GetAssemblies()
                     .Where(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource")
                     .ToList();
 
-                if (assemblies.Count == 0)
+                if (assemblies.Count > 0)
                 {
-                    Log.Debug("System.Diagnostics.DiagnosticSource assembly not found. MeterListener functionality will be unavailable.");
-                    _isAvailable = false;
-                    return;
+                    assembly = assemblies.OrderByDescending(a => a.GetName().Version).First();
+                }
+                else
+                {
+                    // If not loaded yet, try to load it explicitly
+                    // This is common when the agent initializes before application code references System.Diagnostics.Metrics
+                    try
+                    {
+                        assembly = Assembly.Load("System.Diagnostics.DiagnosticSource");
+                        Log.Debug("Loaded System.Diagnostics.DiagnosticSource assembly explicitly.");
+                    }
+                    catch (Exception loadEx)
+                    {
+                        Log.Debug($"System.Diagnostics.DiagnosticSource assembly not found and could not be loaded: {loadEx.Message}. MeterListener functionality will be unavailable.");
+                        _isAvailable = false;
+                        return;
+                    }
                 }
 
-                var assembly = assemblies.OrderByDescending(a => a.GetName().Version).First();
                 Log.Debug($"Initializing MeterListener from System.Diagnostics.DiagnosticSource version {assembly.GetName().Version}");
 
                 _meterListenerType = assembly.GetType("System.Diagnostics.Metrics.MeterListener", throwOnError: true);
