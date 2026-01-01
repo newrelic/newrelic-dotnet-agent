@@ -91,15 +91,31 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public void Start()
         {
-            if (!EnsureInitialized()) return;
-            ConfigureCallbacks();
-            _startMethod.Invoke(_meterListener, null);
+            if (!EnsureInitialized() || _startMethod == null) return;
+            
+            try
+            {
+                ConfigureCallbacks();
+                _startMethod.Invoke(_meterListener, null);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug($"Failed to start MeterListener: {ex.Message}");
+            }
         }
 
         public void RecordObservableInstruments()
         {
-            if (!EnsureInitialized()) return;
-            _recordObservableInstrumentsMethod.Invoke(_meterListener, null);
+            if (!EnsureInitialized() || _recordObservableInstrumentsMethod == null) return;
+            
+            try
+            {
+                _recordObservableInstrumentsMethod.Invoke(_meterListener, null);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug($"Failed to record observable instruments: {ex.Message}");
+            }
         }
 
         private bool EnsureInitialized()
@@ -113,8 +129,16 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public void EnableMeasurementEvents(object instrument, object state)
         {
-            if (!_isAvailable) return;
-            _enableMeasurementEventsMethod.Invoke(_meterListener, new[] { instrument, state });
+            if (!_isAvailable || _enableMeasurementEventsMethod == null) return;
+            
+            try
+            {
+                _enableMeasurementEventsMethod.Invoke(_meterListener, new[] { instrument, state });
+            }
+            catch (Exception ex)
+            {
+                Log.Debug($"Failed to enable measurement events: {ex.Message}");
+            }
         }
 
         public void RegisterMeasurementCallback<T>(MeasurementCallbackDelegate<T> callback) where T : struct
@@ -124,7 +148,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public void SetMeasurementCallback<T>(MeasurementCallbackDelegate<T> callback) where T : struct
         {
-            if (!_isAvailable) return;
+            if (!_isAvailable || _setMeasurementEventCallbackMethod == null) return;
             var setCallbackGeneric = _setMeasurementEventCallbackMethod.MakeGenericMethod(typeof(T));
             var callbackDelegateType = setCallbackGeneric.GetParameters()[0].ParameterType;
             var invokeMethod = callbackDelegateType.GetMethod("Invoke");
