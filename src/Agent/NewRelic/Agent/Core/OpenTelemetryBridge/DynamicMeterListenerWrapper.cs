@@ -20,7 +20,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private readonly IAssemblyProvider _assemblyProvider;
         private object _meterListener;
         private Type _meterListenerType;
-        private Type _instrumentType;
         private bool _isAvailable;
 
         private MethodInfo _startMethod;
@@ -41,51 +40,59 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         private void TryInitialize()
         {
-            var assemblies = _assemblyProvider.GetAssemblies()
-                .Where(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource")
-                .ToList();
-
-            if (assemblies.Count == 0)
+            try
             {
-                _isAvailable = false;
-                return;
+                var assemblies = _assemblyProvider.GetAssemblies()
+                    .Where(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource")
+                    .ToList();
+
+                if (assemblies.Count == 0)
+                {
+                    Log.Debug("System.Diagnostics.DiagnosticSource assembly not found. MeterListener functionality will be unavailable.");
+                    _isAvailable = false;
+                    return;
+                }
+
+                var assembly = assemblies.OrderByDescending(a => a.GetName().Version).First();
+                Log.Debug($"Initializing MeterListener from System.Diagnostics.DiagnosticSource version {assembly.GetName().Version}");
+
+                _meterListenerType = assembly.GetType("System.Diagnostics.Metrics.MeterListener", throwOnError: true);
+
+                _startMethod = _meterListenerType.GetMethod("Start") ?? throw new MissingMethodException(_meterListenerType.Name, "Start");
+                _enableMeasurementEventsMethod = _meterListenerType.GetMethod("EnableMeasurementEvents") ?? throw new MissingMethodException(_meterListenerType.Name, "EnableMeasurementEvents");
+                _recordObservableInstrumentsMethod = _meterListenerType.GetMethod("RecordObservableInstruments") ?? throw new MissingMethodException(_meterListenerType.Name, "RecordObservableInstruments");
+                _setMeasurementEventCallbackMethod = _meterListenerType.GetMethod("SetMeasurementEventCallback") ?? throw new MissingMethodException(_meterListenerType.Name, "SetMeasurementEventCallback");
+
+                _meterListener = Activator.CreateInstance(_meterListenerType);
+                _isAvailable = true;
             }
-
-            var assembly = assemblies.OrderByDescending(a => a.GetName().Version).First();
-
-            _meterListenerType = assembly.GetType("System.Diagnostics.Metrics.MeterListener", throwOnError: true);
-            _instrumentType = assembly.GetType("System.Diagnostics.Metrics.Instrument", throwOnError: true);
-
-            _startMethod = _meterListenerType.GetMethod("Start") ?? throw new MissingMethodException(_meterListenerType.Name, "Start");
-            _enableMeasurementEventsMethod = _meterListenerType.GetMethod("EnableMeasurementEvents") ?? throw new MissingMethodException(_meterListenerType.Name, "EnableMeasurementEvents");
-            _recordObservableInstrumentsMethod = _meterListenerType.GetMethod("RecordObservableInstruments") ?? throw new MissingMethodException(_meterListenerType.Name, "RecordObservableInstruments");
-            _setMeasurementEventCallbackMethod = _meterListenerType.GetMethod("SetMeasurementEventCallback") ?? throw new MissingMethodException(_meterListenerType.Name, "SetMeasurementEventCallback");
-
-            _meterListener = Activator.CreateInstance(_meterListenerType);
-            _isAvailable = true;
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to initialize MeterListener via reflection. OpenTelemetry metrics bridging will be unavailable.");
+                _isAvailable = false;
+            }
         }
 
         public void Start()
         {
-            if (!_isAvailable)
-            {
-                TryInitialize();
-            }
-            
-            if (!_isAvailable) return;
+            if (!EnsureInitialized()) return;
             ConfigureCallbacks();
             _startMethod.Invoke(_meterListener, null);
         }
 
         public void RecordObservableInstruments()
         {
+            if (!EnsureInitialized()) return;
+            _recordObservableInstrumentsMethod.Invoke(_meterListener, null);
+        }
+
+        private bool EnsureInitialized()
+        {
             if (!_isAvailable)
             {
                 TryInitialize();
             }
-            
-            if (!_isAvailable) return;
-            _recordObservableInstrumentsMethod.Invoke(_meterListener, null);
+            return _isAvailable;
         }
 
         public void EnableMeasurementEvents(object instrument, object state)
