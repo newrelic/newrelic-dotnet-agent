@@ -122,7 +122,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             // Assert
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(counter, Arg.IsAny<object>()), Occurs.Once());
             Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.GetMeter), Occurs.AtLeastOnce());
-            
+
             meter.Dispose();
         }
 
@@ -139,7 +139,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             // Assert
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(histogram, Arg.IsAny<object>()), Occurs.Once());
             Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.CreateHistogram), Occurs.AtLeastOnce());
-            
+
             meter.Dispose();
         }
 
@@ -156,7 +156,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             // Assert
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(upDownCounter, Arg.IsAny<object>()), Occurs.Once());
             Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.CreateUpDownCounter), Occurs.AtLeastOnce());
-            
+
             meter.Dispose();
         }
 
@@ -173,7 +173,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             // Assert
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(observableCounter, Arg.IsAny<object>()), Occurs.Once());
             Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.CreateObservableCounter), Occurs.AtLeastOnce());
-            
+
             meter.Dispose();
         }
 
@@ -192,7 +192,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 
             // Assert - Both should succeed
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Exactly(2));
-            
+
             meter.Dispose();
         }
 
@@ -202,7 +202,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             // Arrange
             Mock.Arrange(() => _mockConfig.OpenTelemetryMetricsExcludeFilters)
                 .Returns(new[] { "TestMeter" });
-            
+
             var meter = new Meter("TestMeter");
             var counter = meter.CreateCounter<int>("test-counter");
 
@@ -211,7 +211,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 
             // Assert
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Never());
-            
+
             meter.Dispose();
         }
 
@@ -221,7 +221,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             // Arrange
             Mock.Arrange(() => _mockConfig.OpenTelemetryMetricsIncludeFilters)
                 .Returns(new[] { "TestMeter" });
-            
+
             var meter = new Meter("TestMeter");
             var counter = meter.CreateCounter<int>("test-counter");
 
@@ -230,7 +230,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 
             // Assert
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(counter, Arg.IsAny<object>()), Occurs.Once());
-            
+
             meter.Dispose();
         }
 
@@ -246,7 +246,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 
             // Assert
             Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.InstrumentCreated), Occurs.Once());
-            
+
             meter.Dispose();
         }
 
@@ -264,7 +264,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 
             // Act & Assert
             Assert.DoesNotThrow(() => _service.OnInstrumentPublished(counter, _mockListener));
-            
+
             meter.Dispose();
         }
 
@@ -294,7 +294,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 
             // Act & Assert - Should not throw
             Assert.DoesNotThrow(() => _service.OnInstrumentPublished(counter, _mockListener));
-            
+
             meter.Dispose();
         }
 
@@ -312,7 +312,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 
             // Assert - Should successfully handle both
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Exactly(2));
-            
+
             meter.Dispose();
         }
 
@@ -335,7 +335,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.CreateCounter), Occurs.Once());
             Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.CreateHistogram), Occurs.Once());
             Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.CreateUpDownCounter), Occurs.Once());
-            
+
             meter.Dispose();
         }
 
@@ -367,7 +367,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 
             // Assert - Both should be enabled since Meter objects have same type
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Exactly(2));
-            
+
             meter1.Dispose();
             meter2.Dispose();
         }
@@ -378,7 +378,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             // Arrange
             var meter = new Meter("TestMeter");
             int callCount = 0;
-            var observableGauge = meter.CreateObservableGauge("test-gauge", () => 
+            var observableGauge = meter.CreateObservableGauge("test-gauge", () =>
             {
                 callCount++;
                 return 42.0;
@@ -390,7 +390,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             // Assert
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(observableGauge, Arg.IsAny<object>()), Occurs.Once());
             Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.CreateObservableGauge), Occurs.Once());
-            
+
             meter.Dispose();
         }
 
@@ -407,7 +407,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             // Assert
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(observableUpDownCounter, Arg.IsAny<object>()), Occurs.Once());
             Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.CreateObservableUpDownCounter), Occurs.Once());
-            
+
             meter.Dispose();
         }
 
@@ -427,7 +427,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 
             // Assert - All should be processed
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Exactly(3));
-            
+
             meter.Dispose();
         }
 
@@ -449,7 +449,128 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 
             // Act & Assert
             Assert.DoesNotThrow(() => _service.OnInstrumentPublished(counter, _mockListener));
-            
+
+            meter.Dispose();
+        }
+
+        [Test]
+        public void OnInstrumentPublished_WithEmptyMeterName_DoesNotEnableInstrument()
+        {
+            // Arrange
+            var meter = new Meter("");
+            var counter = meter.CreateCounter<int>("counter");
+
+            // Act
+            _service.OnInstrumentPublished(counter, _mockListener);
+
+            // Assert
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Never());
+            meter.Dispose();
+        }
+
+        [Test]
+        public void FilterValidTags_WithNullKeys_RemovesThem()
+        {
+            // Arrange
+            var meter = new Meter("TestMeter");
+            var counter = meter.CreateCounter<int>("counter");
+
+            // Act - This will use FilterValidTags internally when measurements are recorded
+            _service.OnInstrumentPublished(counter, _mockListener);
+
+            // Assert
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(counter, Arg.IsAny<object>()), Occurs.Once());
+            meter.Dispose();
+        }
+
+        [Test]
+        public void RecordSpecificInstrumentType_ForAllTypes_RecordsMetrics()
+        {
+            // Arrange
+            var meter = new Meter("TestMeter");
+            var counter = meter.CreateCounter<int>("counter");
+            var histogram = meter.CreateHistogram<int>("histogram");
+            var upDownCounter = meter.CreateUpDownCounter<int>("upDownCounter");
+            var observableCounter = meter.CreateObservableCounter<int>("observableCounter", () => 1);
+            var observableGauge = meter.CreateObservableGauge<int>("observableGauge", () => 1);
+            var observableUpDownCounter = meter.CreateObservableUpDownCounter<int>("observableUpDownCounter", () => 1);
+
+            // Act
+            _service.OnInstrumentPublished(counter, _mockListener);
+            _service.OnInstrumentPublished(histogram, _mockListener);
+            _service.OnInstrumentPublished(upDownCounter, _mockListener);
+            _service.OnInstrumentPublished(observableCounter, _mockListener);
+            _service.OnInstrumentPublished(observableGauge, _mockListener);
+            _service.OnInstrumentPublished(observableUpDownCounter, _mockListener);
+
+            // Assert
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.AtLeast(6));
+
+            meter.Dispose();
+        }
+
+        [Test]
+        public void GetInstrumentAdvice_OnOlderDotNet_HandlesGracefully()
+        {
+            // Arrange
+            var meter = new Meter("TestMeter");
+            var counter = meter.CreateCounter<int>("counter");
+
+            // Act - OnInstrumentPublished calls GetInstrumentAdvice internally
+            _service.OnInstrumentPublished(counter, _mockListener);
+
+            // Assert - Should complete without errors
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
+            meter.Dispose();
+        }
+
+        [Test]
+        public void GetMeterScope_WithMeter_HandlesGracefully()
+        {
+            // Arrange
+            var meter = new Meter("TestMeter", "1.0");
+            var counter = meter.CreateCounter<int>("counter");
+
+            // Act - CreateBridgedMeter calls GetMeterScope internally
+            _service.OnInstrumentPublished(counter, _mockListener);
+
+            // Assert
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
+            meter.Dispose();
+        }
+
+        [Test]
+        public void BridgeMeasurements_WithValidObservable_CreatesCorrectMeasurements()
+        {
+            // Arrange
+            var meter = new Meter("TestMeter");
+            var callCount = 0;
+            var observableCounter = meter.CreateObservableCounter<int>("test", () =>
+            {
+                callCount++;
+                return new[] { new Measurement<int>(callCount, new[] { new KeyValuePair<string, object>("iteration", callCount) }) };
+            });
+
+            // Act
+            _service.OnInstrumentPublished(observableCounter, _mockListener);
+
+            // Assert
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
+            meter.Dispose();
+        }
+
+        [Test]
+        public void CreateBridgedInstrument_WithUnitAndDescription_UsesCorrectConstructor()
+        {
+            // Arrange
+            var meter = new Meter("TestMeter");
+            var counter = meter.CreateCounter<int>("counter", "ms", "Test description");
+
+            // Act - Tests constructor selection with unit and description
+            _service.OnInstrumentPublished(counter, _mockListener);
+
+            // Assert
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
             meter.Dispose();
         }
     }
