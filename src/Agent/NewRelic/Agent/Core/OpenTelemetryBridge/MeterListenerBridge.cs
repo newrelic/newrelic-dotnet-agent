@@ -111,9 +111,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             _meterBridgingService.StopListening();
             _otlpConfigurationService.Dispose();
 
+            // Do not dispose _sdkLogger to avoid EventListener conflicts with EventPipe-based GC metrics.
+            // EventListener has singleton semantics per EventSource - disposing can disrupt subscriptions
+            // and cause race conditions with GCEventsListener in GCSamplerNetCore.
+            // The SDK logger is lightweight and will be cleaned up when the AppDomain unloads.
+            // See: https://github.com/newrelic/newrelic-dotnet-agent/issues/234]
             if (_sdkLogger != null)
             {
-                _sdkLogger.Dispose();
+                // _sdkLogger.Dispose(); // Intentionally not disposing - see comment above
                 _sdkLogger = null;
             }
         }
