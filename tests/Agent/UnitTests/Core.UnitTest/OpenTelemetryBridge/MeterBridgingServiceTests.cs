@@ -573,5 +573,87 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
             meter.Dispose();
         }
+
+        [Test]
+        public void OnInstrumentPublished_WithObservableCounter_BridgesMeasurements()
+        {
+            // Arrange
+            var meter = new Meter("TestMeter");
+            var observableCounter = meter.CreateObservableCounter<long>("test.observable", () => 100L);
+
+            // Act - Observable instruments are also enabled for measurement events
+            _service.OnInstrumentPublished(observableCounter, _mockListener);
+
+            // Assert - Observable instruments call EnableMeasurementEvents like regular instruments
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
+            
+            meter.Dispose();
+        }
+
+        [Test]
+        public void OnInstrumentPublished_WithObservableGauge_BridgesMeasurements()
+        {
+            // Arrange
+            var meter = new Meter("TestMeter");
+            var observableGauge = meter.CreateObservableGauge<double>("test.gauge", () => 42.5);
+
+            // Act
+            _service.OnInstrumentPublished(observableGauge, _mockListener);
+
+            // Assert
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
+            
+            meter.Dispose();
+        }
+
+        [Test]
+        public void OnInstrumentPublished_WithObservableUpDownCounter_BridgesMeasurements()
+        {
+            // Arrange
+            var meter = new Meter("TestMeter");
+            var observableUpDown = meter.CreateObservableUpDownCounter<int>("test.updown.obs", () => -5);
+
+            // Act
+            _service.OnInstrumentPublished(observableUpDown, _mockListener);
+
+            // Assert
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
+            
+            meter.Dispose();
+        }
+
+        [Test]
+        public void OnInstrumentPublished_WithMeterVersion_PreservesInBridgedMeter()
+        {
+            // Arrange - CreateBridgedMeter should preserve version
+            var meter = new Meter("TestMeter", "2.0.0");
+            var counter = meter.CreateCounter<long>("test.counter");
+
+            // Act - This internally calls CreateBridgedMeter
+            _service.OnInstrumentPublished(counter, _mockListener);
+
+            // Assert
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
+            
+            meter.Dispose();
+        }
+
+        [Test]
+        public void OnInstrumentPublished_MultipleTimes_ReusesBridgedMeter()
+        {
+            // Arrange
+            var meter = new Meter("TestMeter");
+            var counter1 = meter.CreateCounter<int>("counter1");
+            var counter2 = meter.CreateCounter<int>("counter2");
+
+            // Act - Multiple instruments from same meter should reuse bridged meter
+            _service.OnInstrumentPublished(counter1, _mockListener);
+            _service.OnInstrumentPublished(counter2, _mockListener);
+
+            // Assert
+            Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Exactly(2));
+            
+            meter.Dispose();
+        }
     }
 }

@@ -180,5 +180,125 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), 
                 Occurs.AtLeast(2)); // Created twice
         }
+
+        [Test]
+        public void GetOrCreateMeterProvider_WithProxy_ConfiguresHttpClient()
+        {
+            // Arrange
+            var mockProxy = Mock.Create<System.Net.IWebProxy>();
+            var mockConnectionInfo = Mock.Create<IConnectionInfo>();
+            Mock.Arrange(() => mockConnectionInfo.HttpProtocol).Returns("https");
+            Mock.Arrange(() => mockConnectionInfo.Host).Returns("collector.newrelic.com");
+            Mock.Arrange(() => mockConnectionInfo.Port).Returns(443);
+            Mock.Arrange(() => mockConnectionInfo.Proxy).Returns(() => mockProxy);
+
+            // Act
+            var result = _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
+
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(_service.HttpClient, Is.Not.Null);
+        }
+
+        [Test]
+        public void HttpClient_IsAccessibleAfterProviderCreation()
+        {
+            // Arrange
+            var mockConnectionInfo = Mock.Create<IConnectionInfo>();
+            Mock.Arrange(() => mockConnectionInfo.HttpProtocol).Returns("https");
+            Mock.Arrange(() => mockConnectionInfo.Host).Returns("collector.newrelic.com");
+            Mock.Arrange(() => mockConnectionInfo.Port).Returns(443);
+            Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
+
+            // Act
+            _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
+            var httpClient = _service.HttpClient;
+
+            // Assert
+            Assert.That(httpClient, Is.Not.Null);
+        }
+
+        [Test]
+        public void GetOrCreateMeterProvider_WithDifferentPort_RecreatesProvider()
+        {
+            // Arrange
+            var connectionInfo1 = Mock.Create<IConnectionInfo>();
+            Mock.Arrange(() => connectionInfo1.HttpProtocol).Returns("https");
+            Mock.Arrange(() => connectionInfo1.Host).Returns("collector.newrelic.com");
+            Mock.Arrange(() => connectionInfo1.Port).Returns(443);
+            Mock.Arrange(() => connectionInfo1.Proxy).Returns<System.Net.IWebProxy>(null);
+
+            var connectionInfo2 = Mock.Create<IConnectionInfo>();
+            Mock.Arrange(() => connectionInfo2.HttpProtocol).Returns("https");
+            Mock.Arrange(() => connectionInfo2.Host).Returns("collector.newrelic.com");
+            Mock.Arrange(() => connectionInfo2.Port).Returns(8443); // Different port
+            Mock.Arrange(() => connectionInfo2.Proxy).Returns<System.Net.IWebProxy>(null);
+
+            // Act
+            var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid");
+            var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid");
+
+            // Assert
+            Assert.That(result1, Is.Not.SameAs(result2));
+        }
+
+        [Test]
+        public void GetOrCreateMeterProvider_WithDifferentProtocol_RecreatesProvider()
+        {
+            // Arrange
+            var connectionInfo1 = Mock.Create<IConnectionInfo>();
+            Mock.Arrange(() => connectionInfo1.HttpProtocol).Returns("https");
+            Mock.Arrange(() => connectionInfo1.Host).Returns("collector.newrelic.com");
+            Mock.Arrange(() => connectionInfo1.Port).Returns(443);
+            Mock.Arrange(() => connectionInfo1.Proxy).Returns<System.Net.IWebProxy>(null);
+
+            var connectionInfo2 = Mock.Create<IConnectionInfo>();
+            Mock.Arrange(() => connectionInfo2.HttpProtocol).Returns("http"); // Different protocol
+            Mock.Arrange(() => connectionInfo2.Host).Returns("collector.newrelic.com");
+            Mock.Arrange(() => connectionInfo2.Port).Returns(443);
+            Mock.Arrange(() => connectionInfo2.Proxy).Returns<System.Net.IWebProxy>(null);
+
+            // Act
+            var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid");
+            var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid");
+
+            // Assert
+            Assert.That(result1, Is.Not.SameAs(result2));
+        }
+
+        [Test]
+        public void GetOrCreateMeterProvider_NoArgs_WithPreviousConnectionInfo_ReturnsProvider()
+        {
+            // Arrange
+            var mockConnectionInfo = Mock.Create<IConnectionInfo>();
+            Mock.Arrange(() => mockConnectionInfo.HttpProtocol).Returns("https");
+            Mock.Arrange(() => mockConnectionInfo.Host).Returns("collector.newrelic.com");
+            Mock.Arrange(() => mockConnectionInfo.Port).Returns(443);
+            Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
+
+            _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
+
+            // Act
+            var result = _service.GetOrCreateMeterProvider();
+
+            // Assert
+            Assert.That(result, Is.Not.Null);
+        }
+
+        [Test]
+        public void Dispose_DisposesResources()
+        {
+            // Arrange
+            var mockConnectionInfo = Mock.Create<IConnectionInfo>();
+            Mock.Arrange(() => mockConnectionInfo.HttpProtocol).Returns("https");
+            Mock.Arrange(() => mockConnectionInfo.Host).Returns("collector.newrelic.com");
+            Mock.Arrange(() => mockConnectionInfo.Port).Returns(443);
+            Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
+
+            _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
+
+            // Act & Assert - Should not throw
+            Assert.DoesNotThrow(() => _service.Dispose());
+        }
     }
 }
