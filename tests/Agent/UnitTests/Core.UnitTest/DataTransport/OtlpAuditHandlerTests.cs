@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             // Arrange
             AuditLog.IsAuditLogEnabled = true;
             
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics");
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics");
             request.Content = new ByteArrayContent(new byte[] { 0x1, 0x2, 0x3 });
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-protobuf");
 
@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             // Arrange
             AuditLog.IsAuditLogEnabled = false;
             
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics");
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics");
             var expectedResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
 
             _mockInnerHandler.Response = expectedResponse;
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             // Arrange
             AuditLog.IsAuditLogEnabled = true;
             
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics");
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics");
             var expectedException = new HttpRequestException("Network error");
 
             _mockInnerHandler.ExceptionToThrow = expectedException;
@@ -340,7 +340,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
         {
             // Arrange
             AuditLog.IsAuditLogEnabled = false;
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics");
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics");
             request.Content = new StringContent("{\"data\": true}");
             var expectedResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             _mockInnerHandler.Response = expectedResponse;
@@ -359,7 +359,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
         {
             // Arrange
             AuditLog.IsAuditLogEnabled = true;
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics");
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics");
             var errorResponse = new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError)
             {
                 Content = new StringContent("Server Error")
@@ -379,7 +379,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
         {
             // Arrange
             AuditLog.IsAuditLogEnabled = true;
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics");
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics");
             var response = new HttpResponseMessage(System.Net.HttpStatusCode.NoContent)
             {
                 Content = null // No content
@@ -405,11 +405,11 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             
             _mockInnerHandler.Response = response1;
             var result1 = await httpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics"));
+                new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics"));
 
             _mockInnerHandler.Response = response2;
             var result2 = await httpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Post, "https://otlp.nr-data.net/v1/metrics"));
+                new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics"));
 
             // Assert
             Assert.That(result1.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.OK));

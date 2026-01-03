@@ -9,34 +9,27 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
     public class MeterFilterService
     {
-        private readonly IConfiguration _configuration;
-
-        public MeterFilterService(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
-
-        public bool ShouldEnableInstrumentsInMeter(string meterName)
+        public bool ShouldEnableInstrumentsInMeter(IConfiguration configuration, string meterName)
         {
             if (string.IsNullOrEmpty(meterName))
                 return false;
 
-            var includeFilters = _configuration.OpenTelemetryMetricsIncludeFilters;
-            var excludeFilters = _configuration.OpenTelemetryMetricsExcludeFilters;
+            var includeFilters = configuration.OpenTelemetryMetricsIncludeFilters;
+            var excludeFilters = configuration.OpenTelemetryMetricsExcludeFilters;
 
-            // Customer exclude list (highest precedence)
-            if (excludeFilters?.Contains(meterName)==true)
+            // Check customer exclude list (overrides everything)
+            if (excludeFilters != null && excludeFilters.Contains(meterName))
                 return false;
 
-            // Customer include list (overrides built-in exclusions)
-            if (includeFilters?.Contains(meterName)==true)
+            // Check customer include list (overrides built-in exclusions)
+            if (includeFilters != null && includeFilters.Contains(meterName))
                 return true;
 
-            // Built-in exclusions
+            // Check built-in exclusions
             if (!IsNotBuiltInExclusion(meterName))
                 return false;
 
-            // Default: permissive
+            // Default: permissive (allow all not explicitly excluded)
             return true;
         }
 

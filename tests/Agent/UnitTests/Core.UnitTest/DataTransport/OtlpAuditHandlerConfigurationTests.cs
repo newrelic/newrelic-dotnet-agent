@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             Assert.DoesNotThrow(() => DataTransportAuditLogger.Log(
                 DataTransportAuditLogger.AuditLogDirection.Sent,
                 DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
-                "https://otlp.nr-data.net/v1/metrics"
+                "https://collector.newrelic.com/v1/metrics"
             ), "DataTransportAuditLogger.Log should not throw when audit logging is enabled for sent data");
         }
 
@@ -99,7 +99,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             Assert.DoesNotThrow(() => DataTransportAuditLogger.Log(
                 DataTransportAuditLogger.AuditLogDirection.Received,
                 DataTransportAuditLogger.AuditLogSource.Collector,
-                "Response: 200 (OK) for https://otlp.nr-data.net/v1/metrics"
+                "Response: 200 (OK) for https://collector.newrelic.com/v1/metrics"
             ), "DataTransportAuditLogger.Log should not throw when audit logging is enabled for received data");
         }
     }
