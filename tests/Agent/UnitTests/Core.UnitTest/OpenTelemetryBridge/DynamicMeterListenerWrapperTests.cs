@@ -14,6 +14,23 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
     [TestFixture]
     public class DynamicMeterListenerWrapperTests
     {
+        private Assembly GetDiagnosticSourceAssembly()
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
+        }
+
+        private bool TryGetDiagnosticSourceAssembly(out Assembly assembly)
+        {
+            assembly = GetDiagnosticSourceAssembly();
+            if (assembly == null)
+            {
+                Assert.Ignore("System.Diagnostics.DiagnosticSource not available in test environment");
+                return false;
+            }
+            return true;
+        }
+
         [Test]
         public void Constructor_WithMissingAssembly_CreatesNoOpWrapper()
         {
@@ -34,20 +51,17 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
         public void Constructor_WithValidAssembly_CreatesWrapper()
         {
             // Arrange
-            var mockProvider = Mock.Create<IAssemblyProvider>();
-            var diagnosticSourceAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
-
-            if (diagnosticSourceAssembly == null)
-            {
-                Assert.Ignore("System.Diagnostics.DiagnosticSource not available in test environment");
+            if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
                 return;
-            }
 
+            var mockProvider = Mock.Create<IAssemblyProvider>();
             Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
 
-            // Act & Assert - Should not throw
-            Assert.DoesNotThrow(() => new DynamicMeterListenerWrapper(mockProvider));
+            // Act
+            using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+
+            // Assert
+            Assert.DoesNotThrow(() => wrapper.Start());
         }
 
         [Test]
@@ -114,20 +128,14 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
         public void Constructor_WithValidDiagnosticSourceAssembly_InitializesSuccessfully()
         {
             // Arrange
-            var mockProvider = Mock.Create<IAssemblyProvider>();
-            var diagnosticSourceAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
-
-            if (diagnosticSourceAssembly == null)
-            {
-                Assert.Ignore("System.Diagnostics.DiagnosticSource not available in test environment");
+            if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
                 return;
-            }
 
+            var mockProvider = Mock.Create<IAssemblyProvider>();
             Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
 
             // Act
-            var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+            using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
 
             // Assert - Verify it doesn't throw and basic operations work
             Assert.DoesNotThrow(() => wrapper.Start());
@@ -138,18 +146,12 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
         public void InstrumentPublished_WhenSet_IsInvoked()
         {
             // Arrange
-            var mockProvider = Mock.Create<IAssemblyProvider>();
-            var diagnosticSourceAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
-
-            if (diagnosticSourceAssembly == null)
-            {
-                Assert.Ignore("System.Diagnostics.DiagnosticSource not available in test environment");
+            if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
                 return;
-            }
 
+            var mockProvider = Mock.Create<IAssemblyProvider>();
             Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
-            var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+            using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
             
             wrapper.InstrumentPublished = (instrument, listener) => { };
 
@@ -164,18 +166,12 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
         public void SetMeasurementCallback_WithValidWrapper_ConfiguresCallback()
         {
             // Arrange
-            var mockProvider = Mock.Create<IAssemblyProvider>();
-            var diagnosticSourceAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
-
-            if (diagnosticSourceAssembly == null)
-            {
-                Assert.Ignore("System.Diagnostics.DiagnosticSource not available in test environment");
+            if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
                 return;
-            }
 
+            var mockProvider = Mock.Create<IAssemblyProvider>();
             Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
-            var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+            using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
 
             // Act & Assert - Should configure without throwing
             Assert.DoesNotThrow(() => wrapper.SetMeasurementCallback<int>((inst, val, tags, state) => { }));
@@ -187,18 +183,12 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
         public void RegisterMeasurementCallback_CallsSetMeasurementCallback()
         {
             // Arrange
-            var mockProvider = Mock.Create<IAssemblyProvider>();
-            var diagnosticSourceAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
-
-            if (diagnosticSourceAssembly == null)
-            {
-                Assert.Ignore("System.Diagnostics.DiagnosticSource not available in test environment");
+            if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
                 return;
-            }
 
+            var mockProvider = Mock.Create<IAssemblyProvider>();
             Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
-            var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+            using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
 
             // Act & Assert
             Assert.DoesNotThrow(() => wrapper.RegisterMeasurementCallback<int>((inst, val, tags, state) => { }));
@@ -208,18 +198,12 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
         public void MeasurementsCompleted_WhenSet_IsInvoked()
         {
             // Arrange
-            var mockProvider = Mock.Create<IAssemblyProvider>();
-            var diagnosticSourceAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
-
-            if (diagnosticSourceAssembly == null)
-            {
-                Assert.Ignore("System.Diagnostics.DiagnosticSource not available in test environment");
+            if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
                 return;
-            }
 
+            var mockProvider = Mock.Create<IAssemblyProvider>();
             Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
-            var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+            using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
             
             wrapper.MeasurementsCompleted = (instrument, state, listener) => { };
 
@@ -234,16 +218,10 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
         public void EnsureInitialized_RetriesInitialization_WhenNotInitiallyAvailable()
         {
             // Arrange
-            var mockProvider = Mock.Create<IAssemblyProvider>();
-            var diagnosticSourceAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
-
-            if (diagnosticSourceAssembly == null)
-            {
-                Assert.Ignore("System.Diagnostics.DiagnosticSource not available in test environment");
+            if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
                 return;
-            }
 
+            var mockProvider = Mock.Create<IAssemblyProvider>();
             // First return empty, then return the assembly
             var callCount = 0;
             Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(() =>
@@ -252,7 +230,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
                 return callCount == 1 ? new Assembly[0] : new[] { diagnosticSourceAssembly };
             });
 
-            var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+            using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
 
             // Act - First call should fail, second should retry and succeed
             wrapper.EnableMeasurementEvents(null, null);  // Triggers EnsureInitialized
@@ -266,21 +244,60 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
         public void Dispose_WithInitializedWrapper_DisposesUnderlyingListener()
         {
             // Arrange
-            var mockProvider = Mock.Create<IAssemblyProvider>();
-            var diagnosticSourceAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
-
-            if (diagnosticSourceAssembly == null)
-            {
-                Assert.Ignore("System.Diagnostics.DiagnosticSource not available in test environment");
+            if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
                 return;
-            }
 
+            var mockProvider = Mock.Create<IAssemblyProvider>();
             Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
-            var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+            using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
 
             // Act & Assert
             Assert.DoesNotThrow(() => wrapper.Dispose());
+        }
+
+        [Test]
+        public void DynamicMeterListenerWrapper_WhenAssemblyLoadFails_GracefullyHandlesFailure()
+        {
+            // Arrange - Mock provider that throws during GetAssemblies
+            var mockProvider = Mock.Create<IAssemblyProvider>();
+            Mock.Arrange(() => mockProvider.GetAssemblies())
+                .Throws<Exception>();
+
+            // Act - Constructor should handle exception gracefully
+            var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+
+            // Assert - All operations should be no-ops and not throw
+            Assert.DoesNotThrow(() => wrapper.Start());
+            Assert.DoesNotThrow(() => wrapper.RecordObservableInstruments());
+            Assert.DoesNotThrow(() => wrapper.EnableMeasurementEvents(new object(), new object()));
+            Assert.DoesNotThrow(() => wrapper.Dispose());
+        }
+
+        [Test]
+        public void DynamicMeterListenerWrapper_WhenAssemblyNotFound_RemainsUnavailableGracefully()
+        {
+            // Arrange - Mock provider returns empty assembly list
+            var mockProvider = Mock.Create<IAssemblyProvider>();
+            Mock.Arrange(() => mockProvider.GetAssemblies())
+                .Returns(new Assembly[0]);
+
+            // Act
+            var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+
+            // Assert - Should remain unavailable but functional (defensive)
+            Assert.DoesNotThrow(() => wrapper.Start());
+            Assert.DoesNotThrow(() => wrapper.RecordObservableInstruments());
+            Assert.DoesNotThrow(() => wrapper.EnableMeasurementEvents(new object(), new object()));
+            
+            // Multiple calls should also not throw
+            Assert.DoesNotThrow(() => wrapper.Start());
+            Assert.DoesNotThrow(() => wrapper.RecordObservableInstruments());
+            
+            // Disposal should work
+            Assert.DoesNotThrow(() => wrapper.Dispose());
+            
+            // Post-disposal calls should be no-ops
+            Assert.DoesNotThrow(() => wrapper.Start());
         }
     }
 }

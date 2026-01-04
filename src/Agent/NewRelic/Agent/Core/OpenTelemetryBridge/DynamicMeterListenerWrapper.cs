@@ -18,6 +18,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
     public class DynamicMeterListenerWrapper : IMeterListenerWrapper
     {
         private readonly IAssemblyProvider _assemblyProvider;
+        private volatile bool _disposed;
         private object _meterListener;
         private Type _meterListenerType;
         private bool _isAvailable;
@@ -26,6 +27,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private MethodInfo _enableMeasurementEventsMethod;
         private MethodInfo _recordObservableInstrumentsMethod;
         private MethodInfo _setMeasurementEventCallbackMethod;
+        private Action _recordObservableInstrumentsDelegate;
 
         public Action<object, IMeterListenerWrapper> InstrumentPublished { get; set; }
 
@@ -80,6 +82,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 _setMeasurementEventCallbackMethod = _meterListenerType.GetMethod("SetMeasurementEventCallback") ?? throw new MissingMethodException(_meterListenerType.Name, "SetMeasurementEventCallback");
 
                 _meterListener = Activator.CreateInstance(_meterListenerType);
+                
+                // Compile RecordObservableInstruments for better performance (called frequently)
+                var instanceConstant = Expression.Constant(_meterListener);
+                var instanceCast = Expression.Convert(instanceConstant, _meterListenerType);
+                var callExpr = Expression.Call(instanceCast, _recordObservableInstrumentsMethod);
+                var lambda = Expression.Lambda<Action>(callExpr);
+                _recordObservableInstrumentsDelegate = lambda.Compile();
+                
                 _isAvailable = true;
             }
             catch (Exception ex)
@@ -91,7 +101,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public void Start()
         {
-            if (!EnsureInitialized() || _startMethod == null) return;
+            if (CheckDisposed() || !EnsureInitialized() || _startMethod == null) return;
             
             try
             {
@@ -106,11 +116,11 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public void RecordObservableInstruments()
         {
-            if (!EnsureInitialized() || _recordObservableInstrumentsMethod == null) return;
+            if (CheckDisposed() || !EnsureInitialized() || _recordObservableInstrumentsDelegate == null) return;
             
             try
             {
-                _recordObservableInstrumentsMethod.Invoke(_meterListener, null);
+                _recordObservableInstrumentsDelegate();
             }
             catch (Exception ex)
             {
@@ -127,9 +137,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             return _isAvailable;
         }
 
+        private bool CheckDisposed()
+        {
+            return _disposed;
+        }
+
         public void EnableMeasurementEvents(object instrument, object state)
         {
-            if (!_isAvailable || _enableMeasurementEventsMethod == null) return;
+            if (CheckDisposed() || !_isAvailable || _enableMeasurementEventsMethod == null) return;
             
             try
             {
@@ -148,7 +163,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public void SetMeasurementCallback<T>(MeasurementCallbackDelegate<T> callback) where T : struct
         {
-            if (!_isAvailable || _setMeasurementEventCallbackMethod == null) return;
+            if (CheckDisposed() || !_isAvailable || _setMeasurementEventCallbackMethod == null) return;
+            
             var setCallbackGeneric = _setMeasurementEventCallbackMethod.MakeGenericMethod(typeof(T));
             var callbackDelegateType = setCallbackGeneric.GetParameters()[0].ParameterType;
             var invokeMethod = callbackDelegateType.GetMethod("Invoke");
@@ -188,7 +204,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             }
 
             var lambda = Expression.Lambda(callbackDelegateType, finalCallExpr, instrumentParam, measurementParam, tagsParam, stateParam);
-            setCallbackGeneric.Invoke(_meterListener, new object[] { lambda.Compile() });
+            var compiledDelegate = lambda.Compile();
+            
+            setCallbackGeneric.Invoke(_meterListener, new object[] { compiledDelegate });
         }
 
         private void HandleMeasurementCallbackWithSpan<T, TSpan>(object instrument, T measurement, TSpan tagsSpan, object state, MeasurementCallbackDelegate<T> callback)
@@ -312,7 +330,15 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public void Dispose()
         {
-            (_meterListener as IDisposable)?.Dispose();
+            if (CheckDisposed()) return;
+
+            lock (this)
+            {
+                if (CheckDisposed()) return;
+
+                _disposed = true;
+                (_meterListener as IDisposable)?.Dispose();
+            }
         }
     }
 }
