@@ -10,6 +10,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NewRelic.Agent.Api" Version="10.47.1" />
+    <PackageReference Include="NewRelic.Agent.Api" Version="10.47.2" />
   </ItemGroup>
 </Project>
