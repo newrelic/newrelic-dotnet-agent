@@ -415,7 +415,7 @@ jobs:
         run: |
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "List ports in use"
-            netstat -no  
+            netstat -no
           }
 
           Write-Host "Run tests"
@@ -430,16 +430,47 @@ jobs:
           # }
           $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
-          ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          # Capture test output to extract payload logs
+          ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx" | Tee-Object -FilePath "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_console_output.txt"
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
             Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
 
             Write-Host "Get .NET Runtime errors (if any)"
-            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
           }
         shell: powershell
+
+      - name: Extract payload bytes log
+        if: always()
+        run: |
+          $consoleOutput = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_console_output.txt"
+          $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.txt"
+
+          if (Test-Path $consoleOutput) {
+            Select-String -Path $consoleOutput -Pattern "Total payload bytes sent:" | ForEach-Object { $_.Line } | Out-File -FilePath $payloadLog -Encoding UTF8
+
+            if (Test-Path $payloadLog) {
+              Write-Host "Extracted payload logs to $payloadLog"
+              Get-Content $payloadLog | Write-Host
+            } else {
+              Write-Host "No payload byte logs found in console output"
+              "No payload logs found for ${{ matrix.namespace }}" | Out-File -FilePath $payloadLog -Encoding UTF8
+            }
+          } else {
+            Write-Host "Console output file not found"
+            "Console output not found for ${{ matrix.namespace }}" | Out-File -FilePath $payloadLog -Encoding UTF8
+          }
+        shell: powershell
+
+      - name: Upload payload bytes log
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: integration-payload-bytes-${{ matrix.namespace }}
+          path: C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.txt
+          if-no-files-found: warn
 
       - name: Archive integration test results on failure
         if: ${{ failure() }}
@@ -565,7 +596,7 @@ jobs:
         run: |
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "List ports in use"
-            netstat -no  
+            netstat -no
           }
 
           # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
@@ -574,16 +605,47 @@ jobs:
           $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
           $json | ConvertTo-Json | Out-File "${{ env.unbounded_tests_path }}/xunit.runner.json"
 
-          ${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          # Capture test output to extract payload logs
+          ${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx" | Tee-Object -FilePath "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_console_output.txt"
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
             Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
 
             Write-Host "Get .NET Runtime errors (if any)"
-            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
           }
         shell: powershell
+
+      - name: Extract payload bytes log
+        if: always()
+        run: |
+          $consoleOutput = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_console_output.txt"
+          $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.txt"
+
+          if (Test-Path $consoleOutput) {
+            Select-String -Path $consoleOutput -Pattern "Total payload bytes sent:" | ForEach-Object { $_.Line } | Out-File -FilePath $payloadLog -Encoding UTF8
+
+            if (Test-Path $payloadLog) {
+              Write-Host "Extracted payload logs to $payloadLog"
+              Get-Content $payloadLog | Write-Host
+            } else {
+              Write-Host "No payload byte logs found in console output"
+              "No payload logs found for ${{ matrix.namespace }}" | Out-File -FilePath $payloadLog -Encoding UTF8
+            }
+          } else {
+            Write-Host "Console output file not found"
+            "Console output not found for ${{ matrix.namespace }}" | Out-File -FilePath $payloadLog -Encoding UTF8
+          }
+        shell: powershell
+
+      - name: Upload payload bytes log
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: unbounded-payload-bytes-${{ matrix.namespace }}
+          path: C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.txt
+          if-no-files-found: warn
 
       - name: Archive unbounded test results on failure
         if: ${{ failure() }}
@@ -777,6 +839,132 @@ jobs:
           path: |
             ${{ github.workspace }}\build\BuildArtifacts
           if-no-files-found: error
+
+  aggregate-integration-payload-logs:
+    name: Aggregate Integration Test Payload Logs
+    needs: [run-integration-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Download all integration payload artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: integration-payload-bytes-*
+          path: payload-logs/integration
+          merge-multiple: true
+
+      - name: Combine payload logs
+        run: |
+          mkdir -p combined-logs
+          echo "=== Integration Tests - Total Payload Bytes ===" > combined-logs/integration_payload_bytes_combined.txt
+          echo "Generated: $(date)" >> combined-logs/integration_payload_bytes_combined.txt
+          echo "" >> combined-logs/integration_payload_bytes_combined.txt
+
+          if [ -d "payload-logs/integration" ]; then
+            grand_total=0
+
+            find payload-logs/integration -name "*_payload_bytes.txt" -type f | sort | while read file; do
+              echo "--- $(basename "$file" .txt) ---" >> combined-logs/integration_payload_bytes_combined.txt
+              cat "$file" >> combined-logs/integration_payload_bytes_combined.txt
+              echo "" >> combined-logs/integration_payload_bytes_combined.txt
+
+              # Extract payload bytes and accumulate
+              while IFS= read -r line; do
+                if [[ "$line" =~ Total\ payload\ bytes\ sent:\ ([0-9]+) ]]; then
+                  bytes="${BASH_REMATCH[1]}"
+                  grand_total=$((grand_total + bytes))
+                fi
+              done < "$file"
+            done
+
+            # Append grand total at the end
+            echo "======================================" >> combined-logs/integration_payload_bytes_combined.txt
+            echo "GRAND TOTAL PAYLOAD BYTES: $grand_total" >> combined-logs/integration_payload_bytes_combined.txt
+            echo "======================================" >> combined-logs/integration_payload_bytes_combined.txt
+
+            echo "Combined payload log created:"
+            cat combined-logs/integration_payload_bytes_combined.txt
+          else
+            echo "No integration payload logs found"
+            echo "No payload logs were generated" >> combined-logs/integration_payload_bytes_combined.txt
+          fi
+        shell: bash
+
+      - name: Upload combined integration payload log
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: integration-payload-bytes-combined
+          path: combined-logs/integration_payload_bytes_combined.txt
+          if-no-files-found: warn
+
+  aggregate-unbounded-payload-logs:
+    name: Aggregate Unbounded Test Payload Logs
+    needs: [run-unbounded-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Download all unbounded payload artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: unbounded-payload-bytes-*
+          path: payload-logs/unbounded
+          merge-multiple: true
+
+      - name: Combine payload logs
+        run: |
+          mkdir -p combined-logs
+          echo "=== Unbounded Integration Tests - Total Payload Bytes ===" > combined-logs/unbounded_payload_bytes_combined.txt
+          echo "Generated: $(date)" >> combined-logs/unbounded_payload_bytes_combined.txt
+          echo "" >> combined-logs/unbounded_payload_bytes_combined.txt
+
+          if [ -d "payload-logs/unbounded" ]; then
+            grand_total=0
+
+            find payload-logs/unbounded -name "*_payload_bytes.txt" -type f | sort | while read file; do
+              echo "--- $(basename "$file" .txt) ---" >> combined-logs/unbounded_payload_bytes_combined.txt
+              cat "$file" >> combined-logs/unbounded_payload_bytes_combined.txt
+              echo "" >> combined-logs/unbounded_payload_bytes_combined.txt
+
+              # Extract payload bytes and accumulate
+              while IFS= read -r line; do
+                if [[ "$line" =~ Total\ payload\ bytes\ sent:\ ([0-9]+) ]]; then
+                  bytes="${BASH_REMATCH[1]}"
+                  grand_total=$((grand_total + bytes))
+                fi
+              done < "$file"
+            done
+
+            # Append grand total at the end
+            echo "======================================" >> combined-logs/unbounded_payload_bytes_combined.txt
+            echo "GRAND TOTAL PAYLOAD BYTES: $grand_total" >> combined-logs/unbounded_payload_bytes_combined.txt
+            echo "======================================" >> combined-logs/unbounded_payload_bytes_combined.txt
+
+            echo "Combined payload log created:"
+            cat combined-logs/unbounded_payload_bytes_combined.txt
+          else
+            echo "No unbounded payload logs found"
+            echo "No payload logs were generated" >> combined-logs/unbounded_payload_bytes_combined.txt
+          fi
+        shell: bash
+
+      - name: Upload combined unbounded payload log
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: unbounded-payload-bytes-combined
+          path: combined-logs/unbounded_payload_bytes_combined.txt
+          if-no-files-found: warn
 
   # This job is necessary in order for us to have a branch protection rule for tests with a matrix
   # if any of the matrix tests fail, this job fails and the branch protection rule keeps the PR from merging

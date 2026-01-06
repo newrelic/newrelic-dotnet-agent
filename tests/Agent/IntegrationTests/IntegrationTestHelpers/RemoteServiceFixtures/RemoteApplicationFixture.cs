@@ -19,6 +19,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     {
         public virtual string TestSettingCategory { get { return "Default"; } }
 
+        public int? BaselinePayloadBytes { get; set; }
+
         private Action _setupConfiguration;
         private Action _exerciseApplication;
         private HashSet<uint> _errorsToRetryOn = new HashSet<uint>
@@ -267,6 +269,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                     do
                     {
+                        TestLogger?.WriteLine($"Test name: {TestContext.Current.TestClass.TestClassName}");
                         TestLogger?.WriteLine("Test Home: " + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
 
                         // reset these for each loop iteration
@@ -387,12 +390,45 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         TestLogger?.WriteLine("----- End of Agent log file -----");
 
+                        if (BaselinePayloadBytes.HasValue)
+                        {
+                            TestForExpectedPayloadSize();
+                        }
+                        else
+                        {
+                            TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassName}: Total payload bytes sent: {AgentLog.GetTotalPayloadBytes()}");
+                        }
+
                         if (!applicationHadNonZeroExitCode)
                         {
                             TestForKnownProblems();
                         }
                     }
                 }
+            }
+        }
+
+        private void TestForExpectedPayloadSize()
+        {
+            if (!BaselinePayloadBytes.HasValue)
+            {
+                throw new InvalidOperationException("Baseline payload bytes not set.");
+            }
+
+            var actualPayloadBytes = AgentLog.GetTotalPayloadBytes();
+            var expectedPayloadBytes = BaselinePayloadBytes.Value;
+            var allowedDeviation = expectedPayloadBytes * 0.05;
+            var lowerBound = expectedPayloadBytes - allowedDeviation;
+            var upperBound = expectedPayloadBytes + allowedDeviation;
+            var percentDeviation = ((double)(actualPayloadBytes - expectedPayloadBytes) / expectedPayloadBytes) * 100;
+
+            if (actualPayloadBytes < lowerBound || actualPayloadBytes > upperBound)
+            {
+                Assert.Fail($"{TestContext.Current.TestClass.TestClassName}: Payload size out of acceptable range. Expected: {expectedPayloadBytes} bytes, Actual: {actualPayloadBytes} bytes, Deviation: {percentDeviation:F2}% (allowed: ±5%)");
+            }
+            else
+            {
+                TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassName}: Payload size within acceptable range. Expected: {expectedPayloadBytes} bytes, Actual: {actualPayloadBytes} bytes, Deviation: {percentDeviation:F2}%");
             }
         }
 
@@ -596,7 +632,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
             if (headers != null && headers.Any())
             {
-                foreach(var header in headers)
+                foreach (var header in headers)
                 {
                     content.Headers.Add(header.Key, header.Value);
                 }

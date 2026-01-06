@@ -8,6 +8,8 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Xunit;
 
@@ -111,6 +113,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
                 Thread.Sleep(TimeSpan.FromMilliseconds(100));
             } while (timeTaken.Elapsed < timeout);
+        }
+
+        public long GetTotalPayloadBytes()
+        {
+            const string payloadInvocationRegex = @"Request\(.{36}\): Invoked ""[^""]+"" with : (.*)";
+            var regex = new Regex(payloadInvocationRegex);
+            long totalBytes = 0;
+
+            foreach (var line in GetFileLines())
+            {
+                var match = regex.Match(line);
+                if (match.Success && match.Groups.Count > 1)
+                {
+                    var jsonPayload = match.Groups[1].Value;
+                    totalBytes += Encoding.UTF8.GetByteCount(jsonPayload);
+                }
+            }
+
+            return totalBytes;
         }
     }
 }

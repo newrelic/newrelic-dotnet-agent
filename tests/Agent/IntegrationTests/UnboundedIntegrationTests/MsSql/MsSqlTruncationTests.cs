@@ -25,6 +25,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             _fixture = fixture;
             _fixture.TestLogger = output;
 
+            _fixture.BaselinePayloadBytes = 61446; // Baseline payload size for Core Latest agent with Microsoft.Data.SqlClient
+
             _fixture.AddCommand($"{exerciserName} MsSqlWithLongQuery");
             _fixture.AddCommand($"{exerciserName} Wait 5000");
 
@@ -71,16 +73,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
     #region System.Data.SqlClient
 
-    //public class MsSqlTruncationTests_MicrosoftDataSqlClient_CoreLatest : MsSqlTruncationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    //{
-    //    public MsSqlTruncationTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-    //        : base(
-    //              fixture: fixture,
-    //              output: output,
-    //              exerciserName: "MicrosoftDataSqlClientExerciser")
-    //    {
-    //    }
-    //}
-    
+    public class MsSqlTruncationTests_MicrosoftDataSqlClient_CoreLatest : MsSqlTruncationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MsSqlTruncationTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  exerciserName: "MicrosoftDataSqlClientExerciser")
+        {
+        }
+    }
+
     #endregion
 }
