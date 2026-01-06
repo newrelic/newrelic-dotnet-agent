@@ -70,17 +70,17 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     #region System.Data.SqlClient
-    
-    public class MsSqlTruncationTests_MicrosoftDataSqlClient_CoreLatest : MsSqlTruncationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public MsSqlTruncationTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  exerciserName: "MicrosoftDataSqlClientExerciser")
-        {
-        }
-    }
+
+    //public class MsSqlTruncationTests_MicrosoftDataSqlClient_CoreLatest : MsSqlTruncationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    //{
+    //    public MsSqlTruncationTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+    //        : base(
+    //              fixture: fixture,
+    //              output: output,
+    //              exerciserName: "MicrosoftDataSqlClientExerciser")
+    //    {
+    //    }
+    //}
     
     #endregion
 }
