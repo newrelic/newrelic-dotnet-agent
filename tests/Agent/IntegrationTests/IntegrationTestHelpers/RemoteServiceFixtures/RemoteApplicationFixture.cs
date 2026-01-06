@@ -390,13 +390,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         TestLogger?.WriteLine("----- End of Agent log file -----");
 
+                        TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassName}: Total payload bytes sent: {AgentLog.GetTotalPayloadBytes()}");
+
                         if (BaselinePayloadBytes.HasValue)
                         {
                             TestForExpectedPayloadSize();
-                        }
-                        else
-                        {
-                            TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassName}: Total payload bytes sent: {AgentLog.GetTotalPayloadBytes()}");
                         }
 
                         if (!applicationHadNonZeroExitCode)

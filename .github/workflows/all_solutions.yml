@@ -430,8 +430,7 @@ jobs:
           # }
           $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
-          # Capture test output to extract payload logs
-          ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx" | Tee-Object -FilePath "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_console_output.txt"
+          ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
@@ -442,25 +441,44 @@ jobs:
           }
         shell: powershell
 
-      - name: Extract payload bytes log
+      - name: Extract payload bytes log from TRX
         if: always()
         run: |
-          $consoleOutput = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_console_output.txt"
+          $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.txt"
 
-          if (Test-Path $consoleOutput) {
-            Select-String -Path $consoleOutput -Pattern "Total payload bytes sent:" | ForEach-Object { $_.Line } | Out-File -FilePath $payloadLog -Encoding UTF8
+          Write-Host "Checking for TRX file at: $trxFile"
 
-            if (Test-Path $payloadLog) {
+          if (Test-Path $trxFile) {
+            $fileSize = (Get-Item $trxFile).Length
+            Write-Host "TRX file found. Size: $fileSize bytes"
+
+            # Read TRX file and extract lines containing payload information from Message elements
+            [xml]$trxContent = Get-Content $trxFile
+            $messageElements = $trxContent.SelectNodes("//*[local-name()='Output']/*[local-name()='TextMessages']/*[local-name()='Message']")
+
+            $payloadLines = @()
+            foreach ($message in $messageElements) {
+              $text = $message.InnerText
+              if ($text -match "Total payload bytes sent:") {
+                $payloadLines += $text.Trim()
+              }
+            }
+
+            Write-Host "Found $($payloadLines.Count) payload log entries"
+
+            if ($payloadLines.Count -gt 0) {
+              $payloadLines | Out-File -FilePath $payloadLog -Encoding UTF8
               Write-Host "Extracted payload logs to $payloadLog"
-              Get-Content $payloadLog | Write-Host
+              Write-Host "Content:"
+              Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
             } else {
-              Write-Host "No payload byte logs found in console output"
+              Write-Host "No payload byte logs found in TRX file"
               "No payload logs found for ${{ matrix.namespace }}" | Out-File -FilePath $payloadLog -Encoding UTF8
             }
           } else {
-            Write-Host "Console output file not found"
-            "Console output not found for ${{ matrix.namespace }}" | Out-File -FilePath $payloadLog -Encoding UTF8
+            Write-Host "TRX file not found"
+            "TRX file not found for ${{ matrix.namespace }}" | Out-File -FilePath $payloadLog -Encoding UTF8
           }
         shell: powershell
 
@@ -605,8 +623,7 @@ jobs:
           $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
           $json | ConvertTo-Json | Out-File "${{ env.unbounded_tests_path }}/xunit.runner.json"
 
-          # Capture test output to extract payload logs
-          ${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx" | Tee-Object -FilePath "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_console_output.txt"
+          ${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
@@ -617,25 +634,44 @@ jobs:
           }
         shell: powershell
 
-      - name: Extract payload bytes log
+      - name: Extract payload bytes log from TRX
         if: always()
         run: |
-          $consoleOutput = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_console_output.txt"
+          $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.txt"
 
-          if (Test-Path $consoleOutput) {
-            Select-String -Path $consoleOutput -Pattern "Total payload bytes sent:" | ForEach-Object { $_.Line } | Out-File -FilePath $payloadLog -Encoding UTF8
+          Write-Host "Checking for TRX file at: $trxFile"
 
-            if (Test-Path $payloadLog) {
+          if (Test-Path $trxFile) {
+            $fileSize = (Get-Item $trxFile).Length
+            Write-Host "TRX file found. Size: $fileSize bytes"
+
+            # Read TRX file and extract lines containing payload information from Message elements
+            [xml]$trxContent = Get-Content $trxFile
+            $messageElements = $trxContent.SelectNodes("//*[local-name()='Output']/*[local-name()='TextMessages']/*[local-name()='Message']")
+
+            $payloadLines = @()
+            foreach ($message in $messageElements) {
+              $text = $message.InnerText
+              if ($text -match "Total payload bytes sent:") {
+                $payloadLines += $text.Trim()
+              }
+            }
+
+            Write-Host "Found $($payloadLines.Count) payload log entries"
+
+            if ($payloadLines.Count -gt 0) {
+              $payloadLines | Out-File -FilePath $payloadLog -Encoding UTF8
               Write-Host "Extracted payload logs to $payloadLog"
-              Get-Content $payloadLog | Write-Host
+              Write-Host "Content:"
+              Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
             } else {
-              Write-Host "No payload byte logs found in console output"
+              Write-Host "No payload byte logs found in TRX file"
               "No payload logs found for ${{ matrix.namespace }}" | Out-File -FilePath $payloadLog -Encoding UTF8
             }
           } else {
-            Write-Host "Console output file not found"
-            "Console output not found for ${{ matrix.namespace }}" | Out-File -FilePath $payloadLog -Encoding UTF8
+            Write-Host "TRX file not found"
+            "TRX file not found for ${{ matrix.namespace }}" | Out-File -FilePath $payloadLog -Encoding UTF8
           }
         shell: powershell
 
