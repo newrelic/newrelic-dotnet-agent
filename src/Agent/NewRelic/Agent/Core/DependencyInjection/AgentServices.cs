@@ -47,6 +47,7 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {
@@ -163,6 +164,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
             container.Register<IApiSupportabilityMetricCounters, IOutOfBandMetricSource, ApiSupportabilityMetricCounters>();
             container.Register<ICATSupportabilityMetricCounters, IOutOfBandMetricSource, CATSupportabilityMetricCounters>();
+            container.Register<IOtelBridgeSupportabilityMetricCounters, IOutOfBandMetricSource, OtelBridgeSupportabilityMetricCounters>();
             container.Register<IAgentTimerService, AgentTimerService>();
             container.Register<IThreadPoolStatic, ThreadPoolStatic>();
             container.Register<ITransactionTransformer, TransactionTransformer>();
@@ -173,7 +175,9 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ITransactionTraceMaker, TransactionTraceMaker>();
             container.Register<ITransactionEventMaker, TransactionEventMaker>();
             container.Register<ICallStackManager, CallStackManager>();
-            container.Register<IAdaptiveSampler, AdaptiveSampler>();
+
+            container.Register<ISamplerFactory, SamplerFactory>();
+            container.Register<ISamplerService, SamplerService>();
 
             var transactionCollectors = new List<ITransactionCollector> {
                 new SlowestTransactionCollector(),
@@ -237,6 +241,11 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
             container.Register<ActivityBridge, ActivityBridge>();
             container.Register<NewRelicActivitySourceProxy, NewRelicActivitySourceProxy>();
+
+            if (!serverlessModeEnabled)
+            {
+                container.Register<MeterListenerBridge, MeterListenerBridge>();
+            }
 
             container.Build();
         }

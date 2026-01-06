@@ -14,7 +14,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using Telerik.JustMock;
+using NewRelic.Agent.Core.Config;
 
 namespace CompositeTests.CrossAgentTests.DistributedTracing
 {
@@ -23,22 +26,25 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
     {
         private static CompositeTestAgent _compositeTestAgent;
         private IAgent _agent;
-        private static IAdaptiveSampler _adaptiveSampler;
+        private SamplerFactory _samplerFactory;
 
         private static List<TestCaseData> TraceContextTestCaseData => GetTraceContextTestData();
 
         [SetUp]
         public void Setup()
         {
-            _compositeTestAgent = new CompositeTestAgent();
+            _samplerFactory = Mock.Create<SamplerFactory>(Behavior.CallOriginal);
+
+            _compositeTestAgent = new CompositeTestAgent(samplerFactory: _samplerFactory);
+
             _agent = _compositeTestAgent.GetAgent();
-            _adaptiveSampler = Mock.Create<IAdaptiveSampler>(Behavior.CallOriginal);
         }
 
         [TearDown]
-        public static void TearDown()
+        public void TearDown()
         {
             _compositeTestAgent.Dispose();
+            _samplerFactory.Dispose();
         }
 
         [TestCaseSource(nameof(TraceContextTestCaseData))]
@@ -49,6 +55,8 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             MakeTransaction(testData);
 
             _compositeTestAgent.Harvest();
+
+            ValidateExpectedPriority(testData);
 
             ValidateIntrinsics(testData);
 
@@ -86,13 +94,10 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             return testCaseData;
         }
 
-        private static void InitializeSettings(TraceContextTestData testData)
+        private void InitializeSettings(TraceContextTestData testData)
         {
-            if (testData.ForceSampledTrue)
-            {
-                var priority = 1.0f;
-                Mock.Arrange(() => _adaptiveSampler.ComputeSampled(ref priority)).IgnoreArguments().Returns(true);
-            }
+            Mock.Arrange(() => _samplerFactory.GetSampler(SamplerType.Adaptive, Arg.IsAny<float?>()))
+                .Returns(() => new MockAdaptiveSampler(testData.ForceSampledTrue));
 
             _compositeTestAgent.LocalConfiguration.spanEvents.enabled = testData.SpanEventsEnabled;
             var defaultTransactionEventsEnabled = _compositeTestAgent.LocalConfiguration.transactionEvents.enabled;
@@ -104,7 +109,48 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             _compositeTestAgent.ServerConfiguration.AccountId = testData.AccountId;
             _compositeTestAgent.ServerConfiguration.PrimaryApplicationId = "primaryApplicationId";
 
+            if (testData.RootSampler != null)
+            {
+                _compositeTestAgent.LocalConfiguration.distributedTracing.sampler.root.Item = GetSamplerFromName(testData.RootSampler, testData);
+            }
+
+            if (testData.RemoteParentSampledSampler != null)
+            {
+                _compositeTestAgent.LocalConfiguration.distributedTracing.sampler.remoteParentSampled.Item = GetSamplerFromName(testData.RemoteParentSampledSampler, testData);
+            }
+
+            if (testData.RemoteParentNotSampledSampler != null)
+            {
+                _compositeTestAgent.LocalConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item = GetSamplerFromName(testData.RemoteParentNotSampledSampler, testData);
+            }
+
             _compositeTestAgent.PushConfiguration();
+        }
+
+        private static object GetSamplerFromName(string samplerName, TraceContextTestData testData)
+        {
+            switch (samplerName)
+            {
+                case "always_on":
+                    return new AlwaysOnSamplerType();
+                case "always_off":
+                    return new AlwaysOffSamplerType();
+                case "trace_id_ratio_based":
+                    if (!testData.Ratio.HasValue)
+                    {
+                        // This is not valid in our config so we need to treat it as if the sampler is not set
+                        return null;
+                    }
+                    return new TraceIdRatioBasedSamplerType
+                    {
+                        ratio = (decimal)testData.Ratio
+                    };
+                case "adaptive":
+                case "default":
+                    return new AdaptiveSamplerType();
+                default:
+                    throw new Exception($"Unknown sampler type {samplerName}");
+            }
         }
 
         void MakeTransaction(TraceContextTestData testData)
@@ -364,6 +410,19 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             }
         }
 
+        private void ValidateExpectedPriority(TraceContextTestData testData)
+        {
+            if (testData.ExpectedPriorityBetween != null)
+            {
+                var minValue = testData.ExpectedPriorityBetween[0];
+                var maxValue = testData.ExpectedPriorityBetween[1];
+                var transactionEvent = _compositeTestAgent.TransactionEvents?.First();
+
+                Assert.That(transactionEvent, Is.Not.Null, "A transaction event was expected to be found.");
+                Assert.That(transactionEvent.Priority, Is.InRange(minValue, maxValue), $"Actual priority {transactionEvent.Priority} not in expected range [{minValue}, {maxValue}]");
+            }
+        }
+
         private void ValidateIntrinsics(TraceContextTestData testData)
         {
             if (testData.IntrinsicSettings != null)
@@ -432,6 +491,9 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 
         private void ValidateMetrics(TraceContextTestData testData)
         {
+            if (testData.ExpectedMetrics == null)
+                return;
+
             var expectedMetrics = new List<ExpectedMetric>();
 
             // convert json ExpectedMetrics for CompositeTests.MetricAssertions
@@ -441,6 +503,21 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             }
 
             MetricAssertions.MetricsExist(expectedMetrics, _compositeTestAgent.Metrics);
+        }
+
+        private class MockAdaptiveSampler : AdaptiveSampler
+        {
+            private readonly bool _shouldSample;
+
+            public MockAdaptiveSampler(bool shouldSample) : base(10, 60, 0, false)
+            {
+                _shouldSample = shouldSample;
+            }
+
+            protected override bool ShouldSample()
+            {
+                return _shouldSample;
+            }
         }
 
         #region Trace Context Test Data Classes
@@ -462,7 +539,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             [JsonProperty("raises_exception")]
             public bool RaisesException { get; set; }
 
-            [JsonProperty("force_sampled_true")]
+            [JsonProperty("force_adaptive_sampled_true")]
             public bool ForceSampledTrue { get; set; }
 
             [JsonProperty("span_events_enabled")]
@@ -471,11 +548,26 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
             [JsonProperty("transaction_events_enabled")]
             public bool? TransactionEventsEnabled { get; set; }
 
+            [JsonProperty("root")]
+            public string RootSampler { get; set; }
+
+            [JsonProperty("remote_parent_sampled")]
+            public string RemoteParentSampledSampler { get; set; }
+
+            [JsonProperty("remote_parent_not_sampled")]
+            public string RemoteParentNotSampledSampler { get; set; }
+
+            [JsonProperty("ratio")]
+            public double? Ratio { get; set; }
+
             [JsonProperty("transport_type")]
             public string TransportType { get; set; }
 
             [JsonProperty("inbound_headers")]
             public HeaderSettings[] InboundHeaders { get; set; }
+
+            [JsonProperty("expected_priority_between")]
+            public int[] ExpectedPriorityBetween { get; set; }
 
             [JsonProperty("outbound_payloads", NullValueHandling = NullValueHandling.Ignore)]
             public OutboundPayloadSettings[] OutboundPayloadsSettings { get; set; }

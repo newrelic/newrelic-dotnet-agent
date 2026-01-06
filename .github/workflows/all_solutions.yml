@@ -42,13 +42,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
       - name: Run Shellcheck
@@ -75,10 +75,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+  
       - name: Build FullAgent.sln
         run: |
           Write-Host "dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
@@ -93,7 +99,7 @@ jobs:
         shell: powershell
           
       - name: Archive FullAgent Home folders
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: homefolders
           path: |
@@ -137,7 +143,7 @@ jobs:
         shell: powershell
 
       - name: Archive msi _build Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: msi-build-folder-artifacts
           path: ${{ github.workspace }}\src\_build
@@ -160,10 +166,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+  
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
         with:
@@ -182,7 +194,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: integrationtests
           path: |
@@ -202,10 +214,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+  
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
         with:
@@ -220,7 +238,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: unboundedintegrationtests
           path: |
@@ -268,6 +286,7 @@ jobs:
           DistributedTracing, 
           Errors, 
           HttpClientInstrumentation, 
+          HybridHttpContextStorage,
           InfiniteTracing,
           LLM,
           Logging.AuditLog,
@@ -278,6 +297,7 @@ jobs:
           Logging.MaxSamplesStored, 
           Logging.MetricsAndForwarding, 
           Logging.ZeroMaxSamplesStored,
+          OpenTelemetry,
           Owin,
           MassTransit, 
           ReJit.NetCore, 
@@ -299,7 +319,7 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net9.0
+      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net10.0
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
@@ -310,10 +330,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+  
       - name: Disable TLS 1.3
         run: |
           $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client"
@@ -341,13 +367,13 @@ jobs:
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download Integration Test Artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: integrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
@@ -357,7 +383,7 @@ jobs:
           matrix.namespace == 'AgentFeatures' || matrix.namespace == 'AgentLogs' || matrix.namespace == 'AgentMetrics' || matrix.namespace == 'BasicInstrumentation' || 
           matrix.namespace == 'CatInbound' || matrix.namespace == 'CatOutbound' || matrix.namespace == 'CodeLevelMetrics' || matrix.namespace == 'CSP' || 
           matrix.namespace == 'CustomAttributes' || matrix.namespace == 'CustomInstrumentation' || matrix.namespace == 'DataTransmission' || 
-          matrix.namespace == 'DistributedTracing' || matrix.namespace == 'Errors' || matrix.namespace == 'HttpClientInstrumentation' ||
+          matrix.namespace == 'DistributedTracing' || matrix.namespace == 'Errors' || matrix.namespace == 'HttpClientInstrumentation' || matrix.namespace == 'HybridHttpContextStorage' ||
           matrix.namespace == 'Rejit.NetFramework' || matrix.namespace == 'RequestHandling' || matrix.namespace == 'RequestHeadersCapture.AspNet' ||
           matrix.namespace == 'RequestHeadersCapture.AspNetCore' || matrix.namespace == 'RequestHeadersCapture.EnvironmentVariables' ||
           matrix.namespace == 'RequestHeadersCapture.WCF' || matrix.namespace == 'WCF.Client.IIS.ASPDisabled' ||
@@ -379,6 +405,12 @@ jobs:
           choco install azure-functions-core-tools -y --params "'/x64'"
         shell: powershell
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+  
       - name: Run Integration Tests
         run: |
           if ($Env:enhanced_logging -eq $True) {
@@ -411,7 +443,7 @@ jobs:
 
       - name: Archive integration test results on failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: integration-test-results-${{ matrix.namespace }}
           path: |
@@ -447,7 +479,7 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net9.0
+      unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net10.0
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
@@ -455,23 +487,19 @@ jobs:
       CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
 
     steps:
-      - name: My IP
-        run: (Invoke-WebRequest -uri "http://ifconfig.me/ip").Content
-        shell: powershell
-
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download Unbounded Integration Test Artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: unboundedintegrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
@@ -526,6 +554,12 @@ jobs:
 #          Start-CosmosDbEmulator
 #        shell: pwsh
 
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+  
       - name: Run Unbounded Integration Tests
         run: |
           if ($Env:enhanced_logging -eq $True) {
@@ -552,7 +586,7 @@ jobs:
 
       - name: Archive unbounded test results on failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: unbounded-test-working-directory-${{ matrix.namespace }}
           path: |
@@ -568,40 +602,40 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: homefolders
           path: src/Agent
 
-      - name: Convert GPG Key Into File
+      - name: Convert GPG Private Key Into File
         id: write_gpgkey
         run: |
-          filePath="/tmp/gpg.tar.bz2"
-          echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
+          filePath="/tmp/private_gpg_key.gpg"
+          echo "${{ secrets.NEW_GPG_KEY }}" | base64 -d > $filePath
           echo "filePath=$filePath" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Copy GPG Key to keys
         run: |
           mkdir ${{ github.workspace }}/build/Linux/keys
-          cp -f ${{ steps.write_gpgkey.outputs.filePath }} ${{ github.workspace }}/build/Linux/keys/gpg.tar.bz2
+          cp -f ${{ steps.write_gpgkey.outputs.filePath }} ${{ github.workspace }}/build/Linux/keys/private_gpg_key.gpg
         shell: bash
 
       - name: Build RPM
@@ -618,11 +652,11 @@ jobs:
 
           cd ${{ github.workspace }}/build/Linux
           docker compose build build_rpm
-          docker compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
+          docker compose run -e AGENT_VERSION=$agentVersion -e GPG_KEY=/keys/private_gpg_key.gpg -e GPG_KEY_PASSPHRASE=${{ secrets.NEW_GPG_KEY_PASSPHRASE }} build_rpm
         shell: bash
 
       - name: Archive RPM Package Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: rpm-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -635,24 +669,24 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: msi-build-folder-artifacts
           path: src/_build
@@ -675,7 +709,7 @@ jobs:
         shell: bash
 
       - name: Archive Debian Package Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: debian-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -687,31 +721,37 @@ jobs:
     runs-on: windows-2022
 
     steps:
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+  
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download Debian _build Artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: debian-build-artifacts
           path: src/_build/CoreArtifacts
 
       - name: Download RPM _build Artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: rpm-build-artifacts
           path: src/_build/CoreArtifacts
@@ -730,7 +770,7 @@ jobs:
         shell: powershell
 
       - name: Archive Deploy Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: deploy-artifacts
           path: |
@@ -746,7 +786,7 @@ jobs:
     if: always()
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           disable-sudo: true
           egress-policy: audit

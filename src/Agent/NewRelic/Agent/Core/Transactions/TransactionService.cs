@@ -16,6 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
+using NewRelic.Agent.Extensions.Helpers;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -67,10 +70,10 @@ namespace NewRelic.Agent.Core.Transactions
         private readonly IErrorService _errorService;
         private readonly IDistributedTracePayloadHandler _distributedTracePayloadHandler;
         private readonly IAttributeDefinitionService _attribDefSvc;
-        private readonly IAdaptiveSampler _adaptiveSampler;
+        private readonly ISamplerService _samplerService;
 
         public TransactionService(IEnumerable<IContextStorageFactory> factories, ISimpleTimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser,
-            IErrorService errorService, IDistributedTracePayloadHandler distributedTracePayloadHandler, IAttributeDefinitionService attribDefSvc, IAdaptiveSampler adaptiveSampler)
+            IErrorService errorService, IDistributedTracePayloadHandler distributedTracePayloadHandler, IAttributeDefinitionService attribDefSvc, ISamplerService samplerService)
         {
             _sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
             _asyncContext = GetAsyncTransactionContext(factories);
@@ -82,7 +85,12 @@ namespace NewRelic.Agent.Core.Transactions
             _errorService = errorService;
             _distributedTracePayloadHandler = distributedTracePayloadHandler;
             _attribDefSvc = attribDefSvc;
-            _adaptiveSampler = adaptiveSampler;
+            _samplerService = samplerService;
+
+            if (_configuration.HybridHttpContextStorageEnabled && _sortedPrimaryContexts.First().GetType().Name.Contains("HybridHttpContext"))
+            {
+                Log.Info("HybridHttpContextStorage is enabled and will be used in place of AsyncLocalStorage and HttpContextStorage.");
+            }
         }
 
         public bool IsAttachedToAsyncStorage => TryGetInternalTransaction(_asyncContext) != null;
@@ -94,31 +102,66 @@ namespace NewRelic.Agent.Core.Transactions
 
         #region Private Helpers
 
-        private static IEnumerable<IContextStorage<IInternalTransaction>> GetPrimaryTransactionContexts(IEnumerable<IContextStorageFactory> factories)
+        private static readonly List<IContextStorage<IInternalTransaction>> _tlsStorageList =
+            [new ThreadLocalStorage<IInternalTransaction>("NewRelic.Transaction")];
+
+        private List<IContextStorage<IInternalTransaction>> GetPrimaryTransactionContexts(IEnumerable<IContextStorageFactory> factories)
         {
-            var list = factories
-                .Where(factory => factory != null)
-                .Where(factory => !factory.IsAsyncStorage)
-                .Select(factory => factory.CreateContext<IInternalTransaction>("NewRelic.Transaction"))
-                .Where(transactionContext => transactionContext != null)
-                .ToList(); //ToList() is important to force evaluation only once
+            var includeHybrid = _configuration.HybridHttpContextStorageEnabled;
+            const string key = TransactionContextKey;
 
-            list.Add(new ThreadLocalStorage<IInternalTransaction>("NewRelic.Transaction"));
+            var result = new List<IContextStorage<IInternalTransaction>>();
+            foreach (var factory in factories)
+            {
+                // Skip async storage contexts here; they are handled separately
+                if (factory.IsAsyncStorage)
+                    continue;
 
-            return list
-                .OrderByDescending(transactionContext => transactionContext.Priority).ToList();
+                // Skip hybrid if not enabled
+                if (factory.IsHybridStorage && !includeHybrid)
+                    continue;
+
+                var context = factory.CreateContext<IInternalTransaction>(key);
+                if (context != null)
+                    result.Add(context);
+            }
+
+            // Add thread-local fallback
+            result.AddRange(_tlsStorageList);
+
+            // Sort descending by priority
+            result.Sort((a, b) => b.Priority.CompareTo(a.Priority));
+            return result;
         }
 
-        private static IContextStorage<IInternalTransaction> GetAsyncTransactionContext(IEnumerable<IContextStorageFactory> factories)
+        private IContextStorage<IInternalTransaction> GetAsyncTransactionContext(IEnumerable<IContextStorageFactory> factories)
         {
-            return factories
-                .Where(factory => factory != null)
-                .Where(factory => factory.IsAsyncStorage)
-                .Select(factory => factory.CreateContext<IInternalTransaction>("NewRelic.Transaction"))
-                .Where(transactionContext => transactionContext != null)
-                .Where(transactionContext => transactionContext.CanProvide)
-                .OrderByDescending(transactionContext => transactionContext.Priority)
-                .FirstOrDefault();
+            var includeHybrid = _configuration.HybridHttpContextStorageEnabled;
+            const string key = TransactionContextKey;
+
+            IContextStorage<IInternalTransaction> bestContext = null;
+
+            foreach (var factory in factories)
+            {
+                // Only consider async non-hybrid factories OR hybrid factories (if enabled)
+                var isAsyncNonHybrid = factory.IsAsyncStorage && !factory.IsHybridStorage;
+                var isHybridAndEnabled = factory.IsHybridStorage && includeHybrid;
+
+                if (!isHybridAndEnabled && !isAsyncNonHybrid)
+                    continue;
+
+                var context = factory.CreateContext<IInternalTransaction>(key);
+                if (context is not { CanProvide: true })
+                    continue;
+
+                // Keep the context with the highest priority
+                if (bestContext == null || context.Priority > bestContext.Priority)
+                {
+                    bestContext = context;
+                }
+            }
+
+            return bestContext;
         }
 
         private IInternalTransaction TryGetInternalTransaction(IContextStorage<IInternalTransaction> transactionContext)
@@ -165,8 +208,10 @@ namespace NewRelic.Agent.Core.Transactions
             var priority = _tracePriorityManager.Create();
             var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(),
                 DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, priority,
-                _databaseStatementParser, _distributedTracePayloadHandler, _errorService, _attribDefSvc.AttributeDefs);
-            _adaptiveSampler.StartTransaction();
+                _databaseStatementParser, _distributedTracePayloadHandler, _errorService, _attribDefSvc.AttributeDefs, _samplerService);
+
+            _samplerService.GetSampler(SamplerLevel.Root).StartTransaction();
+
             try
             {
                 transactionContext.SetData(transaction);

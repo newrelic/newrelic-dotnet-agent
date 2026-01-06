@@ -604,6 +604,17 @@ namespace NewRelic.Agent.Core.Segments
             return this;
         }
 
+        public ISpan AddAgentAttribute(string key, object value)
+        {
+            SpanAttributeValueCollection attribValues;
+            lock (_attribValuesSyncRoot)
+            {
+                attribValues = _attribValues ??= new SpanAttributeValueCollection();
+            }
+            AttribDefs.GetAgentAttributeForSpan(key).TrySetValue(attribValues, value);
+            return this;
+        }
+
         public ISpan SetName(string name)
         {
             SegmentNameOverride = name;

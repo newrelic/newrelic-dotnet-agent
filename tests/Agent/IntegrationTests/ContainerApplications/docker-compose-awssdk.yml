@@ -2,7 +2,7 @@
 #
 # AGENT_PATH      host path to the Agent linux home folder - will map to /usr/local/newrelic-dotnet-agent in the container
 # LOG_PATH        host path for Agent logfile output - will map to /app/logs in the container
-# DISTRO_TAG      distro tag for build, not including the architecture suffix - possible values 8.0-bookworm-slim, 8.0-alpine, 8.0-jammy
+# DISTRO_TAG      distro tag for build, not including the architecture suffix
 # TARGET_ARCH     the target architecture for the run -- either amd64 or arm64
 # BUILD_ARCH      the build architecture-- either amd64 or arm64
 # PORT            external port for the smoketest API

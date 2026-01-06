@@ -4,16 +4,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace CompositeTests.HybridAgent.Helpers;
 
 public static class OpenTelemetryOperations
 {
-    public static ActivitySource TestAppActivitySource = new("TestApp activity source");
+    public static ActivitySource TestAppActivitySource = new("TestApp activity source", "1.2.3");
 
     public static void DoWorkInSpan(string spanName, ActivityKind activityKind, Action work)
     {
@@ -135,6 +132,13 @@ public static class OpenTelemetryOperations
 
         work();
     }
+
+    public static void SetOkStatusOnSpan(Action work)
+    {
+        Activity.Current?.SetStatus(ActivityStatusCode.Ok);
+        work();
+    }
+
     public static void SetErrorStatusOnSpan(string statusDescription, Action work)
     {
         Activity.Current?.SetStatus(ActivityStatusCode.Error, statusDescription);

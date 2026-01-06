@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>NewRelic.Agent.UnboundedIntegrationTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.UnboundedIntegrationTests</AssemblyName>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

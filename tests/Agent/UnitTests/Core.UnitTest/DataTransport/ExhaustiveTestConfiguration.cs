@@ -16,7 +16,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public string AgentEnabledAt => "Hardcoded in test";
 
-        public bool ServerlessModeEnabled  => false;
+        public bool ServerlessModeEnabled => false;
 
         public string ServerlessFunctionName => null;
 
@@ -24,7 +24,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public string AgentLicenseKey => "AgentLicenseKey";
 
-        public IEnumerable<string> ApplicationNames => new[] { "name1", "name2", "name3" };
+        public IEnumerable<string> ApplicationNames => ["name1", "name2", "name3"];
+        public bool TryGetApplicationNames(out IEnumerable<string> names)
+        {
+            names = ApplicationNames;
+            return true;
+        }
 
         public string ApplicationNamesSource => "ApplicationNameSource";
 
@@ -121,6 +126,13 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool CrossApplicationTracingEnabled => true;
 
         public bool DistributedTracingEnabled => true;
+
+        public SamplerType RootSamplerType => SamplerType.TraceIdRatioBased;
+        public SamplerType RemoteParentSampledSamplerType => SamplerType.AlwaysOn;
+        public SamplerType RemoteParentNotSampledSamplerType => SamplerType.AlwaysOff;
+        public float? RootTraceIdRatioSamplerRatio => 0.12f;
+        public float? RemoteParentSampledTraceIdRatioSamplerRatio => null;
+        public float? RemoteParentNotSampledTraceIdRatioSamplerRatio => null;
 
         public bool SpanEventsEnabled => true;
 
@@ -417,9 +429,6 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool ExcludeNewrelicHeader => true;
 
-        public RemoteParentSampledBehavior RemoteParentSampledBehavior => RemoteParentSampledBehavior.Default;
-        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => RemoteParentSampledBehavior.Default;
-
         public bool ApplicationLoggingEnabled => true;
 
         public bool LogMetricsCollectorEnabled => true;
@@ -432,7 +441,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool LogDecoratorEnabled => true;
 
-        public HashSet<string> LogLevelDenyList => new HashSet<string> { "testlevel1, testlevel2" } ;
+        public HashSet<string> LogLevelDenyList => new HashSet<string> { "testlevel1, testlevel2" };
 
         public bool AppDomainCachingDisabled => true;
 
@@ -442,7 +451,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool ContextDataEnabled => true;
 
-        public IEnumerable<string> ContextDataInclude => new[] { "attr1", "attr2"};
+        public IEnumerable<string> ContextDataInclude => new[] { "attr1", "attr2" };
 
         public IEnumerable<string> ContextDataExclude => new[] { "attr1", "attr2" };
 
@@ -511,10 +520,22 @@ namespace NewRelic.Agent.Core.DataTransport
         public int HealthFrequency => 5;
 
         public bool AwsLambdaApmModeEnabled => true;
-        public List<string> IncludedActivitySources => ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"];
-        public List<string> ExcludedActivitySources => ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"];
-        public bool OpenTelemetryBridgeEnabled => true;
-
         public int MaxCustomInstrumentationSupportabilityMetrics => 25;
+
+        // OpenTelemetry Configuration Properties
+        public bool OpenTelemetryEnabled => true;
+
+        public bool OpenTelemetryTracingEnabled => true;
+        public List<string> OpenTelemetryTracingIncludedActivitySources => ["SomeIncludedActivitySourceName", "AnotherIncludedActivitySourceName"];
+        public List<string> OpenTelemetryTracingExcludedActivitySources => ["SomeExcludedActivitySourceName", "AnotherExcludedActivitySourceName"];
+        public List<string> OpenTelemetryTracingDefaultExcludedActivitySources => ["SomeDefaultExcludedActivitySourceName", "AnotherDefaultExcludedActivitySourceName"];
+
+        public bool OpenTelemetryMetricsEnabled => true;
+        public IEnumerable<string> OpenTelemetryMetricsIncludeFilters => ["IncludedMeter1", "IncludedMeter2"];
+        public IEnumerable<string> OpenTelemetryMetricsExcludeFilters => ["ExcludedMeter1", "ExcludedMeter2"];
+        public int OpenTelemetryOtlpTimeoutSeconds => 10;
+        public int OpenTelemetryOtlpExportIntervalSeconds => 5;
+
+        public bool HybridHttpContextStorageEnabled => false;
     }
 }

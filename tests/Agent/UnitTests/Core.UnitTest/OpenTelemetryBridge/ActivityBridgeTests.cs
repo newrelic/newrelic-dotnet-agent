@@ -2,16 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.UnitTests.Core.UnitTest.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
     [TestFixture]
     public class ActivityBridgeTests
@@ -27,31 +25,31 @@ namespace NewRelic.Agent.UnitTests.Core.UnitTest.OpenTelemetryBridge
             _mockErrorService = Mock.Create<IErrorService>();
             _mockConfig = Mock.Create<IConfiguration>();
             Mock.Arrange(() => _mockAgent.Configuration).Returns(_mockConfig);
-            Mock.Arrange(() => _mockConfig.OpenTelemetryBridgeEnabled).Returns(true);
-        }
+            Mock.Arrange(() => _mockConfig.OpenTelemetryEnabled).Returns(true);
 
-        [Test]
-        public void Start_ReturnsFalse_WhenDiagnosticSourceAssemblyNotLoaded()
-        {
-            // Arrange
-            // This test is only valid if System.Diagnostics.DiagnosticSource is not loaded in the current AppDomain.
-            var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-            var diagnosticSource = loadedAssemblies.FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
-            if (diagnosticSource != null)
-            {
-                Assert.Ignore("System.Diagnostics.DiagnosticSource is loaded in this AppDomain, so this test cannot be executed.");
-            }
-
-            var bridge = new ActivityBridge(_mockAgent, _mockErrorService);
-            var result = bridge.Start();
-            Assert.That(result, Is.False, "Start should return false if DiagnosticSource is not loaded.");
+            Mock.Arrange(() => _mockConfig.OpenTelemetryTracingEnabled).Returns(true);
         }
 
         [Test]
         public void Start_ReturnsTrue_WhenOpenTelemetryBridgeDisabled()
         {
             // Arrange
-            Mock.Arrange(() => _mockConfig.OpenTelemetryBridgeEnabled).Returns(false);
+            Mock.Arrange(() => _mockConfig.OpenTelemetryEnabled).Returns(false);
+            Mock.Arrange(() => _mockConfig.OpenTelemetryTracingEnabled).Returns(true);
+
+            var bridge = new ActivityBridge(_mockAgent, _mockErrorService);
+            // Act
+            var result = bridge.Start();
+            // Assert
+            Assert.That(result, Is.True, "Start should return true if OpenTelemetry is disabled.");
+        }
+
+        [Test]
+        public void Start_ReturnsTrue_WhenOpenTelemetryBridgeEnabled_AndTracingDisabled()
+        {
+            // Arrange
+            Mock.Arrange(() => _mockConfig.OpenTelemetryEnabled).Returns(true);
+            Mock.Arrange(() => _mockConfig.OpenTelemetryTracingEnabled).Returns(false);
 
             var bridge = new ActivityBridge(_mockAgent, _mockErrorService);
 
@@ -59,7 +57,7 @@ namespace NewRelic.Agent.UnitTests.Core.UnitTest.OpenTelemetryBridge
             var result = bridge.Start();
 
             // Assert
-            Assert.That(result, Is.True, "Start should return true if OpenTelemetryBridge is disabled.");
+            Assert.That(result, Is.True, "Start should return true if OpenTelemetry is disabled.");
         }
 
         [Test]

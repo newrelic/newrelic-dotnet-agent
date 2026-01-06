@@ -48,9 +48,15 @@ jobs:
       test_results_path: tests\TestResults
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
+
+      - name: Setup .NET 10 Preview
+        uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5.0.1
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
 
       - name: Restore NuGet Packages
         run: dotnet restore
@@ -59,14 +65,14 @@ jobs:
         run: dotnet test --verbosity minimal --no-restore --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
 
       - name: Upload coverage reports to Codecov.io
-        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5.5.0
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
             flags: Agent
             directory: ${{ env.test_results_path }}
             token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage report artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
             name: UnitTestResults # Artifact name        
             path: ${{ env.test_results_path }} # Directory containing files to upload

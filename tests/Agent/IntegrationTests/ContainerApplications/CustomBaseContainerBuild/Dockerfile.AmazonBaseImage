@@ -8,8 +8,9 @@ RUN dnf upgrade-minimal -y
 
 # install the asp.netcore runtime. Based on https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual
 ARG DOTNET_VERSION
+ARG DOTNET_QUALITY
 RUN dnf install -y wget tar findutils gzip libicu
 RUN wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
 RUN chmod +x ./dotnet-install.sh
-RUN ./dotnet-install.sh --channel ${DOTNET_VERSION} --runtime aspnetcore
+RUN ./dotnet-install.sh --channel ${DOTNET_VERSION} --quality ${DOTNET_QUALITY} --runtime aspnetcore
 ENV PATH="${PATH}:/root/.dotnet:/root/.dotnet/tools"

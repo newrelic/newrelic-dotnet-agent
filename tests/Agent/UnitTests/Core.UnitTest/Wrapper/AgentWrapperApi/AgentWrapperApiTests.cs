@@ -15,7 +15,6 @@ using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
@@ -42,7 +41,7 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
-using NewRelic.Agent.Core.Database.UnitTest;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
@@ -105,6 +104,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private ICustomEventTransformer _customEventTransformer;
         private IDatabaseService _databaseService;
 
+        private SamplerFactory _samplerFactory;
+        private SamplerService _samplerService;
+
         [SetUp]
         public void SetUp()
         {
@@ -162,6 +164,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _customEventTransformer = Mock.Create<ICustomEventTransformer>();
             _databaseService = Mock.Create<IDatabaseService>();
 
+            _samplerFactory = new SamplerFactory();
+            _samplerService = new SamplerService(_samplerFactory);
+
             _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService, _customEventTransformer, new NewRelicActivitySourceProxy(), _databaseService);
         }
 
@@ -174,6 +179,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _attribDefSvc.Dispose();
             _labelsService.Dispose();
             _databaseService.Dispose();
+            _samplerService.Dispose();
+            _samplerFactory.Dispose();
         }
 
         private class CallStackManagerFactory : ICallStackManagerFactory
@@ -678,7 +685,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         [Test]
         public void AcceptDistributedTraceHeaders__ReportsSupportabilityMetric_NullPayload()
         {
-            _distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, new AdaptiveSampler());
+            _distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, _samplerService);
             _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter, _simpleSchedulingService, _customEventTransformer, new NewRelicActivitySourceProxy(), _databaseService);
             SetupTransaction();
 
@@ -2321,7 +2328,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private void SetupTransaction()
         {
             var transactionName = TransactionName.ForWebTransaction("foo", "bar");
-            _transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            _transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
 
             Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns(_transaction);
         }

@@ -20,6 +20,8 @@ namespace NewRelic.Agent.Configuration
 
         string AgentLicenseKey { get; }
         IEnumerable<string> ApplicationNames { get; }
+        bool TryGetApplicationNames(out IEnumerable<string> names);
+
         string ApplicationNamesSource { get; }
         bool AutoStartAgent { get; }
         string BrowserMonitoringApplicationId { get; }
@@ -191,8 +193,13 @@ namespace NewRelic.Agent.Configuration
         bool EnableAspNetCore6PlusBrowserInjection { get; }
         bool ExcludeNewrelicHeader { get; }
 
-        RemoteParentSampledBehavior RemoteParentSampledBehavior { get; }
-        RemoteParentSampledBehavior RemoteParentNotSampledBehavior { get; }
+        SamplerType RootSamplerType { get; }
+        SamplerType RemoteParentSampledSamplerType { get; }
+        SamplerType RemoteParentNotSampledSamplerType { get; }
+
+        float? RootTraceIdRatioSamplerRatio { get; }
+        float? RemoteParentSampledTraceIdRatioSamplerRatio { get; }
+        float? RemoteParentNotSampledTraceIdRatioSamplerRatio { get; }
 
         bool ApplicationLoggingEnabled { get; }
         bool LogMetricsCollectorEnabled { get; }
@@ -249,10 +256,24 @@ namespace NewRelic.Agent.Configuration
 
         bool AwsLambdaApmModeEnabled { get; }
 
-        List<string> IncludedActivitySources { get; }
-        List<string> ExcludedActivitySources { get; }
-
-        bool OpenTelemetryBridgeEnabled { get; }
         int MaxCustomInstrumentationSupportabilityMetrics { get; }
+
+        #region OpenTelemetry Configuration Properties
+        bool OpenTelemetryEnabled { get; }
+
+        bool OpenTelemetryTracingEnabled { get; }
+
+        List<string> OpenTelemetryTracingDefaultExcludedActivitySources { get; }
+        List<string> OpenTelemetryTracingIncludedActivitySources { get; }
+        List<string> OpenTelemetryTracingExcludedActivitySources { get; }
+
+        bool OpenTelemetryMetricsEnabled { get; }
+        IEnumerable<string> OpenTelemetryMetricsIncludeFilters { get; }
+        IEnumerable<string> OpenTelemetryMetricsExcludeFilters { get; }
+        int OpenTelemetryOtlpTimeoutSeconds { get; }
+        int OpenTelemetryOtlpExportIntervalSeconds { get; }
+        #endregion
+
+        bool HybridHttpContextStorageEnabled { get; }
     }
 }

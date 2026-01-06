@@ -82,10 +82,10 @@ namespace NewRelic.Agent.Core.Attributes
 
         public static AttributeDefinitionBuilder<string, string> CreateDBStatement(string name, AttributeClassification classification)
         {
-            const int dbStmtMaxLength = 1999;
+            const int dbStmtMaxLengthBytes = 4096; // max byte length, per agent spec
 
             return new AttributeDefinitionBuilder<string, string>(name, classification)
-                .WithConvert((dbStmt) => TruncateDatastoreStatement(dbStmt, dbStmtMaxLength));
+                .WithConvert((dbStmt) => TruncateDatastoreStatement(dbStmt, dbStmtMaxLengthBytes));
         }
 
         public static AttributeDefinitionBuilder<object, object> CreateCustomAttribute(string name, AttributeDestinations destination)
@@ -94,91 +94,102 @@ namespace NewRelic.Agent.Core.Attributes
 
             builder.AppliesTo(destination, true);
 
-            builder.WithConvert((input) =>
-            {
-                if (input == null)
-                {
-                    return null;
-                }
-
-                if (input is TimeSpan)
-                {
-                    return ((TimeSpan)input).TotalSeconds;
-                }
-                else if (input is DateTimeOffset)
-                {
-                    return ((DateTimeOffset)input).ToString("o");
-                }
-
-                switch (Type.GetTypeCode(input.GetType()))
-                {
-                    case TypeCode.SByte:
-                    case TypeCode.Byte:
-                    case TypeCode.UInt16:
-                    case TypeCode.UInt32:
-                    case TypeCode.UInt64:
-                    case TypeCode.Int16:
-                    case TypeCode.Int32:
-                        return Convert.ToInt64(input);
-
-                    // don't convert Decimal and Single to double.
-                    // The value ends up getting serialized as a string, so there's no need for the conversion
-                    case TypeCode.Decimal:
-                    case TypeCode.Single:
-
-                    case TypeCode.Double:
-                    case TypeCode.Int64:
-                    case TypeCode.Boolean:
-                    case TypeCode.String:
-                        return input;
-
-                    case TypeCode.DateTime:
-                        return ((DateTime)input).ToString("o");
-                }
-
-                return input.ToString();
-            });
+            builder.WithConvert(GenericConverter);
 
             return builder;
         }
 
-        private static string TruncateDatastoreStatement(string statement, int maxSizeBytes)
+        public static AttributeDefinitionBuilder<object, object> CreateAgentAttribute(string name, AttributeDestinations destination)
         {
-            const int maxBytesPerUtf8Char = 4;
-            const byte firstByte = 0b11000000;
-            const byte highBit = 0b10000000;
+            var builder = Create<object, object>(name, AttributeClassification.AgentAttributes);
 
-            var maxCharactersWillFitWithoutTruncation = maxSizeBytes / maxBytesPerUtf8Char;
+            builder.AppliesTo(destination, true);
 
-            if (statement.Length <= maxCharactersWillFitWithoutTruncation)
-            {
-                return statement;
-            }
+            builder.WithConvert(GenericConverter);
 
-            var byteArray = Encoding.UTF8.GetBytes(statement);
-
-            if (byteArray.Length <= maxSizeBytes)
-            {
-                return statement;
-            }
-
-            var actualMaxStatementLength = maxSizeBytes - 3;
-
-            var byteOffset = actualMaxStatementLength;
-
-            // Check high bit to see if we're [potentially] in the middle of a multi-byte char
-            if ((byteArray[byteOffset] & highBit) == highBit)
-            {
-                // If so, keep walking back until we have a byte starting with `11`,
-                // which means the first byte of a multi-byte UTF8 character.
-                while (firstByte != (byteArray[byteOffset] & firstByte))
-                {
-                    byteOffset--;
-                }
-            }
-
-            return Encoding.UTF8.GetString(byteArray, 0, byteOffset) + "...";
+            return builder;
         }
+
+        // public to allow for testing
+        public static object GenericConverter(object input)
+        {
+            switch (input)
+            {
+                case null:
+                    return null;
+                case TimeSpan span:
+                    return span.TotalSeconds;
+                case DateTimeOffset offset:
+                    return offset.ToString("o");
+                default:
+                    switch (Type.GetTypeCode(input.GetType()))
+                    {
+                        case TypeCode.SByte:
+                        case TypeCode.Byte:
+                        case TypeCode.UInt16:
+                        case TypeCode.UInt32:
+                        case TypeCode.UInt64:
+                        case TypeCode.Int16:
+                        case TypeCode.Int32:
+                            return Convert.ToInt64(input);
+
+                        // don't convert Decimal and Single to double.
+                        // The value ends up getting serialized as a string, so there's no need for the conversion
+                        case TypeCode.Decimal:
+                        case TypeCode.Single:
+
+                        case TypeCode.Double:
+                        case TypeCode.Int64:
+                        case TypeCode.Boolean:
+                        case TypeCode.String:
+                            return input;
+
+                        case TypeCode.DateTime:
+                            return ((DateTime)input).ToString("o");
+                    }
+
+                    return input.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Truncates the specified statement to ensure its UTF-8 encoded byte length does not exceed the given maximum
+        /// size, appending an ellipsis if truncation occurs.
+        /// Assumes <paramref name="maxSizeBytes"/> is strictly greater than the UTF-8 byte length of the ellipsis.
+        /// </summary>
+        /// <param name="statement">The input string to be truncated. Can be null.</param>
+        /// <param name="maxSizeBytes">The maximum allowed size, in bytes, of the UTF-8 encoded result.</param>
+        /// <returns>A string whose UTF-8 encoded byte length is less than or equal to the specified maximum. If truncation
+        /// occurs, the result ends with an ellipsis ("..."). Returns null if the input statement is null.</returns>
+        public static string TruncateDatastoreStatement(string statement, int maxSizeBytes)
+        {
+            if (statement == null)
+            {
+                return null;
+            }
+
+            const string ellipsis = "...";
+            var ellipsisBytes = Encoding.UTF8.GetByteCount(ellipsis);
+
+            var bytes = Encoding.UTF8.GetBytes(statement);
+            if (bytes.Length <= maxSizeBytes)
+            {
+                return statement;
+            }
+
+            // Budget for content to leave room for the ellipsis.
+            var offset = maxSizeBytes - ellipsisBytes;
+
+            // Back up if the first excluded byte is a UTF-8 continuation byte (10xxxxxx)
+            while (offset > 0 && (bytes[offset] & 0b1100_0000) == 0b1000_0000)
+            {
+                offset--;
+            }
+
+            var truncated = Encoding.UTF8.GetString(bytes, 0, offset);
+            return truncated + ellipsis;
+        }
+
     }
 
     public class AttributeDefinitionBuilder<TInput, TOutput>

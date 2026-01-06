@@ -74,6 +74,7 @@ namespace MockNewRelic.Controllers
                         var serverConfig = new Dictionary<string, object>();
 
                         serverConfig["agent_run_id"] = Guid.NewGuid();
+                        serverConfig["entity_guid"] = Guid.NewGuid();
 
                         if (_setLiveInstrumentationOnConnect)
                         {

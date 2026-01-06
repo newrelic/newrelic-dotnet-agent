@@ -16,6 +16,7 @@ namespace NewRelic.Agent.Core.Utilities
         [TestCase(DotnetCoreVersion.net7, ExpectedResult = true)]
         [TestCase(DotnetCoreVersion.net8, ExpectedResult = false)]
         [TestCase(DotnetCoreVersion.net9, ExpectedResult = false)]
+        [TestCase(DotnetCoreVersion.net10, ExpectedResult = false)]
         [TestCase(DotnetCoreVersion.Other, ExpectedResult = false)]
         public bool IsUnsupportedDotnetCoreVersion(DotnetCoreVersion version)
         {

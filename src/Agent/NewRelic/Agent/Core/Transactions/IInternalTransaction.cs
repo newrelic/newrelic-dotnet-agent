@@ -8,6 +8,7 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
@@ -42,7 +43,7 @@ namespace NewRelic.Agent.Core.Transactions
         string TraceId { get; }
         float Priority { get; }
         bool? Sampled { get; }
-        void SetSampled(IAdaptiveSampler adaptiveSampler);
+        void SetSampled();
 
         /// <summary>
         /// Marks this builder as cleanly finished.

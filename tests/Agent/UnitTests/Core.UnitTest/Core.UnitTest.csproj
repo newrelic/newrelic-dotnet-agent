@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net481;net9.0</TargetFrameworks>
+    <TargetFrameworks>net481;net10.0</TargetFrameworks>
     <RootNamespace>NewRelic.Agent.Core</RootNamespace>
     <AssemblyName>NewRelic.Agent.Core.UnitTest</AssemblyName>
     <DebugType>Full</DebugType>
@@ -12,7 +12,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="JustMock" Version="2025.3.813.457" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
     <PackageReference Include="MoreLinq" Version="2.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Nito.AsyncEx.Context" Version="5.1.2" />
@@ -21,12 +21,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NUnit3TestAdapter" Version="5.1.0">
+    <PackageReference Include="NUnit3TestAdapter" Version="5.2.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net90'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net481'">
@@ -40,7 +40,6 @@
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
     <Reference Include="System.XML" />
-    <Reference Include="System.ValueTuple" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />

@@ -20,7 +20,7 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         private List<string> _bedrockModelsToTest = new List<string>
         {
             "amazonembed",
-            "amazonexpress",
+            //"amazonexpress", // Model is EOLed as of 12/29/25
             //"anthropic" // Model is EOLed as of 9/11/25
         };
 
@@ -108,7 +108,7 @@ namespace NewRelic.Agent.IntegrationTests.LLM
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/Bedrock/InvokeModelAsync", CallCountAllHarvests = _bedrockModelsToTest.Count - 1 },
+                //new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/Bedrock/InvokeModelAsync", CallCountAllHarvests = _bedrockModelsToTest.Count - 1 }, // We are only testing one embedding model right now
                 new Assertions.ExpectedMetric { metricName = @"Custom/Llm/embedding/Bedrock/InvokeModelAsync", CallCountAllHarvests = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true},
                 new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/LLM/.*/.*", IsRegexName = true}, // Supportability/DotNet/LLM/{vendor}/{model}

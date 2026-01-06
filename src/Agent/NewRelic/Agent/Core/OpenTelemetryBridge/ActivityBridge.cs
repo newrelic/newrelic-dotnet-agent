@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
@@ -17,8 +18,8 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 namespace NewRelic.Agent.Core.OpenTelemetryBridge;
 
 // TODO: Review all usages of the Activity class to ensure that we are only using the things are available in the
-// supported versions of the DiagnosticSource assembly. We could also support some backwards compatibility by only
-// having certain features available in the necessary properties or methods are available.
+//  supported versions of the DiagnosticSource assembly. We could also support some backwards compatibility by only
+//  having certain features available in the necessary properties or methods are available.
 public class ActivityBridge : IDisposable
 {
     public const string TemporarySegmentName = "temp segment name";
@@ -42,18 +43,19 @@ public class ActivityBridge : IDisposable
 
     public bool Start()
     {
-        if (!_agent.Configuration.OpenTelemetryBridgeEnabled)
+        if (!_agent.Configuration.OpenTelemetryTracingEnabled)
         {
+            Log.Debug("Open Telemetry Tracing Bridge is disabled via configuration.");
             return true;
         }
 
         if (_activityListener != null)
         {
-            Log.Debug("Activity listener has already been created. Not starting a new one.");
+            Log.Debug("OpenTelemetry Tracing Bridge has already been created. Not starting a new one.");
             return false;
         }
 
-        Log.Debug("OpenTelemetry Bridge is enabled. Starting the activity listener.");
+        Log.Debug("OpenTelemetry Tracing Bridge is enabled. Starting the activity listener.");
         return TryCreateActivityListener();
     }
 
@@ -393,16 +395,7 @@ public class ActivityBridge : IDisposable
             return false;
         }
 
-        var includedActivitySources = _agent.Configuration.IncludedActivitySources;
-        var excludedActivitySources = _agent.Configuration.ExcludedActivitySources;
-
-        var shouldListenToActivitySource = !string.IsNullOrEmpty(activitySourceName)
-                                           && includedActivitySources.Contains(activitySourceName)
-                                           && !excludedActivitySources.Contains(activitySourceName);
-
-        Log.Finest($"ShouldListenToActivitySource: {(shouldListenToActivitySource ? "Listening to" : "Not listening to")} {activitySourceName}.");
-
-        return shouldListenToActivitySource;
+        return ActivitySourceExtensions.ShouldListenToActivitySource(activitySourceName, _agent.Configuration);
     }
 
     private bool ShouldSampleActivity(int kind, object activityContext)
@@ -512,6 +505,18 @@ public class ActivityBridge : IDisposable
 
         if (segment != null)
         {
+            // set status code (and description, if available) as agent attributes on the segment
+            dynamic activity = originalActivity;
+            int activityStatusCode = (int)activity.Status;
+            segment.AddAgentAttribute("status.code", activityStatusCode.ToActivityStatusCodeString());
+
+            // description is currently only available when status is Error
+            string activityStatusDescription = (string)activity.StatusDescription;
+            if (!string.IsNullOrWhiteSpace(activityStatusDescription))
+            {
+                segment.AddAgentAttribute("status.description", activityStatusDescription);
+            }
+
             segment.ProcessActivityTags(originalActivity, agent, errorService);
             segment.AddExceptionEventInformationToSegment(originalActivity, errorService);
             segment.CaptureEventsOnSpan(originalActivity);
@@ -527,4 +532,32 @@ public class ActivityBridge : IDisposable
     }
     #endregion
 
+}
+
+public static class ActivitySourceExtensions
+{
+    // static to allow unit testing to verify logic without needing to create an ActivityBridge instance
+    public static bool ShouldListenToActivitySource(string activitySourceName, IConfiguration config)
+    {
+        var defaultExcludedActivitySources = config.OpenTelemetryTracingDefaultExcludedActivitySources;
+        var customerIncludedActivitySources = config.OpenTelemetryTracingIncludedActivitySources;
+        var customerExcludedActivitySources = config.OpenTelemetryTracingExcludedActivitySources;
+
+        // priority from lowest to highest:
+        // Default Excluded Activity Sources
+        // Customer Included Activity Sources
+        // Customer Excluded Activity Sources
+        // --> items on the customer include list override the default exclude list
+        // --> items on the customer exclude list override the customer include list
+        // --> activity sources not in any exclude list are included by default
+        var isExcludedByDefault = defaultExcludedActivitySources.Contains(activitySourceName, StringComparer.CurrentCultureIgnoreCase);
+        var isIncludedByCustomer = customerIncludedActivitySources.Contains(activitySourceName, StringComparer.CurrentCultureIgnoreCase);
+        var isExcludedByCustomer = customerExcludedActivitySources.Contains(activitySourceName, StringComparer.CurrentCultureIgnoreCase);
+
+        bool shouldListenToActivitySource = !isExcludedByCustomer && (!isExcludedByDefault || isIncludedByCustomer);
+
+        Log.Finest($"ShouldListenToActivitySource: {(shouldListenToActivitySource ? "Listening to" : "Not listening to")} {activitySourceName}.");
+
+        return shouldListenToActivitySource;
+    }
 }

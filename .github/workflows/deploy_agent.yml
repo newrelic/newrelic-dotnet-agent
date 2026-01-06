@@ -48,6 +48,7 @@ on:
 permissions:
   contents: read
   packages: read
+  id-token: write
   
 env:
   DOTNET_NOLOGO: true
@@ -61,14 +62,14 @@ jobs:
       workflow_run_id: ${{ steps.step2.outputs.workflow_run_id }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
         if: ${{ inputs.get-version-automatically }}
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
       
@@ -155,13 +156,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ needs.get-release-info.outputs.workflow_run_id }}
@@ -170,7 +171,7 @@ jobs:
           repository: ${{ github.repository }}
       
       - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}
@@ -184,7 +185,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\staging_dir
@@ -257,33 +258,37 @@ jobs:
     if: ${{ inputs.nuget }}
     name: Deploy Agent to NuGet
     runs-on: windows-2022
+    permissions:
+      id-token: write #enable GitHub OIDC token issuance for this job
 
     env:
       nuget_source: https://www.nuget.org
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir
-
-      - name: Setup NuGet API Key
-        run: |
-          nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
-        shell: pwsh
-
+          
+      # Get a short-lived NuGet API key
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@d22cc5f58ff5b88bf9bd452535b4335137e24544 # v1.1.0
+        id: login
+        with:
+          user: ${{ secrets.NUGET_TRUSTED_PUBLISH_POLICY_USER }}
+        
       - name: Deploy Agent to Nuget
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgent\NewRelic.Agent.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgent\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "dotnet nuget push $packagePath --source ${{ env.nuget_source }}"
           }
         shell: powershell
 
@@ -293,11 +298,11 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgentApi\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Api').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "dotnet nuget push $packagePath --source ${{ env.nuget_source }}"
           }
         shell: powershell
 
@@ -307,11 +312,11 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureCloudServices\$packageName
           $version = $packageName.TrimStart('NewRelicWindowsAzure').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "dotnet nuget push $packagePath --source ${{ env.nuget_source }}"
           }
         shell: powershell
 
@@ -321,11 +326,11 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "dotnet nuget push $packagePath --source ${{ env.nuget_source }}"
           }
         shell: powershell
 
@@ -335,11 +340,11 @@ jobs:
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "dotnet nuget push $packagePath --source ${{ env.nuget_source }}"
           }
         shell: powershell
 
@@ -350,7 +355,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
@@ -361,12 +366,12 @@ jobs:
         shell: bash
 
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/

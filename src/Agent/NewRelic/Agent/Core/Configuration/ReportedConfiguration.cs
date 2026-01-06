@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.SharedInterfaces;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Configuration
@@ -53,6 +54,8 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.application_names")]
         public IEnumerable<string> ApplicationNames => _configuration.ApplicationNames;
 
+        public bool TryGetApplicationNames(out IEnumerable<string> names) => _configuration.TryGetApplicationNames(out names);
+
         [JsonProperty("agent.application_names_source")]
         public string ApplicationNamesSource => _configuration.ApplicationNamesSource;
 
@@ -71,7 +74,7 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("browser_monitoring.error_beacon_address")]
         public string BrowserMonitoringErrorBeaconAddress => _configuration.BrowserMonitoringErrorBeaconAddress;
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string BrowserMonitoringJavaScriptAgent => _configuration.BrowserMonitoringJavaScriptAgent;
 
         [JsonProperty("browser_monitoring.javascript_agent.populated")]
@@ -87,7 +90,7 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("browser_monitoring.loader_debug")]
         public bool LoaderDebug => false;
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string BrowserMonitoringKey => _configuration.BrowserMonitoringKey;
 
         [JsonProperty("browser_monitoring.monitoring_key.populated")]
@@ -207,10 +210,27 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("distributed_tracing.enabled")]
         public bool DistributedTracingEnabled => _configuration.DistributedTracingEnabled;
 
-        [JsonProperty("distributed_tracing.sampler.remote_parent_sampled")]
-        public RemoteParentSampledBehavior RemoteParentSampledBehavior { get; }
-        [JsonProperty("distributed_tracing.sampler.remote_parent_not_sampled")]
-        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior { get; }
+        [JsonProperty("distributed_tracing.sampler.root.sampler_type")]
+        public string RootSamplerName => RootSamplerType.ToSamplerTypeString();
+        [JsonIgnore]
+        public SamplerType RootSamplerType => _configuration.RootSamplerType;
+
+        [JsonProperty("distributed_tracing.sampler.remote_parent_sampled.sampler_type")]
+        public string RemoteParentSampledSamplerName => RemoteParentSampledSamplerType.ToSamplerTypeString();
+        [JsonIgnore]
+        public SamplerType RemoteParentSampledSamplerType => _configuration.RemoteParentSampledSamplerType;
+
+        [JsonProperty("distributed_tracing.sampler.remote_parent_not_sampled.sampler_type")]
+        public string RemoteParentNotSampledSamplerName => RemoteParentNotSampledSamplerType.ToSamplerTypeString();
+        [JsonIgnore]
+        public SamplerType RemoteParentNotSampledSamplerType => _configuration.RemoteParentNotSampledSamplerType;
+
+        [JsonProperty("distributed_tracing.sampler.root.trace_id_ratio_based.ratio")]
+        public float? RootTraceIdRatioSamplerRatio => _configuration.RootTraceIdRatioSamplerRatio;
+        [JsonProperty("distributed_tracing.sampler.remote_parent_sampled.trace_id_ratio_based.ratio")]
+        public float? RemoteParentSampledTraceIdRatioSamplerRatio => _configuration.RemoteParentSampledTraceIdRatioSamplerRatio;
+        [JsonProperty("distributed_tracing.sampler.remote_parent_not_sampled.trace_id_ratio_based.ratio")]
+        public float? RemoteParentNotSampledTraceIdRatioSamplerRatio => _configuration.RemoteParentNotSampledTraceIdRatioSamplerRatio;
 
         [JsonProperty("span_events.enabled")]
         public bool SpanEventsEnabled => _configuration.SpanEventsEnabled;
@@ -306,7 +326,7 @@ namespace NewRelic.Agent.Core.Configuration
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings => _configuration.ExpectedErrorMessagesForAgentSettings;
 
         // The following IConfiguration property `ExpectedErrorStatusCodesForAgentSettings` actually reports the same information in a more friendly way
-        [JsonIgnore()]
+        [JsonIgnore]
         public IEnumerable<MatchRule> ExpectedStatusCodes => _configuration.ExpectedStatusCodes;
 
         [JsonProperty("error_collector.expected_status_codes")]
@@ -325,7 +345,7 @@ namespace NewRelic.Agent.Core.Configuration
         public IDictionary<string, IEnumerable<string>> IgnoreErrorMessagesForAgentSettings => _configuration.IgnoreErrorMessagesForAgentSettings;
 
         // Serializing this Func doesn't provide us with more information than the supportability metrics
-        [JsonIgnore()]
+        [JsonIgnore]
         public Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback => _configuration.ErrorGroupCallback;
 
         [JsonProperty("agent.request_headers_map")]
@@ -370,37 +390,37 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.app_settings_config_file_path")]
         public string AppSettingsConfigFilePath => _configuration.AppSettingsConfigFilePath;
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string ProxyHost => _configuration.ProxyHost;
 
         [JsonProperty("proxy.host.configured")]
         public bool ProxyHostConfigured => !string.IsNullOrWhiteSpace(ProxyHost);
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string ProxyUriPath => _configuration.ProxyUriPath;
 
         [JsonProperty("proxy.uri_path.configured")]
         public bool ProxyUriPathConfigured => !string.IsNullOrWhiteSpace(ProxyUriPath);
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public int ProxyPort => _configuration.ProxyPort;
 
         [JsonProperty("proxy.port.configured")]
         public bool ProxyPortConfigured => true; // as this is an integer with a default value, it will always be 'configured'
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string ProxyUsername => _configuration.ProxyUsername;
 
         [JsonProperty("proxy.username.configured")]
         public bool ProxyUsernameConfigured => !string.IsNullOrWhiteSpace(ProxyUsername);
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string ProxyPassword => _configuration.ProxyPassword;
 
         [JsonProperty("proxy.password.configured")]
         public bool ProxyPasswordConfigured => !string.IsNullOrWhiteSpace(ProxyPassword);
 
-        [JsonIgnore()]
+        [JsonIgnore]
         public string ProxyDomain => _configuration.ProxyDomain;
 
         [JsonProperty("proxy.domain.configured")]
@@ -700,7 +720,7 @@ namespace NewRelic.Agent.Core.Configuration
         public bool AiMonitoringRecordContentEnabled => _configuration.AiMonitoringRecordContentEnabled;
 
         // Serializing this Func doesn't provide us with more information than the supportability metrics
-        [JsonIgnore()]
+        [JsonIgnore]
         public Func<string, string, int> LlmTokenCountingCallback => _configuration.LlmTokenCountingCallback;
 
         [JsonIgnore]
@@ -748,18 +768,44 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonIgnore]
         public bool AwsLambdaApmModeEnabled => _configuration.AwsLambdaApmModeEnabled;
         
-
-        [JsonProperty("otel_bridge.included_activity_sources")]
-        public List<string> IncludedActivitySources => _configuration.IncludedActivitySources;
-
-        [JsonProperty("otel_bridge.excluded_activity_sources")]
-        public List<string> ExcludedActivitySources => _configuration.ExcludedActivitySources;
-
-        [JsonProperty("otel_bridge.enabled")]
-        public bool OpenTelemetryBridgeEnabled => _configuration.OpenTelemetryBridgeEnabled;
-
         [JsonIgnore]
         public int MaxCustomInstrumentationSupportabilityMetrics { get; }
+
+        // OpenTelemetry Configuration Properties
+        [JsonProperty("opentelemetry.enabled")]
+        public bool OpenTelemetryEnabled => _configuration.OpenTelemetryEnabled;
+
+
+        [JsonProperty("opentelemetry.traces.enabled")]
+        public bool OpenTelemetryTracingEnabled => _configuration.OpenTelemetryTracingEnabled;
+
+        [JsonProperty("opentelemetry.traces.include")]
+        public List<string> OpenTelemetryTracingIncludedActivitySources => _configuration.OpenTelemetryTracingIncludedActivitySources;
+
+        [JsonProperty("opentelemetry.traces.exclude")]
+        public List<string> OpenTelemetryTracingExcludedActivitySources => _configuration.OpenTelemetryTracingExcludedActivitySources;
+
+        [JsonProperty("opentelemetry.traces.default_exclude")]
+        public List<string> OpenTelemetryTracingDefaultExcludedActivitySources =>
+            _configuration.OpenTelemetryTracingDefaultExcludedActivitySources;
+
+        [JsonProperty("opentelemetry.metrics.enabled")]
+        public bool OpenTelemetryMetricsEnabled => _configuration.OpenTelemetryMetricsEnabled;
+
+        [JsonProperty("opentelemetry.metrics.include")]
+        public IEnumerable<string> OpenTelemetryMetricsIncludeFilters => _configuration.OpenTelemetryMetricsIncludeFilters;
+
+        [JsonProperty("opentelemetry.metrics.exclude")]
+        public IEnumerable<string> OpenTelemetryMetricsExcludeFilters => _configuration.OpenTelemetryMetricsExcludeFilters;
+
+        [JsonProperty("opentelemetry.otlp.timeout_seconds")]
+        public int OpenTelemetryOtlpTimeoutSeconds => _configuration.OpenTelemetryOtlpTimeoutSeconds;
+
+        [JsonProperty("opentelemetry.otlp.export_interval_seconds")]
+        public int OpenTelemetryOtlpExportIntervalSeconds => _configuration.OpenTelemetryOtlpExportIntervalSeconds;
+
+        [JsonProperty("hybrid_http_context_storage.enabled")]
+        public bool HybridHttpContextStorageEnabled => _configuration.HybridHttpContextStorageEnabled;
 
         #endregion
     }

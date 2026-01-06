@@ -35,6 +35,7 @@ namespace NewRelic.Agent.Core.Utilities
         net7,
         net8,
         net9,
+        net10,
         Other
     }
 
@@ -103,6 +104,11 @@ namespace NewRelic.Agent.Core.Utilities
                 return DotnetCoreVersion.netcoreapp31;
             }
 
+            if (envVer.Major == 10)
+            {
+                return DotnetCoreVersion.net10;
+            }
+
             if (envVer.Major == 9)
             {
                 return DotnetCoreVersion.net9;
@@ -139,17 +145,24 @@ namespace NewRelic.Agent.Core.Utilities
 
         public static bool IsUnsupportedDotnetCoreVersion(DotnetCoreVersion version)
         {
-            // Newer versions of .net will be flagged as Other until we update our version checking logic.
-            // So we can either check against a supported list, or an unsupported list, but the supported list
-            // is smaller.
-            var supportedDotnetCoreVersions = new List<DotnetCoreVersion> { DotnetCoreVersion.net8, DotnetCoreVersion.net9, DotnetCoreVersion.Other };
-            return !supportedDotnetCoreVersions.Contains(version);
+            // We only need to update this method when a version becomes unsupported.
+            var unsupportedDotnetCoreVersions = new List<DotnetCoreVersion> {
+                DotnetCoreVersion.LessThan30,
+                DotnetCoreVersion.netcoreapp30,
+                DotnetCoreVersion.netcoreapp31,
+                DotnetCoreVersion.net5,
+                DotnetCoreVersion.net6,
+                DotnetCoreVersion.net7
+                // DotnetCoreVersion.net8 EOL 2026-11-10
+                // DotnetCoreVersion.net9 EOL 2026-11-10
+            };
+
+            return unsupportedDotnetCoreVersions.Contains(version);
         }
 
         public static bool IsUnsupportedDotnetFrameworkVersion(DotnetFrameworkVersion version)
         {
-            // For .net framework we can maintain a list of unsupported versions to check against
-            // so that newer versions of .net framework will not be listed as an unsupported version.
+            // We only need to update this method when a framework version becomes unsupported.
             var unsupportedDotnetFrameworkVersions = new List<DotnetFrameworkVersion> {
                 DotnetFrameworkVersion.LessThan45,
                 DotnetFrameworkVersion.net45,
@@ -158,6 +171,7 @@ namespace NewRelic.Agent.Core.Utilities
                 DotnetFrameworkVersion.net46,
                 DotnetFrameworkVersion.net461
             };
+
             return unsupportedDotnetFrameworkVersions.Contains(version);
         }
     }

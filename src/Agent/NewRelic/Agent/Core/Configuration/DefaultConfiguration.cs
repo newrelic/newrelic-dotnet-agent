@@ -18,7 +18,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -48,7 +48,6 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly IHttpRuntimeStatic _httpRuntimeStatic = new HttpRuntimeStatic();
         private readonly IConfigurationManagerStatic _configurationManagerStatic = new ConfigurationManagerStaticMock();
         private readonly IDnsStatic _dnsStatic;
-        private readonly IAgentHealthReporter _agentHealthReporter;
 
         /// <summary>
         /// Default configuration.  It will contain reasonable default values for everything and never anything more.  Useful when you don't have configuration off disk or a collector response yet.
@@ -74,7 +73,7 @@ namespace NewRelic.Agent.Core.Configuration
             ConfigurationVersion = Interlocked.Increment(ref _currentConfigurationVersion);
         }
 
-        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter)
+        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
             : this()
         {
             _environment = environment;
@@ -85,8 +84,6 @@ namespace NewRelic.Agent.Core.Configuration
 
             _utilizationFullHostName = new Lazy<string>(_dnsStatic.GetFullHostName);
             _utilizationHostName = new Lazy<string>(_dnsStatic.GetHostName);
-
-            _agentHealthReporter = agentHealthReporter;
 
             if (localConfiguration != null)
             {
@@ -207,11 +204,6 @@ namespace NewRelic.Agent.Core.Configuration
             get
             {
                 _agentLicenseKey ??= TryGetLicenseKey();
-                if (string.IsNullOrWhiteSpace(_agentLicenseKey) && !ServerlessModeEnabled)
-                {
-                    TrySetAgentControlStatus(HealthCodes.LicenseKeyMissing);
-                }
-
                 return _agentLicenseKey;
             }
         }
@@ -276,95 +268,128 @@ namespace NewRelic.Agent.Core.Configuration
 
         private IEnumerable<string> GetApplicationNames()
         {
+            // Wrapper that throws if no application names could be resolved.
+            if (TryGetApplicationNames(out var names))
+            {
+                return names;
+            }
+
+            throw new Exception("An application name must be provided");
+        }
+
+        /// <summary>
+        /// Attempts to resolve the application names following the same ordered precedence
+        /// as the legacy <see cref="GetApplicationNames"/> implementation without throwing.
+        /// </summary>
+        /// <param name="names">Resolved application names when successful; null otherwise.</param>
+        /// <returns>True if application names were found; false if none could be resolved.</returns>
+        /// <remarks>
+        /// Side effects:
+        /// - Sets <see cref="_applicationNamesSource"/> to the source of the resolved names.
+        /// - Sets <see cref="_applicationNamesMissing"/> to true only when resolution fails.
+        /// Logging behavior is preserved exactly from the original implementation.
+        /// </remarks>
+        public bool TryGetApplicationNames(out IEnumerable<string> names)  // CHANGED: was private
+        {
+            // 1. Agent API
             var runtimeAppNames = _runTimeConfiguration.ApplicationNames.ToList();
             if (runtimeAppNames.Any())
             {
                 Log.Info("Application name from SetApplicationName API.");
                 _applicationNamesSource = "API";
-
-                return runtimeAppNames;
+                names = runtimeAppNames;
+                return true;
             }
 
+            // 2. App/web config (web.config/app.config/appsettings.json)
             var appName = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName);
             if (appName != null)
             {
                 Log.Info("Application name from web.config or app.config.");
                 _applicationNamesSource = "Application Config";
-
-                return appName.Split(StringSeparators.Comma);
+                names = appName.Split(StringSeparators.Comma);
+                return true;
             }
 
+            // 3. IISEXPRESS_SITENAME
             appName = _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME");
             if (appName != null)
             {
                 Log.Info("Application name from IISEXPRESS_SITENAME Environment Variable.");
                 _applicationNamesSource = "Environment Variable (IISEXPRESS_SITENAME)";
-
-                return appName.Split(StringSeparators.Comma);
+                names = appName.Split(StringSeparators.Comma);
+                return true;
             }
 
+            // 4. NEW_RELIC_APP_NAME
             appName = _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME");
             if (appName != null)
             {
                 Log.Info("Application name from NEW_RELIC_APP_NAME Environment Variable.");
                 _applicationNamesSource = "Environment Variable (NEW_RELIC_APP_NAME)";
-
-                return appName.Split(StringSeparators.Comma);
+                names = appName.Split(StringSeparators.Comma);
+                return true;
             }
 
+            // 5. Azure Function site name (when detected & enabled)
             if (AzureFunctionModeDetected && AzureFunctionModeEnabled && !string.IsNullOrEmpty(AzureFunctionAppName))
             {
                 Log.Info("Application name from Azure Function site name.");
                 _applicationNamesSource = "Azure Function";
-                return [AzureFunctionAppName];
+                names = [AzureFunctionAppName];
+                return true;
             }
 
+            // 6. RoleName
             appName = _environment.GetEnvironmentVariable("RoleName");
             if (appName != null)
             {
                 Log.Info("Application name from RoleName Environment Variable.");
                 _applicationNamesSource = "Environment Variable (RoleName)";
-
-                return appName.Split(StringSeparators.Comma);
+                names = appName.Split(StringSeparators.Comma);
+                return true;
             }
 
-            if (ServerlessModeEnabled)
+            // 7. Serverless (Lambda)
+            if (ServerlessModeEnabled && !string.IsNullOrEmpty(ServerlessFunctionName))
             {
-                if (!string.IsNullOrEmpty(ServerlessFunctionName))
-                {
-                    Log.Info("Application name from Lambda Function Name.");
-                    _applicationNamesSource = "Environment Variable (AWS_LAMBDA_FUNCTION_NAME)";
-                    return [ServerlessFunctionName];
-                }
+                Log.Info("Application name from Lambda Function Name.");
+                _applicationNamesSource = "Environment Variable (AWS_LAMBDA_FUNCTION_NAME)";
+                names = [ServerlessFunctionName];
+                return true;
             }
 
+            // 8. newrelic.config
             if (_localConfiguration.application.name.Count > 0)
             {
                 Log.Info("Application name from newrelic.config.");
                 _applicationNamesSource = "NewRelic Config";
-
-                return _localConfiguration.application.name;
+                names = _localConfiguration.application.name;
+                return true;
             }
 
+            // 9. Application Pool
             appName = GetAppPoolId();
             if (!string.IsNullOrWhiteSpace(appName))
             {
                 Log.Info("Application name from Application Pool name.");
                 _applicationNamesSource = "Application Pool";
-
-                return appName.Split(StringSeparators.Comma);
+                names = appName.Split(StringSeparators.Comma);
+                return true;
             }
 
+            // 10. Process name (only when AppDomain virtual path is null)
             if (_httpRuntimeStatic.AppDomainAppVirtualPath == null)
             {
                 Log.Info("Application name from process name.");
                 _applicationNamesSource = "Process Name";
-
-                return [_processStatic.GetCurrentProcess().ProcessName];
+                names = [_processStatic.GetCurrentProcess().ProcessName];
+                return true;
             }
 
-            TrySetAgentControlStatus(HealthCodes.ApplicationNameMissing);
-            throw new Exception("An application name must be provided");
+            // Failure path
+            names = null;
+            return false;
         }
 
         private string GetAppPoolId()
@@ -404,7 +429,7 @@ namespace NewRelic.Agent.Core.Configuration
         #region Browser Monitoring
 
         public virtual string BrowserMonitoringApplicationId { get { return _serverConfiguration.RumSettingsApplicationId ?? string.Empty; } }
-        public virtual bool BrowserMonitoringAutoInstrument { get { return _localConfiguration.browserMonitoring.autoInstrument; } }
+        public virtual bool BrowserMonitoringAutoInstrument => EnvironmentOverrides(_localConfiguration.browserMonitoring.autoInstrument, "NEW_RELIC_BROWSER_MONITORING_AUTO_INSTRUMENT");
         public virtual string BrowserMonitoringBeaconAddress { get { return _serverConfiguration.RumSettingsBeacon ?? string.Empty; } }
         public virtual string BrowserMonitoringErrorBeaconAddress { get { return _serverConfiguration.RumSettingsErrorBeacon ?? string.Empty; } }
         public virtual string BrowserMonitoringJavaScriptAgent { get { return _serverConfiguration.RumSettingsJavaScriptAgentLoader ?? string.Empty; } }
@@ -518,11 +543,11 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual IEnumerable<string> CaptureAttributesIncludes =>
             CanUseAttributesIncludes
                 ? _captureAttributesIncludes ??=
-                    [..EnvironmentOverrides(_localConfiguration.attributes.include, "NEW_RELIC_ATTRIBUTES_INCLUDE")]
+                    [.. EnvironmentOverrides(_localConfiguration.attributes.include, "NEW_RELIC_ATTRIBUTES_INCLUDE")]
                 : _captureAttributesIncludes ??= [];
 
         private IEnumerable<string> _captureAttributesExcludes;
-        public virtual IEnumerable<string> CaptureAttributesExcludes => _captureAttributesExcludes ??= [..EnvironmentOverrides(_localConfiguration.attributes.exclude, "NEW_RELIC_ATTRIBUTES_EXCLUDE")];
+        public virtual IEnumerable<string> CaptureAttributesExcludes => _captureAttributesExcludes ??= [.. EnvironmentOverrides(_localConfiguration.attributes.exclude, "NEW_RELIC_ATTRIBUTES_EXCLUDE")];
 
         private IEnumerable<string> _captureAttributesDefaultExcludes;
         public virtual IEnumerable<string> CaptureAttributesDefaultExcludes => _captureAttributesDefaultExcludes ??= ["identity.*"];
@@ -547,12 +572,12 @@ namespace NewRelic.Agent.Core.Configuration
         private HashSet<string> _transactionEventsAttributesInclude;
         public HashSet<string> TransactionEventsAttributesInclude =>
             _transactionEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && TransactionEventsAttributesEnabled
-                ? [.._localConfiguration.transactionEvents.attributes.include]
+                ? [.. _localConfiguration.transactionEvents.attributes.include]
                 : [];
 
         private HashSet<string> _transactionEventsAttributesExclude;
         public HashSet<string> TransactionEventsAttributesExclude =>
-            _transactionEventsAttributesExclude ??= [.._localConfiguration.transactionEvents.attributes.exclude];
+            _transactionEventsAttributesExclude ??= [.. _localConfiguration.transactionEvents.attributes.exclude];
 
         public virtual bool CaptureTransactionTraceAttributes => ShouldCaptureTransactionTraceAttributes();
 
@@ -575,7 +600,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual IEnumerable<string> CaptureTransactionTraceAttributesIncludes =>
             ShouldCaptureTransactionTraceAttributesIncludes()
-                ? _captureTransactionTraceAttributesIncludes ??= [.._localConfiguration.transactionTracer.attributes.include]
+                ? _captureTransactionTraceAttributesIncludes ??= [.. _localConfiguration.transactionTracer.attributes.include]
                 : _captureTransactionTraceAttributesIncludes ??= [];
 
         private bool? _shouldCaptureTransactionTraceAttributesIncludes;
@@ -600,7 +625,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private IEnumerable<string> _captureTransactionTraceAttributesExcludes;
         public virtual IEnumerable<string> CaptureTransactionTraceAttributesExcludes =>
-            _captureTransactionTraceAttributesExcludes ??= [.._localConfiguration.transactionTracer.attributes.exclude];
+            _captureTransactionTraceAttributesExcludes ??= [.. _localConfiguration.transactionTracer.attributes.exclude];
 
 
         public virtual bool CaptureErrorCollectorAttributes => ShouldCaptureErrorCollectorAttributes();
@@ -688,7 +713,7 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         private IEnumerable<string> _captureBrowserMonitoringAttributesExcludes;
-        public virtual IEnumerable<string> CaptureBrowserMonitoringAttributesExcludes => _captureBrowserMonitoringAttributesExcludes ??=[.. _localConfiguration.browserMonitoring.attributes.exclude];
+        public virtual IEnumerable<string> CaptureBrowserMonitoringAttributesExcludes => _captureBrowserMonitoringAttributesExcludes ??= [.. _localConfiguration.browserMonitoring.attributes.exclude];
 
 
         private BoolConfigurationItem _shouldCaptureCustomParameters;
@@ -834,11 +859,11 @@ namespace NewRelic.Agent.Core.Configuration
         private HashSet<string> _spanEventsAttributesInclude;
         public HashSet<string> SpanEventsAttributesInclude =>
             _spanEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && SpanEventsAttributesEnabled
-                ? [.._localConfiguration.spanEvents.attributes.include]
+                ? [.. _localConfiguration.spanEvents.attributes.include]
                 : [];
 
         private HashSet<string> _spanEventsAttributesExclude;
-        public virtual HashSet<string> SpanEventsAttributesExclude => _spanEventsAttributesExclude ??= [.._localConfiguration.spanEvents.attributes.exclude];
+        public virtual HashSet<string> SpanEventsAttributesExclude => _spanEventsAttributesExclude ??= [.. _localConfiguration.spanEvents.attributes.exclude];
 
         #endregion
 
@@ -876,9 +901,102 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool ExcludeNewrelicHeader => _localConfiguration.distributedTracing.excludeNewrelicHeader;
 
-        public RemoteParentSampledBehavior RemoteParentSampledBehavior => EnvironmentOverrides(_localConfiguration.distributedTracing.sampler.remoteParentSampled.ToString(), "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED").ToRemoteParentSampledBehavior();
+        public SamplerType RootSamplerType => GetSamplerType(SamplerLevel.Root);
+        public SamplerType RemoteParentSampledSamplerType => GetSamplerType(SamplerLevel.RemoteParentSampled);
+        public SamplerType RemoteParentNotSampledSamplerType => GetSamplerType(SamplerLevel.RemoteParentNotSampled);
+        public float? RootTraceIdRatioSamplerRatio { get => RootSamplerType == SamplerType.TraceIdRatioBased ? TraceIdSamplerRatio(SamplerLevel.Root) : null; }
+        public float? RemoteParentSampledTraceIdRatioSamplerRatio { get => RemoteParentSampledSamplerType == SamplerType.TraceIdRatioBased ? TraceIdSamplerRatio(SamplerLevel.RemoteParentSampled) : null; }
+        public float? RemoteParentNotSampledTraceIdRatioSamplerRatio { get => RemoteParentNotSampledSamplerType == SamplerType.TraceIdRatioBased ? TraceIdSamplerRatio(SamplerLevel.RemoteParentNotSampled) : null; }
 
-        public RemoteParentSampledBehavior RemoteParentNotSampledBehavior => EnvironmentOverrides(_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.ToString(), "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED").ToRemoteParentSampledBehavior();
+        private SamplerType GetSamplerType(SamplerLevel samplerLevel)
+        {
+            // Environment variable (if present) always wins
+            var envVarName = samplerLevel switch
+            {
+                SamplerLevel.Root => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT",
+                SamplerLevel.RemoteParentSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED",
+                SamplerLevel.RemoteParentNotSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED",
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
+            };
+
+            var envValue = _environment.GetEnvironmentVariableFromList(envVarName);
+            if (!string.IsNullOrEmpty(envValue))
+            {
+                return envValue.ToRemoteParentSamplerType();
+            }
+
+            // use local config if no env var override
+            var samplerItem = samplerLevel switch
+            {
+                SamplerLevel.Root => _localConfiguration.distributedTracing.sampler.root.Item,
+                SamplerLevel.RemoteParentSampled => _localConfiguration.distributedTracing.sampler.remoteParentSampled.Item,
+                SamplerLevel.RemoteParentNotSampled => _localConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item,
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
+            };
+
+            //if samplerLevel is one of the remote parent levels and samplerItem is null (not configured), we need to check the legacy attributes
+            if (samplerLevel != SamplerLevel.Root && samplerItem == null)
+            {
+                var remoteParentSampledBehaviorType = samplerLevel == SamplerLevel.RemoteParentSampled ?
+                    _localConfiguration.distributedTracing.sampler.remoteParentSampled1 :
+                    _localConfiguration.distributedTracing.sampler.remoteParentNotSampled1;
+
+                if (remoteParentSampledBehaviorType != RemoteParentSampledBehaviorType.@default)
+                {
+                    Log.Warn($"Using deprecated configuration for {samplerLevel}. Please use the new distributed tracing sampler configuration.");
+                    return remoteParentSampledBehaviorType.ToRemoteParentSamplerType();
+                }
+            }
+
+            return MapSamplerItem(samplerItem);
+        }
+
+        private static SamplerType MapSamplerItem(object samplerItem) =>
+            samplerItem switch
+            {
+                null => SamplerType.Adaptive, // not configured, default to Adaptive
+                AdaptiveSamplerType => SamplerType.Adaptive,
+                AlwaysOnSamplerType => SamplerType.AlwaysOn,
+                AlwaysOffSamplerType => SamplerType.AlwaysOff,
+                TraceIdRatioBasedSamplerType => SamplerType.TraceIdRatioBased,
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerItem), samplerItem, "Unknown sampler type in configuration.")
+            };
+
+        private float? TraceIdSamplerRatio(SamplerLevel samplerLevel)
+        {
+            var envVarName = samplerLevel switch
+            {
+                SamplerLevel.Root => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_ROOT_TRACE_ID_RATIO_BASED_RATIO",
+                SamplerLevel.RemoteParentSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_SAMPLED_TRACE_ID_RATIO_BASED_RATIO",
+                SamplerLevel.RemoteParentNotSampled => "NEW_RELIC_DISTRIBUTED_TRACING_SAMPLER_REMOTE_PARENT_NOT_SAMPLED_TRACE_ID_RATIO_BASED_RATIO",
+                _ => throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null)
+            };
+
+            var envValue = _environment.GetEnvironmentVariableFromList(envVarName);
+            if (!string.IsNullOrEmpty(envValue) && float.TryParse(envValue, out var ratioFromEnv))
+            {
+                return ratioFromEnv;
+            }
+
+            // use local config if no env var override
+            switch (samplerLevel)
+            {
+                case SamplerLevel.Root:
+                    if (_localConfiguration.distributedTracing.sampler.root.Item is TraceIdRatioBasedSamplerType rootTraceIdRatioSamplerType)
+                        return (float)rootTraceIdRatioSamplerType.ratio;
+                    return null;
+                case SamplerLevel.RemoteParentSampled:
+                    if (_localConfiguration.distributedTracing.sampler.remoteParentSampled.Item is TraceIdRatioBasedSamplerType remoteParentSampledTraceIdRatioSamplerType)
+                        return (float)remoteParentSampledTraceIdRatioSamplerType.ratio;
+                    return null;
+                case SamplerLevel.RemoteParentNotSampled:
+                    if (_localConfiguration.distributedTracing.sampler.remoteParentNotSampled.Item is TraceIdRatioBasedSamplerType remoteParentNotSampledTraceIdRatioSamplerType)
+                        return (float)remoteParentNotSampledTraceIdRatioSamplerType.ratio;
+                    return null;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(samplerLevel), samplerLevel, null);
+            }
+        }
 
         #endregion Distributed Tracing
 
@@ -1532,11 +1650,11 @@ namespace NewRelic.Agent.Core.Configuration
         private HashSet<string> _customEventsAttributesInclude;
         public HashSet<string> CustomEventsAttributesInclude =>
             _customEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && CustomEventsAttributesEnabled
-                ? [.._localConfiguration.customEvents.attributes.include]
+                ? [.. _localConfiguration.customEvents.attributes.include]
                 : [];
 
         private HashSet<string> _customEventsAttributesExclude;
-        public HashSet<string> CustomEventsAttributesExclude => _customEventsAttributesExclude ??= [.._localConfiguration.customEvents.attributes.exclude];
+        public HashSet<string> CustomEventsAttributesExclude => _customEventsAttributesExclude ??= [.. _localConfiguration.customEvents.attributes.exclude];
 
         #endregion
 
@@ -1579,7 +1697,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual TimeSpan TransactionTraceApdexT =>
             // get apdex_t from environment variable if running in serverless mode
-            TimeSpan.FromSeconds(ServerlessModeEnabled ? 
+            TimeSpan.FromSeconds(ServerlessModeEnabled ?
                 EnvironmentOverrides(0.5, "NEW_RELIC_APDEX_T").GetValueOrDefault() : ServerOverrides(_serverConfiguration.ApdexT, 0.5));
 
         public virtual TimeSpan TransactionTraceThreshold =>
@@ -2010,7 +2128,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private bool? _enableAspNetCore6PlusBrowserInjection;
         public bool EnableAspNetCore6PlusBrowserInjection =>
-            _enableAspNetCore6PlusBrowserInjection ??= TryGetAppSettingAsBoolWithDefault("EnableAspNetCore6PlusBrowserInjection", true);
+            _enableAspNetCore6PlusBrowserInjection ??= EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("EnableAspNetCore6PlusBrowserInjection", true), "NEW_RELIC_ENABLE_ASPNETCORE6PLUS_BROWSER_INJECTION");
 
         private TimeSpan? _metricsHarvestCycleOverride = null;
         public TimeSpan MetricsHarvestCycle
@@ -2540,18 +2658,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static int? GetNullableIntValue(bool specified, int value) => specified ? value : null;
 
-        // Since the configuration is initialized before the AgentHealthReporter, needed a way to not call it till it was ready 
-        private void TrySetAgentControlStatus((bool IsHealthy, string Code, string Status) healthStatus)
-        {
-            if (_agentHealthReporter == null)
-            {
-                Log.Debug("DefaultConfiguration: Unable to set Agent Control status {status} because agent health reporter has not been initialized.", healthStatus);
-                return;
-            }
-
-            _agentHealthReporter.SetAgentControlStatus(healthStatus);
-        }
-
         #endregion
 
         #region deprecated/disabled parameter group settings
@@ -2691,73 +2797,159 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
-        #region Otel Bridge
-
-        // The activity sources we listen to by default - these are the sources that we will automatically instrument
-        private static readonly string[] DefaultIncludedActivitySources = ["NewRelic.Agent","Elastic.Transport","RabbitMQ.Client.Subscriber","RabbitMQ.Client.Publisher"]; 
-
-        private List<string> _includedActivitySources;
-        public List<string> IncludedActivitySources
-        {
-            get
-            {
-                if (_includedActivitySources == null)
-                {
-                    var includedActivitySources = DefaultIncludedActivitySources.ToList();
-
-                    var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Include");
-                    if (!string.IsNullOrEmpty(appSetting))
-                    {
-                        includedActivitySources.AddRange(
-                 appSetting
-                            .Split([','], StringSplitOptions.RemoveEmptyEntries)
-                            .Select(s => s.Trim())
-                            .Where(s => !string.IsNullOrEmpty(s))
-                        );
-                    }
-
-                    _includedActivitySources = includedActivitySources.Distinct().ToList();
-                }
-
-                return _includedActivitySources;
-            }
-        }
-
-        // The activity sources we do not want to listen to - these sources will not be instrumented even if they are in the include list
-        // TODO: we probably want to have a default set of excluded activity sources at some point
-        private static readonly string[] DefaultExcludedActivitySources = [];
-
-        private List<string> _excludedActivitySources;
-        public List<string> ExcludedActivitySources
-        {
-            get
-            {
-                if (_excludedActivitySources == null)
-                {
-                    var excludedActivitySources = DefaultExcludedActivitySources.ToList();
-
-                    var appSetting = TryGetAppSettingAsString("OpenTelemetry.ActivitySource.Exclude");
-                    if (!string.IsNullOrEmpty(appSetting))
-                    {
-                        excludedActivitySources.AddRange(
-                          appSetting
-                            .Split([','], StringSplitOptions.RemoveEmptyEntries)
-                            .Select(s => s.Trim())
-                            .Where(s => !string.IsNullOrEmpty(s))
-                        );
-                    }
-                    _excludedActivitySources = excludedActivitySources.Distinct().ToList();
-                }
-
-                return _excludedActivitySources;
-            }
-        }
-
-        public bool OpenTelemetryBridgeEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("OpenTelemetry.Enabled", false), "NEW_RELIC_OPEN_TELEMETRY_BRIDGE_ENABLED");
-
         public int MaxCustomInstrumentationSupportabilityMetrics => 25; // in case we want to make this configurable in the future
 
+        #region OpenTelemetry Configuration
+
+        public bool OpenTelemetryEnabled => EnvironmentOverrides(_localConfiguration.opentelemetry.enabled, "NEW_RELIC_OPENTELEMETRY_ENABLED");
+
+        public bool OpenTelemetryTracingEnabled => OpenTelemetryEnabled && EnvironmentOverrides(_localConfiguration.opentelemetry.traces.enabled, "NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED");
+
+        public List<string> OpenTelemetryTracingIncludedActivitySources
+        {
+            get
+            {
+                if (field == null)
+                {
+                    var includeString = EnvironmentOverrides(_localConfiguration.opentelemetry.traces.include, "NEW_RELIC_OPENTELEMETRY_TRACES_INCLUDE") ?? string.Empty;
+                    field = includeString
+                        .Split([','], StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .Distinct()
+                        .ToList();
+                }
+
+                return field;
+            }
+        }
+
+        // These are activity sources that are excluded by default unless explicitly included via configuration
+        public List<string> OpenTelemetryTracingDefaultExcludedActivitySources => new List<string>()
+        { "AWSSDK.Bedrock Runtime",
+          "AWSSDK.Bedrock",
+          "AWSSDK.DynamoDB",
+          "AWSSDK.Firehose",
+          "AWSSDK.Kinesis",
+          "AWSSDK.Lambda",
+          "AWSSDK.SQS",
+          "Azure.Cosmos.Operation",
+          "Azure.Messaging.ServiceBus.Message",
+          "Azure.Messaging.ServiceBus.ServiceBusProcessor",
+          "Azure.Messaging.ServiceBus.ServiceBusReceiver",
+          "Azure.Messaging.ServiceBus.ServiceBusSender",
+          "connector-net",
+          "Couchbase.DotnetSdk.OpenTelemetryRequestTracer",
+          "MassTransit",
+          "Microsoft.AspNetCore",
+          "Microsoft.AspNetCore.Components",
+          "Microsoft.AspNetCore.Components.Server.Circuits",
+          "Microsoft.AspNetCore.SignalR.Server",
+          "Microsoft.Azure.Functions.Worker",
+          "Microsoft.Data.SqlClient",
+          "MongoDB.Driver.Core.Extensions.DiagnosticSources",
+          "MySqlConnector",
+          "Npgsql",
+          "NServiceBus.Core",
+          "OpenAI.ChatClient",
+          "OpenTelemetry.AutoInstrumentation.Kafka",
+          "OpenTelemetry.AutoInstrumentation.MongoDB",
+          "OpenTelemetry.Instrumentation.AspNet",
+          "OpenTelemetry.Instrumentation.AWSLambda",
+          "OpenTelemetry.Instrumentation.Owin",
+          "OpenTelemetry.Instrumentation.StackExchangeRedis",
+          "OpenTelemetry.Instrumentation.Wcf",
+          "Oracle.ManagedDataAccess",
+          "Oracle.ManagedDataAccess.Core",
+          "System.Data",
+          "System.Data.SqlClient",
+          "System.Net.Http",
+          "System.Web.Mvc" };
+
+        public List<string> OpenTelemetryTracingExcludedActivitySources
+        {
+            get
+            {
+                if (field == null)
+                {
+                    var excludeString = EnvironmentOverrides(_localConfiguration.opentelemetry.traces.exclude, "NEW_RELIC_OPENTELEMETRY_TRACES_EXCLUDE") ?? string.Empty;
+
+                    field = excludeString
+                        .Split([','], StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .Distinct()
+                        .ToList();
+                }
+
+                return field;
+            }
+        }
+
+
+        public bool OpenTelemetryMetricsEnabled
+        {
+            get
+            {
+                // Both the global OpenTelemetry setting and the metrics-specific setting must be true
+                return OpenTelemetryEnabled && EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.enabled, "NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED");
+            }
+        }
+
+        public IEnumerable<string> OpenTelemetryMetricsIncludeFilters
+        {
+            get
+            {
+                if (field == null)
+                {
+                    var includeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.include, "NEW_RELIC_OPENTELEMETRY_METRICS_INCLUDE") ?? string.Empty;
+                    field = includeString
+                        .Split([','], StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .ToList();
+                }
+                return field;
+            }
+        }
+
+        public IEnumerable<string> OpenTelemetryMetricsExcludeFilters
+        {
+            get
+            {
+                if (field == null)
+                {
+                    var excludeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.exclude, "NEW_RELIC_OPENTELEMETRY_METRICS_EXCLUDE") ?? string.Empty;
+                    field = excludeString
+                        .Split([','], StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .ToList();
+                }
+                return field;
+            }
+        }
+
+        public int OpenTelemetryOtlpTimeoutSeconds
+        {
+            get
+            {
+                var value = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("OpenTelemetryOtlpTimeoutSeconds", 10), "NEW_RELIC_OPENTELEMETRY_OTLP_TIMEOUT_SECONDS").GetValueOrDefault(10);
+                return value > 0 ? value : 10;
+            }
+        }
+
+        public int OpenTelemetryOtlpExportIntervalSeconds
+        {
+            get
+            {
+                var value = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("OpenTelemetryOtlpExportIntervalSeconds", 5), "NEW_RELIC_OPENTELEMETRY_OTLP_EXPORT_INTERVAL_SECONDS").GetValueOrDefault(5);
+                return value > 0 ? value : 5;
+            }
+        }
         #endregion
+
+        public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", false), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");
 
         public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
         {

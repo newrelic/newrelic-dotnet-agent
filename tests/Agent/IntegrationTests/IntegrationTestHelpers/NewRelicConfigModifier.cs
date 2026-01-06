@@ -4,7 +4,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Text;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -230,7 +233,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         /// Sets or deletes the distributed trace enabled setting in the newrelic.config.
         /// </summary>
         /// <param name="enabled">If null, the setting will be deleted; otherwise, the setting will be set to the value of this parameter.</param>
-        public void SetOrDeleteDistributedTraceEnabled(bool? enabled)
+        public NewRelicConfigModifier SetOrDeleteDistributedTraceEnabled(bool? enabled)
         {
             const string config = "configuration";
             const string distributedTracing = "distributedTracing";
@@ -243,6 +246,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { config, distributedTracing },
                     "enabled", enabled.Value ? "true" : "false");
             }
+
+            return this;
         }
 
         /// <summary>
@@ -281,7 +286,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
-        public void SetOrDeleteSpanEventsEnabled(bool? enabled)
+        public NewRelicConfigModifier SetOrDeleteSpanEventsEnabled(bool? enabled)
         {
             const string config = "configuration";
             const string spanEvents = "spanEvents";
@@ -294,6 +299,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { config, spanEvents },
                     "enabled", enabled.Value ? "true" : "false");
             }
+            return this;
         }
 
         public void SetCustomHostName(string customHostName)
@@ -545,15 +551,77 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
-        public NewRelicConfigModifier EnableOTelBridge(bool enabled)
+        public NewRelicConfigModifier EnableOpenTelemetry(bool enabled)
         {
-            CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.Enabled", enabled.ToString(), "urn:newrelic-config");
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "opentelemetry", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "enabled", enabled.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableOpenTelemetryTracing(bool enabled)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "traces", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "traces" }, "enabled", enabled.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableOpenTelemetryMetrics(bool enabled)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "metrics" }, "enabled", enabled.ToString().ToLower());
             return this;
         }
 
         public NewRelicConfigModifier IncludeActivitySource(string activitySourceName)
         {
             CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.ActivitySource.Include", activitySourceName, "urn:newrelic-config");
+            return this;
+        }
+
+        public NewRelicConfigModifier ExcludeActivitySource(string activitySourceName)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.ActivitySource.Exclude", activitySourceName, "urn:newrelic-config");
+            return this;
+        }
+
+        public NewRelicConfigModifier IncludeOpenTelemetryMeters(string meterNames)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "metrics" }, "include", meterNames);
+            return this;
+        }
+
+        public NewRelicConfigModifier ExcludeOpenTelemetryMeters(string meterNames)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "metrics" }, "exclude", meterNames);
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableHybridHttpContextStorage(bool enabled)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "HybridHttpContextStorageEnabled", enabled.ToString(), "urn:newrelic-config");
+            return this;
+        }
+
+        public void AddBomToConfig()
+        {
+            var encodingWithBom = Encoding.UTF8;
+            var bomBytes = encodingWithBom.GetPreamble();
+            var content = File.ReadAllText(_configFilePath);
+            var contentBytes = encodingWithBom.GetBytes(content);
+
+            using var fs = new FileStream(_configFilePath, FileMode.Create);
+            // Write the BOM bytes first
+            fs.Write(bomBytes, 0, bomBytes.Length);
+
+            // Then write the actual content bytes
+            fs.Write(contentBytes, 0, contentBytes.Length);
+        }
+
+        public NewRelicConfigModifier EnableEventListenerSamplers(bool enabled)    
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "NewRelic.EventListenerSamplersEnabled", enabled.ToString(), "urn:newrelic-config");
             return this;
         }
     }

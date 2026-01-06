@@ -78,8 +78,10 @@ namespace NewRelic.Agent.Core.Configuration
                     "cross_application_tracer.cross_process_id": "CrossApplicationTracingCrossProcessId",
                     "cross_application_tracer.enabled": true,
                     "distributed_tracing.enabled": true,
-                    "distributed_tracing.sampler.remote_parent_sampled": "default",
-                    "distributed_tracing.sampler.remote_parent_not_sampled": "default",
+                    "distributed_tracing.sampler.root.sampler_type": "trace_id_ratio_based",
+                    "distributed_tracing.sampler.remote_parent_sampled.sampler_type": "always_on",
+                    "distributed_tracing.sampler.remote_parent_not_sampled.sampler_type": "always_off",
+                    "distributed_tracing.sampler.root.trace_id_ratio_based.ratio": 0.12,
                     "span_events.enabled": true,
                     "span_events.harvest_cycle": "00:20:34",
                     "span_events.attributes_enabled": true,
@@ -354,9 +356,17 @@ namespace NewRelic.Agent.Core.Configuration
                     "agent_control.enabled" : true,
                     "agent_control.health.delivery_location": "file:///tmp/health",
                     "agent_control.health.frequency": 5,
-                    "otel_bridge.included_activity_sources": ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"],
-                    "otel_bridge.excluded_activity_sources": ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"],
-                    "otel_bridge.enabled": true
+                    "opentelemetry.enabled": true,
+                    "opentelemetry.traces.enabled": true,
+                    "opentelemetry.traces.include": ["SomeIncludedActivitySourceName","AnotherIncludedActivitySourceName"],
+                    "opentelemetry.traces.exclude": ["SomeExcludedActivitySourceName","AnotherExcludedActivitySourceName"],
+                    "opentelemetry.traces.default_exclude": ["SomeDefaultExcludedActivitySourceName","AnotherDefaultExcludedActivitySourceName"],
+                    "opentelemetry.metrics.enabled": true,
+                    "opentelemetry.metrics.include": ["IncludedMeter1","IncludedMeter2"],
+                    "opentelemetry.metrics.exclude": ["ExcludedMeter1","ExcludedMeter2"],
+                    "opentelemetry.otlp.timeout_seconds": 10,
+                    "opentelemetry.otlp.export_interval_seconds": 5,
+                    "hybrid_http_context_storage.enabled":false
                 }
                 """;
 

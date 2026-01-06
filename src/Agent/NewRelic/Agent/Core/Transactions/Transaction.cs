@@ -33,6 +33,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.OpenTelemetryBridge;
 using NewRelic.Agent.Extensions.Api.Experimental;
 
@@ -119,16 +120,16 @@ namespace NewRelic.Agent.Core.Transactions
             internal set => _sampled = value;
         }
 
-        public void SetSampled(IAdaptiveSampler adaptiveSampler)
+        public void SetSampled()
         {
             lock (_sync)
             {
                 if (!Sampled.HasValue)
                 {
-                    var priority = _priority;
-                    Sampled = adaptiveSampler.ComputeSampled(ref priority);
-                    _priority = priority;
+                    var result = _samplerService.GetSampler(SamplerLevel.Root).ShouldSample(new SamplingParameters(TraceId, _priority));
 
+                    _sampled = result.Sampled;
+                    _priority = result.Priority;
                 }
             }
         }
@@ -1065,7 +1066,7 @@ namespace NewRelic.Agent.Core.Transactions
         public Transaction(IConfiguration configuration, ITransactionName initialTransactionName,
             ISimpleTimer timer, DateTime startTime, ICallStackManager callStackManager, IDatabaseService databaseService,
             float priority, IDatabaseStatementParser databaseStatementParser, IDistributedTracePayloadHandler distributedTracePayloadHandler,
-            IErrorService errorService, IAttributeDefinitions attribDefs)
+            IErrorService errorService, IAttributeDefinitions attribDefs, ISamplerService samplerService)
         {
             CandidateTransactionName = new CandidateTransactionName(this, initialTransactionName);
             _guid = GuidGenerator.GenerateNewRelicGuid();
@@ -1084,6 +1085,7 @@ namespace NewRelic.Agent.Core.Transactions
             _errorService = errorService;
             _distributedTracePayloadHandler = distributedTracePayloadHandler;
             _attribDefs = attribDefs;
+            _samplerService = samplerService;
         }
 
         public int Add(Segment segment)
@@ -1219,6 +1221,7 @@ namespace NewRelic.Agent.Core.Transactions
         public bool IsFinished { get; private set; } = false;
 
         private object _finishLock = new object();
+        private readonly ISamplerService _samplerService;
 
         public bool Finish()
         {
@@ -1289,12 +1292,14 @@ namespace NewRelic.Agent.Core.Transactions
 
                 if (segment.UniqueId >= _transactionTracerMaxSegments)
                 {
+                    if (Log.IsFinestEnabled) LogFinest($"Nulling out reference to this segment {{{segment.ToStringForFinestLogging()}}}");
                     // we're over the segment limit.  Null out the reference to the segment.
                     _segments[segment.UniqueId] = null;
                 }
 
                 if (segment.ParentUniqueId.HasValue)
                 {
+                    if (Log.IsFinestEnabled) LogFinest($"Trying to get parent segment for {{{segment.ToStringForFinestLogging()}}}");
                     var parentSegment = _segments[segment.ParentUniqueId.Value];
                     if (null != parentSegment)
                     {
