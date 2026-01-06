@@ -129,9 +129,118 @@ jobs:
           --logger "trx;verbosity=detailed"
           --results-directory ${{ env.test_results_path }}
 
+      - name: Extract payload bytes log from TRX
+        if: always()
+        run: |
+          PAYLOAD_LOG="${{ env.test_results_path }}/${{ matrix.arch }}_${{ matrix.distro }}_payload_bytes.txt"
+          echo "Searching for TRX files in: ${{ env.test_results_path }}"
+
+          # Find all TRX files
+          TRX_FILES=$(find "${{ env.test_results_path }}" -name "*.trx" -type f)
+
+          if [ -z "$TRX_FILES" ]; then
+            echo "No TRX files found"
+            echo "No TRX files found for ${{ matrix.arch }}/${{ matrix.distro }}" > "$PAYLOAD_LOG"
+          else
+            echo "Found TRX files:"
+            echo "$TRX_FILES"
+
+            # Extract payload lines from all TRX files
+            > "$PAYLOAD_LOG"  # Clear/create file
+
+            for trx_file in $TRX_FILES; do
+              echo "Processing: $trx_file"
+              # Use grep to find payload lines (simpler than XML parsing in bash)
+              grep -o '<Message>.*Total payload bytes sent:.*</Message>' "$trx_file" | \
+                sed 's/<Message>//g; s/<\/Message>//g' >> "$PAYLOAD_LOG" || true
+            done
+
+            # Check if we found any payload entries
+            if [ -s "$PAYLOAD_LOG" ]; then
+              echo "Extracted $(wc -l < "$PAYLOAD_LOG") payload log entries"
+              echo "Content:"
+              cat "$PAYLOAD_LOG"
+            else
+              echo "No payload byte logs found in TRX files"
+              echo "No payload logs found for ${{ matrix.arch }}/${{ matrix.distro }}" > "$PAYLOAD_LOG"
+            fi
+          fi
+        shell: bash
+
+      - name: Upload payload bytes log
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: linux-container-payload-bytes-${{ matrix.arch }}-${{ matrix.distro }}
+          path: ${{ env.test_results_path }}/*_payload_bytes.txt
+          if-no-files-found: warn
+
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: ContainerTestResults-${{ matrix.arch }}-${{ matrix.distro }}
           path: ${{ env.test_results_path }}
+
+  aggregate-linux-container-payload-logs:
+    name: Aggregate Linux Container Test Payload Logs
+    needs: [linux-container-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Download all Linux container payload artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: linux-container-payload-bytes-*
+          path: payload-logs/linux-container
+          merge-multiple: true
+
+      - name: Combine payload logs
+        run: |
+          mkdir -p combined-logs
+          echo "=== Linux Container Tests - Total Payload Bytes ===" > combined-logs/linux_container_payload_bytes_combined.txt
+          echo "Generated: $(date)" >> combined-logs/linux_container_payload_bytes_combined.txt
+          echo "" >> combined-logs/linux_container_payload_bytes_combined.txt
+
+          if [ -d "payload-logs/linux-container" ]; then
+            grand_total=0
+
+            find payload-logs/linux-container -name "*_payload_bytes.txt" -type f | sort | while read file; do
+              echo "--- $(basename "$file" .txt) ---" >> combined-logs/linux_container_payload_bytes_combined.txt
+              cat "$file" >> combined-logs/linux_container_payload_bytes_combined.txt
+              echo "" >> combined-logs/linux_container_payload_bytes_combined.txt
+
+              # Extract payload bytes and accumulate
+              while IFS= read -r line; do
+                if [[ "$line" =~ Total\ payload\ bytes\ sent:\ ([0-9]+) ]]; then
+                  bytes="${BASH_REMATCH[1]}"
+                  grand_total=$((grand_total + bytes))
+                fi
+              done < "$file"
+            done
+
+            # Append grand total at the end
+            echo "======================================" >> combined-logs/linux_container_payload_bytes_combined.txt
+            echo "GRAND TOTAL PAYLOAD BYTES: $grand_total" >> combined-logs/linux_container_payload_bytes_combined.txt
+            echo "======================================" >> combined-logs/linux_container_payload_bytes_combined.txt
+
+            echo "Combined payload log created:"
+            cat combined-logs/linux_container_payload_bytes_combined.txt
+          else
+            echo "No Linux container payload logs found"
+            echo "No payload logs were generated" >> combined-logs/linux_container_payload_bytes_combined.txt
+          fi
+        shell: bash
+
+      - name: Upload combined Linux container payload log
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: linux-container-payload-bytes-combined
+          path: combined-logs/linux_container_payload_bytes_combined.txt
+          if-no-files-found: warn
