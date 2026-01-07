@@ -151,10 +151,13 @@ jobs:
 
   run-linux-container-tests:
     name: Run Linux Container Tests
-    needs: 
+    needs:
       - build-fullagent-msi
     uses: ./.github/workflows/linux_container_tests.yml
     secrets: inherit
+    permissions:
+      actions: write
+      contents: read
         
   build-integration-tests:
     needs: build-fullagent-msi
