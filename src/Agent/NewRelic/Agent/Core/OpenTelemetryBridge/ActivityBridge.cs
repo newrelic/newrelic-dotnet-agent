@@ -96,8 +96,6 @@ public class ActivityBridge : IDisposable
         }
 
         Log.Debug($"Found System.Diagnostics.DiagnosticSource assembly version {assembly.GetName().Version}.");
-
-        // TODO: Identify the minimum version of the DiagnosticSource assembly that is compatible with the OpenTelemetry Bridge.
         if ((assembly.GetName().Version?.Major ?? 0) < 7)
         {
             Log.Debug("DiagnosticSource assembly not found or version < 7 is not compatible with OpenTelemetry Bridge. Not starting the activity listener.");
