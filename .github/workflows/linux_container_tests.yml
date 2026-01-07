@@ -72,7 +72,7 @@ jobs:
             runner: ubuntu-24.04-arm
 
     env:
-      test_results_path: tests\TestResults
+      test_results_path: tests/TestResults
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
