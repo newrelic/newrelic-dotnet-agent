@@ -4,6 +4,7 @@
 */
 #pragma once
 #include "../Logging/Logger.h"
+#include "../MethodRewriter/ISystemCalls.h"
 #include "../RapidXML/rapidxml.hpp"
 #include "IgnoreInstrumentation.h"
 #include "Exceptions.h"
@@ -11,6 +12,7 @@
 #include <memory>
 #include <regex>
 #include <set>
+#include <list>
 #include <string>
 #include <utility>
 
@@ -19,7 +21,6 @@
 #else
 #include "../Profiler/SystemCalls.h"
 #endif
-#include <list>
 
 namespace NewRelic { namespace Profiler { namespace Configuration {
 
@@ -31,13 +32,14 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
     class Configuration {
     public:
         // intentionally doesn't take a const wstring& because rapidxml will do destructive operations on the string
-        Configuration(xstring_t globalNewRelicConfiguration, std::pair<xstring_t, bool> localNewRelicConfiguration, xstring_t applicationConfiguration = _X(""), std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> systemCalls = nullptr)
+        Configuration(xstring_t globalNewRelicConfiguration, std::pair<xstring_t, bool> localNewRelicConfiguration, xstring_t applicationConfiguration = _X(""), std::shared_ptr<NewRelic::Profiler::MethodRewriter::ISystemCalls> systemCalls = nullptr)
             : _agentEnabled(true)
             , _agentEnabledInLocalConfig(false)
             , _logLevel(Logger::Level::LEVEL_INFO)
             , _consoleLogging(false)
             , _loggingEnabled(true)
-            , _processes(new Processes())
+            , _includedProcesses(new Processes())
+            , _excludedProcesses(new Processes())
             , _applicationPoolsWhiteList(new ApplicationPools())
             , _applicationPoolsBlackList(new ApplicationPools())
             , _applicationPoolsAreEnabledByDefault(true)
@@ -115,19 +117,21 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         Configuration(
             bool agentEnabled = true,
             Logger::Level logLevel = Logger::Level::LEVEL_INFO,
-            ProcessesPtr processes = ProcessesPtr(new Processes()),
+            ProcessesPtr includedProcesses = ProcessesPtr(new Processes()),
+            ProcessesPtr excludedProcesses = ProcessesPtr(new Processes()),
             ApplicationPoolsPtr whiteList = ApplicationPoolsPtr(new ApplicationPools()),
             ApplicationPoolsPtr blackList = ApplicationPoolsPtr(new ApplicationPools()),
             bool poolsEnabledByDefault = true,
             bool agentEnabledSetInApplicationConfiguration = false,
             bool agentEnabledViaApplicationConfiguration = false,
-            std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> systemCalls = nullptr)
+            std::shared_ptr<NewRelic::Profiler::MethodRewriter::ISystemCalls> systemCalls = nullptr)
             : _agentEnabled(agentEnabled)
             , _agentEnabledInLocalConfig(false)
             , _logLevel(logLevel)
             , _consoleLogging(false)
             , _loggingEnabled(true)
-            , _processes(processes)
+            , _includedProcesses(includedProcesses)
+            , _excludedProcesses(excludedProcesses)
             , _applicationPoolsWhiteList(whiteList)
             , _applicationPoolsBlackList(blackList)
             , _applicationPoolsAreEnabledByDefault(poolsEnabledByDefault)
@@ -188,6 +192,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             LogTrace(_X("App Pool Id: ") + appPoolId);
             LogTrace(_X("Is Core CLR: ") + xstring_t(isCoreClr ? _X("true") : _X("false")));
 
+            if (ProcessExcludedByConfig(processPath))
+            {
+                LogInfo(L"Process " + processPath + L" excluded by configuration.");
+                return false;
+            }
+
             if (IsAzureFunction()) // valid for both .NET Framework and .NET Core
             {
                 if (IsAzureFunctionModeEnabled()) // if not explicitly enabled, fall back to "legacy" behavior
@@ -236,13 +246,14 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         Logger::Level _logLevel;
         bool _consoleLogging;
         bool _loggingEnabled;
-        ProcessesPtr _processes;
+        ProcessesPtr _includedProcesses;
+        ProcessesPtr _excludedProcesses;
         ApplicationPoolsPtr _applicationPoolsWhiteList;
         ApplicationPoolsPtr _applicationPoolsBlackList;
         bool _applicationPoolsAreEnabledByDefault;
         bool _agentEnabledSetInApplicationConfiguration;
         bool _agentEnabledViaApplicationConfiguration;
-        std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> _systemCalls;
+        std::shared_ptr<NewRelic::Profiler::MethodRewriter::ISystemCalls> _systemCalls;
         IgnoreInstrumentationListPtr _ignoreList;
 
         rapidxml::xml_node<xchar_t>* GetConfigurationNode(const rapidxml::xml_document<xchar_t>& document)
@@ -347,7 +358,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return;
 
             SetInstrumentationIgnoreList(instrumentationNode);
-            SetProcesses(instrumentationNode);
+            SetIncludedProcesses(instrumentationNode);
+            SetExcludedProcesses(instrumentationNode);
         }
 
         void SetInstrumentationIgnoreList(rapidxml::xml_node<xchar_t>* instrumentationNode)
@@ -374,8 +386,20 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             }
         }
 
-        void SetProcesses(rapidxml::xml_node<xchar_t>* instrumentationNode)
+        void SetIncludedProcesses(rapidxml::xml_node<xchar_t>* instrumentationNode)
         {
+            // First try to get the list from the environment variable
+            if (_systemCalls) {
+                auto includedApplicationNames = _systemCalls->GetIncludedApplicationNames();
+                if (includedApplicationNames) {
+                    for (const auto& processName : *includedApplicationNames) {
+                        _includedProcesses->emplace(processName);
+                    }
+                    return;
+                }
+            }
+
+            // Get the list from newrelic.config
             auto applicationsNode = instrumentationNode->first_node(_X("applications"), 0, false);
             if (applicationsNode == nullptr)
                 return;
@@ -384,7 +408,51 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 auto processName = applicationNode->first_attribute(_X("name"), 0, false);
                 if (processName == nullptr)
                     continue;
-                _processes->emplace(processName->value());
+                bool exclude = false;
+                auto includeAttribute = applicationNode->first_attribute(_X("include"), 0, false);
+                if (includeAttribute != nullptr) {
+                    exclude = Strings::AreEqualCaseInsensitive(includeAttribute->value(), _X("false"));
+                }
+
+                if (exclude)
+                    continue;
+
+                _includedProcesses->emplace(processName->value());
+            }
+        }
+
+        void SetExcludedProcesses(rapidxml::xml_node<xchar_t>* instrumentationNode)
+        {
+
+            // First try to get the list from the environment variable
+            if (_systemCalls) {
+                auto excludedApplicationNames = _systemCalls->GetExcludedApplicationNames();
+                if (excludedApplicationNames) {
+                    for (const auto& processName : *excludedApplicationNames) {
+                        _excludedProcesses->emplace(processName);
+                    }
+                    return;
+                }
+            }
+
+            // Get the list from newrelic.config
+            auto applicationsNode = instrumentationNode->first_node(_X("applications"), 0, false);
+            if (applicationsNode == nullptr)
+                return;
+
+            for (auto applicationNode = applicationsNode->first_node(_X("application"), 0, false); applicationNode; applicationNode = applicationNode->next_sibling(_X("application"), 0, false)) {
+                auto processName = applicationNode->first_attribute(_X("name"), 0, false);
+                if (processName == nullptr)
+                    continue;
+                bool exclude = false;
+                auto includeAttribute = applicationNode->first_attribute(_X("include"), 0, false);
+                if (includeAttribute != nullptr) {
+                    exclude = Strings::AreEqualCaseInsensitive(includeAttribute->value(), _X("false"));
+                }
+
+                if (exclude) {
+                    _excludedProcesses->emplace(processName->value());
+                }
             }
         }
 
@@ -407,11 +475,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             if (defaultApplicationPoolNode == nullptr)
                 return;
 
-            auto defaultInstrumentAttrbitue = defaultApplicationPoolNode->first_attribute(_X("instrument"), 0, false);
-            if (defaultInstrumentAttrbitue == nullptr)
+            auto defaultInstrumentAttribute = defaultApplicationPoolNode->first_attribute(_X("instrument"), 0, false);
+            if (defaultInstrumentAttribute == nullptr)
                 return;
 
-            auto defaultInstrumentString = defaultInstrumentAttrbitue->value();
+            auto defaultInstrumentString = defaultInstrumentAttribute->value();
             _applicationPoolsAreEnabledByDefault = Strings::AreEqualCaseInsensitive(defaultInstrumentString, _X("true"));
         }
 
@@ -500,7 +568,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
         bool IsIgnoreProcess(const xstring_t& processName)
         {
-            //Since instrumenting the SMSvcHost.exe proccess was reported to cause connection failure, force the profiler to ignore this process for safety.
+            //Since instrumenting the SMSvcHost.exe process was reported to cause connection failure, force the profiler to ignore this process for safety.
             if (Strings::EndsWith(processName, _X("SMSvcHost.exe")))
             {
                 LogInfo(_X("The SMSvcHost.exe process has been identified as an ignored process."));
@@ -764,7 +832,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 }
             }
 
-            if (IsProcessInProcessList(_processes, processName)) {
+            if (IsProcessInProcessList(_includedProcesses, processName)) {
                 LogInfo(L"Enabling instrumentation for this process (", processName, ") due to existence of application node in newrelic.config.");
                 return true;
             }
@@ -784,6 +852,23 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             }
 
             LogInfo(L"This process (", processName, ") is not configured to be instrumented.");
+            return false;
+        }
+
+        // Returns true if the given processPath matches any process name in the excluded process list (case-insensitive, using EndsWith).
+        bool ProcessExcludedByConfig(const xstring_t& processPath) const
+        {
+            if (!_excludedProcesses || _excludedProcesses->empty())
+                return false;
+
+            for (const auto& excludedProcess : *_excludedProcesses)
+            {
+                if (Strings::EndsWith(processPath, excludedProcess))
+                {
+                    LogInfo(_X("Process ") + processPath + _X(" is excluded by configuration (matched: ") + excludedProcess + _X(")."));
+                    return true;
+                }
+            }
             return false;
         }
 
