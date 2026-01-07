@@ -1044,3 +1044,65 @@ jobs:
         with:
           name: unbounded-payload-bytes-*
           failOnError: false
+
+  display-all-payload-summaries:
+    name: Display All Payload Summaries
+    needs: [aggregate-integration-payload-logs, aggregate-unbounded-payload-logs, run-linux-container-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Download combined integration payload log
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: combined-integration-payload-bytes
+          path: payload-summaries
+        continue-on-error: true
+
+      - name: Download combined unbounded payload log
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: combined-unbounded-payload-bytes
+          path: payload-summaries
+        continue-on-error: true
+
+      - name: Download combined Linux container payload log
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: combined-linux-container-payload-bytes
+          path: payload-summaries
+        continue-on-error: true
+
+      - name: Display all payload summaries
+        run: |
+          echo "=========================================="
+          echo "ALL PAYLOAD SUMMARIES"
+          echo "=========================================="
+          echo ""
+
+          if [ -d "payload-summaries" ]; then
+            for summary_file in payload-summaries/*.txt; do
+              if [ -f "$summary_file" ]; then
+                echo "=========================================="
+                echo "FILE: $(basename "$summary_file")"
+                echo "=========================================="
+                cat "$summary_file"
+                echo ""
+                echo ""
+              fi
+            done
+
+            echo "=========================================="
+            echo "SUMMARY COMPLETE"
+            echo "=========================================="
+          else
+            echo "No payload summary files found"
+          fi
+        shell: bash
