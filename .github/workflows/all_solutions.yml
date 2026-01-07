@@ -962,7 +962,7 @@ jobs:
       - name: Upload combined integration payload log
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: integration-payload-bytes-combined
+          name: combined-integration-payload-bytes
           path: combined-logs/integration_payload_bytes_combined.txt
           if-no-files-found: warn
 
@@ -1035,7 +1035,7 @@ jobs:
       - name: Upload combined unbounded payload log
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: unbounded-payload-bytes-combined
+          name: combined-unbounded-payload-bytes
           path: combined-logs/unbounded_payload_bytes_combined.txt
           if-no-files-found: warn
 
