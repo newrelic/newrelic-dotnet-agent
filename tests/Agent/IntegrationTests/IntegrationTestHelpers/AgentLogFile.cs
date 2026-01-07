@@ -133,5 +133,34 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             return totalBytes;
         }
+
+        public Dictionary<string, long> GetPayloadBytesByCategory()
+        {
+            const string payloadInvocationRegex = @"Request\(.{36}\): Invoked ""([^""]+)"" with : (.*)";
+            var regex = new Regex(payloadInvocationRegex);
+            var payloadBytesByCategory = new Dictionary<string, long>();
+
+            foreach (var line in GetFileLines())
+            {
+                var match = regex.Match(line);
+                if (match.Success && match.Groups.Count > 2)
+                {
+                    var category = match.Groups[1].Value;
+                    var jsonPayload = match.Groups[2].Value;
+                    var byteCount = Encoding.UTF8.GetByteCount(jsonPayload);
+
+                    if (payloadBytesByCategory.ContainsKey(category))
+                    {
+                        payloadBytesByCategory[category] += byteCount;
+                    }
+                    else
+                    {
+                        payloadBytesByCategory[category] = byteCount;
+                    }
+                }
+            }
+
+            return payloadBytesByCategory;
+        }
     }
 }

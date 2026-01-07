@@ -390,12 +390,22 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         TestLogger?.WriteLine("----- End of Agent log file -----");
 
+                        TestLogger?.WriteLine("===== Begin Payload Bytes Summary =====");
+                        // get the payload by category and log it
+                        TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}: Payload bytes sent by category:");
+                        var payloadByCategory = AgentLog.GetPayloadBytesByCategory();
+                        foreach (var category in payloadByCategory.Keys)
+                        {
+                            TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}:     {category}: {payloadByCategory[category]} bytes");
+                        }
+
                         TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}: Total payload bytes sent: {AgentLog.GetTotalPayloadBytes()}");
 
                         if (BaselinePayloadBytes.HasValue)
                         {
                             TestForExpectedPayloadSize();
                         }
+                        TestLogger?.WriteLine("----- End Payload Bytes Summary -----");
 
                         if (!applicationHadNonZeroExitCode)
                         {
