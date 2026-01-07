@@ -18,6 +18,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(1));
             _fixture.TestLogger = output;
+            _fixture.AgentLogExpected = false;
 
             _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
             _fixture.AddCommand($"RootCommands DelaySeconds 10");
