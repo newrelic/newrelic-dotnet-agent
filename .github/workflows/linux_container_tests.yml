@@ -150,9 +150,8 @@ jobs:
 
             for trx_file in $TRX_FILES; do
               echo "Processing: $trx_file"
-              # Use grep to find payload lines (simpler than XML parsing in bash)
-              grep -o '<Message>.*Total payload bytes sent:.*</Message>' "$trx_file" | \
-                sed 's/<Message>//g; s/<\/Message>//g' >> "$PAYLOAD_LOG" || true
+              # Extract payload lines from StdOut elements
+              grep -o 'Total payload bytes sent: [0-9]*' "$trx_file" >> "$PAYLOAD_LOG" || true
             done
 
             # Check if we found any payload entries
