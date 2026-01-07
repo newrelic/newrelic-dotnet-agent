@@ -876,9 +876,29 @@ jobs:
             ${{ github.workspace }}\build\BuildArtifacts
           if-no-files-found: error
 
+  # This job is necessary in order for us to have a branch protection rule for tests with a matrix
+  # if any of the matrix tests fail, this job fails and the branch protection rule keeps the PR from merging
+  integration-test-status:
+    name: Check Test Matrix Status
+    runs-on: ubuntu-latest
+    needs: [run-linux-container-tests, run-integration-tests, run-unbounded-tests]
+    if: always()
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+      - name: Successful test run
+        if: ${{ !(contains(needs.*.result, 'failure')) }}
+        run: exit 0
+      - name: Failing test run
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1
+
   aggregate-integration-payload-logs:
     name: Aggregate Integration Test Payload Logs
-    needs: [run-integration-tests]
+    needs: [integration-test-status]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -905,7 +925,8 @@ jobs:
           if [ -d "payload-logs/integration" ]; then
             grand_total=0
 
-            find payload-logs/integration -name "*_payload_bytes.txt" -type f | sort | while read file; do
+            # Process files without pipe to preserve variable scope
+            while IFS= read -r file; do
               echo "--- $(basename "$file" .txt) ---" >> combined-logs/integration_payload_bytes_combined.txt
               cat "$file" >> combined-logs/integration_payload_bytes_combined.txt
               echo "" >> combined-logs/integration_payload_bytes_combined.txt
@@ -917,7 +938,7 @@ jobs:
                   grand_total=$((grand_total + bytes))
                 fi
               done < "$file"
-            done
+            done < <(find payload-logs/integration -name "*_payload_bytes.txt" -type f | sort)
 
             # Append grand total at the end
             echo "======================================" >> combined-logs/integration_payload_bytes_combined.txt
@@ -939,9 +960,15 @@ jobs:
           path: combined-logs/integration_payload_bytes_combined.txt
           if-no-files-found: warn
 
+      - name: Delete individual integration payload artifacts
+        uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v5.1.0
+        with:
+          name: integration-payload-bytes-*
+          failOnError: false
+
   aggregate-unbounded-payload-logs:
     name: Aggregate Unbounded Test Payload Logs
-    needs: [run-unbounded-tests]
+    needs: [integration-test-status]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -968,7 +995,8 @@ jobs:
           if [ -d "payload-logs/unbounded" ]; then
             grand_total=0
 
-            find payload-logs/unbounded -name "*_payload_bytes.txt" -type f | sort | while read file; do
+            # Process files without pipe to preserve variable scope
+            while IFS= read -r file; do
               echo "--- $(basename "$file" .txt) ---" >> combined-logs/unbounded_payload_bytes_combined.txt
               cat "$file" >> combined-logs/unbounded_payload_bytes_combined.txt
               echo "" >> combined-logs/unbounded_payload_bytes_combined.txt
@@ -980,7 +1008,7 @@ jobs:
                   grand_total=$((grand_total + bytes))
                 fi
               done < "$file"
-            done
+            done < <(find payload-logs/unbounded -name "*_payload_bytes.txt" -type f | sort)
 
             # Append grand total at the end
             echo "======================================" >> combined-logs/unbounded_payload_bytes_combined.txt
@@ -1002,22 +1030,8 @@ jobs:
           path: combined-logs/unbounded_payload_bytes_combined.txt
           if-no-files-found: warn
 
-  # This job is necessary in order for us to have a branch protection rule for tests with a matrix
-  # if any of the matrix tests fail, this job fails and the branch protection rule keeps the PR from merging
-  integration-test-status:
-    name: Check Test Matrix Status
-    runs-on: ubuntu-latest
-    needs: [run-linux-container-tests, run-integration-tests, run-unbounded-tests]
-    if: always()
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+      - name: Delete individual unbounded payload artifacts
+        uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v5.1.0
         with:
-          disable-sudo: true
-          egress-policy: audit
-      - name: Successful test run
-        if: ${{ !(contains(needs.*.result, 'failure')) }}
-        run: exit 0
-      - name: Failing test run
-        if: ${{ contains(needs.*.result, 'failure') }}
-        run: exit 1
+          name: unbounded-payload-bytes-*
+          failOnError: false

@@ -211,7 +211,8 @@ jobs:
           if [ -d "payload-logs/linux-container" ]; then
             grand_total=0
 
-            find payload-logs/linux-container -name "*_payload_bytes.txt" -type f | sort | while read file; do
+            # Process files without pipe to preserve variable scope
+            while IFS= read -r file; do
               echo "--- $(basename "$file" .txt) ---" >> combined-logs/linux_container_payload_bytes_combined.txt
               cat "$file" >> combined-logs/linux_container_payload_bytes_combined.txt
               echo "" >> combined-logs/linux_container_payload_bytes_combined.txt
@@ -223,7 +224,7 @@ jobs:
                   grand_total=$((grand_total + bytes))
                 fi
               done < "$file"
-            done
+            done < <(find payload-logs/linux-container -name "*_payload_bytes.txt" -type f | sort)
 
             # Append grand total at the end
             echo "======================================" >> combined-logs/linux_container_payload_bytes_combined.txt
@@ -244,3 +245,9 @@ jobs:
           name: linux-container-payload-bytes-combined
           path: combined-logs/linux_container_payload_bytes_combined.txt
           if-no-files-found: warn
+
+      - name: Delete individual Linux container payload artifacts
+        uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v5.1.0
+        with:
+          name: linux-container-payload-bytes-*
+          failOnError: false

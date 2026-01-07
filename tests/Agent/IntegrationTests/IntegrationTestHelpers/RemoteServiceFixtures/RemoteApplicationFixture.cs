@@ -269,7 +269,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                     do
                     {
-                        TestLogger?.WriteLine($"Test name: {TestContext.Current.TestClass.TestClassName}");
+                        TestLogger?.WriteLine($"Test name: {TestContext.Current.TestClass.TestClassSimpleName}");
                         TestLogger?.WriteLine("Test Home: " + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
 
                         // reset these for each loop iteration
@@ -390,7 +390,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         TestLogger?.WriteLine("----- End of Agent log file -----");
 
-                        TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassName}: Total payload bytes sent: {AgentLog.GetTotalPayloadBytes()}");
+                        TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}: Total payload bytes sent: {AgentLog.GetTotalPayloadBytes()}");
 
                         if (BaselinePayloadBytes.HasValue)
                         {
@@ -422,11 +422,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             if (actualPayloadBytes < lowerBound || actualPayloadBytes > upperBound)
             {
-                Assert.Fail($"{TestContext.Current.TestClass.TestClassName}: Payload size out of acceptable range. Expected: {expectedPayloadBytes} bytes, Actual: {actualPayloadBytes} bytes, Deviation: {percentDeviation:F2}% (allowed: ±5%)");
+                Assert.Fail($"{TestContext.Current.TestClass.TestClassSimpleName}: Payload size out of acceptable range. Expected: {expectedPayloadBytes} bytes, Actual: {actualPayloadBytes} bytes, Deviation: {percentDeviation:F2}% (allowed: ±5%)");
             }
             else
             {
-                TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassName}: Payload size within acceptable range. Expected: {expectedPayloadBytes} bytes, Actual: {actualPayloadBytes} bytes, Deviation: {percentDeviation:F2}%");
+                TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}: Payload size within acceptable range. Expected: {expectedPayloadBytes} bytes, Actual: {actualPayloadBytes} bytes, Deviation: {percentDeviation:F2}%");
             }
         }
 
