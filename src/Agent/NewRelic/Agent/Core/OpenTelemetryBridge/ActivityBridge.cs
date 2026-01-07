@@ -470,8 +470,8 @@ public class ActivityBridge : IDisposable
             transaction.AcceptDistributedTraceHeaders(originalActivity, ActivityBridgeHelpers.GetTraceContextHeadersFromActivity, TransportType.Unknown);
         }
 
-        // TODO: We need a better way to detect activities created by a segment.
-        if (activity.DisplayName != TemporarySegmentName)
+        // Activities created by a segment will have the NewRelicSegment custom property set with the segment.
+        if (activity.GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName) == null)
         {
             if (transaction.GetExperimentalApi().StartActivitySegment(ActivityStartedMethodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
             {
