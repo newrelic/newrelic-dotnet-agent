@@ -187,6 +187,9 @@ jobs:
     needs: [linux-container-tests]
     runs-on: ubuntu-latest
     if: always()
+    permissions:
+      actions: write
+      contents: read
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
