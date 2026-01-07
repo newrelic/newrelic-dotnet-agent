@@ -150,8 +150,8 @@ jobs:
 
             for trx_file in $TRX_FILES; do
               echo "Processing: $trx_file"
-              # Extract payload lines from StdOut elements
-              grep -o 'Total payload bytes sent: [0-9]*' "$trx_file" >> "$PAYLOAD_LOG" || true
+              # Extract payload lines from StdOut elements (including test class name prefix)
+              grep -E '[A-Za-z0-9_]+: Total payload bytes sent: [0-9]+' "$trx_file" >> "$PAYLOAD_LOG" || true
             done
 
             # Check if we found any payload entries
