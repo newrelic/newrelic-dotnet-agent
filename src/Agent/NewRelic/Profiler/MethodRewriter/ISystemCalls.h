@@ -6,8 +6,10 @@
 #include <memory>
 #include <string>
 #include <set>
+#include <list>
 #include "../Common/xplat.h"
 #include "../Logging/DefaultFileLogLocation.h"
+#include "../Common/Strings.h"
 
 namespace NewRelic { namespace Profiler { namespace MethodRewriter {
     struct ISystemCalls : Logger::IFileDestinationSystemCalls
@@ -110,7 +112,15 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             return GetEnvironmentBool(_X("NEW_RELIC_AZURE_FUNCTION_LOG_LEVEL_OVERRIDE"), false);
         }
 
+        virtual std::unique_ptr<std::list<xstring_t>> GetIncludedApplicationNames()
+        {
+            return GetEnvironmentVariableAsList(_X("NEW_RELIC_INCLUDED_APPLICATION_NAMES"));
+        }
 
+        virtual std::unique_ptr<std::list<xstring_t>> GetExcludedApplicationNames()
+        {
+            return GetEnvironmentVariableAsList(_X("NEW_RELIC_EXCLUDED_APPLICATION_NAMES"));
+        }
 
     private:
         bool _isCoreClr = false;
@@ -151,6 +161,33 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
                 variableValue = TryGetEnvironmentVariable(oldVariable); // no need to log deprecation message; that's handled in the managed agent
             }
             return variableValue;
+        }
+
+        std::unique_ptr<std::list<xstring_t>> GetEnvironmentVariableAsList(const xstring_t& variableName)
+        {
+            auto variableValue = TryGetEnvironmentVariable(variableName);
+            if (variableValue == nullptr)
+            {
+                return nullptr;
+            }
+            std::unique_ptr<std::list<xstring_t>> list = std::make_unique<std::list<xstring_t>>();
+            xstring_t valueStr = *variableValue;
+            size_t start = 0;
+            size_t end = valueStr.find(_X(','));
+            while (end != xstring_t::npos)
+            {
+                xstring_t item = valueStr.substr(start, end - start);
+                list->push_back(item);
+                start = end + 1;
+                end = valueStr.find(_X(','), start);
+            }
+            // Add the last (or only) item
+            xstring_t item = valueStr.substr(start);
+            if (!item.empty())
+            {
+                list->push_back(item);
+            }
+            return list;
         }
     };
     typedef std::shared_ptr<ISystemCalls> ISystemCallsPtr;
