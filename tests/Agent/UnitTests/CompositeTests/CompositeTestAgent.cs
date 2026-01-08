@@ -226,7 +226,7 @@ namespace CompositeTests
             InstrumentationService = _container.Resolve<IInstrumentationService>();
             InstrumentationWatcher = _container.Resolve<InstrumentationWatcher>();
 
-            AgentServices.StartServices(_container, false, enableGCSamplerV2);
+            AgentServices.StartServices(_container, enableServerlessMode, enableGCSamplerV2);
 
             DisableAgentInitializer();
             InternalApi.SetAgentApiImplementation(_container.Resolve<IAgentApi>());
