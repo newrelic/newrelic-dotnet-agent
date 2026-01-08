@@ -130,11 +130,13 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
 
         TEST_METHOD(logger_verify_can_change_level_to_debug)
         {
+            ResetStdLog();
             AssertLevelChange(Level::LEVEL_DEBUG);
         }
 
         TEST_METHOD(logger_verify_can_change_level_to_trace)
         {
+            ResetStdLog();
             AssertLevelChange(Level::LEVEL_TRACE);
         }
 
