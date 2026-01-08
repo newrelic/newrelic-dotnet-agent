@@ -515,6 +515,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         }
 
         // add attributes required for span event
+        AttribDefs.GetTypeAttribute(TypeAttributeValue.SpanEvent).TrySetDefault(attribValCollection);
         AttribDefs.Timestamp.TrySetValue(attribValCollection, timestamp);
         attribValCollection.TrySetValue(AttribDefs.NameForSpan, name);
         attribValCollection.TrySetValue(AttribDefs.SpanIdForSpanEvent, SpanId);
