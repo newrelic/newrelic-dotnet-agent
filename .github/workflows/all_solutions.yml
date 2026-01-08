@@ -151,10 +151,13 @@ jobs:
 
   run-linux-container-tests:
     name: Run Linux Container Tests
-    needs: 
+    needs:
       - build-fullagent-msi
     uses: ./.github/workflows/linux_container_tests.yml
     secrets: inherit
+    permissions:
+      actions: write
+      contents: read
         
   build-integration-tests:
     needs: build-fullagent-msi
@@ -327,7 +330,6 @@ jobs:
       NEW_RELIC_AZURE_FUNCTION_LOG_LEVEL_OVERRIDE: 1 # enables profiler debug logs when testing an azure function
       # Set an environment variable that the tests will use to set the application name.
       CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -415,7 +417,7 @@ jobs:
         run: |
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "List ports in use"
-            netstat -no  
+            netstat -no
           }
 
           Write-Host "Run tests"
@@ -437,9 +439,61 @@ jobs:
             Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
 
             Write-Host "Get .NET Runtime errors (if any)"
-            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
           }
         shell: powershell
+
+      - name: Extract payload bytes log from TRX
+        if: always()
+        run: |
+          $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
+
+          Write-Host "Checking for TRX file at: $trxFile"
+
+          if (Test-Path $trxFile) {
+            $fileSize = (Get-Item $trxFile).Length
+            Write-Host "TRX file found. Size: $fileSize bytes"
+
+            # Read TRX file and extract lines containing payload information from Message elements
+            [xml]$trxContent = Get-Content $trxFile
+            $messageElements = $trxContent.SelectNodes("//*[local-name()='Output']/*[local-name()='TextMessages']/*[local-name()='Message']")
+
+            $payloadData = @{}
+            foreach ($message in $messageElements) {
+              $text = $message.InnerText
+              if ($text -match "^(.+?):\s*Total payload bytes sent:\s*(\d+)") {
+                $className = $Matches[1].Trim()
+                $byteCount = [int]$Matches[2]
+                $payloadData[$className] = $byteCount
+                Write-Host "Found: $className = $byteCount bytes"
+              }
+            }
+
+            Write-Host "Found $($payloadData.Count) payload log entries"
+
+            if ($payloadData.Count -gt 0) {
+              $payloadData | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+              Write-Host "Extracted payload logs to $payloadLog"
+              Write-Host "Content:"
+              Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
+            } else {
+              Write-Host "No payload byte logs found in TRX file"
+              @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+            }
+          } else {
+            Write-Host "TRX file not found"
+            @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+          }
+        shell: powershell
+
+      - name: Upload payload bytes log
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: integration-payload-bytes-${{ matrix.namespace }}
+          path: C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
+          if-no-files-found: warn
 
       - name: Archive integration test results on failure
         if: ${{ failure() }}
@@ -564,7 +618,7 @@ jobs:
         run: |
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "List ports in use"
-            netstat -no  
+            netstat -no
           }
 
           # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
@@ -580,9 +634,61 @@ jobs:
             Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
 
             Write-Host "Get .NET Runtime errors (if any)"
-            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
           }
         shell: powershell
+
+      - name: Extract payload bytes log from TRX
+        if: always()
+        run: |
+          $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
+
+          Write-Host "Checking for TRX file at: $trxFile"
+
+          if (Test-Path $trxFile) {
+            $fileSize = (Get-Item $trxFile).Length
+            Write-Host "TRX file found. Size: $fileSize bytes"
+
+            # Read TRX file and extract lines containing payload information from Message elements
+            [xml]$trxContent = Get-Content $trxFile
+            $messageElements = $trxContent.SelectNodes("//*[local-name()='Output']/*[local-name()='TextMessages']/*[local-name()='Message']")
+
+            $payloadData = @{}
+            foreach ($message in $messageElements) {
+              $text = $message.InnerText
+              if ($text -match "^(.+?):\s*Total payload bytes sent:\s*(\d+)") {
+                $className = $Matches[1].Trim()
+                $byteCount = [int]$Matches[2]
+                $payloadData[$className] = $byteCount
+                Write-Host "Found: $className = $byteCount bytes"
+              }
+            }
+
+            Write-Host "Found $($payloadData.Count) payload log entries"
+
+            if ($payloadData.Count -gt 0) {
+              $payloadData | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+              Write-Host "Extracted payload logs to $payloadLog"
+              Write-Host "Content:"
+              Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
+            } else {
+              Write-Host "No payload byte logs found in TRX file"
+              @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+            }
+          } else {
+            Write-Host "TRX file not found"
+            @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+          }
+        shell: powershell
+
+      - name: Upload payload bytes log
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: unbounded-payload-bytes-${{ matrix.namespace }}
+          path: C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
+          if-no-files-found: warn
 
       - name: Archive unbounded test results on failure
         if: ${{ failure() }}
@@ -796,3 +902,335 @@ jobs:
       - name: Failing test run
         if: ${{ contains(needs.*.result, 'failure') }}
         run: exit 1
+
+  aggregate-integration-payload-logs:
+    name: Aggregate Integration Test Payload Logs
+    needs: [integration-test-status]
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Download all integration payload artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: integration-payload-bytes-*
+          path: payload-logs/integration
+          merge-multiple: true
+
+      - name: Combine payload logs
+        run: |
+          mkdir -p combined-logs
+
+          if [ -d "payload-logs/integration" ]; then
+            echo "["  > combined-logs/integration_payload_bytes_combined.json
+            first=true
+            grand_total=0
+
+            # Process JSON files and merge into array
+            while IFS= read -r file; do
+              echo "Processing: $(basename "$file")"
+
+              # Read JSON and extract key-value pairs
+              while IFS= read -r line; do
+                # Skip lines that are just braces or empty
+                if [[ "$line" =~ ^[[:space:]]*\{[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*$ ]] || [[ -z "$line" ]]; then
+                  continue
+                fi
+
+                # Extract class name and byte count from JSON property
+                if [[ "$line" =~ \"([^\"]+)\":[[:space:]]*([0-9]+) ]]; then
+                  className="${BASH_REMATCH[1]}"
+                  byteCount="${BASH_REMATCH[2]}"
+                  grand_total=$((grand_total + byteCount))
+
+                  if [ "$first" = true ]; then
+                    first=false
+                  else
+                    echo "," >> combined-logs/integration_payload_bytes_combined.json
+                  fi
+                  echo "  {\"className\": \"$className\", \"payloadBytes\": $byteCount}" >> combined-logs/integration_payload_bytes_combined.json
+                fi
+              done < "$file"
+            done < <(find payload-logs/integration -name "*_payload_bytes.json" -type f | sort)
+
+            echo "" >> combined-logs/integration_payload_bytes_combined.json
+            echo "]" >> combined-logs/integration_payload_bytes_combined.json
+
+            # Create summary metadata file
+            echo "{" > combined-logs/integration_payload_bytes_summary.json
+            echo "  \"testType\": \"Integration Tests\"," >> combined-logs/integration_payload_bytes_summary.json
+            echo "  \"generatedAt\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"," >> combined-logs/integration_payload_bytes_summary.json
+            echo "  \"grandTotalBytes\": $grand_total" >> combined-logs/integration_payload_bytes_summary.json
+            echo "}" >> combined-logs/integration_payload_bytes_summary.json
+
+            echo "Combined payload JSON created with grand total: $grand_total bytes"
+            echo "Payload data:"
+            cat combined-logs/integration_payload_bytes_combined.json
+            echo ""
+            echo "Summary:"
+            cat combined-logs/integration_payload_bytes_summary.json
+          else
+            echo "No integration payload logs found"
+            echo "[]" > combined-logs/integration_payload_bytes_combined.json
+            echo "{\"testType\": \"Integration Tests\", \"grandTotalBytes\": 0}" > combined-logs/integration_payload_bytes_summary.json
+          fi
+        shell: bash
+
+      - name: Upload combined integration payload log
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: combined-integration-payload-bytes
+          path: combined-logs/integration_payload_bytes_*.json
+          if-no-files-found: warn
+
+      - name: Delete individual integration payload artifacts
+        uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v5.1.0
+        with:
+          name: integration-payload-bytes-*
+          failOnError: false
+
+  aggregate-unbounded-payload-logs:
+    name: Aggregate Unbounded Test Payload Logs
+    needs: [integration-test-status]
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Download all unbounded payload artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: unbounded-payload-bytes-*
+          path: payload-logs/unbounded
+          merge-multiple: true
+
+      - name: Combine payload logs
+        run: |
+          mkdir -p combined-logs
+
+          if [ -d "payload-logs/unbounded" ]; then
+            echo "["  > combined-logs/unbounded_payload_bytes_combined.json
+            first=true
+            grand_total=0
+
+            # Process JSON files and merge into array
+            while IFS= read -r file; do
+              echo "Processing: $(basename "$file")"
+
+              # Read JSON and extract key-value pairs
+              while IFS= read -r line; do
+                # Skip lines that are just braces or empty
+                if [[ "$line" =~ ^[[:space:]]*\{[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*$ ]] || [[ -z "$line" ]]; then
+                  continue
+                fi
+
+                # Extract class name and byte count from JSON property
+                if [[ "$line" =~ \"([^\"]+)\":[[:space:]]*([0-9]+) ]]; then
+                  className="${BASH_REMATCH[1]}"
+                  byteCount="${BASH_REMATCH[2]}"
+                  grand_total=$((grand_total + byteCount))
+
+                  if [ "$first" = true ]; then
+                    first=false
+                  else
+                    echo "," >> combined-logs/unbounded_payload_bytes_combined.json
+                  fi
+                  echo "  {\"className\": \"$className\", \"payloadBytes\": $byteCount}" >> combined-logs/unbounded_payload_bytes_combined.json
+                fi
+              done < "$file"
+            done < <(find payload-logs/unbounded -name "*_payload_bytes.json" -type f | sort)
+
+            echo "" >> combined-logs/unbounded_payload_bytes_combined.json
+            echo "]" >> combined-logs/unbounded_payload_bytes_combined.json
+
+            # Create summary metadata file
+            echo "{" > combined-logs/unbounded_payload_bytes_summary.json
+            echo "  \"testType\": \"Unbounded Integration Tests\"," >> combined-logs/unbounded_payload_bytes_summary.json
+            echo "  \"generatedAt\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"," >> combined-logs/unbounded_payload_bytes_summary.json
+            echo "  \"grandTotalBytes\": $grand_total" >> combined-logs/unbounded_payload_bytes_summary.json
+            echo "}" >> combined-logs/unbounded_payload_bytes_summary.json
+
+            echo "Combined payload JSON created with grand total: $grand_total bytes"
+            echo "Payload data:"
+            cat combined-logs/unbounded_payload_bytes_combined.json
+            echo ""
+            echo "Summary:"
+            cat combined-logs/unbounded_payload_bytes_summary.json
+          else
+            echo "No unbounded payload logs found"
+            echo "[]" > combined-logs/unbounded_payload_bytes_combined.json
+            echo "{\"testType\": \"Unbounded Integration Tests\", \"grandTotalBytes\": 0}" > combined-logs/unbounded_payload_bytes_summary.json
+          fi
+        shell: bash
+
+      - name: Upload combined unbounded payload log
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: combined-unbounded-payload-bytes
+          path: combined-logs/unbounded_payload_bytes_*.json
+          if-no-files-found: warn
+
+      - name: Delete individual unbounded payload artifacts
+        uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v5.1.0
+        with:
+          name: unbounded-payload-bytes-*
+          failOnError: false
+
+  display-all-payload-summaries:
+    name: Display All Payload Summaries
+    needs: [aggregate-integration-payload-logs, aggregate-unbounded-payload-logs, run-linux-container-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Download combined integration payload log
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: combined-integration-payload-bytes
+          path: payload-summaries
+        continue-on-error: true
+
+      - name: Download combined unbounded payload log
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: combined-unbounded-payload-bytes
+          path: payload-summaries
+        continue-on-error: true
+
+      - name: Download combined Linux container payload log
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: combined-linux-container-payload-bytes
+          path: payload-summaries
+        continue-on-error: true
+
+      - name: Create consolidated JSON output
+        run: |
+          if [ -d "payload-summaries" ]; then
+            echo "{"  > final_payload_summary.json
+
+            first_type=true
+            overall_total=0
+
+            # Process each test type's combined data
+            for data_file in payload-summaries/*_combined.json; do
+              if [ -f "$data_file" ]; then
+                filename=$(basename "$data_file" _payload_bytes_combined.json)
+
+                # Determine test type name
+                case "$filename" in
+                  integration)
+                    test_type="integrationTests"
+                    ;;
+                  unbounded)
+                    test_type="unboundedTests"
+                    ;;
+                  linux_container)
+                    test_type="containerTests"
+                    ;;
+                  *)
+                    test_type="$filename"
+                    ;;
+                esac
+
+                # Get corresponding summary file for grand total and timestamp
+                summary_file="payload-summaries/${filename}_payload_bytes_summary.json"
+                grand_total=0
+                generated_at=""
+                if [ -f "$summary_file" ]; then
+                  if grep -q "grandTotalBytes" "$summary_file"; then
+                    grand_total=$(grep -oP '"grandTotalBytes":\s*\K\d+' "$summary_file")
+                    overall_total=$((overall_total + grand_total))
+                  fi
+                  if grep -q "generatedAt" "$summary_file"; then
+                    generated_at=$(grep -oP '"generatedAt":\s*"\K[^"]+' "$summary_file")
+                  fi
+                fi
+
+                # Add comma separator if not first entry
+                if [ "$first_type" = false ]; then
+                  echo "," >> final_payload_summary.json
+                fi
+                first_type=false
+
+                # Add test type section
+                echo "  \"$test_type\": {" >> final_payload_summary.json
+                echo "    \"generatedAt\": \"$generated_at\"," >> final_payload_summary.json
+                echo "    \"bytes\": $grand_total," >> final_payload_summary.json
+                echo "    \"details\": [" >> final_payload_summary.json
+
+                # Read and merge test class data from combined file, converting payloadBytes to bytes
+                first_test=true
+                while IFS= read -r line; do
+                  # Skip array brackets and empty lines
+                  if [[ "$line" =~ ^[[:space:]]*\[[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\][[:space:]]*$ ]] || [[ -z "$line" ]]; then
+                    continue
+                  fi
+
+                  # Extract className and payloadBytes, convert to new format
+                  if [[ "$line" =~ \"className\":[[:space:]]*\"([^\"]+)\".*\"payloadBytes\":[[:space:]]*([0-9]+) ]]; then
+                    className="${BASH_REMATCH[1]}"
+                    byteCount="${BASH_REMATCH[2]}"
+
+                    # Add comma separator if not first test entry
+                    if [ "$first_test" = false ]; then
+                      echo "," >> final_payload_summary.json
+                    fi
+                    first_test=false
+
+                    echo "      {\"className\": \"$className\", \"bytes\": $byteCount}" >> final_payload_summary.json
+                  fi
+                done < "$data_file"
+
+                echo "" >> final_payload_summary.json
+                echo "    ]" >> final_payload_summary.json
+                echo -n "  }" >> final_payload_summary.json
+              fi
+            done
+
+            echo "," >> final_payload_summary.json
+            echo "  \"bytes\": $overall_total" >> final_payload_summary.json
+            echo "}" >> final_payload_summary.json
+
+            echo "=========================================="
+            echo "FINAL CONSOLIDATED PAYLOAD SUMMARY"
+            echo "=========================================="
+            cat final_payload_summary.json
+            echo ""
+            echo "=========================================="
+            echo "OVERALL TOTAL: $overall_total bytes"
+            echo "=========================================="
+          else
+            echo "No payload summary files found"
+            echo '{"bytes": 0}' > final_payload_summary.json
+          fi
+        shell: bash
+
+      - name: Upload final consolidated summary
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: final-payload-summary
+          path: final_payload_summary.json
+          if-no-files-found: warn

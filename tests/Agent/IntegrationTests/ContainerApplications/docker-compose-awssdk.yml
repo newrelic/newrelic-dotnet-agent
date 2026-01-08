@@ -26,7 +26,7 @@ services:
     image: localstack/localstack:stable
     expose: # ports are only available internal to the service, not external so there's no chance for conflicts
       - "4566"       # LocalStack Gateway
-      - "4510-4559"  # external services port range
+      - "4559"  # external services port range
     environment:
       # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
       - DEBUG=${DEBUG:-0}
