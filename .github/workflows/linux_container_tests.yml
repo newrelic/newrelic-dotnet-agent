@@ -132,7 +132,7 @@ jobs:
       - name: Extract payload bytes log from TRX
         if: always()
         run: |
-          PAYLOAD_LOG="${{ env.test_results_path }}/${{ matrix.arch }}_${{ matrix.distro }}_payload_bytes.txt"
+          PAYLOAD_LOG="${{ env.test_results_path }}/${{ matrix.arch }}_${{ matrix.distro }}_payload_bytes.json"
           echo "Searching for TRX files in: ${{ env.test_results_path }}"
 
           # Find all TRX files
@@ -140,28 +140,46 @@ jobs:
 
           if [ -z "$TRX_FILES" ]; then
             echo "No TRX files found"
-            echo "No TRX files found for ${{ matrix.arch }}/${{ matrix.distro }}" > "$PAYLOAD_LOG"
+            echo "{}" > "$PAYLOAD_LOG"
           else
             echo "Found TRX files:"
             echo "$TRX_FILES"
 
-            # Extract payload lines from all TRX files
-            > "$PAYLOAD_LOG"  # Clear/create file
+            # Extract payload lines from all TRX files and build JSON
+            echo "{" > "$PAYLOAD_LOG"
+            first=true
 
             for trx_file in $TRX_FILES; do
               echo "Processing: $trx_file"
               # Extract payload lines from StdOut elements (including test class name prefix)
-              grep -E '[A-Za-z0-9_]+: Total payload bytes sent: [0-9]+' "$trx_file" >> "$PAYLOAD_LOG" || true
+              while IFS= read -r line; do
+                if [[ "$line" =~ ^([A-Za-z0-9_]+):\ Total\ payload\ bytes\ sent:\ ([0-9]+) ]]; then
+                  className="${BASH_REMATCH[1]}"
+                  byteCount="${BASH_REMATCH[2]}"
+                  echo "Found: $className = $byteCount bytes"
+
+                  if [ "$first" = true ]; then
+                    first=false
+                  else
+                    echo "," >> "$PAYLOAD_LOG"
+                  fi
+                  echo "  \"$className\": $byteCount" >> "$PAYLOAD_LOG"
+                fi
+              done < <(grep -E '[A-Za-z0-9_]+: Total payload bytes sent: [0-9]+' "$trx_file" || true)
             done
 
+            echo "" >> "$PAYLOAD_LOG"
+            echo "}" >> "$PAYLOAD_LOG"
+
             # Check if we found any payload entries
-            if [ -s "$PAYLOAD_LOG" ]; then
-              echo "Extracted $(wc -l < "$PAYLOAD_LOG") payload log entries"
+            content=$(cat "$PAYLOAD_LOG")
+            if [[ "$content" != "{}" && "$content" != $'{\n}' ]]; then
+              echo "Extracted payload log entries"
               echo "Content:"
               cat "$PAYLOAD_LOG"
             else
               echo "No payload byte logs found in TRX files"
-              echo "No payload logs found for ${{ matrix.arch }}/${{ matrix.distro }}" > "$PAYLOAD_LOG"
+              echo "{}" > "$PAYLOAD_LOG"
             fi
           fi
         shell: bash
@@ -171,7 +189,7 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: linux-container-payload-bytes-${{ matrix.arch }}-${{ matrix.distro }}
-          path: ${{ env.test_results_path }}/*_payload_bytes.txt
+          path: ${{ env.test_results_path }}/*_payload_bytes.json
           if-no-files-found: warn
 
       - name: Archive test results
@@ -206,38 +224,59 @@ jobs:
       - name: Combine payload logs
         run: |
           mkdir -p combined-logs
-          echo "=== Linux Container Tests - Total Payload Bytes ===" > combined-logs/linux_container_payload_bytes_combined.txt
-          echo "Generated: $(date)" >> combined-logs/linux_container_payload_bytes_combined.txt
-          echo "" >> combined-logs/linux_container_payload_bytes_combined.txt
 
           if [ -d "payload-logs/linux-container" ]; then
+            echo "["  > combined-logs/linux_container_payload_bytes_combined.json
+            first=true
             grand_total=0
 
-            # Process files without pipe to preserve variable scope
+            # Process JSON files and merge into array
             while IFS= read -r file; do
-              echo "--- $(basename "$file" .txt) ---" >> combined-logs/linux_container_payload_bytes_combined.txt
-              cat "$file" >> combined-logs/linux_container_payload_bytes_combined.txt
-              echo "" >> combined-logs/linux_container_payload_bytes_combined.txt
+              echo "Processing: $(basename "$file")"
 
-              # Extract payload bytes and accumulate
+              # Read JSON and extract key-value pairs
               while IFS= read -r line; do
-                if [[ "$line" =~ Total\ payload\ bytes\ sent:\ ([0-9]+) ]]; then
-                  bytes="${BASH_REMATCH[1]}"
-                  grand_total=$((grand_total + bytes))
+                # Skip lines that are just braces or empty
+                if [[ "$line" =~ ^[[:space:]]*\{[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*$ ]] || [[ -z "$line" ]]; then
+                  continue
+                fi
+
+                # Extract class name and byte count from JSON property
+                if [[ "$line" =~ \"([^\"]+)\":[[:space:]]*([0-9]+) ]]; then
+                  className="${BASH_REMATCH[1]}"
+                  byteCount="${BASH_REMATCH[2]}"
+                  grand_total=$((grand_total + byteCount))
+
+                  if [ "$first" = true ]; then
+                    first=false
+                  else
+                    echo "," >> combined-logs/linux_container_payload_bytes_combined.json
+                  fi
+                  echo "  {\"className\": \"$className\", \"payloadBytes\": $byteCount}" >> combined-logs/linux_container_payload_bytes_combined.json
                 fi
               done < "$file"
-            done < <(find payload-logs/linux-container -name "*_payload_bytes.txt" -type f | sort)
+            done < <(find payload-logs/linux-container -name "*_payload_bytes.json" -type f | sort)
 
-            # Append grand total at the end
-            echo "======================================" >> combined-logs/linux_container_payload_bytes_combined.txt
-            echo "GRAND TOTAL PAYLOAD BYTES: $grand_total" >> combined-logs/linux_container_payload_bytes_combined.txt
-            echo "======================================" >> combined-logs/linux_container_payload_bytes_combined.txt
+            echo "" >> combined-logs/linux_container_payload_bytes_combined.json
+            echo "]" >> combined-logs/linux_container_payload_bytes_combined.json
 
-            echo "Combined payload log created:"
-            cat combined-logs/linux_container_payload_bytes_combined.txt
+            # Create summary metadata file
+            echo "{" > combined-logs/linux_container_payload_bytes_summary.json
+            echo "  \"testType\": \"Linux Container Tests\"," >> combined-logs/linux_container_payload_bytes_summary.json
+            echo "  \"generatedAt\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"," >> combined-logs/linux_container_payload_bytes_summary.json
+            echo "  \"grandTotalBytes\": $grand_total" >> combined-logs/linux_container_payload_bytes_summary.json
+            echo "}" >> combined-logs/linux_container_payload_bytes_summary.json
+
+            echo "Combined payload JSON created with grand total: $grand_total bytes"
+            echo "Payload data:"
+            cat combined-logs/linux_container_payload_bytes_combined.json
+            echo ""
+            echo "Summary:"
+            cat combined-logs/linux_container_payload_bytes_summary.json
           else
             echo "No Linux container payload logs found"
-            echo "No payload logs were generated" >> combined-logs/linux_container_payload_bytes_combined.txt
+            echo "[]" > combined-logs/linux_container_payload_bytes_combined.json
+            echo "{\"testType\": \"Linux Container Tests\", \"grandTotalBytes\": 0}" > combined-logs/linux_container_payload_bytes_summary.json
           fi
         shell: bash
 
@@ -245,7 +284,7 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: combined-linux-container-payload-bytes
-          path: combined-logs/linux_container_payload_bytes_combined.txt
+          path: combined-logs/linux_container_payload_bytes_*.json
           if-no-files-found: warn
 
       - name: Delete individual Linux container payload artifacts
