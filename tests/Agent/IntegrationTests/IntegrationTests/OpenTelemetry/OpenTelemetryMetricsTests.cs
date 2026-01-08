@@ -27,6 +27,7 @@ namespace NewRelic.Agent.IntegrationTests.OpenTelemetry
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                     configModifier.SetLogLevel("finest");
+                    configModifier.ConfigureFasterOpenTelemetryOtlpExportInterval(5);
                 },
                 exerciseApplication: () =>
                 {
@@ -76,10 +77,11 @@ namespace NewRelic.Agent.IntegrationTests.OpenTelemetry
                 _fixture.TestLogger.WriteLine($"Name: {metric.Name}, TotalCount: {metric.TotalCount}");
             }
 
-            // Verify all expected metrics are present (but allow additional metrics)
+            // Verify all expected metrics are present by name (ignore type differences across platforms)
             foreach (var expectedMetric in GetExpectedMetrics())
             {
-                Assert.Contains(metricEntries, m => m.Name == expectedMetric);
+                var found = aggregatedTotals.Any(m => m.Name == expectedMetric);
+                Assert.True(found, $"Expected metric '{expectedMetric}' not found. Available metrics: {string.Join(", ", aggregatedTotals.Select(m => m.Name))}");
             }
         }
 

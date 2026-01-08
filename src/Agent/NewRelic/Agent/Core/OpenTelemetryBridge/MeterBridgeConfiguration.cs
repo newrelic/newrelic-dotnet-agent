@@ -4,18 +4,16 @@
 using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
-    public class MeterBridgeConfiguration
+    public class MeterBridgeConfiguration : ConfigurationBasedService
     {
-        private readonly IConfiguration _configuration;
-        private readonly MeterFilterService _filterService;
-
-        public MeterBridgeConfiguration(IConfiguration configuration)
+        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
         {
-            _configuration = configuration;
-            _filterService = new MeterFilterService(configuration);
+            // Configuration is automatically updated by base class
         }
 
         public Uri BuildOtlpEndpoint(IConnectionInfo connectionInfo)
@@ -28,6 +26,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public bool IsMetricsEnabled() => _configuration.OpenTelemetryMetricsEnabled;
 
-        public bool ShouldEnableInstrumentsInMeter(string meterName) => _filterService.ShouldEnableInstrumentsInMeter(meterName);
+        public bool ShouldEnableInstrumentsInMeter(string meterName) => MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, meterName);
     }
 }

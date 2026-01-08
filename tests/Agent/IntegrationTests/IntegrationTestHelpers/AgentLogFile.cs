@@ -8,6 +8,8 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Xunit;
 
@@ -111,6 +113,54 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
                 Thread.Sleep(TimeSpan.FromMilliseconds(100));
             } while (timeTaken.Elapsed < timeout);
+        }
+
+        public long GetTotalPayloadBytes()
+        {
+            const string payloadInvocationRegex = @"Request\(.{36}\): Invoked ""[^""]+"" with : (.*)";
+            var regex = new Regex(payloadInvocationRegex);
+            long totalBytes = 0;
+
+            foreach (var line in GetFileLines())
+            {
+                var match = regex.Match(line);
+                if (match.Success && match.Groups.Count > 1)
+                {
+                    var jsonPayload = match.Groups[1].Value;
+                    totalBytes += Encoding.UTF8.GetByteCount(jsonPayload);
+                }
+            }
+
+            return totalBytes;
+        }
+
+        public Dictionary<string, long> GetPayloadBytesByCategory()
+        {
+            const string payloadInvocationRegex = @"Request\(.{36}\): Invoked ""([^""]+)"" with : (.*)";
+            var regex = new Regex(payloadInvocationRegex);
+            var payloadBytesByCategory = new Dictionary<string, long>();
+
+            foreach (var line in GetFileLines())
+            {
+                var match = regex.Match(line);
+                if (match.Success && match.Groups.Count > 2)
+                {
+                    var category = match.Groups[1].Value;
+                    var jsonPayload = match.Groups[2].Value;
+                    var byteCount = Encoding.UTF8.GetByteCount(jsonPayload);
+
+                    if (payloadBytesByCategory.ContainsKey(category))
+                    {
+                        payloadBytesByCategory[category] += byteCount;
+                    }
+                    else
+                    {
+                        payloadBytesByCategory[category] = byteCount;
+                    }
+                }
+            }
+
+            return payloadBytesByCategory;
         }
     }
 }

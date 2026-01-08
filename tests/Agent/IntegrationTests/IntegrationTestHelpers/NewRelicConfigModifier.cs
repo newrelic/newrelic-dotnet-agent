@@ -439,6 +439,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
+        public NewRelicConfigModifier ConfigureFasterOpenTelemetryOtlpExportInterval(int seconds)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetryOtlpExportIntervalSeconds", seconds.ToString(), "urn:newrelic-config");
+            return this;
+        }
+
         public NewRelicConfigModifier EnableAspNetCore6PlusBrowserInjection(bool enableBrowserInjection)
         {
             CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "appSettings", string.Empty);
