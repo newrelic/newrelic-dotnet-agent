@@ -7,9 +7,9 @@ using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
-    public class MeterFilterService
+    public static class MeterFilterHelpers
     {
-        public bool ShouldEnableInstrumentsInMeter(IConfiguration configuration, string meterName)
+        public static bool ShouldEnableInstrumentsInMeter(IConfiguration configuration, string meterName)
         {
             if (string.IsNullOrEmpty(meterName))
                 return false;

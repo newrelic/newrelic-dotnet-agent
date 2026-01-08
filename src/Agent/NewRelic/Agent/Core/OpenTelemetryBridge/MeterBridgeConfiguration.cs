@@ -11,8 +11,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
     public class MeterBridgeConfiguration : ConfigurationBasedService
     {
-        private readonly MeterFilterService _filterService = new MeterFilterService();
-
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
         {
             // Configuration is automatically updated by base class
@@ -28,6 +26,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
         public bool IsMetricsEnabled() => _configuration.OpenTelemetryMetricsEnabled;
 
-        public bool ShouldEnableInstrumentsInMeter(string meterName) => _filterService.ShouldEnableInstrumentsInMeter(_configuration, meterName);
+        public bool ShouldEnableInstrumentsInMeter(string meterName) => MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, meterName);
     }
 }

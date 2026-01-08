@@ -23,7 +23,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         private readonly IMeterListenerWrapper _meterListener;
         private readonly IConfigurationService _configurationService;
         private readonly IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
-        private readonly MeterFilterService _filterService = new MeterFilterService();
 
         private readonly Meter _newRelicBridgeMeter = new Meter("NewRelicOTelBridgeMeter");
         private readonly ConcurrentDictionary<string, Meter> _bridgedMeters = new ConcurrentDictionary<string, Meter>();
@@ -97,7 +96,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
                 if (meterName == null) return;
                 if (string.IsNullOrEmpty(meterName)) return;
 
-                if (_filterService.ShouldEnableInstrumentsInMeter(_configurationService.Configuration, meterName))
+                if (MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configurationService.Configuration, meterName))
                 {
                     var state = GetStateForInstrumentWithMetrics(instrument);
                     _meterListener.EnableMeasurementEvents(instrument, state);

@@ -10,16 +10,14 @@ using Telerik.JustMock;
 namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
 {
     [TestFixture]
-    public class MeterFilterServiceTests
+    public class MeterFilterHelpersTests
     {
         private IConfiguration _configuration;
-        private MeterFilterService _service;
 
         [SetUp]
         public void SetUp()
         {
             _configuration = Mock.Create<IConfiguration>();
-            _service = new MeterFilterService();
         }
 
         [Test]
@@ -30,7 +28,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
                 .Returns(new List<string>());
 
-            var result = _service.ShouldEnableInstrumentsInMeter(_configuration, "AnyMeter");
+            var result = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, "AnyMeter");
 
             Assert.That(result, Is.True);
         }
@@ -43,8 +41,8 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
                 .Returns(new List<string> { "ExcludedMeter" });
 
-            var excluded = _service.ShouldEnableInstrumentsInMeter(_configuration, "ExcludedMeter");
-            var allowed = _service.ShouldEnableInstrumentsInMeter(_configuration, "AllowedMeter");
+            var excluded = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, "ExcludedMeter");
+            var allowed = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, "AllowedMeter");
 
             Assert.That(excluded, Is.False);
             Assert.That(allowed, Is.True);
@@ -58,7 +56,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
                 .Returns(new List<string>());
 
-            var result = _service.ShouldEnableInstrumentsInMeter(_configuration, "NewRelic.Test");
+            var result = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, "NewRelic.Test");
 
             Assert.That(result, Is.True);
         }
@@ -71,8 +69,8 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
                 .Returns(new List<string>());
 
-            var newRelic = _service.ShouldEnableInstrumentsInMeter(_configuration, "NewRelic.Test");
-            var otel = _service.ShouldEnableInstrumentsInMeter(_configuration, "OpenTelemetry.Test");
+            var newRelic = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, "NewRelic.Test");
+            var otel = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, "OpenTelemetry.Test");
 
             Assert.That(newRelic, Is.False);
             Assert.That(otel, Is.False);
@@ -86,7 +84,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
                 .Returns((IEnumerable<string>)null);
 
-            var result = _service.ShouldEnableInstrumentsInMeter(_configuration, "TestMeter");
+            var result = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, "TestMeter");
 
             Assert.That(result, Is.True);
         }
@@ -99,8 +97,8 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
                 .Returns((IEnumerable<string>)null);
 
-            var nullResult = _service.ShouldEnableInstrumentsInMeter(_configuration, null);
-            var emptyResult = _service.ShouldEnableInstrumentsInMeter(_configuration, "");
+            var nullResult = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, null);
+            var emptyResult = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, "");
 
             Assert.That(nullResult, Is.False);
             Assert.That(emptyResult, Is.False);
@@ -114,7 +112,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
                 .Returns(new List<string> { "ExcludedMeter" });
 
-            var result = _service.ShouldEnableInstrumentsInMeter(_configuration, "OtherMeter");
+            var result = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, "OtherMeter");
 
             Assert.That(result, Is.True);
         }
@@ -127,8 +125,8 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters)
                 .Returns((IEnumerable<string>)null);
 
-            var included = _service.ShouldEnableInstrumentsInMeter(_configuration, "IncludedMeter");
-            var other = _service.ShouldEnableInstrumentsInMeter(_configuration, "OtherMeter");
+            var included = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, "IncludedMeter");
+            var other = MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configuration, "OtherMeter");
 
             Assert.That(included, Is.True);
             Assert.That(other, Is.True);
@@ -137,8 +135,8 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
         [Test]
         public void IsNotBuiltInExclusion_NullOrEmpty()
         {
-            var nullResult = MeterFilterService.IsNotBuiltInExclusion(null);
-            var emptyResult = MeterFilterService.IsNotBuiltInExclusion("");
+            var nullResult = MeterFilterHelpers.IsNotBuiltInExclusion(null);
+            var emptyResult = MeterFilterHelpers.IsNotBuiltInExclusion("");
 
             Assert.That(nullResult, Is.False);
             Assert.That(emptyResult, Is.False);
