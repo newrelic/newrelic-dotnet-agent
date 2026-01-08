@@ -622,7 +622,7 @@ public static class ActivityBridgeSegmentHelpers
             DateTime timestamp = activityEvent.Timestamp.UtcDateTime;
             IEnumerable<KeyValuePair<string, object>> tags = activityEvent.Tags;
 
-            hybridAgentSegment.AddEventToSpan(name, timestamp, tags);
+            hybridAgentSegment.TryAddEventToSpan(name, timestamp, tags);
         }
     }
 
@@ -640,7 +640,7 @@ public static class ActivityBridgeSegmentHelpers
         {
             string traceId = activityLink.Context.TraceId.ToString();
             string spanId = activityLink.Context.SpanId.ToString();
-            hybridAgentSegment.AddLinkToSpan(traceId, spanId, activityLink.Tags);
+            hybridAgentSegment.TryAddLinkToSpan(traceId, spanId, activityLink.Tags);
         }
     }
 
