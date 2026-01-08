@@ -33,7 +33,7 @@ using Telerik.JustMock;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Transformers;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 
 namespace NewRelic.Agent.Core.CrossAgentTests
 {

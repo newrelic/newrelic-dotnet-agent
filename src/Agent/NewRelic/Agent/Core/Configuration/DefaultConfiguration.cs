@@ -18,7 +18,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -61,7 +60,33 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly Dictionary<string, string> _newRelicAppSettings;
 
         public bool UseResourceBasedNamingForWCFEnabled { get; private set; }
-        public bool EventListenerSamplersEnabled { get; set; }
+        
+        private bool _eventListenerSamplersEnabledConfigured;
+        private bool _hasLoggedEventListenerSamplersDisabled;
+        
+        /// <summary>
+        /// Controls whether EventListener-based samplers (GCSamplerNetCore, ThreadStatsSampler) are enabled.
+        /// Automatically returns false when OpenTelemetry metrics are enabled to prevent EventListener conflicts.
+        /// </summary>
+        public bool EventListenerSamplersEnabled
+        {
+            get
+            {
+                // Disable EventListener samplers when OTel metrics are enabled to avoid EventListener conflicts
+                // between OpenTelemetrySDKLogger and EventPipe-based samplers (GCSamplerNetCore/ThreadStatsSampler)
+                if (OpenTelemetryMetricsEnabled)
+                {
+                    if (!_hasLoggedEventListenerSamplersDisabled)
+                    {
+                        Log.Info("EventListener-based samplers (GCSamplerNetCore, ThreadStatsSampler) have been automatically disabled because OpenTelemetry metrics are enabled. This prevents EventListener conflicts with the OpenTelemetrySDKLogger.");
+                        _hasLoggedEventListenerSamplersDisabled = true;
+                    }
+                    return false;
+                }
+                return _eventListenerSamplersEnabledConfigured;
+            }
+            set => _eventListenerSamplersEnabledConfigured = value;
+        }
 
         public TimeSpan DefaultHarvestCycle => TimeSpan.FromMinutes(1);
 
@@ -112,7 +137,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
 
-            EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
+            _eventListenerSamplersEnabledConfigured = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
 
             ParseExpectedErrorConfigurations();
             ParseIgnoreErrorConfigurations();
@@ -2805,14 +2830,15 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool OpenTelemetryTracingEnabled => OpenTelemetryEnabled && EnvironmentOverrides(_localConfiguration.opentelemetry.traces.enabled, "NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED");
 
+        private List<string> _openTelemetryTracingIncludedActivitySources;
         public List<string> OpenTelemetryTracingIncludedActivitySources
         {
             get
             {
-                if (field == null)
+                if (_openTelemetryTracingIncludedActivitySources == null)
                 {
                     var includeString = EnvironmentOverrides(_localConfiguration.opentelemetry.traces.include, "NEW_RELIC_OPENTELEMETRY_TRACES_INCLUDE") ?? string.Empty;
-                    field = includeString
+                    _openTelemetryTracingIncludedActivitySources = includeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
                         .Where(s => !string.IsNullOrEmpty(s))
@@ -2820,7 +2846,7 @@ namespace NewRelic.Agent.Core.Configuration
                         .ToList();
                 }
 
-                return field;
+                return _openTelemetryTracingIncludedActivitySources;
             }
         }
 
@@ -2866,15 +2892,16 @@ namespace NewRelic.Agent.Core.Configuration
           "System.Net.Http",
           "System.Web.Mvc" };
 
+        private List<string> _openTelemetryTracingExcludedActivitySources;
         public List<string> OpenTelemetryTracingExcludedActivitySources
         {
             get
             {
-                if (field == null)
+                if (_openTelemetryTracingExcludedActivitySources == null)
                 {
                     var excludeString = EnvironmentOverrides(_localConfiguration.opentelemetry.traces.exclude, "NEW_RELIC_OPENTELEMETRY_TRACES_EXCLUDE") ?? string.Empty;
 
-                    field = excludeString
+                    _openTelemetryTracingExcludedActivitySources = excludeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
                         .Where(s => !string.IsNullOrEmpty(s))
@@ -2882,7 +2909,7 @@ namespace NewRelic.Agent.Core.Configuration
                         .ToList();
                 }
 
-                return field;
+                return _openTelemetryTracingExcludedActivitySources;
             }
         }
 
@@ -2896,37 +2923,39 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private List<string> _openTelemetryMetricsIncludeFilters;
         public IEnumerable<string> OpenTelemetryMetricsIncludeFilters
         {
             get
             {
-                if (field == null)
+                if (_openTelemetryMetricsIncludeFilters == null)
                 {
                     var includeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.include, "NEW_RELIC_OPENTELEMETRY_METRICS_INCLUDE") ?? string.Empty;
-                    field = includeString
+                    _openTelemetryMetricsIncludeFilters = includeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
                         .Where(s => !string.IsNullOrEmpty(s))
                         .ToList();
                 }
-                return field;
+                return _openTelemetryMetricsIncludeFilters;
             }
         }
 
+        private List<string> _openTelemetryMetricsExcludeFilters;
         public IEnumerable<string> OpenTelemetryMetricsExcludeFilters
         {
             get
             {
-                if (field == null)
+                if (_openTelemetryMetricsExcludeFilters == null)
                 {
                     var excludeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.exclude, "NEW_RELIC_OPENTELEMETRY_METRICS_EXCLUDE") ?? string.Empty;
-                    field = excludeString
+                    _openTelemetryMetricsExcludeFilters = excludeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
                         .Where(s => !string.IsNullOrEmpty(s))
                         .ToList();
                 }
-                return field;
+                return _openTelemetryMetricsExcludeFilters;
             }
         }
 

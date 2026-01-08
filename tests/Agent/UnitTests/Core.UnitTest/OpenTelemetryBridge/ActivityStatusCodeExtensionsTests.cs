@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge

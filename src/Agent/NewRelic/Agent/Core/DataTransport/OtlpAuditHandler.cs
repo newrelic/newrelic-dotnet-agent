@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -125,7 +126,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 // For protobuf content, add warning about binary data not being logged
                 if (contentType.StartsWith("application/x-protobuf", StringComparison.OrdinalIgnoreCase) || 
-                    contentType.Contains("protobuf", StringComparison.OrdinalIgnoreCase))
+                    contentType.IndexOf("protobuf", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     return $"{baseInfo} [Binary Protobuf Data - Content Not Logged]";
                 }
