@@ -42,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Get collected OTLP Metrics via: {address}");
 
-            return GetJson<List<MetricsSummaryDto>>(address);
+            return GetJson<List<MetricsSummaryDto>>(address) ?? new List<MetricsSummaryDto>();
         }
 
         public int GetCollectedOTLPMetricsCount()
