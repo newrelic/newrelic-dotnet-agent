@@ -244,6 +244,11 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
             if (!serverlessModeEnabled)
             {
+                container.Register<IAssemblyProvider, AppDomainAssemblyProvider>();
+                container.Register<IMeterListenerWrapper, DynamicMeterListenerWrapper>();
+                container.Register<MeterBridgeConfiguration, MeterBridgeConfiguration>();
+                container.Register<IOtlpExporterConfigurationService, OtlpExporterConfigurationService>();
+                container.Register<IMeterBridgingService, MeterBridgingService>();
                 container.Register<MeterListenerBridge, MeterListenerBridge>();
             }
 
@@ -281,6 +286,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
                 container.Resolve<ConfigurationTracker>();
                 container.Resolve<LiveInstrumentationServerConfigurationListener>();
                 container.Resolve<UpdatedLoadedModulesService>();
+                container.Resolve<MeterListenerBridge>();
             }
         }
     }
