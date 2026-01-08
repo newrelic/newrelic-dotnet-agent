@@ -105,6 +105,35 @@ namespace NewRelic.Agent.Core.Spans
 
             _attribDefs.ParentId.TrySetValue(attribValues, GetParentSpanId(segment, immutableTransaction, rootSpanId));
 
+            foreach (var link in segment.Links)
+            {
+                var attributes = link.Attributes;
+
+                _attribDefs.GetTypeAttribute(TypeAttributeValue.SpanLink).TrySetDefault(attributes);
+                attributes.TrySetValue(_attribDefs.TraceIdForSpanData, immutableTransaction.TraceId);
+                attributes.TrySetValue(_attribDefs.SpanIdForSpanLink, segment.SpanId);
+                attributes.TrySetValue(_attribDefs.LinkedTraceId, link.LinkedTraceId);
+                attributes.TrySetValue(_attribDefs.LinkedSpanId, link.LinkedSpanId);
+                _attribDefs.Timestamp.TrySetValue(attributes, immutableTransaction.StartTime.Add(segment.RelativeStartTime));
+
+                var linkWireModel = new SpanLinkWireModel(attributes);
+                attribValues.Span.Links.Add(linkWireModel);
+            }
+
+            foreach (var evt in segment.Events)
+            {
+                var attributes = evt.Attributes;
+
+                _attribDefs.GetTypeAttribute(TypeAttributeValue.SpanEvent).TrySetDefault(attributes);
+                _attribDefs.Timestamp.TrySetValue(attributes, evt.Timestamp);
+                attributes.TrySetValue(_attribDefs.NameForSpan, evt.Name);
+                attributes.TrySetValue(_attribDefs.TraceIdForSpanData, immutableTransaction.TraceId);
+                attributes.TrySetValue(_attribDefs.SpanIdForSpanEvent, segment.SpanId);
+
+                var eventWireModel = new SpanEventEventWireModel(attributes);
+                attribValues.Span.Events.Add(eventWireModel);
+            }
+
             return attribValues;
         }
 

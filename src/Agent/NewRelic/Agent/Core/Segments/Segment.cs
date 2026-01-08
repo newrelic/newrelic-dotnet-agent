@@ -34,6 +34,65 @@ namespace NewRelic.Agent.Core.Segments
         string TypeName { get; }
     }
 
+    /// <summary>
+    /// Interface for a link to another span.  Used for distributed tracing.
+    /// </summary>
+    public interface ISpanLink
+    {
+        string LinkedTraceId { get; }
+        string LinkedSpanId { get; }
+        SpanAttributeValueCollection Attributes { get; }
+    }
+
+    /// <summary>
+    /// Represents a link to a span in a distributed trace, including its trace ID, span ID, and associated attributes.
+    /// </summary>
+    /// <remarks>A <see cref="SpanLink"/> is used to associate a span with another span in a distributed
+    /// trace,  typically to represent causal relationships or dependencies between spans.  This is useful in scenarios
+    /// such as linking a span to a parent span in a different trace or  associating spans across asynchronous
+    /// operations.</remarks>
+    public class SpanLink : ISpanLink
+    {
+        public SpanLink(string linkedTraceId, string linkedSpanId)
+        {
+            LinkedTraceId = linkedTraceId;
+            LinkedSpanId = linkedSpanId;
+            Attributes = new SpanAttributeValueCollection();
+        }
+        public string LinkedTraceId { get; }
+        public string LinkedSpanId { get; }
+        public SpanAttributeValueCollection Attributes { get; }
+    }
+
+    /// <summary>
+    /// Represents an event that occurs within a span, including its name, timestamp, and associated attributes.
+    /// </summary>
+    /// <remarks>This interface is typically used to describe events that are part of a distributed tracing
+    /// span. Each event includes a name, a timestamp indicating when the event occurred, and a collection of attributes
+    /// that provide additional context about the event.</remarks>
+    public interface ISpanEventEvent
+    {
+        string Name { get; }
+        DateTime Timestamp { get; } // Epoch time in milliseconds
+        SpanAttributeValueCollection Attributes { get; }
+    }
+
+    /// <summary>
+    /// Represents an event that occurred within a span, including its name, timestamp, and associated attributes.
+    /// </summary>
+    public class SpanEventEvent : ISpanEventEvent
+    {
+        public SpanEventEvent(string name, DateTime timestamp)
+        {
+            Name = name;
+            Timestamp = timestamp;
+            Attributes = new SpanAttributeValueCollection();
+        }
+        public string Name { get; }
+        public DateTime Timestamp { get; } // Epoch time in milliseconds
+        public SpanAttributeValueCollection Attributes { get; }
+    }
+
     public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     {
         private static ConfigurationSubscriber _configurationSubscriber = new ConfigurationSubscriber();
@@ -42,6 +101,9 @@ namespace NewRelic.Agent.Core.Segments
         public string TypeName => MethodCallData.TypeName;
 
         private SpanAttributeValueCollection _attribValues;
+
+        public List<ISpanLink> Links { get; } = new();
+        public List<ISpanEventEvent> Events { get; } = new();
 
         public Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData)
         {
@@ -487,6 +549,33 @@ namespace NewRelic.Agent.Core.Segments
             return this;
         }
 
+        public void AddEventToSpan(string name, DateTime timestamp, IEnumerable<KeyValuePair<string, object>> attributes)
+        {
+            var spanEvent = new SpanEventEvent(name, timestamp);
+            if (attributes != null)
+            {
+                foreach (var attribute in attributes)
+                {
+                    spanEvent.Attributes.TrySetValue(AttribDefs.GetCustomAttributeForSpan(attribute.Key), attribute.Value);
+                }
+            }
+            Events.Add(spanEvent);
+        }
+
+        public void AddLinkToSpan(string linkedTraceId, string linkedSpanId, IEnumerable<KeyValuePair<string, object>> attributes)
+        {
+            var spanLink = new SpanLink(linkedTraceId, linkedSpanId);
+            if (attributes != null)
+            {
+                foreach (var attribute in attributes)
+                {
+                    spanLink.Attributes.TrySetValue(AttribDefs.GetCustomAttributeForSpan(attribute.Key), attribute.Value);
+                }
+            }
+            Links.Add(spanLink);
+        }
+
+
         private readonly object _attribValuesSyncRoot = new object();
 
         public ISpan AddCustomAttribute(string key, object value)
@@ -548,5 +637,9 @@ namespace NewRelic.Agent.Core.Segments
 
         bool ActivityStartedTransaction { get; set; }
         void MakeActivityCurrent();
+
+        void AddEventToSpan(string name, DateTime timestamp, IEnumerable<KeyValuePair<string, object>> attributes);
+
+        void AddLinkToSpan(string linkedTraceId, string linkedSpanId, IEnumerable<KeyValuePair<string, object>> attributes);
     }
 }

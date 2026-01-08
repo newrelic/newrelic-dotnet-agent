@@ -19,6 +19,23 @@ namespace NewRelic.Agent.Core.Segments
         public string SpanId { get; set; }
 
         public string DisplayName => $"{TraceId}.{SpanId}";
+
+        public List<SpanLinkWireModel> Links { get; } = new List<SpanLinkWireModel>();
+        public List<SpanEventEventWireModel> Events { get; } = new List<SpanEventEventWireModel>();
+    }
+
+    public class SpanLinkWireModel : EventWireModel
+    {
+        public SpanLinkWireModel(IAttributeValueCollection attribValues) : base(AttributeDestinations.SpanEvent, attribValues, false, 0.0f)
+        {
+        }
+    }
+
+    public class SpanEventEventWireModel : EventWireModel
+    {
+        public SpanEventEventWireModel(IAttributeValueCollection attribValues) : base(AttributeDestinations.SpanEvent, attribValues, false, 0.0f)
+        {
+        }
     }
 
     public partial class SpanBatch : IStreamingBatchModel<Span>
