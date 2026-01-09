@@ -253,6 +253,7 @@ public class EventWireModelSerializerTests
             Assert.That(actualJson, Does.Contain("\"type\":\"SpanEvent\""));
             Assert.That(actualJson, Does.Contain("\"guid\":\"main-span\""));
             Assert.That(actualJson, Does.Contain("\"linkedTraceId\":\"link-trace\""));
+            Assert.That(actualJson, Does.Contain("\"linkedSpanId\":\"link-span\""));
             Assert.That(actualJson, Does.Contain("\"name\":\"test-event\""));
         });
     }
