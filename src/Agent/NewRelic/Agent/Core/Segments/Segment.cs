@@ -497,13 +497,19 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
 
     public bool TryAddEventToSpan(string name, DateTime timestamp, IEnumerable<KeyValuePair<string, object>> attributes)
     {
-        // only allow MaxSpanEventsPerSpan events per span
+        // only allow MaxSpanEventsPerSegment events per segment
         if (Events.Count >= MaxSpanEventsPerSegment)
         {
             return false;
         }
 
         AttributeValueCollection attribValCollection = new AttributeValueCollection();
+
+        // add attributes required for span event -- a few additional attributes will be added in SpanEventMaker
+        AttribDefs.GetTypeAttribute(TypeAttributeValue.SpanEvent).TrySetDefault(attribValCollection);
+        attribValCollection.TrySetValue(AttribDefs.SpanIdForSpanEvent, SpanId);
+        attribValCollection.TrySetValue(AttribDefs.NameForSpan, name);
+        AttribDefs.Timestamp.TrySetValue(attribValCollection, timestamp);
 
         // add all tags on the event as custom attributes
         if (attributes != null)
@@ -514,27 +520,26 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
             }
         }
 
-        // add attributes required for span event
-        AttribDefs.GetTypeAttribute(TypeAttributeValue.SpanEvent).TrySetDefault(attribValCollection);
-        AttribDefs.Timestamp.TrySetValue(attribValCollection, timestamp);
-        attribValCollection.TrySetValue(AttribDefs.NameForSpan, name);
-        attribValCollection.TrySetValue(AttribDefs.SpanIdForSpanEvent, SpanId);
-
         var eventWireModel = new SpanEventWireModel(attribValCollection);
-
         Events.Add(eventWireModel);
         return true;
     }
 
     public bool TryAddLinkToSpan(string linkedTraceId, string linkedSpanId, IEnumerable<KeyValuePair<string, object>> attributes)
     {
-        // only allow MaxSpanLinksPerSpan links per span
+        // only allow MaxSpanLinksPerSegment links per segment
         if (Links.Count >= MaxSpanLinksPerSegment)
         {
             return false;
         }
 
         AttributeValueCollection attribValCollection = new AttributeValueCollection();
+
+        // add attributes required for span link -- a few additional attributes will be added in SpanEventMaker
+        AttribDefs.GetTypeAttribute(TypeAttributeValue.SpanLink).TrySetDefault(attribValCollection);
+        attribValCollection.TrySetValue(AttribDefs.SpanIdForSpanLink, SpanId);
+        attribValCollection.TrySetValue(AttribDefs.LinkedTraceId, linkedTraceId);
+        attribValCollection.TrySetValue(AttribDefs.LinkedSpanId, linkedSpanId);
 
         // add all tags on the link as custom attributes
         if (attributes != null)
@@ -544,12 +549,6 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
                 attribValCollection.TrySetValue(AttribDefs.GetCustomAttributeForSpan(attribute.Key), attribute.Value);
             }
         }
-
-        // add attributes required for span link
-        AttribDefs.GetTypeAttribute(TypeAttributeValue.SpanLink).TrySetDefault(attribValCollection);
-        attribValCollection.TrySetValue(AttribDefs.SpanIdForSpanLink, SpanId);
-        attribValCollection.TrySetValue(AttribDefs.LinkedTraceId, linkedTraceId);
-        attribValCollection.TrySetValue(AttribDefs.LinkedSpanId, linkedSpanId);
 
         var linkWireModel = new SpanLinkWireModel(attribValCollection);
         Links.Add(linkWireModel);
