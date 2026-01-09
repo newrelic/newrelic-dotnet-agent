@@ -1062,10 +1062,9 @@ public class SpanEventMakerTests
         Assert.Multiple(() =>
         {
             Assert.That(linkIntrinsics["type"], Is.EqualTo("SpanLink"));
-            Assert.That(linkIntrinsics["traceId"], Is.EqualTo(DistributedTraceTraceId));
-            Assert.That(linkIntrinsics["spanId"], Is.EqualTo(segment.SpanId));
-            Assert.That(linkIntrinsics["link.traceId"], Is.EqualTo("linked-trace-abc"));
-            Assert.That(linkIntrinsics["link.spanId"], Is.EqualTo("linked-span-xyz"));
+            Assert.That(linkIntrinsics["trace.id"], Is.EqualTo(DistributedTraceTraceId));
+            Assert.That(linkIntrinsics["linkedTraceId"], Is.EqualTo("linked-trace-abc"));
+            Assert.That(linkIntrinsics["linkedSpanId"], Is.EqualTo("linked-span-xyz"));
             Assert.That(linkIntrinsics.ContainsKey("timestamp"), Is.True);
             Assert.That(linkUserAttribs["custom.attr"], Is.EqualTo("custom-value"));
         });
@@ -1157,8 +1156,8 @@ public class SpanEventMakerTests
         {
             Assert.That(eventIntrinsics["type"], Is.EqualTo("SpanEvent"));
             Assert.That(eventIntrinsics["name"], Is.EqualTo("test-event"));
-            Assert.That(eventIntrinsics["traceId"], Is.EqualTo(DistributedTraceTraceId));
-            Assert.That(eventIntrinsics["spanId"], Is.EqualTo(segment.SpanId));
+            Assert.That(eventIntrinsics["trace.id"], Is.EqualTo(DistributedTraceTraceId));
+            Assert.That(eventIntrinsics["span.id"], Is.EqualTo(segment.SpanId));
             Assert.That(eventIntrinsics.ContainsKey("timestamp"), Is.True);
             Assert.That(eventUserAttribs["custom.event.attr"], Is.EqualTo("event-value"));
         });
