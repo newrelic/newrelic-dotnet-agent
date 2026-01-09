@@ -80,6 +80,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(configuration.ShouldInstrument(L"foo.exe", L"", L"", L"", false));
         }
 
+        TEST_METHOD(should_instrument_process_netcore)
+        {
+            Configuration configuration(false, Logger::Level::LEVEL_INFO, _emptyProcesses, _emptyProcesses, _emptyAppPoolsAllowList, _emptyAppPoolsDenyList, true, false, false, _systemCalls);
+            Assert::IsTrue(configuration.ShouldInstrument(L"foo.exe", L"", L"", L"", true));
+        }
+
         TEST_METHOD(azure_function_should_instrument_functions_net_host_if_azure_function_mode_not_specified)
         {
             std::wstring configurationXml(L"\
