@@ -105,21 +105,33 @@ public class SpanEventMaker : ISpanEventMaker
 
         _attribDefs.ParentId.TrySetValue(attribValues, GetParentSpanId(segment, immutableTransaction, rootSpanId));
 
-        // augment span link attributes and add to span
         foreach (var link in segment.Links)
         {
-            link.AttributeValues.TrySetValue(_attribDefs.TraceIdForSpanData, immutableTransaction.TraceId);
-            _attribDefs.Timestamp.TrySetValue(link.AttributeValues, immutableTransaction.StartTime.Add(segment.RelativeStartTime));
+            var attributes = link.Attributes;
 
-            attribValues.Span.Links.Add(link);
+            _attribDefs.GetTypeAttribute(TypeAttributeValue.SpanLink).TrySetDefault(attributes);
+            attributes.TrySetValue(_attribDefs.TraceIdForSpanData, immutableTransaction.TraceId);
+            attributes.TrySetValue(_attribDefs.SpanIdForSpanLink, segment.SpanId);
+            attributes.TrySetValue(_attribDefs.LinkedTraceId, link.LinkedTraceId);
+            attributes.TrySetValue(_attribDefs.LinkedSpanId, link.LinkedSpanId);
+            _attribDefs.Timestamp.TrySetValue(attributes, immutableTransaction.StartTime.Add(segment.RelativeStartTime));
+
+            var linkWireModel = new SpanLinkWireModel(attributes);
+            attribValues.Span.Links.Add(linkWireModel);
         }
 
-        // augment span event attributes and add to span
         foreach (var evt in segment.Events)
         {
-            evt.AttributeValues.TrySetValue(_attribDefs.TraceIdForSpanData, immutableTransaction.TraceId);
+            var attributes = evt.Attributes;
 
-            attribValues.Span.Events.Add(evt);
+            _attribDefs.GetTypeAttribute(TypeAttributeValue.SpanEvent).TrySetDefault(attributes);
+            _attribDefs.Timestamp.TrySetValue(attributes, evt.Timestamp);
+            attributes.TrySetValue(_attribDefs.NameForSpan, evt.Name);
+            attributes.TrySetValue(_attribDefs.TraceIdForSpanData, immutableTransaction.TraceId);
+            attributes.TrySetValue(_attribDefs.SpanIdForSpanEvent, segment.SpanId);
+
+            var eventWireModel = new SpanEventEventWireModel(attributes);
+            attribValues.Span.Events.Add(eventWireModel);
         }
 
         return attribValues;

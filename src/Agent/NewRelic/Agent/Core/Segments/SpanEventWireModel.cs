@@ -21,7 +21,7 @@ public partial class Span : IStreamingModel
     public string DisplayName => $"{TraceId}.{SpanId}";
 
     public List<SpanLinkWireModel> Links { get; } = new List<SpanLinkWireModel>();
-    public List<SpanEventWireModel> Events { get; } = new List<SpanEventWireModel>();
+    public List<SpanEventEventWireModel> Events { get; } = new List<SpanEventEventWireModel>();
 }
 
 public class SpanLinkWireModel : EventWireModel
@@ -31,9 +31,9 @@ public class SpanLinkWireModel : EventWireModel
     }
 }
 
-public class SpanEventWireModel : EventWireModel
+public class SpanEventEventWireModel : EventWireModel
 {
-    public SpanEventWireModel(IAttributeValueCollection attribValues) : base(AttributeDestinations.SpanEvent, attribValues, false, 0.0f)
+    public SpanEventEventWireModel(IAttributeValueCollection attribValues) : base(AttributeDestinations.SpanEvent, attribValues, false, 0.0f)
     {
     }
 }
