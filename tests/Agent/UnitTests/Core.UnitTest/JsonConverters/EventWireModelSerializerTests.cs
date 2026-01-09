@@ -1,19 +1,19 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using Newtonsoft.Json;
-using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Core.WireModels;
-using NUnit.Framework;
 using System;
 using System.IO;
 using System.Text;
-using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Fixtures;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.WireModels;
+using Newtonsoft.Json;
+using NUnit.Framework;
+using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.JsonConverters.Tests;
+namespace NewRelic.Agent.Core.JsonConverters;
 
 [TestFixture]
 public class EventWireModelSerializerTests
