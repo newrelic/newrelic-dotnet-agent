@@ -61,7 +61,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool UseResourceBasedNamingForWCFEnabled { get; private set; }
         
-        private bool _eventListenerSamplersEnabledConfigured;
         private bool _hasLoggedEventListenerSamplersDisabled;
         
         /// <summary>
@@ -83,9 +82,9 @@ namespace NewRelic.Agent.Core.Configuration
                     }
                     return false;
                 }
-                return _eventListenerSamplersEnabledConfigured;
+                return field;
             }
-            set => _eventListenerSamplersEnabledConfigured = value;
+            set => field = value;
         }
 
         public TimeSpan DefaultHarvestCycle => TimeSpan.FromMinutes(1);
@@ -137,7 +136,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
 
-            _eventListenerSamplersEnabledConfigured = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
+            EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
 
             ParseExpectedErrorConfigurations();
             ParseIgnoreErrorConfigurations();
