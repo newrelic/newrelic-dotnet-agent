@@ -72,7 +72,7 @@ jobs:
             runner: ubuntu-24.04-arm
 
     env:
-      test_results_path: tests\TestResults
+      test_results_path: tests/TestResults
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
@@ -129,9 +129,166 @@ jobs:
           --logger "trx;verbosity=detailed"
           --results-directory ${{ env.test_results_path }}
 
+      - name: Extract payload bytes log from TRX
+        if: always()
+        run: |
+          PAYLOAD_LOG="${{ env.test_results_path }}/${{ matrix.arch }}_${{ matrix.distro }}_payload_bytes.json"
+          echo "Searching for TRX files in: ${{ env.test_results_path }}"
+
+          # Find all TRX files
+          TRX_FILES=$(find "${{ env.test_results_path }}" -name "*.trx" -type f)
+
+          if [ -z "$TRX_FILES" ]; then
+            echo "No TRX files found"
+            echo "{}" > "$PAYLOAD_LOG"
+          else
+            echo "Found TRX files:"
+            echo "$TRX_FILES"
+
+            # Extract payload lines from all TRX files and build JSON
+            echo "{" > "$PAYLOAD_LOG"
+            first=true
+
+            for trx_file in $TRX_FILES; do
+              echo "Processing: $trx_file"
+              # Extract payload lines from StdOut elements (including test class name prefix)
+              while IFS= read -r line; do
+                if [[ "$line" =~ ^([A-Za-z0-9_]+):\ Total\ payload\ bytes\ sent:\ ([0-9]+) ]]; then
+                  className="${BASH_REMATCH[1]}"
+                  byteCount="${BASH_REMATCH[2]}"
+                  echo "Found: $className = $byteCount bytes"
+
+                  if [ "$first" = true ]; then
+                    first=false
+                  else
+                    echo "," >> "$PAYLOAD_LOG"
+                  fi
+                  echo "  \"$className\": $byteCount" >> "$PAYLOAD_LOG"
+                fi
+              done < <(grep -E '[A-Za-z0-9_]+: Total payload bytes sent: [0-9]+' "$trx_file" || true)
+            done
+
+            echo "" >> "$PAYLOAD_LOG"
+            echo "}" >> "$PAYLOAD_LOG"
+
+            # Check if we found any payload entries
+            content=$(cat "$PAYLOAD_LOG")
+            if [[ "$content" != "{}" && "$content" != $'{\n}' ]]; then
+              echo "Extracted payload log entries"
+              echo "Content:"
+              cat "$PAYLOAD_LOG"
+            else
+              echo "No payload byte logs found in TRX files"
+              echo "{}" > "$PAYLOAD_LOG"
+            fi
+          fi
+        shell: bash
+
+      - name: Upload payload bytes log
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: linux-container-payload-bytes-${{ matrix.arch }}-${{ matrix.distro }}
+          path: ${{ env.test_results_path }}/*_payload_bytes.json
+          if-no-files-found: warn
+
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: ContainerTestResults-${{ matrix.arch }}-${{ matrix.distro }}
           path: ${{ env.test_results_path }}
+
+  aggregate-linux-container-payload-logs:
+    name: Aggregate Linux Container Test Payload Logs
+    needs: [linux-container-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Download all Linux container payload artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: linux-container-payload-bytes-*
+          path: payload-logs/linux-container
+          merge-multiple: true
+
+      - name: Combine payload logs
+        run: |
+          mkdir -p combined-logs
+
+          if [ -d "payload-logs/linux-container" ]; then
+            echo "["  > combined-logs/linux_container_payload_bytes_combined.json
+            first=true
+            grand_total=0
+
+            # Process JSON files and merge into array
+            while IFS= read -r file; do
+              echo "Processing: $(basename "$file")"
+
+              # Read JSON and extract key-value pairs
+              while IFS= read -r line; do
+                # Skip lines that are just braces or empty
+                if [[ "$line" =~ ^[[:space:]]*\{[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*$ ]] || [[ -z "$line" ]]; then
+                  continue
+                fi
+
+                # Extract class name and byte count from JSON property
+                if [[ "$line" =~ \"([^\"]+)\":[[:space:]]*([0-9]+) ]]; then
+                  className="${BASH_REMATCH[1]}"
+                  byteCount="${BASH_REMATCH[2]}"
+                  grand_total=$((grand_total + byteCount))
+
+                  if [ "$first" = true ]; then
+                    first=false
+                  else
+                    echo "," >> combined-logs/linux_container_payload_bytes_combined.json
+                  fi
+                  echo "  {\"className\": \"$className\", \"payloadBytes\": $byteCount}" >> combined-logs/linux_container_payload_bytes_combined.json
+                fi
+              done < "$file"
+            done < <(find payload-logs/linux-container -name "*_payload_bytes.json" -type f | sort)
+
+            echo "" >> combined-logs/linux_container_payload_bytes_combined.json
+            echo "]" >> combined-logs/linux_container_payload_bytes_combined.json
+
+            # Create summary metadata file
+            echo "{" > combined-logs/linux_container_payload_bytes_summary.json
+            echo "  \"testType\": \"Linux Container Tests\"," >> combined-logs/linux_container_payload_bytes_summary.json
+            echo "  \"generatedAt\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"," >> combined-logs/linux_container_payload_bytes_summary.json
+            echo "  \"grandTotalBytes\": $grand_total" >> combined-logs/linux_container_payload_bytes_summary.json
+            echo "}" >> combined-logs/linux_container_payload_bytes_summary.json
+
+            echo "Combined payload JSON created with grand total: $grand_total bytes"
+            echo "Payload data:"
+            cat combined-logs/linux_container_payload_bytes_combined.json
+            echo ""
+            echo "Summary:"
+            cat combined-logs/linux_container_payload_bytes_summary.json
+          else
+            echo "No Linux container payload logs found"
+            echo "[]" > combined-logs/linux_container_payload_bytes_combined.json
+            echo "{\"testType\": \"Linux Container Tests\", \"grandTotalBytes\": 0}" > combined-logs/linux_container_payload_bytes_summary.json
+          fi
+        shell: bash
+
+      - name: Upload combined Linux container payload log
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: combined-linux-container-payload-bytes
+          path: combined-logs/linux_container_payload_bytes_*.json
+          if-no-files-found: warn
+
+      - name: Delete individual Linux container payload artifacts
+        uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v5.1.0
+        with:
+          name: linux-container-payload-bytes-*
+          failOnError: false
