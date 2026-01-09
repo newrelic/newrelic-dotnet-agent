@@ -149,6 +149,11 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> MessageRoutingKey { get; }
         AttributeDefinition<string, string> MessagingRabbitMqDestinationRoutingKey { get; }
         AttributeDefinition<string, string> MessagingDestinationPublishName { get; }
+        AttributeDefinition<string, string> LinkedTraceId { get; }
+        AttributeDefinition<string, string> LinkedSpanId { get; }
+        AttributeDefinition<string, string> SpanIdForSpanLink { get; }
+        AttributeDefinition<string, string> TraceIdForSpanData { get; }
+        AttributeDefinition<string, string> SpanIdForSpanEvent { get; }
     }
 
     public class AttributeDefinitionService : ConfigurationBasedService, IAttributeDefinitionService
@@ -360,6 +365,8 @@ namespace NewRelic.Agent.Core.Attributes
                     break;
 
                 case TypeAttributeValue.Span:
+                case TypeAttributeValue.SpanLink:
+                case TypeAttributeValue.SpanEvent:
                     dest = AttributeDestinations.SpanEvent;
                     break;
             }
@@ -1218,6 +1225,36 @@ namespace NewRelic.Agent.Core.Attributes
         private AttributeDefinition<string, string> _messagingDestinationPublishName;
         public AttributeDefinition<string, string> MessagingDestinationPublishName => _messagingDestinationPublishName ?? (_messagingDestinationPublishName =
             AttributeDefinitionBuilder.CreateString("messaging.destination_publish.name", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _linkedTraceId;
+        public AttributeDefinition<string, string> LinkedTraceId => _linkedTraceId ?? (_linkedTraceId =
+            AttributeDefinitionBuilder.CreateString("linkedTraceId", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _linkedSpanId;
+        public AttributeDefinition<string, string> LinkedSpanId => _linkedSpanId ?? (_linkedSpanId =
+            AttributeDefinitionBuilder.CreateString("linkedSpanId", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _spanIdForSpanLink;
+        public AttributeDefinition<string, string> SpanIdForSpanLink => _spanIdForSpanLink ?? (_spanIdForSpanLink =
+            AttributeDefinitionBuilder.CreateString("id", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _spanIdForSpanEvent;
+        public AttributeDefinition<string, string> SpanIdForSpanEvent => _spanIdForSpanEvent ?? (_spanIdForSpanEvent =
+            AttributeDefinitionBuilder.CreateString("span.id", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _traceIdForSpanData;
+        public AttributeDefinition<string, string> TraceIdForSpanData => _traceIdForSpanData ?? (_traceIdForSpanData =
+            AttributeDefinitionBuilder.CreateString("trace.id", AttributeClassification.Intrinsics)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
     }

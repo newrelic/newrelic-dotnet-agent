@@ -2609,5 +2609,221 @@
                 }
             ]
         }
+    },
+    {
+        "testDescription": "Span with single link",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "SpanWithLink",
+                            "spanKind": "Internal"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddSpanLink",
+                                "parameters": {
+                                    "linkedTraceId": "abc123def456789012345678901234ab",
+                                    "linkedSpanId": "1234567890123456",
+                                    "attributes": {
+                                        "link.type": "follows_from",
+                                        "link.source": "external_system"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "SpanWithLink",
+                    "parentName": "Foo",
+                    "category": "generic",
+                    "links": [
+                        {
+                            "linkedTraceId": "abc123def456789012345678901234ab",
+                            "linkedSpanId": "1234567890123456",
+                            "attributes": {
+                                "link.type": "follows_from",
+                                "link.source": "external_system"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Span with single event",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "SpanWithEvent",
+                            "spanKind": "Internal"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddSpanEvent",
+                                "parameters": {
+                                    "eventName": "custom.event",
+                                    "attributes": {
+                                        "event.severity": "info",
+                                        "event.message": "Something happened"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "SpanWithEvent",
+                    "parentName": "Foo",
+                    "category": "generic",
+                    "events": [
+                        {
+                            "name": "custom.event",
+                            "attributes": {
+                                "event.severity": "info",
+                                "event.message": "Something happened"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Span with multiple links and events",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "SpanWithLinksAndEvents",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddSpanLink",
+                                "parameters": {
+                                    "linkedTraceId": "abc123def456789012345678901234ab",
+                                    "linkedSpanId": "1234567890123456",
+                                    "attributes": {
+                                        "link.type": "follows_from"
+                                    }
+                                }
+                            },
+                            {
+                                "command": "AddSpanLink",
+                                "parameters": {
+                                    "linkedTraceId": "def456abc789012345678901234567cd",
+                                    "linkedSpanId": "6543210987654321",
+                                    "attributes": {
+                                        "link.type": "child_of"
+                                    }
+                                }
+                            },
+                            {
+                                "command": "AddSpanEvent",
+                                "parameters": {
+                                    "eventName": "start",
+                                    "attributes": {
+                                        "event.timestamp": "2024-01-15T10:00:00Z"
+                                    }
+                                }
+                            },
+                            {
+                                "command": "AddSpanEvent",
+                                "parameters": {
+                                    "eventName": "end",
+                                    "attributes": {
+                                        "event.timestamp": "2024-01-15T10:00:01Z"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "SpanWithLinksAndEvents",
+                    "parentName": "Foo",
+                    "category": "generic",
+                    "links": [
+                        {
+                            "linkedTraceId": "abc123def456789012345678901234ab",
+                            "linkedSpanId": "1234567890123456",
+                            "attributes": {
+                                "link.type": "follows_from"
+                            }
+                        },
+                        {
+                            "linkedTraceId": "def456abc789012345678901234567cd",
+                            "linkedSpanId": "6543210987654321",
+                            "attributes": {
+                                "link.type": "child_of"
+                            }
+                        }
+                    ],
+                    "events": [
+                        {
+                            "name": "start",
+                            "attributes": {
+                                "event.timestamp": "2024-01-15T10:00:00Z"
+                            }
+                        },
+                        {
+                            "name": "end",
+                            "attributes": {
+                                "event.timestamp": "2024-01-15T10:00:01Z"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
     }
 ]

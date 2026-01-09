@@ -113,6 +113,21 @@ public abstract class HybridAgentTestsBase
                 var typeParam = operation.Parameters.TryGetValue("type", out var type) ? type as string : null;
                 return (work) => OpenTelemetryOperations.AddAttributeToCurrentSpan(name!, value, typeParam, work);
 
+            case { Command: "AddSpanLink" }:
+                var linkedTraceId = operation.Parameters!["linkedTraceId"] as string;
+                var linkedSpanId = operation.Parameters!["linkedSpanId"] as string;
+                var linkAttributes = operation.Parameters.TryGetValue("attributes", out var la) 
+                    ? ConvertToDictionary(la)
+                    : null;
+                return (work) => OpenTelemetryOperations.AddSpanLink(linkedTraceId!, linkedSpanId!, linkAttributes, work);
+
+            case { Command: "AddSpanEvent" }:
+                var eventName = operation.Parameters!["eventName"] as string;
+                var eventAttributes = operation.Parameters.TryGetValue("attributes", out var ea) 
+                    ? ConvertToDictionary(ea)
+                    : null;
+                return (work) => OpenTelemetryOperations.AddSpanEvent(eventName!, eventAttributes, work);
+
             case { Command: "RecordExceptionOnSpan" }:
                 var errorMessage = operation.Parameters!["errorMessage"] as string;
                 return (work) => OpenTelemetryOperations.RecordExceptionOnSpan(errorMessage!, work);
@@ -150,6 +165,20 @@ public abstract class HybridAgentTestsBase
             "Consumer" => ActivityKind.Consumer,
             _ => throw new NotImplementedException(),
         };
+    }
+
+    private static IDictionary<string, object> ConvertToDictionary(object obj)
+    {
+        if (obj == null)
+            return null;
+
+        if (obj is IDictionary<string, object> dict)
+            return dict;
+
+        if (obj is Newtonsoft.Json.Linq.JObject jObject)
+            return jObject.ToObject<Dictionary<string, object>>();
+
+        return null;
     }
 
     private static string GetSpanNameForOperation(Operation operation)
@@ -365,6 +394,85 @@ public abstract class HybridAgentTestsBase
 
                     Assert.That(allAttributes, Contains.Key(attribute.Key), $"Expected attribute {attribute.Key} not found.");
                     Assert.That(allAttributes[attribute.Key], Is.EqualTo(attribute.Value), $"Expected attribute {attribute.Key} with value {attribute.Value} does not match actual value {allAttributes[attribute.Key]}.");
+                }
+            }
+
+            if (expectedSpan.Links != null && expectedSpan.Links.Any())
+            {
+                ValidateSpanLinks(expectedSpan.Links, actualSpan);
+            }
+
+            if (expectedSpan.Events != null && expectedSpan.Events.Any())
+            {
+                ValidateSpanEvents(expectedSpan.Events, actualSpan);
+            }
+        }
+    }
+
+    private void ValidateSpanLinks(IEnumerable<SpanLink> expectedLinks, ISpanEventWireModel actualSpan)
+    {
+        var actualLinks = actualSpan.Span.Links;
+        
+        Assert.That(actualLinks, Has.Count.EqualTo(expectedLinks.Count()), 
+            $"Expected {expectedLinks.Count()} links but found {actualLinks.Count}");
+
+        var expectedLinksList = expectedLinks.ToList();
+        for (int i = 0; i < expectedLinksList.Count; i++)
+        {
+            var expectedLink = expectedLinksList[i];
+            var actualLink = actualLinks[i];
+
+            var linkAttribs = actualLink.AttributeValues.GetAllAttributeValuesDic();
+            
+            Assert.That(linkAttribs["linkedTraceId"], Is.EqualTo(expectedLink.LinkedTraceId));
+            Assert.That(linkAttribs["linkedSpanId"], Is.EqualTo(expectedLink.LinkedSpanId));
+
+            if (expectedLink.Attributes != null)
+            {
+                foreach (var attr in expectedLink.Attributes)
+                {
+                    Assert.That(linkAttribs, Contains.Key(attr.Key));
+
+                    // DateTime values are serialized to ISO 8601 strings in the actual span events
+                    var expectedValue = attr.Value is DateTime dt
+                        ? dt.ToString("O") // ISO 8601 format
+                        : attr.Value;
+
+                    Assert.That(linkAttribs[attr.Key], Is.EqualTo(expectedValue));
+                }
+            }
+        }
+    }
+
+    private void ValidateSpanEvents(IEnumerable<SpanEvent> expectedEvents, ISpanEventWireModel actualSpan)
+    {
+        var actualEvents = actualSpan.Span.Events;
+        
+        Assert.That(actualEvents, Has.Count.EqualTo(expectedEvents.Count()), 
+            $"Expected {expectedEvents.Count()} events but found {actualEvents.Count}");
+
+        var expectedEventsList = expectedEvents.ToList();
+        for (int i = 0; i < expectedEventsList.Count; i++)
+        {
+            var expectedEvent = expectedEventsList[i];
+            var actualEvent = actualEvents[i];
+
+            var eventAttribs = actualEvent.AttributeValues.GetAllAttributeValuesDic();
+            
+            Assert.That(eventAttribs["name"], Is.EqualTo(expectedEvent.Name));
+
+            if (expectedEvent.Attributes != null)
+            {
+                foreach (var attr in expectedEvent.Attributes)
+                {
+                    Assert.That(eventAttribs, Contains.Key(attr.Key));
+                    
+                    // DateTime values are serialized to ISO 8601 strings in the actual span events
+                    var expectedValue = attr.Value is DateTime dt 
+                        ? dt.ToString("O") // ISO 8601 format
+                        : attr.Value;
+                    
+                    Assert.That(eventAttribs[attr.Key], Is.EqualTo(expectedValue));
                 }
             }
         }

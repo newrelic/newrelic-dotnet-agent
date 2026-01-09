@@ -7,6 +7,8 @@ namespace NewRelic.Agent.Core.Attributes
     {
         Transaction = 1,
         TransactionError = 2,
-        Span = 3
+        Span = 3,
+        SpanLink = 4,
+        SpanEvent = 5
     }
 }
