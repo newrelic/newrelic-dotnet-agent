@@ -2830,15 +2830,14 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool OpenTelemetryTracingEnabled => OpenTelemetryEnabled && EnvironmentOverrides(_localConfiguration.opentelemetry.traces.enabled, "NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED");
 
-        private List<string> _openTelemetryTracingIncludedActivitySources;
         public List<string> OpenTelemetryTracingIncludedActivitySources
         {
             get
             {
-                if (_openTelemetryTracingIncludedActivitySources == null)
+                if (field == null)
                 {
                     var includeString = EnvironmentOverrides(_localConfiguration.opentelemetry.traces.include, "NEW_RELIC_OPENTELEMETRY_TRACES_INCLUDE") ?? string.Empty;
-                    _openTelemetryTracingIncludedActivitySources = includeString
+                    field = includeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
                         .Where(s => !string.IsNullOrEmpty(s))
@@ -2846,7 +2845,7 @@ namespace NewRelic.Agent.Core.Configuration
                         .ToList();
                 }
 
-                return _openTelemetryTracingIncludedActivitySources;
+                return field;
             }
         }
 
@@ -2892,16 +2891,15 @@ namespace NewRelic.Agent.Core.Configuration
           "System.Net.Http",
           "System.Web.Mvc" };
 
-        private List<string> _openTelemetryTracingExcludedActivitySources;
         public List<string> OpenTelemetryTracingExcludedActivitySources
         {
             get
             {
-                if (_openTelemetryTracingExcludedActivitySources == null)
+                if (field == null)
                 {
                     var excludeString = EnvironmentOverrides(_localConfiguration.opentelemetry.traces.exclude, "NEW_RELIC_OPENTELEMETRY_TRACES_EXCLUDE") ?? string.Empty;
 
-                    _openTelemetryTracingExcludedActivitySources = excludeString
+                    field = excludeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
                         .Where(s => !string.IsNullOrEmpty(s))
@@ -2909,7 +2907,7 @@ namespace NewRelic.Agent.Core.Configuration
                         .ToList();
                 }
 
-                return _openTelemetryTracingExcludedActivitySources;
+                return field;
             }
         }
 
@@ -2923,39 +2921,37 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        private List<string> _openTelemetryMetricsIncludeFilters;
         public IEnumerable<string> OpenTelemetryMetricsIncludeFilters
         {
             get
             {
-                if (_openTelemetryMetricsIncludeFilters == null)
+                if (field == null)
                 {
                     var includeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.include, "NEW_RELIC_OPENTELEMETRY_METRICS_INCLUDE") ?? string.Empty;
-                    _openTelemetryMetricsIncludeFilters = includeString
+                    field = includeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
                         .Where(s => !string.IsNullOrEmpty(s))
                         .ToList();
                 }
-                return _openTelemetryMetricsIncludeFilters;
+                return field;
             }
         }
 
-        private List<string> _openTelemetryMetricsExcludeFilters;
         public IEnumerable<string> OpenTelemetryMetricsExcludeFilters
         {
             get
             {
-                if (_openTelemetryMetricsExcludeFilters == null)
+                if (field == null)
                 {
                     var excludeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.exclude, "NEW_RELIC_OPENTELEMETRY_METRICS_EXCLUDE") ?? string.Empty;
-                    _openTelemetryMetricsExcludeFilters = excludeString
+                    field = excludeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
                         .Where(s => !string.IsNullOrEmpty(s))
                         .ToList();
                 }
-                return _openTelemetryMetricsExcludeFilters;
+                return field;
             }
         }
 
