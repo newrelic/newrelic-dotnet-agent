@@ -177,14 +177,14 @@ namespace NewRelic.Agent.Core
 
             if (Configuration.OpenTelemetryEnabled)
             {
-                _container.Resolve<OpenTelemetryBridge.ActivityBridge>().Start();
+                _container.Resolve<OpenTelemetryBridge.Tracing.ActivityBridge>().Start();
 
                 if (!bootstrapConfig.ServerlessModeEnabled)
                 {
                     // We need to resolve the MeterListenerBridge before the connect event is triggered so that
                     // the MeterListenerBridge is ready to receive the connect event and start listening for
                     // metrics.
-                    _container.Resolve<OpenTelemetryBridge.MeterListenerBridge>();
+                    _container.Resolve<OpenTelemetryBridge.Metrics.MeterListenerBridge>();
                 }
             }
 

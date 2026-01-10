@@ -43,7 +43,8 @@ namespace NewRelic.Agent.IntegrationTests.OpenTelemetry
                     _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(5));
 
                     // Add extra delay to ensure all metrics are exported
-                    System.Threading.Thread.Sleep(TimeSpan.FromSeconds(30));
+                    // Increased from 30 to 45 seconds for slower CI environments
+                    System.Threading.Thread.Sleep(TimeSpan.FromSeconds(45));
 
                     // Don't specify exact count - just get what's available with a reasonable max
                     _otlpSummaries = _fixture.GetCollectedOTLPMetrics(count: 1000);

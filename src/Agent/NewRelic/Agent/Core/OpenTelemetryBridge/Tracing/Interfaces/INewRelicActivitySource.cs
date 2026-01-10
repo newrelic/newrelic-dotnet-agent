@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics;
 using NewRelic.Agent.Extensions.Api.Experimental;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing.Interfaces
 {
     public interface INewRelicActivitySource : IDisposable
     {

@@ -4,6 +4,8 @@
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing.Interfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
 using Telerik.JustMock.Helpers;

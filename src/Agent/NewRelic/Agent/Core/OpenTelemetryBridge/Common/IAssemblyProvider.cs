@@ -3,7 +3,7 @@
 
 using System.Reflection;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Common
 {
     /// <summary>
     /// Provides access to loaded assemblies.

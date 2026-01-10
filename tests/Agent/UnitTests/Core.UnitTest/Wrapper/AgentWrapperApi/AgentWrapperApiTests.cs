@@ -40,7 +40,7 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Labels;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi

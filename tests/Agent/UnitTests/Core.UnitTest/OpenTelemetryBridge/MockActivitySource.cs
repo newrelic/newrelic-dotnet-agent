@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {

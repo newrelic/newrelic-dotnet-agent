@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NUnit.Framework;
 using Telerik.JustMock;
 

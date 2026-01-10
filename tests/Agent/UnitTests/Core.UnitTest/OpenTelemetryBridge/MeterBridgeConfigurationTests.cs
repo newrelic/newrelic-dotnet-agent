@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics;
 using NUnit.Framework;
 using Telerik.JustMock;
 

@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
 {
     public static class MeterFilterHelpers
     {

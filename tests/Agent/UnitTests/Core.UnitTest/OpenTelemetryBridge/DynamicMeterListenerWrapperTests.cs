@@ -5,7 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics;
 using NUnit.Framework;
 using Telerik.JustMock;
 

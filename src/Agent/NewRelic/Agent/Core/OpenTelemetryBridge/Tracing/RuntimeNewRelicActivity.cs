@@ -4,7 +4,7 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Api.Experimental;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing
 {
     // TODO: Not all of these properties on activities are available in all versions of the DiagnosticSource assembly.
     // We should either have code that gracefully handles the property or method not being available, or we need to

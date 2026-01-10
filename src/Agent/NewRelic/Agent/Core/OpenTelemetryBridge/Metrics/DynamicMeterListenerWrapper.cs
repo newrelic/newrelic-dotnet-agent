@@ -8,8 +8,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
 {
     /// <summary>
     /// Implementation of IMeterListenerWrapper that dynamically interacts with the MeterListener type

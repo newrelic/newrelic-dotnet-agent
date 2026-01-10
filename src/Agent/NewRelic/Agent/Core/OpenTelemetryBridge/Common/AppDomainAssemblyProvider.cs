@@ -4,7 +4,7 @@
 using System;
 using System.Reflection;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Common
 {
     /// <summary>
     /// Implementation of IAssemblyProvider that returns assemblies from the current AppDomain.

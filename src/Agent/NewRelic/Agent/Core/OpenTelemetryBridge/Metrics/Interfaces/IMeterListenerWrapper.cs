@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces
 {
     /// <summary>
     /// Delegate for measurement callbacks.

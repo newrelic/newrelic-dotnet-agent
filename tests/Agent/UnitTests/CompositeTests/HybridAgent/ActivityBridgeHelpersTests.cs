@@ -6,7 +6,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NUnit.Framework;
 using OpenTelemetry;
 using OpenTelemetry.Trace;

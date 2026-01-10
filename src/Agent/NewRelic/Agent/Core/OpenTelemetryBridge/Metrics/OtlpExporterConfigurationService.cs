@@ -16,8 +16,9 @@ using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
 {
     public class OtlpExporterConfigurationService : DisposableService, IOtlpExporterConfigurationService
     {

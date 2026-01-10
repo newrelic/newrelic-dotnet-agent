@@ -11,7 +11,8 @@ using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
 

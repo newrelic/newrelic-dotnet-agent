@@ -32,7 +32,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 
 namespace NewRelic.Agent.Core
 {

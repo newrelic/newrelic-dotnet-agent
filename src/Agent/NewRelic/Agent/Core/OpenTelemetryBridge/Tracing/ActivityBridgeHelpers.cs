@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using NewRelic.Agent.Api;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing
 {
     public static class ActivityBridgeHelpers
     {

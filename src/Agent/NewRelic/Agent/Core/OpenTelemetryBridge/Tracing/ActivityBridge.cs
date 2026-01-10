@@ -15,7 +15,7 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge;
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 
 // TODO: Review all usages of the Activity class to ensure that we are only using the things are available in the
 //  supported versions of the DiagnosticSource assembly. We could also support some backwards compatibility by only

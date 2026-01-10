@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.TestUtilities;

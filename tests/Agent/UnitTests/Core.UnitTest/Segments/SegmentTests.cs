@@ -9,7 +9,7 @@ using NewRelic.Agent.Core.Metrics;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Api.Experimental;
