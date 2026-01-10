@@ -62,29 +62,34 @@ namespace NewRelic.Agent.Core.Configuration
         public bool UseResourceBasedNamingForWCFEnabled { get; private set; }
         
         private bool _hasLoggedEventListenerSamplersDisabled;
-        
+        private bool _eventListenerSamplersEnabledConfigured;
+
         /// <summary>
         /// Controls whether EventListener-based samplers (GCSamplerNetCore, ThreadStatsSampler) are enabled.
         /// Automatically returns false when OpenTelemetry metrics are enabled to prevent EventListener conflicts.
         /// </summary>
+        /// <remarks>
+        /// Uses explicit backing fields instead of 'field' keyword because this property needs two pieces of state:
+        /// 1. _eventListenerSamplersEnabledConfigured - the actual property value
+        /// 2. _hasLoggedEventListenerSamplersDisabled - tracks if the warning log has been written
+        /// The setter is required by IConfiguration interface, though it goes against the typical pattern in this class.
+        /// </remarks>
         public bool EventListenerSamplersEnabled
         {
             get
             {
-                // Disable EventListener samplers when OTel metrics are enabled to avoid EventListener conflicts
-                // between OpenTelemetrySDKLogger and EventPipe-based samplers (GCSamplerNetCore/ThreadStatsSampler)
                 if (OpenTelemetryMetricsEnabled)
                 {
                     if (!_hasLoggedEventListenerSamplersDisabled)
                     {
-                        Log.Info("EventListener-based samplers (GCSamplerNetCore, ThreadStatsSampler) have been automatically disabled because OpenTelemetry metrics are enabled. This prevents EventListener conflicts with the OpenTelemetrySDKLogger.");
+                        Log.Info("EventListener-based samplers (GCSamplerNetCore, ThreadStatsSampler) have been automatically disabled because OpenTelemetry metrics are enabled.");
                         _hasLoggedEventListenerSamplersDisabled = true;
                     }
                     return false;
                 }
-                return field;
+                return _eventListenerSamplersEnabledConfigured;
             }
-            set => field = value;
+            set => _eventListenerSamplersEnabledConfigured = value;
         }
 
         public TimeSpan DefaultHarvestCycle => TimeSpan.FromMinutes(1);
@@ -136,7 +141,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
 
-            EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
+            _eventListenerSamplersEnabledConfigured = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
 
             ParseExpectedErrorConfigurations();
             ParseIgnoreErrorConfigurations();
