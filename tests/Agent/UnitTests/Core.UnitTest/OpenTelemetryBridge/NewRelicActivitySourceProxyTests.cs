@@ -9,6 +9,8 @@ using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Extensions.Api.Experimental;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing.Interfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
 using Telerik.JustMock.Helpers;

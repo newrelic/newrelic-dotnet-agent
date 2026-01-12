@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Utilities;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Common
 {
     public static class TagHelpers
     {

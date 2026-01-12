@@ -7,8 +7,9 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
 {
     /// <summary>
     /// Orchestrates the OpenTelemetry bridging process by coordinating the lifecycle
@@ -59,26 +60,18 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
         {
             var newEntityGuid = serverConfigurationUpdatedEvent.Configuration.EntityGuid;
 
-            if (!string.IsNullOrEmpty(_currentEntityGuid) &&
-                !string.IsNullOrEmpty(newEntityGuid) &&
-                _currentEntityGuid != newEntityGuid)
+            // Only update if we have a new non-empty GUID that's different from current
+            if (string.IsNullOrEmpty(newEntityGuid) || _currentEntityGuid == newEntityGuid)
             {
-                _currentEntityGuid = newEntityGuid;
-
-                if (_connectionInfo != null && _configuration.OpenTelemetryMetricsEnabled)
-                {
-                    _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid);
-                }
+                return;
             }
-            else if (string.IsNullOrEmpty(_currentEntityGuid) && !string.IsNullOrEmpty(newEntityGuid))
+
+            _currentEntityGuid = newEntityGuid;
+            
+            // Create provider if we have connection info and metrics enabled
+            if (_connectionInfo != null && _configuration.OpenTelemetryMetricsEnabled)
             {
-                _currentEntityGuid = newEntityGuid;
-                
-                // Create provider if we have connection info and metrics enabled
-                if (_connectionInfo != null && _configuration.OpenTelemetryMetricsEnabled)
-                {
-                    _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid);
-                }
+                _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid);
             }
         }
 
@@ -111,11 +104,13 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
             _meterBridgingService.StopListening();
             _otlpConfigurationService.Dispose();
 
-            // Do not dispose _sdkLogger to avoid EventListener conflicts with EventPipe-based GC metrics.
-            // EventListener has singleton semantics per EventSource - disposing can disrupt subscriptions
-            // and cause race conditions with GCEventsListener in GCSamplerNetCore.
+            // Do not dispose _sdkLogger to avoid potential EventListener conflicts.
+            // Note: EventPipe-based samplers (GCSamplerNetCore, ThreadStatsSampler) are automatically
+            // disabled when OpenTelemetry metrics are enabled (see DefaultConfiguration.EventListenerSamplersEnabled),
+            // which prevents conflicts. However, we still avoid disposing the logger as a defensive measure.
+            // EventListener has singleton semantics per EventSource - disposing can disrupt subscriptions.
             // The SDK logger is lightweight and will be cleaned up when the AppDomain unloads.
-            // See: https://github.com/newrelic/newrelic-dotnet-agent/issues/234]
+            // See: https://github.com/newrelic/newrelic-dotnet-agent/issues/234
             if (_sdkLogger != null)
             {
                 // _sdkLogger.Dispose(); // Intentionally not disposing - see comment above

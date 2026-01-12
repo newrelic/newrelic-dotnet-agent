@@ -5,8 +5,9 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using NewRelic.Agent.Extensions.Api.Experimental;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing.Interfaces;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing
 {
     public class NewRelicActivitySourceProxy
     {

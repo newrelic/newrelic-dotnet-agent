@@ -125,7 +125,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 // For protobuf content, add warning about binary data not being logged
                 if (contentType.StartsWith("application/x-protobuf", StringComparison.OrdinalIgnoreCase) || 
-                    contentType.Contains("protobuf", StringComparison.OrdinalIgnoreCase))
+                    contentType.Contains("protobuf"))
                 {
                     return $"{baseInfo} [Binary Protobuf Data - Content Not Logged]";
                 }

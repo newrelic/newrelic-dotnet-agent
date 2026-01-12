@@ -34,7 +34,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NewRelic.Agent.Extensions.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Transactions

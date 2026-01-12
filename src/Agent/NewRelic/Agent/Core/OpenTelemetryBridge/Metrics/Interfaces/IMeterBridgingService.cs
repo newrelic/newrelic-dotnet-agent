@@ -3,7 +3,7 @@
 
 using System;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces
 {
     /// <summary>
     /// Coordinates the bridging of OpenTelemetry meters and instruments to the New Relic agent.

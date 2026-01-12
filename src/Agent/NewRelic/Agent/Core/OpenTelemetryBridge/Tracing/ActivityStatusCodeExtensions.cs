@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing
 {
     public static class ActivityStatusCodeExtensions
     {
