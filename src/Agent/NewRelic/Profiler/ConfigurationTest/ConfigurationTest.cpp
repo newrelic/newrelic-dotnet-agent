@@ -74,7 +74,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(configuration.ShouldInstrument(L"w3wp.exe", L"", L"foo", L"", false));
         }
 
-        TEST_METHOD(should_not_instrument_process)
+        TEST_METHOD(should_not_instrument_process_netframework)
         {
             Configuration configuration(false, Logger::Level::LEVEL_INFO, _emptyProcesses, _emptyProcesses, _emptyAppPoolsAllowList, _emptyAppPoolsDenyList, true, false, false, _systemCalls);
             Assert::IsFalse(configuration.ShouldInstrument(L"foo.exe", L"", L"", L"", false));
@@ -419,6 +419,63 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"", L"", L"", false));
         }
 
+        TEST_METHOD(instrument_process_from_xml_with_explicit_include)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <instrumentation>\
+            <applications>\
+                <application name=\"foo.exe\" include=\"true\" />\
+            </applications>\
+        </instrumentation>\
+    </configuration>\
+    ");
+
+
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", _systemCalls);
+            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"", L"", L"", false));
+        }
+
+        TEST_METHOD(should_not_instrument_process_from_xml_with_exclude_netframework)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <instrumentation>\
+            <applications>\
+                <application name=\"foo.exe\" include=\"false\" />\
+            </applications>\
+        </instrumentation>\
+    </configuration>\
+    ");
+
+
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", _systemCalls);
+            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"", L"", L"", false));
+        }
+
+        TEST_METHOD(should_not_instrument_processes_from_xml_with_exclude_netcore)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <instrumentation>\
+            <applications>\
+                <application name=\"foo.exe\" include=\"false\" />\
+                <application name=\"mailServer\" include=\"false\" />\
+            </applications>\
+        </instrumentation>\
+    </configuration>\
+    ");
+
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", _systemCalls);
+            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"", L"", L"", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"mailServer", L"", L"", L"", true));
+            // Make sure similar names aren't excluded
+            Assert::IsTrue(configuration.ShouldInstrument(L"emailServer", L"", L"", L"", true));
+        }
+
         TEST_METHOD(instrument_multiple_processes_from_xml)
         {
             std::wstring configurationXml(L"\
@@ -427,7 +484,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
         <instrumentation>\
             <applications>\
                 <application name=\"foo.exe\"/>\
-                <application name=\"bar.exe\"/>\
+                <application name=\"bar.exe\" inlcude=\"true\" />\
             </applications>\
         </instrumentation>\
     </configuration>\
@@ -454,6 +511,57 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", _systemCalls);
             Assert::IsFalse(configuration.ShouldInstrument(L"Baz.exe", L"", L"", L"", false));
+        }
+
+        TEST_METHOD(do_not_instrument_processes_excluded_by_environment_netframework)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <instrumentation>\
+            <applications>\
+                <application name=\"foo.exe\"/>\
+                <application name=\"bar.exe\"/>\
+            </applications>\
+        </instrumentation>\
+    </configuration>\
+    ");
+
+            _systemCalls->environmentVariables[L"NEW_RELIC_EXCLUDED_APPLICATION_NAMES"] = L"bar.exe,baz.exe";
+
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", _systemCalls);
+            Assert::IsFalse(configuration.ShouldInstrument(L"bar.exe", L"", L"", L"", false));
+            Assert::IsFalse(configuration.ShouldInstrument(L"baz.exe", L"", L"", L"", false));
+        }
+
+        TEST_METHOD(do_not_instrument_processes_excluded_by_environment_netcore)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <instrumentation>\
+            <applications>\
+                <application name=\"foo.exe\"/>\
+                <application name=\"bar.exe\"/>\
+            </applications>\
+        </instrumentation>\
+    </configuration>\
+    ");
+
+            _systemCalls->environmentVariables[L"NEW_RELIC_EXCLUDED_APPLICATION_NAMES"] = L"bar.exe,baz.exe";
+
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", _systemCalls);
+            Assert::IsFalse(configuration.ShouldInstrument(L"bar.exe", L"", L"", L"", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"baz.exe", L"", L"", L"", true));
+        }
+
+        TEST_METHOD(instrument_processes_included_by_environment_netframework)
+        {
+            _systemCalls->environmentVariables[L"NEW_RELIC_INCLUDED_APPLICATION_NAMES"] = L"bar.exe,baz.exe";
+
+            Configuration configuration(_agentEnabledXml, _missingAgentEnabledConfigPair, L"", _systemCalls);
+            Assert::IsTrue(configuration.ShouldInstrument(L"bar.exe", L"", L"", L"", false));
+            Assert::IsTrue(configuration.ShouldInstrument(L"baz.exe", L"", L"", L"", false));
         }
 
         TEST_METHOD(exception_on_missing_configuration_node)

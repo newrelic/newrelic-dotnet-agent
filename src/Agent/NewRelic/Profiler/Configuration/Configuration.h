@@ -354,8 +354,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         void SetInstrumentationData(rapidxml::xml_node<xchar_t>* configurationNode)
         {
             auto instrumentationNode = configurationNode->first_node(_X("instrumentation"), 0, false);
-            if (instrumentationNode == nullptr)
-                return;
+            // Checking for a null instrumentationNode needs to happen in the functions below
+            // due to the need to also check environment variables first
 
             SetInstrumentationIgnoreList(instrumentationNode);
             SetIncludedProcesses(instrumentationNode);
@@ -364,6 +364,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
         void SetInstrumentationIgnoreList(rapidxml::xml_node<xchar_t>* instrumentationNode)
         {
+            if (instrumentationNode == nullptr)
+                return;
+
             auto rulesNode = instrumentationNode->first_node(_X("rules"), 0, false);
             if (rulesNode == nullptr)
                 return;
@@ -400,6 +403,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             }
 
             // Get the list from newrelic.config
+            if (instrumentationNode == nullptr)
+                return;
+
             auto applicationsNode = instrumentationNode->first_node(_X("applications"), 0, false);
             if (applicationsNode == nullptr)
                 return;
@@ -436,6 +442,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             }
 
             // Get the list from newrelic.config
+            if (instrumentationNode == nullptr)
+                return;
+
             auto applicationsNode = instrumentationNode->first_node(_X("applications"), 0, false);
             if (applicationsNode == nullptr)
                 return;
@@ -855,7 +864,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             return false;
         }
 
-        // Returns true if the given processPath matches any process name in the excluded process list (case-insensitive, using EndsWith).
+        // Returns true if the given processPath matches any process name in the excluded process list (case-insensitive).
         bool ProcessExcludedByConfig(const xstring_t& processPath) const
         {
             if (!_excludedProcesses || _excludedProcesses->empty())
@@ -863,7 +872,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
             for (const auto& excludedProcess : *_excludedProcesses)
             {
-                if (Strings::EndsWith(processPath, excludedProcess))
+                if (Strings::AreEqualCaseInsensitive(processPath, excludedProcess))
                 {
                     LogInfo(_X("Process ") + processPath + _X(" is excluded by configuration (matched: ") + excludedProcess + _X(")."));
                     return true;
