@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge
 {
@@ -39,8 +40,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge
 
             bool isWeb = (int)activity.Kind == (int)ActivityKind.Server;
 
-            // TODO: Consider using activity source name for category ?? 
-            return agent.CreateTransaction(isWeb, "Activity", activity.DisplayName, doNotTrackAsUnitOfWork: true);
+            return agent.CreateTransaction(isWeb, activity.Source?.Name ?? "Activity", activity.DisplayName, doNotTrackAsUnitOfWork: true);
         }
 
         public static IEnumerable<string> GetTraceContextHeadersFromActivity(object originalActivity, string headerName)
