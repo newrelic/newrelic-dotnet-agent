@@ -484,7 +484,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
         <instrumentation>\
             <applications>\
                 <application name=\"foo.exe\"/>\
-                <application name=\"bar.exe\" inlcude=\"true\" />\
+                <application name=\"bar.exe\" include=\"true\" />\
             </applications>\
         </instrumentation>\
     </configuration>\
