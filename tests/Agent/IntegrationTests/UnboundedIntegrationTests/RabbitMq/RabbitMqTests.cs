@@ -8,6 +8,8 @@ using NewRelic.Testing.Assertions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using NewRelic.Agent.UnboundedIntegrationTests.RabbitMq;
 using Xunit;
 
 
@@ -48,6 +50,8 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                 configModifier
                 .ForceTransactionTraces()
+                .ConfigureFasterMetricsHarvestCycle(15)
+                .ConfigureFasterSpanEventsHarvestCycle(20)
                 .SetLogLevel("Finest")
                 .EnableOpenTelemetry(true)
                 .EnableOpenTelemetryTracing(true)
@@ -55,7 +59,8 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             },
             exerciseApplication: () =>
             {
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
 
@@ -105,12 +110,16 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
 
         var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_metricScopeBase}/SendReceiveAsync");
 
-        var queueProduceSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/RabbitMQ/Queue/Produce/Named/{_sendReceiveQueue}");
-        var queueConsumeSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/RabbitMQ/Queue/Consume/Named/{_sendReceiveQueue}");
-        var purgeProduceSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/RabbitMQ/Queue/Produce/Named/{_purgeQueue}");
-        var tempProduceSpanEvents = _fixture.AgentLog.TryGetSpanEvent(@"MessageBroker/RabbitMQ/Queue/Produce/Temp");
-        var tempConsumeSpanEvents = _fixture.AgentLog.TryGetSpanEvent(@"MessageBroker/RabbitMQ/Queue/Consume/Temp");
-        var topicProduceSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/RabbitMQ/Topic/Produce/Named/{_sendReceiveTopic}");
+        var queueProduceSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/RabbitMQ/Queue/Produce/Named/{_sendReceiveQueue}");
+        var queueConsumeSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/RabbitMQ/Queue/Consume/Named/{_sendReceiveQueue}");
+        var purgeProduceSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/RabbitMQ/Queue/Produce/Named/{_purgeQueue}");
+        var tempProduceSpanEvent = _fixture.AgentLog.TryGetSpanEvent(@"MessageBroker/RabbitMQ/Queue/Produce/Temp");
+        var tempConsumeSpanEvent = _fixture.AgentLog.TryGetSpanEvent(@"MessageBroker/RabbitMQ/Queue/Consume/Temp");
+        var topicProduceSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/RabbitMQ/Topic/Produce/Named/{_sendReceiveTopic}");
+
+        // assert that RabbitMQ produces 2 span links
+        var spanLinks = _fixture.AgentLog.GetSpanLinks().ToList();
+        Assert.Equal(2, spanLinks.Count);
 
         var expectedProduceAgentAttributes = new List<string>
         {
@@ -159,35 +168,35 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
 
             () => Assertions.SpanEventHasAttributes(expectedProduceAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueProduceSpanEvents),
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueProduceSpanEvent),
             () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueProduceSpanEvents),
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueProduceSpanEvent),
 
             () => Assertions.SpanEventHasAttributes(expectedConsumeAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvents),
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueConsumeSpanEvent),
             () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvents),
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, queueConsumeSpanEvent),
 
             () => Assertions.SpanEventHasAttributes(expectedProduceAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, purgeProduceSpanEvents),
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, purgeProduceSpanEvent),
             () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, purgeProduceSpanEvents),
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, purgeProduceSpanEvent),
 
             () => Assertions.SpanEventHasAttributes(expectedTempProduceAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, tempProduceSpanEvents),
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, tempProduceSpanEvent),
             () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, tempProduceSpanEvents),
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, tempProduceSpanEvent),
 
             // not available via otel bridge
             //() => Assertions.SpanEventHasAttributes(expectedTempConsumeAgentAttributes,
             //    Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, tempConsumeSpanEvents),
             () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, tempConsumeSpanEvents),
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, tempConsumeSpanEvent),
 
             () => Assertions.SpanEventHasAttributes(expectedProduceAgentAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, topicProduceSpanEvents),
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, topicProduceSpanEvent),
             () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes,
-                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, topicProduceSpanEvents)
+                Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Intrinsic, topicProduceSpanEvent)
         );
     }
 }

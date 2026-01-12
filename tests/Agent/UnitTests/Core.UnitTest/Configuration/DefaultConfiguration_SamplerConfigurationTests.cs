@@ -625,7 +625,7 @@ namespace NewRelic.Agent.Core.Configuration
         public void EventListenerSamplersEnabled_ReturnsFalse_WhenOpenTelemetryMetricsEnabled()
         {
             // Arrange
-            _localConfig.opentelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpentelemetry
             {
                 enabled = true,
                 metrics = new configurationOpentelemetryMetrics
@@ -647,7 +647,7 @@ namespace NewRelic.Agent.Core.Configuration
         public void EventListenerSamplersEnabled_ReturnsTrue_WhenOpenTelemetryMetricsDisabled()
         {
             // Arrange
-            _localConfig.opentelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpentelemetry
             {
                 enabled = true,
                 metrics = new configurationOpentelemetryMetrics
@@ -686,7 +686,7 @@ namespace NewRelic.Agent.Core.Configuration
             // Arrange - explicitly enable EventListener samplers via app setting
             _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.EventListenerSamplersEnabled", value = "true" });
             // But also enable OpenTelemetry metrics (should take precedence)
-            _localConfig.opentelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpentelemetry
             {
                 enabled = true,
                 metrics = new configurationOpentelemetryMetrics
@@ -709,7 +709,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             // Arrange
             _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.EventListenerSamplersEnabled", value = "true" });
-            _localConfig.opentelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpentelemetry
             {
                 enabled = false,
                 metrics = new configurationOpentelemetryMetrics

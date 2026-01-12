@@ -126,7 +126,7 @@
             </xs:documentation>
         </xs:annotation>
     </xs:complexType>
-    
+
     <xs:element name="configuration">
         <xs:complexType>
             <xs:all>
@@ -1296,7 +1296,7 @@
                     </xs:complexType>
                 </xs:element>
 
-                <xs:element name="distributedTracing">
+                <xs:element name="distributedTracing" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>
                             Distributed tracing lets you see the path that a request takes through your distributed system. Enabling distributed tracing changes the behavior of some New Relic features, so carefully consult the transition guide before you enable this feature: https://docs.newrelic.com/docs/transition-guide-distributed-tracing
@@ -1420,7 +1420,7 @@
                         </xs:attribute>
                     </xs:complexType>
                 </xs:element>
-                
+
                 <xs:element name="spanEvents" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>
@@ -2243,7 +2243,7 @@
                     </xs:complexType>
                 </xs:element>
 
-                <xs:element name="opentelemetry" minOccurs="0" maxOccurs="1">
+                <xs:element name="openTelemetry" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>
                             OpenTelemetry configuration for the agent. This section contains configuration options
@@ -2266,7 +2266,7 @@
                                             <xs:documentation>
                                                 This setting controls whether OpenTelemetry tracing is enabled.
                                                 Defaults to "true".
-                                                This feature must be used together with the global opentelemetry enabled setting.
+                                                This feature must be used together with the global openTelemetry enabled setting.
                                                 Environment variable: NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED
                                             </xs:documentation>
                                         </xs:annotation>
@@ -2306,7 +2306,7 @@
                                         <xs:annotation>
                                             <xs:documentation>
                                                 Set this to "true" to enable OpenTelemetry metrics collection and export to New Relic.
-                                                This feature must be used together with the global opentelemetry enabled setting.
+                                                This feature must be used together with the global openTelemetry enabled setting.
                                                 Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED
                                             </xs:documentation>
                                         </xs:annotation>

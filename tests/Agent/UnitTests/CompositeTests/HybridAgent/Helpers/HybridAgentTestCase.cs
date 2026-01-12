@@ -85,4 +85,31 @@ public class Span
 
     [JsonProperty("attributes")]
     public IDictionary<string, object> Attributes { get; set; }
+
+    [JsonProperty("links")]
+    public IEnumerable<SpanLink> Links { get; set; }
+
+    [JsonProperty("events")]
+    public IEnumerable<SpanEvent> Events { get; set; }
+}
+
+public class SpanLink
+{
+    [JsonProperty("linkedTraceId")]
+    public string LinkedTraceId { get; set; }
+
+    [JsonProperty("linkedSpanId")]
+    public string LinkedSpanId { get; set; }
+
+    [JsonProperty("attributes")]
+    public IDictionary<string, object> Attributes { get; set; }
+}
+
+public class SpanEvent
+{
+    [JsonProperty("name")]
+    public string Name { get; set; }
+
+    [JsonProperty("attributes")]
+    public IDictionary<string, object> Attributes { get; set; }
 }
