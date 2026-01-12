@@ -99,7 +99,7 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationCloud cloudField;
         
-        private configurationOpentelemetry opentelemetryField;
+        private configurationOpentelemetry openTelemetryField;
         
         private bool agentEnabledField;
         
@@ -124,7 +124,7 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configuration()
         {
-            this.opentelemetryField = new configurationOpentelemetry();
+            this.openTelemetryField = new configurationOpentelemetry();
             this.cloudField = new configurationCloud();
             this.codeLevelMetricsField = new configurationCodeLevelMetrics();
             this.processHostField = new configurationProcessHost();
@@ -617,15 +617,15 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
-        public configurationOpentelemetry opentelemetry
+        public configurationOpentelemetry openTelemetry
         {
             get
             {
-                return this.opentelemetryField;
+                return this.openTelemetryField;
             }
             set
             {
-                this.opentelemetryField = value;
+                this.openTelemetryField = value;
             }
         }
         

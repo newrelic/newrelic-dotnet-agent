@@ -2801,9 +2801,9 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region OpenTelemetry Configuration
 
-        public bool OpenTelemetryEnabled => EnvironmentOverrides(_localConfiguration.opentelemetry.enabled, "NEW_RELIC_OPENTELEMETRY_ENABLED");
+        public bool OpenTelemetryEnabled => EnvironmentOverrides(_localConfiguration.openTelemetry.enabled, "NEW_RELIC_OPENTELEMETRY_ENABLED");
 
-        public bool OpenTelemetryTracingEnabled => OpenTelemetryEnabled && EnvironmentOverrides(_localConfiguration.opentelemetry.traces.enabled, "NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED");
+        public bool OpenTelemetryTracingEnabled => OpenTelemetryEnabled && EnvironmentOverrides(_localConfiguration.openTelemetry.traces.enabled, "NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED");
 
         public List<string> OpenTelemetryTracingIncludedActivitySources
         {
@@ -2811,7 +2811,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (field == null)
                 {
-                    var includeString = EnvironmentOverrides(_localConfiguration.opentelemetry.traces.include, "NEW_RELIC_OPENTELEMETRY_TRACES_INCLUDE") ?? string.Empty;
+                    var includeString = EnvironmentOverrides(_localConfiguration.openTelemetry.traces.include, "NEW_RELIC_OPENTELEMETRY_TRACES_INCLUDE") ?? string.Empty;
                     field = includeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
@@ -2872,7 +2872,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (field == null)
                 {
-                    var excludeString = EnvironmentOverrides(_localConfiguration.opentelemetry.traces.exclude, "NEW_RELIC_OPENTELEMETRY_TRACES_EXCLUDE") ?? string.Empty;
+                    var excludeString = EnvironmentOverrides(_localConfiguration.openTelemetry.traces.exclude, "NEW_RELIC_OPENTELEMETRY_TRACES_EXCLUDE") ?? string.Empty;
 
                     field = excludeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
@@ -2892,7 +2892,7 @@ namespace NewRelic.Agent.Core.Configuration
             get
             {
                 // Both the global OpenTelemetry setting and the metrics-specific setting must be true
-                return OpenTelemetryEnabled && EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.enabled, "NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED");
+                return OpenTelemetryEnabled && EnvironmentOverrides(_localConfiguration.openTelemetry.metrics.enabled, "NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED");
             }
         }
 
@@ -2902,7 +2902,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (field == null)
                 {
-                    var includeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.include, "NEW_RELIC_OPENTELEMETRY_METRICS_INCLUDE") ?? string.Empty;
+                    var includeString = EnvironmentOverrides(_localConfiguration.openTelemetry.metrics.include, "NEW_RELIC_OPENTELEMETRY_METRICS_INCLUDE") ?? string.Empty;
                     field = includeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())
@@ -2919,7 +2919,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (field == null)
                 {
-                    var excludeString = EnvironmentOverrides(_localConfiguration.opentelemetry.metrics.exclude, "NEW_RELIC_OPENTELEMETRY_METRICS_EXCLUDE") ?? string.Empty;
+                    var excludeString = EnvironmentOverrides(_localConfiguration.openTelemetry.metrics.exclude, "NEW_RELIC_OPENTELEMETRY_METRICS_EXCLUDE") ?? string.Empty;
                     field = excludeString
                         .Split([','], StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim())

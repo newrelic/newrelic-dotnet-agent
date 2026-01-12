@@ -559,22 +559,22 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public NewRelicConfigModifier EnableOpenTelemetry(bool enabled)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "opentelemetry", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "enabled", enabled.ToString().ToLower());
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "openTelemetry", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry" }, "enabled", enabled.ToString().ToLower());
             return this;
         }
 
         public NewRelicConfigModifier EnableOpenTelemetryTracing(bool enabled)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "traces", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "traces" }, "enabled", enabled.ToString().ToLower());
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry" }, "traces", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry", "traces" }, "enabled", enabled.ToString().ToLower());
             return this;
         }
 
         public NewRelicConfigModifier EnableOpenTelemetryMetrics(bool enabled)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "metrics", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "metrics" }, "enabled", enabled.ToString().ToLower());
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry", "metrics" }, "enabled", enabled.ToString().ToLower());
             return this;
         }
 
@@ -592,15 +592,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public NewRelicConfigModifier IncludeOpenTelemetryMeters(string meterNames)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "metrics", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "metrics" }, "include", meterNames);
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry", "metrics" }, "include", meterNames);
             return this;
         }
 
         public NewRelicConfigModifier ExcludeOpenTelemetryMeters(string meterNames)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry" }, "metrics", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "opentelemetry", "metrics" }, "exclude", meterNames);
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry", "metrics" }, "exclude", meterNames);
             return this;
         }
 

@@ -519,6 +519,8 @@ public class ActivityBridge : IDisposable
 
             segment.ProcessActivityTags(originalActivity, agent, errorService);
             segment.AddExceptionEventInformationToSegment(originalActivity, errorService);
+            segment.CaptureEventsOnSpan(originalActivity);
+            segment.CaptureSpanLinks(originalActivity);
             segment.End();
         }
 
