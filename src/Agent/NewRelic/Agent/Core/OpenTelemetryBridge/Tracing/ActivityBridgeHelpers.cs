@@ -22,7 +22,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing
 
         public static bool IsTransactionRequiredForActivity(object originalActivity)
         {
-            // TODO: Determine if this is the right thing to do. Our wrapper service separates these concepts.
             return !ShouldStartTransactionForActivity(originalActivity);
         }
 
