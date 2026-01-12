@@ -5,8 +5,9 @@ using System;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using NewRelic.Agent.Extensions.Api.Experimental;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing.Interfaces;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing
 {
     public class RuntimeActivitySource : INewRelicActivitySource
     {

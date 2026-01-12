@@ -15,8 +15,9 @@ using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
 {
     public class MeterBridgingService : DisposableService, IMeterBridgingService
     {
