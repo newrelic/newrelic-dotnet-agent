@@ -564,6 +564,16 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsTrue(configuration.ShouldInstrument(L"baz.exe", L"", L"", L"", false));
         }
 
+        TEST_METHOD(instrument_processes_exclude_takes_precedence_over_include)
+        {
+            _systemCalls->environmentVariables[L"NEW_RELIC_INCLUDED_APPLICATION_NAMES"] = L"bar.exe,baz.exe";
+            _systemCalls->environmentVariables[L"NEW_RELIC_EXCLUDED_APPLICATION_NAMES"] = L"bar.exe";
+
+            Configuration configuration(_agentEnabledXml, _missingAgentEnabledConfigPair, L"", _systemCalls);
+            Assert::IsFalse(configuration.ShouldInstrument(L"bar.exe", L"", L"", L"", false));
+            Assert::IsTrue(configuration.ShouldInstrument(L"baz.exe", L"", L"", L"", false));
+        }
+
         TEST_METHOD(exception_on_missing_configuration_node)
         {
             std::wstring configurationXml(L"<?xml version=\"1.0\"?><foo/>");
