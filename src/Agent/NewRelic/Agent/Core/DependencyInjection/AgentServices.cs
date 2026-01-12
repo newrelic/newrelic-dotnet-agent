@@ -45,7 +45,10 @@ using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Agent.Core.Labels;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 

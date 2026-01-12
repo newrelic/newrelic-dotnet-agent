@@ -10,7 +10,7 @@ using System.Reflection;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing
 {
     public static class ActivityBridgeHelpers
     {

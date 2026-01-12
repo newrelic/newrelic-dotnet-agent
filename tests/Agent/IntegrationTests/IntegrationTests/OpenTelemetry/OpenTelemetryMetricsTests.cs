@@ -46,6 +46,7 @@ namespace NewRelic.Agent.IntegrationTests.OpenTelemetry
         [Fact]
         public void Metrics_are_collected_and_match_expected_names_with_positive_counts()
         {
+            Assert.NotNull(_otlpSummaries);
             Assert.NotEmpty(_otlpSummaries);
 
             // Aggregate metrics from summaries

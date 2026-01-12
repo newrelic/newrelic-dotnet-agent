@@ -608,5 +608,125 @@ namespace NewRelic.Agent.Core.Configuration
                 Assert.That(_config.RemoteParentSampledTraceIdRatioSamplerRatio, Is.Null);
             });
         }
+
+        #region EventListenerSamplersEnabled Tests
+
+        [Test]
+        public void EventListenerSamplersEnabled_DefaultsToTrue()
+        {
+            // Act
+            var result = _config.EventListenerSamplersEnabled;
+
+            // Assert
+            Assert.That(result, Is.True);
+        }
+
+        [Test]
+        public void EventListenerSamplersEnabled_ReturnsFalse_WhenOpenTelemetryMetricsEnabled()
+        {
+            // Arrange
+            _localConfig.opentelemetry = new configurationOpentelemetry
+            {
+                enabled = true,
+                metrics = new configurationOpentelemetryMetrics
+                {
+                    enabled = true
+                }
+            };
+
+            CreateConfig();
+
+            // Act
+            var result = _config.EventListenerSamplersEnabled;
+
+            // Assert
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public void EventListenerSamplersEnabled_ReturnsTrue_WhenOpenTelemetryMetricsDisabled()
+        {
+            // Arrange
+            _localConfig.opentelemetry = new configurationOpentelemetry
+            {
+                enabled = true,
+                metrics = new configurationOpentelemetryMetrics
+                {
+                    enabled = false
+                }
+            };
+
+            CreateConfig();
+
+            // Act
+            var result = _config.EventListenerSamplersEnabled;
+
+            // Assert
+            Assert.That(result, Is.True);
+        }
+
+        [Test]
+        public void EventListenerSamplersEnabled_CanBeExplicitlyDisabledViaAppSetting()
+        {
+            // Arrange
+            _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.EventListenerSamplersEnabled", value = "false" });
+
+            CreateConfig();
+
+            // Act
+            var result = _config.EventListenerSamplersEnabled;
+
+            // Assert
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public void EventListenerSamplersEnabled_AppSettingOverriddenByOpenTelemetryMetrics()
+        {
+            // Arrange - explicitly enable EventListener samplers via app setting
+            _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.EventListenerSamplersEnabled", value = "true" });
+            // But also enable OpenTelemetry metrics (should take precedence)
+            _localConfig.opentelemetry = new configurationOpentelemetry
+            {
+                enabled = true,
+                metrics = new configurationOpentelemetryMetrics
+                {
+                    enabled = true
+                }
+            };
+
+            CreateConfig();
+
+            // Act
+            var result = _config.EventListenerSamplersEnabled;
+
+            // Assert - OpenTelemetry metrics setting should override explicit app setting
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public void EventListenerSamplersEnabled_CanBeExplicitlyEnabledViaAppSetting()
+        {
+            // Arrange
+            _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.EventListenerSamplersEnabled", value = "true" });
+            _localConfig.opentelemetry = new configurationOpentelemetry
+            {
+                enabled = false,
+                metrics = new configurationOpentelemetryMetrics
+                {
+                    enabled = false
+                }
+            };
+
+            CreateConfig();
+
+            // Act
+            var result = _config.EventListenerSamplersEnabled;
+
+            // Assert
+            Assert.That(result, Is.True);
+        }
+
+        #endregion
     }
 }
