@@ -194,7 +194,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
             if (ProcessExcludedByConfig(processPath))
             {
-                LogInfo(L"Process " + processPath + L" excluded by configuration.");
+                LogInfo(L"Process ", processPath , L" excluded by configuration.");
                 return false;
             }
 
