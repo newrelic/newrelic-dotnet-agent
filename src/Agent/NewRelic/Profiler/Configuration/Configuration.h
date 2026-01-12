@@ -842,7 +842,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             }
 
             if (IsProcessInProcessList(_includedProcesses, processName)) {
-                LogInfo(L"Enabling instrumentation for this process (", processName, ") due to existence of application node in newrelic.config.");
+                LogInfo(L"Enabling instrumentation for this process (", processName, ") due to existence of application node in newrelic.config or NEW_RELIC_INCLUDED_APPLICATION_NAMES environment variable.");
                 return true;
             }
 
@@ -867,16 +867,16 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         // Returns true if the given processPath matches any process name in the excluded process list (case-insensitive).
         bool ProcessExcludedByConfig(const xstring_t& processPath) const
         {
+            xstring_t::size_type pos = processPath.find_last_of(_X("/\\"));
+            xstring_t processName = (pos == xstring_t::npos) ? processPath : processPath.substr(pos + 1);
+
             if (!_excludedProcesses || _excludedProcesses->empty())
                 return false;
 
             for (const auto& excludedProcess : *_excludedProcesses)
             {
-                if (Strings::AreEqualCaseInsensitive(processPath, excludedProcess))
-                {
-                    LogInfo(_X("Process ") + processPath + _X(" is excluded by configuration (matched: ") + excludedProcess + _X(")."));
+                if (Strings::AreEqualCaseInsensitive(processName, excludedProcess))
                     return true;
-                }
             }
             return false;
         }

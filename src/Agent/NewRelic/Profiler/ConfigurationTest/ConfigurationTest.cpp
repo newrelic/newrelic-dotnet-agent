@@ -476,6 +476,27 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsTrue(configuration.ShouldInstrument(L"emailServer", L"", L"", L"", true));
         }
 
+        TEST_METHOD(should_not_instrument_process_name_regardless_of_path_netcore)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <instrumentation>\
+            <applications>\
+                <application name=\"foo.exe\" include=\"false\" />\
+                <application name=\"linuxFoo\" include=\"false\" />\
+            </applications>\
+        </instrumentation>\
+    </configuration>\
+    ");
+
+            Configuration configuration(configurationXml, _missingAgentEnabledConfigPair, L"", _systemCalls);
+            Assert::IsFalse(configuration.ShouldInstrument(L"C:\\tools\\Foo.exe", L"", L"", L"", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"C:\\apps\\Foo.exe", L"", L"", L"", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"/usr/bin/linuxFoo", L"", L"", L"", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"/usr/local/bin/linuxFoo", L"", L"", L"", true));
+        }
+
         TEST_METHOD(instrument_multiple_processes_from_xml)
         {
             std::wstring configurationXml(L"\
