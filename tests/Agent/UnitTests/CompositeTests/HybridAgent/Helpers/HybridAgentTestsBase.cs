@@ -41,9 +41,9 @@ public abstract class HybridAgentTestsBase
         }
 
         // enable the OTel bridge and include our test activity source
-        _compositeTestAgent.LocalConfiguration.opentelemetry.enabled = true;
-        _compositeTestAgent.LocalConfiguration.opentelemetry.traces.enabled = true;
-        _compositeTestAgent.LocalConfiguration.opentelemetry.traces.include = OpenTelemetryOperations.TestAppActivitySource.Name;
+        _compositeTestAgent.LocalConfiguration.openTelemetry.enabled = true;
+        _compositeTestAgent.LocalConfiguration.openTelemetry.traces.enabled = true;
+        _compositeTestAgent.LocalConfiguration.openTelemetry.traces.include = OpenTelemetryOperations.TestAppActivitySource.Name;
 
         // update configuration
         _compositeTestAgent.PushConfiguration();
