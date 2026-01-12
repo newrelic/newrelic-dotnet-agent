@@ -130,11 +130,13 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
 
         TEST_METHOD(logger_verify_can_change_level_to_debug)
         {
+            ResetStdLog();
             AssertLevelChange(Level::LEVEL_DEBUG);
         }
 
         TEST_METHOD(logger_verify_can_change_level_to_trace)
         {
+            ResetStdLog();
             AssertLevelChange(Level::LEVEL_TRACE);
         }
 
@@ -340,9 +342,9 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         }
         TEST_METHOD(logger_test_console)
         {
+            ResetStdLog();
             StdLog.SetLevel(Level::LEVEL_TRACE);
             StdLog.SetConsoleLogging(true);
-            ResetStdLog();
 
             LogInfo("blah blah blah");
             LogWarn("A warning");
@@ -411,6 +413,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
             StdLog.get_dest().str(L"");
             StdLog.SetAzureFunctionMode(false);
             StdLog.SetAzureFunctionLogLevelOverride(false);
+            StdLog.SetConsoleLogging(false);
         }
 
         MessageList GetMessages()
