@@ -371,6 +371,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #endregion
 
+        #region Span Links
+        public IEnumerable<SpanEvent> GetSpanLinks()
+        {
+            return GetSpanEvents()
+                .Where(@event => @event?.IntrinsicAttributes?["type"]?.ToString() == "SpanLink");
+        }
+        #endregion
+
         #region ErrorEvents
 
         public IEnumerable<ErrorEventPayload> GetErrorEventPayloads()
