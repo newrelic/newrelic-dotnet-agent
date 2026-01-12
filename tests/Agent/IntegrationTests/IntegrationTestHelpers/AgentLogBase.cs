@@ -365,7 +365,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public SpanEvent TryGetSpanEvent(string spanName)
         {
             return GetSpanEvents()
-                .Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == spanName)
+                .Where(@event => @event?.IntrinsicAttributes?["type"]?.ToString() == "Span" && @event?.IntrinsicAttributes?["name"]?.ToString() == spanName)
                 .FirstOrDefault();
         }
 

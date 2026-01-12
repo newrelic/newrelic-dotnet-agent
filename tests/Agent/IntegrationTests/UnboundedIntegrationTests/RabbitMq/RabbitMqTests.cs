@@ -48,6 +48,8 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                 configModifier
                 .ForceTransactionTraces()
+                .ConfigureFasterMetricsHarvestCycle(15)
+                .ConfigureFasterSpanEventsHarvestCycle(20)
                 .SetLogLevel("Finest")
                 .EnableOpenTelemetry(true)
                 .EnableOpenTelemetryTracing(true)
@@ -55,7 +57,8 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             },
             exerciseApplication: () =>
             {
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
 
@@ -104,6 +107,8 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
         };
 
         var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_metricScopeBase}/SendReceiveAsync");
+
+        var allSpans = _fixture.AgentLog.GetSpanEvents().ToList();
 
         var queueProduceSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/RabbitMQ/Queue/Produce/Named/{_sendReceiveQueue}");
         var queueConsumeSpanEvents = _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/RabbitMQ/Queue/Consume/Named/{_sendReceiveQueue}");
