@@ -6,10 +6,10 @@ using NewRelic.Agent.Extensions.Api.Experimental;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing
 {
-    // TODO: Not all of these properties on activities are available in all versions of the DiagnosticSource assembly.
     // We should either have code that gracefully handles the property or method not being available, or we need to
     // ensure that we only enable the bridging code when an appropriate minimum version of the DiagnosticSource
     // assembly is loaded.
+    // These properties are available from at least version 7, and we require 7 and above.
     public class RuntimeNewRelicActivity : INewRelicActivity
     {
         private readonly object _activity;
