@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NUnit.Framework;
 using Telerik.JustMock;
 

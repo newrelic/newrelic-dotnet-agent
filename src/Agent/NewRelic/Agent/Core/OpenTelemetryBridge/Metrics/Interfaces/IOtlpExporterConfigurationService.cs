@@ -5,7 +5,7 @@ using System;
 using System.Net.Http;
 using NewRelic.Agent.Core.DataTransport;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces
 {
     /// <summary>
     /// Manages the lifecycle of the OpenTelemetry MeterProvider and its OTLP exporter configuration.

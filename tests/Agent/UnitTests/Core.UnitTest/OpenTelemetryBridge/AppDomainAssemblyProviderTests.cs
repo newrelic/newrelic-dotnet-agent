@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Linq;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge

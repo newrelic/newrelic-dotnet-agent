@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
+using Telerik.JustMock;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Api.Experimental;

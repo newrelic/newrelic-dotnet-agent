@@ -17,7 +17,7 @@ using System.Diagnostics;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NewRelic.Agent.Extensions.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
 

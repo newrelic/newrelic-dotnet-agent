@@ -18,7 +18,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using NewRelic.Agent.Core.OpenTelemetryBridge;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -61,7 +60,8 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly Dictionary<string, string> _newRelicAppSettings;
 
         public bool UseResourceBasedNamingForWCFEnabled { get; private set; }
-        public bool EventListenerSamplersEnabled { get; set; }
+        
+        private bool _hasLoggedEventListenerSamplersDisabled;
 
         public TimeSpan DefaultHarvestCycle => TimeSpan.FromMinutes(1);
 
@@ -2946,6 +2946,29 @@ namespace NewRelic.Agent.Core.Configuration
                 var value = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("OpenTelemetryOtlpExportIntervalSeconds", 5), "NEW_RELIC_OPENTELEMETRY_OTLP_EXPORT_INTERVAL_SECONDS").GetValueOrDefault(5);
                 return value > 0 ? value : 5;
             }
+        }
+
+        /// <summary>
+        /// Controls whether EventListener-based samplers (GCSamplerNetCore, ThreadStatsSampler) are enabled.
+        /// Automatically returns false when OpenTelemetry metrics are enabled to prevent EventListener conflicts.
+        /// </summary>
+        public bool EventListenerSamplersEnabled
+        {
+            get
+            {
+                if (OpenTelemetryMetricsEnabled)
+                {
+                    if (field && !_hasLoggedEventListenerSamplersDisabled)
+                    {
+                        Log.Info("EventListener-based samplers (GCSamplerNetCore, ThreadStatsSampler) have been automatically disabled because OpenTelemetry metrics are enabled.");
+                        _hasLoggedEventListenerSamplersDisabled = true;
+                        field = false;
+                    }
+                }
+
+                return field;
+            }
+            set => field = value;
         }
         #endregion
 
