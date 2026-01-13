@@ -341,7 +341,6 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_CONFIG_OBSCURING_KEY",
                     "NEW_RELIC_PROXY_PASS_OBFUSCATED",
                     "NEW_RELIC_CLOUD_AWS_ACCOUNT_ID"
-
                 };
 
                 List<(string,string)> environmentVariablesDeprecated = new List<(string, string)>
