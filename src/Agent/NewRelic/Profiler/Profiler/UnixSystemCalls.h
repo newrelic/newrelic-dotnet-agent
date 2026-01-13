@@ -110,12 +110,10 @@ namespace NewRelic { namespace Profiler
             catch (const std::exception& e)
             {
                 LogError(L"Exception caught trying to read process path: ", e.what());
-                return _X("");
             }
             catch (...)
             {
                 LogError(L"Unknown exception caught trying to read process path.");
-                return _X("");
             }
             return _X(".");
         }
