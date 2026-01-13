@@ -64,17 +64,14 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
                     try
                     {
                         assembly = Assembly.Load("System.Diagnostics.DiagnosticSource");
-                        Log.Debug("Loaded System.Diagnostics.DiagnosticSource assembly explicitly.");
                     }
                     catch (Exception loadEx)
                     {
-                        Log.Debug($"System.Diagnostics.DiagnosticSource assembly not found and could not be loaded: {loadEx.Message}. MeterListener functionality will be unavailable.");
+                        Log.Debug($"System.Diagnostics.DiagnosticSource assembly not found: {loadEx.Message}. MeterListener functionality will be unavailable.");
                         _isAvailable = false;
                         return;
                     }
                 }
-
-                Log.Debug($"Initializing MeterListener from System.Diagnostics.DiagnosticSource version {assembly.GetName().Version}");
 
                 _meterListenerType = assembly.GetType("System.Diagnostics.Metrics.MeterListener", throwOnError: true);
 
@@ -112,7 +109,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
             }
             catch (Exception ex)
             {
-                Log.Debug($"Failed to start MeterListener: {ex.Message}");
+                Log.Debug(ex, "Failed to start MeterListener");
             }
         }
 
@@ -126,7 +123,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
             }
             catch (Exception ex)
             {
-                Log.Debug($"Failed to record observable instruments: {ex.Message}");
+                Log.Debug(ex, "Failed to record observable instruments");
             }
         }
 
@@ -154,7 +151,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
             }
             catch (Exception ex)
             {
-                Log.Debug($"Failed to enable measurement events: {ex.Message}");
+                Log.Debug(ex, "Failed to enable measurement events");
             }
         }
 
