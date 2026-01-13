@@ -175,11 +175,6 @@ public static class ActivityBridgeSegmentHelpers
     // TODO: RPC Server implementation is very preliminary; unable to test currently because asp.net core grpc server doesn't create activities with the expected tags
     private static void ProcessRpcServerTags(ISegment segment, IAgent agent, IErrorService errorService, Dictionary<string, object> tags, string activityLogPrefix)
     {
-        if (segment is not IHybridAgentSegment hybridAgentSegment)
-        {
-            return; // TODO: this shouldn't be possible; don't think we need to check for it
-        }
-
         tags.TryGetAndRemoveTag<string>(["rpc.system"], out var rpcSystem); // may not exist
 
         tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code"], out var statusCode);
@@ -195,7 +190,7 @@ public static class ActivityBridgeSegmentHelpers
         // TODO: ExternalSegmentData curently sets Component as an Intrinsic attribute on the span, with a value of _segmentData.TypeName (which ends up being `NewRelic.Agent.Core.OpenTelemetryBridge.ActivityBridge`)  with no override available. So there's no way for us to set the same attribute with a different value.
         //segment.AddCustomAttribute("component", rpcSystem);
 
-        var transaction = hybridAgentSegment.GetTransactionFromSegment();
+        var transaction = ((IHybridAgentSegment)segment).GetTransactionFromSegment();
 
         var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
         transaction.SetUri(path);
