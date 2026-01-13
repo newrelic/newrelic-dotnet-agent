@@ -59,10 +59,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryMetricsEnabled_RequiresBothGlobalAndMetricsSettings_ToBeTrue()
         {
             // Arrange
-            _localConfig.openTelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                metrics = new configurationOpentelemetryMetrics
+                metrics = new configurationOpenTelemetryMetrics
                 {
                     enabled = true
                 }
@@ -81,10 +81,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryMetricsEnabled_WithOnlyGlobalSettingTrue_ShouldBeFalse()
         {
             // Arrange
-            _localConfig.openTelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                metrics = new configurationOpentelemetryMetrics
+                metrics = new configurationOpenTelemetryMetrics
                 {
                     enabled = false // metrics specific setting is false
                 }
@@ -103,10 +103,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryMetricsIncludeFilters_ShouldParseCommaSeparatedValues()
         {
             // Arrange
-            _localConfig.openTelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                metrics = new configurationOpentelemetryMetrics
+                metrics = new configurationOpenTelemetryMetrics
                 {
                     enabled = true,
                     include = "MeterName1,MeterName2, MeterName3 "
@@ -131,10 +131,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryMetricsExcludeFilters_ShouldParseCommaSeparatedValues()
         {
             // Arrange
-            _localConfig.openTelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                metrics = new configurationOpentelemetryMetrics
+                metrics = new configurationOpenTelemetryMetrics
                 {
                     enabled = true,
                     exclude = "Debug.Meter,Test.Meter"
@@ -158,10 +158,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryMetricsFilters_WithEmptyStrings_ShouldReturnEmptyCollections()
         {
             // Arrange
-            _localConfig.openTelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                metrics = new configurationOpentelemetryMetrics
+                metrics = new configurationOpenTelemetryMetrics
                 {
                     enabled = true,
                     include = "",
@@ -184,10 +184,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryTracesEnabled_RequiresBothGlobalAndTracesSettings_ToBeTrue()
         {
             // Arrange
-            _localConfig.openTelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                traces = new configurationOpentelemetryTraces
+                traces = new configurationOpenTelemetryTraces
                 {
                     enabled = true
                 }
@@ -206,10 +206,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryTracesEnabled_WithOnlyGlobalSettingTrue_ShouldBeFalse()
         {
             // Arrange
-            _localConfig.openTelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                traces = new configurationOpentelemetryTraces
+                traces = new configurationOpenTelemetryTraces
                 {
                     enabled = false // traces specific setting is false
                 }

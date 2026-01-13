@@ -548,7 +548,7 @@
                             <xs:element name="applications" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        A list of application names to instrument.
+                                        A list of application names to instrument, or exclude from instrumentation.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:complexType>
@@ -558,8 +558,15 @@
                                                 <xs:attribute name="name" type="xs:string" use="required">
                                                     <xs:annotation>
                                                         <xs:documentation>
-                                                            The name of your custom server application; remove everything up to and including the last folder separator.
+                                                            The name of a .NET application; remove everything up to and including the last folder separator.
                                                             For example, "MyCustomServer.exe".
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                                <xs:attribute name="include" type="xs:boolean" default="true" use="optional">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            Enables or disables instrumentation of this application. Default is true (enabled).
                                                         </xs:documentation>
                                                     </xs:annotation>
                                                 </xs:attribute>
