@@ -7,11 +7,20 @@ on:
         type: boolean
         default: true
         required: false
+      aggregate_payload_data:
+        type: boolean
+        default: false
+        required: false
   workflow_dispatch:
     inputs:
       run_id:
         description: 'Run ID of the build workflow (all_solutions.yml) to use the agent from. ID can be found in URL for run.'
         required: true
+      aggregate_payload_data:
+        description: 'Build and aggregate payload data'
+        type: boolean
+        default: false
+        required: false
 
 env:
   DOTNET_NOLOGO: true
@@ -130,7 +139,7 @@ jobs:
           --results-directory ${{ env.test_results_path }}
 
       - name: Extract payload bytes log from TRX
-        if: always()
+        if: inputs.aggregate_payload_data == true
         run: |
           PAYLOAD_LOG="${{ env.test_results_path }}/${{ matrix.arch }}_${{ matrix.distro }}_payload_bytes.json"
           echo "Searching for TRX files in: ${{ env.test_results_path }}"
@@ -185,7 +194,7 @@ jobs:
         shell: bash
 
       - name: Upload payload bytes log
-        if: always()
+        if: inputs.aggregate_payload_data == true
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: linux-container-payload-bytes-${{ matrix.arch }}-${{ matrix.distro }}
@@ -203,7 +212,7 @@ jobs:
     name: Aggregate Linux Container Test Payload Logs
     needs: [linux-container-tests]
     runs-on: ubuntu-latest
-    if: always()
+    if: inputs.aggregate_payload_data == true
     permissions:
       actions: write
       contents: read
