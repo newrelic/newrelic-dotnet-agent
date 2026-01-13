@@ -261,6 +261,7 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_AGENT_CONTROL_ENABLED",
                     "NEW_RELIC_AGENT_CONTROL_HEALTH_DELIVERY_LOCATION",
                     "NEW_RELIC_AGENT_CONTROL_HEALTH_FREQUENCY",
+                    "NEW_RELIC_AGENT_VERSION_OVERRIDE",
                     "NEW_RELIC_AI_MONITORING_ENABLED",
                     "NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED",
                     "NEW_RELIC_ALLOW_ALL_HEADERS",
@@ -280,7 +281,6 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED",
                     "NEW_RELIC_BROWSER_MONITORING_AUTO_INSTRUMENT",
                     "NEW_RELIC_ENABLE_ASPNETCORE6PLUS_BROWSER_INJECTION",
-                    "NEW_RELIC_CLOUD_AWS_ACCOUNT_ID",
                     "NEW_RELIC_CODE_LEVEL_METRICS_ENABLED",
                     "NEW_RELIC_DISABLE_APPDOMAIN_CACHING",
                     "NEW_RELIC_DISTRIBUTED_TRACING_ENABLED",
@@ -339,7 +339,9 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_PROXY_USER",
                     "NEW_RELIC_PROXY_PASS",
                     "NEW_RELIC_CONFIG_OBSCURING_KEY",
-                    "NEW_RELIC_PROXY_PASS_OBFUSCATED"
+                    "NEW_RELIC_PROXY_PASS_OBFUSCATED",
+                    "NEW_RELIC_CLOUD_AWS_ACCOUNT_ID"
+
                 };
 
                 List<(string,string)> environmentVariablesDeprecated = new List<(string, string)>
