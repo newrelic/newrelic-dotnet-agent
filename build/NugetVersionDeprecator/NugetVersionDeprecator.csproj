@@ -22,8 +22,8 @@
     <PackageReference Include="NuGet.Protocol" Version="7.0.1" />
     <PackageReference Include="System.Formats.Asn1" Version="10.0.1" /> <!-- For Nuget.Protocol transient depedency vulnerability -->
     <PackageReference Include="Octokit" Version="14.0.0" />
-    <PackageReference Include="RestSharp" Version="113.0.0" />
-    <PackageReference Include="RestSharp.Serializers.NewtonsoftJson" Version="113.0.0" />
+    <PackageReference Include="RestSharp" Version="113.1.0" />
+    <PackageReference Include="RestSharp.Serializers.NewtonsoftJson" Version="113.1.0" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
 
