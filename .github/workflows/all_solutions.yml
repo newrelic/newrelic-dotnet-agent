@@ -10,6 +10,12 @@ on:
     types: [published]
 
   workflow_dispatch:
+    inputs:
+      aggregate_payload_data:
+        description: 'Build and aggregate payload data'
+        required: false
+        type: boolean
+        default: false
 
   schedule:
     - cron: "0 9 * * 1-5"
@@ -154,6 +160,8 @@ jobs:
     needs:
       - build-fullagent-msi
     uses: ./.github/workflows/linux_container_tests.yml
+    with:
+      aggregate_payload_data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
     secrets: inherit
     permissions:
       actions: write
@@ -444,7 +452,7 @@ jobs:
         shell: powershell
 
       - name: Extract payload bytes log from TRX
-        if: always()
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
         run: |
           $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
@@ -488,7 +496,7 @@ jobs:
         shell: powershell
 
       - name: Upload payload bytes log
-        if: always()
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: integration-payload-bytes-${{ matrix.namespace }}
@@ -639,7 +647,7 @@ jobs:
         shell: powershell
 
       - name: Extract payload bytes log from TRX
-        if: always()
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
         run: |
           $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
@@ -683,7 +691,7 @@ jobs:
         shell: powershell
 
       - name: Upload payload bytes log
-        if: always()
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: unbounded-payload-bytes-${{ matrix.namespace }}
@@ -907,7 +915,7 @@ jobs:
     name: Aggregate Integration Test Payload Logs
     needs: [integration-test-status]
     runs-on: ubuntu-latest
-    if: always()
+    if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
     permissions:
       actions: write
       contents: read
@@ -1001,7 +1009,7 @@ jobs:
     name: Aggregate Unbounded Test Payload Logs
     needs: [integration-test-status]
     runs-on: ubuntu-latest
-    if: always()
+    if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
     permissions:
       actions: write
       contents: read
@@ -1095,7 +1103,7 @@ jobs:
     name: Display All Payload Summaries
     needs: [aggregate-integration-payload-logs, aggregate-unbounded-payload-logs, run-linux-container-tests]
     runs-on: ubuntu-latest
-    if: always()
+    if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
     permissions:
       contents: read
     steps:
