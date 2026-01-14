@@ -411,6 +411,13 @@ namespace NewRelic.Agent.Core.Attributes
 
         protected override bool SetValueImpl(IAttributeValue attribVal)
         {
+            if (IsImmutable)
+            {
+#if DEBUG
+                // try to catch attempts to add to an immutable collection during development
+                throw new Exception($"Attempted to add attribute {attribVal.AttributeDefinition.Name} to immutable collection");
+#endif
+            }
             if (attribVal is AttributeValue attribValTyped)
             {
                 return SetValueImplInternal(attribValTyped);
@@ -433,7 +440,12 @@ namespace NewRelic.Agent.Core.Attributes
         {
             if (IsImmutable)
             {
+#if DEBUG
+                // try to catch attempts to add to an immutable collection during development
+                throw new Exception($"Attempted to add attribute {attribDef.Name} to immutable collection");
+#else
                 return false;
+#endif
             }
 
             var attribVal = new AttributeValue(attribDef)
@@ -448,7 +460,12 @@ namespace NewRelic.Agent.Core.Attributes
         {
             if (IsImmutable)
             {
+#if DEBUG
+                // try to catch attempts to add to an immutable collection during development
+                throw new Exception($"Attempted to add attribute {attribDef.Name} to immutable collection");
+#else
                 return false;
+#endif
             }
 
             var attribVal = new AttributeValue(attribDef)
@@ -463,7 +480,12 @@ namespace NewRelic.Agent.Core.Attributes
         {
             if (IsImmutable)
             {
+#if DEBUG
+                // try to catch attempts to add to an immutable collection during development
+                throw new Exception($"Attempted to add attribute {attribVal.AttributeDefinition.Name} to immutable collection");
+#else
                 return false;
+#endif
             }
 
             var lockObj = _lockObjects[attribVal.AttributeDefinition.Classification];

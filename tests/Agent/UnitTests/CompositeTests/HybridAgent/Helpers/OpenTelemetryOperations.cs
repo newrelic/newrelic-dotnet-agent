@@ -110,6 +110,50 @@ public static class OpenTelemetryOperations
         work();
     }
 
+    public static void AddSpanLink(string linkedTraceId, string linkedSpanId, IDictionary<string, object> attributes, Action work)
+    {
+        var currentActivity = Activity.Current;
+        if (currentActivity == null)
+        {
+            Console.WriteLine("No current activity to add link to");
+            work();
+            return;
+        }
+
+        var linkedContext = new ActivityContext(
+            ActivityTraceId.CreateFromString(linkedTraceId.AsSpan()),
+            ActivitySpanId.CreateFromString(linkedSpanId.AsSpan()),
+            ActivityTraceFlags.Recorded,
+            traceState: null);
+
+        var activityTags = attributes != null 
+            ? new ActivityTagsCollection(attributes) 
+            : null;
+
+        currentActivity.AddLink(new ActivityLink(linkedContext, activityTags));
+
+        work();
+    }
+
+    public static void AddSpanEvent(string eventName, IDictionary<string, object> attributes, Action work)
+    {
+        var currentActivity = Activity.Current;
+        if (currentActivity == null)
+        {
+            Console.WriteLine("No current activity to add event to");
+            work();
+            return;
+        }
+
+        var activityTags = attributes != null 
+            ? new ActivityTagsCollection(attributes) 
+            : null;
+
+        currentActivity.AddEvent(new ActivityEvent(eventName, tags: activityTags));
+
+        work();
+    }
+
     public static void AssertNotValidSpan()
     {
         Assert.That(Activity.Current, Is.Null, "Expected no active span, but found one.");

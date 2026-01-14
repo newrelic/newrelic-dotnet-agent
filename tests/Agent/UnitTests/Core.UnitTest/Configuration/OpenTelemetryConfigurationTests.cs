@@ -59,10 +59,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryMetricsEnabled_RequiresBothGlobalAndMetricsSettings_ToBeTrue()
         {
             // Arrange
-            _localConfig.opentelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                metrics = new configurationOpentelemetryMetrics
+                metrics = new configurationOpenTelemetryMetrics
                 {
                     enabled = true
                 }
@@ -81,10 +81,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryMetricsEnabled_WithOnlyGlobalSettingTrue_ShouldBeFalse()
         {
             // Arrange
-            _localConfig.opentelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                metrics = new configurationOpentelemetryMetrics
+                metrics = new configurationOpenTelemetryMetrics
                 {
                     enabled = false // metrics specific setting is false
                 }
@@ -103,10 +103,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryMetricsIncludeFilters_ShouldParseCommaSeparatedValues()
         {
             // Arrange
-            _localConfig.opentelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                metrics = new configurationOpentelemetryMetrics
+                metrics = new configurationOpenTelemetryMetrics
                 {
                     enabled = true,
                     include = "MeterName1,MeterName2, MeterName3 "
@@ -131,10 +131,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryMetricsExcludeFilters_ShouldParseCommaSeparatedValues()
         {
             // Arrange
-            _localConfig.opentelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                metrics = new configurationOpentelemetryMetrics
+                metrics = new configurationOpenTelemetryMetrics
                 {
                     enabled = true,
                     exclude = "Debug.Meter,Test.Meter"
@@ -158,10 +158,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryMetricsFilters_WithEmptyStrings_ShouldReturnEmptyCollections()
         {
             // Arrange
-            _localConfig.opentelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                metrics = new configurationOpentelemetryMetrics
+                metrics = new configurationOpenTelemetryMetrics
                 {
                     enabled = true,
                     include = "",
@@ -184,10 +184,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryTracesEnabled_RequiresBothGlobalAndTracesSettings_ToBeTrue()
         {
             // Arrange
-            _localConfig.opentelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                traces = new configurationOpentelemetryTraces
+                traces = new configurationOpenTelemetryTraces
                 {
                     enabled = true
                 }
@@ -206,10 +206,10 @@ namespace NewRelic.Agent.Core.Configuration
         public void OpenTelemetryTracesEnabled_WithOnlyGlobalSettingTrue_ShouldBeFalse()
         {
             // Arrange
-            _localConfig.opentelemetry = new configurationOpentelemetry
+            _localConfig.openTelemetry = new configurationOpenTelemetry
             {
                 enabled = true,
-                traces = new configurationOpentelemetryTraces
+                traces = new configurationOpenTelemetryTraces
                 {
                     enabled = false // traces specific setting is false
                 }
@@ -227,7 +227,7 @@ namespace NewRelic.Agent.Core.Configuration
         [Test]
         public void OpenTelemetryTracingIncludedActivitySources_ParsesPoorlyFormedLocalString()
         {
-            _localConfig.opentelemetry.traces.include = "  Foo , ,Bar,,  baz , Foo  ";
+            _localConfig.openTelemetry.traces.include = "  Foo , ,Bar,,  baz , Foo  ";
 
             var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
             var result = configuration.OpenTelemetryTracingIncludedActivitySources;
@@ -238,7 +238,7 @@ namespace NewRelic.Agent.Core.Configuration
         [Test]
         public void OpenTelemetryTracingIncludedActivitySources_EnvironmentOverridesLocal_AndParses()
         {
-            _localConfig.opentelemetry.traces.include = "LocalA,LocalB";
+            _localConfig.openTelemetry.traces.include = "LocalA,LocalB";
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_TRACES_INCLUDE"))
                 .Returns(" A , , B , C , A ");
 
@@ -251,7 +251,7 @@ namespace NewRelic.Agent.Core.Configuration
         [Test]
         public void OpenTelemetryTracingIncludedActivitySources_EmptyOrWhitespaceTokens_AreIgnored()
         {
-            _localConfig.opentelemetry.traces.include = " , ,   , ";
+            _localConfig.openTelemetry.traces.include = " , ,   , ";
             var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
             Assert.That(cfg.OpenTelemetryTracingIncludedActivitySources, Is.Empty);
@@ -260,7 +260,7 @@ namespace NewRelic.Agent.Core.Configuration
         [Test]
         public void OpenTelemetryTracingExcludedActivitySources_ParsesPoorlyFormedLocalString()
         {
-            _localConfig.opentelemetry.traces.exclude = "  Ex1 , , Ex2,,  Ex3 , Ex1  ";
+            _localConfig.openTelemetry.traces.exclude = "  Ex1 , , Ex2,,  Ex3 , Ex1  ";
 
             var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
             var result = cfg.OpenTelemetryTracingExcludedActivitySources;
@@ -271,7 +271,7 @@ namespace NewRelic.Agent.Core.Configuration
         [Test]
         public void OpenTelemetryTracingExcludedActivitySources_EnvironmentOverridesLocal_AndParses()
         {
-            _localConfig.opentelemetry.traces.exclude = "LocalX,LocalY";
+            _localConfig.openTelemetry.traces.exclude = "LocalX,LocalY";
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_TRACES_EXCLUDE"))
                 .Returns(" X , , Y , Z , X ");
 
@@ -284,7 +284,7 @@ namespace NewRelic.Agent.Core.Configuration
         [Test]
         public void OpenTelemetryTracingExcludedActivitySources_EmptyOrWhitespaceTokens_AreIgnored()
         {
-            _localConfig.opentelemetry.traces.exclude = " , ,   , ";
+            _localConfig.openTelemetry.traces.exclude = " , ,   , ";
             var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
             Assert.That(cfg.OpenTelemetryTracingExcludedActivitySources, Is.Empty);

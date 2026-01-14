@@ -601,6 +601,45 @@ public static class ActivityBridgeSegmentHelpers
         return new DatastoreSegmentData(agent.GetExperimentalApi().DatabaseService, parsedSqlStatement, string.Empty, null);
     }
 
+    public static void CaptureEventsOnSpan(this ISegment segment, object originalActivity)
+    {
+        var hybridAgentSegment = segment as IHybridAgentSegment;
+
+        if (hybridAgentSegment == null)
+        {
+            return;
+        }
+
+        // Capture all events on the activity as span events
+        dynamic activity = originalActivity;
+        foreach (var activityEvent in activity.Events)
+        {
+            string name = activityEvent.Name;
+            DateTime timestamp = activityEvent.Timestamp.UtcDateTime;
+            IEnumerable<KeyValuePair<string, object>> tags = activityEvent.Tags;
+
+            hybridAgentSegment.TryAddEventToSpan(name, timestamp, tags);
+        }
+    }
+
+    public static void CaptureSpanLinks(this ISegment segment, object originalActivity)
+    {
+        var hybridAgentSegment = segment as IHybridAgentSegment;
+        if (hybridAgentSegment == null)
+        {
+            return;
+        }
+
+        // Capture all links on the activity as span links
+        dynamic activity = originalActivity;
+        foreach (var activityLink in activity.Links)
+        {
+            string traceId = activityLink.Context.TraceId.ToString();
+            string spanId = activityLink.Context.SpanId.ToString();
+            hybridAgentSegment.TryAddLinkToSpan(traceId, spanId, activityLink.Tags);
+        }
+    }
+
     public static void AddExceptionEventInformationToSegment(this ISegment segment, object originalActivity, IErrorService errorService)
     {
         // Exceptions recorded during an activity may be added as events on the activity. Not every way of recording

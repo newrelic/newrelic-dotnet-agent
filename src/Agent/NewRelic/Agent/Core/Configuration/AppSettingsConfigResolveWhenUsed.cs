@@ -93,11 +93,12 @@ namespace NewRelic.Agent.Core.Configuration
                 }
                 else
                 {
+                    var valueToLog = value;
                     if (key.Equals(Constants.AppSettingsLicenseKey))
                     {
-                        value = Strings.ObfuscateLicenseKey(value);
+                        valueToLog = Strings.ObfuscateLicenseKey(value);
                     }
-                    Log.Debug($"Reading value from appsettings.json and appsettings.*.json: '{key}={value}'");
+                    Log.Debug($"Reading value from appsettings.json and appsettings.*.json: '{key}={valueToLog}'");
                 }
             }
 
