@@ -1125,6 +1125,7 @@ jobs:
     runs-on: ubuntu-latest
     if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
     permissions:
+      actions: write
       contents: read
     steps:
       - name: Harden Runner
