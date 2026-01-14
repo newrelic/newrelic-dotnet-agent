@@ -239,7 +239,8 @@ namespace NewRelic.Agent.Core
             //Log here for debugging configuration issues
             if (Log.IsDebugEnabled)
             {
-                List<string> environmentVariables = new List<string> {
+                // Non-NEW_RELIC environment variables we want to log
+                List<string> unprefixedEnvVars = new List<string> {
                     "APP_POOL_ID",
                     "COR_ENABLE_PROFILING",
                     "COR_PROFILER",
@@ -252,87 +253,14 @@ namespace NewRelic.Agent.Core
                     "CORECLR_PROFILER_PATH",
                     "CORECLR_PROFILER_PATH_32",
                     "CORECLR_PROFILER_PATH_64",
-                    "NEW_RELIC_HOME",
-                    "NEW_RELIC_INSTALL_PATH",
-                    "NEW_RELIC_APP_NAME",
                     "RoleName",
                     "IISEXPRESS_SITENAME",
                     "MAX_TRANSACTION_SAMPLES_STORED",
-                    "NEW_RELIC_AGENT_CONTROL_ENABLED",
-                    "NEW_RELIC_AGENT_CONTROL_HEALTH_DELIVERY_LOCATION",
-                    "NEW_RELIC_AGENT_CONTROL_HEALTH_FREQUENCY",
-                    "NEW_RELIC_AGENT_VERSION_OVERRIDE",
-                    "NEW_RELIC_AI_MONITORING_ENABLED",
-                    "NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED",
-                    "NEW_RELIC_ALLOW_ALL_HEADERS",
-                    "NEW_RELIC_APM_LAMBDA_MODE",
-                    "NEW_RELIC_APPLICATION_LOGGING_ENABLED",
-                    "NEW_RELIC_APPLICATION_LOGGING_METRICS_ENABLED",
-                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED",
-                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_MAX_SAMPLES_STORED",
-                    "NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED",
-                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_ENABLED",
-                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_INCLUDE",
-                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_EXCLUDE",
-                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_LOG_LEVEL_DENYLIST",
-                    "NEW_RELIC_ATTRIBUTES_ENABLED",
-                    "NEW_RELIC_ATTRIBUTES_INCLUDE",
-                    "NEW_RELIC_ATTRIBUTES_EXCLUDE",
-                    "NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED",
-                    "NEW_RELIC_BROWSER_MONITORING_AUTO_INSTRUMENT",
-                    "NEW_RELIC_ENABLE_ASPNETCORE6PLUS_BROWSER_INJECTION",
-                    "NEW_RELIC_CODE_LEVEL_METRICS_ENABLED",
-                    "NEW_RELIC_DISABLE_APPDOMAIN_CACHING",
-                    "NEW_RELIC_DISTRIBUTED_TRACING_ENABLED",
-                    "NEW_RELIC_SPAN_EVENTS_ENABLED",
-                    "NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED",
-                    "MAX_EVENT_SAMPLES_STORED",
-                    "NEW_RELIC_DISABLE_SAMPLERS",
-                    "NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES",
-                    "NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES",
-                    "NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD",
-                    "NEW_RELIC_HIGH_SECURITY",
-                    "NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT",
-                    "NEW_RELIC_INFINITE_TRACING_TIMEOUT_SEND",
-                    "NEW_RELIC_INFINITE_TRACING_EXIT_TIMEOUT",
-                    "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_STREAMS_COUNT",
-                    "NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_HOST",
-                    "NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_PORT",
-                    "NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_SSL",
-                    "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_QUEUE_SIZE",
-                    "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_PARTITION_COUNT",
-                    "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_BATCH_SIZE",
-                    "NEW_RELIC_INFINITE_TRACING_COMPRESSION",
-                    "NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG",
-                    "NEW_RELIC_LOG",
-                    "NEW_RELIC_LOG_DIRECTORY",
-                    "NEW_RELIC_PROFILER_LOG_DIRECTORY",
-                    "NEW_RELIC_LOG_LEVEL",
-                    "NEW_RELIC_LOG_ENABLED",
-                    "NEW_RELIC_LOG_CONSOLE",
-                    "NEW_RELIC_LOG_ROLLING_STRATEGY",
-                    "NEW_RELIC_LOG_MAX_FILE_SIZE_MB",
-                    "NEW_RELIC_LOG_MAX_FILES",
-                    "NEW_RELIC_LABELS",
-                    "NEW_RELIC_PROCESS_HOST_DISPLAY_NAME",
-                    "NEW_RELIC_PROXY_HOST",
-                    "NEW_RELIC_PROXY_URI_PATH",
-                    "NEW_RELIC_PROXY_PORT",
-                    "NEW_RELIC_PROXY_DOMAIN",
-                    "NEW_RELIC_SEND_DATA_ON_EXIT",
-                    "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS",
-                    "NEW_RELIC_UTILIZATION_DETECT_AWS",
-                    "NEW_RELIC_UTILIZATION_DETECT_AZURE",
-                    "NEW_RELIC_UTILIZATION_DETECT_GCP",
-                    "NEW_RELIC_UTILIZATION_DETECT_PCF",
-                    "NEW_RELIC_UTILIZATION_DETECT_DOCKER",
-                    "NEW_RELIC_UTILIZATION_DETECT_KUBERNETES",
-                    "NEW_RELIC_UTILIZATION_LOGICAL_PROCESSORS",
-                    "NEW_RELIC_UTILIZATION_TOTAL_RAM_MIB",
-                    "NEW_RELIC_UTILIZATION_BILLING_HOSTNAME"
+                    "MAX_EVENT_SAMPLES_STORED"
                 };
 
-                List<string> environmentVariablesSensitive = new List<string> {
+                // Sensitive environment variables that should not have their values logged
+                HashSet<string> envVarsSensitive = new HashSet<string> {
                     "NEW_RELIC_LICENSE_KEY",
                     "NEWRELIC_LICENSEKEY",
                     "NEW_RELIC_SECURITY_POLICIES_TOKEN",
@@ -343,11 +271,12 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_CLOUD_AWS_ACCOUNT_ID"
                 };
 
-                List<(string,string)> environmentVariablesDeprecated = new List<(string, string)>
+                List<(string,string)> envVarsDeprecated = new List<(string, string)>
                 {
                     ("CORECLR_NEWRELIC_HOME","CORECLR_NEW_RELIC_HOME"),
                     ("NEWRELIC_HOME", "NEW_RELIC_HOME"),
                     ("NEWRELIC_INSTALL_PATH", "NEW_RELIC_INSTALL_PATH"),
+                    ("NEWRELIC_LICENSE_KEY", "NEW_RELIC_LICENSE_KEY"),
                     ("NEWRELIC_LOG_DIRECTORY", "NEW_RELIC_LOG_DIRECTORY"),
                     ("NEWRELIC_LOG_LEVEL", "NEW_RELIC_LOG_LEVEL"),
                     ("NEWRELIC_PROFILER_LOG_DIRECTORY", "NEW_RELIC_PROFILER_LOG_DIRECTORY"),
@@ -355,31 +284,31 @@ namespace NewRelic.Agent.Core
                     ("NEWRELIC_AGENT_VERSION_OVERRIDE", "NEW_RELIC_AGENT_VERSION_OVERRIDE")
                 };
 
-                // so we can report the values as usual
-                environmentVariables.AddRange(environmentVariablesDeprecated.Select(tuple => tuple.Item1));
-
-                // Add this one separately so we can report the deprecated name but not log the value
-                environmentVariablesDeprecated.Add(("NEWRELIC_LICENSEKEY", "NEW_RELIC_LICENSE_KEY"));
+                var envVarsToLog = new List<string>(unprefixedEnvVars);
 
                 var environment = new SharedInterfaces.Environment(); // ensures we use the agent's cached env var values
 
-                foreach (var ev in environmentVariables)
+                // Get all environment variables beginning with NEW_RELIC_ from the system for logging
+                envVarsToLog.AddRange(environment.GetEnvironmentVariablesWithPrefix("NEW_RELIC_").Select(ev => ev.Key));
+                envVarsToLog.Sort();
+
+                // Log environment variables, respecting sensitive variables
+                foreach (var ev in envVarsToLog)
                 {
                     if (!string.IsNullOrEmpty(environment.GetEnvironmentVariable(ev)))
                     {
-                        Log.Debug("Environment Variable {0} value: {1}", ev, environment.GetEnvironmentVariable(ev));
+                        if (envVarsSensitive.Contains(ev))
+                        {
+                            Log.Debug("Environment Variable {0} is configured with a value. Not logging potentially sensitive value", ev);
+                        }
+                        else
+                        {
+                            Log.Debug("Environment Variable {0} value: {1}", ev, environment.GetEnvironmentVariable(ev));
+                        }
                     }
                 }
 
-                foreach (var evs in environmentVariablesSensitive)
-                {
-                    if (!string.IsNullOrEmpty(environment.GetEnvironmentVariable(evs)))
-                    {
-                        Log.Debug("Environment Variable {0} is configured with a value. Not logging potentially sensitive value", evs);
-                    }
-                }
-
-                foreach (var ev in environmentVariablesDeprecated)
+                foreach (var ev in envVarsDeprecated)
                 {
                     if (!string.IsNullOrEmpty(environment.GetEnvironmentVariable(ev.Item1)))
                     {
