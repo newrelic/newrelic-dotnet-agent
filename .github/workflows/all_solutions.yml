@@ -1001,16 +1001,14 @@ jobs:
 
       - name: Delete individual integration payload artifacts
         run: |
-          # Get all artifacts matching the pattern and delete them
-          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
-            --jq '.artifacts[] | select(.name | startswith("integration-payload-bytes-")) | .name' \
-            | while read -r artifact_name; do
-              echo "Deleting artifact: $artifact_name"
-              gh api repos/${{ github.repository }}/actions/artifacts \
-                --jq ".artifacts[] | select(.name == \"$artifact_name\" and .workflow_run.id == ${{ github.run_id }}) | .id" \
-                | while read -r artifact_id; do
-                  gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id || echo "Failed to delete $artifact_name"
-                done
+          # Get all artifacts from this run matching the pattern and delete them
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --paginate \
+            --jq '.artifacts[] | select(.name | startswith("integration-payload-bytes-")) | "\(.id) \(.name)"' \
+            | while read -r artifact_id artifact_name; do
+              echo "Deleting artifact: $artifact_name (ID: $artifact_id)"
+              gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id \
+                && echo "Successfully deleted $artifact_name" \
+                || echo "Failed to delete $artifact_name"
             done
         env:
           GH_TOKEN: ${{ github.token }}
@@ -1107,16 +1105,14 @@ jobs:
 
       - name: Delete individual unbounded payload artifacts
         run: |
-          # Get all artifacts matching the pattern and delete them
-          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
-            --jq '.artifacts[] | select(.name | startswith("unbounded-payload-bytes-")) | .name' \
-            | while read -r artifact_name; do
-              echo "Deleting artifact: $artifact_name"
-              gh api repos/${{ github.repository }}/actions/artifacts \
-                --jq ".artifacts[] | select(.name == \"$artifact_name\" and .workflow_run.id == ${{ github.run_id }}) | .id" \
-                | while read -r artifact_id; do
-                  gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id || echo "Failed to delete $artifact_name"
-                done
+          # Get all artifacts from this run matching the pattern and delete them
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --paginate \
+            --jq '.artifacts[] | select(.name | startswith("unbounded-payload-bytes-")) | "\(.id) \(.name)"' \
+            | while read -r artifact_id artifact_name; do
+              echo "Deleting artifact: $artifact_name (ID: $artifact_id)"
+              gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id \
+                && echo "Successfully deleted $artifact_name" \
+                || echo "Failed to delete $artifact_name"
             done
         env:
           GH_TOKEN: ${{ github.token }}
@@ -1269,15 +1265,15 @@ jobs:
 
       - name: Delete combined payload artifacts
         run: |
-          # Delete the combined artifacts explicitly
-          for artifact_name in combined-integration-payload-bytes combined-unbounded-payload-bytes combined-linux-container-payload-bytes; do
-            echo "Deleting artifact: $artifact_name"
-            gh api repos/${{ github.repository }}/actions/artifacts \
-              --jq ".artifacts[] | select(.name == \"$artifact_name\" and .workflow_run.id == ${{ github.run_id }}) | .id" \
-              | while read -r artifact_id; do
-                gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id || echo "Failed to delete $artifact_name"
-              done
-          done
+          # Get combined artifacts from this run and delete them
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --paginate \
+            --jq '.artifacts[] | select(.name | startswith("combined-")) | select(.name | endswith("-payload-bytes")) | "\(.id) \(.name)"' \
+            | while read -r artifact_id artifact_name; do
+              echo "Deleting artifact: $artifact_name (ID: $artifact_id)"
+              gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id \
+                && echo "Successfully deleted $artifact_name" \
+                || echo "Failed to delete $artifact_name"
+            done
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
