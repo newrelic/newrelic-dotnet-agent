@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.48.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.47.2...v10.48.0) (2026-01-14)
+
+
+### Notice
+
+* The GPG key used to sign .NET Agent RPM packages in our YUM repo has been rotated. Please update your systems to trust the new key by downloading our [updated repository definition file](https://download.newrelic.com/dot_net_agent/yum/newrelic-dotnet-agent.repo) and placing it in `/etc/yum.repos.d/`, overwriting any existing version of that file. ([ef5f329](https://github.com/newrelic/newrelic-dotnet-agent/commit/ef5f3296ee4580d73437243f5437d86fafcac4ce))
+
+
+### New features
+
+* Allow users to configure process names that should not be instrumented ([#3387](https://github.com/newrelic/newrelic-dotnet-agent/issues/3387)) ([8dedf32](https://github.com/newrelic/newrelic-dotnet-agent/commit/8dedf324fed3559c5de8697a9728b31cf8dacf96))
+* Increase maximum length of `db.statement` span attribute to 4096 bytes ([#3364](https://github.com/newrelic/newrelic-dotnet-agent/issues/3364)) ([#3365](https://github.com/newrelic/newrelic-dotnet-agent/issues/3365)) ([bbac2f4](https://github.com/newrelic/newrelic-dotnet-agent/commit/bbac2f49fc5094036b97f25689b07611fefde40a))
+
+
+### Fixes
+
+* Fix agent connection error when debug logging is enabled. ([#3395](https://github.com/newrelic/newrelic-dotnet-agent/issues/3395)) ([82fc1b6](https://github.com/newrelic/newrelic-dotnet-agent/commit/82fc1b63e9194e0ed2d44e2bcca3cf3eb5dfe6cb))
+* Restore min/max occurs properties on `distributedTracing` config element. ([#3381](https://github.com/newrelic/newrelic-dotnet-agent/issues/3381)) ([#3388](https://github.com/newrelic/newrelic-dotnet-agent/issues/3388)) ([2d0b89f](https://github.com/newrelic/newrelic-dotnet-agent/commit/2d0b89fb0561ad85bfe9a7909be7f83a88dc1067))
+
 ## [10.47.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.47.1...v10.47.2) (2025-12-16)
 
 
