@@ -290,6 +290,8 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_DISABLE_SAMPLERS",
                     "NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES",
                     "NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES",
+                    "NEW_RELIC_EXCLUDED_APPLICATION_NAMES",
+                    "NEW_RELIC_INCLUDED_APPLICATION_NAMES",
                     "NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD",
                     "NEW_RELIC_HIGH_SECURITY",
                     "NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT",
