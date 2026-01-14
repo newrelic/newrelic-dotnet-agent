@@ -36,6 +36,8 @@ env:
 jobs:
   check-modified-files:
     name: Check if source files were modified, skip remaining jobs if not
+    # skip if the PR source branch starts with "release-please"
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release-please')
     uses: ./.github/workflows/check_modified_files.yml
     secrets: inherit
     permissions:
@@ -1000,10 +1002,20 @@ jobs:
           if-no-files-found: warn
 
       - name: Delete individual integration payload artifacts
-        uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v5.1.0
-        with:
-          name: integration-payload-bytes-*
-          failOnError: false
+        run: |
+          # Get all artifacts from this run matching the pattern and delete them
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --paginate \
+            --jq '.artifacts[] | select(.name | startswith("integration-payload-bytes-")) | "\(.id) \(.name)"' \
+            | while read -r artifact_id artifact_name; do
+              echo "Deleting artifact: $artifact_name (ID: $artifact_id)"
+              gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id \
+                && echo "Successfully deleted $artifact_name" \
+                || echo "Failed to delete $artifact_name"
+            done
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        continue-on-error: true
 
   aggregate-unbounded-payload-logs:
     name: Aggregate Unbounded Test Payload Logs
@@ -1094,10 +1106,20 @@ jobs:
           if-no-files-found: warn
 
       - name: Delete individual unbounded payload artifacts
-        uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v5.1.0
-        with:
-          name: unbounded-payload-bytes-*
-          failOnError: false
+        run: |
+          # Get all artifacts from this run matching the pattern and delete them
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --paginate \
+            --jq '.artifacts[] | select(.name | startswith("unbounded-payload-bytes-")) | "\(.id) \(.name)"' \
+            | while read -r artifact_id artifact_name; do
+              echo "Deleting artifact: $artifact_name (ID: $artifact_id)"
+              gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id \
+                && echo "Successfully deleted $artifact_name" \
+                || echo "Failed to delete $artifact_name"
+            done
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        continue-on-error: true
 
   display-all-payload-summaries:
     name: Display All Payload Summaries
@@ -1105,6 +1127,7 @@ jobs:
     runs-on: ubuntu-latest
     if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
     permissions:
+      actions: write
       contents: read
     steps:
       - name: Harden Runner
@@ -1242,3 +1265,19 @@ jobs:
           name: final-payload-summary
           path: final_payload_summary.json
           if-no-files-found: warn
+
+      - name: Delete combined payload artifacts
+        run: |
+          # Get combined artifacts from this run and delete them
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --paginate \
+            --jq '.artifacts[] | select(.name | startswith("combined-")) | select(.name | endswith("-payload-bytes")) | "\(.id) \(.name)"' \
+            | while read -r artifact_id artifact_name; do
+              echo "Deleting artifact: $artifact_name (ID: $artifact_id)"
+              gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id \
+                && echo "Successfully deleted $artifact_name" \
+                || echo "Failed to delete $artifact_name"
+            done
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        continue-on-error: true
