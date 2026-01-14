@@ -36,6 +36,8 @@ env:
 jobs:
   check-modified-files:
     name: Check if source files were modified, skip remaining jobs if not
+    # skip if the PR source branch starts with "release-please"
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release-please')
     uses: ./.github/workflows/check_modified_files.yml
     secrets: inherit
     permissions:
