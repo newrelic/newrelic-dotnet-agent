@@ -191,7 +191,7 @@ public static class ActivityBridgeSegmentHelpers
         var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
         transaction.SetUri(path);
 
-        transaction.SetRequestMethod(method ?? grpcMethod ?? "Unknown"); // TODO: should we default to "Unknown" or leave it null?
+        transaction.SetRequestMethod(method ?? grpcMethod ?? "Unknown");
         if (statusCode.HasValue)
             transaction.SetHttpResponseStatusCode(statusCode.Value);
 
