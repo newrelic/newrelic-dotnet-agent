@@ -271,12 +271,12 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_CLOUD_AWS_ACCOUNT_ID"
                 };
 
+                // This list purposefully does not include NEWRELIC_LICENSEKEY
                 List<(string,string)> envVarsDeprecated = new List<(string, string)>
                 {
                     ("CORECLR_NEWRELIC_HOME","CORECLR_NEW_RELIC_HOME"),
                     ("NEWRELIC_HOME", "NEW_RELIC_HOME"),
                     ("NEWRELIC_INSTALL_PATH", "NEW_RELIC_INSTALL_PATH"),
-                    ("NEWRELIC_LICENSE_KEY", "NEW_RELIC_LICENSE_KEY"),
                     ("NEWRELIC_LOG_DIRECTORY", "NEW_RELIC_LOG_DIRECTORY"),
                     ("NEWRELIC_LOG_LEVEL", "NEW_RELIC_LOG_LEVEL"),
                     ("NEWRELIC_PROFILER_LOG_DIRECTORY", "NEW_RELIC_PROFILER_LOG_DIRECTORY"),
@@ -285,6 +285,9 @@ namespace NewRelic.Agent.Core
                 };
 
                 var envVarsToLog = new List<string>(unprefixedEnvVars);
+
+                // Add deprecated environment variable names to the list to log values
+                envVarsToLog.AddRange(envVarsDeprecated.Select(tuple => tuple.Item1));
 
                 var environment = new SharedInterfaces.Environment(); // ensures we use the agent's cached env var values
 
@@ -308,6 +311,8 @@ namespace NewRelic.Agent.Core
                     }
                 }
 
+                // Add NEWRELIC_LICENSEKEY to the deprecated list for warning purposes
+                envVarsDeprecated.Add(("NEWRELIC_LICENSEKEY", "NEW_RELIC_LICENSE_KEY"));
                 foreach (var ev in envVarsDeprecated)
                 {
                     if (!string.IsNullOrEmpty(environment.GetEnvironmentVariable(ev.Item1)))
