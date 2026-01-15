@@ -212,12 +212,7 @@ public static class ActivityBridgeSegmentHelpers
 
     private static void RecordGrpcException(ISegment segment, IAgent agent, IErrorService errorService, int statusCode, string path, string activityLogPrefix)
     {
-        if (segment is not IHybridAgentSegment hybridAgentSegment)
-        {
-            return; // TODO: this shouldn't be possible; don't think we need to check for it
-        }
-
-        var transaction = hybridAgentSegment.GetTransactionFromSegment();
+        var transaction = ((IHybridAgentSegment)segment).GetTransactionFromSegment();
         if (transaction is IHybridAgentTransaction internalTransaction)
         {
             var errorMessage = $"gRPC call to {path} failed with status code {statusCode}";
