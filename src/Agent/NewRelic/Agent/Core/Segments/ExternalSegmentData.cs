@@ -21,6 +21,7 @@ namespace NewRelic.Agent.Core.Segments
 
         private int? _httpStatusCode;
         private string _httpStatusText;
+        private readonly string _componentOverride;
 
         public override SpanCategory SpanCategory => SpanCategory.Http;
 
@@ -28,11 +29,12 @@ namespace NewRelic.Agent.Core.Segments
         public string Method { get; }
         public string Type { get; }
 
-        public ExternalSegmentData(Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData = null)
+        public ExternalSegmentData(Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData = null, string componentOverride = null)
         {
             Uri = uri;
             Method = method;
             CrossApplicationResponseData = crossApplicationResponseData;
+            _componentOverride = componentOverride;
         }
 
         public CrossApplicationResponseData CrossApplicationResponseData { get; set; }
@@ -91,7 +93,7 @@ namespace NewRelic.Agent.Core.Segments
             AttribDefs.SpanCategory.TrySetValue(attribVals, SpanCategory.Http);
             AttribDefs.HttpUrl.TrySetValue(attribVals, Uri);
             AttribDefs.HttpMethod.TrySetValue(attribVals, Method);
-            AttribDefs.Component.TrySetValue(attribVals, _segmentState.TypeName);
+            AttribDefs.Component.TrySetValue(attribVals, _componentOverride ?? _segmentState.TypeName);
             AttribDefs.SpanKind.TrySetDefault(attribVals);
             AttribDefs.HttpStatusCode.TrySetValue(attribVals, _httpStatusCode);   //Attrib handles null
             AttribDefs.HttpStatusText.TrySetValue(attribVals, _httpStatusText);
