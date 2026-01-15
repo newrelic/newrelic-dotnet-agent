@@ -533,10 +533,6 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthEventCounters[AgentHealthEvent.Span]?.Add(count);
         }
 
-        public void ReportSpanEventLinksDropped(int droppedCount) => TrySend(_metricBuilder.TryBuildSpanEventLinksDroppedMetric(droppedCount));
-
-        public void ReportSpanEventEventsDropped(int droppedCount) => TrySend(_metricBuilder.TryBuildSpanEventEventsDroppedMetric(droppedCount));
-
         #endregion Span 
 
         #region InfiniteTracing

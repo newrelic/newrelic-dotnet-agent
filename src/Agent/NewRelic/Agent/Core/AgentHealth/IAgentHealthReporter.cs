@@ -123,10 +123,6 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         void ReportSpanEventsSent(int count);
 
-        void ReportSpanEventLinksDropped(int droppedCount);
-
-        void ReportSpanEventEventsDropped(int droppedCount);
-
         void CollectDistributedTraceMetrics();
 
         void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint);

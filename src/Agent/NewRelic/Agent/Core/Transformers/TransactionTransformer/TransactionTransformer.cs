@@ -214,10 +214,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private void GenerateAndCollectMetrics(ImmutableTransaction immutableTransaction, TimeSpan? apdexT, string transactionApdexMetricName, TimeSpan totalTime, TransactionMetricStatsCollection txStats)
         {
+            var spanEventLinksDropped = 0;
+            var spanEventEventsDropped = 0;
+
             foreach (var segment in immutableTransaction.Segments)
             {
                 GenerateSegmentMetrics(segment, txStats);
+                spanEventLinksDropped += segment.SpanEventLinksDropped;
+                spanEventEventsDropped += segment.SpanEventEventsDropped;
             }
+
+            if (spanEventLinksDropped > 0)
+                MetricBuilder.TryBuildSpanEventLinksDroppedMetric(spanEventLinksDropped, txStats);
+            if (spanEventEventsDropped > 0)
+                MetricBuilder.TryBuildSpanEventEventsDroppedMetric(spanEventEventsDropped, txStats);
 
             var isWebTransaction = immutableTransaction.IsWebTransaction();
 

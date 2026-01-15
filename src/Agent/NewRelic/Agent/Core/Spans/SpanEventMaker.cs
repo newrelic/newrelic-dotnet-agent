@@ -36,29 +36,13 @@ public class SpanEventMaker : ISpanEventMaker
 
         yield return GenerateRootSpan(rootSpanId, immutableTransaction, transactionName, transactionAttribValues);
 
-        var spanEventLinksDropped = 0;
-        var spanEventEventsDropped = 0;
-
         foreach (var segment in immutableTransaction.Segments)
         {
             var segmentAttribValues = GetAttributeValues(segment, immutableTransaction, rootSpanId);
 
             segmentAttribValues.MakeImmutable();
 
-            spanEventLinksDropped += segment.SpanEventLinksDropped;
-            spanEventEventsDropped += segment.SpanEventEventsDropped;
-
             yield return segmentAttribValues;
-        }
-
-        if (spanEventLinksDropped > 0)
-        {
-            _agentHealthReporter.ReportSpanEventLinksDropped(spanEventLinksDropped);
-        }
-
-        if (spanEventEventsDropped > 0)
-        {
-            _agentHealthReporter.ReportSpanEventEventsDropped(spanEventEventsDropped);
         }
     }
 
