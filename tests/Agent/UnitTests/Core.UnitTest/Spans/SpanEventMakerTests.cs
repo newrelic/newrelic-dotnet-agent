@@ -158,7 +158,7 @@ public class SpanEventMakerTests
 
         _transactionAttribMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
 
-        _spanEventMaker = new SpanEventMaker(_attribDefSvc, _configurationService, _agentHealthReporter);
+        _spanEventMaker = new SpanEventMaker(_attribDefSvc, _configurationService);
         _databaseService = new DatabaseService();
 
         _transactionEventMaker = new TransactionEventMaker(_attribDefSvc);

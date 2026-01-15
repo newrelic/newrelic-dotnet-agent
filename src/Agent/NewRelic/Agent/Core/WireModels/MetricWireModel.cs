@@ -977,6 +977,7 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 return TryBuildSupportabilityCountMetric(MetricNames.SupportabilitySpanEventsSent, eventCount);
             }
+
             #endregion Span builders
 
             #region Log Events and Metrics

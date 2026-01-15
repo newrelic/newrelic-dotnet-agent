@@ -3,7 +3,6 @@
 
 using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
@@ -21,13 +20,11 @@ public class SpanEventMaker : ISpanEventMaker
     private readonly IAttributeDefinitionService _attribDefSvc;
     private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
     private readonly IConfigurationService _configurationService;
-    private readonly IAgentHealthReporter _agentHealthReporter;
 
-    public SpanEventMaker(IAttributeDefinitionService attribDefSvc, IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter)
+    public SpanEventMaker(IAttributeDefinitionService attribDefSvc, IConfigurationService configurationService)
     {
         _attribDefSvc = attribDefSvc;
         _configurationService = configurationService;
-        _agentHealthReporter = agentHealthReporter;
     }
 
     public IEnumerable<ISpanEventWireModel> GetSpanEvents(ImmutableTransaction immutableTransaction, string transactionName, IAttributeValueCollection transactionAttribValues)
