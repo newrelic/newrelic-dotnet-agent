@@ -313,16 +313,7 @@ public static class ActivityBridgeSegmentHelpers
     private static void ProcessProducerConsumerMessagingSystemTags(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, ActivityKind activityKind, string messagingSystem)
     {
         // translate the messaging system to a vendor name suitable for MessageBrokerSegmentData
-        string vendor = messagingSystem switch
-        {
-            // TODO: consolidate all vendor names to some common enum or constant similar to DatastoreVendor
-            "rabbitmq" => "RabbitMQ",
-            "kafka" => "Kafka",
-            "aws.sqs" => SqsHelper.VendorName,
-            "aws.sns" => "SNS",
-            "servicebus" => "ServiceBus",
-            _ => messagingSystem.CapitalizeEachWord() // default to capitalizing each word in the messaging system name
-        };
+        var vendor = MessageBrokerVendorConstants.ToVendorName(messagingSystem);
 
         Log.Finest($"{activityLogPrefix} has a messaging.system tag with value {messagingSystem}. Mapping to vendor {vendor}.");
 

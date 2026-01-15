@@ -443,7 +443,7 @@ namespace NewRelic.Agent.Core.Metrics
         private const string KakfaMessages = "Messages";
         public static MetricName GetKafkaMessagesReceivedPerConsume(string topic)
         {
-            return MetricName.Create(Message, "Kafka", KakfaTopic, MessageBrokerNamed, topic, KakfaReceived, KakfaMessages);
+            return MetricName.Create(Message, MessageBrokerVendorConstants.Kafka, KakfaTopic, MessageBrokerNamed, topic, KakfaReceived, KakfaMessages);
         }
 
         #endregion MessageBroker

@@ -18,7 +18,6 @@ namespace NewRelic.Agent.Extensions.AwsSdk
         private static Func<object> _messageAttributeValueTypeFactory;
 
         public const string MessagingSystemName = "aws_sqs";
-        public const string VendorName = "SQS";
 
         private class SqsAttributes
         {
@@ -61,7 +60,7 @@ namespace NewRelic.Agent.Extensions.AwsSdk
         {
             var attr = new SqsAttributes(url);
 
-            var segment = transaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, VendorName, destinationName: attr.QueueName, messagingSystemName: MessagingSystemName, cloudAccountId: attr.CloudId, cloudRegion: attr.Region);
+            var segment = transaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, MessageBrokerVendorConstants.SQS, destinationName: attr.QueueName, messagingSystemName: MessagingSystemName, cloudAccountId: attr.CloudId, cloudRegion: attr.Region);
             segment.GetExperimentalApi().MakeLeaf();
 
             return segment;

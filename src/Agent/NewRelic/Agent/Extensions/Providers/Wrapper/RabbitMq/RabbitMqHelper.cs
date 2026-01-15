@@ -16,7 +16,6 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
     {
         private const string TempQueuePrefix = "amq.";
         private const string BasicPropertiesType = "RabbitMQ.Client.Framing.BasicProperties";
-        public const string VendorName = "RabbitMQ";
         public const string AssemblyName = "RabbitMQ.Client";
         public const string TypeName = "RabbitMQ.Client.Framing.Impl.Model";
 
@@ -77,7 +76,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 instrumentedMethodCall.MethodCall,
                 destType,
                 MessageBrokerAction.Produce,
-                VendorName,
+                MessageBrokerVendorConstants.RabbitMQ,
                 destName,
                 serverAddress: GetServerAddress(instrumentedMethodCall, agent),
                 serverPort: GetServerPort(instrumentedMethodCall, agent),
@@ -124,7 +123,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 instrumentedMethodCall.MethodCall,
                 destType,
                 MessageBrokerAction.Produce,
-                VendorName,
+                MessageBrokerVendorConstants.RabbitMQ,
                 destName,
                 serverAddress: GetServerAddress(instrumentedMethodCall, agent),
                 serverPort: GetServerPort(instrumentedMethodCall, agent),

@@ -57,7 +57,7 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
             // create a transaction for this method call. This method invokes the ProcessMessageAsync handler
             transaction = agent.CreateTransaction(
                 destinationType: destinationType,
-                BrokerVendorName,
+                MessageBrokerVendorConstants.ServiceBus,
                 destination: queueOrTopicName);
 
             if (instrumentedMethodCall.IsAsync)
@@ -74,7 +74,7 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus
                 instrumentedMethodCall.MethodCall,
                 destinationType,
                 MessageBrokerAction.Process,
-                BrokerVendorName,
+                MessageBrokerVendorConstants.ServiceBus,
                 GetQueueOrTopicName(destinationType, queueOrTopicName),
                 serverAddress: fqns);
 

@@ -57,7 +57,7 @@ public class SpanEventMakerTests
 
     private const string TransactionName = "WebTransaction/foo/bar";
 
-    private const string MessageBrokerVendor = "RabbitMQ";
+    private const string MessageBrokerVendor = MessageBrokerVendorConstants.RabbitMQ;
     private const string MessageBrokerQueue = "MyQueue";
     private const string ServerAddress = "localhost";
     private const int ServerPort = 5672;

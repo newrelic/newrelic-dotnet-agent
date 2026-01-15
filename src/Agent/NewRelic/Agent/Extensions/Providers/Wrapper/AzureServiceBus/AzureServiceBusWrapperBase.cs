@@ -9,8 +9,6 @@ namespace NewRelic.Providers.Wrapper.AzureServiceBus;
 
 public abstract class AzureServiceBusWrapperBase : IWrapper
 {
-    protected const string BrokerVendorName = "ServiceBus";
-
     public virtual bool IsTransactionRequired => true; // only instrument service bus methods if we're already in a transaction
 
     public abstract CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo);

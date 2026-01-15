@@ -178,7 +178,6 @@ namespace CompositeTests
         [Test]
         public void MessageBrokerSegmentResultsInSpanEventCategoryOfGeneric()
         {
-            var vendorName = "RabbitMQ";
             var routingKey = "queueName"; //TOPIC has a . QUEUE no .
 
             _compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
@@ -186,12 +185,12 @@ namespace CompositeTests
 
             var tx = _agent.CreateTransaction(
                 destinationType: MessageBrokerDestinationType.Queue,
-                brokerVendorName: vendorName,
+                brokerVendorName: MessageBrokerVendorConstants.RabbitMQ,
                 destination: routingKey);
 
             _agent.CurrentTransaction.AcceptDistributedTraceHeaders(NewRelicHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
-            var segment = _agent.StartMessageBrokerSegmentOrThrow(vendorName, MessageBrokerDestinationType.Queue,
+            var segment = _agent.StartMessageBrokerSegmentOrThrow(MessageBrokerVendorConstants.RabbitMQ, MessageBrokerDestinationType.Queue,
                 routingKey, MessageBrokerAction.Consume);
             segment.End();
             tx.End();
