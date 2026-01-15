@@ -238,14 +238,7 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetAndRemoveTag<string>(["url.query"], out var query);
         tags.TryGetAndRemoveTag<int>(["http.response.status_code", "http.status_code"], out var statusCode);
 
-        if (segment is not IHybridAgentSegment hybridAgentSegment)
-        {
-            return; // TODO: this shouldn't be possible; don't think we need to check for it
-        }
-
-        var transaction = hybridAgentSegment.GetTransactionFromSegment();
-
-
+        var transaction = ((IHybridAgentSegment)segment).GetTransactionFromSegment();
         transaction.SetRequestMethod(requestMethod);
         transaction.SetUri(path);
         transaction.SetHttpResponseStatusCode(statusCode);
