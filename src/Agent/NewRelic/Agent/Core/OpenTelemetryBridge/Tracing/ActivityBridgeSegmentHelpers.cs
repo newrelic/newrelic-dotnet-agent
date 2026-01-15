@@ -24,9 +24,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 
 public static class ActivityBridgeSegmentHelpers
 {
-    // TODO: Coalesce with NewRelic.Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders
-    public static readonly string[] DefaultCaptureHeaders = ["Referer", "Accept", "Content-Length", "Host", "User-Agent"];
-
     public static void ProcessActivityTags(this ISegment segment, object originalActivity, IAgent agent, IErrorService errorService)
     {
         dynamic activity = originalActivity;
@@ -282,7 +279,7 @@ public static class ActivityBridgeSegmentHelpers
             // Filter to only headers that actually exist if not allowing all, to avoid KeyNotFoundException (e.g. Referer missing).
             IEnumerable<string> captureKeys = agent.Configuration.AllowAllRequestHeaders
                 ? headersDict.Keys
-                : DefaultCaptureHeaders.Where(h => headersDict.ContainsKey(h));
+                : Statics.DefaultCaptureHeaders.Where(h => headersDict.ContainsKey(h));
 
             if (captureKeys.Any())
             {
