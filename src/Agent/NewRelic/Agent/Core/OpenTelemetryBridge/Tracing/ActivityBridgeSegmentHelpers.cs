@@ -17,7 +17,6 @@ using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
-using static Grpc.Core.ServerServiceDefinition;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;

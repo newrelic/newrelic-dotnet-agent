@@ -182,6 +182,10 @@ namespace NewRelic.Agent.Core.WireModels
 
         MetricWireModel TryBuildSpanEventsSentMetric(int count);
 
+        MetricWireModel TryBuildSpanEventEventsDroppedMetric(int droppedCount);
+
+        MetricWireModel TryBuildSpanEventLinksDroppedMetric(int droppedCount);
+
         MetricWireModel TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(string endpoint, int count = 1);
 
         MetricWireModel TryBuildInstallTypeMetric(string installType);

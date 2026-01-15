@@ -967,6 +967,14 @@ namespace NewRelic.Agent.Core.WireModels
                 return TryBuildSupportabilityCountMetric(MetricNames.SupportabilitySpanEventsSent, eventCount);
             }
 
+            public MetricWireModel TryBuildSpanEventEventsDroppedMetric(int droppedCount)
+            {
+                return TryBuildSupportabilityCountMetric(MetricNames.SupportabilitySpanEventEventsDropped, droppedCount);
+            }
+            public MetricWireModel TryBuildSpanEventLinksDroppedMetric(int droppedCount)
+            {
+                return TryBuildSupportabilityCountMetric(MetricNames.SupportabilitySpanEventLinksDropped, droppedCount);
+            }
             #endregion Span builders
 
             #region Log Events and Metrics

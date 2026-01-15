@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
@@ -20,11 +21,13 @@ public class SpanEventMaker : ISpanEventMaker
     private readonly IAttributeDefinitionService _attribDefSvc;
     private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
     private readonly IConfigurationService _configurationService;
+    private readonly IAgentHealthReporter _agentHealthReporter;
 
-    public SpanEventMaker(IAttributeDefinitionService attribDefSvc, IConfigurationService configurationService)
+    public SpanEventMaker(IAttributeDefinitionService attribDefSvc, IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter)
     {
         _attribDefSvc = attribDefSvc;
         _configurationService = configurationService;
+        _agentHealthReporter = agentHealthReporter;
     }
 
     public IEnumerable<ISpanEventWireModel> GetSpanEvents(ImmutableTransaction immutableTransaction, string transactionName, IAttributeValueCollection transactionAttribValues)
@@ -33,13 +36,29 @@ public class SpanEventMaker : ISpanEventMaker
 
         yield return GenerateRootSpan(rootSpanId, immutableTransaction, transactionName, transactionAttribValues);
 
+        var spanEventLinksDropped = 0;
+        var spanEventEventsDropped = 0;
+
         foreach (var segment in immutableTransaction.Segments)
         {
             var segmentAttribValues = GetAttributeValues(segment, immutableTransaction, rootSpanId);
 
             segmentAttribValues.MakeImmutable();
 
+            spanEventLinksDropped += segment.SpanEventLinksDropped;
+            spanEventEventsDropped += segment.SpanEventEventsDropped;
+
             yield return segmentAttribValues;
+        }
+
+        if (spanEventLinksDropped > 0)
+        {
+            _agentHealthReporter.ReportSpanEventLinksDropped(spanEventLinksDropped);
+        }
+
+        if (spanEventEventsDropped > 0)
+        {
+            _agentHealthReporter.ReportSpanEventEventsDropped(spanEventEventsDropped);
         }
     }
 
