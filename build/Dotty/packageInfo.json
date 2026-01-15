@@ -76,8 +76,6 @@
     },
     {
         "packageName": "masstransit",
-        "ignorePatch": true,
-        "ignoreMinor": true,
         "ignoreMajor": true,
         "ignoreReason": "9.x requires a paid license. Stay on 8.5.7 which is the latest free version."
     },
