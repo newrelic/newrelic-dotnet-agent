@@ -98,31 +98,23 @@ namespace NewRelic { namespace Profiler
 
         virtual xstring_t GetProcessPath()
         {
-            /*
-            char *argv[] = {};
-            int err = PAL_Initialize(0, argv);
-            if(0 != err)
+            try
             {
-                LogDebug(L"Initialize failed");
-                return _X("");
+                char result[PATH_MAX];
+                ssize_t count = readlink("/proc/self/exe", result, PATH_MAX - 1);
+                if (count != -1) {
+                    result[count] = '\0';
+                    return ToWideString(result);
+                }
             }
-
-            LogInfo(L"Initialize : " << err);
-
-            const int MAX_PROCESS_PATH = 1024;
-            xchar_t moduleName[MAX_PROCESS_PATH];
-            auto result = GetModuleFileNameW(nullptr, moduleName, MAX_PROCESS_PATH);
-            if (result == 0)
+            catch (const std::exception& e)
             {
-                auto error = ::GetLastError();
-                LogError(L"Unable to get the process name.  Error number: " << error);
-                //throw ProfilerException();
-            } else {
-                LogDebug(L"Process path: " << xstring_t(moduleName));
+                LogError(L"Exception caught trying to read process path: ", e.what());
             }
-            //return moduleName;
-            */
-            
+            catch (...)
+            {
+                LogError(L"Unknown exception caught trying to read process path.");
+            }
             return _X(".");
         }
 

@@ -10,6 +10,12 @@ on:
     types: [published]
 
   workflow_dispatch:
+    inputs:
+      aggregate_payload_data:
+        description: 'Collect and aggregate payload data'
+        required: false
+        type: boolean
+        default: false
 
   schedule:
     - cron: "0 9 * * 1-5"
@@ -30,6 +36,8 @@ env:
 jobs:
   check-modified-files:
     name: Check if source files were modified, skip remaining jobs if not
+    # skip if the PR source branch starts with "release-please"
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release-please')
     uses: ./.github/workflows/check_modified_files.yml
     secrets: inherit
     permissions:
@@ -154,6 +162,8 @@ jobs:
     needs:
       - build-fullagent-msi
     uses: ./.github/workflows/linux_container_tests.yml
+    with:
+      aggregate_payload_data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
     secrets: inherit
     permissions:
       actions: write
@@ -444,7 +454,7 @@ jobs:
         shell: powershell
 
       - name: Extract payload bytes log from TRX
-        if: always()
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
         run: |
           $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
@@ -488,7 +498,7 @@ jobs:
         shell: powershell
 
       - name: Upload payload bytes log
-        if: always()
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: integration-payload-bytes-${{ matrix.namespace }}
@@ -639,7 +649,7 @@ jobs:
         shell: powershell
 
       - name: Extract payload bytes log from TRX
-        if: always()
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
         run: |
           $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
@@ -683,7 +693,7 @@ jobs:
         shell: powershell
 
       - name: Upload payload bytes log
-        if: always()
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: unbounded-payload-bytes-${{ matrix.namespace }}
@@ -907,7 +917,7 @@ jobs:
     name: Aggregate Integration Test Payload Logs
     needs: [integration-test-status]
     runs-on: ubuntu-latest
-    if: always()
+    if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
     permissions:
       actions: write
       contents: read
@@ -992,16 +1002,26 @@ jobs:
           if-no-files-found: warn
 
       - name: Delete individual integration payload artifacts
-        uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v5.1.0
-        with:
-          name: integration-payload-bytes-*
-          failOnError: false
+        run: |
+          # Get all artifacts from this run matching the pattern and delete them
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --paginate \
+            --jq '.artifacts[] | select(.name | startswith("integration-payload-bytes-")) | "\(.id) \(.name)"' \
+            | while read -r artifact_id artifact_name; do
+              echo "Deleting artifact: $artifact_name (ID: $artifact_id)"
+              gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id \
+                && echo "Successfully deleted $artifact_name" \
+                || echo "Failed to delete $artifact_name"
+            done
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        continue-on-error: true
 
   aggregate-unbounded-payload-logs:
     name: Aggregate Unbounded Test Payload Logs
     needs: [integration-test-status]
     runs-on: ubuntu-latest
-    if: always()
+    if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
     permissions:
       actions: write
       contents: read
@@ -1086,17 +1106,28 @@ jobs:
           if-no-files-found: warn
 
       - name: Delete individual unbounded payload artifacts
-        uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v5.1.0
-        with:
-          name: unbounded-payload-bytes-*
-          failOnError: false
+        run: |
+          # Get all artifacts from this run matching the pattern and delete them
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --paginate \
+            --jq '.artifacts[] | select(.name | startswith("unbounded-payload-bytes-")) | "\(.id) \(.name)"' \
+            | while read -r artifact_id artifact_name; do
+              echo "Deleting artifact: $artifact_name (ID: $artifact_id)"
+              gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id \
+                && echo "Successfully deleted $artifact_name" \
+                || echo "Failed to delete $artifact_name"
+            done
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        continue-on-error: true
 
   display-all-payload-summaries:
     name: Display All Payload Summaries
     needs: [aggregate-integration-payload-logs, aggregate-unbounded-payload-logs, run-linux-container-tests]
     runs-on: ubuntu-latest
-    if: always()
+    if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
     permissions:
+      actions: write
       contents: read
     steps:
       - name: Harden Runner
@@ -1234,3 +1265,19 @@ jobs:
           name: final-payload-summary
           path: final_payload_summary.json
           if-no-files-found: warn
+
+      - name: Delete combined payload artifacts
+        run: |
+          # Get combined artifacts from this run and delete them
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --paginate \
+            --jq '.artifacts[] | select(.name | startswith("combined-")) | select(.name | endswith("-payload-bytes")) | "\(.id) \(.name)"' \
+            | while read -r artifact_id artifact_name; do
+              echo "Deleting artifact: $artifact_name (ID: $artifact_id)"
+              gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id \
+                && echo "Successfully deleted $artifact_name" \
+                || echo "Failed to delete $artifact_name"
+            done
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        continue-on-error: true

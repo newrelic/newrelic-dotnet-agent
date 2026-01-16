@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "../Logging/Logger.h"
 #include "../Configuration/Configuration.h"
-#include "../LoggingTest/DefaultFileLogLocationTest.cpp"
+#include "../MethodRewriterTest/MockSystemCalls.h"
 #include "CppUnitTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -15,9 +15,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
         TEST_METHOD(netCore_dotnet_exe_invocations_not_instrumented) {
             auto processPath = _X("processPath");
             auto appPoolId = _X("appPoolId");
-            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+            auto systemCalls = std::make_shared<NewRelic::Profiler::MethodRewriter::Test::MockSystemCalls>();
 
-            Configuration configuration(true, Logger::Level::LEVEL_INFO, ProcessesPtr(new Processes()),ApplicationPoolsPtr(new ApplicationPools()),ApplicationPoolsPtr(new ApplicationPools()), true, false, false, systemCalls);
+            Configuration configuration(true, Logger::Level::LEVEL_INFO, ProcessesPtr(new Processes()), ProcessesPtr(new Processes()), ApplicationPoolsPtr(new ApplicationPools()),ApplicationPoolsPtr(new ApplicationPools()), true, false, false, systemCalls);
 
             auto isCoreClr = true;
 
