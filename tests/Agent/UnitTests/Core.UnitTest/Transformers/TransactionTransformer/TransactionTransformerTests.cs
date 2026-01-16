@@ -1556,6 +1556,89 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         }
 
         #endregion Helpers
+
+        #region Dropped Span Links and Events Metrics
+
+        [Test]
+        public void DroppedSpanLinksMetric_IsGenerated_WhenLinksDropped()
+        {
+            // ARRANGE
+            var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>()))
+                .DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+
+            var segment = GetSegment("TestSegment");
+            for (int i = 0; i < 100; i++)
+                segment.TryAddLinkToSpan($"trace-{i}", $"span-{i}", null);
+            for (int i = 0; i < 5; i++)
+                segment.TryAddLinkToSpan($"dropped-{i}", $"dropped-{i}", null);
+
+            var transaction = TestTransactions.CreateDefaultTransaction(segments: new List<Segment> { segment });
+
+            // ACT
+            _transactionTransformer.Transform(transaction);
+
+            // ASSERT
+            Assert.Multiple(() =>
+            {
+                Assert.That(generatedMetrics.ContainsKey("Supportability/SpanEvent/Links/Dropped"), Is.True);
+                Assert.That(generatedMetrics["Supportability/SpanEvent/Links/Dropped"].Value0, Is.EqualTo(5));
+            });
+        }
+
+        [Test]
+        public void DroppedSpanEventsMetric_IsGenerated_WhenEventsDropped()
+        {
+            // ARRANGE
+            var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>()))
+                .DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+
+            var segment = GetSegment("TestSegment");
+            for (int i = 0; i < 100; i++)
+                segment.TryAddEventToSpan($"event-{i}", DateTime.UtcNow, null);
+            for (int i = 0; i < 3; i++)
+                segment.TryAddEventToSpan($"dropped-{i}", DateTime.UtcNow, null);
+
+            var transaction = TestTransactions.CreateDefaultTransaction(segments: new List<Segment> { segment });
+
+            // ACT
+            _transactionTransformer.Transform(transaction);
+
+            // ASSERT
+            Assert.Multiple(() =>
+            {
+                Assert.That(generatedMetrics.ContainsKey("Supportability/SpanEvent/Events/Dropped"), Is.True);
+                Assert.That(generatedMetrics["Supportability/SpanEvent/Events/Dropped"].Value0, Is.EqualTo(3));
+            });
+        }
+
+        [Test]
+        public void DroppedSpanMetrics_AreNotGenerated_WhenNothingDropped()
+        {
+            // ARRANGE
+            var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>()))
+                .DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+
+            var segment = GetSegment("TestSegment");
+            segment.TryAddLinkToSpan("trace-1", "span-1", null);
+            segment.TryAddEventToSpan("event-1", DateTime.UtcNow, null);
+
+            var transaction = TestTransactions.CreateDefaultTransaction(segments: new List<Segment> { segment });
+
+            // ACT
+            _transactionTransformer.Transform(transaction);
+
+            // ASSERT
+            Assert.Multiple(() =>
+            {
+                Assert.That(generatedMetrics.ContainsKey("Supportability/SpanEvent/Links/Dropped"), Is.False);
+                Assert.That(generatedMetrics.ContainsKey("Supportability/SpanEvent/Events/Dropped"), Is.False);
+            });
+        }
+
+        #endregion Dropped Span Links and Events Metrics
     }
 }
 
