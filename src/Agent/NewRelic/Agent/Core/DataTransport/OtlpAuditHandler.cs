@@ -16,20 +16,27 @@ namespace NewRelic.Agent.Core.DataTransport
     /// </summary>
     public class OtlpAuditHandler : DelegatingHandler
     {
+        /// <summary>
+        /// Sends an HTTP request and logs request/response data for audit purposes.
+        /// </summary>
+        /// <param name="request">The HTTP request message to send</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+        /// <returns>The HTTP response message</returns>
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Log.Finest("Exporting OTLP metrics to {RequestUri}", request.RequestUri);
-            // Audit log the outgoing request
-            LogOtlpRequest(request);
+            
+            // Audit log the outgoing request - await to ensure completion
+            await LogOtlpRequest(request).ConfigureAwait(false);
 
             HttpResponseMessage response = null;
             try
             {
                 // Send the request through the pipeline
-                response = await base.SendAsync(request, cancellationToken);
+                response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-                // Audit log the response
-                LogOtlpResponse(request, response);
+                // Audit log the response - await to ensure completion
+                await LogOtlpResponse(response).ConfigureAwait(false);
 
                 Log.Debug("Exported OTLP metrics to {RequestUri} with status {ResponseStatusCode}", request.RequestUri, response.StatusCode);
                 return response;
@@ -46,7 +53,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private static void LogOtlpRequest(HttpRequestMessage request)
+        private static async Task LogOtlpRequest(HttpRequestMessage request)
         {
             try
             {
@@ -56,14 +63,14 @@ namespace NewRelic.Agent.Core.DataTransport
                     DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
                     request.RequestUri?.ToString() ?? "Unknown URI");
 
-                // Log request metadata (for binary content)
-                var contentInfo = GetSafeContentInfo(request.Content);
-                if (!string.IsNullOrEmpty(contentInfo))
+                // Log request content - for binary protobuf, encode as base64 for audit purposes
+                if (request.Content != null)
                 {
+                    var contentData = await GetContentForAuditLog(request.Content).ConfigureAwait(false);
                     DataTransportAuditLogger.Log(
                         DataTransportAuditLogger.AuditLogDirection.Sent,
                         DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
-                        contentInfo);
+                        contentData);
                 }
             }
             catch (Exception ex)
@@ -72,28 +79,18 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private static void LogOtlpResponse(HttpRequestMessage request, HttpResponseMessage response)
+        private static async Task LogOtlpResponse(HttpResponseMessage response)
         {
             try
             {
-                var responseInfo = $"Response: {response.StatusCode} ({(int)response.StatusCode}) for {request.RequestUri}";
-                
-                DataTransportAuditLogger.Log(
-                    DataTransportAuditLogger.AuditLogDirection.Received,
-                    DataTransportAuditLogger.AuditLogSource.Collector,
-                    responseInfo);
-
-                // Log response content metadata if present
+                // Log response content - matches HttpCollectorWire pattern (single received entry with content)
                 if (response.Content != null)
                 {
-                    var responseContentInfo = GetSafeContentInfo(response.Content);
-                    if (!string.IsNullOrEmpty(responseContentInfo))
-                    {
-                        DataTransportAuditLogger.Log(
-                            DataTransportAuditLogger.AuditLogDirection.Received,
-                            DataTransportAuditLogger.AuditLogSource.Collector,
-                            responseContentInfo);
-                    }
+                    var responseData = await GetContentForAuditLog(response.Content).ConfigureAwait(false);
+                    DataTransportAuditLogger.Log(
+                        DataTransportAuditLogger.AuditLogDirection.Received,
+                        DataTransportAuditLogger.AuditLogSource.Collector,
+                        responseData);
                 }
             }
             catch (Exception ex)
@@ -103,40 +100,40 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         /// <summary>
-        /// Generates logging information for HTTP content, particularly for binary protobuf data.
-        /// Avoids logging full binary content which would be unreadable and potentially large.
+        /// Retrieves HTTP content for audit logging. For binary protobuf data, encodes as base64
+        /// to ensure audit logs contain the actual data sent/received for compliance purposes.
+        /// Includes payload size information for auditing purposes.
+        /// Matches the pattern used by HttpCollectorWire for consistency.
         /// </summary>
-        /// <param name="content">The HTTP content to generate info for</param>
-        /// <returns>string representation of the content metadata</returns>
-        private static string GetSafeContentInfo(HttpContent content)
+        /// <param name="content">The HTTP content to retrieve</param>
+        /// <returns>String representation of the content (base64 for binary, text for other types) with size info</returns>
+        private static async Task<string> GetContentForAuditLog(HttpContent content)
         {
             if (content == null)
-                return null;
+                return string.Empty;
 
             try
             {
                 var contentType = content.Headers?.ContentType?.MediaType ?? "unknown";
-                var contentLength = content.Headers?.ContentLength?.ToString() ?? "unknown";
-                var encoding = content.Headers?.ContentEncoding != null 
-                    ? string.Join(", ", content.Headers.ContentEncoding) 
-                    : "none";
-
-                var baseInfo = $"Content: {contentType}, Length: {contentLength} bytes, Encoding: {encoding}";
-
-                // For protobuf content, add warning about binary data not being logged
+                
+                // For binary protobuf content, encode as base64 for audit logging
                 if (contentType.StartsWith("application/x-protobuf", StringComparison.OrdinalIgnoreCase) || 
                     contentType.Contains("protobuf"))
                 {
-                    return $"{baseInfo} [Binary Protobuf Data - Content Not Logged]";
+                    var bytes = await content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                    var base64 = Convert.ToBase64String(bytes);
+                    return $"[Protobuf {bytes.Length} bytes, Base64 {base64.Length} chars] {base64}";
                 }
 
-                // All other content types (json, text, xml, etc.) just return basic metadata
-                return baseInfo;
+                // For text-based content (json, xml, text), return as-is with size
+                var textContent = await content.ReadAsStringAsync().ConfigureAwait(false);
+                var textBytes = System.Text.Encoding.UTF8.GetByteCount(textContent);
+                return $"[Text {textBytes} bytes] {textContent}";
             }
             catch (Exception ex)
             {
-                Log.Debug(ex, "Failed to generate safe content info for audit logging");
-                return "Content: metadata unavailable";
+                Log.Debug(ex, "Failed to read content for audit logging");
+                return "[Failed to read content for audit logging]";
             }
         }
     }
