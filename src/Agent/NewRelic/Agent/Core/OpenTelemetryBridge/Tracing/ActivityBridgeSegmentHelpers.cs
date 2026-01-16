@@ -328,12 +328,11 @@ public static class ActivityBridgeSegmentHelpers
 
         tags.TryGetAndRemoveTag<string>(["messaging.operation.name"], out var operationName);
 
+        // Operation name is system specific.  The OTel semantic conventions do not define standard operation names, see https://opentelemetry.io/docs/specs/semconv/registry/attributes/messaging/#messaging-operation-name.
         var operation = activityKind switch
         {
             // doesn't work for RabbitMQ, as there is no activity for purge operation. Might work for other messaging systems but is unverified.
             ActivityKind.Producer when operationName == "purge" => MessageBrokerAction.Purge,
-            // TODO: consider supporting other Producer operations like "create", "delete", "process", "receive", etc.
-
             ActivityKind.Producer => MessageBrokerAction.Produce,
             ActivityKind.Consumer => MessageBrokerAction.Consume,
 
