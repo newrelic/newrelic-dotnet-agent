@@ -5,6 +5,7 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport.Client;
 using NewRelic.Agent.Extensions.Logging;
 
@@ -16,6 +17,13 @@ namespace NewRelic.Agent.Core.DataTransport
     /// </summary>
     public class OtlpAuditHandler : DelegatingHandler
     {
+        private readonly IAgentHealthReporter _agentHealthReporter;
+
+        public OtlpAuditHandler(IAgentHealthReporter agentHealthReporter = null)
+        {
+            _agentHealthReporter = agentHealthReporter;
+        }
+
         /// <summary>
         /// Sends an HTTP request and logs request/response data for audit purposes.
         /// </summary>
@@ -26,8 +34,8 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             Log.Finest("Exporting OTLP metrics to {RequestUri}", request.RequestUri);
             
-            // Audit log the outgoing request - await to ensure completion
-            await LogOtlpRequest(request).ConfigureAwait(false);
+            // Audit log the outgoing request and capture size - single read for both audit log and metrics
+            var bytesSent = await LogOtlpRequest(request).ConfigureAwait(false);
 
             HttpResponseMessage response = null;
             try
@@ -35,8 +43,11 @@ namespace NewRelic.Agent.Core.DataTransport
                 // Send the request through the pipeline
                 response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-                // Audit log the response - await to ensure completion
-                await LogOtlpResponse(response).ConfigureAwait(false);
+                // Audit log the response and capture size - single read for both audit log and metrics
+                var bytesReceived = await LogOtlpResponse(response).ConfigureAwait(false);
+
+                // Report supportability metrics for data usage
+                _agentHealthReporter?.ReportSupportabilityDataUsage("OTLP", "Metrics", bytesSent, bytesReceived);
 
                 Log.Debug("Exported OTLP metrics to {RequestUri} with status {ResponseStatusCode}", request.RequestUri, response.StatusCode);
                 return response;
@@ -53,8 +64,9 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private static async Task LogOtlpRequest(HttpRequestMessage request)
+        private static async Task<long> LogOtlpRequest(HttpRequestMessage request)
         {
+            long bytesSent = 0;
             try
             {
                 // Log the request URI (with license key obfuscation)
@@ -63,10 +75,12 @@ namespace NewRelic.Agent.Core.DataTransport
                     DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
                     request.RequestUri?.ToString() ?? "Unknown URI");
 
-                // Log request content - for binary protobuf, encode as base64 for audit purposes
+                // Log request content and capture size - single read for both purposes
                 if (request.Content != null)
                 {
-                    var contentData = await GetContentForAuditLog(request.Content).ConfigureAwait(false);
+                    var (contentData, bytesRead) = await GetContentForAuditLogWithSize(request.Content).ConfigureAwait(false);
+                    bytesSent = bytesRead;
+                    
                     DataTransportAuditLogger.Log(
                         DataTransportAuditLogger.AuditLogDirection.Sent,
                         DataTransportAuditLogger.AuditLogSource.InstrumentedApp,
@@ -77,16 +91,20 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 Log.Debug(ex, "Failed to audit log OTLP request");
             }
+            return bytesSent;
         }
 
-        private static async Task LogOtlpResponse(HttpResponseMessage response)
+        private static async Task<long> LogOtlpResponse(HttpResponseMessage response)
         {
+            long bytesReceived = 0;
             try
             {
-                // Log response content - matches HttpCollectorWire pattern (single received entry with content)
+                // Log response content and capture size - single read for both purposes
                 if (response.Content != null)
                 {
-                    var responseData = await GetContentForAuditLog(response.Content).ConfigureAwait(false);
+                    var (responseData, bytesRead) = await GetContentForAuditLogWithSize(response.Content).ConfigureAwait(false);
+                    bytesReceived = bytesRead;
+                    
                     DataTransportAuditLogger.Log(
                         DataTransportAuditLogger.AuditLogDirection.Received,
                         DataTransportAuditLogger.AuditLogSource.Collector,
@@ -97,20 +115,21 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 Log.Debug(ex, "Failed to audit log OTLP response");
             }
+            return bytesReceived;
         }
 
         /// <summary>
-        /// Retrieves HTTP content for audit logging. For binary protobuf data, encodes as base64
+        /// Retrieves HTTP content for audit logging with byte size. For binary protobuf data, encodes as base64
         /// to ensure audit logs contain the actual data sent/received for compliance purposes.
         /// Includes payload size information for auditing purposes.
         /// Matches the pattern used by HttpCollectorWire for consistency.
         /// </summary>
         /// <param name="content">The HTTP content to retrieve</param>
-        /// <returns>String representation of the content (base64 for binary, text for other types) with size info</returns>
-        private static async Task<string> GetContentForAuditLog(HttpContent content)
+        /// <returns>Tuple of (formatted content string, byte count)</returns>
+        private static async Task<(string, long)> GetContentForAuditLogWithSize(HttpContent content)
         {
             if (content == null)
-                return string.Empty;
+                return (string.Empty, 0);
 
             try
             {
@@ -122,18 +141,18 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     var bytes = await content.ReadAsByteArrayAsync().ConfigureAwait(false);
                     var base64 = Convert.ToBase64String(bytes);
-                    return $"[Protobuf {bytes.Length} bytes, Base64 {base64.Length} chars] {base64}";
+                    return ($"[Protobuf {bytes.Length} bytes, Base64 {base64.Length} chars] {base64}", bytes.Length);
                 }
 
                 // For text-based content (json, xml, text), return as-is with size
                 var textContent = await content.ReadAsStringAsync().ConfigureAwait(false);
                 var textBytes = System.Text.Encoding.UTF8.GetByteCount(textContent);
-                return $"[Text {textBytes} bytes] {textContent}";
+                return ($"[Text {textBytes} bytes] {textContent}", textBytes);
             }
             catch (Exception ex)
             {
                 Log.Debug(ex, "Failed to read content for audit logging");
-                return "[Failed to read content for audit logging]";
+                return ("[Failed to read content for audit logging]", 0);
             }
         }
     }

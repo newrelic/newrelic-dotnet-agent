@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Metrics;
@@ -20,6 +21,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
         private IConfigurationService _mockConfigService;
         private IConfiguration _mockConfig;
         private IOtelBridgeSupportabilityMetricCounters _mockMetrics;
+        private IAgentHealthReporter _mockAgentHealthReporter;
         private OtlpExporterConfigurationService _service;
 
         [SetUp]
@@ -28,6 +30,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             _mockConfigService = Mock.Create<IConfigurationService>();
             _mockConfig = Mock.Create<IConfiguration>();
             _mockMetrics = Mock.Create<IOtelBridgeSupportabilityMetricCounters>();
+            _mockAgentHealthReporter = Mock.Create<IAgentHealthReporter>();
             var mockBridgeConfig = Mock.Create<MeterBridgeConfiguration>();
 
             Mock.Arrange(() => _mockConfigService.Configuration).Returns(_mockConfig);
@@ -37,7 +40,7 @@ namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge
             Mock.Arrange(() => _mockConfig.OpenTelemetryOtlpExportIntervalSeconds).Returns(60);
             Mock.Arrange(() => _mockConfig.OpenTelemetryOtlpTimeoutSeconds).Returns(30);
 
-            _service = new OtlpExporterConfigurationService(_mockConfigService, _mockMetrics, mockBridgeConfig);
+            _service = new OtlpExporterConfigurationService(_mockConfigService, _mockMetrics, _mockAgentHealthReporter, mockBridgeConfig);
         }
 
         [TearDown]

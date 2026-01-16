@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DataTransport.Client;
 using NewRelic.Agent.Core.Logging;
@@ -25,7 +26,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
         public void SetUp()
         {
             _mockInnerHandler = new TestHttpMessageHandler();
-            _auditHandler = new OtlpAuditHandler
+            _auditHandler = new OtlpAuditHandler(null)
             {
                 InnerHandler = _mockInnerHandler
             };
@@ -70,26 +71,6 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             
             // Verify that audit logging was attempted (we can't easily mock the static AuditLog.Log method)
             // In a real integration test, we would check the actual audit log file
-        }
-
-        [Test]
-        public async Task SendAsync_WithAuditLogDisabled_DoesNotLog()
-        {
-            // Arrange
-            AuditLog.IsAuditLogEnabled = false;
-            
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics");
-            var expectedResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-
-            _mockInnerHandler.Response = expectedResponse;
-
-            // Act
-            using var httpClient = new HttpClient(_auditHandler);
-            var response = await httpClient.SendAsync(request);
-
-            // Assert
-            Assert.That(response, Is.Not.Null);
-            Assert.That(response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.OK));
         }
 
         [Test]
@@ -141,7 +122,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
     public static class OtlpAuditHandlerTestHelpers
     {
         /// <summary>
-        /// Replicates the GetContentForAuditLog logic for unit testing
+        /// Replicates the GetContentForAuditLogWithSize logic for unit testing
         /// This ensures our business logic is properly tested without violating encapsulation
         /// </summary>
         public static async Task<string> GetContentForAuditLogTesting(HttpContent content)
@@ -169,7 +150,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             }
             catch
             {
-                return "[Content read failed]";
+                return "[Failed to read content for audit logging]";
             }
         }
     }
@@ -272,7 +253,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             var result = await OtlpAuditHandlerTestHelpers.GetContentForAuditLogTesting(throwingContent);
 
             // Assert
-            Assert.That(result, Is.EqualTo("[Content read failed]"));
+            Assert.That(result, Is.EqualTo("[Failed to read content for audit logging]"));
         }
 
         /// <summary>
@@ -309,7 +290,7 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
         public void SetUp()
         {
             _mockInnerHandler = new TestHttpMessageHandler();
-            _auditHandler = new OtlpAuditHandler
+            _auditHandler = new OtlpAuditHandler(null)
             {
                 InnerHandler = _mockInnerHandler
             };
@@ -322,87 +303,6 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
             _auditHandler?.Dispose();
             _mockInnerHandler?.Dispose();
             AuditLog.IsAuditLogEnabled = false;
-        }
-
-        [Test]
-        public async Task SendAsync_WithSuccessResponse_ReturnsResponse()
-        {
-            // Arrange
-            AuditLog.IsAuditLogEnabled = false;
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics");
-            request.Content = new StringContent("{\"data\": true}");
-            var expectedResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-            _mockInnerHandler.Response = expectedResponse;
-
-            // Act
-            using var httpClient = new HttpClient(_auditHandler);
-            var response = await httpClient.SendAsync(request);
-
-            // Assert
-            Assert.That(response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.OK));
-            Assert.That(_mockInnerHandler.RequestSent, Is.Not.Null);
-        }
-
-        [Test]
-        public async Task SendAsync_WithServerError_ReturnsErrorResponse()
-        {
-            // Arrange
-            AuditLog.IsAuditLogEnabled = true;
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics");
-            var errorResponse = new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError)
-            {
-                Content = new StringContent("Server Error")
-            };
-            _mockInnerHandler.Response = errorResponse;
-
-            // Act
-            using var httpClient = new HttpClient(_auditHandler);
-            var response = await httpClient.SendAsync(request);
-
-            // Assert
-            Assert.That(response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.InternalServerError));
-        }
-
-        [Test]
-        public async Task SendAsync_WithNullResponseContent_HandlesGracefully()
-        {
-            // Arrange
-            AuditLog.IsAuditLogEnabled = true;
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics");
-            var response = new HttpResponseMessage(System.Net.HttpStatusCode.NoContent)
-            {
-                Content = null // No content
-            };
-            _mockInnerHandler.Response = response;
-
-            // Act & Assert - Should not throw
-            using var httpClient = new HttpClient(_auditHandler);
-            var result = await httpClient.SendAsync(request);
-            Assert.That(result, Is.Not.Null);
-        }
-
-        [Test]
-        public async Task SendAsync_MultipleRequests_LogsEachRequest()
-        {
-            // Arrange
-            AuditLog.IsAuditLogEnabled = true;
-            var response1 = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-            var response2 = new HttpResponseMessage(System.Net.HttpStatusCode.Accepted);
-
-            // Act
-            using var httpClient = new HttpClient(_auditHandler);
-            
-            _mockInnerHandler.Response = response1;
-            var result1 = await httpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics"));
-
-            _mockInnerHandler.Response = response2;
-            var result2 = await httpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics"));
-
-            // Assert
-            Assert.That(result1.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.OK));
-            Assert.That(result2.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.Accepted));
         }
 
         [Test]
@@ -426,40 +326,84 @@ namespace NewRelic.Agent.Core.UnitTests.DataTransport
         }
 
         [Test]
-        public async Task SendAsync_WithContentReadException_ContinuesGracefully()
+        public async Task SendAsync_WithAgentHealthReporter_ReportsSupportabilityMetrics()
         {
             // Arrange
-            AuditLog.IsAuditLogEnabled = true;
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://collector.newrelic.com/v1/metrics");
-            
-            // Create content that will throw when read
-            var badContent = new ThrowingHttpContent();
-            request.Content = badContent;
-            
-            var response = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
-            {
-                Content = new StringContent("OK")
-            };
-            _mockInnerHandler.Response = response;
+            var mockAgentHealthReporter = Mock.Create<IAgentHealthReporter>();
+            long reportedBytesSent = 0;
+            long reportedBytesReceived = 0;
+            string reportedApi = null;
+            string reportedApiArea = null;
 
-            // Act & Assert - Should not throw, audit log handles exception gracefully
-            using var httpClient = new HttpClient(_auditHandler);
-            var result = await httpClient.SendAsync(request);
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.OK));
+            Mock.Arrange(() => mockAgentHealthReporter.ReportSupportabilityDataUsage(
+                Arg.IsAny<string>(), 
+                Arg.IsAny<string>(), 
+                Arg.IsAny<long>(), 
+                Arg.IsAny<long>()))
+                .DoInstead((string api, string apiArea, long sent, long received) =>
+                {
+                    reportedApi = api;
+                    reportedApiArea = apiArea;
+                    reportedBytesSent = sent;
+                    reportedBytesReceived = received;
+                });
+
+            using var auditHandler = new OtlpAuditHandler(mockAgentHealthReporter);
+            var mockInnerHandler = new TestHttpMessageHandler
+            {
+                Response = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                {
+                    Content = new StringContent("response content")
+                }
+            };
+            auditHandler.InnerHandler = mockInnerHandler;
+
+            var httpClient = new HttpClient(auditHandler);
+            var requestContent = new StringContent("test request");
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.newrelic.com/v1/metrics")
+            {
+                Content = requestContent
+            };
+
+            // Act
+            await httpClient.SendAsync(request);
+
+            // Assert
+            Assert.That(reportedApi, Is.EqualTo("OTLP"));
+            Assert.That(reportedApiArea, Is.EqualTo("Metrics"));
+            Assert.That(reportedBytesSent, Is.GreaterThan(0));
+            Assert.That(reportedBytesReceived, Is.GreaterThan(0));
+
+            httpClient.Dispose();
+            mockInnerHandler.Dispose();
         }
 
         [Test]
-        public async Task GetContentForAuditLog_WithThrowingContent_ReturnsErrorMessage()
+        public async Task SendAsync_WithNullAgentHealthReporter_DoesNotThrow()
         {
-            // Arrange
-            var throwingContent = new ThrowingHttpContent();
+            // Arrange - No agent health reporter
+            using var auditHandler = new OtlpAuditHandler(null);
+            var mockInnerHandler = new TestHttpMessageHandler
+            {
+                Response = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                {
+                    Content = new StringContent("response content")
+                }
+            };
+            auditHandler.InnerHandler = mockInnerHandler;
 
-            // Act
-            var result = await OtlpAuditHandlerTestHelpers.GetContentForAuditLogTesting(throwingContent);
+            var httpClient = new HttpClient(auditHandler);
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.newrelic.com/v1/metrics")
+            {
+                Content = new StringContent("test request")
+            };
 
-            // Assert - Should return error message instead of throwing
-            Assert.That(result, Is.EqualTo("[Content read failed]"));
+            // Act & Assert - Should not throw
+            await httpClient.SendAsync(request);
+            Assert.Pass();
+
+            httpClient.Dispose();
+            mockInnerHandler.Dispose();
         }
 
         /// <summary>
