@@ -105,8 +105,8 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     private const int MaxSpanEventsPerSegment = 100;
     private const int MaxSpanLinksPerSegment = 100;
 
-    public int SpanEventLinksDropped { get; private set; }
-    public int SpanEventEventsDropped { get; private set; }
+    public InterlockedCounter SpanEventLinksDropped { get; private set; }
+    public InterlockedCounter SpanEventEventsDropped { get; private set; }
 
     public List<ISpanLink> Links { get; } = new();
     public List<ISpanEventEvent> Events { get; } = new();
@@ -559,7 +559,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     {
         if (Events.Count >= MaxSpanEventsPerSegment)
         {
-            SpanEventEventsDropped++;
+            SpanEventEventsDropped.Increment();
             return false;
         }
 
@@ -581,7 +581,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     {
         if (Links.Count >= MaxSpanLinksPerSegment)
         {
-            SpanEventLinksDropped++;
+            SpanEventLinksDropped.Increment();
             return false;
         }
 

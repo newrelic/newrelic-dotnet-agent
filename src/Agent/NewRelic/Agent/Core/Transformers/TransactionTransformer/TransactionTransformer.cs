@@ -220,8 +220,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             foreach (var segment in immutableTransaction.Segments)
             {
                 GenerateSegmentMetrics(segment, txStats);
-                spanEventLinksDropped += segment.SpanEventLinksDropped;
-                spanEventEventsDropped += segment.SpanEventEventsDropped;
+                spanEventLinksDropped += segment.SpanEventLinksDropped.Value;
+                spanEventEventsDropped += segment.SpanEventEventsDropped.Value;
             }
 
             if (spanEventLinksDropped > 0)
