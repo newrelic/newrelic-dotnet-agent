@@ -105,8 +105,8 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     private const int MaxSpanEventsPerSegment = 100;
     private const int MaxSpanLinksPerSegment = 100;
 
-    public InterlockedCounter SpanEventLinksDropped { get; private set; } = new();
-    public InterlockedCounter SpanEventEventsDropped { get; private set; } = new();
+    public InterlockedCounter SpanEventLinksDropped { get; } = new();
+    public InterlockedCounter SpanEventEventsDropped { get; } = new();
 
     public List<ISpanLink> Links { get; } = new();
     public List<ISpanEventEvent> Events { get; } = new();
