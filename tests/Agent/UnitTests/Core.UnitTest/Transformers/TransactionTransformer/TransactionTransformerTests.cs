@@ -1581,8 +1581,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // ASSERT
             Assert.Multiple(() =>
             {
-                Assert.That(generatedMetrics.ContainsKey("Supportability/SpanEvent/Links/Dropped"), Is.True);
-                Assert.That(generatedMetrics["Supportability/SpanEvent/Links/Dropped"].Value0, Is.EqualTo(5));
+                Assert.That(generatedMetrics.ContainsKey("Supportability/DotNet/SpanEvent/Links/Dropped"), Is.True);
+                Assert.That(generatedMetrics["Supportability/DotNet/SpanEvent/Links/Dropped"].Value0, Is.EqualTo(5));
             });
         }
 
@@ -1608,8 +1608,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // ASSERT
             Assert.Multiple(() =>
             {
-                Assert.That(generatedMetrics.ContainsKey("Supportability/SpanEvent/Events/Dropped"), Is.True);
-                Assert.That(generatedMetrics["Supportability/SpanEvent/Events/Dropped"].Value0, Is.EqualTo(3));
+                Assert.That(generatedMetrics.ContainsKey("Supportability/DotNet/SpanEvent/Events/Dropped"), Is.True);
+                Assert.That(generatedMetrics["Supportability/DotNet/SpanEvent/Events/Dropped"].Value0, Is.EqualTo(3));
             });
         }
 
@@ -1633,8 +1633,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // ASSERT
             Assert.Multiple(() =>
             {
-                Assert.That(generatedMetrics.ContainsKey("Supportability/SpanEvent/Links/Dropped"), Is.False);
-                Assert.That(generatedMetrics.ContainsKey("Supportability/SpanEvent/Events/Dropped"), Is.False);
+                Assert.That(generatedMetrics.ContainsKey("Supportability/DotNet/SpanEvent/Links/Dropped"), Is.False);
+                Assert.That(generatedMetrics.ContainsKey("Supportability/DotNet/SpanEvent/Events/Dropped"), Is.False);
             });
         }
 
