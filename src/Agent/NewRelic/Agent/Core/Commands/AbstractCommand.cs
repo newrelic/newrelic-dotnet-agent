@@ -3,12 +3,11 @@
 
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.Commands
-{
-    public abstract class AbstractCommand : ICommand
-    {
-        public string Name { get; protected set; }
+namespace NewRelic.Agent.Core.Commands;
 
-        public abstract object Process(IDictionary<string, object> arguments);
-    }
+public abstract class AbstractCommand : ICommand
+{
+    public string Name { get; protected set; }
+
+    public abstract object Process(IDictionary<string, object> arguments);
 }

@@ -3,516 +3,515 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using NewRelic.Agent.Extensions.SystemExtensions;
 using NewRelic.Agent.Extensions.Logging;
-using System.Diagnostics;
+using NewRelic.Agent.Extensions.SystemExtensions;
 
-namespace NewRelic.Agent.Core.Attributes
+namespace NewRelic.Agent.Core.Attributes;
+
+public static class AttributeDefinitionBuilder
 {
-    public static class AttributeDefinitionBuilder
+    private const int StringValueMaxLengthBytes = 255;
+    private const int ErrorMessageMaxLengthBytes = 1023;
+
+    public static AttributeDefinitionBuilder<TInput, TOutput> Create<TInput, TOutput>(string name, AttributeClassification classification)
     {
-        private const int StringValueMaxLengthBytes = 255;
-        private const int ErrorMessageMaxLengthBytes = 1023;
-
-        public static AttributeDefinitionBuilder<TInput, TOutput> Create<TInput, TOutput>(string name, AttributeClassification classification)
-        {
-            return new AttributeDefinitionBuilder<TInput, TOutput>(name, classification);
-        }
-
-        public static AttributeDefinitionBuilder<TValue, TValue> Create<TValue>(string name, AttributeClassification classification)
-        {
-            return new AttributeDefinitionBuilder<TValue, TValue>(name, classification)
-                .WithConvert((i) => i);
-        }
-
-        public static AttributeDefinitionBuilder<TInput, string> CreateString<TInput>(string name, AttributeClassification classification)
-        {
-            return new AttributeDefinitionBuilder<TInput, string>(name, classification)
-                .WithPostProcessing((v) => v.TruncateUnicodeStringByBytes(StringValueMaxLengthBytes));
-        }
-
-        public static AttributeDefinitionBuilder<string, string> CreateString(string name, AttributeClassification classification)
-        {
-            return Create<string>(name, classification)
-                .WithPostProcessing((v) => v.TruncateUnicodeStringByBytes(StringValueMaxLengthBytes));
-        }
-
-        public static AttributeDefinitionBuilder<string, string> CreateErrorMessage(string name, AttributeClassification classification)
-        {
-            return Create<string>(name, classification)
-                .WithPostProcessing((v) => v.TruncateUnicodeStringByBytes(ErrorMessageMaxLengthBytes));
-        }
-
-        public static AttributeDefinitionBuilder<TInput, double> CreateDouble<TInput>(string name, AttributeClassification classification)
-        {
-            return new AttributeDefinitionBuilder<TInput, double>(name, classification);
-        }
-
-        public static AttributeDefinitionBuilder<double, double> CreateDouble(string name, AttributeClassification classification)
-        {
-            return Create<double>(name, classification);
-        }
-
-        public static AttributeDefinitionBuilder<TInput, bool> CreateBool<TInput>(string name, AttributeClassification classification)
-        {
-            return new AttributeDefinitionBuilder<TInput, bool>(name, classification);
-        }
-
-        public static AttributeDefinitionBuilder<bool, bool> CreateBool(string name, AttributeClassification classification)
-        {
-            return Create<bool>(name, classification);
-        }
-
-        public static AttributeDefinitionBuilder<TInput, long> CreateLong<TInput>(string name, AttributeClassification classification)
-        {
-            return new AttributeDefinitionBuilder<TInput, long>(name, classification);
-        }
-
-        public static AttributeDefinitionBuilder<long, long> CreateLong(string name, AttributeClassification classification)
-        {
-            return Create<long>(name, classification);
-        }
-
-        public static AttributeDefinitionBuilder<int, int> CreateInt(string name, AttributeClassification classification)
-        {
-            return Create<int>(name, classification);
-        }
-
-        public static AttributeDefinitionBuilder<string, string> CreateDBStatement(string name, AttributeClassification classification)
-        {
-            const int dbStmtMaxLengthBytes = 4096; // max byte length, per agent spec
-
-            return new AttributeDefinitionBuilder<string, string>(name, classification)
-                .WithConvert((dbStmt) => TruncateDatastoreStatement(dbStmt, dbStmtMaxLengthBytes));
-        }
-
-        public static AttributeDefinitionBuilder<object, object> CreateCustomAttribute(string name, AttributeDestinations destination)
-        {
-            var builder = Create<object, object>(name, AttributeClassification.UserAttributes);
-
-            builder.AppliesTo(destination, true);
-
-            builder.WithConvert(GenericConverter);
-
-            return builder;
-        }
-
-        public static AttributeDefinitionBuilder<object, object> CreateAgentAttribute(string name, AttributeDestinations destination)
-        {
-            var builder = Create<object, object>(name, AttributeClassification.AgentAttributes);
-
-            builder.AppliesTo(destination, true);
-
-            builder.WithConvert(GenericConverter);
-
-            return builder;
-        }
-
-        // public to allow for testing
-        public static object GenericConverter(object input)
-        {
-            switch (input)
-            {
-                case null:
-                    return null;
-                case TimeSpan span:
-                    return span.TotalSeconds;
-                case DateTimeOffset offset:
-                    return offset.ToString("o");
-                default:
-                    switch (Type.GetTypeCode(input.GetType()))
-                    {
-                        case TypeCode.SByte:
-                        case TypeCode.Byte:
-                        case TypeCode.UInt16:
-                        case TypeCode.UInt32:
-                        case TypeCode.UInt64:
-                        case TypeCode.Int16:
-                        case TypeCode.Int32:
-                            return Convert.ToInt64(input);
-
-                        // don't convert Decimal and Single to double.
-                        // The value ends up getting serialized as a string, so there's no need for the conversion
-                        case TypeCode.Decimal:
-                        case TypeCode.Single:
-
-                        case TypeCode.Double:
-                        case TypeCode.Int64:
-                        case TypeCode.Boolean:
-                        case TypeCode.String:
-                            return input;
-
-                        case TypeCode.DateTime:
-                            return ((DateTime)input).ToString("o");
-                    }
-
-                    return input.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Truncates the specified statement to ensure its UTF-8 encoded byte length does not exceed the given maximum
-        /// size, appending an ellipsis if truncation occurs.
-        /// Assumes <paramref name="maxSizeBytes"/> is strictly greater than the UTF-8 byte length of the ellipsis.
-        /// </summary>
-        /// <param name="statement">The input string to be truncated. Can be null.</param>
-        /// <param name="maxSizeBytes">The maximum allowed size, in bytes, of the UTF-8 encoded result.</param>
-        /// <returns>A string whose UTF-8 encoded byte length is less than or equal to the specified maximum. If truncation
-        /// occurs, the result ends with an ellipsis ("..."). Returns null if the input statement is null.</returns>
-        public static string TruncateDatastoreStatement(string statement, int maxSizeBytes)
-        {
-            if (statement == null)
-            {
-                return null;
-            }
-
-            const string ellipsis = "...";
-            var ellipsisBytes = Encoding.UTF8.GetByteCount(ellipsis);
-
-            var bytes = Encoding.UTF8.GetBytes(statement);
-            if (bytes.Length <= maxSizeBytes)
-            {
-                return statement;
-            }
-
-            // Budget for content to leave room for the ellipsis.
-            var offset = maxSizeBytes - ellipsisBytes;
-
-            // Back up if the first excluded byte is a UTF-8 continuation byte (10xxxxxx)
-            while (offset > 0 && (bytes[offset] & 0b1100_0000) == 0b1000_0000)
-            {
-                offset--;
-            }
-
-            var truncated = Encoding.UTF8.GetString(bytes, 0, offset);
-            return truncated + ellipsis;
-        }
-
+        return new AttributeDefinitionBuilder<TInput, TOutput>(name, classification);
     }
 
-    public class AttributeDefinitionBuilder<TInput, TOutput>
+    public static AttributeDefinitionBuilder<TValue, TValue> Create<TValue>(string name, AttributeClassification classification)
     {
-        private static readonly AttributeDestinations[] AttribDestinationValues =
-            Enum.GetValues(typeof(AttributeDestinations)).OfType<AttributeDestinations>()
+        return new AttributeDefinitionBuilder<TValue, TValue>(name, classification)
+            .WithConvert((i) => i);
+    }
+
+    public static AttributeDefinitionBuilder<TInput, string> CreateString<TInput>(string name, AttributeClassification classification)
+    {
+        return new AttributeDefinitionBuilder<TInput, string>(name, classification)
+            .WithPostProcessing((v) => v.TruncateUnicodeStringByBytes(StringValueMaxLengthBytes));
+    }
+
+    public static AttributeDefinitionBuilder<string, string> CreateString(string name, AttributeClassification classification)
+    {
+        return Create<string>(name, classification)
+            .WithPostProcessing((v) => v.TruncateUnicodeStringByBytes(StringValueMaxLengthBytes));
+    }
+
+    public static AttributeDefinitionBuilder<string, string> CreateErrorMessage(string name, AttributeClassification classification)
+    {
+        return Create<string>(name, classification)
+            .WithPostProcessing((v) => v.TruncateUnicodeStringByBytes(ErrorMessageMaxLengthBytes));
+    }
+
+    public static AttributeDefinitionBuilder<TInput, double> CreateDouble<TInput>(string name, AttributeClassification classification)
+    {
+        return new AttributeDefinitionBuilder<TInput, double>(name, classification);
+    }
+
+    public static AttributeDefinitionBuilder<double, double> CreateDouble(string name, AttributeClassification classification)
+    {
+        return Create<double>(name, classification);
+    }
+
+    public static AttributeDefinitionBuilder<TInput, bool> CreateBool<TInput>(string name, AttributeClassification classification)
+    {
+        return new AttributeDefinitionBuilder<TInput, bool>(name, classification);
+    }
+
+    public static AttributeDefinitionBuilder<bool, bool> CreateBool(string name, AttributeClassification classification)
+    {
+        return Create<bool>(name, classification);
+    }
+
+    public static AttributeDefinitionBuilder<TInput, long> CreateLong<TInput>(string name, AttributeClassification classification)
+    {
+        return new AttributeDefinitionBuilder<TInput, long>(name, classification);
+    }
+
+    public static AttributeDefinitionBuilder<long, long> CreateLong(string name, AttributeClassification classification)
+    {
+        return Create<long>(name, classification);
+    }
+
+    public static AttributeDefinitionBuilder<int, int> CreateInt(string name, AttributeClassification classification)
+    {
+        return Create<int>(name, classification);
+    }
+
+    public static AttributeDefinitionBuilder<string, string> CreateDBStatement(string name, AttributeClassification classification)
+    {
+        const int dbStmtMaxLengthBytes = 4096; // max byte length, per agent spec
+
+        return new AttributeDefinitionBuilder<string, string>(name, classification)
+            .WithConvert((dbStmt) => TruncateDatastoreStatement(dbStmt, dbStmtMaxLengthBytes));
+    }
+
+    public static AttributeDefinitionBuilder<object, object> CreateCustomAttribute(string name, AttributeDestinations destination)
+    {
+        var builder = Create<object, object>(name, AttributeClassification.UserAttributes);
+
+        builder.AppliesTo(destination, true);
+
+        builder.WithConvert(GenericConverter);
+
+        return builder;
+    }
+
+    public static AttributeDefinitionBuilder<object, object> CreateAgentAttribute(string name, AttributeDestinations destination)
+    {
+        var builder = Create<object, object>(name, AttributeClassification.AgentAttributes);
+
+        builder.AppliesTo(destination, true);
+
+        builder.WithConvert(GenericConverter);
+
+        return builder;
+    }
+
+    // public to allow for testing
+    public static object GenericConverter(object input)
+    {
+        switch (input)
+        {
+            case null:
+                return null;
+            case TimeSpan span:
+                return span.TotalSeconds;
+            case DateTimeOffset offset:
+                return offset.ToString("o");
+            default:
+                switch (Type.GetTypeCode(input.GetType()))
+                {
+                    case TypeCode.SByte:
+                    case TypeCode.Byte:
+                    case TypeCode.UInt16:
+                    case TypeCode.UInt32:
+                    case TypeCode.UInt64:
+                    case TypeCode.Int16:
+                    case TypeCode.Int32:
+                        return Convert.ToInt64(input);
+
+                    // don't convert Decimal and Single to double.
+                    // The value ends up getting serialized as a string, so there's no need for the conversion
+                    case TypeCode.Decimal:
+                    case TypeCode.Single:
+
+                    case TypeCode.Double:
+                    case TypeCode.Int64:
+                    case TypeCode.Boolean:
+                    case TypeCode.String:
+                        return input;
+
+                    case TypeCode.DateTime:
+                        return ((DateTime)input).ToString("o");
+                }
+
+                return input.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Truncates the specified statement to ensure its UTF-8 encoded byte length does not exceed the given maximum
+    /// size, appending an ellipsis if truncation occurs.
+    /// Assumes <paramref name="maxSizeBytes"/> is strictly greater than the UTF-8 byte length of the ellipsis.
+    /// </summary>
+    /// <param name="statement">The input string to be truncated. Can be null.</param>
+    /// <param name="maxSizeBytes">The maximum allowed size, in bytes, of the UTF-8 encoded result.</param>
+    /// <returns>A string whose UTF-8 encoded byte length is less than or equal to the specified maximum. If truncation
+    /// occurs, the result ends with an ellipsis ("..."). Returns null if the input statement is null.</returns>
+    public static string TruncateDatastoreStatement(string statement, int maxSizeBytes)
+    {
+        if (statement == null)
+        {
+            return null;
+        }
+
+        const string ellipsis = "...";
+        var ellipsisBytes = Encoding.UTF8.GetByteCount(ellipsis);
+
+        var bytes = Encoding.UTF8.GetBytes(statement);
+        if (bytes.Length <= maxSizeBytes)
+        {
+            return statement;
+        }
+
+        // Budget for content to leave room for the ellipsis.
+        var offset = maxSizeBytes - ellipsisBytes;
+
+        // Back up if the first excluded byte is a UTF-8 continuation byte (10xxxxxx)
+        while (offset > 0 && (bytes[offset] & 0b1100_0000) == 0b1000_0000)
+        {
+            offset--;
+        }
+
+        var truncated = Encoding.UTF8.GetString(bytes, 0, offset);
+        return truncated + ellipsis;
+    }
+
+}
+
+public class AttributeDefinitionBuilder<TInput, TOutput>
+{
+    private static readonly AttributeDestinations[] AttribDestinationValues =
+        Enum.GetValues(typeof(AttributeDestinations)).OfType<AttributeDestinations>()
             .Where(x=>x != AttributeDestinations.None)
             .Where(x=>x != AttributeDestinations.All)
             .ToArray();
 
-        private readonly string _name;
-        private readonly AttributeClassification _classification;
-        private TOutput _defaultOutputVal;
-        private TInput _defaultInputVal;
-        private Dictionary<AttributeDestinations, bool> _availability = new Dictionary<AttributeDestinations, bool>();
-        private Func<TInput, TOutput> _conversionImpl;
-        private Func<TOutput, TOutput> _postProcessingImpl = (o) => o;
+    private readonly string _name;
+    private readonly AttributeClassification _classification;
+    private TOutput _defaultOutputVal;
+    private TInput _defaultInputVal;
+    private Dictionary<AttributeDestinations, bool> _availability = new Dictionary<AttributeDestinations, bool>();
+    private Func<TInput, TOutput> _conversionImpl;
+    private Func<TOutput, TOutput> _postProcessingImpl = (o) => o;
 
-        private AttributeDestinations _destinations = AttributeDestinations.None;
+    private AttributeDestinations _destinations = AttributeDestinations.None;
 
-        public AttributeDefinitionBuilder(string name, AttributeClassification classification)
+    public AttributeDefinitionBuilder(string name, AttributeClassification classification)
+    {
+        _name = name;
+        _classification = classification;
+    }
+
+    public AttributeDefinitionBuilder<TInput, TOutput> WithDefaultOutputValue(TOutput defaultOutputVal)
+    {
+        _defaultOutputVal = defaultOutputVal;
+        return this;
+    }
+
+    public AttributeDefinitionBuilder<TInput, TOutput> WithDefaultInputValue(TInput defaultInputVal)
+    {
+        _defaultInputVal = defaultInputVal;
+        return this;
+    }
+
+    public AttributeDefinitionBuilder<TInput, TOutput> AppliesTo(params AttributeDestinations[] destinations)
+    {
+        foreach (var destination in destinations)
         {
-            _name = name;
-            _classification = classification;
+            AppliesTo(destination, true);
         }
 
-        public AttributeDefinitionBuilder<TInput, TOutput> WithDefaultOutputValue(TOutput defaultOutputVal)
-        {
-            _defaultOutputVal = defaultOutputVal;
-            return this;
-        }
+        return this;
+    }
 
-        public AttributeDefinitionBuilder<TInput, TOutput> WithDefaultInputValue(TInput defaultInputVal)
+    public AttributeDefinitionBuilder<TInput, TOutput> AppliesTo(AttributeDestinations destination, bool isAvailable)
+    {
+        foreach (var val in AttribDestinationValues)
         {
-            _defaultInputVal = defaultInputVal;
-            return this;
-        }
-
-        public AttributeDefinitionBuilder<TInput, TOutput> AppliesTo(params AttributeDestinations[] destinations)
-        {
-            foreach (var destination in destinations)
+            if ((destination & val) == val)
             {
-                AppliesTo(destination, true);
+                _availability[val] = isAvailable;
             }
-
-            return this;
         }
 
-        public AttributeDefinitionBuilder<TInput, TOutput> AppliesTo(AttributeDestinations destination, bool isAvailable)
+        UpdateDestinationsFlags();
+            
+        return this;
+    }
+
+    private void UpdateDestinationsFlags()
+    {
+        _destinations = AttributeDestinations.None;
+
+        foreach (var availDestination in _availability.Where(x => x.Value))
         {
-            foreach (var val in AttribDestinationValues)
+            _destinations |= availDestination.Key;
+        }
+    }
+
+    public AttributeDefinitionBuilder<TInput, TOutput> WithConvert(Func<TInput, TOutput> convertValueImpl)
+    {
+        _conversionImpl = convertValueImpl;
+        return this;
+    }
+
+    public AttributeDefinitionBuilder<TInput, TOutput> WithPostProcessing(Func<TOutput, TOutput> postProcessingImpl)
+    {
+        _postProcessingImpl = postProcessingImpl;
+        return this;
+    }
+
+    public AttributeDefinition<TInput, TOutput> Build(IAttributeFilter filter)
+    {
+        if (_defaultInputVal != null && _defaultOutputVal == null && _conversionImpl != null)
+        {
+            _defaultOutputVal = _conversionImpl(_defaultInputVal);
+        }
+
+        // Update the user specified filter to include information 
+        // from the declaration and any inforamtion obtained from configuration
+        // via the filtering services.
+        if (_classification != AttributeClassification.Intrinsics)
+        {
+            foreach (var dest in _availability.Keys.ToArray())
             {
-                if ((destination & val) == val)
-                {
-                    _availability[val] = isAvailable;
-                }
+                _availability[dest] = _availability[dest]
+                                      && !filter.ShouldFilterAttribute(dest)
+                                      && filter.CheckOrAddAttributeClusionCache(_name, dest, dest);
             }
 
             UpdateDestinationsFlags();
-            
-            return this;
         }
 
-        private void UpdateDestinationsFlags()
+        var result = new AttributeDefinition<TInput, TOutput>(_name, _classification, _availability, _conversionImpl, _defaultOutputVal, _postProcessingImpl);
+
+        return result;
+    }
+}
+
+[DebuggerDisplay("{Name}-{Classification}")]
+public class AttributeDefinition
+{
+    public const string KeyName_Guid = "guid";
+    public const string KeyName_TraceId = "traceId";
+
+    private const int _attribNameMaxLengthBytes = 255;
+
+    public readonly Guid Guid = Guid.NewGuid();
+    public readonly string Name;
+    public readonly AttributeClassification Classification;
+    public readonly AttributeDestinations AttributeDestinations;
+    protected readonly Dictionary<AttributeDestinations, bool> _availability;
+
+    public AttributeDefinition(string name, AttributeClassification classification, Dictionary<AttributeDestinations, bool> availability)
+    {
+        Name = name;
+        Classification = classification;
+        _availability = availability;
+
+        foreach (var k in availability.Where(x=>x.Value))
         {
-            _destinations = AttributeDestinations.None;
-
-            foreach (var availDestination in _availability.Where(x => x.Value))
-            {
-                _destinations |= availDestination.Key;
-            }
-        }
-
-        public AttributeDefinitionBuilder<TInput, TOutput> WithConvert(Func<TInput, TOutput> convertValueImpl)
-        {
-            _conversionImpl = convertValueImpl;
-            return this;
-        }
-
-        public AttributeDefinitionBuilder<TInput, TOutput> WithPostProcessing(Func<TOutput, TOutput> postProcessingImpl)
-        {
-            _postProcessingImpl = postProcessingImpl;
-            return this;
-        }
-
-        public AttributeDefinition<TInput, TOutput> Build(IAttributeFilter filter)
-        {
-            if (_defaultInputVal != null && _defaultOutputVal == null && _conversionImpl != null)
-            {
-                _defaultOutputVal = _conversionImpl(_defaultInputVal);
-            }
-
-            // Update the user specified filter to include information 
-            // from the declaration and any inforamtion obtained from configuration
-            // via the filtering services.
-            if (_classification != AttributeClassification.Intrinsics)
-            {
-                foreach (var dest in _availability.Keys.ToArray())
-                {
-                    _availability[dest] = _availability[dest]
-                        && !filter.ShouldFilterAttribute(dest)
-                        && filter.CheckOrAddAttributeClusionCache(_name, dest, dest);
-                }
-
-                UpdateDestinationsFlags();
-            }
-
-            var result = new AttributeDefinition<TInput, TOutput>(_name, _classification, _availability, _conversionImpl, _defaultOutputVal, _postProcessingImpl);
-
-            return result;
+            AttributeDestinations |= k.Key;
         }
     }
 
-    [DebuggerDisplay("{Name}-{Classification}")]
-    public class AttributeDefinition
+    public bool IsAvailableForAny(params AttributeDestinations[] targetModels)
     {
-        public const string KeyName_Guid = "guid";
-        public const string KeyName_TraceId = "traceId";
-
-        private const int _attribNameMaxLengthBytes = 255;
-
-        public readonly Guid Guid = Guid.NewGuid();
-        public readonly string Name;
-        public readonly AttributeClassification Classification;
-        public readonly AttributeDestinations AttributeDestinations;
-        protected readonly Dictionary<AttributeDestinations, bool> _availability;
-
-        public AttributeDefinition(string name, AttributeClassification classification, Dictionary<AttributeDestinations, bool> availability)
+        if(targetModels == null)
         {
-            Name = name;
-            Classification = classification;
-            _availability = availability;
-
-            foreach (var k in availability.Where(x=>x.Value))
-            {
-                AttributeDestinations |= k.Key;
-            }
-        }
-
-        public bool IsAvailableForAny(params AttributeDestinations[] targetModels)
-        {
-            if(targetModels == null)
-            {
-                return false;
-            }
-
-            foreach(var targetModel in targetModels)
-            {
-                if(_availability.TryGetValue(targetModel, out var isAvail) && isAvail)
-                {
-                    return true;
-                }
-            }
-
             return false;
         }
 
-
-        private bool? _isDefinitionValid;
-        public bool IsDefinitionValid => (_isDefinitionValid ?? (_isDefinitionValid = ValidateDefinition()).Value);
-
-        private bool ValidateDefinition()
+        foreach(var targetModel in targetModels)
         {
-            if (string.IsNullOrWhiteSpace(Name))
+            if(_availability.TryGetValue(targetModel, out var isAvail) && isAvail)
             {
-                Log.Debug($"{AttributeDestinations} {Classification} Attribute definition is not valid - Name is null/empty");
-                return false;
+                return true;
             }
-
-            if (Encoding.UTF8.GetByteCount(Name) > _attribNameMaxLengthBytes)
-            {
-                Log.Debug($"{AttributeDestinations} {Classification} Attribute definition is not valid - Name is is too large ({Name})");
-                return false;
-            }
-
-            return true;
         }
 
-        protected void HandleNullValue()
-        {
-            if (Classification != AttributeClassification.UserAttributes)
-            {
-                return;
-            }
+        return false;
+    }
 
-            Log.Debug($"{AttributeDestinations} {Classification} Attribute '{Name}' was not recorded - value was null");
+
+    private bool? _isDefinitionValid;
+    public bool IsDefinitionValid => (_isDefinitionValid ?? (_isDefinitionValid = ValidateDefinition()).Value);
+
+    private bool ValidateDefinition()
+    {
+        if (string.IsNullOrWhiteSpace(Name))
+        {
+            Log.Debug($"{AttributeDestinations} {Classification} Attribute definition is not valid - Name is null/empty");
+            return false;
+        }
+
+        if (Encoding.UTF8.GetByteCount(Name) > _attribNameMaxLengthBytes)
+        {
+            Log.Debug($"{AttributeDestinations} {Classification} Attribute definition is not valid - Name is is too large ({Name})");
+            return false;
+        }
+
+        return true;
+    }
+
+    protected void HandleNullValue()
+    {
+        if (Classification != AttributeClassification.UserAttributes)
+        {
+            return;
+        }
+
+        Log.Debug($"{AttributeDestinations} {Classification} Attribute '{Name}' was not recorded - value was null");
+    }
+}
+
+public class AttributeDefinition<TInput, TOutput> : AttributeDefinition
+{
+    public AttributeDefinition(string name, AttributeClassification classification, Dictionary<AttributeDestinations, bool> availability, Func<TInput, TOutput> conversionImpl, TOutput defaultOutputVal, Func<TOutput, TOutput> postProcessingImpl)
+        : base(name, classification, availability)
+    {
+        _conversionImpl = conversionImpl;
+        _defaultOutput = defaultOutputVal;
+        _postProcessingImpl = postProcessingImpl;
+    }
+
+    private readonly Func<TInput, TOutput> _conversionImpl;
+    private readonly TOutput _defaultOutput;
+    private readonly Func<TOutput, TOutput> _postProcessingImpl;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="collection"></param>
+    /// <param name="getValFx">Function in users code to obtain the value.  Wrapped in a delegate
+    /// so as to not run if it is deemed not necessary</param>
+    /// <returns>true if the value was set</returns>
+    public bool TrySetValue(IAttributeValueCollection collection, Func<TInput> getInputValFx)
+    {
+        if (!IsDefinitionValid || collection.IsImmutable || !IsAvailableForAny(collection.TargetModelTypes))
+        {
+            return false;
+        }
+
+        if (getInputValFx == null || _conversionImpl == null)
+        {
+            HandleNullValue();
+            return false;
+        }
+
+        return collection.TrySetValue(this, new Lazy<object>(ResolveValue));
+
+        object ResolveValue()
+        {
+            return ResolveLazyValue(getInputValFx);
         }
     }
 
-    public class AttributeDefinition<TInput, TOutput> : AttributeDefinition
+    /// <summary>
+    /// This method should only be used when the value is simple and available.
+    /// any other implementation should use the delegate version of this method
+    /// </summary>
+    /// <param name="collection"></param>
+    /// <param name="sourceVal">The value in it's native form</param>
+    /// <returns>true if the value was set</returns>
+    public bool TrySetValue(IAttributeValueCollection collection, TInput sourceVal)
     {
-        public AttributeDefinition(string name, AttributeClassification classification, Dictionary<AttributeDestinations, bool> availability, Func<TInput, TOutput> conversionImpl, TOutput defaultOutputVal, Func<TOutput, TOutput> postProcessingImpl)
-            : base(name, classification, availability)
+        if (!IsDefinitionValid || collection.IsImmutable || !IsAvailableForAny(collection.TargetModelTypes))
         {
-            _conversionImpl = conversionImpl;
-            _defaultOutput = defaultOutputVal;
-            _postProcessingImpl = postProcessingImpl;
+            return false;
         }
 
-        private readonly Func<TInput, TOutput> _conversionImpl;
-        private readonly TOutput _defaultOutput;
-        private readonly Func<TOutput, TOutput> _postProcessingImpl;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="collection"></param>
-        /// <param name="getValFx">Function in users code to obtain the value.  Wrapped in a delegate
-        /// so as to not run if it is deemed not necessary</param>
-        /// <returns>true if the value was set</returns>
-        public bool TrySetValue(IAttributeValueCollection collection, Func<TInput> getInputValFx)
+        if (sourceVal == null || _conversionImpl == null)
         {
-            if (!IsDefinitionValid || collection.IsImmutable || !IsAvailableForAny(collection.TargetModelTypes))
-            {
-                return false;
-            }
-
-            if (getInputValFx == null || _conversionImpl == null)
-            {
-                HandleNullValue();
-                return false;
-            }
-
-            return collection.TrySetValue(this, new Lazy<object>(ResolveValue));
-
-            object ResolveValue()
-            {
-                return ResolveLazyValue(getInputValFx);
-            }
+            HandleNullValue();
+            return false;
         }
 
-        /// <summary>
-        /// This method should only be used when the value is simple and available.
-        /// any other implementation should use the delegate version of this method
-        /// </summary>
-        /// <param name="collection"></param>
-        /// <param name="sourceVal">The value in it's native form</param>
-        /// <returns>true if the value was set</returns>
-        public bool TrySetValue(IAttributeValueCollection collection, TInput sourceVal)
+        var destVal = _conversionImpl(sourceVal);
+        if (destVal == null)
         {
-            if (!IsDefinitionValid || collection.IsImmutable || !IsAvailableForAny(collection.TargetModelTypes))
-            {
-                return false;
-            }
+            HandleNullValue();
+            return false;
+        }
 
-            if (sourceVal == null || _conversionImpl == null)
-            {
-                HandleNullValue();
-                return false;
-            }
-
-            var destVal = _conversionImpl(sourceVal);
+        if (_postProcessingImpl != null)
+        {
+            destVal = _postProcessingImpl(destVal);
             if (destVal == null)
             {
                 HandleNullValue();
                 return false;
             }
-
-            if (_postProcessingImpl != null)
-            {
-                destVal = _postProcessingImpl(destVal);
-                if (destVal == null)
-                {
-                    HandleNullValue();
-                    return false;
-                }
-            }
-
-            return collection.TrySetValue(this, destVal);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="collection"></param>
-        /// <returns>true if the value was set</returns>
-        public bool TrySetDefault(IAttributeValueCollection collection)
+        return collection.TrySetValue(this, destVal);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="collection"></param>
+    /// <returns>true if the value was set</returns>
+    public bool TrySetDefault(IAttributeValueCollection collection)
+    {
+        if (collection.IsImmutable)
         {
-            if (collection.IsImmutable)
-            {
-                return false;
-            }
-
-            if (!IsAvailableForAny(collection.TargetModelTypes))
-            {
-                return false;
-            }
-
-            if (_defaultOutput != null)
-            {
-                return collection.TrySetValue(this, _defaultOutput);
-            }
-
             return false;
         }
 
-        private object ResolveLazyValue(Func<TInput> getInputValFx)
+        if (!IsAvailableForAny(collection.TargetModelTypes))
         {
-            var inputVal = getInputValFx();
-            if (inputVal == null)
-            {
-                HandleNullValue();
-                return null;
-            }
+            return false;
+        }
 
-            var destVal = _conversionImpl(inputVal);
+        if (_defaultOutput != null)
+        {
+            return collection.TrySetValue(this, _defaultOutput);
+        }
+
+        return false;
+    }
+
+    private object ResolveLazyValue(Func<TInput> getInputValFx)
+    {
+        var inputVal = getInputValFx();
+        if (inputVal == null)
+        {
+            HandleNullValue();
+            return null;
+        }
+
+        var destVal = _conversionImpl(inputVal);
+        if (destVal == null)
+        {
+            HandleNullValue();
+            return null;
+        }
+
+        if (_postProcessingImpl != null)
+        {
+            destVal = _postProcessingImpl(destVal);
             if (destVal == null)
             {
                 HandleNullValue();
                 return null;
             }
-
-            if (_postProcessingImpl != null)
-            {
-                destVal = _postProcessingImpl(destVal);
-                if (destVal == null)
-                {
-                    HandleNullValue();
-                    return null;
-                }
-            }
-
-            return destVal;
         }
+
+        return destVal;
     }
 }

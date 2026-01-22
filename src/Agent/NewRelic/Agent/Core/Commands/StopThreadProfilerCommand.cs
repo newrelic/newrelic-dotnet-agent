@@ -1,58 +1,57 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Extensions.Logging;
-using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.Commands
+namespace NewRelic.Agent.Core.Commands;
+
+public class StopThreadProfilerCommand : AbstractCommand
 {
-    public class StopThreadProfilerCommand : AbstractCommand
+    public IThreadProfilingSessionControl ThreadProfilingService { get; set; }
+
+    public StopThreadProfilerCommand(IThreadProfilingSessionControl threadProfilingService)
     {
-        public IThreadProfilingSessionControl ThreadProfilingService { get; set; }
+        Name = "stop_profiler";
+        ThreadProfilingService = threadProfilingService;
+    }
 
-        public StopThreadProfilerCommand(IThreadProfilingSessionControl threadProfilingService)
+    public override object Process(IDictionary<string, object> arguments)
+    {
+        var errorMessage = StopThreadProfilingSessions(arguments);
+        if (errorMessage == null)
+            return new Dictionary<string, object>();
+
+        return new Dictionary<string, object>
         {
-            Name = "stop_profiler";
-            ThreadProfilingService = threadProfilingService;
-        }
+            {"error", errorMessage}
+        };
+    }
 
-        public override object Process(IDictionary<string, object> arguments)
+    private string StopThreadProfilingSessions(IDictionary<string, object> arguments)
+    {
+        if (arguments == null)
+            return "No arguments sent with stop_profiler command.";
+
+        var stopArgs = new ThreadProfilerCommandArgs(arguments, ThreadProfilingService.IgnoreMinMinimumSamplingDuration);
+        if (stopArgs.ProfileId == 0)
+            return "A valid profile_id must be supplied to stop a thread profiling session.";
+
+        try
         {
-            var errorMessage = StopThreadProfilingSessions(arguments);
-            if (errorMessage == null)
-                return new Dictionary<string, object>();
-
-            return new Dictionary<string, object>
+            var stoppedSession = ThreadProfilingService.StopThreadProfilingSession(stopArgs.ProfileId, stopArgs.ReportData);
+            if (!stoppedSession)
             {
-                {"error", errorMessage}
-            };
-        }
-
-        private string StopThreadProfilingSessions(IDictionary<string, object> arguments)
-        {
-            if (arguments == null)
-                return "No arguments sent with stop_profiler command.";
-
-            var stopArgs = new ThreadProfilerCommandArgs(arguments, ThreadProfilingService.IgnoreMinMinimumSamplingDuration);
-            if (stopArgs.ProfileId == 0)
-                return "A valid profile_id must be supplied to stop a thread profiling session.";
-
-            try
-            {
-                var stoppedSession = ThreadProfilingService.StopThreadProfilingSession(stopArgs.ProfileId, stopArgs.ReportData);
-                if (!stoppedSession)
-                {
-                    return "A thread profiling session is not running.";
-                }
+                return "A thread profiling session is not running.";
             }
-            catch (InvalidProfileIdException e)
-            {
-                Log.Error(e, "StopThreadProfilingSessions() failed");
-                return e.Message;
-            }
-
-            return null;
         }
+        catch (InvalidProfileIdException e)
+        {
+            Log.Error(e, "StopThreadProfilingSessions() failed");
+            return e.Message;
+        }
+
+        return null;
     }
 }

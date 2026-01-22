@@ -3,74 +3,73 @@
 
 using System;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core.Api
+namespace NewRelic.Agent.Core.Api;
+
+public class SpanBridgeApi
 {
-    public class SpanBridgeApi
+    private readonly ISpan _span;
+    private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
+    private readonly IConfigurationService _configSvc;
+
+    public SpanBridgeApi(ISpan span, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters, IConfigurationService configSvc)
     {
-        private readonly ISpan _span;
-        private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
-        private readonly IConfigurationService _configSvc;
+        _span = span;
+        _apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
+        _configSvc = configSvc;
+    }
 
-        public SpanBridgeApi(ISpan span, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters, IConfigurationService configSvc)
+    public object AddCustomAttribute(string key, object value)
+    {
+        try
         {
-            _span = span;
-            _apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
-            _configSvc = configSvc;
-        }
+            _apiSupportabilityMetricCounters.Record(ApiMethod.SpanAddCustomAttribute);
 
-        public object AddCustomAttribute(string key, object value)
-        {
-            try
+            if (!_configSvc.Configuration.CaptureCustomParameters)
             {
-                _apiSupportabilityMetricCounters.Record(ApiMethod.SpanAddCustomAttribute);
-
-                if (!_configSvc.Configuration.CaptureCustomParameters)
-                {
-                    return _span;
-                }
-
-                _span.AddCustomAttribute(key, value);
-            }
-            catch (Exception ex)
-            {
-                try
-                {
-                    Log.Error(ex, "Error in AddCustomAttribute");
-                }
-                catch (Exception)
-                {
-                    // Swallow the error.. nom nom
-                }
+                return _span;
             }
 
-            return _span;
+            _span.AddCustomAttribute(key, value);
         }
-
-        public object SetName(string name)
+        catch (Exception ex)
         {
             try
             {
-                _apiSupportabilityMetricCounters.Record(ApiMethod.SpanSetName);
-
-                _span.SetName(name);
+                Log.Error(ex, "Error in AddCustomAttribute");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                try
-                {
-                    Log.Error(ex, "Error in SetName");
-                }
-                catch (Exception)
-                {
-                    // Swallow the error.. nom nom
-                }
+                // Swallow the error.. nom nom
             }
-
-            return _span;
         }
+
+        return _span;
+    }
+
+    public object SetName(string name)
+    {
+        try
+        {
+            _apiSupportabilityMetricCounters.Record(ApiMethod.SpanSetName);
+
+            _span.SetName(name);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                Log.Error(ex, "Error in SetName");
+            }
+            catch (Exception)
+            {
+                // Swallow the error.. nom nom
+            }
+        }
+
+        return _span;
     }
 }

@@ -5,35 +5,35 @@ using System;
 using NewRelic.Agent.Extensions.Logging;
 
 #if NETSTANDARD2_0
-using Microsoft.Extensions.Configuration;
 using System.IO;
+using Microsoft.Extensions.Configuration;
 #endif
 
-namespace NewRelic.Agent.Core.Configuration
+namespace NewRelic.Agent.Core.Configuration;
+
+public interface IConfigurationManagerStatic
 {
-    public interface IConfigurationManagerStatic
+    string AppSettingsFilePath { get; }
+    string GetAppSetting(string key);
+}
+
+// sdaubin : Why do we have a mock in the agent code?  This is a code smell.
+public class ConfigurationManagerStaticMock : IConfigurationManagerStatic
+{
+    private readonly Func<string, string> _getAppSetting;
+
+    public ConfigurationManagerStaticMock(Func<string, string> getAppSetting = null)
     {
-        string AppSettingsFilePath { get; }
-        string GetAppSetting(string key);
+        _getAppSetting = getAppSetting ?? (key => null);
     }
 
-    // sdaubin : Why do we have a mock in the agent code?  This is a code smell.
-    public class ConfigurationManagerStaticMock : IConfigurationManagerStatic
+    public string AppSettingsFilePath => throw new NotImplementedException();
+
+    public string GetAppSetting(string key)
     {
-        private readonly Func<string, string> _getAppSetting;
-
-        public ConfigurationManagerStaticMock(Func<string, string> getAppSetting = null)
-        {
-            _getAppSetting = getAppSetting ?? (key => null);
-        }
-
-        public string AppSettingsFilePath => throw new NotImplementedException();
-
-        public string GetAppSetting(string key)
-        {
-            return _getAppSetting(key);
-        }
+        return _getAppSetting(key);
     }
+}
 
 #if NETFRAMEWORK
 
@@ -77,43 +77,42 @@ namespace NewRelic.Agent.Core.Configuration
         }
     }
 #else
-    /// <summary>
-    /// Provides configuration access for .NET Standard applications.
-    /// Uses internal bridging logic to access the application's Microsoft.Extensions.Configuration
-    /// system when available, with fallback to ILRepacked configuration.
-    /// </summary>
-    public class ConfigurationManagerStatic : IConfigurationManagerStatic
+/// <summary>
+/// Provides configuration access for .NET Standard applications.
+/// Uses internal bridging logic to access the application's Microsoft.Extensions.Configuration
+/// system when available, with fallback to ILRepacked configuration.
+/// </summary>
+public class ConfigurationManagerStatic : IConfigurationManagerStatic
+{
+    private bool localConfigChecksDisabled;
+
+    public string AppSettingsFilePath
     {
-        private bool localConfigChecksDisabled;
-
-        public string AppSettingsFilePath
+        get
         {
-            get
-            {
-                if (localConfigChecksDisabled)
-                    return null;
-
-                return ConfigurationBridge.GetAppSettingsFilePath();
-            }
-        }
-
-        public string GetAppSetting(string key)
-        {
-            if (localConfigChecksDisabled || key == null)
+            if (localConfigChecksDisabled)
                 return null;
 
-            try
-            {
-                return ConfigurationBridge.GetAppSetting(key);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"ConfigurationManagerStatic: Failed to read '{key}'. " +
-                             $"Reading New Relic configuration values will be disabled.");
-                localConfigChecksDisabled = true;
-                return null;
-            }
+            return ConfigurationBridge.GetAppSettingsFilePath();
         }
     }
-#endif
+
+    public string GetAppSetting(string key)
+    {
+        if (localConfigChecksDisabled || key == null)
+            return null;
+
+        try
+        {
+            return ConfigurationBridge.GetAppSetting(key);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"ConfigurationManagerStatic: Failed to read '{key}'. " +
+                          $"Reading New Relic configuration values will be disabled.");
+            localConfigChecksDisabled = true;
+            return null;
+        }
+    }
 }
+#endif
