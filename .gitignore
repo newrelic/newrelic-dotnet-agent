@@ -79,4 +79,4 @@ build/Linux/keys
 /build/_staging
 
 # Claude AI settings
-.claude/settings.local.json
+.claude
