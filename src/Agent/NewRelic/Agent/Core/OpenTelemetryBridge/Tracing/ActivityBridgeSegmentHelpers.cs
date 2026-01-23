@@ -46,6 +46,7 @@ public static class ActivityBridgeSegmentHelpers
 
         // based on activity kind, create the appropriate segment data
         // remove all tags that are used in segment data creation
+        Log.Finest(">>>>>>>>>>>>>>>>>>> activityKind (2=client): " + activityKind);
         switch (activityKind)
         {
             case (int)ActivityKind.Client:
@@ -53,6 +54,7 @@ public static class ActivityBridgeSegmentHelpers
                 // order is important because some activities have both tags, e.g. a database call that is also an HTTP call, like Elasticsearch
                 if (tags.TryGetAndRemoveTag<string>(["db.system.name", "db.system"], out var dbSystemName)) // it's a database call
                 {
+                    Log.Finest("db.system.name|db.system found: " + dbSystemName);
                     ProcessClientDatabaseTags(segment, agent, activity, activityLogPrefix, tags, dbSystemName);
                 }
                 else if (tags.TryGetAndRemoveTag<string>(["rpc.system"], out var rpcSystem)) // it's an RPC client activity
@@ -465,16 +467,20 @@ public static class ActivityBridgeSegmentHelpers
 
     private static ISegmentData GetDefaultDatastoreSegmentData(IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, DatastoreVendor vendor)
     {
-        // TODO: We may get two activities with "db.system" tags - one with a DisplayName of "Open" and one with a DisplayName of "Execute".
-        // TODO: The "Execute" activity will have the SQL command text in the tags, while the "Open" activity will not.
-        // TODO: What do we do with the "Open" activity? For now, we'll ignore it
-        if (activity.DisplayName != "Execute")
+        // This is determined per db system type.
+        // Example, per OTel contrib, for MSSQL this will start with Execute for stored procedures and several other starting values for basic queries.
+        // See: https://github.com/open-telemetry/opentelemetry-dotnet-contrib/blob/main/src/Shared/DatabaseSemanticConventionHelper.cs#L62
+        // See: https://github.com/open-telemetry/opentelemetry-dotnet-contrib/blob/main/src/Shared/DatabaseSemanticConventionHelper.cs#L122
+        string displayName = activity.DisplayName as string;
+        if (displayName.StartsWith("Open", StringComparison.InvariantCultureIgnoreCase))
             return null;
 
         tags.TryGetAndRemoveTag<string>(["db.query.text", "db.statement"], out var commandText);
+        tags.TryGetAndRemoveTag<string>(["db.stored_procedure.name"], out var storedProcedureName); // only present for store procedure calls
 
-        // TODO: Where do we get commandType? Existing SQL wrappers get it from the IDbCommand.CommandType property.
-        var commandType = CommandType.Text;
+        // This is used to determine how to parse the command text. The default is Text for non-stored procedure commands.
+        // Execute is used for stored procedures in several DB systems per OTel contrib.
+        var commandType = displayName.StartsWith("Execute", StringComparison.InvariantCultureIgnoreCase) && !string.IsNullOrEmpty(storedProcedureName) ? CommandType.StoredProcedure : CommandType.Text;
 
         var parsedSqlStatement = SqlParser.GetParsedDatabaseStatement(vendor, commandType, commandText);
 
