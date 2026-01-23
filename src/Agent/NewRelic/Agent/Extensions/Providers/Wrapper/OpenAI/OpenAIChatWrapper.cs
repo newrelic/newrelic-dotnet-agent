@@ -82,6 +82,17 @@ public class OpenAiChatWrapper : IWrapper
 
         if (isAsync)
         {
+            if (methodMethodName.Contains("Streaming"))
+            {
+                return Delegates.GetAsyncDelegateFor<object>( // This doesn't work, GetAsyncDelegateFor<Task> requires Task type parameter
+                    agent,
+                    segment,
+                    false,
+                    TryProcessStreamingAsyncResponse,
+                    TaskContinuationOptions.ExecuteSynchronously
+                );
+
+            }
             return Delegates.GetAsyncDelegateFor<Task>(
                 agent,
                 segment,
@@ -115,6 +126,28 @@ public class OpenAiChatWrapper : IWrapper
             }
 
             ProcessResponse(segment, model, chatMessages, clientResult, chatCompletionOptions, agent);
+        }
+
+        void TryProcessStreamingAsyncResponse(object asyncCollectionResult)
+        {
+            segment.End();
+
+            // TODO do something useful here
+
+            //if (responseTask.IsFaulted)
+            //{
+            //    HandleError(segment, model, responseTask, agent);
+            //    return;
+            //}
+
+            //dynamic clientResult = GetTaskResult(responseTask);
+            //if (clientResult == null)
+            //{
+            //    agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Error processing response: Response payload is null");
+            //    return;
+            //}
+
+            //ProcessResponse(segment, model, chatMessages, clientResult, chatCompletionOptions, agent);
         }
     }
 
