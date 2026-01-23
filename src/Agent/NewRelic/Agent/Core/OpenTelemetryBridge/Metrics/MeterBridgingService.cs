@@ -158,7 +158,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
             {
                 var cacheData = _createObservableInstrumentCache.GetOrAdd(instrumentType, GetObservableInstrumentCacheData);
                 var result = cacheData?.CreateCallbackAndObservableInstrumentDelegate(instrument, meter, cacheData);
-                Log.Debug($"Created bridged observable instrument: {nameProp?.GetValue(instrument)} on meter: {meterName}");
                 return result;
             }
 
@@ -196,7 +195,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
             }
             catch (Exception ex)
             {
-                Log.Debug($"Failed to extract tags from instrument: {ex.Message}");
+                Log.Debug(ex, "Failed to extract tags from instrument");
                 return null;
             }
         }
@@ -214,10 +213,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
                 var adviceProp = instrument.GetType().GetProperty("Advice");
                 return adviceProp?.GetValue(instrument);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Expected to fail on .NET versions < 9.0 where Advice property doesn't exist
-                Log.Finest($"Advice property not available on instrument (expected on .NET < 9.0): {ex.Message}");
                 return null;
             }
         }
@@ -255,7 +253,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
                 else
                 {
                     _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeasurementBridgeFailure);
-                    Log.Debug($"Unsupported bridged instrument type: {bridgedInstrument.GetType().Name}");
+                    Log.Warn($"Unsupported bridged instrument type: {bridgedInstrument.GetType().Name}");
                 }
             }
         }
@@ -327,10 +325,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
                 var scopeProp = meter.GetType().GetProperty("Scope");
                 return scopeProp?.GetValue(meter);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Expected to fail on .NET versions < 9.0 where Scope property doesn't exist
-                Log.Finest($"Scope property not available on meter (expected on .NET < 9.0): {ex.Message}");
                 return null;
             }
         }
@@ -691,7 +688,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
                 }
                 catch (Exception ex)
                 {
-                    Log.Debug($"Failed to create property accessors for type {type.Name}: {ex.Message}");
+                    Log.Debug(ex, $"Failed to create property accessors for type {type.Name}");
                 }
                 return cache;
             });

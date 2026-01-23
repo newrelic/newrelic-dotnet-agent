@@ -471,6 +471,17 @@ namespace NewRelic.Agent.Core.WireModels
                 txStats.MergeUnscopedStats(proposedName, data);
             }
 
+            public static void TryBuildSpanEventLinksDroppedMetric(int droppedCount, TransactionMetricStatsCollection txStats)
+            {
+                var data = MetricDataWireModel.BuildCountData(droppedCount);
+                txStats.MergeUnscopedStats(MetricName.Create(MetricNames.SupportabilitySpanEventLinksDropped), data);
+            }
+            public static void TryBuildSpanEventEventsDroppedMetric(int droppedCount, TransactionMetricStatsCollection txStats)
+            {
+                var data = MetricDataWireModel.BuildCountData(droppedCount);
+                txStats.MergeUnscopedStats(MetricName.Create(MetricNames.SupportabilitySpanEventEventsDropped), data);
+            }
+
             #endregion Segment builders
 
             #region Supportability builders

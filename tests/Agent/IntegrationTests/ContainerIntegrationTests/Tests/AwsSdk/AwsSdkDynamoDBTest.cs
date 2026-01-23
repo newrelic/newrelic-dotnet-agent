@@ -84,8 +84,6 @@ public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoD
         {
             new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/create_table", callCount = 1},
             new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/create_table", callCount = 1, metricScope = createTableScope},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/describe_table", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/describe_table", callCount = 1, metricScope = createTableScope},
             new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/put_item", callCount = 1},
             new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/put_item", callCount = 1, metricScope = putItemScope},
             new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/get_item", callCount = 1},
@@ -103,7 +101,7 @@ public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoD
 
         };
 
-        var expectedOperations = new[] { "create_table", "describe_table", "put_item", "get_item", "update_item", "delete_item", "query", "scan", "delete_table" };
+        var expectedOperations = new[] { "create_table", "put_item", "get_item", "update_item", "delete_item", "query", "scan", "delete_table" };
         var expectedOperationsCount = expectedOperations.Length;
 
         string expectedArn = $"arn:aws:dynamodb:(unknown):{_accountId}:table/{_tableName}";

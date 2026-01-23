@@ -1070,6 +1070,8 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilitySpanEventsSeen = SpanEventsPs + "TotalEventsSeen";
         public const string SupportabilitySpanEventsLimit = SpanEventsPs + "Limit";
 
+        public const string SupportabilitySpanEventLinksDropped = SupportabilityDotNetPs + SpanEventsPs + "Links" + PathSeparator + "Dropped";
+        public const string SupportabilitySpanEventEventsDropped = SupportabilityDotNetPs + SpanEventsPs + "Events" + PathSeparator + "Dropped";
 
         #endregion Span Metrics
 

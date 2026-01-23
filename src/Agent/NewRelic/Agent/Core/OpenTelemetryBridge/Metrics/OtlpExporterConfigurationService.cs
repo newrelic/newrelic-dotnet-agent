@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Logging;
@@ -24,6 +25,7 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
     {
         private readonly IConfigurationService _configurationService;
         private readonly IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
+        private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly MeterBridgeConfiguration _bridgeConfiguration;
         private MeterProvider _meterProvider;
         private readonly object _meterProviderLock = new object();
@@ -36,10 +38,12 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
         public OtlpExporterConfigurationService(
             IConfigurationService configurationService, 
             IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters,
+            IAgentHealthReporter agentHealthReporter,
             MeterBridgeConfiguration bridgeConfiguration)
         {
             _configurationService = configurationService;
             _supportabilityMetricCounters = supportabilityMetricCounters;
+            _agentHealthReporter = agentHealthReporter;
             _bridgeConfiguration = bridgeConfiguration;
         }
 
@@ -139,9 +143,9 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
 
 #if NETSTANDARD2_0_OR_GREATER
                 var retryHandler = new CustomRetryHandler { InnerHandler = httpClientHandler };
-                var auditHandler = new OtlpAuditHandler { InnerHandler = retryHandler };
+                var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = retryHandler };
 #else
-                var auditHandler = new OtlpAuditHandler { InnerHandler = httpClientHandler };
+                var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = httpClientHandler };
 #endif
                 var httpClient = new HttpClient(auditHandler);
                 httpClient.Timeout = TimeSpan.FromSeconds(_configurationService.Configuration.OpenTelemetryOtlpTimeoutSeconds);
