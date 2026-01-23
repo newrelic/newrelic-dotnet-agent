@@ -1,12 +1,11 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces;
+
+public interface IHttpContentHeadersWrapper
 {
-    public interface IHttpContentHeadersWrapper
-    {
-        ICollection<string> ContentEncoding { get; }
-    }
+    ICollection<string> ContentEncoding { get; }
 }

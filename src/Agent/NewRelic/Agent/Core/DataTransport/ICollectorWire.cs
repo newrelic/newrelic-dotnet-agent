@@ -3,10 +3,9 @@
 
 using System;
 
-namespace NewRelic.Agent.Core.DataTransport
+namespace NewRelic.Agent.Core.DataTransport;
+
+public interface ICollectorWire
 {
-    public interface ICollectorWire
-    {
-        string SendData(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid);
-    }
+    string SendData(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid);
 }

@@ -1,301 +1,300 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Core.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Agent.Core.DistributedTracing
+namespace NewRelic.Agent.Core.DistributedTracing;
+
+public class TracingState : ITracingState
 {
-    public class TracingState : ITracingState
+    // not valid for this enum, but will be replaced on first call to Type
+    private DistributedTracingParentType _type = (DistributedTracingParentType)(-2);
+    private DateTime _timestamp;
+    private bool _validTracestateWasAccepted = false;
+    private DateTime _transactionStartTime;
+
+    #region Properties
+
+    public DistributedTracingParentType Type
     {
-        // not valid for this enum, but will be replaced on first call to Type
-        private DistributedTracingParentType _type = (DistributedTracingParentType)(-2);
-        private DateTime _timestamp;
-        private bool _validTracestateWasAccepted = false;
-        private DateTime _transactionStartTime;
-
-        #region Properties
-
-        public DistributedTracingParentType Type
+        get
         {
-            get
+            if ((int)_type != -2)
             {
-                if ((int)_type != -2)
-                {
-                    return _type;
-                }
+                return _type;
+            }
 
-                if (_traceContext?.Tracestate != null)
-                {
-                    return _type = _traceContext.Tracestate.ParentType;
-                }
+            if (_traceContext?.Tracestate != null)
+            {
+                return _type = _traceContext.Tracestate.ParentType;
+            }
 
-                if (_newRelicPayload?.Type != null)
+            if (_newRelicPayload?.Type != null)
+            {
+                if (Enum.TryParse<DistributedTracingParentType>(_newRelicPayload.Type, out var payloadParentType))
                 {
-                    if (Enum.TryParse<DistributedTracingParentType>(_newRelicPayload.Type, out var payloadParentType))
-                    {
-                        return _type = payloadParentType;
-                    }
+                    return _type = payloadParentType;
                 }
+            }
 
-                return _type = DistributedTracingParentType.Unknown;
+            return _type = DistributedTracingParentType.Unknown;
+        }
+    }
+
+    public string AppId
+    {
+        get
+        {
+            if (_traceContext?.Tracestate != null)
+            {
+                return _traceContext.Tracestate.AppId;
+            }
+
+            return _newRelicPayload?.AppId;
+        }
+    }
+
+    public string AccountId
+    {
+        get
+        {
+            if (_traceContext?.Tracestate != null)
+            {
+                return _traceContext.Tracestate.AccountId;
+            }
+
+            return _newRelicPayload?.AccountId;
+        }
+    }
+
+    // Not part of trace-context or newrelic-payload - doesn't need to check if context or payload.
+    public TransportType TransportType { get; private set; }
+
+    public string Guid
+    {
+        get
+        {
+            if (_traceContext?.Tracestate != null)
+            {
+                return _traceContext.Tracestate.SpanId;
+            }
+
+            return _newRelicPayload?.Guid;
+        }
+    }
+
+    public string ParentId => _traceContext?.Traceparent?.ParentId;
+
+    public DateTime Timestamp
+    {
+        get
+        {
+            if (_timestamp != default)
+            {
+                return _timestamp;
+            }
+
+            if (_traceContext?.Tracestate != null && _traceContext.Tracestate.Timestamp != default)
+            {
+                return _timestamp = _traceContext.Tracestate.Timestamp.FromUnixTimeMilliseconds();
+            }
+
+            if (_newRelicPayload?.Timestamp != default)
+            {
+                return _timestamp = _newRelicPayload.Timestamp;
+            }
+
+            return _timestamp = default(DateTime); // default is same as new.
+        }
+    }
+
+    public TimeSpan TransportDuration
+    {
+        get
+        {
+            var duration = Timestamp != default ? _transactionStartTime - Timestamp : TimeSpan.Zero;
+            return duration > TimeSpan.Zero ? duration : TimeSpan.Zero;
+        }
+    }
+
+    public string TraceId
+    {
+        get
+        {
+            if (_traceContext?.Traceparent != null)
+            {
+                return _traceContext.Traceparent.TraceId;
+            }
+
+            return _newRelicPayload?.TraceId;
+        }
+    }
+
+    public string TransactionId
+    {
+        get
+        {
+            if (_traceContext?.Tracestate != null)
+            {
+                return _traceContext.Tracestate.TransactionId;
+            }
+
+            return _newRelicPayload?.TransactionId;
+        }
+    }
+
+    private bool? _sampled;
+    public bool? Sampled
+    {
+        get
+        {
+            if (_sampled is not null)
+                return _sampled;
+
+            if (_traceContext?.Tracestate is { Sampled: not null })
+                return _sampled = Convert.ToBoolean(_traceContext.Tracestate.Sampled);
+
+            if (_newRelicPayload?.Sampled is not null)
+                return _sampled = _newRelicPayload.Sampled;
+
+            return null;
+        }
+    }
+
+    private float? _priority;
+    public float? Priority
+    {
+        get
+        {
+            if (_priority != null)
+            {
+                return _priority;
+            }
+
+            if (_traceContext?.Tracestate is { Priority: not null })
+            {
+                return _traceContext.Tracestate.Priority;
+            }
+
+            return _newRelicPayload?.Priority;
+        }
+    }
+
+    public bool NewRelicPayloadWasAccepted { get; private set; } = false;
+    public bool TraceContextWasAccepted { get; private set; } = false;
+
+    public bool HasDataForParentAttributes => NewRelicPayloadWasAccepted || _validTracestateWasAccepted;
+    public bool HasDataForAttributes { get; private set; } = false;
+
+    public List<string> VendorStateEntries => (_traceContext?.VendorStateEntries);
+
+    #endregion Properties
+
+    public List<IngestErrorType> IngestErrors { get; private set; }
+
+    private DistributedTracePayload _newRelicPayload;
+    private W3CTraceContext _traceContext;
+
+    public static ITracingState AcceptDistributedTraceHeaders<T>(
+        T carrier,
+        Func<T, string, IEnumerable<string>> getter,
+        TransportType transportType,
+        string agentTrustKey,
+        DateTime transactionStartTime, ISamplerService samplerService)
+    {
+        var tracingState = new TracingState();
+        var errors = new List<IngestErrorType>();
+
+        // w3c
+        tracingState._traceContext = W3CTraceContext.TryGetTraceContextFromHeaders(carrier, getter, agentTrustKey, errors);
+        tracingState.TraceContextWasAccepted =
+            tracingState._traceContext.TraceparentPresent &&
+            !errors.Contains(IngestErrorType.TraceParentParseException);
+
+        tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null;
+
+        // newrelic 
+        // if traceparent was present (regardless if valid), ignore newrelic header
+        if (!tracingState._traceContext.TraceparentPresent)
+        {
+            // Search for the following header keys in this order: "newrelic", "NEWRELIC", "Newrelic"
+            // If the getter function makes a case-insensitive search it will find any of the three
+            // variants on the first call.
+            var newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllLower)?.ToList();
+
+            if (newRelicHeaderList is not { Count: > 0})
+                newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllUpper)?.ToList();
+
+            if (newRelicHeaderList is not { Count: > 0 })
+                newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeySingleUpper)?.ToList();
+
+            if (newRelicHeaderList is { Count: > 0}) // a NR header key was present
+            {
+                tracingState._newRelicPayload = DistributedTracePayload.TryDecodeAndDeserializeDistributedTracePayload(newRelicHeaderList.FirstOrDefault(), agentTrustKey, errors);
+                tracingState.NewRelicPayloadWasAccepted = tracingState._newRelicPayload != null ? true : false;
             }
         }
 
-        public string AppId
-        {
-            get
-            {
-                if (_traceContext?.Tracestate != null)
-                {
-                    return _traceContext.Tracestate.AppId;
-                }
+        tracingState.ApplyRemoteParentSampledBehavior(samplerService);
 
-                return _newRelicPayload?.AppId;
-            }
+        if (errors.Any())
+        {
+            tracingState.IngestErrors = errors;
         }
 
-        public string AccountId
-        {
-            get
-            {
-                if (_traceContext?.Tracestate != null)
-                {
-                    return _traceContext.Tracestate.AccountId;
-                }
+        // if Traceparent was present (regardless if valid), generate TransactionAttributes
+        tracingState.HasDataForAttributes = tracingState._traceContext.TraceparentPresent == true || tracingState.NewRelicPayloadWasAccepted == true;
 
-                return _newRelicPayload?.AccountId;
-            }
+        tracingState._transactionStartTime = tracingState._validTracestateWasAccepted || tracingState.NewRelicPayloadWasAccepted ? transactionStartTime : default;
+        tracingState.TransportType = transportType;
+
+        return tracingState;
+    }
+
+    /// <summary>
+    /// Use remote parent sampled behavior configuration in conjunction with the traceparent sampled flag to determine
+    /// if the transaction should be sampled.
+    /// </summary>
+    private void ApplyRemoteParentSampledBehavior(ISamplerService samplerService)
+    {
+        // don't do anything if the traceparent is not present or it's null
+        bool? isRemoteParentSampled = null;
+        if (_traceContext.TraceparentPresent && _traceContext.Traceparent != null)
+        {
+            isRemoteParentSampled = _traceContext.Traceparent.Sampled;
         }
 
-        // Not part of trace-context or newrelic-payload - doesn't need to check if context or payload.
-        public TransportType TransportType { get; private set; }
-
-        public string Guid
+        if (isRemoteParentSampled == null && _newRelicPayload != null)
         {
-            get
-            {
-                if (_traceContext?.Tracestate != null)
-                {
-                    return _traceContext.Tracestate.SpanId;
-                }
-
-                return _newRelicPayload?.Guid;
-            }
+            isRemoteParentSampled = _newRelicPayload.Sampled;
         }
 
-        public string ParentId => _traceContext?.Traceparent?.ParentId;
+        if (isRemoteParentSampled == null) // no remote parent
+            return;
 
-        public DateTime Timestamp
-        {
-            get
-            {
-                if (_timestamp != default)
-                {
-                    return _timestamp;
-                }
+        var sampler = samplerService.GetSampler(isRemoteParentSampled.Value ? SamplerLevel.RemoteParentSampled : SamplerLevel.RemoteParentNotSampled);
+        if (sampler == null) // remote parent sampled behavior is not configured
+            return;
 
-                if (_traceContext?.Tracestate != null && _traceContext.Tracestate.Timestamp != default)
-                {
-                    return _timestamp = _traceContext.Tracestate.Timestamp.FromUnixTimeMilliseconds();
-                }
+        var samplingResult = sampler.ShouldSample(new SamplingParameters(TraceId, Priority ?? 0.0f, _traceContext, TraceContextWasAccepted && _validTracestateWasAccepted, _newRelicPayload, NewRelicPayloadWasAccepted));
 
-                if (_newRelicPayload?.Timestamp != default)
-                {
-                    return _timestamp = _newRelicPayload.Timestamp;
-                }
+        // setting these to non-null values will override the logic in the property getters that falls back to the payload or tracestate values
+        _priority = samplingResult.Priority;
+        _sampled = samplingResult.Sampled;
 
-                return _timestamp = default(DateTime); // default is same as new.
-            }
-        }
-
-        public TimeSpan TransportDuration
-        {
-            get
-            {
-                var duration = Timestamp != default ? _transactionStartTime - Timestamp : TimeSpan.Zero;
-                return duration > TimeSpan.Zero ? duration : TimeSpan.Zero;
-            }
-        }
-
-        public string TraceId
-        {
-            get
-            {
-                if (_traceContext?.Traceparent != null)
-                {
-                    return _traceContext.Traceparent.TraceId;
-                }
-
-                return _newRelicPayload?.TraceId;
-            }
-        }
-
-        public string TransactionId
-        {
-            get
-            {
-                if (_traceContext?.Tracestate != null)
-                {
-                    return _traceContext.Tracestate.TransactionId;
-                }
-
-                return _newRelicPayload?.TransactionId;
-            }
-        }
-
-        private bool? _sampled;
-        public bool? Sampled
-        {
-            get
-            {
-                if (_sampled is not null)
-                    return _sampled;
-
-                if (_traceContext?.Tracestate is { Sampled: not null })
-                    return _sampled = Convert.ToBoolean(_traceContext.Tracestate.Sampled);
-
-                if (_newRelicPayload?.Sampled is not null)
-                    return _sampled = _newRelicPayload.Sampled;
-
-                return null;
-            }
-        }
-
-        private float? _priority;
-        public float? Priority
-        {
-            get
-            {
-                if (_priority != null)
-                {
-                    return _priority;
-                }
-
-                if (_traceContext?.Tracestate is { Priority: not null })
-                {
-                    return _traceContext.Tracestate.Priority;
-                }
-
-                return _newRelicPayload?.Priority;
-            }
-        }
-
-        public bool NewRelicPayloadWasAccepted { get; private set; } = false;
-        public bool TraceContextWasAccepted { get; private set; } = false;
-
-        public bool HasDataForParentAttributes => NewRelicPayloadWasAccepted || _validTracestateWasAccepted;
-        public bool HasDataForAttributes { get; private set; } = false;
-
-        public List<string> VendorStateEntries => (_traceContext?.VendorStateEntries);
-
-        #endregion Properties
-
-        public List<IngestErrorType> IngestErrors { get; private set; }
-
-        private DistributedTracePayload _newRelicPayload;
-        private W3CTraceContext _traceContext;
-
-        public static ITracingState AcceptDistributedTraceHeaders<T>(
-            T carrier,
-            Func<T, string, IEnumerable<string>> getter,
-            TransportType transportType,
-            string agentTrustKey,
-            DateTime transactionStartTime, ISamplerService samplerService)
-        {
-            var tracingState = new TracingState();
-            var errors = new List<IngestErrorType>();
-
-            // w3c
-            tracingState._traceContext = W3CTraceContext.TryGetTraceContextFromHeaders(carrier, getter, agentTrustKey, errors);
-            tracingState.TraceContextWasAccepted =
-                tracingState._traceContext.TraceparentPresent &&
-                !errors.Contains(IngestErrorType.TraceParentParseException);
-
-            tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null;
-
-            // newrelic 
-            // if traceparent was present (regardless if valid), ignore newrelic header
-            if (!tracingState._traceContext.TraceparentPresent)
-            {
-                // Search for the following header keys in this order: "newrelic", "NEWRELIC", "Newrelic"
-                // If the getter function makes a case-insensitive search it will find any of the three
-                // variants on the first call.
-                var newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllLower)?.ToList();
-
-                if (newRelicHeaderList is not { Count: > 0})
-                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllUpper)?.ToList();
-
-                if (newRelicHeaderList is not { Count: > 0 })
-                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeySingleUpper)?.ToList();
-
-                if (newRelicHeaderList is { Count: > 0}) // a NR header key was present
-                {
-                    tracingState._newRelicPayload = DistributedTracePayload.TryDecodeAndDeserializeDistributedTracePayload(newRelicHeaderList.FirstOrDefault(), agentTrustKey, errors);
-                    tracingState.NewRelicPayloadWasAccepted = tracingState._newRelicPayload != null ? true : false;
-                }
-            }
-
-            tracingState.ApplyRemoteParentSampledBehavior(samplerService);
-
-            if (errors.Any())
-            {
-                tracingState.IngestErrors = errors;
-            }
-
-            // if Traceparent was present (regardless if valid), generate TransactionAttributes
-            tracingState.HasDataForAttributes = tracingState._traceContext.TraceparentPresent == true || tracingState.NewRelicPayloadWasAccepted == true;
-
-            tracingState._transactionStartTime = tracingState._validTracestateWasAccepted || tracingState.NewRelicPayloadWasAccepted ? transactionStartTime : default;
-            tracingState.TransportType = transportType;
-
-            return tracingState;
-        }
-
-        /// <summary>
-        /// Use remote parent sampled behavior configuration in conjunction with the traceparent sampled flag to determine
-        /// if the transaction should be sampled.
-        /// </summary>
-        private void ApplyRemoteParentSampledBehavior(ISamplerService samplerService)
-        {
-            // don't do anything if the traceparent is not present or it's null
-            bool? isRemoteParentSampled = null;
-            if (_traceContext.TraceparentPresent && _traceContext.Traceparent != null)
-            {
-                isRemoteParentSampled = _traceContext.Traceparent.Sampled;
-            }
-
-            if (isRemoteParentSampled == null && _newRelicPayload != null)
-            {
-                isRemoteParentSampled = _newRelicPayload.Sampled;
-            }
-
-            if (isRemoteParentSampled == null) // no remote parent
-                return;
-
-            var sampler = samplerService.GetSampler(isRemoteParentSampled.Value ? SamplerLevel.RemoteParentSampled : SamplerLevel.RemoteParentNotSampled);
-            if (sampler == null) // remote parent sampled behavior is not configured
-                return;
-
-            var samplingResult = sampler.ShouldSample(new SamplingParameters(TraceId, Priority ?? 0.0f, _traceContext, TraceContextWasAccepted && _validTracestateWasAccepted, _newRelicPayload, NewRelicPayloadWasAccepted));
-
-            // setting these to non-null values will override the logic in the property getters that falls back to the payload or tracestate values
-            _priority = samplingResult.Priority;
-            _sampled = samplingResult.Sampled;
-
-            Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext?.Traceparent?.Sampled={TraceParentSampled}, _newRelicPayload?.Sampled={NewRelicSampled}, Sampler: {Sampler} ==> Sampled: {Sampled}, Priority: {Priority}",
-                    _traceContext?.Traceparent?.Sampled,
-                    _newRelicPayload?.Sampled,
-                    sampler.GetType().Name,
-                    Sampled,
-                    Priority
-                );
-        }
+        Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext?.Traceparent?.Sampled={TraceParentSampled}, _newRelicPayload?.Sampled={NewRelicSampled}, Sampler: {Sampler} ==> Sampled: {Sampled}, Priority: {Priority}",
+            _traceContext?.Traceparent?.Sampled,
+            _newRelicPayload?.Sampled,
+            sampler.GetType().Name,
+            Sampled,
+            Priority
+        );
     }
 }

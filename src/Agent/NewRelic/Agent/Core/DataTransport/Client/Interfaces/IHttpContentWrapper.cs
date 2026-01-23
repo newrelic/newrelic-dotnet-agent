@@ -3,15 +3,13 @@
 
 using System.IO;
 
-namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
-{
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
-    /// <summary>
-    /// HttpContentHeaders wrapper to enable mocking in unit tests
-    /// </summary>
-    public interface IHttpContentWrapper
-    {
-        Stream ReadAsStream();
-        IHttpContentHeadersWrapper Headers { get; }
-    }
+/// <summary>
+/// HttpContentHeaders wrapper to enable mocking in unit tests
+/// </summary>
+public interface IHttpContentWrapper
+{
+    Stream ReadAsStream();
+    IHttpContentHeadersWrapper Headers { get; }
 }

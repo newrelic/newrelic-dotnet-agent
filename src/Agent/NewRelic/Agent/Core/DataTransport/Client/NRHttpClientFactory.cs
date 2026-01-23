@@ -6,29 +6,28 @@ using System.Net;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
+namespace NewRelic.Agent.Core.DataTransport.Client;
+
+/// <summary>
+///     Pseudo "factory" implementation to get an IHttpClient instance of a NRHttpClient. Registered in DI
+///     at startup if running in a .NET build
+/// </summary>
+public class NRHttpClientFactory : IHttpClientFactory
 {
-    /// <summary>
-    ///     Pseudo "factory" implementation to get an IHttpClient instance of a NRHttpClient. Registered in DI
-    ///     at startup if running in a .NET build
-    /// </summary>
-    public class NRHttpClientFactory : IHttpClientFactory
+    private IHttpClient _httpClient;
+
+    private bool? _hasProxy;
+
+    public IHttpClient GetOrCreateClient(IWebProxy proxy, IConfiguration configuration)
     {
-        private IHttpClient _httpClient;
-
-        private bool? _hasProxy;
-
-        public IHttpClient GetOrCreateClient(IWebProxy proxy, IConfiguration configuration)
+        var proxyRequired = (proxy != null);
+        if (_httpClient != null && (_hasProxy == proxyRequired))
         {
-            var proxyRequired = (proxy != null);
-            if (_httpClient != null && (_hasProxy == proxyRequired))
-            {
-                return _httpClient;
-            }
-
-            _hasProxy = proxyRequired;
-            return _httpClient = new NRHttpClient(proxy, configuration);
+            return _httpClient;
         }
+
+        _hasProxy = proxyRequired;
+        return _httpClient = new NRHttpClient(proxy, configuration);
     }
 }
 #endif

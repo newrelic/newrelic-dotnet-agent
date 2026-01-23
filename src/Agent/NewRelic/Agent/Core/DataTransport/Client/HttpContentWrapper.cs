@@ -6,8 +6,8 @@ using System.IO;
 using System.Net.Http;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
-{
+namespace NewRelic.Agent.Core.DataTransport.Client;
+
     /// <summary>
     /// HttpContent wrapper to enable mocking in unit tests
     /// </summary>
@@ -27,5 +27,4 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
         public IHttpContentHeadersWrapper Headers => new HttpContentHeadersWrapper(_httpContent.Headers);
     }
-}
 #endif

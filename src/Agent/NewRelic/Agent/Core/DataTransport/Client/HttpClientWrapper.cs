@@ -9,42 +9,41 @@ using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
+namespace NewRelic.Agent.Core.DataTransport.Client;
+
+public class HttpClientWrapper : IHttpClientWrapper
 {
-    public class HttpClientWrapper : IHttpClientWrapper
+    private readonly HttpClient _httpClient;
+    private readonly int _timeoutMilliseconds;
+
+    public HttpClientWrapper(HttpClient client, int timeoutMilliseconds)
     {
-        private readonly HttpClient _httpClient;
-        private readonly int _timeoutMilliseconds;
+        _httpClient = client;
+        _timeoutMilliseconds = timeoutMilliseconds;
+    }
 
-        public HttpClientWrapper(HttpClient client, int timeoutMilliseconds)
+
+    public void Dispose()
+    {
+        _httpClient.Dispose();
+    }
+
+    public async Task<IHttpResponseMessageWrapper> SendAsync(HttpRequestMessage message)
+    {
+        using var cts = new CancellationTokenSource(_timeoutMilliseconds);
+        try
         {
-            _httpClient = client;
-            _timeoutMilliseconds = timeoutMilliseconds;
+            // .ConfigureAwait(false) is used to avoid deadlocks.
+            var httpResponseMessage = await _httpClient.SendAsync(message, cts.Token).ConfigureAwait(false);
+            return new HttpResponseMessageWrapper(httpResponseMessage);
         }
-
-
-        public void Dispose()
+        catch (Exception e)
         {
-            _httpClient.Dispose();
-        }
+            Log.Debug(cts.IsCancellationRequested
+                ? $"HttpClient.SendAsync() timed out after {_timeoutMilliseconds}ms."
+                : $"HttpClient.SendAsync() threw an unexpected exception: {e}");
 
-        public async Task<IHttpResponseMessageWrapper> SendAsync(HttpRequestMessage message)
-        {
-            using var cts = new CancellationTokenSource(_timeoutMilliseconds);
-            try
-            {
-                // .ConfigureAwait(false) is used to avoid deadlocks.
-                var httpResponseMessage = await _httpClient.SendAsync(message, cts.Token).ConfigureAwait(false);
-                return new HttpResponseMessageWrapper(httpResponseMessage);
-            }
-            catch (Exception e)
-            {
-                Log.Debug(cts.IsCancellationRequested
-                    ? $"HttpClient.SendAsync() timed out after {_timeoutMilliseconds}ms."
-                    : $"HttpClient.SendAsync() threw an unexpected exception: {e}");
-
-                throw;
-            }
+            throw;
         }
     }
 }

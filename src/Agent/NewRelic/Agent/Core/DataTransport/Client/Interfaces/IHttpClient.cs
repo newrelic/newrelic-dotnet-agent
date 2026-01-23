@@ -2,12 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Threading.Tasks;
 
-namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces;
+
+public interface IHttpClient : IDisposable
 {
-    public interface IHttpClient : IDisposable
-    {
-        IHttpResponse Send(IHttpRequest request);
-    }
+    IHttpResponse Send(IHttpRequest request);
 }

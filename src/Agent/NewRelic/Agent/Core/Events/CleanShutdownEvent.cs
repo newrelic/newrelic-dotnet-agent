@@ -1,9 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Core.Events
+namespace NewRelic.Agent.Core.Events;
+
+public class CleanShutdownEvent
 {
-    public class CleanShutdownEvent
-    {
-    }
 }
