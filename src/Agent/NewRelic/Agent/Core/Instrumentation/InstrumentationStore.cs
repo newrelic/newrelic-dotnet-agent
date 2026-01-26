@@ -1,53 +1,52 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core.Instrumentation
+namespace NewRelic.Agent.Core.Instrumentation;
+
+public interface IInstrumentationStore
 {
-    public interface IInstrumentationStore
+    bool IsEmpty { get; }
+    void AddOrUpdateInstrumentation(string name, string xml);
+    KeyValuePair<string, string>[] GetInstrumentation();
+    bool Clear();
+}
+
+public class InstrumentationStore : IInstrumentationStore
+{
+    private readonly ConcurrentDictionary<string, string> _instrumentation = new ConcurrentDictionary<string, string>();
+
+    public bool IsEmpty => _instrumentation.Count == 0;
+
+    public void AddOrUpdateInstrumentation(string name, string xml)
     {
-        bool IsEmpty { get; }
-        void AddOrUpdateInstrumentation(string name, string xml);
-        KeyValuePair<string, string>[] GetInstrumentation();
-        bool Clear();
+        if (string.IsNullOrEmpty(name))
+        {
+            Log.Warn($"Instrumentation {nameof(name)} was null or empty.");
+            return;
+        }
+
+        _instrumentation[name] = xml;
     }
 
-    public class InstrumentationStore : IInstrumentationStore
+    public KeyValuePair<string, string>[] GetInstrumentation()
     {
-        private readonly ConcurrentDictionary<string, string> _instrumentation = new ConcurrentDictionary<string, string>();
+        // The following must use ToArray because ToArray is thread safe on a ConcurrentDictionary.
+        return _instrumentation.ToArray();
+    }
 
-        public bool IsEmpty => _instrumentation.Count == 0;
-
-        public void AddOrUpdateInstrumentation(string name, string xml)
+    public bool Clear()
+    {
+        var instrumentationCleared = false;
+        foreach (var key in _instrumentation.Keys)
         {
-            if (string.IsNullOrEmpty(name))
-            {
-                Log.Warn($"Instrumentation {nameof(name)} was null or empty.");
-                return;
-            }
-
-            _instrumentation[name] = xml;
+            _instrumentation[key] = string.Empty;
+            instrumentationCleared = true;
         }
 
-        public KeyValuePair<string, string>[] GetInstrumentation()
-        {
-            // The following must use ToArray because ToArray is thread safe on a ConcurrentDictionary.
-            return _instrumentation.ToArray();
-        }
-
-        public bool Clear()
-        {
-            var instrumentationCleared = false;
-            foreach (var key in _instrumentation.Keys)
-            {
-                _instrumentation[key] = string.Empty;
-                instrumentationCleared = true;
-            }
-
-            return instrumentationCleared;
-        }
+        return instrumentationCleared;
     }
 }

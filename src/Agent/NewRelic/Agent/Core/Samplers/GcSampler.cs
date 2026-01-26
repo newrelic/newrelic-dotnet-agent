@@ -7,10 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Agent.Core.SharedInterfaces;
 
 namespace NewRelic.Agent.Core.Samplers
 {
