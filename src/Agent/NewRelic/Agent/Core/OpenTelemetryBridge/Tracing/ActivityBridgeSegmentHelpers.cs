@@ -44,7 +44,6 @@ public static class ActivityBridgeSegmentHelpers
 
         // based on activity kind, create the appropriate segment data
         // remove all tags that are used in segment data creation
-        Log.Finest(">>>>>>>>>>>>>>>>>>> activityKind (2=client): " + activityKind);
         switch (activityKind)
         {
             case (int)ActivityKind.Client:
@@ -628,7 +627,7 @@ public static class ActivityBridgeSegmentHelpers
             if (activityEvent.Name == "exception")
             {
                 string exceptionMessage = null;
-                //string exceptionType = null;
+                string exceptionType = null;
                 //string exceptionStacktrace = null;
 
                 foreach (var tag in activityEvent.Tags)
@@ -637,31 +636,27 @@ public static class ActivityBridgeSegmentHelpers
                     {
                         exceptionMessage = tag.Value?.ToString();
                     }
-                    //else if (tag.Key == "exception.type")
-                    //{
-                    //    exceptionType = tag.Value?.ToString();
-                    //}
+                    else if (tag.Key == "exception.type")
+                    {
+                        exceptionType = tag.Value?.ToString();
+                    }
+                    // TODO: In the future consider adding stack trace information.  Will need to verify format first.
                     //else if (tag.Key == "exception.stacktrace")
                     //{
                     //    exceptionStacktrace = tag.Value?.ToString();
                     //}
 
-                    // Add all of the original attributes to the segment.
+                    // Add all the original attributes to the segment.
                     segment.AddCustomAttribute((string)tag.Key, (object)tag.Value);
                 }
 
                 if (exceptionMessage != null)
                 {
-
-                    // TODO: The agent does not support ignoring errors by message, but if a type is available we could
-                    // consider ignoring the error based on the type.
-
+                    var errorData = errorService.FromMessage(exceptionMessage, exceptionType, (IDictionary<string, object>)null, null);
                     // TODO: In the future consider using the span status to determine if the exception is expected or not.
-                    var errorData = errorService.FromMessage(exceptionMessage, (IDictionary<string, object>)null, false);
                     //var span = (IInternalSpan)segment;
                     //span.ErrorData = errorData;
 
-                    // TODO: Record the errorData on the transaction.
                     if (segment is IHybridAgentSegment hybridAgentSegment)
                     {
                         var transaction = hybridAgentSegment.GetTransactionFromSegment();
@@ -673,7 +668,7 @@ public static class ActivityBridgeSegmentHelpers
                     }
                 }
 
-                // Short circuiting the loop after finding the first exception event.
+                // Short-circuiting the loop after finding the first exception event.
                 break;
             }
         }

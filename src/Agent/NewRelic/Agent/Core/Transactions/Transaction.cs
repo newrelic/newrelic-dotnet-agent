@@ -215,7 +215,7 @@ namespace NewRelic.Agent.Core.Transactions
 
             var segment = StartSegmentImpl(methodCall);
 
-            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+            if (Log.IsFinestEnabled) LogFinest($"Segment() start {{{segment.ToStringForFinestLogging()}}}");
 
             return segment;
         }
@@ -268,7 +268,7 @@ namespace NewRelic.Agent.Core.Transactions
             var simpleSegmentData = new SimpleSegmentData(activity.DisplayName);
             segment.SetSegmentData(simpleSegmentData);
 
-            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+            if (Log.IsFinestEnabled) LogFinest($"Segment(activity) start {{{segment.ToStringForFinestLogging()}}}");
 
             return segment;
         }
@@ -286,7 +286,7 @@ namespace NewRelic.Agent.Core.Transactions
 
             segment.SetSegmentData(customSegmentData);
 
-            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+            if (Log.IsFinestEnabled) LogFinest($"Segment(custom) start {{{segment.ToStringForFinestLogging()}}}");
 
             return segment;
         }
@@ -322,7 +322,7 @@ namespace NewRelic.Agent.Core.Transactions
 
             segment.SetSegmentData(messageBrokerSegmentData);
 
-            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+            if (Log.IsFinestEnabled) LogFinest($"Segment(message broker) start {{{segment.ToStringForFinestLogging()}}}");
 
             return segment;
         }
@@ -342,7 +342,7 @@ namespace NewRelic.Agent.Core.Transactions
 
             segment.SetSegmentData(messageBrokerSegmentData);
 
-            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+            if (Log.IsFinestEnabled) LogFinest($"Segment(message broker serialization) start {{{segment.ToStringForFinestLogging()}}}");
 
             return segment;
         }
@@ -393,7 +393,7 @@ namespace NewRelic.Agent.Core.Transactions
 
             segment.SetSegmentData(datastoreSegmentData);
 
-            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+            if (Log.IsFinestEnabled) LogFinest($"Segment(stackexchange redis) start {{{segment.ToStringForFinestLogging()}}}");
 
             return segment;
         }
@@ -410,7 +410,7 @@ namespace NewRelic.Agent.Core.Transactions
 
             segment.SetSegmentData(datastoreSegmentData);
 
-            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+            if (Log.IsFinestEnabled) LogFinest($"Segment(datastore) start {{{segment.ToStringForFinestLogging()}}}");
 
             return segment;
         }
@@ -530,7 +530,7 @@ namespace NewRelic.Agent.Core.Transactions
 
             segment.SetSegmentData(externalSegmentData);
 
-            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+            if (Log.IsFinestEnabled) LogFinest($"Segment(external) start {{{segment.ToStringForFinestLogging()}}}");
 
             return segment;
         }
@@ -576,7 +576,7 @@ namespace NewRelic.Agent.Core.Transactions
 
             segment.SetSegmentData(methodSegmentData);
 
-            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+            if (Log.IsFinestEnabled) LogFinest($"Segment(method) start {{{segment.ToStringForFinestLogging()}}}");
 
             return segment;
         }
@@ -604,7 +604,7 @@ namespace NewRelic.Agent.Core.Transactions
 
             segment.SetSegmentData(simpleSegmentData);
 
-            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+            if (Log.IsFinestEnabled) LogFinest($"Segment(transaction) start {{{segment.ToStringForFinestLogging()}}}");
 
             return segment;
         }
@@ -755,8 +755,15 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void NoticeErrorOnTransactionAndSegment(ErrorData errorData, ISegment segment)
         {
-            TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
-            TryNoticeErrorOnSegment(errorData, segment);
+            if (!_errorService.ShouldIgnoreException(errorData))
+            {
+                TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
+                TryNoticeErrorOnSegment(errorData, segment);
+            }
+            else
+            {
+                TransactionMetadata.TransactionErrorState.SetIgnoreAgentNoticedErrors();
+            }
         }
 
         private void TryNoticeErrorOnSegment(ErrorData errorData, ISegment segment)

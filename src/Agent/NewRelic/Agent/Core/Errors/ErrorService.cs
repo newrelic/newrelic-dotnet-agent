@@ -3,11 +3,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+#if !NETSTANDARD2_0
 using System.Web;
+#endif
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Helpers;
-using System.Collections.ObjectModel;
+
 
 namespace NewRelic.Agent.Core.Errors
 {
@@ -16,6 +19,7 @@ namespace NewRelic.Agent.Core.Errors
         bool ShouldCollectErrors { get; }
 
         bool ShouldIgnoreException(Exception exception);
+        bool ShouldIgnoreException(ErrorData errorData);
         bool ShouldIgnoreHttpStatusCode(int statusCode, int? subStatusCode);
 
         ErrorData FromException(Exception exception);
@@ -23,6 +27,8 @@ namespace NewRelic.Agent.Core.Errors
         ErrorData FromException(Exception exception, IDictionary<string, object> customAttributes);
         ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes, bool isExpected);
         ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes, bool isExpected);
+        ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, string> customAttributes, bool? isExpected);
+        ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, object> customAttributes, bool? isExpected);
         ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt);
     }
 
@@ -42,6 +48,11 @@ namespace NewRelic.Agent.Core.Errors
         public bool ShouldIgnoreException(Exception exception)
         {
             return IsErrorFromExceptionSpecified(exception, _configurationService.Configuration.IgnoreErrorsConfiguration);
+        }
+
+        public bool ShouldIgnoreException(ErrorData errorData)
+        {
+            return IsExceptionSpecified(errorData.ErrorMessage, errorData.ErrorTypeName, _configurationService.Configuration.IgnoreErrorsConfiguration);
         }
 
         public bool ShouldIgnoreHttpStatusCode(int statusCode, int? subStatusCode)
@@ -88,6 +99,16 @@ namespace NewRelic.Agent.Core.Errors
             return FromMessageInternal(errorMessage, customAttributes, isExpected);
         }
 
+        public ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, string> customAttributes, bool? isExpected)
+        {
+            return FromMessageInternal(errorMessage, typeName, customAttributes, isExpected ?? IsExceptionSpecified(errorMessage, typeName, _configurationService.Configuration.ExpectedErrorsConfiguration));
+        }
+
+        public ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, object> customAttributes, bool? isExpected)
+        {
+            return FromMessageInternal(errorMessage, typeName, customAttributes, isExpected ?? IsExceptionSpecified(errorMessage, typeName, _configurationService.Configuration.ExpectedErrorsConfiguration));
+        }
+
         public ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt)
         {
             if (statusCode < 400) return null;
@@ -121,6 +142,12 @@ namespace NewRelic.Agent.Core.Errors
         {
             var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
             return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
+        }
+
+        private ErrorData FromMessageInternal<T>(string errorMessage, string typeName, IDictionary<string, T> customAttributes, bool isExpected)
+        {
+            var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
+            return new ErrorData(message, typeName ?? CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
         }
 
         private ErrorData FromExceptionInternal(Exception exception, ReadOnlyDictionary<string, object> customAttributes)
@@ -159,6 +186,23 @@ namespace NewRelic.Agent.Core.Errors
                 if (messages != Enumerable.Empty<string>())
                 {
                     return ContainsSubstring(messages, exception.Message);
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsExceptionSpecified(string message, string exceptionTypeName, IDictionary<string, IEnumerable<string>> source)
+        {
+            if (source.TryGetValue(exceptionTypeName, out var messages))
+            {
+                if (messages != Enumerable.Empty<string>())
+                {
+                    return ContainsSubstring(messages, message);
                 }
                 else
                 {

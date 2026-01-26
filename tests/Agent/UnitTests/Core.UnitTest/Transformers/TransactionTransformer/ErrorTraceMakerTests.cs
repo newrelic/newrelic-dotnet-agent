@@ -69,7 +69,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             return _errorService.FromException(_exception, customAttributes);
         }
 
-        private ErrorData GetErrorDataFromMessage(object value)
+        private ErrorData GetErrorDataFromMessage(string message, object value)
         {
             Dictionary<string, object> customAttributes = null;
             if (value != null)
@@ -77,7 +77,18 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 customAttributes = new Dictionary<string, object> { { ErrorDataCustomAttributeKey, value } };
             }
 
-            return _errorService.FromMessage("Out of Memory Message", customAttributes, false);
+            return _errorService.FromMessage(message, customAttributes, false);
+        }
+
+        private ErrorData GetErrorDataFromMessage(string message, string typeName, object value, bool isExpected)
+        {
+            Dictionary<string, object> customAttributes = null;
+            if (value != null)
+            {
+                customAttributes = new Dictionary<string, object> { { ErrorDataCustomAttributeKey, value } };
+            }
+
+            return _errorService.FromMessage(message, typeName, customAttributes, isExpected);
         }
 
         [Test]
@@ -103,10 +114,19 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 );
         }
 
-        [Test]
-        public void GetErrorTrace_ReturnsErrorTrace_IfExceptionIsNoticed()
+        [TestCase("Out of Memory Message", "Custom Error")]
+        [TestCase("Unhandled Exception", "System.Exception")]
+        [TestCase("", "System.Exception")]
+        [TestCase(null, "System.Exception")]
+        [TestCase("Aggregate Error", "")]
+        [TestCase("", "")]
+        [TestCase(null, "")]
+        [TestCase("Bad Argument", "")]
+        [TestCase("", null)]
+        [TestCase(null, null)]
+        public void GetErrorTrace_ReturnsErrorTrace_IfExceptionIsNoticed(string message, string typeName)
         {
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -116,16 +136,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(errorTrace, Is.Not.Null);
             NrAssert.Multiple(
                 () => Assert.That(errorTrace.Path, Is.EqualTo("WebTransaction/Name")),
-                () => Assert.That(errorTrace.Message, Is.EqualTo("Out of Memory Message")),
-                () => Assert.That(errorTrace.ExceptionClassName, Is.EqualTo("Custom Error")),
+                () => Assert.That(errorTrace.Message, Is.EqualTo(message)),
+                () => Assert.That(errorTrace.ExceptionClassName, Is.EqualTo(typeName ?? "Custom Error")), // null typeName defaults to "Custom Error"
                 () => Assert.That(errorTrace.Guid, Is.EqualTo(transaction.Guid))
             );
         }
 
-        [Test]
-        public void GetErrorTrace_ReturnsFirstException_IfMultipleExceptionsNoticed()
+        [TestCase("Out of Memory Message", "Custom Error")]
+        [TestCase("Unhandled Exception", "System.Exception")]
+        public void GetErrorTrace_ReturnsFirstException_IfMultipleExceptionsNoticed(string message, string typeName)
         {
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var errorData2 = _errorService.FromMessage("My message2", (Dictionary<string, object>)null, false);
             var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData, errorData2 });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
@@ -136,16 +157,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(errorTrace, Is.Not.Null);
             NrAssert.Multiple(
                 () => Assert.That(errorTrace.Path, Is.EqualTo("WebTransaction/Name")),
-                () => Assert.That(errorTrace.Message, Is.EqualTo("Out of Memory Message")),
-                () => Assert.That(errorTrace.ExceptionClassName, Is.EqualTo("Custom Error")),
+                () => Assert.That(errorTrace.Message, Is.EqualTo(message)),
+                () => Assert.That(errorTrace.ExceptionClassName, Is.EqualTo(typeName)),
                 () => Assert.That(errorTrace.Guid, Is.EqualTo(transaction.Guid))
             );
         }
 
-        [Test]
-        public void GetErrorTrace_ReturnsExceptionsBeforeStatusCodes()
+        [TestCase("Out of Memory Message", "Custom Error")]
+        [TestCase("Unhandled Exception", "System.Exception")]
+        public void GetErrorTrace_ReturnsExceptionsBeforeStatusCodes(string message, string typeName)
         {
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -155,17 +177,18 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(errorTrace, Is.Not.Null);
             NrAssert.Multiple(
                 () => Assert.That(errorTrace.Path, Is.EqualTo("WebTransaction/Name")),
-                () => Assert.That(errorTrace.Message, Is.EqualTo("Out of Memory Message")),
-                () => Assert.That(errorTrace.ExceptionClassName, Is.EqualTo("Custom Error")),
+                () => Assert.That(errorTrace.Message, Is.EqualTo(message)),
+                () => Assert.That(errorTrace.ExceptionClassName, Is.EqualTo(typeName)),
                 () => Assert.That(errorTrace.Guid, Is.EqualTo(transaction.Guid))
             );
         }
 
-        [Test]
-        public void GetErrorTrace_ReturnsExceptionWithoutMessage_IfStripExceptionMessageEnabled()
+        [TestCase("Out of Memory Message", "Custom Error")]
+        [TestCase("Unhandled Exception", "System.Exception")]
+        public void GetErrorTrace_ReturnsExceptionWithoutMessage_IfStripExceptionMessageEnabled(string message, string typeName)
         {
             Mock.Arrange(() => _configurationService.Configuration.StripExceptionMessages).Returns(true);
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -176,7 +199,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             NrAssert.Multiple(
                 () => Assert.That(errorTrace.Path, Is.EqualTo("WebTransaction/Name")),
                 () => Assert.That(errorTrace.Message, Is.EqualTo(StripExceptionMessagesMessage)),
-                () => Assert.That(errorTrace.ExceptionClassName, Is.EqualTo("Custom Error")),
+                () => Assert.That(errorTrace.ExceptionClassName, Is.EqualTo(typeName)),
                 () => Assert.That(errorTrace.Guid, Is.EqualTo(transaction.Guid))
             );
         }
@@ -184,12 +207,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         #region ErrorGroup FromMessage
 
-        [TestCase("value")]
-        [TestCase(null)]
-        public void GetErrorTrace_InTransaction_FromMessage_HasErrorGroup(object value)
+        [TestCase("Out of Memory Message", "Custom Error", "value")]
+        [TestCase("Unhandled Exception", "System.Exception", "value")]
+        [TestCase("Out of Memory Message", "Custom Error", null)]
+        [TestCase("Unhandled Exception", "System.Exception", null)]
+        public void GetErrorTrace_InTransaction_FromMessage_HasErrorGroup(string message, string typeName, object value)
         {
             _errorGroupCallback = ex => "test group";
-            var errorData = GetErrorDataFromMessage(value);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, value) : GetErrorDataFromMessage(message, typeName, null, false);
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -200,13 +225,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(errorGroupAttribute, Is.EqualTo("test group"));
         }
 
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase("    ")]
-        public void GetErrorTrace_InTransaction_FromMessage_DoesNotHaveErrorGroup(string callbackReturnValue)
+        [TestCase("Out of Memory Message", "Custom Error", null)]
+        [TestCase("Unhandled Exception", "System.Exception", null)]
+        [TestCase("Out of Memory Message", "Custom Error", "")]
+        [TestCase("Unhandled Exception", "System.Exception", "")]
+        [TestCase("Out of Memory Message", "Custom Error", "    ")]
+        [TestCase("Unhandled Exception", "System.Exception", "    ")]
+        public void GetErrorTrace_InTransaction_FromMessage_DoesNotHaveErrorGroup(string message, string typeName, string callbackReturnValue)
         {
             _errorGroupCallback = ex => callbackReturnValue;
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -216,10 +244,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(agentAttributes.Keys, Has.No.Member(_expectedErrorGroupAttributeName));
         }
 
-        [Test]
-        public void GetErrorTrace_InTransaction_FromMessage_DoesNotHaveErrorGroup()
+        [TestCase("Out of Memory Message", "Custom Error")]
+        [TestCase("Unhandled Exception", "System.Exception")]
+        public void GetErrorTrace_InTransaction_FromMessage_DoesNotHaveErrorGroup(string message, string typeName)
         {
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -229,12 +258,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(agentAttributes.Keys, Has.No.Member("error_group"));
         }
 
-        [TestCase("value")]
-        [TestCase(null)]
-        public void GetErrorTrace_NoTransaction_FromMessage_HasErrorGroup(object value)
+        [TestCase("Out of Memory Message", "Custom Error", "value")]
+        [TestCase("Unhandled Exception", "System.Exception", "value")]
+        [TestCase("Out of Memory Message", "Custom Error", null)]
+        [TestCase("Unhandled Exception", "System.Exception", null)]
+        public void GetErrorTrace_NoTransaction_FromMessage_HasErrorGroup(string message, string typeName,object value)
         {
             _errorGroupCallback = ex => "test group";
-            var errorData = GetErrorDataFromMessage(value);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, value) : GetErrorDataFromMessage(message, typeName, null, false);
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorData);
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
@@ -243,13 +274,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(errorGroupAttribute, Is.EqualTo("test group"));
         }
 
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase("    ")]
-        public void GetErrorTrace_NoTransaction_FromMessage_DoesNotHaveErrorGroup(string callbackReturnValue)
+        [TestCase("Out of Memory Message", "Custom Error", null)]
+        [TestCase("Unhandled Exception", "System.Exception", null)]
+        [TestCase("Out of Memory Message", "Custom Error", "")]
+        [TestCase("Unhandled Exception", "System.Exception", "")]
+        [TestCase("Out of Memory Message", "Custom Error", "    ")]
+        [TestCase("Unhandled Exception", "System.Exception", "    ")]
+        public void GetErrorTrace_NoTransaction_FromMessage_DoesNotHaveErrorGroup(string message, string typeName, string callbackReturnValue)
         {
             _errorGroupCallback = ex => callbackReturnValue;
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorData);
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
@@ -257,10 +291,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(agentAttributes.Keys, Has.No.Member(_expectedErrorGroupAttributeName));
         }
 
-        [Test]
-        public void GetErrorTrace_NoTransaction_FromMessage_DoesNotHaveErrorGroup()
+        [TestCase("Out of Memory Message", "Custom Error")]
+        [TestCase("Unhandled Exception", "System.Exception")]
+        public void GetErrorTrace_NoTransaction_FromMessage_DoesNotHaveErrorGroup(string message, string typeName)
         {
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorData);
             var agentAttributes = errorTrace.Attributes.AgentAttributes;

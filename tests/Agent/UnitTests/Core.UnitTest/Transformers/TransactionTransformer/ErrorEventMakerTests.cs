@@ -4,26 +4,27 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Google.Protobuf.WellKnownTypes;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
+using NewRelic.Agent.TestUtilities;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Segments.Tests;
-using NewRelic.Agent.TestUtilities;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Api.Experimental;
-using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -97,7 +98,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             return _errorService.FromException(_exception, customAttributes);
         }
 
-        private ErrorData GetErrorDataFromMessage(object value)
+        private ErrorData GetErrorDataFromMessage(string message, object value)
         {
             Dictionary<string, object> customAttributes = null;
             if (value != null)
@@ -105,8 +106,19 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 customAttributes = new Dictionary<string, object> { { ErrorDataCustomAttributeKey, value } };
             }
 
-            return _errorService.FromMessage("Out of Memory Message", customAttributes, false);
-        } 
+            return _errorService.FromMessage(message, customAttributes, false);
+        }
+
+        private ErrorData GetErrorDataFromMessage(string message, string typeName, object value, bool isExpected)
+        {
+            Dictionary<string, object> customAttributes = null;
+            if (value != null)
+            {
+                customAttributes = new Dictionary<string, object> { { ErrorDataCustomAttributeKey, value } };
+            }
+
+            return _errorService.FromMessage(message, typeName, customAttributes, isExpected);
+        }
 
         [Test]
         public void GetErrorEvent_InTransaction_IfStatusCodeIs404_ContainsCorrectAttributes()
@@ -291,14 +303,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             );
         }
 
-        #region ErrorGroup FromMesssage
+        #region ErrorGroup FromMessage
 
-        [TestCase("value")]
-        [TestCase(null)]
-        public void GetErrorEvent_NoTransaction_FromMessage_ContainsErrorGroup(object value)
+        [TestCase("Out of Memory Message", "Custom Error", "value")]
+        [TestCase("Unhandled Exception", "System.Exception", "value")]
+        [TestCase("Out of Memory Message", "Custom Error", null)]
+        [TestCase("Unhandled Exception", "System.Exception", null)]
+        public void GetErrorEvent_NoTransaction_FromMessage_ContainsErrorGroup(string message, string typeName, object value)
         {
             _errorGroupCallback = ex => "test group";
-            var errorData = GetErrorDataFromMessage(value);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, value) : GetErrorDataFromMessage(message, typeName, value, false);
             var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
@@ -306,34 +320,40 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(errorGroupAttribute, Is.EqualTo("test group"));
         }
 
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase("     ")]
-        public void GetErrorEvent_NoTransaction_FromMessage_DoesNotContainErrorGroup(string callbackReturnValue)
+        [TestCase("Out of Memory Message", "Custom Error", null)]
+        [TestCase("Unhandled Exception", "System.Exception", null)]
+        [TestCase("Out of Memory Message", "Custom Error", "")]
+        [TestCase("Unhandled Exception", "System.Exception", "")]
+        [TestCase("Out of Memory Message", "Custom Error", "     ")]
+        [TestCase("Unhandled Exception", "System.Exception", "     ")]
+        public void GetErrorEvent_NoTransaction_FromMessage_DoesNotContainErrorGroup(string message, string typeName, string callbackReturnValue)
         {
             _errorGroupCallback = ex => callbackReturnValue;
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
             Assert.That(agentAttributeKeys, Has.No.Member(_expectedErrorGroupAttributeName));
         }
 
-        [Test]
-        public void GetErrorEvent_NoTransaction_FromMessage_DoesNotContainErrorGroup()
+        [TestCase("Out of Memory Message", "Custom Error")]
+        [TestCase("Unhandled Exception", "System.Exception")]
+        public void GetErrorEvent_NoTransaction_FromMessage_DoesNotContainErrorGroup(string message, string typeName)
         {
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
             Assert.That(agentAttributeKeys, Has.No.Member(_expectedErrorGroupAttributeName));
         }
 
-        [TestCase("value")]
-        [TestCase(null)]
-        public void GetErrorEvent_InTransaction_FromMessage_ContainsErrorGroup(object value)
+        [TestCase("Out of Memory Message", "Custom Error", "value")]
+        [TestCase("Unhandled Exception", "System.Exception", "value")]
+        [TestCase("Out of Memory Message", "Custom Error", null)]
+        [TestCase("Unhandled Exception", "System.Exception", null)]
+        public void GetErrorEvent_InTransaction_FromMessage_ContainsErrorGroup(string message, string typeName, object value)
         {
             _errorGroupCallback = ex => "test group";
-            var errorData = GetErrorDataFromMessage(value);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, value) : GetErrorDataFromMessage(message, typeName, value, false);
             var transaction = BuildTestTransaction(statusCode: 500,
                                                             exceptionData: errorData,
                                                             uri: "http://www.newrelic.com/test?param=value",
@@ -354,10 +374,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(errorGroupAttribute, Is.EqualTo("test group"));
         }
 
-        [Test]
-        public void GetErrorEvent_InTransaction_FromMessage_DoesNotContainErrorGroup()
+        [TestCase("Out of Memory Message", "Custom Error")]
+        [TestCase("Unhandled Exception", "System.Exception")]
+        public void GetErrorEvent_InTransaction_FromMessage_DoesNotContainErrorGroup(string message, string typeName)
         {
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var transaction = BuildTestTransaction(statusCode: 500,
                                                             exceptionData: errorData,
                                                             uri: "http://www.newrelic.com/test?param=value",
@@ -377,13 +398,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(agentAttributeKeys, Has.No.Member("error_group"));
         }
 
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase("     ")]
-        public void GetErrorEvent_InTransaction_FromMessage_DoesNotContainErrorGroup(string errorGroupValue)
+        [TestCase("Out of Memory Message", "Custom Error", null)]
+        [TestCase("Unhandled Exception", "System.Exception", null)]
+        [TestCase("Out of Memory Message", "Custom Error", "")]
+        [TestCase("Unhandled Exception", "System.Exception", "")]
+        [TestCase("Out of Memory Message", "Custom Error", "     ")]
+        [TestCase("Unhandled Exception", "System.Exception", "     ")]
+        public void GetErrorEvent_InTransaction_FromMessage_DoesNotContainErrorGroup(string message, string typeName, string errorGroupValue)
         {
             _errorGroupCallback = ex => errorGroupValue;
-            var errorData = GetErrorDataFromMessage(null);
+            var errorData = typeName == "Custom Error" ? GetErrorDataFromMessage(message, null) : GetErrorDataFromMessage(message, typeName, null, false);
             var transaction = BuildTestTransaction(statusCode: 500,
                                                             exceptionData: errorData,
                                                             uri: "http://www.newrelic.com/test?param=value",

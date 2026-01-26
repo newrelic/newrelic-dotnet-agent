@@ -188,6 +188,78 @@ namespace NewRelic.Agent.Core.Errors
 
         [TestCase(true)]
         [TestCase(false)]
+        public void ShouldIgnoreException_ErrorData_IgnoreErrorClasses(bool hasIgnoreError)
+        {
+            var message = "Out of memory message";
+            var typeName = "System.IO.DirectoryNotFoundException";
+            var ignoreClasses = new List<string>()
+            {
+                typeName,
+            };
+
+            if (hasIgnoreError)
+            {
+                SetupConfiguration(ignoreClasses, null, null, false, null, null, null, true);
+            }
+
+            var errorData = _errorService.FromMessage(message, typeName, (Dictionary<string, object>)null, false);
+
+            if (hasIgnoreError)
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(_errorService.ShouldIgnoreException(errorData), Is.True);
+                });
+            }
+            else
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(_errorService.ShouldIgnoreException(errorData), Is.False);
+                });
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ShouldIgnoreException_ErrorData_IgnoreErrorMessages(bool hasIgnoreError)
+        {
+            var message1 = "error message 1";
+            var message2 = "error message 2";
+            var typeName = "System.IO.DirectoryNotFoundException";
+            var ignoreErrorMessages = new Dictionary<string, IEnumerable<string>>
+            {
+                { typeName, new List<string>() { message1, message2 } }
+            };
+
+            if (hasIgnoreError)
+            {
+                SetupConfiguration(null, ignoreErrorMessages, null, false, null, null, null, errorCollectorEnabled: true);
+            }
+
+            var errorData1 = _errorService.FromMessage("this is error message 1 ", typeName, (Dictionary<string, object>)null, false);
+            var errorData2 = _errorService.FromMessage("this is error message 2 ", typeName, (Dictionary<string, object>)null, false);
+
+            if (hasIgnoreError)
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(_errorService.ShouldIgnoreException(errorData1), Is.True);
+                    Assert.That(_errorService.ShouldIgnoreException(errorData2), Is.True);
+                });
+            }
+            else
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(_errorService.ShouldIgnoreException(errorData1), Is.False);
+                    Assert.That(_errorService.ShouldIgnoreException(errorData2), Is.False);
+                });
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
         public void FromException_ReturnsExpectedErrorData(bool stripExceptionMessages)
         {
             SetupConfiguration(_exceptionsToIgnore, null, _statusCodesToIgnore, stripExceptionMessages, null, null, null, true);
@@ -215,6 +287,40 @@ namespace NewRelic.Agent.Core.Errors
             Assert.Multiple(() =>
             {
                 Assert.That(errorData.ErrorTypeName, Is.EqualTo(exception.GetType().FullName));
+                Assert.That(errorData.NoticedAt.Kind, Is.EqualTo(DateTimeKind.Utc));
+                Assert.That(errorData.Path, Is.Null);
+            });
+            Assert.That(errorData.CustomAttributes, Is.Empty);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void FromMessage_ReturnsExpectedErrorData(bool stripExceptionMessages)
+        {
+            SetupConfiguration(_exceptionsToIgnore, null, _statusCodesToIgnore, stripExceptionMessages, null, null, null, true);
+
+            var message = "Out of memory";
+            var typeName = "System.Exception";
+            var errorData = _errorService.FromMessage(message, typeName, (Dictionary<string, object>)null, false);
+
+            if (!stripExceptionMessages)
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(errorData.ErrorMessage, Is.EqualTo(message));
+                });
+            }
+            else
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(errorData.ErrorMessage, Is.EqualTo(ErrorData.StripExceptionMessagesMessage));
+                });
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(errorData.ErrorTypeName, Is.EqualTo(typeName));
                 Assert.That(errorData.NoticedAt.Kind, Is.EqualTo(DateTimeKind.Utc));
                 Assert.That(errorData.Path, Is.Null);
             });
@@ -299,6 +405,80 @@ namespace NewRelic.Agent.Core.Errors
 
         [TestCase(true)]
         [TestCase(false)]
+        public void FromMessage_MarkErrorDataAsExpected_ExpectedErrorClasses(bool hasExpectedError)
+        {
+            var message = "Root Exception";
+            var typeName = "System.IO.DirectoryNotFoundException";
+
+            var expectedClasses = new List<string>()
+            {
+                typeName,
+            };
+
+            if (hasExpectedError)
+            {
+                SetupConfiguration(null, null, null, false, expectedClasses, null, null, true);
+            }
+
+            var errorData = _errorService.FromMessage(message, typeName, (Dictionary<string, object>)null, null); // null will force using config for expectedness
+
+            if (hasExpectedError)
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(errorData.IsExpected, Is.True);
+                });
+            }
+            else
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(errorData.IsExpected, Is.False);
+                });
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void FromMessage_MarkErrorDataAsExpected_ExpectedErrorMessages(bool hasExpectedError)
+        {
+            var message1 = "error message 1";
+            var message2 = "error message 2";
+            var typeName = "System.IO.DirectoryNotFoundException";
+
+            var expectedMessages = new Dictionary<string, IEnumerable<string>>
+            {
+                { typeName, new List<string>() { message1, message2 } }
+            };
+
+            if (hasExpectedError)
+            {
+                SetupConfiguration(null, null, null, false, null, expectedMessages, null, errorCollectorEnabled: true);
+            }
+
+            var errorData1 = _errorService.FromMessage("this is error message 1 ", typeName, (Dictionary<string, object>)null, null); // null will force using config for expectedness
+            var errorData2 = _errorService.FromMessage("this is error message 2 ", typeName, (Dictionary<string, object>)null, null); // null will force using config for expectedness
+
+            if (hasExpectedError)
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(errorData1.IsExpected, Is.True);
+                    Assert.That(errorData2.IsExpected, Is.True);
+                });
+            }
+            else
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(errorData1.IsExpected, Is.False);
+                    Assert.That(errorData2.IsExpected, Is.False);
+                });
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
         public void FromErrorHttpStatusCode_MarkErrorDataAsExpected_ExpectedStatusCodes(bool hasExpectedError)
         {
 
@@ -354,7 +534,30 @@ namespace NewRelic.Agent.Core.Errors
             var errorData = _errorService.FromException(expectedException);
 
             Assert.That(errorData.IsExpected, Is.True);
+        }
 
+        [Test]
+        public void FromMessage_MarkErrorDataAsExpected_SameErrorClass_In_ExpectedClasses_ExpectedErrorMessages()
+        {
+            var message1 = "error message 1";
+            var message2 = "error message 2";
+            var typeName = "System.IO.DirectoryNotFoundException";
+
+            var expectedMessages = new Dictionary<string, IEnumerable<string>>
+            {
+                { typeName, new List<string>() { message1, message2 } }
+            };
+
+            var expectedClasses = new List<string>()
+            {
+                typeName,
+            };
+
+            SetupConfiguration(null, null, null, false, expectedClasses, expectedMessages, null, true);
+
+            var errorData = _errorService.FromMessage("any error messages", typeName, (Dictionary<string, object>)null, null); // null will force using config for expectedness
+
+            Assert.That(errorData.IsExpected, Is.True);
         }
 
         private void SetupConfiguration(List<string> classesToBeIgnored, IEnumerable<KeyValuePair<string, IEnumerable<string>>> errorMessagesToBeIgnored,
