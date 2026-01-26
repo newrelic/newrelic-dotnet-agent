@@ -1,124 +1,123 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Agent.Core.SharedInterfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core.Aggregators
+namespace NewRelic.Agent.Core.Aggregators;
+
+public interface ISqlTraceAggregator : IDisposable
 {
-    public interface ISqlTraceAggregator : IDisposable
+    void Collect(SqlTraceStatsCollection sqlTrStats);
+}
+
+public class SqlTraceAggregator : AbstractAggregator<SqlTraceStatsCollection>, ISqlTraceAggregator
+{
+    private SqlTraceStatsCollection _sqlTraceStats = new SqlTraceStatsCollection();
+
+    private readonly object _sqlTraceLock = new object();
+
+    private readonly IAgentHealthReporter _agentHealthReporter;
+
+    public SqlTraceAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
+        : base(dataTransportService, scheduler, processStatic)
     {
-        void Collect(SqlTraceStatsCollection sqlTrStats);
+        _agentHealthReporter = agentHealthReporter;
     }
 
-    public class SqlTraceAggregator : AbstractAggregator<SqlTraceStatsCollection>, ISqlTraceAggregator
+    protected override TimeSpan HarvestCycle => _configuration.SqlTracesHarvestCycle;
+
+    protected override bool IsEnabled => _configuration.SlowSqlEnabled;
+
+    public override void Collect(SqlTraceStatsCollection sqlTraceStats)
     {
-        private SqlTraceStatsCollection _sqlTraceStats = new SqlTraceStatsCollection();
-
-        private readonly object _sqlTraceLock = new object();
-
-        private readonly IAgentHealthReporter _agentHealthReporter;
-
-        public SqlTraceAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
-            : base(dataTransportService, scheduler, processStatic)
+        lock (_sqlTraceLock)
         {
-            _agentHealthReporter = agentHealthReporter;
+            this._sqlTraceStats.Merge(sqlTraceStats);
+        }
+    }
+
+    protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+
+    protected override void Harvest() => InternalHarvest();
+
+    protected void InternalHarvest(string transactionId = null)
+    {
+        Log.Finest("SQL Trace harvest starting.");
+
+        IDictionary<long, SqlTraceWireModel> oldSqlTraces;
+        lock (_sqlTraceLock)
+        {
+            oldSqlTraces = _sqlTraceStats.Collection;
+            _sqlTraceStats = new SqlTraceStatsCollection();
         }
 
-        protected override TimeSpan HarvestCycle => _configuration.SqlTracesHarvestCycle;
+        var slowestTraces = oldSqlTraces.Values
+            .Where(trace => trace != null)
+            .OrderByDescending(trace => trace.MaxCallTime)
+            .Take(_configuration.SqlTracesPerPeriod)
+            .ToList();
 
-        protected override bool IsEnabled => _configuration.SlowSqlEnabled;
-
-        public override void Collect(SqlTraceStatsCollection sqlTraceStats)
+        // if we don't have any traces to publish then don't
+        var traceCount = slowestTraces.Count;
+        if (traceCount > 0)
         {
-            lock (_sqlTraceLock)
-            {
-                this._sqlTraceStats.Merge(sqlTraceStats);
-            }
+            var responseStatus = DataTransportService.Send(slowestTraces, transactionId);
+            HandleResponse(responseStatus, slowestTraces);
         }
 
-        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+        Log.Finest("SQL Trace harvest finished.");
+    }
 
-        protected override void Harvest() => InternalHarvest();
-
-        protected void InternalHarvest(string transactionId = null)
+    private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<SqlTraceWireModel> traces)
+    {
+        switch (responseStatus)
         {
-            Log.Finest("SQL Trace harvest starting.");
+            case DataTransportResponseStatus.RequestSuccessful:
+                _agentHealthReporter.ReportSqlTracesSent(traces.Count);
+                break;
+            case DataTransportResponseStatus.Retain:
+                Retain(traces);
+                Log.Debug("Retaining {count} SQL traces.", traces.Count);
+                break;
+            case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
+            case DataTransportResponseStatus.Discard:
+            default:
+                Log.Debug("Discarding {count} SQL traces.", traces.Count);
+                break;
+        }
+    }
 
-            IDictionary<long, SqlTraceWireModel> oldSqlTraces;
-            lock (_sqlTraceLock)
-            {
-                oldSqlTraces = _sqlTraceStats.Collection;
-                _sqlTraceStats = new SqlTraceStatsCollection();
-            }
+    private void Retain(ICollection<SqlTraceWireModel> traces)
+    {
+        _agentHealthReporter.ReportSqlTracesRecollected(traces.Count);
 
-            var slowestTraces = oldSqlTraces.Values
-                .Where(trace => trace != null)
-                .OrderByDescending(trace => trace.MaxCallTime)
-                .Take(_configuration.SqlTracesPerPeriod)
-                .ToList();
+        var tracesCollection = new SqlTraceStatsCollection();
 
-            // if we don't have any traces to publish then don't
-            var traceCount = slowestTraces.Count;
-            if (traceCount > 0)
-            {
-                var responseStatus = DataTransportService.Send(slowestTraces, transactionId);
-                HandleResponse(responseStatus, slowestTraces);
-            }
-
-            Log.Finest("SQL Trace harvest finished.");
+        foreach (var trace in traces)
+        {
+            tracesCollection.Insert(trace);
         }
 
-        private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<SqlTraceWireModel> traces)
+        Collect(tracesCollection);
+    }
+
+    protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+    {
+        // It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
+        // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
+
+        lock (_sqlTraceLock)
         {
-            switch (responseStatus)
-            {
-                case DataTransportResponseStatus.RequestSuccessful:
-                    _agentHealthReporter.ReportSqlTracesSent(traces.Count);
-                    break;
-                case DataTransportResponseStatus.Retain:
-                    Retain(traces);
-                    Log.Debug("Retaining {count} SQL traces.", traces.Count);
-                    break;
-                case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
-                case DataTransportResponseStatus.Discard:
-                default:
-                    Log.Debug("Discarding {count} SQL traces.", traces.Count);
-                    break;
-            }
-        }
-
-        private void Retain(ICollection<SqlTraceWireModel> traces)
-        {
-            _agentHealthReporter.ReportSqlTracesRecollected(traces.Count);
-
-            var tracesCollection = new SqlTraceStatsCollection();
-
-            foreach (var trace in traces)
-            {
-                tracesCollection.Insert(trace);
-            }
-
-            Collect(tracesCollection);
-        }
-
-        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
-        {
-            // It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
-            // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
-
-            lock (_sqlTraceLock)
-            {
-                _sqlTraceStats = new SqlTraceStatsCollection();
-            }
+            _sqlTraceStats = new SqlTraceStatsCollection();
         }
     }
 }

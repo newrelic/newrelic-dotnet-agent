@@ -3,18 +3,16 @@
 
 using System;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
-namespace NewRelic.Agent.Core.Configuration
+namespace NewRelic.Agent.Core.Configuration;
+
+public class SingleEventHarvestConfig
 {
-    public class SingleEventHarvestConfig
-    {
-        [JsonProperty("report_period_ms")]
-        public int ReportPeriodMs { get; set; }
+    [JsonProperty("report_period_ms")]
+    public int ReportPeriodMs { get; set; }
 
-        [JsonProperty("harvest_limit")]
-        public int HarvestLimit { get; set; }
+    [JsonProperty("harvest_limit")]
+    public int HarvestLimit { get; set; }
 
-        public TimeSpan? HarvestCycle => TimeSpan.FromMilliseconds(ReportPeriodMs);
-    }
+    public TimeSpan? HarvestCycle => TimeSpan.FromMilliseconds(ReportPeriodMs);
 }

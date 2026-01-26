@@ -1,12 +1,11 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Core.Attributes
+namespace NewRelic.Agent.Core.Attributes;
+
+public enum AttributeClassification
 {
-    public enum AttributeClassification
-    {
-        AgentAttributes = 0,
-        UserAttributes = 1,
-        Intrinsics = 2
-    }
+    AgentAttributes = 0,
+    UserAttributes = 1,
+    Intrinsics = 2
 }

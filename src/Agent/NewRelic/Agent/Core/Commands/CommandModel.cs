@@ -5,36 +5,35 @@ using System.Collections.Generic;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Core.Commands
+namespace NewRelic.Agent.Core.Commands;
+
+[JsonConverter(typeof(JsonArrayConverter))]
+public class CommandModel
 {
-    [JsonConverter(typeof(JsonArrayConverter))]
-    public class CommandModel
+    [JsonArrayIndex(Index = 0)]
+    public readonly int CommandId;
+
+    [JsonArrayIndex(Index = 1)]
+    public readonly CommandDetails Details;
+
+    public CommandModel(int commandId, CommandDetails details)
     {
-        [JsonArrayIndex(Index = 0)]
-        public readonly int CommandId;
-
-        [JsonArrayIndex(Index = 1)]
-        public readonly CommandDetails Details;
-
-        public CommandModel(int commandId, CommandDetails details)
-        {
-            CommandId = commandId;
-            Details = details;
-        }
+        CommandId = commandId;
+        Details = details;
     }
+}
 
-    public class CommandDetails
+public class CommandDetails
+{
+    [JsonProperty("name")]
+    public readonly string Name;
+
+    [JsonProperty("arguments")]
+    public readonly IDictionary<string, object> Arguments;
+
+    public CommandDetails(string name, IDictionary<string, object> arguments)
     {
-        [JsonProperty("name")]
-        public readonly string Name;
-
-        [JsonProperty("arguments")]
-        public readonly IDictionary<string, object> Arguments;
-
-        public CommandDetails(string name, IDictionary<string, object> arguments)
-        {
-            Name = name;
-            Arguments = arguments;
-        }
+        Name = name;
+        Arguments = arguments;
     }
 }
