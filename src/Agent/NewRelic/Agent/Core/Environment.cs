@@ -12,80 +12,80 @@ using System.Web;
 using System.Web.Configuration;
 using Microsoft.Win32;
 #endif
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Agent.Core.SharedInterfaces;
 using Newtonsoft.Json;
-using NewRelic.Agent.Configuration;
 
-namespace NewRelic.Agent.Core
+namespace NewRelic.Agent.Core;
+
+[NrExcludeFromCodeCoverage]
+[JsonConverter(typeof(EnvironmentConverter))]
+public class Environment
 {
-    [NrExcludeFromCodeCoverage]
-    [JsonConverter(typeof(EnvironmentConverter))]
-    public class Environment
+    private readonly List<object[]> _environmentMap = new List<object[]>();
+
+    private readonly IProcessStatic _processStatic;
+
+    public ulong? TotalPhysicalMemory { get; }
+    public string AppDomainAppPath { get; }
+
+    public Environment(ISystemInfo systemInfo, IProcessStatic processStatic, IConfigurationService configurationService)
     {
-        private readonly List<object[]> _environmentMap = new List<object[]>();
+        _processStatic = processStatic;
 
-        private readonly IProcessStatic _processStatic;
-
-        public ulong? TotalPhysicalMemory { get; }
-        public string AppDomainAppPath { get; }
-
-        public Environment(ISystemInfo systemInfo, IProcessStatic processStatic, IConfigurationService configurationService)
+        try
         {
-            _processStatic = processStatic;
+            TotalPhysicalMemory = systemInfo.GetTotalPhysicalMemoryBytes();
 
-            try
-            {
-                TotalPhysicalMemory = systemInfo.GetTotalPhysicalMemoryBytes();
+            AddVariable("Framework", () => "dotnet");
 
-                AddVariable("Framework", () => "dotnet");
+            var fileVersionInfo = TryGetFileVersionInfo();
+            AddVariable("Product Name", () => fileVersionInfo?.ProductName);
 
-                var fileVersionInfo = TryGetFileVersionInfo();
-                AddVariable("Product Name", () => fileVersionInfo?.ProductName);
-
-                AddVariable("OS", () => System.Environment.OSVersion?.VersionString);
+            AddVariable("OS", () => System.Environment.OSVersion?.VersionString);
 
 #if NETSTANDARD2_0
-                // report linux distro name and version when appropriate
-                // This API is only supported on .net FX 4.7 + so limiting it
-                // to .net core since that is the one affected. 
-                if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
-                {
-                    AddVariable("Linux Distro Name", () => RuntimeEnvironmentInfo.OperatingSystem);
-                    AddVariable("Linux Distro Version", () => RuntimeEnvironmentInfo.OperatingSystemVersion);
-                }
+            // report linux distro name and version when appropriate
+            // This API is only supported on .net FX 4.7 + so limiting it
+            // to .net core since that is the one affected. 
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
+            {
+                AddVariable("Linux Distro Name", () => RuntimeEnvironmentInfo.OperatingSystem);
+                AddVariable("Linux Distro Version", () => RuntimeEnvironmentInfo.OperatingSystemVersion);
+            }
 
-                // This API is only supported on .net FX 4.7 + so limiting it
-                // to .net core since that is the one affected. 
-                AddVariable(".NET Version", () => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription.ToString());
-                AddVariable("Processor Architecture", () => System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString());
+            // This API is only supported on .net FX 4.7 + so limiting it
+            // to .net core since that is the one affected. 
+            AddVariable(".NET Version", () => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription.ToString());
+            AddVariable("Processor Architecture", () => System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString());
 #else
                 AddVariable(".NET Version", () => DotnetVersion.GetDotnetFrameworkVersion().ToString());
                 AddVariable("Processor Architecture", () => (IntPtr.Size == 8) ? "X64" : "X86");
 #endif
 
-                AddVariable("Total Physical System Memory", () => TotalPhysicalMemory);
+            AddVariable("Total Physical System Memory", () => TotalPhysicalMemory);
 
-                var process = TryGetCurrentProcess();
-                AddVariable("StartTime", () => process?.StartTime.ToString("o"));
-                AddVariable("MainModule.FileVersionInfo", () => process?.FileVersionInfo.ToString());
+            var process = TryGetCurrentProcess();
+            AddVariable("StartTime", () => process?.StartTime.ToString("o"));
+            AddVariable("MainModule.FileVersionInfo", () => process?.FileVersionInfo.ToString());
 
-                AddVariable("GCSettings.IsServerGC", () => System.Runtime.GCSettings.IsServerGC);
-                AddVariable("AppDomain.FriendlyName", () => AppDomain.CurrentDomain.FriendlyName);
+            AddVariable("GCSettings.IsServerGC", () => System.Runtime.GCSettings.IsServerGC);
+            AddVariable("AppDomain.FriendlyName", () => AppDomain.CurrentDomain.FriendlyName);
 
-                // If we have a name, report it and its source...
-                if (configurationService.Configuration.ApplicationNames.Any())
-                {
-                    AddVariable("Initial Application Names", () => String.Join(", ", configurationService.Configuration.ApplicationNames));
-                    AddVariable("Initial Application Names Source", () => configurationService.Configuration.ApplicationNamesSource);
-                }
+            // If we have a name, report it and its source...
+            if (configurationService.Configuration.ApplicationNames.Any())
+            {
+                AddVariable("Initial Application Names", () => String.Join(", ", configurationService.Configuration.ApplicationNames));
+                AddVariable("Initial Application Names Source", () => configurationService.Configuration.ApplicationNamesSource);
+            }
 
-                AddVariable("Initial NewRelic Config", () => configurationService.Configuration.NewRelicConfigFilePath);
+            AddVariable("Initial NewRelic Config", () => configurationService.Configuration.NewRelicConfigFilePath);
 
-                // If we found an app config, report it...
-                if (!String.IsNullOrEmpty(configurationService.Configuration.AppSettingsConfigFilePath))
-                    AddVariable("Application Config", () => configurationService.Configuration.AppSettingsConfigFilePath);
+            // If we found an app config, report it...
+            if (!String.IsNullOrEmpty(configurationService.Configuration.AppSettingsConfigFilePath))
+                AddVariable("Application Config", () => configurationService.Configuration.AppSettingsConfigFilePath);
 
 #if NETFRAMEWORK
                 // This stuff is only available to web apps.
@@ -104,10 +104,10 @@ namespace NewRelic.Agent.Core
                 }
 #endif
 
-                AddVariable("Plugin List", GetLoadedAssemblyNames);
+            AddVariable("Plugin List", GetLoadedAssemblyNames);
 
 #if DEBUG
-                AddVariable("Debug Build", () => true.ToString());
+            AddVariable("Debug Build", () => true.ToString());
 #endif
 
 #if NETFRAMEWORK
@@ -127,55 +127,55 @@ namespace NewRelic.Agent.Core
 
 #endif
 
-                AddVariable("Install Type", () => AgentInstallConfiguration.GetAgentInfo()?.ToString() ?? "Unknown");
-            }
-            catch (Exception ex)
-            {
-                Log.Debug(ex, "The .NET agent is unable to collect environment information for the machine");
-            }
+            AddVariable("Install Type", () => AgentInstallConfiguration.GetAgentInfo()?.ToString() ?? "Unknown");
         }
-
-        public void AddVariable(string name, Func<object> valueGetter)
+        catch (Exception ex)
         {
-            var value = null as object;
-            try
-            {
-                value = valueGetter();
-            }
-            catch (Exception ex)
-            {
-                Log.Warn(ex, "Error getting value for environment variable {name}", name);
-            }
-
-            _environmentMap.Add(new[] { name, value });
+            Log.Debug(ex, "The .NET agent is unable to collect environment information for the machine");
         }
+    }
 
-        private IProcess TryGetCurrentProcess()
+    public void AddVariable(string name, Func<object> valueGetter)
+    {
+        var value = null as object;
+        try
         {
-            try
-            {
-                return _processStatic.GetCurrentProcess();
-            }
-            catch (Exception ex)
-            {
-                Log.Warn(ex, "TryGetCurrentProcess() failed");
-                return null;
-            }
+            value = valueGetter();
+        }
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "Error getting value for environment variable {name}", name);
         }
 
-        private static FileVersionInfo TryGetFileVersionInfo()
+        _environmentMap.Add(new[] { name, value });
+    }
+
+    private IProcess TryGetCurrentProcess()
+    {
+        try
         {
-            try
-            {
-                var assembly = Assembly.GetExecutingAssembly();
-                return FileVersionInfo.GetVersionInfo(assembly.Location);
-            }
-            catch (Exception ex)
-            {
-                Log.Warn(ex, "TryGetFileVersionInfo() failed");
-                return null;
-            }
+            return _processStatic.GetCurrentProcess();
         }
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "TryGetCurrentProcess() failed");
+            return null;
+        }
+    }
+
+    private static FileVersionInfo TryGetFileVersionInfo()
+    {
+        try
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            return FileVersionInfo.GetVersionInfo(assembly.Location);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "TryGetFileVersionInfo() failed");
+            return null;
+        }
+    }
 
 #if NETFRAMEWORK
         private static string TryGetAppDomainAppId()
@@ -192,34 +192,34 @@ namespace NewRelic.Agent.Core
         }
 #endif
 
-        public static string TryGetAppPath(Func<string> pathGetter)
+    public static string TryGetAppPath(Func<string> pathGetter)
+    {
+        try
         {
-            try
-            {
-                var path = pathGetter();
+            var path = pathGetter();
 
-                if (path == null)
-                    return null;
-
-                if (path.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
-                    path = path.Substring(0, path.Length - 1);
-
-                var index = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar + "wwwroot", StringComparison.InvariantCultureIgnoreCase);
-                if (index > 0)
-                    path = path.Substring(0, index);
-
-                index = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar);
-                if (index > 0 && index < path.Length - 1)
-                    path = path.Substring(index + 1);
-
-                return path;
-            }
-            catch (Exception ex)
-            {
-                Log.Warn(ex, "TryGetAppPath() failed");
+            if (path == null)
                 return null;
-            }
+
+            if (path.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
+                path = path.Substring(0, path.Length - 1);
+
+            var index = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar + "wwwroot", StringComparison.InvariantCultureIgnoreCase);
+            if (index > 0)
+                path = path.Substring(0, index);
+
+            index = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar);
+            if (index > 0 && index < path.Length - 1)
+                path = path.Substring(index + 1);
+
+            return path;
         }
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "TryGetAppPath() failed");
+            return null;
+        }
+    }
 
 #if NETFRAMEWORK
         public Version TryGetIisVersion()
@@ -253,18 +253,18 @@ namespace NewRelic.Agent.Core
         }
 #endif
 
-        private static IEnumerable<string> GetLoadedAssemblyNames()
-        {
-            var versionZero = new Version(0, 0, 0, 0);
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .Where(assembly => assembly != null)
-                .Where(assembly => assembly.GetName().Version != versionZero)
+    private static IEnumerable<string> GetLoadedAssemblyNames()
+    {
+        var versionZero = new Version(0, 0, 0, 0);
+        return AppDomain.CurrentDomain.GetAssemblies()
+            .Where(assembly => assembly != null)
+            .Where(assembly => assembly.GetName().Version != versionZero)
 #if NETFRAMEWORK
                 .Where(assembly => !(assembly is System.Reflection.Emit.AssemblyBuilder))
 #endif
-                .Select(assembly => assembly.FullName)
-                .ToList();
-        }
+            .Select(assembly => assembly.FullName)
+            .ToList();
+    }
 
 #if NETFRAMEWORK
         private static IEnumerable<ManagementBaseObject> TryGetManagementObjects(string query)
@@ -284,27 +284,26 @@ namespace NewRelic.Agent.Core
         }
 #endif
 
-        public class EnvironmentConverter : JsonConverter
+    public class EnvironmentConverter : JsonConverter
+    {
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-            {
-                var environment = value as Environment;
-                if (environment == null)
-                    throw new NullReferenceException("environment");
+            var environment = value as Environment;
+            if (environment == null)
+                throw new NullReferenceException("environment");
 
-                var serialized = JsonConvert.SerializeObject(environment._environmentMap);
-                writer.WriteRawValue(serialized);
-            }
+            var serialized = JsonConvert.SerializeObject(environment._environmentMap);
+            writer.WriteRawValue(serialized);
+        }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-            {
-                throw new NotImplementedException();
-            }
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
 
-            public override bool CanConvert(Type objectType)
-            {
-                return true;
-            }
+        public override bool CanConvert(Type objectType)
+        {
+            return true;
         }
     }
 }

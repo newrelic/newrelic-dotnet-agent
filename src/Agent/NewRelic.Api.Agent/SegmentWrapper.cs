@@ -3,28 +3,27 @@
 
 using System;
 
-namespace NewRelic.Api.Agent
+namespace NewRelic.Api.Agent;
+
+public class SegmentWrapper : IDisposable
 {
-    public class SegmentWrapper : IDisposable
+    private volatile dynamic _segment;
+
+    public static SegmentWrapper GetDatastoreWrapper(dynamic transaction,
+        string vendor, string model, string operation,
+        string? commandText, string? host, string? portPathOrID, string? databaseName)
     {
-        private volatile dynamic _segment;
+        return new SegmentWrapper(transaction.StartDatastoreSegment(vendor, model, operation,
+            commandText, host, portPathOrID, databaseName));
+    }
 
-        public static SegmentWrapper GetDatastoreWrapper(dynamic transaction,
-            string vendor, string model, string operation,
-            string? commandText, string? host, string? portPathOrID, string? databaseName)
-        {
-            return new SegmentWrapper(transaction.StartDatastoreSegment(vendor, model, operation,
-                commandText, host, portPathOrID, databaseName));
-        }
+    private SegmentWrapper(dynamic segment)
+    {
+        _segment = segment;
+    }
 
-        private SegmentWrapper(dynamic segment)
-        {
-            _segment = segment;
-        }
-
-        public void Dispose()
-        {
-            _segment.End();
-        }
+    public void Dispose()
+    {
+        _segment.End();
     }
 }

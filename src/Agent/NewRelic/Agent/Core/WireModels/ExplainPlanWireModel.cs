@@ -6,28 +6,27 @@ using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Core.WireModels
+namespace NewRelic.Agent.Core.WireModels;
+
+[JsonConverter(typeof(JsonArrayConverter))]
+public class ExplainPlanWireModel
 {
-    [JsonConverter(typeof(JsonArrayConverter))]
-    public class ExplainPlanWireModel
+    private readonly ExplainPlan _explainPlan;
+
+    [JsonArrayIndex(Index = 0)]
+    public IEnumerable<string> ExplainPlanHeaders
     {
-        private readonly ExplainPlan _explainPlan;
+        get { return _explainPlan.ExplainPlanHeaders; }
+    }
 
-        [JsonArrayIndex(Index = 0)]
-        public IEnumerable<string> ExplainPlanHeaders
-        {
-            get { return _explainPlan.ExplainPlanHeaders; }
-        }
+    [JsonArrayIndex(Index = 1)]
+    public List<List<object>> ExplainPlanDatas
+    {
+        get { return _explainPlan.ExplainPlanDatas; }
+    }
 
-        [JsonArrayIndex(Index = 1)]
-        public List<List<object>> ExplainPlanDatas
-        {
-            get { return _explainPlan.ExplainPlanDatas; }
-        }
-
-        public ExplainPlanWireModel(ExplainPlan explainPlan)
-        {
-            _explainPlan = explainPlan;
-        }
+    public ExplainPlanWireModel(ExplainPlan explainPlan)
+    {
+        _explainPlan = explainPlan;
     }
 }

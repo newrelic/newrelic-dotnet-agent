@@ -1,39 +1,38 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Data;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using System.Data;
 
-namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
+namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+
+public class DatabaseStatementParser : ConfigurationBasedService, IDatabaseStatementParser
 {
-    public class DatabaseStatementParser : ConfigurationBasedService, IDatabaseStatementParser
+    private CacheByDatastoreVendor<string, ParsedSqlStatement> _cache;
+
+    public DatabaseStatementParser()
     {
-        private CacheByDatastoreVendor<string, ParsedSqlStatement> _cache;
+        _cache = new CacheByDatastoreVendor<string, ParsedSqlStatement>("SqlParsingCache");
+    }
 
-        public DatabaseStatementParser()
+    public ParsedSqlStatement ParseDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql)
+    {
+        switch (commandType)
         {
-            _cache = new CacheByDatastoreVendor<string, ParsedSqlStatement>("SqlParsingCache");
+            case CommandType.TableDirect:
+            case CommandType.StoredProcedure:
+                return SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql);
+            default:
+                return _cache.GetOrAdd(datastoreVendor, sql, () => SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql));
         }
+    }
 
-        public ParsedSqlStatement ParseDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql)
-        {
-            switch (commandType)
-            {
-                case CommandType.TableDirect:
-                case CommandType.StoredProcedure:
-                    return SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql);
-                default:
-                    return _cache.GetOrAdd(datastoreVendor, sql, () => SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql));
-            }
-        }
-
-        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
-        {
-            _cache.SetCapacity(_configuration.DatabaseStatementCacheCapacity);
-        }
+    protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+    {
+        _cache.SetCapacity(_configuration.DatabaseStatementCacheCapacity);
     }
 }

@@ -5,11 +5,10 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Core.WireModels
+namespace NewRelic.Agent.Core.WireModels;
+
+[JsonConverter(typeof(EventWireModelSerializer))]
+public interface IEventWireModel : IWireModel
 {
-    [JsonConverter(typeof(EventWireModelSerializer))]
-    public interface IEventWireModel : IWireModel
-    {
-        IAttributeValueCollection AttributeValues { get; }
-    }
+    IAttributeValueCollection AttributeValues { get; }
 }

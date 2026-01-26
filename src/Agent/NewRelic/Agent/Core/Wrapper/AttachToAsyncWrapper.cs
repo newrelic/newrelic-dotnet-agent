@@ -5,33 +5,32 @@ using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Agent.Core.Wrapper
+namespace NewRelic.Agent.Core.Wrapper;
+
+public class AttachToAsyncWrapper : IWrapper
 {
-    public class AttachToAsyncWrapper : IWrapper
+    private static readonly string[] PossibleWrapperNames = {
+        "AttachToAsyncWrapper"
+    };
+
+    public bool IsTransactionRequired => true;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
     {
-        private static readonly string[] PossibleWrapperNames = {
-            "AttachToAsyncWrapper"
-        };
+        var canWrap = instrumentedMethodInfo.IsAsync
+                      && PossibleWrapperNames.Contains(instrumentedMethodInfo.RequestedWrapperName);
 
-        public bool IsTransactionRequired => true;
-
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
+        if (!canWrap)
         {
-            var canWrap = instrumentedMethodInfo.IsAsync
-                && PossibleWrapperNames.Contains(instrumentedMethodInfo.RequestedWrapperName);
-
-            if (!canWrap)
-            {
-                return new CanWrapResponse(false);
-            }
-
-            return TaskFriendlySyncContextValidator.CanWrapAsyncMethod(instrumentedMethodInfo.Method.Type.Assembly.GetName().Name, instrumentedMethodInfo.Method.Type.Name, instrumentedMethodInfo.Method.MethodName);
+            return new CanWrapResponse(false);
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
-        {
-            transaction.AttachToAsync();
-            return Delegates.NoOp;
-        }
+        return TaskFriendlySyncContextValidator.CanWrapAsyncMethod(instrumentedMethodInfo.Method.Type.Assembly.GetName().Name, instrumentedMethodInfo.Method.Type.Name, instrumentedMethodInfo.Method.MethodName);
+    }
+
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        transaction.AttachToAsync();
+        return Delegates.NoOp;
     }
 }

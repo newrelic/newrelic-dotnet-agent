@@ -1,40 +1,39 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Api.Agent
+namespace NewRelic.Api.Agent;
+
+internal class TraceMetadata : ITraceMetadata
 {
-    internal class TraceMetadata : ITraceMetadata
+    private static ITraceMetadata _noOpTraceMetadata = new NoOpTraceMetadata();
+    private dynamic _wrappedTraceMetadata = _noOpTraceMetadata;
+
+    internal TraceMetadata(dynamic wrappedTraceMetadata)
     {
-        private static ITraceMetadata _noOpTraceMetadata = new NoOpTraceMetadata();
-        private dynamic _wrappedTraceMetadata = _noOpTraceMetadata;
+        _wrappedTraceMetadata = wrappedTraceMetadata;
+    }
 
-        internal TraceMetadata(dynamic wrappedTraceMetadata)
+    public string TraceId
+    {
+        get
         {
-            _wrappedTraceMetadata = wrappedTraceMetadata;
+            return _wrappedTraceMetadata.TraceId;
         }
+    }
 
-        public string TraceId
+    public string SpanId
+    {
+        get
         {
-            get
-            {
-                return _wrappedTraceMetadata.TraceId;
-            }
+            return _wrappedTraceMetadata.SpanId;
         }
+    }
 
-        public string SpanId
+    public bool IsSampled
+    {
+        get
         {
-            get
-            {
-                return _wrappedTraceMetadata.SpanId;
-            }
-        }
-
-        public bool IsSampled
-        {
-            get
-            {
-                return _wrappedTraceMetadata.IsSampled;
-            }
+            return _wrappedTraceMetadata.IsSampled;
         }
     }
 }

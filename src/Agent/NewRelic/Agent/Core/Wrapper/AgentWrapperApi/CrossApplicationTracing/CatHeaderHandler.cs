@@ -1,260 +1,259 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Helpers;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Helpers;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
+namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
+
+public interface ICatHeaderHandler
 {
-    public interface ICatHeaderHandler
+    IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(IInternalTransaction transaction);
+    IEnumerable<KeyValuePair<string, string>> TryGetOutboundResponseHeaders(IInternalTransaction transaction, TransactionMetricName transactionMetricName);
+    CrossApplicationResponseData TryDecodeInboundResponseHeaders(IDictionary<string, string> headers);
+    string TryDecodeInboundRequestHeadersForCrossProcessId<T>(T carrier, Func<T, string, IEnumerable<string>> getter);
+    CrossApplicationRequestData TryDecodeInboundRequestHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter);
+}
+
+public class CatHeaderHandler : ICatHeaderHandler
+{
+    private const string NewRelicIdHttpHeader = "X-NewRelic-ID";
+    private const string TransactionDataHttpHeader = "X-NewRelic-Transaction";
+    private const string AppDataHttpHeader = "X-NewRelic-App-Data";
+
+
+    private readonly IConfigurationService _configurationService;
+    private readonly ICATSupportabilityMetricCounters _supportabilityMetrics;
+
+    public CatHeaderHandler(IConfigurationService configurationService, ICATSupportabilityMetricCounters supportabilityMetricCounters)
     {
-        IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(IInternalTransaction transaction);
-        IEnumerable<KeyValuePair<string, string>> TryGetOutboundResponseHeaders(IInternalTransaction transaction, TransactionMetricName transactionMetricName);
-        CrossApplicationResponseData TryDecodeInboundResponseHeaders(IDictionary<string, string> headers);
-        string TryDecodeInboundRequestHeadersForCrossProcessId<T>(T carrier, Func<T, string, IEnumerable<string>> getter);
-        CrossApplicationRequestData TryDecodeInboundRequestHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter);
+        _configurationService = configurationService;
+        _supportabilityMetrics = supportabilityMetricCounters;
     }
 
-    public class CatHeaderHandler : ICatHeaderHandler
+    public IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(IInternalTransaction transaction)
     {
-        private const string NewRelicIdHttpHeader = "X-NewRelic-ID";
-        private const string TransactionDataHttpHeader = "X-NewRelic-Transaction";
-        private const string AppDataHttpHeader = "X-NewRelic-App-Data";
-
-
-        private readonly IConfigurationService _configurationService;
-        private readonly ICATSupportabilityMetricCounters _supportabilityMetrics;
-
-        public CatHeaderHandler(IConfigurationService configurationService, ICATSupportabilityMetricCounters supportabilityMetricCounters)
-        {
-            _configurationService = configurationService;
-            _supportabilityMetrics = supportabilityMetricCounters;
-        }
-
-        public IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(IInternalTransaction transaction)
-        {
-            try
-            {
-                if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
-                    return Enumerable.Empty<KeyValuePair<string, string>>();
-
-                var crossProcessId = _configurationService.Configuration.CrossApplicationTracingCrossProcessId;
-                if (crossProcessId == null)
-                {
-                    Log.Error("Failed to get cross process id for outbound request.");
-                    _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Create_Failure_XProcID);
-                    return Enumerable.Empty<KeyValuePair<string, string>>();
-                }
-
-                var encodedNewRelicId = GetEncodedNewRelicId(crossProcessId);
-                var encodedTransactionData = GetEncodedTransactionData(transaction);
-
-                _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Create_Success);
-
-                return new Dictionary<string, string>
-                {
-                    {NewRelicIdHttpHeader, encodedNewRelicId},
-                    {TransactionDataHttpHeader, encodedTransactionData}
-                };
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to get encoded CAT headers for outbound request");
-
-                _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Create_Failure);
-
-                return Enumerable.Empty<KeyValuePair<string, string>>();
-            }
-        }
-
-        public IEnumerable<KeyValuePair<string, string>> TryGetOutboundResponseHeaders(IInternalTransaction transaction, TransactionMetricName transactionMetricName)
-        {
-            try
-            {
-                if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
-                    return Enumerable.Empty<KeyValuePair<string, string>>();
-
-                var refereeCrossProcessId = _configurationService.Configuration.CrossApplicationTracingCrossProcessId;
-                if (refereeCrossProcessId == null)
-                {
-                    Log.Error("Failed to get cross process id for outbound response.");
-                    _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Create_Failure_XProcID);
-                    return Enumerable.Empty<KeyValuePair<string, string>>();
-                }
-
-                var encodedAppData = GetEncodedAppData(transaction, transactionMetricName, refereeCrossProcessId);
-
-                _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Create_Success);
-
-                return new Dictionary<string, string>
-                {
-                    {AppDataHttpHeader, encodedAppData},
-                };
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to get encoded CAT headers for outbound response");
-                _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Create_Failure);
-                return Enumerable.Empty<KeyValuePair<string, string>>();
-            }
-        }
-
-        public CrossApplicationResponseData TryDecodeInboundResponseHeaders(IDictionary<string, string> headers)
+        try
         {
             if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
-                return null;
+                return Enumerable.Empty<KeyValuePair<string, string>>();
 
-            var responseHeader = headers.GetValueOrDefault(AppDataHttpHeader);
-            if (responseHeader == null)
+            var crossProcessId = _configurationService.Configuration.CrossApplicationTracingCrossProcessId;
+            if (crossProcessId == null)
             {
-                return null;
+                Log.Error("Failed to get cross process id for outbound request.");
+                _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Create_Failure_XProcID);
+                return Enumerable.Empty<KeyValuePair<string, string>>();
             }
 
-            //It is possible that multiple instrumentations, on the service side, try to add New Relic header
-            //to the response on the same transaction. When that happens, the response received by the client
-            //has the New Relic header contains multiple header data separated by commas. The agent will only
-            //decode the first header data in this case.
-            var separatorIndex = responseHeader.IndexOf(",");
-            if (separatorIndex > 0)
+            var encodedNewRelicId = GetEncodedNewRelicId(crossProcessId);
+            var encodedTransactionData = GetEncodedTransactionData(transaction);
+
+            _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Create_Success);
+
+            return new Dictionary<string, string>
             {
-                _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Accept_MultipleResponses);
-                responseHeader = responseHeader.Substring(0, separatorIndex);
+                {NewRelicIdHttpHeader, encodedNewRelicId},
+                {TransactionDataHttpHeader, encodedTransactionData}
+            };
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to get encoded CAT headers for outbound request");
+
+            _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Create_Failure);
+
+            return Enumerable.Empty<KeyValuePair<string, string>>();
+        }
+    }
+
+    public IEnumerable<KeyValuePair<string, string>> TryGetOutboundResponseHeaders(IInternalTransaction transaction, TransactionMetricName transactionMetricName)
+    {
+        try
+        {
+            if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
+                return Enumerable.Empty<KeyValuePair<string, string>>();
+
+            var refereeCrossProcessId = _configurationService.Configuration.CrossApplicationTracingCrossProcessId;
+            if (refereeCrossProcessId == null)
+            {
+                Log.Error("Failed to get cross process id for outbound response.");
+                _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Create_Failure_XProcID);
+                return Enumerable.Empty<KeyValuePair<string, string>>();
             }
 
-            try
+            var encodedAppData = GetEncodedAppData(transaction, transactionMetricName, refereeCrossProcessId);
+
+            _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Create_Success);
+
+            return new Dictionary<string, string>
             {
-                var result = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationResponseData>(responseHeader, _configurationService.Configuration.EncodingKey);
+                {AppDataHttpHeader, encodedAppData},
+            };
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to get encoded CAT headers for outbound response");
+            _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Create_Failure);
+            return Enumerable.Empty<KeyValuePair<string, string>>();
+        }
+    }
 
-                if (result == null)
-                {
-                    _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Accept_Failure);
-                }
-                else
-                {
-                    _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Accept_Success);
-                }
+    public CrossApplicationResponseData TryDecodeInboundResponseHeaders(IDictionary<string, string> headers)
+    {
+        if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
+            return null;
 
-                return result;
-            }
-            catch (Exception ex)
+        var responseHeader = headers.GetValueOrDefault(AppDataHttpHeader);
+        if (responseHeader == null)
+        {
+            return null;
+        }
+
+        //It is possible that multiple instrumentations, on the service side, try to add New Relic header
+        //to the response on the same transaction. When that happens, the response received by the client
+        //has the New Relic header contains multiple header data separated by commas. The agent will only
+        //decode the first header data in this case.
+        var separatorIndex = responseHeader.IndexOf(",");
+        if (separatorIndex > 0)
+        {
+            _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Accept_MultipleResponses);
+            responseHeader = responseHeader.Substring(0, separatorIndex);
+        }
+
+        try
+        {
+            var result = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationResponseData>(responseHeader, _configurationService.Configuration.EncodingKey);
+
+            if (result == null)
             {
                 _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Accept_Failure);
-
-                if (ex is Newtonsoft.Json.JsonSerializationException)
-                {
-                    return null;
-                }
-
-                throw;
             }
-        }
-
-        public string TryDecodeInboundRequestHeadersForCrossProcessId<T>(T carrier, Func<T, string, IEnumerable<string>> getter)
-        {
-            if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
-                return null;
-
-            var encodedNewRelicIdHttpHeader = getter(carrier, NewRelicIdHttpHeader)?.FirstOrDefault();
-            if (encodedNewRelicIdHttpHeader == null)
-                return null;
-
-            var decodedCrossProcessId = TryDecodeNewRelicIdHttpHeader(encodedNewRelicIdHttpHeader);
-            if (decodedCrossProcessId == null)
+            else
             {
-                _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Accept_Failure_Decode);
-                return null;
+                _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Accept_Success);
             }
 
-            if (!IsTrustedCrossProcessAccountId(decodedCrossProcessId, _configurationService.Configuration.TrustedAccountIds))
-            {
-                _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Accept_Failure_NotTrusted);
-                return null;
-            }
-
-            return decodedCrossProcessId;
+            return result;
         }
-
-        public CrossApplicationRequestData TryDecodeInboundRequestHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter)
+        catch (Exception ex)
         {
-            if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
+            _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Accept_Failure);
+
+            if (ex is Newtonsoft.Json.JsonSerializationException)
             {
                 return null;
             }
 
-            var encodedTransactionDataHttpHeader = getter(carrier, TransactionDataHttpHeader).FirstOrDefault();
-            if (encodedTransactionDataHttpHeader == null)
-            {
-                return null;
-            }
-
-            var data = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encodedTransactionDataHttpHeader, _configurationService.Configuration.EncodingKey);
-
-            if (data == null)
-            {
-                _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Accept_Failure_Decode);
-            }
-
-            return data;
+            throw;
         }
+    }
 
-        private string TryDecodeNewRelicIdHttpHeader(string encodedNewRelicIdHttpHeader)
+    public string TryDecodeInboundRequestHeadersForCrossProcessId<T>(T carrier, Func<T, string, IEnumerable<string>> getter)
+    {
+        if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
+            return null;
+
+        var encodedNewRelicIdHttpHeader = getter(carrier, NewRelicIdHttpHeader)?.FirstOrDefault();
+        if (encodedNewRelicIdHttpHeader == null)
+            return null;
+
+        var decodedCrossProcessId = TryDecodeNewRelicIdHttpHeader(encodedNewRelicIdHttpHeader);
+        if (decodedCrossProcessId == null)
         {
-            if (encodedNewRelicIdHttpHeader == null)
-                return null;
-
-            return Strings.TryBase64Decode(encodedNewRelicIdHttpHeader, _configurationService.Configuration.EncodingKey);
+            _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Accept_Failure_Decode);
+            return null;
         }
 
-        private string GetEncodedAppData(IInternalTransaction transaction, TransactionMetricName transactionMetricName, string crossProcessId)
+        if (!IsTrustedCrossProcessAccountId(decodedCrossProcessId, _configurationService.Configuration.TrustedAccountIds))
         {
-            var txMetadata = transaction.TransactionMetadata;
-            var queueTime = txMetadata.QueueTime?.TotalSeconds ?? 0;
-            var referrerContentLength = txMetadata.GetCrossApplicationReferrerContentLength();
-            var responseTimeInSeconds = txMetadata.CrossApplicationResponseTimeInSeconds;
-            var appData = new CrossApplicationResponseData(crossProcessId, transactionMetricName.PrefixedName, (float)queueTime, responseTimeInSeconds, referrerContentLength, transaction.Guid);
-
-            return HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(appData), _configurationService.Configuration.EncodingKey);
+            _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Accept_Failure_NotTrusted);
+            return null;
         }
 
-        private string GetEncodedNewRelicId(string referrerCrossProcessId)
+        return decodedCrossProcessId;
+    }
+
+    public CrossApplicationRequestData TryDecodeInboundRequestHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter)
+    {
+        if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
         {
-            return Strings.Base64Encode(referrerCrossProcessId, _configurationService.Configuration.EncodingKey);
+            return null;
         }
 
-        private string GetEncodedTransactionData(IInternalTransaction transaction)
+        var encodedTransactionDataHttpHeader = getter(carrier, TransactionDataHttpHeader).FirstOrDefault();
+        if (encodedTransactionDataHttpHeader == null)
         {
-            var txMetadata = transaction.TransactionMetadata;
-            // If CrossApplicationReferrerTripId is null, then this is the first transaction to make an external request. In this case, use its Guid as the tripId.
-            var tripId = txMetadata.CrossApplicationReferrerTripId ?? transaction.Guid;
-            var transactionData = new CrossApplicationRequestData(transaction.Guid, false, tripId, txMetadata.LatestCrossApplicationPathHash);
-
-            return HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(transactionData), _configurationService.Configuration.EncodingKey);
+            return null;
         }
 
-        private bool IsTrustedCrossProcessAccountId(string accountId, IEnumerable<long> trustedAccountIds)
+        var data = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encodedTransactionDataHttpHeader, _configurationService.Configuration.EncodingKey);
+
+        if (data == null)
         {
-            long requestAccountId;
-            if (!long.TryParse(accountId.Split(StringSeparators.Hash)[0], out requestAccountId))
-            {
-                return false;
-            }
-
-            if (!trustedAccountIds.Contains(requestAccountId))
-            {
-                return false;
-            }
-
-            return true;
+            _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Accept_Failure_Decode);
         }
+
+        return data;
+    }
+
+    private string TryDecodeNewRelicIdHttpHeader(string encodedNewRelicIdHttpHeader)
+    {
+        if (encodedNewRelicIdHttpHeader == null)
+            return null;
+
+        return Strings.TryBase64Decode(encodedNewRelicIdHttpHeader, _configurationService.Configuration.EncodingKey);
+    }
+
+    private string GetEncodedAppData(IInternalTransaction transaction, TransactionMetricName transactionMetricName, string crossProcessId)
+    {
+        var txMetadata = transaction.TransactionMetadata;
+        var queueTime = txMetadata.QueueTime?.TotalSeconds ?? 0;
+        var referrerContentLength = txMetadata.GetCrossApplicationReferrerContentLength();
+        var responseTimeInSeconds = txMetadata.CrossApplicationResponseTimeInSeconds;
+        var appData = new CrossApplicationResponseData(crossProcessId, transactionMetricName.PrefixedName, (float)queueTime, responseTimeInSeconds, referrerContentLength, transaction.Guid);
+
+        return HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(appData), _configurationService.Configuration.EncodingKey);
+    }
+
+    private string GetEncodedNewRelicId(string referrerCrossProcessId)
+    {
+        return Strings.Base64Encode(referrerCrossProcessId, _configurationService.Configuration.EncodingKey);
+    }
+
+    private string GetEncodedTransactionData(IInternalTransaction transaction)
+    {
+        var txMetadata = transaction.TransactionMetadata;
+        // If CrossApplicationReferrerTripId is null, then this is the first transaction to make an external request. In this case, use its Guid as the tripId.
+        var tripId = txMetadata.CrossApplicationReferrerTripId ?? transaction.Guid;
+        var transactionData = new CrossApplicationRequestData(transaction.Guid, false, tripId, txMetadata.LatestCrossApplicationPathHash);
+
+        return HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(transactionData), _configurationService.Configuration.EncodingKey);
+    }
+
+    private bool IsTrustedCrossProcessAccountId(string accountId, IEnumerable<long> trustedAccountIds)
+    {
+        long requestAccountId;
+        if (!long.TryParse(accountId.Split(StringSeparators.Hash)[0], out requestAccountId))
+        {
+            return false;
+        }
+
+        if (!trustedAccountIds.Contains(requestAccountId))
+        {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -1,51 +1,50 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Extensions.Collections;
-using System;
 
-namespace NewRelic.Agent.Core.WireModels
+namespace NewRelic.Agent.Core.WireModels;
+
+public abstract class EventWireModel : IHasPriority, IEventWireModel
 {
-    public abstract class EventWireModel : IHasPriority, IEventWireModel
+    public IAttributeValueCollection AttributeValues { get; private set; }
+
+    private readonly AttributeDestinations _targetObject;
+
+    public readonly bool IsSynthetics;
+
+    private float _priority;
+    public float Priority
     {
-        public IAttributeValueCollection AttributeValues { get; private set; }
-
-        private readonly AttributeDestinations _targetObject;
-
-        public readonly bool IsSynthetics;
-
-        private float _priority;
-        public float Priority
+        get { return _priority; }
+        set
         {
-            get { return _priority; }
-            set
+            const float priorityMin = 0.0f;
+            if (value < priorityMin || float.IsNaN(value) || float.IsNegativeInfinity(value) || float.IsPositiveInfinity(value))
             {
-                const float priorityMin = 0.0f;
-                if (value < priorityMin || float.IsNaN(value) || float.IsNegativeInfinity(value) || float.IsPositiveInfinity(value))
-                {
-                    throw new ArgumentException($"{_targetObject} requires a valid priority value greater than {priorityMin}, value used: {value}");
-                }
-                _priority = value;
+                throw new ArgumentException($"{_targetObject} requires a valid priority value greater than {priorityMin}, value used: {value}");
             }
-        }
-
-        protected EventWireModel(AttributeDestinations targetObject, IAttributeValueCollection attribValues, bool isSynthetics, float priority)
-        {
-            _targetObject = targetObject;
-            AttributeValues = new AttributeValueCollection(attribValues, _targetObject);
-            Priority = priority;
-            IsSynthetics = isSynthetics;
-
-            AttributeValues.MakeImmutable();
+            _priority = value;
         }
     }
 
-    public class ErrorEventWireModel : EventWireModel
+    protected EventWireModel(AttributeDestinations targetObject, IAttributeValueCollection attribValues, bool isSynthetics, float priority)
     {
-        public ErrorEventWireModel(IAttributeValueCollection attribValues, bool isSynthetics, float priority)
-            : base(AttributeDestinations.ErrorEvent, attribValues, isSynthetics, priority)
-        {
-        }
+        _targetObject = targetObject;
+        AttributeValues = new AttributeValueCollection(attribValues, _targetObject);
+        Priority = priority;
+        IsSynthetics = isSynthetics;
+
+        AttributeValues.MakeImmutable();
+    }
+}
+
+public class ErrorEventWireModel : EventWireModel
+{
+    public ErrorEventWireModel(IAttributeValueCollection attribValues, bool isSynthetics, float priority)
+        : base(AttributeDestinations.ErrorEvent, attribValues, isSynthetics, priority)
+    {
     }
 }
