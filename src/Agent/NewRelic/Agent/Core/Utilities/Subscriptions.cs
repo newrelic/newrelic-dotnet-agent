@@ -4,41 +4,40 @@
 using System;
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.Utilities
+namespace NewRelic.Agent.Core.Utilities;
+
+/// <summary>
+/// Thread safe disposable event subscription manager.
+/// </summary>
+public class Subscriptions : IDisposable
 {
-    /// <summary>
-    /// Thread safe disposable event subscription manager.
-    /// </summary>
-    public class Subscriptions : IDisposable
+    private readonly ICollection<IDisposable> _subscriptions = new List<IDisposable>();
+
+    public void Add<T>(Action<T> callback)
     {
-        private readonly ICollection<IDisposable> _subscriptions = new List<IDisposable>();
-
-        public void Add<T>(Action<T> callback)
+        lock (_subscriptions)
         {
-            lock (_subscriptions)
-            {
-                _subscriptions.Add(new EventSubscription<T>(callback));
-            }
+            _subscriptions.Add(new EventSubscription<T>(callback));
         }
+    }
 
-        public void Add<TRequest, TResponse>(RequestBus<TRequest, TResponse>.RequestHandler requestHandler)
+    public void Add<TRequest, TResponse>(RequestBus<TRequest, TResponse>.RequestHandler requestHandler)
+    {
+        lock (_subscriptions)
         {
-            lock (_subscriptions)
-            {
-                _subscriptions.Add(new RequestSubscription<TRequest, TResponse>(requestHandler));
-            }
+            _subscriptions.Add(new RequestSubscription<TRequest, TResponse>(requestHandler));
         }
+    }
 
-        public void Dispose()
+    public void Dispose()
+    {
+        lock (_subscriptions)
         {
-            lock (_subscriptions)
-            {
-                foreach (var subscription in _subscriptions)
-                    if (subscription != null)
-                        subscription.Dispose();
+            foreach (var subscription in _subscriptions)
+                if (subscription != null)
+                    subscription.Dispose();
 
-                _subscriptions.Clear();
-            }
+            _subscriptions.Clear();
         }
     }
 }
