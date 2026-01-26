@@ -17,9 +17,6 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 
-// TODO: Review all usages of the Activity class to ensure that we are only using the things are available in the
-//  supported versions of the DiagnosticSource assembly. We could also support some backwards compatibility by only
-//  having certain features available in the necessary properties or methods are available.
 public class ActivityBridge : IDisposable
 {
     public const string TemporarySegmentName = "temp segment name";
@@ -470,8 +467,8 @@ public class ActivityBridge : IDisposable
             transaction.AcceptDistributedTraceHeaders(originalActivity, ActivityBridgeHelpers.GetTraceContextHeadersFromActivity, TransportType.Unknown);
         }
 
-        // Activities created by a segment will have the NewRelicSegment custom property set with the segment.
-        if (activity.GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName) == null)
+        // TODO: We need a better way to detect activities created by a segment.  Could we use a custom property instead?
+        if (activity.DisplayName != TemporarySegmentName)
         {
             if (transaction.GetExperimentalApi().StartActivitySegment(ActivityStartedMethodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
             {

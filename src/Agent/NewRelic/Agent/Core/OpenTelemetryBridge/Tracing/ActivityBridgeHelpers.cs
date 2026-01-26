@@ -8,7 +8,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing
 {
