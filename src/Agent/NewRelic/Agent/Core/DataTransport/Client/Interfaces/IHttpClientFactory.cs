@@ -4,10 +4,9 @@
 using System.Net;
 using NewRelic.Agent.Configuration;
 
-namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces;
+
+public interface IHttpClientFactory
 {
-    public interface IHttpClientFactory
-    {
-        public IHttpClient GetOrCreateClient(IWebProxy proxy, IConfiguration configuration);
-    }
+    public IHttpClient GetOrCreateClient(IWebProxy proxy, IConfiguration configuration);
 }

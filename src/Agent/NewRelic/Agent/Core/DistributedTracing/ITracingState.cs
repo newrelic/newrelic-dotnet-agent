@@ -1,45 +1,44 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Agent.Core.DistributedTracing
+namespace NewRelic.Agent.Core.DistributedTracing;
+
+public interface ITracingState
 {
-    public interface ITracingState
-    {
-        DistributedTracingParentType Type { get; }
+    DistributedTracingParentType Type { get; }
 
-        string AppId { get; }
+    string AppId { get; }
 
-        string AccountId { get; }
+    string AccountId { get; }
 
-        TransportType TransportType { get; }
+    TransportType TransportType { get; }
 
-        string Guid { get; }
+    string Guid { get; }
 
-        string ParentId { get; }
+    string ParentId { get; }
 
-        DateTime Timestamp { get; }
+    DateTime Timestamp { get; }
 
-        TimeSpan TransportDuration { get; }
+    TimeSpan TransportDuration { get; }
 
-        string TraceId { get; }
+    string TraceId { get; }
 
-        string TransactionId { get; }
+    string TransactionId { get; }
 
-        bool? Sampled { get; }
+    bool? Sampled { get; }
 
-        float? Priority { get; }
+    float? Priority { get; }
 
-        bool NewRelicPayloadWasAccepted { get; }
-        bool TraceContextWasAccepted { get; }
-        bool HasDataForParentAttributes { get; }
-        bool HasDataForAttributes { get; }
+    bool NewRelicPayloadWasAccepted { get; }
+    bool TraceContextWasAccepted { get; }
+    bool HasDataForParentAttributes { get; }
+    bool HasDataForAttributes { get; }
 
-        List<IngestErrorType> IngestErrors { get; }
+    List<IngestErrorType> IngestErrors { get; }
 
-        List<string> VendorStateEntries { get; }
-    }
+    List<string> VendorStateEntries { get; }
 }

@@ -6,26 +6,25 @@ using System.IO;
 using System.Net.Http;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
+namespace NewRelic.Agent.Core.DataTransport.Client;
+
+/// <summary>
+/// HttpContent wrapper to enable mocking in unit tests
+/// </summary>
+public class HttpContentWrapper : IHttpContentWrapper
 {
-    /// <summary>
-    /// HttpContent wrapper to enable mocking in unit tests
-    /// </summary>
-    public class HttpContentWrapper : IHttpContentWrapper
+    private readonly HttpContent _httpContent;
+
+    public HttpContentWrapper(HttpContent httpContent)
     {
-        private readonly HttpContent _httpContent;
-
-        public HttpContentWrapper(HttpContent httpContent)
-        {
-            _httpContent = httpContent;
-        }
-
-        public Stream ReadAsStream()
-        {
-            return _httpContent.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-
-        public IHttpContentHeadersWrapper Headers => new HttpContentHeadersWrapper(_httpContent.Headers);
+        _httpContent = httpContent;
     }
+
+    public Stream ReadAsStream()
+    {
+        return _httpContent.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+    }
+
+    public IHttpContentHeadersWrapper Headers => new HttpContentHeadersWrapper(_httpContent.Headers);
 }
 #endif

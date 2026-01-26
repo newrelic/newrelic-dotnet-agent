@@ -4,15 +4,14 @@
 using System;
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.Events
-{
-    public class ErrorGroupCallbackUpdateEvent
-    {
-        public readonly Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback;
+namespace NewRelic.Agent.Core.Events;
 
-        public ErrorGroupCallbackUpdateEvent(Func<IReadOnlyDictionary<string, object>, string> errorGroupCallback)
-        {
-            ErrorGroupCallback = errorGroupCallback;
-        }
+public class ErrorGroupCallbackUpdateEvent
+{
+    public readonly Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback;
+
+    public ErrorGroupCallbackUpdateEvent(Func<IReadOnlyDictionary<string, object>, string> errorGroupCallback)
+    {
+        ErrorGroupCallback = errorGroupCallback;
     }
 }
