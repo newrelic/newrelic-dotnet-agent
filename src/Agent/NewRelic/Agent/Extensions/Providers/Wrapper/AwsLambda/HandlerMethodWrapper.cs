@@ -1,385 +1,384 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Api;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using System;
-using NewRelic.Agent.Extensions.Lambda;
-using NewRelic.Reflection;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Collections;
+using NewRelic.Agent.Extensions.Lambda;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.AwsLambda
+namespace NewRelic.Providers.Wrapper.AwsLambda;
+
+public class HandlerMethodWrapper : IWrapper
 {
-    public class HandlerMethodWrapper : IWrapper
+    private class FunctionDetails
     {
-        private class FunctionDetails
+        public string FunctionName { get; private set; }
+        public string FunctionVersion { get; private set; }
+        public string Arn { get; private set; }
+        private int ContextIdx = -1;
+        private int InputIdx = -1;
+        private Func<object, string> _requestIdGetter;
+        public AwsLambdaEventType EventType { get; private set; } = AwsLambdaEventType.Unknown;
+
+        public bool HasContext() => ContextIdx != -1;
+        private bool HasInputObject() => InputIdx != -1;
+
+        public void SetContext(object lambdaContext, int contextIdx)
         {
-            public string FunctionName { get; private set; }
-            public string FunctionVersion { get; private set; }
-            public string Arn { get; private set; }
-            private int ContextIdx = -1;
-            private int InputIdx = -1;
-            private Func<object, string> _requestIdGetter;
-            public AwsLambdaEventType EventType { get; private set; } = AwsLambdaEventType.Unknown;
+            ContextIdx = contextIdx;
+            SetName(lambdaContext);
+            SetVersion(lambdaContext);
+            SetArn(lambdaContext);
+            SetRequestIdGetter(lambdaContext);
+        }
 
-            public bool HasContext() => ContextIdx != -1;
-            private bool HasInputObject() => InputIdx != -1;
-
-            public void SetContext(object lambdaContext, int contextIdx)
+        public bool SetEventType(string fullName, int idx)
+        {
+            var eventType = fullName.ToEventType();
+            if (eventType != AwsLambdaEventType.Unknown)
             {
-                ContextIdx = contextIdx;
-                SetName(lambdaContext);
-                SetVersion(lambdaContext);
-                SetArn(lambdaContext);
-                SetRequestIdGetter(lambdaContext);
+                InputIdx = idx;
+                EventType = eventType;
+                return true;
             }
+            return false;
+        }
 
-            public bool SetEventType(string fullName, int idx)
+        public void Validate(string fallbackName1, string fallbackName2, string versionFallback)
+        {
+            ValidateName(fallbackName1, fallbackName2);
+            ValidateVersion(versionFallback);
+        }
+
+        private void SetName(object lambdaContext)
+        {
+            var functionNameGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionName");
+            FunctionName = functionNameGetter(lambdaContext);
+        }
+
+        private void ValidateName(string fallback1, string fallback2)
+        {
+            if (string.IsNullOrEmpty(_functionDetails.FunctionName))
             {
-                var eventType = fullName.ToEventType();
-                if (eventType != AwsLambdaEventType.Unknown)
-                {
-                    InputIdx = idx;
-                    EventType = eventType;
-                    return true;
-                }
-                return false;
-            }
-
-            public void Validate(string fallbackName1, string fallbackName2, string versionFallback)
-            {
-                ValidateName(fallbackName1, fallbackName2);
-                ValidateVersion(versionFallback);
-            }
-
-            private void SetName(object lambdaContext)
-            {
-                var functionNameGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionName");
-                FunctionName = functionNameGetter(lambdaContext);
-            }
-
-            private void ValidateName(string fallback1, string fallback2)
-            {
-                if (string.IsNullOrEmpty(_functionDetails.FunctionName))
-                {
-                    FunctionName = fallback1 ?? fallback2;
-                }
-            }
-
-            private void SetVersion(object lambdaContext)
-            {
-                var functionVersionGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionVersion");
-                FunctionVersion = functionVersionGetter(lambdaContext);
-            }
-
-            private void ValidateVersion(string fallback)
-            {
-                if (string.IsNullOrEmpty(FunctionVersion))
-                {
-                    FunctionVersion = fallback ?? "$LATEST";
-                }
-            }
-
-            private void SetArn(object lambdaContext)
-            {
-                var functionArnGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "InvokedFunctionArn");
-                Arn = functionArnGetter(lambdaContext);
-            }
-
-            private void SetRequestIdGetter(object lambdaContext)
-            {
-                _requestIdGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "AwsRequestId");
-            }
-
-            public string GetRequestId(InstrumentedMethodCall instrumentedMethodCall)
-            {
-                if (HasContext() && (ContextIdx < instrumentedMethodCall.MethodCall.MethodArguments.Length))
-                {
-                    return _requestIdGetter(instrumentedMethodCall.MethodCall.MethodArguments[ContextIdx]);
-                }
-                return null;
-            }
-
-            public object GetInputObject(InstrumentedMethodCall instrumentedMethodCall)
-            {
-                if (HasInputObject() && (InputIdx < instrumentedMethodCall.MethodCall.MethodArguments.Length))
-                {
-                    return instrumentedMethodCall.MethodCall.MethodArguments[InputIdx];
-                }
-                return null;
-            }
-
-            public bool IsWebRequest => EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest;
-
-            public bool ValidateWebRequestParameters(InstrumentedMethodCall instrumentedMethodCall)
-            {
-                if (HasInputObject() && IsWebRequest)
-                {
-                    dynamic input = GetInputObject(instrumentedMethodCall);
-
-                    // make sure the request includes Http Method and Path
-                    switch (EventType)
-                    {
-                        case AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest:
-                            {
-                                if (input.RequestContext != null)
-                                {
-                                    dynamic requestContext = input.RequestContext;
-
-                                    if (requestContext.Http != null)
-                                        return !string.IsNullOrEmpty(requestContext.Http.Method) && !string.IsNullOrEmpty(requestContext.Http.Path);
-                                }
-
-                                return false;
-                            }
-                        case AwsLambdaEventType.APIGatewayProxyRequest:
-                        case AwsLambdaEventType.ApplicationLoadBalancerRequest:
-                            {
-                                dynamic webReq = input;
-                                return !string.IsNullOrEmpty(webReq.HttpMethod) && !string.IsNullOrEmpty(webReq.Path);
-                            }
-                        default:
-                            return true;
-                    }
-
-                }
-
-                return false;
+                FunctionName = fallback1 ?? fallback2;
             }
         }
 
-        private List<string> _webResponseHeaders = ["content-type", "content-length"];
-
-        private static Func<object, object> _getRequestResponseFromGeneric;
-        private static object _initLock = new object();
-        private static FunctionDetails _functionDetails = null;
-
-        public bool IsTransactionRequired => false;
-
-        private static bool _coldStart = true;
-        private ConcurrentHashSet<string> _unexpectedResponseTypes = new();
-        private ConcurrentHashSet<string> _unsupportedInputTypes = new();
-
-        private static bool IsColdStart => _coldStart && !(_coldStart = false);
-
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+        private void SetVersion(object lambdaContext)
         {
-            return new CanWrapResponse("NewRelic.Providers.Wrapper.AwsLambda.HandlerMethod".Equals(methodInfo.RequestedWrapperName));
+            var functionVersionGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "FunctionVersion");
+            FunctionVersion = functionVersionGetter(lambdaContext);
         }
 
-        private void InitLambdaData(InstrumentedMethodCall instrumentedMethodCall, IAgent agent)
+        private void ValidateVersion(string fallback)
         {
-            _functionDetails = new FunctionDetails();
-
-            for (int idx = 0; idx < instrumentedMethodCall.MethodCall.MethodArguments.Length; idx++)
+            if (string.IsNullOrEmpty(FunctionVersion))
             {
-                var arg = instrumentedMethodCall.MethodCall.MethodArguments[idx];
+                FunctionVersion = fallback ?? "$LATEST";
+            }
+        }
 
-                if (!_functionDetails.HasContext())
+        private void SetArn(object lambdaContext)
+        {
+            var functionArnGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "InvokedFunctionArn");
+            Arn = functionArnGetter(lambdaContext);
+        }
+
+        private void SetRequestIdGetter(object lambdaContext)
+        {
+            _requestIdGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(lambdaContext.GetType(), "AwsRequestId");
+        }
+
+        public string GetRequestId(InstrumentedMethodCall instrumentedMethodCall)
+        {
+            if (HasContext() && (ContextIdx < instrumentedMethodCall.MethodCall.MethodArguments.Length))
+            {
+                return _requestIdGetter(instrumentedMethodCall.MethodCall.MethodArguments[ContextIdx]);
+            }
+            return null;
+        }
+
+        public object GetInputObject(InstrumentedMethodCall instrumentedMethodCall)
+        {
+            if (HasInputObject() && (InputIdx < instrumentedMethodCall.MethodCall.MethodArguments.Length))
+            {
+                return instrumentedMethodCall.MethodCall.MethodArguments[InputIdx];
+            }
+            return null;
+        }
+
+        public bool IsWebRequest => EventType is AwsLambdaEventType.APIGatewayProxyRequest or AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest or AwsLambdaEventType.ApplicationLoadBalancerRequest;
+
+        public bool ValidateWebRequestParameters(InstrumentedMethodCall instrumentedMethodCall)
+        {
+            if (HasInputObject() && IsWebRequest)
+            {
+                dynamic input = GetInputObject(instrumentedMethodCall);
+
+                // make sure the request includes Http Method and Path
+                switch (EventType)
                 {
-                    var iLambdaContext = arg.GetType().GetInterface("ILambdaContext");
-                    if (iLambdaContext != null)
+                    case AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest:
                     {
-                        _functionDetails.SetContext(arg, idx);
-                        continue; // go to the next arg
+                        if (input.RequestContext != null)
+                        {
+                            dynamic requestContext = input.RequestContext;
+
+                            if (requestContext.Http != null)
+                                return !string.IsNullOrEmpty(requestContext.Http.Method) && !string.IsNullOrEmpty(requestContext.Http.Path);
+                        }
+
+                        return false;
                     }
+                    case AwsLambdaEventType.APIGatewayProxyRequest:
+                    case AwsLambdaEventType.ApplicationLoadBalancerRequest:
+                    {
+                        dynamic webReq = input;
+                        return !string.IsNullOrEmpty(webReq.HttpMethod) && !string.IsNullOrEmpty(webReq.Path);
+                    }
+                    default:
+                        return true;
                 }
 
-                string name = arg.GetType().FullName;
-                agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Checking parameter: {name}");
-                if (_functionDetails.SetEventType(name, idx))
-                {
-                    agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Supported Event Type found: {_functionDetails.EventType}");
-                }
-                else if (_unsupportedInputTypes.TryAdd(name))
-                {
-                    agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unsupported input object type: {name}. Unable to provide additional instrumentation.");
-                }
             }
 
-            _functionDetails.Validate(agent.Configuration.ServerlessFunctionName, instrumentedMethodCall.MethodCall.Method.MethodName, agent.Configuration.ServerlessFunctionVersion);
+            return false;
+        }
+    }
+
+    private List<string> _webResponseHeaders = ["content-type", "content-length"];
+
+    private static Func<object, object> _getRequestResponseFromGeneric;
+    private static object _initLock = new object();
+    private static FunctionDetails _functionDetails = null;
+
+    public bool IsTransactionRequired => false;
+
+    private static bool _coldStart = true;
+    private ConcurrentHashSet<string> _unexpectedResponseTypes = new();
+    private ConcurrentHashSet<string> _unsupportedInputTypes = new();
+
+    private static bool IsColdStart => _coldStart && !(_coldStart = false);
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+    {
+        return new CanWrapResponse("NewRelic.Providers.Wrapper.AwsLambda.HandlerMethod".Equals(methodInfo.RequestedWrapperName));
+    }
+
+    private void InitLambdaData(InstrumentedMethodCall instrumentedMethodCall, IAgent agent)
+    {
+        _functionDetails = new FunctionDetails();
+
+        for (int idx = 0; idx < instrumentedMethodCall.MethodCall.MethodArguments.Length; idx++)
+        {
+            var arg = instrumentedMethodCall.MethodCall.MethodArguments[idx];
 
             if (!_functionDetails.HasContext())
             {
-                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"No Lambda context information found");
+                var iLambdaContext = arg.GetType().GetInterface("ILambdaContext");
+                if (iLambdaContext != null)
+                {
+                    _functionDetails.SetContext(arg, idx);
+                    continue; // go to the next arg
+                }
             }
 
-            agent.SetServerlessParameters(_functionDetails.FunctionVersion, _functionDetails.Arn);
+            string name = arg.GetType().FullName;
+            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Checking parameter: {name}");
+            if (_functionDetails.SetEventType(name, idx))
+            {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Supported Event Type found: {_functionDetails.EventType}");
+            }
+            else if (_unsupportedInputTypes.TryAdd(name))
+            {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unsupported input object type: {name}. Unable to provide additional instrumentation.");
+            }
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+        _functionDetails.Validate(agent.Configuration.ServerlessFunctionName, instrumentedMethodCall.MethodCall.Method.MethodName, agent.Configuration.ServerlessFunctionVersion);
+
+        if (!_functionDetails.HasContext())
         {
-            if (_functionDetails == null)
+            agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"No Lambda context information found");
+        }
+
+        agent.SetServerlessParameters(_functionDetails.FunctionVersion, _functionDetails.Arn);
+    }
+
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        if (_functionDetails == null)
+        {
+            lock (_initLock)
             {
-                lock (_initLock)
-                {
-                    if (_functionDetails == null)
-                    {
-                        try
-                        {
-                            InitLambdaData(instrumentedMethodCall, agent);
-                        }
-                        catch (Exception ex)
-                        {
-                            agent.Logger.Log(Agent.Extensions.Logging.Level.Error, $"Could not initialize lambda data: {ex.Message}");
-                        }
-                    }
-                }
-            }
-
-            if (_functionDetails!.IsWebRequest)
-            {
-                if (!_functionDetails.ValidateWebRequestParameters(instrumentedMethodCall))
-                {
-                    agent.Logger.Debug($"Invalid or missing web request parameters. HttpMethod and Path are required for {_functionDetails.EventType}. Not instrumenting this function invocation.");
-                    return Delegates.NoOp;
-                }
-            }
-
-
-
-            var isAsync = instrumentedMethodCall.IsAsync;
-            string requestId = _functionDetails.GetRequestId(instrumentedMethodCall);
-            var inputObject = _functionDetails.GetInputObject(instrumentedMethodCall);
-
-            // create a transaction for the function invocation if AwsLambdaApmModeEnabled is enabled then based on spec WebTransaction/Function/APIGATEWAY myFunction
-            // else WebTransaction/Function/myFunction
-            transaction = agent.CreateTransaction(
-                isWeb: _functionDetails.EventType.IsWebEvent(),
-                category: agent.Configuration.AwsLambdaApmModeEnabled ? "Function" : "Lambda",
-                transactionDisplayName: agent.Configuration.AwsLambdaApmModeEnabled
-                                        ? _functionDetails.EventType.ToEventTypeString().ToUpper() + " " + _functionDetails.FunctionName
-                                        : _functionDetails.FunctionName,
-                doNotTrackAsUnitOfWork: true);
-
-            if (isAsync)
-            {
-                transaction.AttachToAsync();
-                transaction.DetachFromPrimary(); //Remove from thread-local type storage
-            }
-
-            if (_functionDetails.EventType != AwsLambdaEventType.Unknown)
-            {
-                transaction.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
-            }
-
-            if (requestId != null)
-            {
-                transaction.AddLambdaAttribute("aws.requestId", requestId);
-            }
-            if (_functionDetails.Arn != null)
-            {
-                transaction.AddLambdaAttribute("aws.lambda.arn", _functionDetails.Arn);
-            }
-
-            if (IsColdStart) // only report this attribute if it's a cold start
-                transaction.AddLambdaAttribute("aws.lambda.coldStart", "true");
-
-            LambdaEventHelpers.AddEventTypeAttributes(agent, transaction, _functionDetails.EventType, inputObject);
-
-            var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, _functionDetails.FunctionName);
-
-            if (isAsync)
-            {
-                return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, InvokeTryProcessResponse, TaskContinuationOptions.ExecuteSynchronously);
-
-                void InvokeTryProcessResponse(Task responseTask)
+                if (_functionDetails == null)
                 {
                     try
                     {
-
-                        if (responseTask.Status == TaskStatus.Faulted)
-                        {
-                            transaction.NoticeError(responseTask.Exception);
-                        }
-
-                        if (!ValidTaskResponse(responseTask) || (segment == null))
-                        {
-                            return;
-                        }
-
-                        // capture response data for specific request / response types
-                        if (_functionDetails.IsWebRequest)
-                        {
-                            var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
-                            var response = responseGetter(responseTask);
-                            CaptureResponseData(transaction, response, agent);
-                        }
+                        InitLambdaData(instrumentedMethodCall, agent);
                     }
-                    finally
+                    catch (Exception ex)
                     {
-                        segment?.End();
-                        transaction.End();
+                        agent.Logger.Log(Agent.Extensions.Logging.Level.Error, $"Could not initialize lambda data: {ex.Message}");
                     }
                 }
             }
-            else
-            {
-                return Delegates.GetDelegateFor<object>(
-                        onSuccess: response =>
-                        {
-                            if (_functionDetails.IsWebRequest)
-                                CaptureResponseData(transaction, response, agent);
+        }
 
-                            segment.End();
-                            transaction.End();
-                        },
-                        onFailure: exception =>
-                        {
-                            segment.End(exception);
-                            transaction.End();
-                        });
+        if (_functionDetails!.IsWebRequest)
+        {
+            if (!_functionDetails.ValidateWebRequestParameters(instrumentedMethodCall))
+            {
+                agent.Logger.Debug($"Invalid or missing web request parameters. HttpMethod and Path are required for {_functionDetails.EventType}. Not instrumenting this function invocation.");
+                return Delegates.NoOp;
             }
         }
 
-        private void CaptureResponseData(ITransaction transaction, object response, IAgent agent)
+
+
+        var isAsync = instrumentedMethodCall.IsAsync;
+        string requestId = _functionDetails.GetRequestId(instrumentedMethodCall);
+        var inputObject = _functionDetails.GetInputObject(instrumentedMethodCall);
+
+        // create a transaction for the function invocation if AwsLambdaApmModeEnabled is enabled then based on spec WebTransaction/Function/APIGATEWAY myFunction
+        // else WebTransaction/Function/myFunction
+        transaction = agent.CreateTransaction(
+            isWeb: _functionDetails.EventType.IsWebEvent(),
+            category: agent.Configuration.AwsLambdaApmModeEnabled ? "Function" : "Lambda",
+            transactionDisplayName: agent.Configuration.AwsLambdaApmModeEnabled
+                ? _functionDetails.EventType.ToEventTypeString().ToUpper() + " " + _functionDetails.FunctionName
+                : _functionDetails.FunctionName,
+            doNotTrackAsUnitOfWork: true);
+
+        if (isAsync)
         {
-            if (response == null)
-                return;
+            transaction.AttachToAsync();
+            transaction.DetachFromPrimary(); //Remove from thread-local type storage
+        }
 
-            // check response type based on request type to be sure it has the properties we're looking for 
-            var responseType = response.GetType().FullName;
-            if ((_functionDetails.EventType == AwsLambdaEventType.APIGatewayProxyRequest && responseType != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse")
-                ||
-                (_functionDetails.EventType == AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest && responseType != "Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyResponse")
-                ||
-                (_functionDetails.EventType == AwsLambdaEventType.ApplicationLoadBalancerRequest && responseType != "Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerResponse"))
+        if (_functionDetails.EventType != AwsLambdaEventType.Unknown)
+        {
+            transaction.AddEventSourceAttribute("eventType", _functionDetails.EventType.ToEventTypeString());
+        }
+
+        if (requestId != null)
+        {
+            transaction.AddLambdaAttribute("aws.requestId", requestId);
+        }
+        if (_functionDetails.Arn != null)
+        {
+            transaction.AddLambdaAttribute("aws.lambda.arn", _functionDetails.Arn);
+        }
+
+        if (IsColdStart) // only report this attribute if it's a cold start
+            transaction.AddLambdaAttribute("aws.lambda.coldStart", "true");
+
+        LambdaEventHelpers.AddEventTypeAttributes(agent, transaction, _functionDetails.EventType, inputObject);
+
+        var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, _functionDetails.FunctionName);
+
+        if (isAsync)
+        {
+            return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, InvokeTryProcessResponse, TaskContinuationOptions.ExecuteSynchronously);
+
+            void InvokeTryProcessResponse(Task responseTask)
             {
-                if (_unexpectedResponseTypes.TryAdd(responseType))
+                try
                 {
-                    agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unexpected response type {responseType} for request event type {_functionDetails.EventType}. Not capturing any response data.");
-                }
 
-                return;
-            }
-
-            dynamic webResponse = response;
-            transaction.SetHttpResponseStatusCode(webResponse.StatusCode);
-
-            IDictionary<string, string> responseHeaders = webResponse.Headers;
-            if (webResponse.Headers != null)
-            {
-                // copy and lowercase the headers
-                Dictionary<string, string> copiedHeaders = new Dictionary<string, string>();
-                foreach (var kvp in responseHeaders)
-                    copiedHeaders.Add(kvp.Key.ToLower(), kvp.Value);
-
-                foreach (var header in _webResponseHeaders) // only capture specific headers
-                {
-                    if (copiedHeaders.TryGetValue(header, out var value))
+                    if (responseTask.Status == TaskStatus.Faulted)
                     {
-                        transaction.AddLambdaAttribute($"response.headers.{header.ToLower()}", value);
+                        transaction.NoticeError(responseTask.Exception);
                     }
+
+                    if (!ValidTaskResponse(responseTask) || (segment == null))
+                    {
+                        return;
+                    }
+
+                    // capture response data for specific request / response types
+                    if (_functionDetails.IsWebRequest)
+                    {
+                        var responseGetter = _getRequestResponseFromGeneric ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseTask.GetType(), "Result");
+                        var response = responseGetter(responseTask);
+                        CaptureResponseData(transaction, response, agent);
+                    }
+                }
+                finally
+                {
+                    segment?.End();
+                    transaction.End();
                 }
             }
         }
-
-        private static bool ValidTaskResponse(Task response)
+        else
         {
-            return response?.Status == TaskStatus.RanToCompletion;
-        }
+            return Delegates.GetDelegateFor<object>(
+                onSuccess: response =>
+                {
+                    if (_functionDetails.IsWebRequest)
+                        CaptureResponseData(transaction, response, agent);
 
+                    segment.End();
+                    transaction.End();
+                },
+                onFailure: exception =>
+                {
+                    segment.End(exception);
+                    transaction.End();
+                });
+        }
     }
+
+    private void CaptureResponseData(ITransaction transaction, object response, IAgent agent)
+    {
+        if (response == null)
+            return;
+
+        // check response type based on request type to be sure it has the properties we're looking for 
+        var responseType = response.GetType().FullName;
+        if ((_functionDetails.EventType == AwsLambdaEventType.APIGatewayProxyRequest && responseType != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse")
+            ||
+            (_functionDetails.EventType == AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest && responseType != "Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyResponse")
+            ||
+            (_functionDetails.EventType == AwsLambdaEventType.ApplicationLoadBalancerRequest && responseType != "Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerResponse"))
+        {
+            if (_unexpectedResponseTypes.TryAdd(responseType))
+            {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Warn, $"Unexpected response type {responseType} for request event type {_functionDetails.EventType}. Not capturing any response data.");
+            }
+
+            return;
+        }
+
+        dynamic webResponse = response;
+        transaction.SetHttpResponseStatusCode(webResponse.StatusCode);
+
+        IDictionary<string, string> responseHeaders = webResponse.Headers;
+        if (webResponse.Headers != null)
+        {
+            // copy and lowercase the headers
+            Dictionary<string, string> copiedHeaders = new Dictionary<string, string>();
+            foreach (var kvp in responseHeaders)
+                copiedHeaders.Add(kvp.Key.ToLower(), kvp.Value);
+
+            foreach (var header in _webResponseHeaders) // only capture specific headers
+            {
+                if (copiedHeaders.TryGetValue(header, out var value))
+                {
+                    transaction.AddLambdaAttribute($"response.headers.{header.ToLower()}", value);
+                }
+            }
+        }
+    }
+
+    private static bool ValidTaskResponse(Task response)
+    {
+        return response?.Status == TaskStatus.RanToCompletion;
+    }
+
 }

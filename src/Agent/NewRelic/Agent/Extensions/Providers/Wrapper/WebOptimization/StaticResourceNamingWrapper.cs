@@ -6,31 +6,30 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
 
-namespace NewRelic.Providers.Wrapper.WebOptimization
+namespace NewRelic.Providers.Wrapper.WebOptimization;
+
+public class StaticResourceNamingWrapper : IWrapper
 {
-    public class StaticResourceNamingWrapper : IWrapper
+    public bool IsTransactionRequired => true;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        public bool IsTransactionRequired => true;
+        var method = methodInfo.Method;
+        var canWrap = method.MatchesAny(assemblyName: "System.Web.Optimization", typeName: "System.Web.Optimization.BundleHandler", methodName: "ProcessRequest");
+        return new CanWrapResponse(canWrap);
+    }
 
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
-        {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny(assemblyName: "System.Web.Optimization", typeName: "System.Web.Optimization.BundleHandler", methodName: "ProcessRequest");
-            return new CanWrapResponse(canWrap);
-        }
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        var httpContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<HttpContext>(0);
+        var assetName = httpContext.Request.Path.TrimStart('/');
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
-        {
-            var httpContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<HttpContext>(0);
-            var assetName = httpContext.Request.Path.TrimStart('/');
+        transaction.SetWebTransactionName(WebTransactionType.ASP, assetName, TransactionNamePriority.FrameworkHigh);
+        var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, assetName);
 
-            transaction.SetWebTransactionName(WebTransactionType.ASP, assetName, TransactionNamePriority.FrameworkHigh);
-            var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, assetName);
+        if (segment == null)
+            return Delegates.NoOp;
 
-            if (segment == null)
-                return Delegates.NoOp;
-
-            return Delegates.GetDelegateFor(segment);
-        }
+        return Delegates.GetDelegateFor(segment);
     }
 }

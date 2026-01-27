@@ -1,53 +1,52 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Agent.Api;
 using System.Threading.Tasks;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.Couchbase
+namespace NewRelic.Providers.Wrapper.Couchbase;
+
+public class CouchbaseQueryWrapperAsync : IWrapper
 {
-    public class CouchbaseQueryWrapperAsync : IWrapper
+    public bool IsTransactionRequired => true;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        public bool IsTransactionRequired => true;
+        var method = methodInfo.Method;
+        var canWrap = method.MatchesAny("Couchbase.NetClient", "Couchbase.CouchbaseBucket", "QueryAsync");
 
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+        if (canWrap)
         {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny("Couchbase.NetClient", "Couchbase.CouchbaseBucket", "QueryAsync");
-
-            if (canWrap)
-            {
-                return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("Couchbase.NetClient", "Couchbase.CouchbaseBucket", "QueryAsync");
-            }
-
-            return new CanWrapResponse(false);
+            return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("Couchbase.NetClient", "Couchbase.CouchbaseBucket", "QueryAsync");
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+        return new CanWrapResponse(false);
+    }
+
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        if (instrumentedMethodCall.IsAsync)
         {
-            if (instrumentedMethodCall.IsAsync)
-            {
-                transaction.AttachToAsync();
-            }
-
-            var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
-
-            var model = CouchbaseHelper.GetBucketName(instrumentedMethodCall.MethodCall.InvocationTarget);
-
-            var parameterTypeName = instrumentedMethodCall.InstrumentedMethodInfo.Method.ParameterTypeNames;
-
-            var parm = instrumentedMethodCall.MethodCall.MethodArguments[0];
-            var commandText = CouchbaseHelper.GetStatement(parm, parameterTypeName);
-
-            var segment = transaction.StartDatastoreSegment(
-                instrumentedMethodCall.MethodCall,
-                new ParsedSqlStatement(DatastoreVendor.Couchbase, model, operation),
-                null,
-                commandText);
-
-            return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
+            transaction.AttachToAsync();
         }
+
+        var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
+
+        var model = CouchbaseHelper.GetBucketName(instrumentedMethodCall.MethodCall.InvocationTarget);
+
+        var parameterTypeName = instrumentedMethodCall.InstrumentedMethodInfo.Method.ParameterTypeNames;
+
+        var parm = instrumentedMethodCall.MethodCall.MethodArguments[0];
+        var commandText = CouchbaseHelper.GetStatement(parm, parameterTypeName);
+
+        var segment = transaction.StartDatastoreSegment(
+            instrumentedMethodCall.MethodCall,
+            new ParsedSqlStatement(DatastoreVendor.Couchbase, model, operation),
+            null,
+            commandText);
+
+        return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
     }
 }

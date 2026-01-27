@@ -8,85 +8,83 @@ using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.Elasticsearch
+namespace NewRelic.Providers.Wrapper.Elasticsearch;
+
+public class RequestWrapper : SearchRequestWrapperBase, IWrapper
 {
+    private const string WrapperName = "ElasticsearchRequestWrapper";
+    private const int RequestParamsIndex = 3;
+    private const int RequestParamsIndexAsync = 4;
 
-    public class RequestWrapper : SearchRequestWrapperBase, IWrapper
+    private static Func<object, object> _apiCallDetailsGetter;
+
+    public override DatastoreVendor Vendor => DatastoreVendor.Elasticsearch;
+
+    public bool IsTransactionRequired => true;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        private const string WrapperName = "ElasticsearchRequestWrapper";
-        private const int RequestParamsIndex = 3;
-        private const int RequestParamsIndexAsync = 4;
+        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+    }
 
-        private static Func<object, object> _apiCallDetailsGetter;
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        var isAsync = instrumentedMethodCall.IsAsync ||
+                      instrumentedMethodCall.InstrumentedMethodInfo.Method.MethodName.EndsWith("RequestAsync");
 
-        public override DatastoreVendor Vendor => DatastoreVendor.Elasticsearch;
+        var indexOfRequestParams = RequestParamsIndex;
 
-        public bool IsTransactionRequired => true;
-
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+        if (isAsync)
         {
-            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+            transaction.AttachToAsync();
+            var parameterTypeNamesList = instrumentedMethodCall.InstrumentedMethodInfo.Method.ParameterTypeNames.Split(',');
+            if (parameterTypeNamesList[RequestParamsIndexAsync] == "Elasticsearch.Net.IRequestParameters")
+            {
+                indexOfRequestParams = RequestParamsIndexAsync;
+            }
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+        var segment = BuildSegment(indexOfRequestParams, instrumentedMethodCall, transaction);
+
+        if (isAsync)
         {
-            var isAsync = instrumentedMethodCall.IsAsync ||
-                          instrumentedMethodCall.InstrumentedMethodInfo.Method.MethodName.EndsWith("RequestAsync");
+            return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, InvokeTryProcessResponse, TaskContinuationOptions.ExecuteSynchronously);
 
-            var indexOfRequestParams = RequestParamsIndex;
-
-            if (isAsync)
+            void InvokeTryProcessResponse(Task responseTask)
             {
-                transaction.AttachToAsync();
-                var parameterTypeNamesList = instrumentedMethodCall.InstrumentedMethodInfo.Method.ParameterTypeNames.Split(',');
-                if (parameterTypeNamesList[RequestParamsIndexAsync] == "Elasticsearch.Net.IRequestParameters")
+                if (!ValidTaskResponse(responseTask) || (segment == null))
                 {
-                    indexOfRequestParams = RequestParamsIndexAsync;
+                    return;
                 }
+                var responseGetter = GetRequestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
+                var response = responseGetter(responseTask);
+                _apiCallDetailsGetter ??= GetApiCallDetailsGetterFromResponse(response);
+                TryProcessResponse(agent, transaction, response, segment, _apiCallDetailsGetter);
             }
-
-            var segment = BuildSegment(indexOfRequestParams, instrumentedMethodCall, transaction);
-
-            if (isAsync)
-            {
-                return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, InvokeTryProcessResponse, TaskContinuationOptions.ExecuteSynchronously);
-
-                void InvokeTryProcessResponse(Task responseTask)
+        }
+        else
+        {
+            return Delegates.GetDelegateFor<object>(
+                onSuccess: response =>
                 {
-                    if (!ValidTaskResponse(responseTask) || (segment == null))
-                    {
-                        return;
-                    }
-                    var responseGetter = GetRequestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
-                    var response = responseGetter(responseTask);
                     _apiCallDetailsGetter ??= GetApiCallDetailsGetterFromResponse(response);
                     TryProcessResponse(agent, transaction, response, segment, _apiCallDetailsGetter);
-                }
-            }
-            else
-            {
-                return Delegates.GetDelegateFor<object>(
-                        onSuccess: response =>
-                        {
-                            _apiCallDetailsGetter ??= GetApiCallDetailsGetterFromResponse(response);
-                            TryProcessResponse(agent, transaction, response, segment, _apiCallDetailsGetter);
-                        },
-                        onFailure: exception =>
-                        {
-                            // Don't know how valid this is
-                            segment.End(exception);
-                        });
-            }
+                },
+                onFailure: exception =>
+                {
+                    // Don't know how valid this is
+                    segment.End(exception);
+                });
         }
+    }
 
-        private static Func<object, object> GetApiCallDetailsGetterFromResponse(object response)
-        {
-            var typeOfResponse = response.GetType();
-            var responseAssemblyName = typeOfResponse.Assembly.FullName;
-            var apiCallDetailsPropertyName = responseAssemblyName.StartsWith("Elastic.Clients.Elasticsearch")
-                ? "ApiCallDetails" : "ApiCall";
+    private static Func<object, object> GetApiCallDetailsGetterFromResponse(object response)
+    {
+        var typeOfResponse = response.GetType();
+        var responseAssemblyName = typeOfResponse.Assembly.FullName;
+        var apiCallDetailsPropertyName = responseAssemblyName.StartsWith("Elastic.Clients.Elasticsearch")
+            ? "ApiCallDetails" : "ApiCall";
 
-            return VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);
-        }
+        return VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);
     }
 }

@@ -11,97 +11,96 @@ using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.Logging
+namespace NewRelic.Providers.Wrapper.Logging;
+
+public class Log4netWrapper : IWrapper
 {
-    public class Log4netWrapper : IWrapper
+    private static Func<object, object> _getLevel;
+    private static Func<object, string> _getRenderedMessage;
+    private static Func<object, DateTime> _getTimestamp;
+    private static Func<object, Exception> _getLogException;
+    private static Func<object, IDictionary> _getGetProperties; // calls GetProperties method
+    private static Func<object, IDictionary> _getProperties; // getter for Properties property
+
+    public bool IsTransactionRequired => false;
+
+
+    private const string WrapperName = "log4net";
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        private static Func<object, object> _getLevel;
-        private static Func<object, string> _getRenderedMessage;
-        private static Func<object, DateTime> _getTimestamp;
-        private static Func<object, Exception> _getLogException;
-        private static Func<object, IDictionary> _getGetProperties; // calls GetProperties method
-        private static Func<object, IDictionary> _getProperties; // getter for Properties property
+        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+    }
 
-        public bool IsTransactionRequired => false;
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[0];
+        var logEventType = logEvent.GetType();
 
+        RecordLogMessage(logEvent, logEventType, agent);
 
-        private const string WrapperName = "log4net";
+        DecorateLogMessage(logEvent, logEventType, agent);
 
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+        return Delegates.NoOp;
+    }
+
+    private void RecordLogMessage(object logEvent, Type logEventType, IAgent agent)
+    {
+        var getLevelFunc = _getLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Level");
+
+        // RenderedMessage is get only
+        var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "RenderedMessage");
+
+        // Older versions of log4net only allow access to a timestamp in local time
+        var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
+
+        _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject");
+
+        // This will either add the log message to the transaction or directly to the aggregator
+        var xapi = agent.GetExperimentalApi();
+
+        xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, _getLogException, GetContextData, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+    }
+
+    private void DecorateLogMessage(object logEvent, Type logEventType, IAgent agent)
+    {
+        if (!agent.Configuration.LogDecoratorEnabled)
         {
-            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+            return;
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+        var getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEventType, "Properties");
+        var propertiesDictionary = getProperties(logEvent);
+
+        if (propertiesDictionary == null)
         {
-            var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[0];
-            var logEventType = logEvent.GetType();
-
-            RecordLogMessage(logEvent, logEventType, agent);
-
-            DecorateLogMessage(logEvent, logEventType, agent);
-
-            return Delegates.NoOp;
+            return;
         }
 
-        private void RecordLogMessage(object logEvent, Type logEventType, IAgent agent)
+        // uses the foratted metadata to make a single entry
+        var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
+
+        // uses underscores to support other frameworks that do not allow hyphens (Serilog)
+        propertiesDictionary["NR_LINKING"] = formattedMetadata;
+    }
+
+    private Dictionary<string, object> GetContextData(object logEvent)
+    {
+        var logEventType = logEvent.GetType();
+        _getGetProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
+
+        var contextData = new Dictionary<string, object>();
+
+        var propertiesDictionary = _getGetProperties(logEvent);
+
+        if (propertiesDictionary != null && propertiesDictionary.Count > 0)
         {
-            var getLevelFunc = _getLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Level");
-
-            // RenderedMessage is get only
-            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "RenderedMessage");
-
-            // Older versions of log4net only allow access to a timestamp in local time
-            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
-
-            _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject");
-
-            // This will either add the log message to the transaction or directly to the aggregator
-            var xapi = agent.GetExperimentalApi();
-
-            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, _getLogException, GetContextData, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
-        }
-
-        private void DecorateLogMessage(object logEvent, Type logEventType, IAgent agent)
-        {
-            if (!agent.Configuration.LogDecoratorEnabled)
+            foreach (var key in propertiesDictionary.Keys)
             {
-                return;
+                contextData.Add(key.ToString(), propertiesDictionary[key]);
             }
-
-            var getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEventType, "Properties");
-            var propertiesDictionary = getProperties(logEvent);
-
-            if (propertiesDictionary == null)
-            {
-                return;
-            }
-
-            // uses the foratted metadata to make a single entry
-            var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
-
-            // uses underscores to support other frameworks that do not allow hyphens (Serilog)
-            propertiesDictionary["NR_LINKING"] = formattedMetadata;
         }
 
-        private Dictionary<string, object> GetContextData(object logEvent)
-        {
-            var logEventType = logEvent.GetType();
-            _getGetProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
-
-            var contextData = new Dictionary<string, object>();
-
-            var propertiesDictionary = _getGetProperties(logEvent);
-
-            if (propertiesDictionary != null && propertiesDictionary.Count > 0)
-            {
-                foreach (var key in propertiesDictionary.Keys)
-                {
-                    contextData.Add(key.ToString(), propertiesDictionary[key]);
-                }
-            }
-
-            return contextData.Any() ? contextData : null;
-        }
+        return contextData.Any() ? contextData : null;
     }
 }

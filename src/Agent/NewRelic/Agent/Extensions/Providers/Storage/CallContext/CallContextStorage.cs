@@ -1,30 +1,29 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Providers.Storage.CallContext
+namespace NewRelic.Providers.Storage.CallContext;
+
+public class CallContextStorage<T> : CallContextStorageBase<T>
 {
-    public class CallContextStorage<T> : CallContextStorageBase<T>
+    private readonly AsyncLocal<T> _storage;
+
+    public CallContextStorage(string key)
     {
-        private readonly AsyncLocal<T> _storage;
+        _storage = new AsyncLocal<T>(key);
+    }
 
-        public CallContextStorage(string key)
-        {
-            _storage = new AsyncLocal<T>(key);
-        }
+    public override T GetData()
+    {
+        return _storage.Value;
+    }
 
-        public override T GetData()
-        {
-            return _storage.Value;
-        }
+    public override void SetData(T value)
+    {
+        _storage.Value = value;
+    }
 
-        public override void SetData(T value)
-        {
-            _storage.Value = value;
-        }
-
-        public override void Clear()
-        {
-            _storage.Value = default(T);
-        }
+    public override void Clear()
+    {
+        _storage.Value = default(T);
     }
 }

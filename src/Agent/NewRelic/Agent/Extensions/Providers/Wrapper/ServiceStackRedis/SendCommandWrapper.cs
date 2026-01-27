@@ -2,103 +2,102 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
-using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NewRelic.Reflection;
-using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Agent.Api;
 
-namespace NewRelic.Providers.Wrapper.ServiceStackRedis
+namespace NewRelic.Providers.Wrapper.ServiceStackRedis;
+
+public class SendCommandWrapper : IWrapper
 {
-    public class SendCommandWrapper : IWrapper
+    private const string AssemblyName = "ServiceStack.Redis";
+    private const string TypeName = "ServiceStack.Redis.RedisClient";
+    private const string PropertyHost = "Host";
+    private const string PropertyPortPathOrId = "Port";
+    private const string PropertyDatabaseName = "Db";
+
+    public bool IsTransactionRequired => true;
+
+    private static class Statics
     {
-        private const string AssemblyName = "ServiceStack.Redis";
-        private const string TypeName = "ServiceStack.Redis.RedisClient";
-        private const string PropertyHost = "Host";
-        private const string PropertyPortPathOrId = "Port";
-        private const string PropertyDatabaseName = "Db";
+        private static Func<object, string> _propertyHost;
+        private static Func<object, int> _propertyPortPathOrId;
+        private static Func<object, long> _propertyDatabaseName;
 
-        public bool IsTransactionRequired => true;
+        public static readonly Func<object, string> GetPropertyHost = AssignPropertyHost();
 
-        private static class Statics
+        public static readonly Func<object, int> GetPropertyPortPathOrId = AssignPropertyPortPathOrId();
+
+        public static readonly Func<object, long> GetPropertyDatabaseName = AssignPropertyDatabaseName();
+
+        private static Func<object, string> AssignPropertyHost()
         {
-            private static Func<object, string> _propertyHost;
-            private static Func<object, int> _propertyPortPathOrId;
-            private static Func<object, long> _propertyDatabaseName;
-
-            public static readonly Func<object, string> GetPropertyHost = AssignPropertyHost();
-
-            public static readonly Func<object, int> GetPropertyPortPathOrId = AssignPropertyPortPathOrId();
-
-            public static readonly Func<object, long> GetPropertyDatabaseName = AssignPropertyDatabaseName();
-
-            private static Func<object, string> AssignPropertyHost()
-            {
-                return _propertyHost ?? (_propertyHost = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(AssemblyName, TypeName, PropertyHost));
-            }
-
-            private static Func<object, int> AssignPropertyPortPathOrId()
-            {
-                return _propertyPortPathOrId ?? (_propertyPortPathOrId = VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(AssemblyName, TypeName, PropertyPortPathOrId));
-            }
-
-            private static Func<object, long> AssignPropertyDatabaseName()
-            {
-                return _propertyDatabaseName ?? (_propertyDatabaseName = VisibilityBypasser.Instance.GeneratePropertyAccessor<long>(AssemblyName, TypeName, PropertyDatabaseName));
-            }
+            return _propertyHost ?? (_propertyHost = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(AssemblyName, TypeName, PropertyHost));
         }
 
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+        private static Func<object, int> AssignPropertyPortPathOrId()
         {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny(assemblyName: "ServiceStack.Redis", typeName: "ServiceStack.Redis.RedisNativeClient", methodName: "SendCommand");
-            return new CanWrapResponse(canWrap);
+            return _propertyPortPathOrId ?? (_propertyPortPathOrId = VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(AssemblyName, TypeName, PropertyPortPathOrId));
         }
 
-        static string GetRedisCommand(byte[] command)
+        private static Func<object, long> AssignPropertyDatabaseName()
         {
-            // ServiceStack.Redis uses the same UTF8 encoder
-            return System.Text.Encoding.UTF8.GetString(command);
+            return _propertyDatabaseName ?? (_propertyDatabaseName = VisibilityBypasser.Instance.GeneratePropertyAccessor<long>(AssemblyName, TypeName, PropertyDatabaseName));
         }
+    }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+    {
+        var method = methodInfo.Method;
+        var canWrap = method.MatchesAny(assemblyName: "ServiceStack.Redis", typeName: "ServiceStack.Redis.RedisNativeClient", methodName: "SendCommand");
+        return new CanWrapResponse(canWrap);
+    }
+
+    static string GetRedisCommand(byte[] command)
+    {
+        // ServiceStack.Redis uses the same UTF8 encoder
+        return System.Text.Encoding.UTF8.GetString(command);
+    }
+
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        var redisCommandWithArgumentsAsBytes = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<byte[][]>(0);
+        var redisCommand = redisCommandWithArgumentsAsBytes[0];
+        if (redisCommand == null)
+            return Delegates.NoOp;
+
+        var operation = GetRedisCommand(redisCommand);
+        var contextObject = instrumentedMethodCall.MethodCall.InvocationTarget;
+        if (contextObject == null)
+            throw new NullReferenceException(nameof(contextObject));
+
+        var host = TryGetPropertyName(PropertyHost, contextObject) ?? "unknown";
+        host = ConnectionStringParserHelper.NormalizeHostname(host, agent.Configuration.UtilizationHostName);
+        var port = TryGetPropertyName(PropertyPortPathOrId, contextObject);
+        if (!int.TryParse(port, out int portNum))
         {
-            var redisCommandWithArgumentsAsBytes = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<byte[][]>(0);
-            var redisCommand = redisCommandWithArgumentsAsBytes[0];
-            if (redisCommand == null)
-                return Delegates.NoOp;
-
-            var operation = GetRedisCommand(redisCommand);
-            var contextObject = instrumentedMethodCall.MethodCall.InvocationTarget;
-            if (contextObject == null)
-                throw new NullReferenceException(nameof(contextObject));
-
-            var host = TryGetPropertyName(PropertyHost, contextObject) ?? "unknown";
-            host = ConnectionStringParserHelper.NormalizeHostname(host, agent.Configuration.UtilizationHostName);
-            var port = TryGetPropertyName(PropertyPortPathOrId, contextObject);
-            if (!int.TryParse(port, out int portNum))
-            {
-                portNum = -1;
-            }
-            var databaseName = TryGetPropertyName(PropertyDatabaseName, contextObject);
-            var connectionInfo = new ConnectionInfo(host, portNum, databaseName);
-
-            var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
-
-            return Delegates.GetDelegateFor(segment);
+            portNum = -1;
         }
+        var databaseName = TryGetPropertyName(PropertyDatabaseName, contextObject);
+        var connectionInfo = new ConnectionInfo(host, portNum, databaseName);
 
-        private static string TryGetPropertyName(string propertyName, object contextObject)
-        {
-            if (propertyName == PropertyHost)
-                return Statics.GetPropertyHost(contextObject);
-            if (propertyName == PropertyPortPathOrId)
-                return Statics.GetPropertyPortPathOrId(contextObject).ToString();
-            if (propertyName == PropertyDatabaseName)
-                return Statics.GetPropertyDatabaseName(contextObject).ToString();
+        var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
 
-            throw new Exception("Unexpected instrumented property in wrapper: " + contextObject + "." + propertyName);
-        }
+        return Delegates.GetDelegateFor(segment);
+    }
+
+    private static string TryGetPropertyName(string propertyName, object contextObject)
+    {
+        if (propertyName == PropertyHost)
+            return Statics.GetPropertyHost(contextObject);
+        if (propertyName == PropertyPortPathOrId)
+            return Statics.GetPropertyPortPathOrId(contextObject).ToString();
+        if (propertyName == PropertyDatabaseName)
+            return Statics.GetPropertyDatabaseName(contextObject).ToString();
+
+        throw new Exception("Unexpected instrumented property in wrapper: " + contextObject + "." + propertyName);
     }
 }

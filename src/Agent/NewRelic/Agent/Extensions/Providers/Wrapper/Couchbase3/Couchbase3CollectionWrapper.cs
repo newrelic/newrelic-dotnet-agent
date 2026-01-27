@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections;
-using System.Linq;
+using System.Threading.Tasks;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
-using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Agent.Api;
-using System.Threading.Tasks;
 
 namespace NewRelic.Providers.Wrapper.Couchbase3;
 

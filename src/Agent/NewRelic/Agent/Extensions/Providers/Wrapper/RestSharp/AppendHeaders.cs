@@ -6,35 +6,34 @@ using System.Net;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.RestSharp
+namespace NewRelic.Providers.Wrapper.RestSharp;
+
+/// <summary>
+/// This instrumentation is used for CAT/DT support on outbound RestClient requests.
+/// Data is added to the Http Headers to be read by the receiving agent.
+/// </summary>
+public class AppendHeaders : IWrapper
 {
-    /// <summary>
-    /// This instrumentation is used for CAT/DT support on outbound RestClient requests.
-    /// Data is added to the Http Headers to be read by the receiving agent.
-    /// </summary>
-    public class AppendHeaders : IWrapper
+    public bool IsTransactionRequired => true;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
     {
-        public bool IsTransactionRequired => true;
+        return new CanWrapResponse("NewRelic.Providers.Wrapper.RestSharp.AppendHeaders".Equals(instrumentedMethodInfo.RequestedWrapperName));
+    }
 
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall,
+        IAgent agent, ITransaction transaction)
+    {
+        var httpWebRequest = (HttpWebRequest)instrumentedMethodCall.MethodCall.MethodArguments[0];
+
+        var setHeaders = new Action<HttpWebRequest, string, string>((carrier, key, value) =>
         {
-            return new CanWrapResponse("NewRelic.Providers.Wrapper.RestSharp.AppendHeaders".Equals(instrumentedMethodInfo.RequestedWrapperName));
-        }
+            // 'Set' will replace an existing value
+            httpWebRequest.Headers?.Set(key, value);
+        });
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall,
-            IAgent agent, ITransaction transaction)
-        {
-            var httpWebRequest = (HttpWebRequest)instrumentedMethodCall.MethodCall.MethodArguments[0];
+        agent.CurrentTransaction.InsertDistributedTraceHeaders(httpWebRequest, setHeaders);
 
-            var setHeaders = new Action<HttpWebRequest, string, string>((carrier, key, value) =>
-            {
-                // 'Set' will replace an existing value
-                httpWebRequest.Headers?.Set(key, value);
-            });
-
-            agent.CurrentTransaction.InsertDistributedTraceHeaders(httpWebRequest, setHeaders);
-
-            return Delegates.NoOp;
-        }
+        return Delegates.NoOp;
     }
 }
