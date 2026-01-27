@@ -46,7 +46,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
             transaction = agent.CreateTransaction(
                 destinationType: destType,
-                brokerVendorName: RabbitMqHelper.VendorName,
+                brokerVendorName: MessageBrokerVendorConstants.RabbitMQ,
                 destination: routingKey);
 
             // ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
@@ -63,7 +63,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 instrumentedMethodCall.MethodCall,
                 destType,
                 MessageBrokerAction.Consume,
-                RabbitMqHelper.VendorName,
+                MessageBrokerVendorConstants.RabbitMQ,
                 destName,
                 serverAddress: hostname,
                 serverPort: port,

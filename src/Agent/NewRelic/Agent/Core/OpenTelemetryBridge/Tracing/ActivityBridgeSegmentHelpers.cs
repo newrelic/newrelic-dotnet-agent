@@ -13,7 +13,6 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -23,9 +22,6 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 
 public static class ActivityBridgeSegmentHelpers
 {
-    // TODO: Coalesce with NewRelic.Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders
-    public static readonly string[] DefaultCaptureHeaders = ["Referer", "Accept", "Content-Length", "Host", "User-Agent"];
-
     public static void ProcessActivityTags(this ISegment segment, object originalActivity, IAgent agent, IErrorService errorService)
     {
         dynamic activity = originalActivity;
@@ -55,6 +51,7 @@ public static class ActivityBridgeSegmentHelpers
                 // order is important because some activities have both tags, e.g. a database call that is also an HTTP call, like Elasticsearch
                 if (tags.TryGetAndRemoveTag<string>(["db.system.name", "db.system"], out var dbSystemName)) // it's a database call
                 {
+                    Log.Finest("db.system.name|db.system found: " + dbSystemName);
                     ProcessClientDatabaseTags(segment, agent, activity, activityLogPrefix, tags, dbSystemName);
                 }
                 else if (tags.TryGetAndRemoveTag<string>(["rpc.system"], out var rpcSystem)) // it's an RPC client activity
@@ -148,13 +145,9 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address"], out var host);
         tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
 
-        // TODO: Otel tracing spec says "component" should be set to the rpc system, but the grpc spec makes no mention of it.
-        // TODO: ExternalSegmentData curently sets Component as an Intrinsic attribute on the span, with a value of _segmentData.TypeName (which ends up being `NewRelic.Agent.Core.OpenTelemetryBridge.ActivityBridge`)  with no override available. So there's no way for us to set the same attribute with a different value.
-        //segment.AddCustomAttribute("component", rpcSystem);
-
         var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
         Uri uri = new Uri(path);
-        var externalSegmentData = new ExternalSegmentData(uri, method);
+        var externalSegmentData = new ExternalSegmentData(uri, method, componentOverride: rpcSystem);
 
         if (statusCode.HasValue)
             externalSegmentData.SetHttpStatus(statusCode.Value);
@@ -174,11 +167,6 @@ public static class ActivityBridgeSegmentHelpers
     // TODO: RPC Server implementation is very preliminary; unable to test currently because asp.net core grpc server doesn't create activities with the expected tags
     private static void ProcessRpcServerTags(ISegment segment, IAgent agent, IErrorService errorService, Dictionary<string, object> tags, string activityLogPrefix)
     {
-        if (segment is not IHybridAgentSegment hybridAgentSegment)
-        {
-            return; // TODO: this shouldn't be possible; don't think we need to check for it
-        }
-
         tags.TryGetAndRemoveTag<string>(["rpc.system"], out var rpcSystem); // may not exist
 
         tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code"], out var statusCode);
@@ -191,15 +179,15 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
 
         // TODO: Otel tracing spec says "component" should be set to the rpc system, but the grpc spec makes no mention of it.
-        // TODO: ExternalSegmentData curently sets Component as an Intrinsic attribute on the span, with a value of _segmentData.TypeName (which ends up being `NewRelic.Agent.Core.OpenTelemetryBridge.ActivityBridge`)  with no override available. So there's no way for us to set the same attribute with a different value.
+        // TODO: ExternalSegmentData currently sets Component as an Intrinsic attribute on the span, with a value of either ExternalSegmentData.ComponentOverride if used or _segmentData.TypeName (which ends up being `NewRelic.Agent.Core.OpenTelemetryBridge.ActivityBridge`).
         //segment.AddCustomAttribute("component", rpcSystem);
 
-        var transaction = hybridAgentSegment.GetTransactionFromSegment();
+        var transaction = ((IHybridAgentSegment)segment).GetTransactionFromSegment();
 
         var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
         transaction.SetUri(path);
 
-        transaction.SetRequestMethod(method ?? grpcMethod ?? "Unknown"); // TODO: should we default to "Unknown" or leave it null?
+        transaction.SetRequestMethod(method ?? grpcMethod ?? "Unknown");
         if (statusCode.HasValue)
             transaction.SetHttpResponseStatusCode(statusCode.Value);
 
@@ -220,12 +208,7 @@ public static class ActivityBridgeSegmentHelpers
 
     private static void RecordGrpcException(ISegment segment, IAgent agent, IErrorService errorService, int statusCode, string path, string activityLogPrefix)
     {
-        if (segment is not IHybridAgentSegment hybridAgentSegment)
-        {
-            return; // TODO: this shouldn't be possible; don't think we need to check for it
-        }
-
-        var transaction = hybridAgentSegment.GetTransactionFromSegment();
+        var transaction = ((IHybridAgentSegment)segment).GetTransactionFromSegment();
         if (transaction is IHybridAgentTransaction internalTransaction)
         {
             var errorMessage = $"gRPC call to {path} failed with status code {statusCode}";
@@ -251,14 +234,7 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetAndRemoveTag<string>(["url.query"], out var query);
         tags.TryGetAndRemoveTag<int>(["http.response.status_code", "http.status_code"], out var statusCode);
 
-        if (segment is not IHybridAgentSegment hybridAgentSegment)
-        {
-            return; // TODO: this shouldn't be possible; don't think we need to check for it
-        }
-
-        var transaction = hybridAgentSegment.GetTransactionFromSegment();
-
-
+        var transaction = ((IHybridAgentSegment)segment).GetTransactionFromSegment();
         transaction.SetRequestMethod(requestMethod);
         transaction.SetUri(path);
         transaction.SetHttpResponseStatusCode(statusCode);
@@ -302,7 +278,7 @@ public static class ActivityBridgeSegmentHelpers
             // Filter to only headers that actually exist if not allowing all, to avoid KeyNotFoundException (e.g. Referer missing).
             IEnumerable<string> captureKeys = agent.Configuration.AllowAllRequestHeaders
                 ? headersDict.Keys
-                : DefaultCaptureHeaders.Where(h => headersDict.ContainsKey(h));
+                : Statics.DefaultCaptureHeaders.Where(h => headersDict.ContainsKey(h));
 
             if (captureKeys.Any())
             {
@@ -336,16 +312,7 @@ public static class ActivityBridgeSegmentHelpers
     private static void ProcessProducerConsumerMessagingSystemTags(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, ActivityKind activityKind, string messagingSystem)
     {
         // translate the messaging system to a vendor name suitable for MessageBrokerSegmentData
-        string vendor = messagingSystem switch
-        {
-            // TODO: consolidate all vendor names to some common enum or constant similar to DatastoreVendor
-            "rabbitmq" => "RabbitMQ",
-            "kafka" => "Kafka",
-            "aws.sqs" => SqsHelper.VendorName,
-            "aws.sns" => "SNS",
-            "servicebus" => "ServiceBus",
-            _ => messagingSystem.CapitalizeEachWord() // default to capitalizing each word in the messaging system name
-        };
+        var vendor = MessageBrokerVendorConstants.ToVendorName(messagingSystem);
 
         Log.Finest($"{activityLogPrefix} has a messaging.system tag with value {messagingSystem}. Mapping to vendor {vendor}.");
 
@@ -360,12 +327,11 @@ public static class ActivityBridgeSegmentHelpers
 
         tags.TryGetAndRemoveTag<string>(["messaging.operation.name"], out var operationName);
 
+        // Operation name is system specific.  The OTel semantic conventions do not define standard operation names, see https://opentelemetry.io/docs/specs/semconv/registry/attributes/messaging/#messaging-operation-name.
         var operation = activityKind switch
         {
             // doesn't work for RabbitMQ, as there is no activity for purge operation. Might work for other messaging systems but is unverified.
             ActivityKind.Producer when operationName == "purge" => MessageBrokerAction.Purge,
-            // TODO: consider supporting other Producer operations like "create", "delete", "process", "receive", etc.
-
             ActivityKind.Producer => MessageBrokerAction.Produce,
             ActivityKind.Consumer => MessageBrokerAction.Consume,
 
@@ -498,16 +464,20 @@ public static class ActivityBridgeSegmentHelpers
 
     private static ISegmentData GetDefaultDatastoreSegmentData(IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, DatastoreVendor vendor)
     {
-        // TODO: We may get two activities with "db.system" tags - one with a DisplayName of "Open" and one with a DisplayName of "Execute".
-        // TODO: The "Execute" activity will have the SQL command text in the tags, while the "Open" activity will not.
-        // TODO: What do we do with the "Open" activity? For now, we'll ignore it
-        if (activity.DisplayName != "Execute")
+        // This is determined per db system type.
+        // Example, per OTel contrib, for MSSQL this will start with Execute for stored procedures and several other starting values for basic queries.
+        // See: https://github.com/open-telemetry/opentelemetry-dotnet-contrib/blob/main/src/Shared/DatabaseSemanticConventionHelper.cs#L62
+        // See: https://github.com/open-telemetry/opentelemetry-dotnet-contrib/blob/main/src/Shared/DatabaseSemanticConventionHelper.cs#L122
+        string displayName = activity.DisplayName as string;
+        if (displayName.StartsWith("Open", StringComparison.InvariantCultureIgnoreCase))
             return null;
 
         tags.TryGetAndRemoveTag<string>(["db.query.text", "db.statement"], out var commandText);
+        tags.TryGetAndRemoveTag<string>(["db.stored_procedure.name"], out var storedProcedureName); // only present for store procedure calls
 
-        // TODO: Where do we get commandType? Existing SQL wrappers get it from the IDbCommand.CommandType property.
-        var commandType = CommandType.Text;
+        // This is used to determine how to parse the command text. The default is Text for non-stored procedure commands.
+        // Execute is used for stored procedures in several DB systems per OTel contrib.
+        var commandType = displayName.StartsWith("Execute", StringComparison.InvariantCultureIgnoreCase) && !string.IsNullOrEmpty(storedProcedureName) ? CommandType.StoredProcedure : CommandType.Text;
 
         var parsedSqlStatement = SqlParser.GetParsedDatabaseStatement(vendor, commandType, commandText);
 
@@ -657,7 +627,7 @@ public static class ActivityBridgeSegmentHelpers
             if (activityEvent.Name == "exception")
             {
                 string exceptionMessage = null;
-                //string exceptionType = null;
+                string exceptionType = null;
                 //string exceptionStacktrace = null;
 
                 foreach (var tag in activityEvent.Tags)
@@ -666,31 +636,27 @@ public static class ActivityBridgeSegmentHelpers
                     {
                         exceptionMessage = tag.Value?.ToString();
                     }
-                    //else if (tag.Key == "exception.type")
-                    //{
-                    //    exceptionType = tag.Value?.ToString();
-                    //}
+                    else if (tag.Key == "exception.type")
+                    {
+                        exceptionType = tag.Value?.ToString();
+                    }
+                    // TODO: In the future consider adding stack trace information.  Will need to verify format first.
                     //else if (tag.Key == "exception.stacktrace")
                     //{
                     //    exceptionStacktrace = tag.Value?.ToString();
                     //}
 
-                    // Add all of the original attributes to the segment.
+                    // Add all the original attributes to the segment.
                     segment.AddCustomAttribute((string)tag.Key, (object)tag.Value);
                 }
 
                 if (exceptionMessage != null)
                 {
-
-                    // TODO: The agent does not support ignoring errors by message, but if a type is available we could
-                    // consider ignoring the error based on the type.
-
+                    var errorData = errorService.FromMessage(exceptionMessage, exceptionType, (IDictionary<string, object>)null, null);
                     // TODO: In the future consider using the span status to determine if the exception is expected or not.
-                    var errorData = errorService.FromMessage(exceptionMessage, (IDictionary<string, object>)null, false);
                     //var span = (IInternalSpan)segment;
                     //span.ErrorData = errorData;
 
-                    // TODO: Record the errorData on the transaction.
                     if (segment is IHybridAgentSegment hybridAgentSegment)
                     {
                         var transaction = hybridAgentSegment.GetTransactionFromSegment();
@@ -702,7 +668,7 @@ public static class ActivityBridgeSegmentHelpers
                     }
                 }
 
-                // Short circuiting the loop after finding the first exception event.
+                // Short-circuiting the loop after finding the first exception event.
                 break;
             }
         }

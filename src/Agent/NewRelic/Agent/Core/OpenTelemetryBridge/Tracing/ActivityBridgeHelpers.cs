@@ -21,7 +21,6 @@ public static class ActivityBridgeHelpers
 
     public static bool IsTransactionRequiredForActivity(object originalActivity)
     {
-        // TODO: Determine if this is the right thing to do. Our wrapper service separates these concepts.
         return !ShouldStartTransactionForActivity(originalActivity);
     }
 
@@ -39,8 +38,7 @@ public static class ActivityBridgeHelpers
 
         bool isWeb = (int)activity.Kind == (int)ActivityKind.Server;
 
-        // TODO: Consider using activity source name for category ?? 
-        return agent.CreateTransaction(isWeb, "Activity", activity.DisplayName, doNotTrackAsUnitOfWork: true);
+        return agent.CreateTransaction(isWeb, activity.Source?.Name ?? "Activity", activity.DisplayName, doNotTrackAsUnitOfWork: true);
     }
 
     public static IEnumerable<string> GetTraceContextHeadersFromActivity(object originalActivity, string headerName)

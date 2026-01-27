@@ -1976,8 +1976,8 @@
                         "server.port": 50051,
                         "http.request.method": "GetItem",
                         "http.statusCode": 0,
-                        "http.url": "grpc://localhost:50051/my.test.Service/GetItem"
-                        //"component": "grpc" -- doesn't work currently
+                        "http.url": "grpc://localhost:50051/my.test.Service/GetItem",
+                        "component": "grpc"
                     }
                 }
             ]
@@ -2070,8 +2070,8 @@
                         "server.port": 50051,
                         "http.request.method": "GetItem",
                         "http.statusCode": 14,
-                        "http.url": "grpc://localhost:50051/my.test.Service/GetItem"
-                        //"component": "grpc" -- doesn't work currently
+                        "http.url": "grpc://localhost:50051/my.test.Service/GetItem",
+                        "component": "grpc"
                     }
                 }
             ]
@@ -2150,8 +2150,8 @@
                         "server.address": "localhost",
                         "server.port": 50052,
                         "http.request.method": "ListItems",
-                        "http.url": "grpc://localhost:50052/my.test.Service/ListItems"
-                        //"component": "grpc" -- doesn't work currently
+                        "http.url": "grpc://localhost:50052/my.test.Service/ListItems",
+                        "component": "grpc"
                     }
                 }
             ]
@@ -2239,8 +2239,8 @@
                         "server.port": 6000,
                         "http.request.method": "UnaryCall",
                         "http.statusCode": 0,
-                        "http.url": "grpc://grpc.example.com:6000/pkg.alt.Service/UnaryCall"
-                        //"component": "grpc" -- doesn't work currently
+                        "http.url": "grpc://grpc.example.com:6000/pkg.alt.Service/UnaryCall",
+                        "component": "grpc"
                     }
                 }
             ]
@@ -2286,7 +2286,7 @@
                     "parentName": "RpcServerTxnSuccess",
                     "category": "generic",
                     "attributes": {
-                        //"component": "grpc" -- doesn't work currently
+                    //"component": "grpc" -- doesn't work currently
                     }
                 }
             ]
@@ -2335,7 +2335,7 @@
                     "parentName": "RpcServerTxnError",
                     "category": "generic",
                     "attributes": {
-                        //"component": "grpc" -- doesn't work currently
+                    //"component": "grpc" -- doesn't work currently
                     }
                 }
             ]
@@ -2376,7 +2376,7 @@
                     "parentName": "RpcServerTxnGrpcMethodOnly",
                     "category": "generic",
                     "attributes": {
-                        //"component": "grpc" -- doesn't work currently
+                     //"component": "grpc" -- doesn't work currently
                     }
                 }
             ]
@@ -2452,7 +2452,7 @@
                     "parentName": "RpcServerTxnMinimal",
                     "category": "generic",
                     "attributes": {
-                        //"component": "grpc" -- doesn't work currently
+                    //"component": "grpc" -- doesn't work currently
                     }
                 }
             ]
