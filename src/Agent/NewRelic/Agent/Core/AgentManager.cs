@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -15,17 +16,17 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Instrumentation;
+using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Agent.Extensions.Logging;
+using Process = System.Diagnostics.Process;
 #if NETSTANDARD
 using System.Runtime.InteropServices;
 #endif
-using System.Threading;
-using Process = System.Diagnostics.Process;
 
 namespace NewRelic.Agent.Core;
 
