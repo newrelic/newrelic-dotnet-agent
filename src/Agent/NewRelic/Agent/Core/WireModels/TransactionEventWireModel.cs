@@ -3,13 +3,12 @@
 
 using NewRelic.Agent.Core.Attributes;
 
-namespace NewRelic.Agent.Core.WireModels
+namespace NewRelic.Agent.Core.WireModels;
+
+public class TransactionEventWireModel : EventWireModel
 {
-    public class TransactionEventWireModel : EventWireModel
+    public TransactionEventWireModel(IAttributeValueCollection attribValues, bool isSynthetics, float priority)
+        : base(AttributeDestinations.TransactionEvent, attribValues, isSynthetics, priority)
     {
-        public TransactionEventWireModel(IAttributeValueCollection attribValues, bool isSynthetics, float priority)
-            : base(AttributeDestinations.TransactionEvent, attribValues, isSynthetics, priority)
-        {
-        }
     }
 }

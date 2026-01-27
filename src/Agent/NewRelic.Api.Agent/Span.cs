@@ -3,58 +3,57 @@
 
 using Microsoft.CSharp.RuntimeBinder;
 
-namespace NewRelic.Api.Agent
+namespace NewRelic.Api.Agent;
+
+internal class Span : ISpan
 {
-    internal class Span : ISpan
+    private readonly dynamic _wrappedSpan;
+    private static ISpan _noOpSpan = new NoOpSpan();
+
+    internal Span(dynamic? wrappedSpan = null)
     {
-        private readonly dynamic _wrappedSpan;
-        private static ISpan _noOpSpan = new NoOpSpan();
+        _wrappedSpan = wrappedSpan ?? _noOpSpan;
+    }
 
-        internal Span(dynamic? wrappedSpan = null)
+    private static bool _isAddCustomAttributeAvailable = true;
+
+    public ISpan AddCustomAttribute(string key, object value)
+    {
+        if (!_isAddCustomAttributeAvailable)
         {
-            _wrappedSpan = wrappedSpan ?? _noOpSpan;
+            return _noOpSpan.AddCustomAttribute(key, value);
         }
 
-        private static bool _isAddCustomAttributeAvailable = true;
-
-        public ISpan AddCustomAttribute(string key, object value)
+        try
         {
-            if (!_isAddCustomAttributeAvailable)
-            {
-                return _noOpSpan.AddCustomAttribute(key, value);
-            }
-
-            try
-            {
-                _wrappedSpan.AddCustomAttribute(key, value);
-            }
-            catch (RuntimeBinderException)
-            {
-                _isAddCustomAttributeAvailable = false;
-            }
-
-            return this;
+            _wrappedSpan.AddCustomAttribute(key, value);
+        }
+        catch (RuntimeBinderException)
+        {
+            _isAddCustomAttributeAvailable = false;
         }
 
-        private static bool _isSetNameAvailable = true;
+        return this;
+    }
 
-        public ISpan SetName(string name)
+    private static bool _isSetNameAvailable = true;
+
+    public ISpan SetName(string name)
+    {
+        if (!_isSetNameAvailable)
         {
-            if (!_isSetNameAvailable)
-            {
-                return _noOpSpan.SetName(name);
-            }
-
-            try
-            {
-                _wrappedSpan.SetName(name);
-            }
-            catch (RuntimeBinderException)
-            {
-                _isSetNameAvailable = false;
-            }
-
-            return this;
+            return _noOpSpan.SetName(name);
         }
+
+        try
+        {
+            _wrappedSpan.SetName(name);
+        }
+        catch (RuntimeBinderException)
+        {
+            _isSetNameAvailable = false;
+        }
+
+        return this;
     }
 }
