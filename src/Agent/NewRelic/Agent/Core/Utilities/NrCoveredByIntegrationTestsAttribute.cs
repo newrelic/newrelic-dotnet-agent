@@ -3,14 +3,13 @@
 
 using System;
 
-namespace NewRelic.Agent.Core.Utilities
+namespace NewRelic.Agent.Core.Utilities;
+
+/// <summary>
+/// A custom attribute used to indicate that this method/class is covered by
+/// integration tests and can be excluded from unit test code coverage
+/// analysis.
+/// </summary>
+public class NrCoveredByIntegrationTestsAttribute : Attribute
 {
-    /// <summary>
-    /// A custom attribute used to indicate that this method/class is covered by
-    /// integration tests and can be excluded from unit test code coverage
-    /// analysis.
-    /// </summary>
-    public class NrCoveredByIntegrationTestsAttribute : Attribute
-    {
-    }
 }

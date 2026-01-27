@@ -3,18 +3,17 @@
 
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Core.Utilization
+namespace NewRelic.Agent.Core.Utilization;
+
+public class AzureAppServiceVendorModel : IVendorModel
 {
-    public class AzureAppServiceVendorModel : IVendorModel
+    public string VendorName => "azureappservice";
+
+    [JsonProperty("cloud.resource_id", NullValueHandling = NullValueHandling.Ignore)]
+    public string CloudResourceId {get;}
+
+    public AzureAppServiceVendorModel(string cloudResourceId)
     {
-        public string VendorName => "azureappservice";
-
-        [JsonProperty("cloud.resource_id", NullValueHandling = NullValueHandling.Ignore)]
-        public string CloudResourceId {get;}
-
-        public AzureAppServiceVendorModel(string cloudResourceId)
-        {
-            CloudResourceId = cloudResourceId;
-        }
+        CloudResourceId = cloudResourceId;
     }
 }

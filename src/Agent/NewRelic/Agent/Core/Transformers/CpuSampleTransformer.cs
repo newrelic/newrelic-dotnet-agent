@@ -7,70 +7,69 @@ using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core.Transformers
+namespace NewRelic.Agent.Core.Transformers;
+
+public interface ICpuSampleTransformer
 {
-    public interface ICpuSampleTransformer
+    void Transform(ImmutableCpuSample sample);
+}
+
+public class CpuSampleTransformer : ICpuSampleTransformer
+{
+    protected readonly IMetricBuilder MetricBuilder;
+
+    private readonly IMetricAggregator _metricAggregator;
+
+    public CpuSampleTransformer(IMetricBuilder metricBuilder, IMetricAggregator metricAggregator)
     {
-        void Transform(ImmutableCpuSample sample);
+        MetricBuilder = metricBuilder;
+        _metricAggregator = metricAggregator;
     }
 
-    public class CpuSampleTransformer : ICpuSampleTransformer
+    public void Transform(ImmutableCpuSample sample)
     {
-        protected readonly IMetricBuilder MetricBuilder;
-
-        private readonly IMetricAggregator _metricAggregator;
-
-        public CpuSampleTransformer(IMetricBuilder metricBuilder, IMetricAggregator metricAggregator)
+        try
         {
-            MetricBuilder = metricBuilder;
-            _metricAggregator = metricAggregator;
-        }
+            var cpuUserTime = GetCpuUserTime(sample.CurrentUserProcessorTime, sample.LastUserProcessorTime);
+            var cpuUserUtilization = GetCpuUserUtilization(cpuUserTime, sample.CurrentSampleTime, sample.LastSampleTime, sample.ProcessorCount);
 
-        public void Transform(ImmutableCpuSample sample)
+            var unscopedCpuUserTimeMetric = MetricBuilder.TryBuildCpuUserTimeMetric(cpuUserTime);
+            RecordMetric(unscopedCpuUserTimeMetric);
+
+            var unscopedCpuUserUtilizationMetric = MetricBuilder.TryBuildCpuUserUtilizationMetric(cpuUserUtilization);
+            RecordMetric(unscopedCpuUserUtilizationMetric);
+        }
+        catch (Exception ex)
         {
-            try
-            {
-                var cpuUserTime = GetCpuUserTime(sample.CurrentUserProcessorTime, sample.LastUserProcessorTime);
-                var cpuUserUtilization = GetCpuUserUtilization(cpuUserTime, sample.CurrentSampleTime, sample.LastSampleTime, sample.ProcessorCount);
-
-                var unscopedCpuUserTimeMetric = MetricBuilder.TryBuildCpuUserTimeMetric(cpuUserTime);
-                RecordMetric(unscopedCpuUserTimeMetric);
-
-                var unscopedCpuUserUtilizationMetric = MetricBuilder.TryBuildCpuUserUtilizationMetric(cpuUserUtilization);
-                RecordMetric(unscopedCpuUserUtilizationMetric);
-            }
-            catch (Exception ex)
-            {
-                Log.Debug(ex, "No CPU metrics will be reported: ");
-            }
+            Log.Debug(ex, "No CPU metrics will be reported: ");
         }
+    }
 
-        private void RecordMetric(MetricWireModel metric)
-        {
-            if (metric == null)
-                return;
+    private void RecordMetric(MetricWireModel metric)
+    {
+        if (metric == null)
+            return;
 
-            _metricAggregator.Collect(metric);
-        }
+        _metricAggregator.Collect(metric);
+    }
 
-        private TimeSpan GetCpuUserTime(TimeSpan currentUserProcessorTime, TimeSpan lastUserProcessorTime)
-        {
-            var cpuUserTime = currentUserProcessorTime - lastUserProcessorTime;
-            if (cpuUserTime < TimeSpan.Zero)
-                throw new Exception($"Invalid CPU User Time. Current CPU time: {currentUserProcessorTime.TotalMilliseconds} (ms), and last CPU time: {lastUserProcessorTime.TotalMilliseconds} (ms), resulting in a negative CPU time");
+    private TimeSpan GetCpuUserTime(TimeSpan currentUserProcessorTime, TimeSpan lastUserProcessorTime)
+    {
+        var cpuUserTime = currentUserProcessorTime - lastUserProcessorTime;
+        if (cpuUserTime < TimeSpan.Zero)
+            throw new Exception($"Invalid CPU User Time. Current CPU time: {currentUserProcessorTime.TotalMilliseconds} (ms), and last CPU time: {lastUserProcessorTime.TotalMilliseconds} (ms), resulting in a negative CPU time");
 
-            return cpuUserTime;
-        }
+        return cpuUserTime;
+    }
 
-        private float GetCpuUserUtilization(TimeSpan cpuUserTime, DateTime currentSampleTime, DateTime lastSampleTime, int processorCount)
-        {
-            var wallClockTimeMs = (currentSampleTime - lastSampleTime).TotalMilliseconds;
-            var cpuUserTimeMs = cpuUserTime.TotalMilliseconds;
-            var cpuUserUtilizationMs = (float)(cpuUserTimeMs / (wallClockTimeMs * processorCount));
-            if (float.IsNaN(cpuUserUtilizationMs) || float.IsInfinity(cpuUserUtilizationMs))
-                throw new Exception($"Invalid CPU Utilization. CPU time: {cpuUserTimeMs} (ms), Real time: {wallClockTimeMs} (ms)");
+    private float GetCpuUserUtilization(TimeSpan cpuUserTime, DateTime currentSampleTime, DateTime lastSampleTime, int processorCount)
+    {
+        var wallClockTimeMs = (currentSampleTime - lastSampleTime).TotalMilliseconds;
+        var cpuUserTimeMs = cpuUserTime.TotalMilliseconds;
+        var cpuUserUtilizationMs = (float)(cpuUserTimeMs / (wallClockTimeMs * processorCount));
+        if (float.IsNaN(cpuUserUtilizationMs) || float.IsInfinity(cpuUserUtilizationMs))
+            throw new Exception($"Invalid CPU Utilization. CPU time: {cpuUserTimeMs} (ms), Real time: {wallClockTimeMs} (ms)");
 
-            return cpuUserUtilizationMs;
-        }
+        return cpuUserUtilizationMs;
     }
 }

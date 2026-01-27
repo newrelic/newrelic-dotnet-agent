@@ -4,24 +4,23 @@
 using System;
 using System.Diagnostics;
 
-namespace NewRelic.Agent.Core.Time
+namespace NewRelic.Agent.Core.Time;
+
+class SimpleTimer : ISimpleTimer
 {
-    class SimpleTimer : ISimpleTimer
+    private readonly Stopwatch _timer = Stopwatch.StartNew();
+
+    public void Stop()
     {
-        private readonly Stopwatch _timer = Stopwatch.StartNew();
+        _timer.Stop();
+    }
 
-        public void Stop()
-        {
-            _timer.Stop();
-        }
+    public TimeSpan Duration => _timer.Elapsed;
 
-        public TimeSpan Duration => _timer.Elapsed;
+    public bool IsRunning => _timer.IsRunning;
 
-        public bool IsRunning => _timer.IsRunning;
-
-        void IDisposable.Dispose()
-        {
-            Stop();
-        }
+    void IDisposable.Dispose()
+    {
+        Stop();
     }
 }

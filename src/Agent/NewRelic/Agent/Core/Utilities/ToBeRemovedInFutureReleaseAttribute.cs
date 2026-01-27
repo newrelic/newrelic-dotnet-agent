@@ -3,23 +3,22 @@
 
 using System;
 
-namespace NewRelic.Agent.Core.Utilities
+namespace NewRelic.Agent.Core.Utilities;
+
+/// <summary>
+/// Identifies a piece of code that is planned to be removed in a future release of the agent.
+/// </summary>
+[AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = true)]
+public class ToBeRemovedInFutureReleaseAttribute : Attribute
 {
-    /// <summary>
-    /// Identifies a piece of code that is planned to be removed in a future release of the agent.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = true)]
-    public class ToBeRemovedInFutureReleaseAttribute : Attribute
+    public string Notes { get; private set; }
+
+    public ToBeRemovedInFutureReleaseAttribute(string notes)
     {
-        public string Notes { get; private set; }
+        Notes = notes;
+    }
 
-        public ToBeRemovedInFutureReleaseAttribute(string notes)
-        {
-            Notes = notes;
-        }
-
-        public ToBeRemovedInFutureReleaseAttribute()
-        {
-        }
+    public ToBeRemovedInFutureReleaseAttribute()
+    {
     }
 }

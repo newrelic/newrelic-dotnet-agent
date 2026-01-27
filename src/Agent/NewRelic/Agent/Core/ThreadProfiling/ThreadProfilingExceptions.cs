@@ -3,12 +3,11 @@
 
 using System;
 
-namespace NewRelic.Agent.Core.ThreadProfiling
+namespace NewRelic.Agent.Core.ThreadProfiling;
+
+public class InvalidProfileIdException : Exception
 {
-    public class InvalidProfileIdException : Exception
-    {
-        public InvalidProfileIdException(string message)
-            : base(message)
-        { }
-    }
+    public InvalidProfileIdException(string message)
+        : base(message)
+    { }
 }
