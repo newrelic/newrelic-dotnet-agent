@@ -7,215 +7,213 @@ using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Agent.Core.Utilities;
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Core.WireModels
+namespace NewRelic.Agent.Core.WireModels;
+
+[JsonConverter(typeof(LoadedModuleWireModelCollectionJsonConverter))]
+public class LoadedModuleWireModelCollection
 {
-    [JsonConverter(typeof(LoadedModuleWireModelCollectionJsonConverter))]
-    public class LoadedModuleWireModelCollection
+    private static Version zeroedVersion = new Version("0.0.0.0");
+
+    public List<LoadedModuleWireModel> LoadedModules { get; }
+
+    private LoadedModuleWireModelCollection()
     {
-        private static Version zeroedVersion = new Version("0.0.0.0");
+        LoadedModules = new List<LoadedModuleWireModel>();
+    }
 
-        public List<LoadedModuleWireModel> LoadedModules { get; }
-
-        private LoadedModuleWireModelCollection()
+    public static LoadedModuleWireModelCollection Build(IList<Assembly> assemblies)
+    {
+        var loadedModulesCollection = new LoadedModuleWireModelCollection();
+        foreach (var assembly in assemblies)
         {
-            LoadedModules = new List<LoadedModuleWireModel>();
-        }
-
-        public static LoadedModuleWireModelCollection Build(IList<Assembly> assemblies)
-        {
-            var loadedModulesCollection = new LoadedModuleWireModelCollection();
-            foreach (var assembly in assemblies)
+            if (!TryGetAssemblyName(assembly, out var assemblyName))
             {
-                if (!TryGetAssemblyName(assembly, out var assemblyName))
-                {
-                    continue; // we don't want to report this assembly
-                }
-
-                var assemblyDetails = assembly.GetName();
-
-                var loadedModule = new LoadedModuleWireModel(assemblyName, assemblyDetails.Version.ToString());
-
-                loadedModule.Data.Add("namespace", assemblyDetails.Name);
-
-                if (TryGetPublicKeyToken(assemblyDetails, out var publicKey))
-                {
-                    loadedModule.Data.Add("publicKeyToken", publicKey);
-                }
-
-                if (TryGetShaFileHashes(assembly, out var sha1FileHash, out var sha512FileHash))
-                {
-                    loadedModule.Data.Add("sha1Checksum", sha1FileHash);
-                    loadedModule.Data.Add("sha512Checksum", sha512FileHash);
-                }
-
-                if (TryGetAssemblyHashCode(assembly, out var assemblyHashCode))
-                {
-                    loadedModule.Data.Add("assemblyHashCode", assemblyHashCode);
-                }
-                if (TryGetCompanyName(assembly, out var companyName))
-                {
-                    loadedModule.Data.Add("Implementation-Vendor", companyName);
-                }
-                if (TryGetCopyright(assembly, out var copyright))
-                {
-                    loadedModule.Data.Add("copyright", copyright);
-                }
-
-                // Use the .Name here and in GetLoadedModules
-                loadedModulesCollection.LoadedModules.Add(loadedModule);
+                continue; // we don't want to report this assembly
             }
 
-            return loadedModulesCollection;
+            var assemblyDetails = assembly.GetName();
+
+            var loadedModule = new LoadedModuleWireModel(assemblyName, assemblyDetails.Version.ToString());
+
+            loadedModule.Data.Add("namespace", assemblyDetails.Name);
+
+            if (TryGetPublicKeyToken(assemblyDetails, out var publicKey))
+            {
+                loadedModule.Data.Add("publicKeyToken", publicKey);
+            }
+
+            if (TryGetShaFileHashes(assembly, out var sha1FileHash, out var sha512FileHash))
+            {
+                loadedModule.Data.Add("sha1Checksum", sha1FileHash);
+                loadedModule.Data.Add("sha512Checksum", sha512FileHash);
+            }
+
+            if (TryGetAssemblyHashCode(assembly, out var assemblyHashCode))
+            {
+                loadedModule.Data.Add("assemblyHashCode", assemblyHashCode);
+            }
+            if (TryGetCompanyName(assembly, out var companyName))
+            {
+                loadedModule.Data.Add("Implementation-Vendor", companyName);
+            }
+            if (TryGetCopyright(assembly, out var copyright))
+            {
+                loadedModule.Data.Add("copyright", copyright);
+            }
+
+            // Use the .Name here and in GetLoadedModules
+            loadedModulesCollection.LoadedModules.Add(loadedModule);
         }
 
-        private static bool TryGetAssemblyName(Assembly assembly, out string assemblyName)
+        return loadedModulesCollection;
+    }
+
+    private static bool TryGetAssemblyName(Assembly assembly, out string assemblyName)
+    {
+        // We skip any assemblies that cannot be linked to a nuget package.
+
+        try
         {
-            // We skip any assemblies that cannot be linked to a nuget package.
-
-            try
-            {
-                if (assembly.IsDynamic) // skip dynamic assemblies
-                {
-                    assemblyName = null;
-                }
-                else if (assembly.GetName().Version == zeroedVersion) // skip assemblies that have a version of 0.0.0.0 - these are precompiled assemblies
-                {
-                    assemblyName = null;
-                }
-                else
-                {
-                    assemblyName = Path.GetFileName(assembly.Location);
-                }
-
-                return !string.IsNullOrWhiteSpace(assemblyName);
-            }
-            catch
+            if (assembly.IsDynamic) // skip dynamic assemblies
             {
                 assemblyName = null;
-                return false;
             }
+            else if (assembly.GetName().Version == zeroedVersion) // skip assemblies that have a version of 0.0.0.0 - these are precompiled assemblies
+            {
+                assemblyName = null;
+            }
+            else
+            {
+                assemblyName = Path.GetFileName(assembly.Location);
+            }
+
+            return !string.IsNullOrWhiteSpace(assemblyName);
         }
-
-        private static bool TryGetPublicKeyToken(AssemblyName assemblyDetails, out string publicKey)
+        catch
         {
-            try
-            {
-                publicKey = BitConverter.ToString(assemblyDetails.GetPublicKeyToken()).Replace("-", "");
-                return !string.IsNullOrWhiteSpace(publicKey);
-            }
-            catch
-            {
-                publicKey = null;
-                return false;
-            }
+            assemblyName = null;
+            return false;
         }
+    }
 
-        private static bool TryGetShaFileHashes(Assembly assembly, out string sha1FileHash, out string sha512FileHash)
+    private static bool TryGetPublicKeyToken(AssemblyName assemblyDetails, out string publicKey)
+    {
+        try
         {
-            try
-            {
-                var location = assembly.Location;
-                if (string.IsNullOrEmpty(location))
-                {
-                    sha1FileHash = null;
-                    sha512FileHash = null;
-                    return false;
-                }
+            publicKey = BitConverter.ToString(assemblyDetails.GetPublicKeyToken()).Replace("-", "");
+            return !string.IsNullOrWhiteSpace(publicKey);
+        }
+        catch
+        {
+            publicKey = null;
+            return false;
+        }
+    }
 
-                if (!File.Exists(location))
-                {
-                    sha1FileHash = null;
-                    sha512FileHash = null;
-                    return false;
-                }
-
-                using (var fs = new FileStream(location, FileMode.Open, FileAccess.Read, FileShare.Read))
-                {
-                    var sha1 = SHA1.Create();
-                    var sha512 = SHA512.Create();
-                    var buffer = new byte[4096]; // 4KB
-                    int bytesRead;
-                    while ((bytesRead = fs.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        sha1.TransformBlock(buffer, 0, bytesRead, null, 0);
-                        sha512.TransformBlock(buffer, 0, bytesRead, null, 0);
-                    }
-
-                    sha1.TransformFinalBlock(buffer, 0, 0);
-                    sha512.TransformFinalBlock(buffer, 0, 0);
-                    sha1FileHash = BitConverter.ToString(sha1.Hash).Replace("-", "").ToLowerInvariant();
-                    sha512FileHash = BitConverter.ToString(sha512.Hash).Replace("-", "").ToLowerInvariant();
-                    sha1.Dispose();
-                    sha512.Dispose();
-                }
-
-                return !string.IsNullOrWhiteSpace(sha1FileHash) && !string.IsNullOrWhiteSpace(sha512FileHash);
-            }
-            catch
+    private static bool TryGetShaFileHashes(Assembly assembly, out string sha1FileHash, out string sha512FileHash)
+    {
+        try
+        {
+            var location = assembly.Location;
+            if (string.IsNullOrEmpty(location))
             {
                 sha1FileHash = null;
                 sha512FileHash = null;
                 return false;
             }
-        }
 
-        private static bool TryGetAssemblyHashCode(Assembly assembly, out string assemblyHashCode)
-        {
-            try
+            if (!File.Exists(location))
             {
-                assemblyHashCode = assembly.GetHashCode().ToString();
-                return !string.IsNullOrWhiteSpace(assemblyHashCode);
-            }
-            catch
-            {
-                assemblyHashCode = null;
+                sha1FileHash = null;
+                sha512FileHash = null;
                 return false;
             }
-        }
 
-        private static bool TryGetCompanyName(Assembly assembly, out string companyName)
-        {
-            try
+            using (var fs = new FileStream(location, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                var attributes = assembly.GetCustomAttributes(typeof(AssemblyCompanyAttribute), true);
-                if (attributes.Length < 1)
+                var sha1 = SHA1.Create();
+                var sha512 = SHA512.Create();
+                var buffer = new byte[4096]; // 4KB
+                int bytesRead;
+                while ((bytesRead = fs.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    companyName = null;
-                    return false;
+                    sha1.TransformBlock(buffer, 0, bytesRead, null, 0);
+                    sha512.TransformBlock(buffer, 0, bytesRead, null, 0);
                 }
 
-                companyName = ((AssemblyCompanyAttribute)attributes[0]).Company;
-                return !string.IsNullOrWhiteSpace(companyName);
+                sha1.TransformFinalBlock(buffer, 0, 0);
+                sha512.TransformFinalBlock(buffer, 0, 0);
+                sha1FileHash = BitConverter.ToString(sha1.Hash).Replace("-", "").ToLowerInvariant();
+                sha512FileHash = BitConverter.ToString(sha512.Hash).Replace("-", "").ToLowerInvariant();
+                sha1.Dispose();
+                sha512.Dispose();
             }
-            catch
+
+            return !string.IsNullOrWhiteSpace(sha1FileHash) && !string.IsNullOrWhiteSpace(sha512FileHash);
+        }
+        catch
+        {
+            sha1FileHash = null;
+            sha512FileHash = null;
+            return false;
+        }
+    }
+
+    private static bool TryGetAssemblyHashCode(Assembly assembly, out string assemblyHashCode)
+    {
+        try
+        {
+            assemblyHashCode = assembly.GetHashCode().ToString();
+            return !string.IsNullOrWhiteSpace(assemblyHashCode);
+        }
+        catch
+        {
+            assemblyHashCode = null;
+            return false;
+        }
+    }
+
+    private static bool TryGetCompanyName(Assembly assembly, out string companyName)
+    {
+        try
+        {
+            var attributes = assembly.GetCustomAttributes(typeof(AssemblyCompanyAttribute), true);
+            if (attributes.Length < 1)
             {
                 companyName = null;
                 return false;
             }
+
+            companyName = ((AssemblyCompanyAttribute)attributes[0]).Company;
+            return !string.IsNullOrWhiteSpace(companyName);
         }
-
-        private static bool TryGetCopyright(Assembly assembly, out string copyright)
+        catch
         {
-            try
-            {
-                var attributes = assembly.GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true);
-                if (attributes.Length < 1)
-                {
-                    copyright = null;
-                    return false;
-                }
+            companyName = null;
+            return false;
+        }
+    }
 
-                copyright = ((AssemblyCopyrightAttribute)attributes[0]).Copyright;
-                return !string.IsNullOrWhiteSpace(copyright);
-            }
-            catch
+    private static bool TryGetCopyright(Assembly assembly, out string copyright)
+    {
+        try
+        {
+            var attributes = assembly.GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true);
+            if (attributes.Length < 1)
             {
                 copyright = null;
                 return false;
             }
+
+            copyright = ((AssemblyCopyrightAttribute)attributes[0]).Copyright;
+            return !string.IsNullOrWhiteSpace(copyright);
+        }
+        catch
+        {
+            copyright = null;
+            return false;
         }
     }
 }

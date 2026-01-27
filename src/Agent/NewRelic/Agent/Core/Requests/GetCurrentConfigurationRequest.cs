@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-namespace NewRelic.Agent.Core.Requests
+namespace NewRelic.Agent.Core.Requests;
+
+public class GetCurrentConfigurationRequest
 {
-    public class GetCurrentConfigurationRequest
-    {
-    }
 }

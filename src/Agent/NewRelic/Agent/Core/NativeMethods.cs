@@ -5,177 +5,175 @@ using System;
 using System.Runtime.InteropServices;
 using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core
+namespace NewRelic.Agent.Core;
+
+public class LinuxNativeMethods : INativeMethods
 {
+    private const string DllName = "NewRelicProfiler";
 
-    public class LinuxNativeMethods : INativeMethods
+    [DllImport(DllName, EntryPoint = "InstrumentationRefresh", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternInstrumentationRefresh();
+
+    [DllImport(DllName, EntryPoint = "ReloadConfiguration", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternReloadConfiguration();
+
+    [DllImport(DllName, EntryPoint = "AddCustomInstrumentation", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternAddCustomInstrumentation(string fileName, string xml);
+
+    [DllImport(DllName, EntryPoint = "ApplyCustomInstrumentation", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternApplyCustomInstrumentation();
+
+    public int InstrumentationRefresh()
     {
-        private const string DllName = "NewRelicProfiler";
-
-        [DllImport(DllName, EntryPoint = "InstrumentationRefresh", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternInstrumentationRefresh();
-
-        [DllImport(DllName, EntryPoint = "ReloadConfiguration", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternReloadConfiguration();
-
-        [DllImport(DllName, EntryPoint = "AddCustomInstrumentation", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternAddCustomInstrumentation(string fileName, string xml);
-
-        [DllImport(DllName, EntryPoint = "ApplyCustomInstrumentation", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternApplyCustomInstrumentation();
-
-        public int InstrumentationRefresh()
+        try
         {
-            try
-            {
-                return ExternInstrumentationRefresh();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "LinuxNativeMethods.InstrumentationRefresh() exception");
-                return -1;
-            }
+            return ExternInstrumentationRefresh();
         }
-
-        public int ReloadConfiguration()
+        catch (Exception ex)
         {
-            try
-            {
-                return ExternReloadConfiguration();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "LinuxNativeMethods.ReloadConfiguration() exception");
-                return -1;
-            }
-        }
-
-        public int AddCustomInstrumentation(string fileName, string xml)
-        {
-            return ExternAddCustomInstrumentation(fileName, xml);
-        }
-
-        public int ApplyCustomInstrumentation()
-        {
-            return ExternApplyCustomInstrumentation();
-        }
-
-        [DllImport(DllName, EntryPoint = "ShutdownThreadProfiler", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void ExternShutdownThreadProfiler();
-
-        [DllImport(DllName, EntryPoint = "ReleaseProfile", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void ExternReleaseProfile();
-
-        [DllImport(DllName, EntryPoint = "RequestProfile", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternRequestProfile([Out] out IntPtr snapshots, [Out] out int length);
-
-        [DllImport(DllName, EntryPoint = "RequestFunctionNames", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternRequestFunctionNames(UIntPtr[] functionIds, int length, [Out] out IntPtr functionInfo);
-
-        public void ReleaseProfile()
-        {
-            ExternReleaseProfile();
-        }
-
-        public int RequestFunctionNames(UIntPtr[] functionIds, int length, [Out] out IntPtr functionInfo)
-        {
-            return ExternRequestFunctionNames(functionIds, length, out functionInfo);
-        }
-
-        public int RequestProfile([Out] out IntPtr snapshots, [Out] out int length)
-        {
-            return ExternRequestProfile(out snapshots, out length);
-        }
-
-        public void ShutdownNativeThreadProfiler()
-        {
-            ExternShutdownThreadProfiler();
+            Log.Error(ex, "LinuxNativeMethods.InstrumentationRefresh() exception");
+            return -1;
         }
     }
 
-    public class WindowsNativeMethods : INativeMethods
+    public int ReloadConfiguration()
     {
-        private const string DllName = "NewRelic.Profiler.dll";
-
-        [DllImport(DllName, EntryPoint = "InstrumentationRefresh", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternInstrumentationRefresh();
-
-        [DllImport(DllName, EntryPoint = "ReloadConfiguration", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternReloadConfiguration();
-
-        [DllImport(DllName, EntryPoint = "AddCustomInstrumentation", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternAddCustomInstrumentation(string fileName, string xml);
-
-        [DllImport(DllName, EntryPoint = "ApplyCustomInstrumentation", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternApplyCustomInstrumentation();
-
-        public int InstrumentationRefresh()
+        try
         {
-            try
-            {
-                return ExternInstrumentationRefresh();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "WindowsNativeMethods.InstrumentationRefresh() exception");
-                return -1;
-            }
+            return ExternReloadConfiguration();
         }
-
-        public int ReloadConfiguration()
+        catch (Exception ex)
         {
-            try
-            {
-                return ExternReloadConfiguration();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "WindowsNativeMethods.ReloadConfiguration() exception");
-                return -1;
-            }
+            Log.Error(ex, "LinuxNativeMethods.ReloadConfiguration() exception");
+            return -1;
         }
+    }
 
-        public int AddCustomInstrumentation(string fileName, string xml)
+    public int AddCustomInstrumentation(string fileName, string xml)
+    {
+        return ExternAddCustomInstrumentation(fileName, xml);
+    }
+
+    public int ApplyCustomInstrumentation()
+    {
+        return ExternApplyCustomInstrumentation();
+    }
+
+    [DllImport(DllName, EntryPoint = "ShutdownThreadProfiler", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternShutdownThreadProfiler();
+
+    [DllImport(DllName, EntryPoint = "ReleaseProfile", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternReleaseProfile();
+
+    [DllImport(DllName, EntryPoint = "RequestProfile", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternRequestProfile([Out] out IntPtr snapshots, [Out] out int length);
+
+    [DllImport(DllName, EntryPoint = "RequestFunctionNames", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternRequestFunctionNames(UIntPtr[] functionIds, int length, [Out] out IntPtr functionInfo);
+
+    public void ReleaseProfile()
+    {
+        ExternReleaseProfile();
+    }
+
+    public int RequestFunctionNames(UIntPtr[] functionIds, int length, [Out] out IntPtr functionInfo)
+    {
+        return ExternRequestFunctionNames(functionIds, length, out functionInfo);
+    }
+
+    public int RequestProfile([Out] out IntPtr snapshots, [Out] out int length)
+    {
+        return ExternRequestProfile(out snapshots, out length);
+    }
+
+    public void ShutdownNativeThreadProfiler()
+    {
+        ExternShutdownThreadProfiler();
+    }
+}
+
+public class WindowsNativeMethods : INativeMethods
+{
+    private const string DllName = "NewRelic.Profiler.dll";
+
+    [DllImport(DllName, EntryPoint = "InstrumentationRefresh", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternInstrumentationRefresh();
+
+    [DllImport(DllName, EntryPoint = "ReloadConfiguration", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternReloadConfiguration();
+
+    [DllImport(DllName, EntryPoint = "AddCustomInstrumentation", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternAddCustomInstrumentation(string fileName, string xml);
+
+    [DllImport(DllName, EntryPoint = "ApplyCustomInstrumentation", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternApplyCustomInstrumentation();
+
+    public int InstrumentationRefresh()
+    {
+        try
         {
-            return ExternAddCustomInstrumentation(fileName, xml);
+            return ExternInstrumentationRefresh();
         }
-
-        public int ApplyCustomInstrumentation()
+        catch (Exception ex)
         {
-            return ExternApplyCustomInstrumentation();
+            Log.Error(ex, "WindowsNativeMethods.InstrumentationRefresh() exception");
+            return -1;
         }
+    }
 
-
-        [DllImport(DllName, EntryPoint = "ShutdownThreadProfiler", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void ExternShutdownThreadProfiler();
-
-        [DllImport(DllName, EntryPoint = "ReleaseProfile", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void ExternReleaseProfile();
-
-        [DllImport(DllName, EntryPoint = "RequestProfile", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternRequestProfile([Out] out IntPtr snapshots, [Out] out int length);
-
-        [DllImport(DllName, EntryPoint = "RequestFunctionNames", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int ExternRequestFunctionNames(UIntPtr[] functionIds, int length, [Out] out IntPtr functionInfo);
-
-        public void ReleaseProfile()
+    public int ReloadConfiguration()
+    {
+        try
         {
-            ExternReleaseProfile();
+            return ExternReloadConfiguration();
         }
-
-        public int RequestFunctionNames(UIntPtr[] functionIds, int length, [Out] out IntPtr functionInfo)
+        catch (Exception ex)
         {
-            return ExternRequestFunctionNames(functionIds, length, out functionInfo);
+            Log.Error(ex, "WindowsNativeMethods.ReloadConfiguration() exception");
+            return -1;
         }
+    }
 
-        public int RequestProfile([Out] out IntPtr snapshots, [Out] out int length)
-        {
-            return ExternRequestProfile(out snapshots, out length);
-        }
+    public int AddCustomInstrumentation(string fileName, string xml)
+    {
+        return ExternAddCustomInstrumentation(fileName, xml);
+    }
 
-        public void ShutdownNativeThreadProfiler()
-        {
-            ExternShutdownThreadProfiler();
-        }
+    public int ApplyCustomInstrumentation()
+    {
+        return ExternApplyCustomInstrumentation();
+    }
+
+
+    [DllImport(DllName, EntryPoint = "ShutdownThreadProfiler", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternShutdownThreadProfiler();
+
+    [DllImport(DllName, EntryPoint = "ReleaseProfile", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternReleaseProfile();
+
+    [DllImport(DllName, EntryPoint = "RequestProfile", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternRequestProfile([Out] out IntPtr snapshots, [Out] out int length);
+
+    [DllImport(DllName, EntryPoint = "RequestFunctionNames", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternRequestFunctionNames(UIntPtr[] functionIds, int length, [Out] out IntPtr functionInfo);
+
+    public void ReleaseProfile()
+    {
+        ExternReleaseProfile();
+    }
+
+    public int RequestFunctionNames(UIntPtr[] functionIds, int length, [Out] out IntPtr functionInfo)
+    {
+        return ExternRequestFunctionNames(functionIds, length, out functionInfo);
+    }
+
+    public int RequestProfile([Out] out IntPtr snapshots, [Out] out int length)
+    {
+        return ExternRequestProfile(out snapshots, out length);
+    }
+
+    public void ShutdownNativeThreadProfiler()
+    {
+        ExternShutdownThreadProfiler();
     }
 }

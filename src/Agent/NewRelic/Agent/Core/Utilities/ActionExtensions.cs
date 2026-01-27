@@ -1,28 +1,27 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Logging;
 using System;
+using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core.Utilities
+namespace NewRelic.Agent.Core.Utilities;
+
+public static class ActionExtensions
 {
-    public static class ActionExtensions
+    public static void CatchAndLog(this Action action)
     {
-        public static void CatchAndLog(this Action action)
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
         {
             try
             {
-                action();
+                Log.Error(ex, $"An exception occurred while doing some background work");
             }
-            catch (Exception ex)
+            catch
             {
-                try
-                {
-                    Log.Error(ex, $"An exception occurred while doing some background work");
-                }
-                catch
-                {
-                }
             }
         }
     }

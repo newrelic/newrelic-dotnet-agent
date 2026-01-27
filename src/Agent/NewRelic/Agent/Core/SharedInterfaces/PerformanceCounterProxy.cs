@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
-using NewRelic.Agent.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.SharedInterfaces
 {

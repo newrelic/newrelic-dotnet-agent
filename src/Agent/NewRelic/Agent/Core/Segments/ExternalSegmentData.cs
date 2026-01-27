@@ -4,14 +4,14 @@
 using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Api.Experimental;
-using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
-using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Metrics;
-using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Spans;
+using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
+using NewRelic.Agent.Extensions.Parsing;
+using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Segments;
 

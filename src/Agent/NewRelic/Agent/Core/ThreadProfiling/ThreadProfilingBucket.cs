@@ -7,181 +7,180 @@ using System.Linq;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
-namespace NewRelic.Agent.Core.ThreadProfiling
+namespace NewRelic.Agent.Core.ThreadProfiling;
+
+/// <summary>
+/// A tree of function identifiers representing function calls in a stack.
+/// </summary>
+public class ThreadProfilingBucket
 {
-    /// <summary>
-    /// A tree of function identifiers representing function calls in a stack.
-    /// </summary>
-    public class ThreadProfilingBucket
+    private const string NativeClassDescriptiveName = "Native";
+    private const string NativeFunctionDescriptiveName = "Function Call";
+    private const string UnknownClassName = "UnknownClass";
+    private const string UnknownMethodName = "UnknownMethod";
+
+    public readonly BucketProfile Tree;
+    private readonly object _syncObj = new object();
+    private readonly IThreadProfilingProcessing _service;
+
+    public ThreadProfilingBucket(IThreadProfilingProcessing service)
     {
-        private const string NativeClassDescriptiveName = "Native";
-        private const string NativeFunctionDescriptiveName = "Function Call";
-        private const string UnknownClassName = "UnknownClass";
-        private const string UnknownMethodName = "UnknownMethod";
+        _service = service;
+        Tree = new BucketProfile();
+    }
 
-        public readonly BucketProfile Tree;
-        private readonly object _syncObj = new object();
-        private readonly IThreadProfilingProcessing _service;
-
-        public ThreadProfilingBucket(IThreadProfilingProcessing service)
+    public void ClearTree()
+    {
+        lock (_syncObj)
         {
-            _service = service;
-            Tree = new BucketProfile();
+            Tree.Root.ClearChildren();
+        }
+    }
+
+    public void UpdateTree(UIntPtr[] fids)
+    {
+        if (fids == null)
+        {
+            Log.Debug("fids passed to UpdateTree is null.");
+            return;
         }
 
-        public void ClearTree()
+        lock (_syncObj)
         {
-            lock (_syncObj)
+            try
             {
-                Tree.Root.ClearChildren();
+                UpdateTree(Tree.Root, fids, fids.Length - 1, 0);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "UpdateTree() failed");
             }
         }
+    }
 
-        public void UpdateTree(UIntPtr[] fids)
+    private void UpdateTree(ProfileNode parent, UIntPtr[] fids, int fidIndex, uint depth)
+    {
+        if (fidIndex < 0)
+            return;
+
+        var fid = fids[fidIndex];
+        var child = parent.Children
+            .Where(node => node != null)
+            .Where(node => node.FunctionId == fid)
+            .FirstOrDefault();
+
+        if (child != null)
         {
-            if (fids == null)
-            {
-                Log.Debug("fids passed to UpdateTree is null.");
-                return;
-            }
+            child.RunnableCount++;
+        }
+        else
+        {
+            // If no matching child found, create a new one to recurse into
+            child = new ProfileNode(fid, 1, depth);
+            parent.AddChild(child);
 
-            lock (_syncObj)
-            {
-                try
-                {
-                    UpdateTree(Tree.Root, fids, fids.Length - 1, 0);
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e, "UpdateTree() failed");
-                }
-            }
+            // If we just added this node's only child, add it to the pruning list
+            if (parent.Children.Count == 1)
+                _service.AddNodeToPruningList(child);
         }
 
-        private void UpdateTree(ProfileNode parent, UIntPtr[] fids, int fidIndex, uint depth)
-        {
-            if (fidIndex < 0)
-                return;
+        UpdateTree(child, fids, fidIndex - 1, ++depth);
+    }
 
-            var fid = fids[fidIndex];
-            var child = parent.Children
-                .Where(node => node != null)
-                .Where(node => node.FunctionId == fid)
-                .FirstOrDefault();
+    public int GetNodeCount()
+    {
+        var totalNodeCount = Tree.Root
+            .Flatten(node => node != null ? node.Children : Enumerable.Empty<ProfileNode>())
+            .Count();
 
-            if (child != null)
-            {
-                child.RunnableCount++;
-            }
-            else
-            {
-                // If no matching child found, create a new one to recurse into
-                child = new ProfileNode(fid, 1, depth);
-                parent.AddChild(child);
+        // Root is not included in node count
+        return totalNodeCount - 1;
+    }
 
-                // If we just added this node's only child, add it to the pruning list
-                if (parent.Children.Count == 1)
-                    _service.AddNodeToPruningList(child);
-            }
+    public int GetDepth()
+    {
+        var treeDepth = GetDepth(Tree.Root, 0);
 
-            UpdateTree(child, fids, fidIndex - 1, ++depth);
-        }
+        // Root is not included in depth count
+        return treeDepth - 1;
+    }
 
-        public int GetNodeCount()
-        {
-            var totalNodeCount = Tree.Root
-                .Flatten(node => node != null ? node.Children : Enumerable.Empty<ProfileNode>())
-                .Count();
+    private static int GetDepth(ProfileNode node, int currentDepth)
+    {
+        currentDepth++;
 
-            // Root is not included in node count
-            return totalNodeCount - 1;
-        }
+        if (node.Children.Count < 1)
+            return currentDepth;
 
-        public int GetDepth()
-        {
-            var treeDepth = GetDepth(Tree.Root, 0);
+        return node.Children
+            .Where(child => child != null)
+            .Select(child => GetDepth(child, currentDepth))
+            .Max();
+    }
 
-            // Root is not included in depth count
-            return treeDepth - 1;
-        }
-
-        private static int GetDepth(ProfileNode node, int currentDepth)
-        {
-            currentDepth++;
-
-            if (node.Children.Count < 1)
-                return currentDepth;
-
-            return node.Children
-                .Where(child => child != null)
-                .Select(child => GetDepth(child, currentDepth))
-                .Max();
-        }
-
-        internal IEnumerable<UIntPtr> GetFunctionIds()
-        {
-            return Tree.Root.Flatten(node => node != null ? node.Children : Enumerable.Empty<ProfileNode>())
-                .Where(node => node != null && node.FunctionId != UIntPtr.Zero)
-                .Select(node => node.FunctionId)
-                .Distinct();
-
-        }
-
-        public void PopulateNames(IDictionary<UIntPtr, ClassMethodNames> namesSource)
-        {
-            var nodes = Tree.Root.Flatten(node => node != null ? node.Children : Enumerable.Empty<ProfileNode>())
-                .Where(node => node != null);
-
-            foreach (var node in nodes)
-            {
-                PopulateNames(node, namesSource);
-            }
-        }
-
-        private void PopulateNames(ProfileNode node, IDictionary<UIntPtr, ClassMethodNames> namesSource)
-        {
-            if (node.FunctionId == UIntPtr.Zero)
-            {
-                node.Details.ClassName = NativeClassDescriptiveName;
-                node.Details.MethodName = NativeFunctionDescriptiveName;
-            }
-            else
-            {
-                var id = node.FunctionId;
-                if (namesSource.ContainsKey(id) && namesSource[id] != null)
-                {
-                    node.Details.ClassName = namesSource[id].Class;
-                    node.Details.MethodName = namesSource[id].Method;
-                }
-                else
-                {
-                    node.Details.ClassName = UnknownClassName;
-                    node.Details.MethodName = UnknownMethodName + '(' + id + ')';
-                }
-            }
-        }
-
-        public void PruneTree()
-        {
-            lock (_syncObj)
-            {
-                PruneTree(Tree.Root);
-            }
-        }
-
-        private static void PruneTree(ProfileNode node)
-        {
-            if (node.Children.Count <= 0)
-                return;
-
-            node.Children
-                .Where(child => child != null)
-                .Where(child => child.IgnoreForReporting)
-                .ToList()
-                .ForEach(child => node.Children.Remove(child));
-
-            foreach (var kid in node.Children) PruneTree(kid);
-        }
+    internal IEnumerable<UIntPtr> GetFunctionIds()
+    {
+        return Tree.Root.Flatten(node => node != null ? node.Children : Enumerable.Empty<ProfileNode>())
+            .Where(node => node != null && node.FunctionId != UIntPtr.Zero)
+            .Select(node => node.FunctionId)
+            .Distinct();
 
     }
+
+    public void PopulateNames(IDictionary<UIntPtr, ClassMethodNames> namesSource)
+    {
+        var nodes = Tree.Root.Flatten(node => node != null ? node.Children : Enumerable.Empty<ProfileNode>())
+            .Where(node => node != null);
+
+        foreach (var node in nodes)
+        {
+            PopulateNames(node, namesSource);
+        }
+    }
+
+    private void PopulateNames(ProfileNode node, IDictionary<UIntPtr, ClassMethodNames> namesSource)
+    {
+        if (node.FunctionId == UIntPtr.Zero)
+        {
+            node.Details.ClassName = NativeClassDescriptiveName;
+            node.Details.MethodName = NativeFunctionDescriptiveName;
+        }
+        else
+        {
+            var id = node.FunctionId;
+            if (namesSource.ContainsKey(id) && namesSource[id] != null)
+            {
+                node.Details.ClassName = namesSource[id].Class;
+                node.Details.MethodName = namesSource[id].Method;
+            }
+            else
+            {
+                node.Details.ClassName = UnknownClassName;
+                node.Details.MethodName = UnknownMethodName + '(' + id + ')';
+            }
+        }
+    }
+
+    public void PruneTree()
+    {
+        lock (_syncObj)
+        {
+            PruneTree(Tree.Root);
+        }
+    }
+
+    private static void PruneTree(ProfileNode node)
+    {
+        if (node.Children.Count <= 0)
+            return;
+
+        node.Children
+            .Where(child => child != null)
+            .Where(child => child.IgnoreForReporting)
+            .ToList()
+            .ForEach(child => node.Children.Remove(child));
+
+        foreach (var kid in node.Children) PruneTree(kid);
+    }
+
 }

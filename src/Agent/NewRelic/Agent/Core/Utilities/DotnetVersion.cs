@@ -7,40 +7,40 @@ using Microsoft.Win32;
 
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.Utilities
+namespace NewRelic.Agent.Core.Utilities;
+
+public enum DotnetFrameworkVersion
 {
-    public enum DotnetFrameworkVersion
-    {
-        LessThan45,
-        net45,
-        net451,
-        net452,
-        net46,
-        net461,
-        net462,
-        net47,
-        net471,
-        net472,
-        net48,
-        net481
-    }
+    LessThan45,
+    net45,
+    net451,
+    net452,
+    net46,
+    net461,
+    net462,
+    net47,
+    net471,
+    net472,
+    net48,
+    net481
+}
 
-    public enum DotnetCoreVersion
-    {
-        LessThan30,
-        netcoreapp30,
-        netcoreapp31,
-        net5,
-        net6,
-        net7,
-        net8,
-        net9,
-        net10,
-        Other
-    }
+public enum DotnetCoreVersion
+{
+    LessThan30,
+    netcoreapp30,
+    netcoreapp31,
+    net5,
+    net6,
+    net7,
+    net8,
+    net9,
+    net10,
+    Other
+}
 
-    public static class DotnetVersion
-    {
+public static class DotnetVersion
+{
 #if NETFRAMEWORK
         // This code is derived from: https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/how-to-determine-which-versions-are-installed#net_d
         public static DotnetFrameworkVersion GetDotnetFrameworkVersion()
@@ -90,89 +90,88 @@ namespace NewRelic.Agent.Core.Utilities
 			}
 		}
 #else
-        public static DotnetCoreVersion GetDotnetCoreVersion()
+    public static DotnetCoreVersion GetDotnetCoreVersion()
+    {
+        var envVer = System.Environment.Version;
+
+        if (envVer.Major == 3 && envVer.Minor == 0)
         {
-            var envVer = System.Environment.Version;
-
-            if (envVer.Major == 3 && envVer.Minor == 0)
-            {
-                return DotnetCoreVersion.netcoreapp30;
-            }
-
-            if (envVer.Major == 3 && envVer.Minor == 1)
-            {
-                return DotnetCoreVersion.netcoreapp31;
-            }
-
-            if (envVer.Major == 10)
-            {
-                return DotnetCoreVersion.net10;
-            }
-
-            if (envVer.Major == 9)
-            {
-                return DotnetCoreVersion.net9;
-            }
-
-            if (envVer.Major == 8)
-            {
-                return DotnetCoreVersion.net8;
-            }
-
-            if (envVer.Major == 7)
-            {
-                return DotnetCoreVersion.net7;
-            }
-
-            if (envVer.Major == 6)
-            {
-                return DotnetCoreVersion.net6;
-            }
-
-            if (envVer.Major == 5)
-            {
-                return DotnetCoreVersion.net5;
-            }
-
-            if (envVer.Major == 4)
-            {
-                return DotnetCoreVersion.LessThan30;
-            }
-
-            return DotnetCoreVersion.Other;
+            return DotnetCoreVersion.netcoreapp30;
         }
+
+        if (envVer.Major == 3 && envVer.Minor == 1)
+        {
+            return DotnetCoreVersion.netcoreapp31;
+        }
+
+        if (envVer.Major == 10)
+        {
+            return DotnetCoreVersion.net10;
+        }
+
+        if (envVer.Major == 9)
+        {
+            return DotnetCoreVersion.net9;
+        }
+
+        if (envVer.Major == 8)
+        {
+            return DotnetCoreVersion.net8;
+        }
+
+        if (envVer.Major == 7)
+        {
+            return DotnetCoreVersion.net7;
+        }
+
+        if (envVer.Major == 6)
+        {
+            return DotnetCoreVersion.net6;
+        }
+
+        if (envVer.Major == 5)
+        {
+            return DotnetCoreVersion.net5;
+        }
+
+        if (envVer.Major == 4)
+        {
+            return DotnetCoreVersion.LessThan30;
+        }
+
+        return DotnetCoreVersion.Other;
+    }
 #endif
 
-        public static bool IsUnsupportedDotnetCoreVersion(DotnetCoreVersion version)
-        {
-            // We only need to update this method when a version becomes unsupported.
-            var unsupportedDotnetCoreVersions = new List<DotnetCoreVersion> {
-                DotnetCoreVersion.LessThan30,
-                DotnetCoreVersion.netcoreapp30,
-                DotnetCoreVersion.netcoreapp31,
-                DotnetCoreVersion.net5,
-                DotnetCoreVersion.net6,
-                DotnetCoreVersion.net7
-                // DotnetCoreVersion.net8 EOL 2026-11-10
-                // DotnetCoreVersion.net9 EOL 2026-11-10
-            };
+    public static bool IsUnsupportedDotnetCoreVersion(DotnetCoreVersion version)
+    {
+        // We only need to update this method when a version becomes unsupported.
+        var unsupportedDotnetCoreVersions = new List<DotnetCoreVersion> {
+            DotnetCoreVersion.LessThan30,
+            DotnetCoreVersion.netcoreapp30,
+            DotnetCoreVersion.netcoreapp31,
+            DotnetCoreVersion.net5,
+            DotnetCoreVersion.net6,
+            DotnetCoreVersion.net7
+            // DotnetCoreVersion.net8 EOL 2026-11-10
+            // DotnetCoreVersion.net9 EOL 2026-11-10
+        };
 
-            return unsupportedDotnetCoreVersions.Contains(version);
-        }
+        return unsupportedDotnetCoreVersions.Contains(version);
+    }
 
-        public static bool IsUnsupportedDotnetFrameworkVersion(DotnetFrameworkVersion version)
-        {
-            // We only need to update this method when a framework version becomes unsupported.
-            var unsupportedDotnetFrameworkVersions = new List<DotnetFrameworkVersion> {
-                DotnetFrameworkVersion.LessThan45,
-                DotnetFrameworkVersion.net45,
-                DotnetFrameworkVersion.net451,
-                DotnetFrameworkVersion.net452,
-                DotnetFrameworkVersion.net46,
-                DotnetFrameworkVersion.net461
-            };
+    public static bool IsUnsupportedDotnetFrameworkVersion(DotnetFrameworkVersion version)
+    {
+        // We only need to update this method when a framework version becomes unsupported.
+        var unsupportedDotnetFrameworkVersions = new List<DotnetFrameworkVersion> {
+            DotnetFrameworkVersion.LessThan45,
+            DotnetFrameworkVersion.net45,
+            DotnetFrameworkVersion.net451,
+            DotnetFrameworkVersion.net452,
+            DotnetFrameworkVersion.net46,
+            DotnetFrameworkVersion.net461
+        };
 
-            return unsupportedDotnetFrameworkVersions.Contains(version);
-        }
+        return unsupportedDotnetFrameworkVersions.Contains(version);
     }
 }

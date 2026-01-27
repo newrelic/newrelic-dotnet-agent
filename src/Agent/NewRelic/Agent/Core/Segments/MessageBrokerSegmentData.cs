@@ -2,140 +2,138 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Time;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
-using NewRelic.Agent.Configuration;
 
-namespace NewRelic.Agent.Core.Segments
+namespace NewRelic.Agent.Core.Segments;
+
+public class MessageBrokerSegmentData : AbstractSegmentData
 {
-    public class MessageBrokerSegmentData : AbstractSegmentData
+
+    private const string TransactionGuidSegmentParameterKey = "transaction_guid";
+
+    public string Vendor { get; set; }
+
+    public string Destination { get; set; }
+
+    public MetricNames.MessageBrokerDestinationType DestinationType { get; set; }
+
+    public MetricNames.MessageBrokerAction Action { get; set; }
+
+    public string MessagingSystemName {get; set;}
+
+    public string CloudAccountId {get; set;}
+
+    public string CloudRegion {get; set;}
+
+    public string ServerAddress {get; set;}
+
+    public int? ServerPort {get; set;}
+
+    public string RoutingKey { get; set; }
+
+
+    public MessageBrokerSegmentData(string vendor, string destination,
+        MetricNames.MessageBrokerDestinationType destinationType, MetricNames.MessageBrokerAction action,
+        string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
+        string serverAddress = null, int? serverPort = null, string routingKey = null)
     {
+        Vendor = vendor;
+        Destination = destination;
+        DestinationType = destinationType;
+        Action = action;
 
-        private const string TransactionGuidSegmentParameterKey = "transaction_guid";
-
-        public string Vendor { get; set; }
-
-        public string Destination { get; set; }
-
-        public MetricNames.MessageBrokerDestinationType DestinationType { get; set; }
-
-        public MetricNames.MessageBrokerAction Action { get; set; }
-
-        public string MessagingSystemName {get; set;}
-
-        public string CloudAccountId {get; set;}
-
-        public string CloudRegion {get; set;}
-
-        public string ServerAddress {get; set;}
-
-        public int? ServerPort {get; set;}
-
-        public string RoutingKey { get; set; }
+        // attributes required for entity relationship mapping
+        MessagingSystemName = messagingSystemName;
+        CloudAccountId = cloudAccountId;
+        CloudRegion = cloudRegion;
+        ServerAddress = serverAddress;
+        ServerPort = serverPort;
+        RoutingKey = routingKey;
+    }
 
 
-        public MessageBrokerSegmentData(string vendor, string destination,
-            MetricNames.MessageBrokerDestinationType destinationType, MetricNames.MessageBrokerAction action,
-            string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
-            string serverAddress = null, int? serverPort = null, string routingKey = null)
+    public override bool IsCombinableWith(AbstractSegmentData otherData)
+    {
+        var otherTypedSegment = otherData as MessageBrokerSegmentData;
+        if (otherTypedSegment == null)
+            return false;
+
+        if (!Vendor.Equals(otherTypedSegment.Vendor))
+            return false;
+
+        if (!Destination.Equals(otherTypedSegment.Destination))
+            return false;
+
+        if (DestinationType != otherTypedSegment.DestinationType)
+            return false;
+
+        if (Action != otherTypedSegment.Action)
+            return false;
+
+        if (MessagingSystemName != otherTypedSegment.MessagingSystemName)
+            return false;
+
+        if (CloudAccountId != otherTypedSegment.CloudAccountId)
+            return false;
+
+        if (CloudRegion != otherTypedSegment.CloudRegion)
+            return false;
+
+        if (ServerAddress != otherTypedSegment.ServerAddress)
+            return false;
+
+        if (ServerPort != otherTypedSegment.ServerPort)
+            return false;
+
+        // Not using routing key for segment combination since it is not present for BasicGet and might be unique for each message.
+
+        return true;
+    }
+
+    public override string GetTransactionTraceName()
+    {
+        return MetricNames.GetMessageBroker(DestinationType, Action, Vendor, Destination).ToString();
+    }
+
+    public override void AddMetricStats(Segment segment, TimeSpan durationOfChildren, TransactionMetricStatsCollection txStats, IConfigurationService configService)
+    {
+        var duration = segment.Duration.Value;
+        var exclusiveDuration = TimeSpanMath.Max(TimeSpan.Zero, duration - durationOfChildren);
+
+        MetricBuilder.TryBuildMessageBrokerSegmentMetric(Vendor, Destination, DestinationType, Action, duration, exclusiveDuration, txStats);
+    }
+
+    public override void SetSpanTypeSpecificAttributes(SpanAttributeValueCollection attribVals)
+    {
+        base.SetSpanTypeSpecificAttributes(attribVals);
+
+        if (Action == MetricNames.MessageBrokerAction.Produce)
         {
-            Vendor = vendor;
-            Destination = destination;
-            DestinationType = destinationType;
-            Action = action;
+            AttribDefs.SpanKind.TrySetValue(attribVals, "producer");
+        }
+        else if (Action == MetricNames.MessageBrokerAction.Consume)
+        {
+            AttribDefs.SpanKind.TrySetValue(attribVals, "consumer");
+            AttribDefs.MessageQueueName.TrySetValue(attribVals, Destination);
+            AttribDefs.MessagingDestinationPublishName.TrySetValue(attribVals, Destination);
+        }
+        // else purge action - do not set the attribute
 
-            // attributes required for entity relationship mapping
-            MessagingSystemName = messagingSystemName;
-            CloudAccountId = cloudAccountId;
-            CloudRegion = cloudRegion;
-            ServerAddress = serverAddress;
-            ServerPort = serverPort;
-            RoutingKey = routingKey;
+        if (ServerPort.HasValue)
+        {
+            AttribDefs.BrokerServerPort.TrySetValue(attribVals, ServerPort.Value);
         }
 
-
-        public override bool IsCombinableWith(AbstractSegmentData otherData)
-        {
-            var otherTypedSegment = otherData as MessageBrokerSegmentData;
-            if (otherTypedSegment == null)
-                return false;
-
-            if (!Vendor.Equals(otherTypedSegment.Vendor))
-                return false;
-
-            if (!Destination.Equals(otherTypedSegment.Destination))
-                return false;
-
-            if (DestinationType != otherTypedSegment.DestinationType)
-                return false;
-
-            if (Action != otherTypedSegment.Action)
-                return false;
-
-            if (MessagingSystemName != otherTypedSegment.MessagingSystemName)
-                return false;
-
-            if (CloudAccountId != otherTypedSegment.CloudAccountId)
-                return false;
-
-            if (CloudRegion != otherTypedSegment.CloudRegion)
-                return false;
-
-            if (ServerAddress != otherTypedSegment.ServerAddress)
-                return false;
-
-            if (ServerPort != otherTypedSegment.ServerPort)
-                return false;
-
-            // Not using routing key for segment combination since it is not present for BasicGet and might be unique for each message.
-
-            return true;
-        }
-
-        public override string GetTransactionTraceName()
-        {
-            return MetricNames.GetMessageBroker(DestinationType, Action, Vendor, Destination).ToString();
-        }
-
-        public override void AddMetricStats(Segment segment, TimeSpan durationOfChildren, TransactionMetricStatsCollection txStats, IConfigurationService configService)
-        {
-            var duration = segment.Duration.Value;
-            var exclusiveDuration = TimeSpanMath.Max(TimeSpan.Zero, duration - durationOfChildren);
-
-            MetricBuilder.TryBuildMessageBrokerSegmentMetric(Vendor, Destination, DestinationType, Action, duration, exclusiveDuration, txStats);
-        }
-
-        public override void SetSpanTypeSpecificAttributes(SpanAttributeValueCollection attribVals)
-        {
-            base.SetSpanTypeSpecificAttributes(attribVals);
-
-            if (Action == MetricNames.MessageBrokerAction.Produce)
-            {
-                AttribDefs.SpanKind.TrySetValue(attribVals, "producer");
-            }
-            else if (Action == MetricNames.MessageBrokerAction.Consume)
-            {
-                AttribDefs.SpanKind.TrySetValue(attribVals, "consumer");
-                AttribDefs.MessageQueueName.TrySetValue(attribVals, Destination);
-                AttribDefs.MessagingDestinationPublishName.TrySetValue(attribVals, Destination);
-            }
-            // else purge action - do not set the attribute
-
-            if (ServerPort.HasValue)
-            {
-                AttribDefs.BrokerServerPort.TrySetValue(attribVals, ServerPort.Value);
-            }
-
-            AttribDefs.BrokerServerAddress.TrySetValue(attribVals, ServerAddress);
-            AttribDefs.MessagingSystemName.TrySetValue(attribVals, MessagingSystemName);
-            AttribDefs.CloudRegion.TrySetValue(attribVals, CloudRegion);
-            AttribDefs.CloudAccountId.TrySetValue(attribVals, CloudAccountId);
-            AttribDefs.MessagingDestinationName.TrySetValue(attribVals, Destination);
-            AttribDefs.MessageRoutingKey.TrySetValue(attribVals, RoutingKey);
-            AttribDefs.MessagingRabbitMqDestinationRoutingKey.TrySetValue(attribVals, RoutingKey);
-        }
+        AttribDefs.BrokerServerAddress.TrySetValue(attribVals, ServerAddress);
+        AttribDefs.MessagingSystemName.TrySetValue(attribVals, MessagingSystemName);
+        AttribDefs.CloudRegion.TrySetValue(attribVals, CloudRegion);
+        AttribDefs.CloudAccountId.TrySetValue(attribVals, CloudAccountId);
+        AttribDefs.MessagingDestinationName.TrySetValue(attribVals, Destination);
+        AttribDefs.MessageRoutingKey.TrySetValue(attribVals, RoutingKey);
+        AttribDefs.MessagingRabbitMqDestinationRoutingKey.TrySetValue(attribVals, RoutingKey);
     }
 }

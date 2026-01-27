@@ -2,78 +2,78 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.SharedInterfaces;
-using Newtonsoft.Json;
-using System.Reflection;
-using System.Diagnostics;
-using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Logging;
+using Newtonsoft.Json;
 #if NETFRAMEWORK
 using System.Web;
 using Microsoft.Win32;
 #endif
 
-namespace NewRelic.Agent.Core
+namespace NewRelic.Agent.Core;
+
+public static partial class AgentInstallConfiguration
 {
-    public static partial class AgentInstallConfiguration
-    {
-        // This field exists only for testing purposes. It allows bootstrap logic and regular
-        // configuration logic to use the same environment variable logic.
-        public static IEnvironment EnvironmentVariableProxy = new SharedInterfaces.Environment();
+    // This field exists only for testing purposes. It allows bootstrap logic and regular
+    // configuration logic to use the same environment variable logic.
+    public static IEnvironment EnvironmentVariableProxy = new SharedInterfaces.Environment();
 
 #if NETSTANDARD2_0
-        private static readonly string[] NewRelicHomeEnvironmentVariables = ["CORECLR_NEW_RELIC_HOME", "CORECLR_NEWRELIC_HOME"];
-        private const string RuntimeDirectoryName = "netcore";
+    private static readonly string[] NewRelicHomeEnvironmentVariables = ["CORECLR_NEW_RELIC_HOME", "CORECLR_NEWRELIC_HOME"];
+    private const string RuntimeDirectoryName = "netcore";
 #else
         private static readonly string[] NewRelicHomeEnvironmentVariables = ["NEW_RELIC_HOME", "NEWRELIC_HOME"];
         private const string RuntimeDirectoryName = "netframework";
 #endif
-        private static readonly string[] NewRelicInstallPathEnvironmentVariables = ["NEW_RELIC_INSTALL_PATH", "NEWRELIC_INSTALL_PATH"];
+    private static readonly string[] NewRelicInstallPathEnvironmentVariables = ["NEW_RELIC_INSTALL_PATH", "NEWRELIC_INSTALL_PATH"];
 
-        public static bool IsWindows { get; }
+    public static bool IsWindows { get; }
 #if NETFRAMEWORK
 		public static DotnetFrameworkVersion DotnetFrameworkVersion { get; }
 #else
-        public static DotnetCoreVersion DotnetCoreVersion { get; }
+    public static DotnetCoreVersion DotnetCoreVersion { get; }
 #endif
-        public static bool IsNetstandardPresent { get; }
-        public static bool IsNet46OrAbove { get; }
-        public static bool IsNetCore30OrAbove { get; }
-        public static string NewRelicHome { get; }
-        public static string NewRelicInstallPath { get; }
-        public static string NewRelicLogDirectory { get; }
-        public static string HomeExtensionsDirectory { get; }
-        public static string RuntimeHomeExtensionsDirectory { get; }
-        public static string InstallPathExtensionsDirectory { get; }
-        public static int ProcessId { get; }
-        public static string AppDomainName { get; }
-        public static string AppDomainAppVirtualPath { get; }
-        public static AgentInfo AgentInfo { get; }
-        public static string AgentVersion { get; }
-        public static long AgentVersionTimestamp { get; }
+    public static bool IsNetstandardPresent { get; }
+    public static bool IsNet46OrAbove { get; }
+    public static bool IsNetCore30OrAbove { get; }
+    public static string NewRelicHome { get; }
+    public static string NewRelicInstallPath { get; }
+    public static string NewRelicLogDirectory { get; }
+    public static string HomeExtensionsDirectory { get; }
+    public static string RuntimeHomeExtensionsDirectory { get; }
+    public static string InstallPathExtensionsDirectory { get; }
+    public static int ProcessId { get; }
+    public static string AppDomainName { get; }
+    public static string AppDomainAppVirtualPath { get; }
+    public static AgentInfo AgentInfo { get; }
+    public static string AgentVersion { get; }
+    public static long AgentVersionTimestamp { get; }
 
-        static AgentInstallConfiguration()
-        {
+    static AgentInstallConfiguration()
+    {
 #if NETFRAMEWORK
 			IsWindows = true;
 #else
-            IsWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
+        IsWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
 #endif
-            NewRelicHome = GetNewRelicHome();
-            NewRelicInstallPath = GetNewRelicInstallPath();
-            HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
-            RuntimeHomeExtensionsDirectory = HomeExtensionsDirectory != null ? Path.Combine(HomeExtensionsDirectory, RuntimeDirectoryName) : null;
-            InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
-            AgentVersion = GetAgentVersion();
-            AgentVersionTimestamp = GetAgentVersionTimestamp();
-            IsNetstandardPresent = GetIsNetstandardPresent();
-            IsNet46OrAbove = GetIsNet46OrAbove();
-            IsNetCore30OrAbove = GetIsNetCore30OrAbove();
-            ProcessId = new ProcessStatic().GetCurrentProcess().Id;
-            AppDomainName = AppDomain.CurrentDomain.FriendlyName;
+        NewRelicHome = GetNewRelicHome();
+        NewRelicInstallPath = GetNewRelicInstallPath();
+        HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
+        RuntimeHomeExtensionsDirectory = HomeExtensionsDirectory != null ? Path.Combine(HomeExtensionsDirectory, RuntimeDirectoryName) : null;
+        InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
+        AgentVersion = GetAgentVersion();
+        AgentVersionTimestamp = GetAgentVersionTimestamp();
+        IsNetstandardPresent = GetIsNetstandardPresent();
+        IsNet46OrAbove = GetIsNet46OrAbove();
+        IsNetCore30OrAbove = GetIsNetCore30OrAbove();
+        ProcessId = new ProcessStatic().GetCurrentProcess().Id;
+        AppDomainName = AppDomain.CurrentDomain.FriendlyName;
 #if NETFRAMEWORK
 			if (HttpRuntime.AppDomainAppVirtualPath != null)
 			{
@@ -86,129 +86,128 @@ namespace NewRelic.Agent.Core
 			}
 			catch { }
 #else
-            try
-            {
-                DotnetCoreVersion = DotnetVersion.GetDotnetCoreVersion();
-            }
-            catch { }
+        try
+        {
+            DotnetCoreVersion = DotnetVersion.GetDotnetCoreVersion();
+        }
+        catch { }
 #endif
-            AgentInfo = GetAgentInfo();
-        }
+        AgentInfo = GetAgentInfo();
+    }
 
-        //This method and delegate is here to allow dependency injecting the IsWindows logic via a typed delegate
-        public delegate bool IsWindowsDelegate();
-        public static bool GetIsWindows()
-        {
-            return IsWindows;
-        }
+    //This method and delegate is here to allow dependency injecting the IsWindows logic via a typed delegate
+    public delegate bool IsWindowsDelegate();
+    public static bool GetIsWindows()
+    {
+        return IsWindows;
+    }
 
-        private static string GetAgentVersion()
+    private static string GetAgentVersion()
+    {
+        try
         {
-            try
-            {
-                return FileVersionInfo.GetVersionInfo(typeof(AgentInstallConfiguration).Assembly.Location).FileVersion;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to determine agent version.");
-                return "?.?.?.?";
-            }
+            return FileVersionInfo.GetVersionInfo(typeof(AgentInstallConfiguration).Assembly.Location).FileVersion;
         }
-
-        private static long GetAgentVersionTimestamp()
+        catch (Exception ex)
         {
-            try
-            {
-                return Assembly.GetExecutingAssembly().GetCustomAttribute<BuildTimestampAttribute>().BuildTimestamp.Value;
-            }
-            catch
-            {
-                return 0;
-            }
+            Log.Error(ex, "Failed to determine agent version.");
+            return "?.?.?.?";
         }
+    }
 
-        private static bool GetIsNetstandardPresent()
+    private static long GetAgentVersionTimestamp()
+    {
+        try
         {
-            var netstandard20Version = new Version(2, 0, 0, 0);
-            var netstandardAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == "netstandard");
-            return netstandardAssembly != null && netstandardAssembly.GetName().Version >= netstandard20Version;
+            return Assembly.GetExecutingAssembly().GetCustomAttribute<BuildTimestampAttribute>().BuildTimestamp.Value;
         }
-
-        private static bool GetIsNet46OrAbove()
+        catch
         {
+            return 0;
+        }
+    }
+
+    private static bool GetIsNetstandardPresent()
+    {
+        var netstandard20Version = new Version(2, 0, 0, 0);
+        var netstandardAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == "netstandard");
+        return netstandardAssembly != null && netstandardAssembly.GetName().Version >= netstandard20Version;
+    }
+
+    private static bool GetIsNet46OrAbove()
+    {
 #if NETFRAMEWORK
 			var net46Version = new Version(4, 0, 30319, 42000);
 			return System.Environment.Version >= net46Version;
 #else
-            return true;
+        return true;
 #endif
-        }
+    }
 
-        private static bool GetIsNetCore30OrAbove()
-        {
+    private static bool GetIsNetCore30OrAbove()
+    {
 #if NETFRAMEWORK
 			return false;
 #else
-            var version = System.Environment.Version;
+        var version = System.Environment.Version;
 
-            // Prior to .NET Core 3.0 System.Environment.Version returned 4.0.30319.42000.
-            // Therefore, the next major version beyond 3.0 will be 5.0.
-            // See: https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#improved-net-core-version-apis
-            if (version.Major == 4) return false;
+        // Prior to .NET Core 3.0 System.Environment.Version returned 4.0.30319.42000.
+        // Therefore, the next major version beyond 3.0 will be 5.0.
+        // See: https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#improved-net-core-version-apis
+        if (version.Major == 4) return false;
 
-            return version.Major >= 3;
+        return version.Major >= 3;
 #endif
-        }
+    }
 
-        private static string GetNewRelicHome()
-        {
-            var newRelicHome = EnvironmentVariableProxy.GetEnvironmentVariableFromList(NewRelicHomeEnvironmentVariables);
-            if (newRelicHome != null && Directory.Exists(newRelicHome)) return Path.GetFullPath(newRelicHome);
+    private static string GetNewRelicHome()
+    {
+        var newRelicHome = EnvironmentVariableProxy.GetEnvironmentVariableFromList(NewRelicHomeEnvironmentVariables);
+        if (newRelicHome != null && Directory.Exists(newRelicHome)) return Path.GetFullPath(newRelicHome);
 #if NETFRAMEWORK
 			var key = Registry.LocalMachine.OpenSubKey(@"Software\New Relic\.NET Agent");
 			if (key != null) newRelicHome = (string)key.GetValue("NewRelicHome");
 #endif
-            return newRelicHome;
+        return newRelicHome;
+    }
+
+    private static string GetNewRelicInstallPath()
+    {
+        var newRelicInstallPath = EnvironmentVariableProxy.GetEnvironmentVariableFromList(NewRelicInstallPathEnvironmentVariables);
+        if (newRelicInstallPath != null)
+        {
+            newRelicInstallPath = Path.Combine(newRelicInstallPath, RuntimeDirectoryName);
+            if (Directory.Exists(newRelicInstallPath)) return newRelicInstallPath;
         }
 
-        private static string GetNewRelicInstallPath()
+        newRelicInstallPath = EnvironmentVariableProxy.GetEnvironmentVariableFromList(NewRelicHomeEnvironmentVariables);
+        return newRelicInstallPath;
+    }
+
+    public static AgentInfo GetAgentInfo()
+    {
+        if (string.IsNullOrEmpty(NewRelicHome))
         {
-            var newRelicInstallPath = EnvironmentVariableProxy.GetEnvironmentVariableFromList(NewRelicInstallPathEnvironmentVariables);
-            if (newRelicInstallPath != null)
-            {
-                newRelicInstallPath = Path.Combine(newRelicInstallPath, RuntimeDirectoryName);
-                if (Directory.Exists(newRelicInstallPath)) return newRelicInstallPath;
-            }
-
-            newRelicInstallPath = EnvironmentVariableProxy.GetEnvironmentVariableFromList(NewRelicHomeEnvironmentVariables);
-            return newRelicInstallPath;
-        }
-
-        public static AgentInfo GetAgentInfo()
-        {
-            if (string.IsNullOrEmpty(NewRelicHome))
-            {
-                Log.Debug($"Could not get agent info. NewRelicHome is null or empty.");
-                return null;
-            }
-
-            var agentInfoPath = Path.Combine(NewRelicHome, "agentinfo.json");
-
-            if (File.Exists(agentInfoPath))
-            {
-                try
-                {
-                    return JsonConvert.DeserializeObject<AgentInfo>(File.ReadAllText(agentInfoPath));
-                }
-                catch (Exception e)
-                {
-                    Log.Debug(e, $"Could not deserialize agent info from {agentInfoPath}.");
-                }
-            }
-            else
-                Log.Debug($"Could not get agent info from {agentInfoPath}. File does not exist.");
-
+            Log.Debug($"Could not get agent info. NewRelicHome is null or empty.");
             return null;
         }
+
+        var agentInfoPath = Path.Combine(NewRelicHome, "agentinfo.json");
+
+        if (File.Exists(agentInfoPath))
+        {
+            try
+            {
+                return JsonConvert.DeserializeObject<AgentInfo>(File.ReadAllText(agentInfoPath));
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e, $"Could not deserialize agent info from {agentInfoPath}.");
+            }
+        }
+        else
+            Log.Debug($"Could not get agent info from {agentInfoPath}. File does not exist.");
+
+        return null;
     }
 }

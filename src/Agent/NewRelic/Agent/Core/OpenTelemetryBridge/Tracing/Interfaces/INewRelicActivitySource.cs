@@ -5,10 +5,9 @@ using System;
 using System.Diagnostics;
 using NewRelic.Agent.Extensions.Api.Experimental;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing.Interfaces
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing.Interfaces;
+
+public interface INewRelicActivitySource : IDisposable
 {
-    public interface INewRelicActivitySource : IDisposable
-    {
-        INewRelicActivity CreateActivity(string activityName, ActivityKind kind);
-    }
+    INewRelicActivity CreateActivity(string activityName, ActivityKind kind);
 }

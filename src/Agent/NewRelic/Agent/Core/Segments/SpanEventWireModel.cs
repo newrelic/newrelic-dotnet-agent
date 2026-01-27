@@ -1,16 +1,16 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
-using NewRelic.Agent.Core.Attributes;
 using Google.Protobuf.Collections;
-using Newtonsoft.Json;
-using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Agent.Extensions.Collections;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Extensions.Collections;
+using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Segments;
 

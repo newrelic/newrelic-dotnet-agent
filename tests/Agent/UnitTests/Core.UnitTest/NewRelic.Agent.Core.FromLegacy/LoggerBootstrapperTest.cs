@@ -6,6 +6,7 @@ using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Extensions.Logging;
 using NUnit.Framework;
 using System.IO;
+using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Testing.Assertions;
 using Telerik.JustMock;

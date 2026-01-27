@@ -4,40 +4,39 @@
 using System;
 using NewRelic.Agent.Core.AgentHealth;
 
-namespace NewRelic.Agent.Core.Utilities
+namespace NewRelic.Agent.Core.Utilities;
+
+public interface IAgentTimer : IDisposable
 {
-    public interface IAgentTimer : IDisposable
+    void Start();
+    void StopAndRecordMetric();
+}
+
+public class AgentTimer : IAgentTimer
+{
+    public AgentTimer(IAgentHealthReporter agentHealthReporter, string eventName)
     {
-        void Start();
-        void StopAndRecordMetric();
+        _agentHealthReporter = agentHealthReporter;
+        _eventName = eventName;
     }
 
-    public class AgentTimer : IAgentTimer
+    private readonly IAgentHealthReporter _agentHealthReporter;
+    private readonly string _eventName;
+    private System.Diagnostics.Stopwatch _stopWatch;
+
+    public void Start()
     {
-        public AgentTimer(IAgentHealthReporter agentHealthReporter, string eventName)
-        {
-            _agentHealthReporter = agentHealthReporter;
-            _eventName = eventName;
-        }
+        _stopWatch = System.Diagnostics.Stopwatch.StartNew();
+    }
 
-        private readonly IAgentHealthReporter _agentHealthReporter;
-        private readonly string _eventName;
-        private System.Diagnostics.Stopwatch _stopWatch;
+    public void StopAndRecordMetric()
+    {
+        _stopWatch.Stop();
+        _agentHealthReporter.ReportAgentTimingMetric(_eventName, _stopWatch.Elapsed);
+    }
 
-        public void Start()
-        {
-            _stopWatch = System.Diagnostics.Stopwatch.StartNew();
-        }
-
-        public void StopAndRecordMetric()
-        {
-            _stopWatch.Stop();
-            _agentHealthReporter.ReportAgentTimingMetric(_eventName, _stopWatch.Elapsed);
-        }
-
-        public void Dispose()
-        {
-            StopAndRecordMetric();
-        }
+    public void Dispose()
+    {
+        StopAndRecordMetric();
     }
 }

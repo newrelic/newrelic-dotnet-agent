@@ -4,16 +4,15 @@
 using System;
 using System.Reflection;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge.Common
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Common;
+
+/// <summary>
+/// Implementation of IAssemblyProvider that returns assemblies from the current AppDomain.
+/// </summary>
+public class AppDomainAssemblyProvider : IAssemblyProvider
 {
-    /// <summary>
-    /// Implementation of IAssemblyProvider that returns assemblies from the current AppDomain.
-    /// </summary>
-    public class AppDomainAssemblyProvider : IAssemblyProvider
+    public Assembly[] GetAssemblies()
     {
-        public Assembly[] GetAssemblies()
-        {
-            return AppDomain.CurrentDomain.GetAssemblies();
-        }
+        return AppDomain.CurrentDomain.GetAssemblies();
     }
 }

@@ -1,29 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Api;
-using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Extensions.Collections;
-using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -33,9 +10,31 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
+using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Api.Experimental;
+using NewRelic.Agent.Extensions.Collections;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Transactions;
 

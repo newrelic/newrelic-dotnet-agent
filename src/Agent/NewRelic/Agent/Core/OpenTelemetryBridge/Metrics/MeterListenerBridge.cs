@@ -1,127 +1,124 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
+using NewRelic.Agent.Core.Utilities;
 
-namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics
+namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics;
+
+/// <summary>
+/// Orchestrates the OpenTelemetry bridging process by coordinating the lifecycle
+/// of the OTLP exporter and the meter listener.
+/// </summary>
+public class MeterListenerBridge : ConfigurationBasedService
 {
-    /// <summary>
-    /// Orchestrates the OpenTelemetry bridging process by coordinating the lifecycle
-    /// of the OTLP exporter and the meter listener.
-    /// </summary>
-    public class MeterListenerBridge : ConfigurationBasedService
+    private OpenTelemetrySDKLogger _sdkLogger;
+    private IConnectionInfo _connectionInfo;
+    private string _currentEntityGuid;
+
+    private readonly IMeterBridgingService _meterBridgingService;
+    private readonly IOtlpExporterConfigurationService _otlpConfigurationService;
+
+    public MeterListenerBridge(
+        IMeterBridgingService meterBridgingService,
+        IOtlpExporterConfigurationService otlpConfigurationService)
     {
-        private OpenTelemetrySDKLogger _sdkLogger;
-        private IConnectionInfo _connectionInfo;
-        private string _currentEntityGuid;
+        _meterBridgingService = meterBridgingService;
+        _otlpConfigurationService = otlpConfigurationService;
 
-        private readonly IMeterBridgingService _meterBridgingService;
-        private readonly IOtlpExporterConfigurationService _otlpConfigurationService;
+        _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
+        _subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
+        _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
 
-        public MeterListenerBridge(
-            IMeterBridgingService meterBridgingService,
-            IOtlpExporterConfigurationService otlpConfigurationService)
+        // Start listening immediately to catch instruments created early in app lifecycle
+        // OTLP exporter will be configured later when agent connects
+        if (_configuration.OpenTelemetryMetricsEnabled)
         {
-            _meterBridgingService = meterBridgingService;
-            _otlpConfigurationService = otlpConfigurationService;
+            _meterBridgingService.StartListening(null);
+        }
+    }
 
-            _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
-            _subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
-            _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
+    private void OnAgentConnected(AgentConnectedEvent agentConnectedEvent)
+    {
+        _connectionInfo = agentConnectedEvent.ConnectInfo;
+        _currentEntityGuid = _configuration.EntityGuid;
 
-            // Start listening immediately to catch instruments created early in app lifecycle
-            // OTLP exporter will be configured later when agent connects
-            if (_configuration.OpenTelemetryMetricsEnabled)
-            {
-                _meterBridgingService.StartListening(null);
-            }
+        ConfigureOtlpExporter();
+    }
+
+    private void OnPreCleanShutdown(PreCleanShutdownEvent preCleanShutdownEvent)
+    {
+        Stop();
+    }
+
+    private void OnServerConfigurationUpdated(ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
+    {
+        var newEntityGuid = serverConfigurationUpdatedEvent.Configuration.EntityGuid;
+
+        // Only update if we have a new non-empty GUID that's different from current
+        if (string.IsNullOrEmpty(newEntityGuid) || _currentEntityGuid == newEntityGuid)
+        {
+            return;
         }
 
-        private void OnAgentConnected(AgentConnectedEvent agentConnectedEvent)
-        {
-            _connectionInfo = agentConnectedEvent.ConnectInfo;
-            _currentEntityGuid = _configuration.EntityGuid;
-
-            ConfigureOtlpExporter();
-        }
-
-        private void OnPreCleanShutdown(PreCleanShutdownEvent preCleanShutdownEvent)
-        {
-            Stop();
-        }
-
-        private void OnServerConfigurationUpdated(ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
-        {
-            var newEntityGuid = serverConfigurationUpdatedEvent.Configuration.EntityGuid;
-
-            // Only update if we have a new non-empty GUID that's different from current
-            if (string.IsNullOrEmpty(newEntityGuid) || _currentEntityGuid == newEntityGuid)
-            {
-                return;
-            }
-
-            _currentEntityGuid = newEntityGuid;
+        _currentEntityGuid = newEntityGuid;
             
-            // Create provider if we have connection info and metrics enabled
-            if (_connectionInfo != null && _configuration.OpenTelemetryMetricsEnabled)
-            {
-                _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid);
-            }
-        }
-
-        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+        // Create provider if we have connection info and metrics enabled
+        if (_connectionInfo != null && _configuration.OpenTelemetryMetricsEnabled)
         {
-        }
-
-        public void ConfigureOtlpExporter()
-        {
-            if (!_configuration.OpenTelemetryMetricsEnabled)
-            {
-                return;
-            }
-
-            if (_connectionInfo == null)
-            {
-                return;
-            }
-
-            if (_sdkLogger == null)
-            {
-                _sdkLogger = new OpenTelemetrySDKLogger();
-            }
-
             _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid);
         }
+    }
 
-        public void Stop()
+    protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+    {
+    }
+
+    public void ConfigureOtlpExporter()
+    {
+        if (!_configuration.OpenTelemetryMetricsEnabled)
         {
-            _meterBridgingService.StopListening();
-            _otlpConfigurationService.Dispose();
-
-            // Do not dispose _sdkLogger to avoid potential EventListener conflicts.
-            // Note: EventPipe-based samplers (GCSamplerNetCore, ThreadStatsSampler) are automatically
-            // disabled when OpenTelemetry metrics are enabled (see DefaultConfiguration.EventListenerSamplersEnabled),
-            // which prevents conflicts. However, we still avoid disposing the logger as a defensive measure.
-            // EventListener has singleton semantics per EventSource - disposing can disrupt subscriptions.
-            // The SDK logger is lightweight and will be cleaned up when the AppDomain unloads.
-            // See: https://github.com/newrelic/newrelic-dotnet-agent/issues/234
-            if (_sdkLogger != null)
-            {
-                // _sdkLogger.Dispose(); // Intentionally not disposing - see comment above
-                _sdkLogger = null;
-            }
+            return;
         }
 
-        public override void Dispose()
+        if (_connectionInfo == null)
         {
-            Stop();
-            base.Dispose();
+            return;
         }
+
+        if (_sdkLogger == null)
+        {
+            _sdkLogger = new OpenTelemetrySDKLogger();
+        }
+
+        _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid);
+    }
+
+    public void Stop()
+    {
+        _meterBridgingService.StopListening();
+        _otlpConfigurationService.Dispose();
+
+        // Do not dispose _sdkLogger to avoid potential EventListener conflicts.
+        // Note: EventPipe-based samplers (GCSamplerNetCore, ThreadStatsSampler) are automatically
+        // disabled when OpenTelemetry metrics are enabled (see DefaultConfiguration.EventListenerSamplersEnabled),
+        // which prevents conflicts. However, we still avoid disposing the logger as a defensive measure.
+        // EventListener has singleton semantics per EventSource - disposing can disrupt subscriptions.
+        // The SDK logger is lightweight and will be cleaned up when the AppDomain unloads.
+        // See: https://github.com/newrelic/newrelic-dotnet-agent/issues/234
+        if (_sdkLogger != null)
+        {
+            // _sdkLogger.Dispose(); // Intentionally not disposing - see comment above
+            _sdkLogger = null;
+        }
+    }
+
+    public override void Dispose()
+    {
+        Stop();
+        base.Dispose();
     }
 }

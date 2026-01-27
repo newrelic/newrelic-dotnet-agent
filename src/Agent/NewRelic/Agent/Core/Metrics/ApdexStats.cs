@@ -4,23 +4,22 @@
 using System;
 using NewRelic.Agent.Extensions.SystemExtensions;
 
-namespace NewRelic.Agent.Core.Metrics
+namespace NewRelic.Agent.Core.Metrics;
+
+public static class ApdexStats
 {
-    public static class ApdexStats
+    private const string ApdexPerfZoneSatisfying = "S";
+    private const string ApdexPerfZoneTolerating = "T";
+    private const string ApdexPerfZoneFrustrating = "F";
+
+    public static string GetApdexPerfZoneOrNull(TimeSpan? responseTime, TimeSpan? apdexT)
     {
-        private const string ApdexPerfZoneSatisfying = "S";
-        private const string ApdexPerfZoneTolerating = "T";
-        private const string ApdexPerfZoneFrustrating = "F";
+        if (responseTime == null || apdexT == null)
+            return null;
 
-        public static string GetApdexPerfZoneOrNull(TimeSpan? responseTime, TimeSpan? apdexT)
-        {
-            if (responseTime == null || apdexT == null)
-                return null;
+        if (responseTime.Value.Ticks <= apdexT.Value.Ticks)
+            return ApdexPerfZoneSatisfying;
 
-            if (responseTime.Value.Ticks <= apdexT.Value.Ticks)
-                return ApdexPerfZoneSatisfying;
-
-            return responseTime.Value.Ticks <= apdexT.Value.Multiply(4).Ticks ? ApdexPerfZoneTolerating : ApdexPerfZoneFrustrating;
-        }
+        return responseTime.Value.Ticks <= apdexT.Value.Multiply(4).Ticks ? ApdexPerfZoneTolerating : ApdexPerfZoneFrustrating;
     }
 }

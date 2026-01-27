@@ -5,32 +5,31 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 
-namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
+namespace NewRelic.Agent.Core.Transformers.TransactionTransformer;
+
+public interface ITransactionEventMaker
 {
-    public interface ITransactionEventMaker
+    TransactionEventWireModel GetTransactionEvent(ImmutableTransaction immutableTransaction, IAttributeValueCollection attributes);
+}
+
+public class TransactionEventMaker : ITransactionEventMaker
+{
+    private readonly IAttributeDefinitionService _attribDefSvc;
+    private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
+
+    public TransactionEventMaker(IAttributeDefinitionService attribDefSvc)
     {
-        TransactionEventWireModel GetTransactionEvent(ImmutableTransaction immutableTransaction, IAttributeValueCollection attributes);
+        _attribDefSvc = attribDefSvc;
     }
 
-    public class TransactionEventMaker : ITransactionEventMaker
+    public TransactionEventWireModel GetTransactionEvent(ImmutableTransaction immutableTransaction, IAttributeValueCollection attribValues)
     {
-        private readonly IAttributeDefinitionService _attribDefSvc;
-        private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
+        var transactionMetadata = immutableTransaction.TransactionMetadata;
+        var isSynthetics = transactionMetadata.IsSynthetics;
+        var priority = immutableTransaction.Priority;
 
-        public TransactionEventMaker(IAttributeDefinitionService attribDefSvc)
-        {
-            _attribDefSvc = attribDefSvc;
-        }
+        _attribDefs.GetTypeAttribute(TypeAttributeValue.Transaction).TrySetDefault(attribValues);
 
-        public TransactionEventWireModel GetTransactionEvent(ImmutableTransaction immutableTransaction, IAttributeValueCollection attribValues)
-        {
-            var transactionMetadata = immutableTransaction.TransactionMetadata;
-            var isSynthetics = transactionMetadata.IsSynthetics;
-            var priority = immutableTransaction.Priority;
-
-            _attribDefs.GetTypeAttribute(TypeAttributeValue.Transaction).TrySetDefault(attribValues);
-
-            return new TransactionEventWireModel(attribValues, isSynthetics, priority);
-        }
+        return new TransactionEventWireModel(attribValues, isSynthetics, priority);
     }
 }

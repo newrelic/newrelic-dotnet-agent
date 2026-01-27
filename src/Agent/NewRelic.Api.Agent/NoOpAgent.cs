@@ -3,19 +3,18 @@
 
 using System.Collections.Generic;
 
-namespace NewRelic.Api.Agent
+namespace NewRelic.Api.Agent;
+
+internal class NoOpAgent : IAgent
 {
-    internal class NoOpAgent : IAgent
-    {
-        private static ITransaction _noOpTransaction = new NoOpTransaction();
-        private static ITraceMetadata _noOpTraceMetadata = new NoOpTraceMetadata();
+    private static ITransaction _noOpTransaction = new NoOpTransaction();
+    private static ITraceMetadata _noOpTraceMetadata = new NoOpTraceMetadata();
 
-        public ITransaction CurrentTransaction => _noOpTransaction;
+    public ITransaction CurrentTransaction => _noOpTransaction;
 
-        public ISpan CurrentSpan => _noOpTransaction.CurrentSpan;
+    public ISpan CurrentSpan => _noOpTransaction.CurrentSpan;
 
-        ITraceMetadata IAgent.TraceMetadata => _noOpTraceMetadata;
+    ITraceMetadata IAgent.TraceMetadata => _noOpTraceMetadata;
 
-        public Dictionary<string, string> GetLinkingMetadata() => new Dictionary<string, string>();
-    }
+    public Dictionary<string, string> GetLinkingMetadata() => new Dictionary<string, string>();
 }

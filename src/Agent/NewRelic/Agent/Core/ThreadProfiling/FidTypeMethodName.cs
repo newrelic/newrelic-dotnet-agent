@@ -4,15 +4,14 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace NewRelic.Agent.Core.ThreadProfiling
+namespace NewRelic.Agent.Core.ThreadProfiling;
+
+[StructLayout(LayoutKind.Sequential)]
+public class FidTypeMethodName
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public class FidTypeMethodName
-    {
-        public UIntPtr FunctionID;
-        [MarshalAs(UnmanagedType.LPWStr)]
-        public string TypeName;
-        [MarshalAs(UnmanagedType.LPWStr)]
-        public string MethodName;
-    };
-}
+    public UIntPtr FunctionID;
+    [MarshalAs(UnmanagedType.LPWStr)]
+    public string TypeName;
+    [MarshalAs(UnmanagedType.LPWStr)]
+    public string MethodName;
+};

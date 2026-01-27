@@ -4,12 +4,11 @@
 using System;
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.Labels
-{
-    public interface ILabelsService : IDisposable
-    {
-        IEnumerable<Label> Labels { get; }
+namespace NewRelic.Agent.Core.Labels;
 
-        IEnumerable<Label> GetFilteredLabels(IEnumerable<string> labelsToExclude);
-    }
+public interface ILabelsService : IDisposable
+{
+    IEnumerable<Label> Labels { get; }
+
+    IEnumerable<Label> GetFilteredLabels(IEnumerable<string> labelsToExclude);
 }

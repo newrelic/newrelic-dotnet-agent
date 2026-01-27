@@ -6,19 +6,18 @@ using NewRelic.Agent.Core.Utilities;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace NewRelic.Agent.Core
+namespace NewRelic.Agent.Core.Logging;
+
+/// <summary>
+/// Formats the current UTC time for logging in the agent
+/// </summary>
+[NrExcludeFromCodeCoverage]
+public class UTCTimestampEnricher : ILogEventEnricher
 {
-    /// <summary>
-    /// Formats the current UTC time for logging in the agent
-    /// </summary>
-    [NrExcludeFromCodeCoverage]
-    public class UTCTimestampEnricher : ILogEventEnricher
+    public const string UTCTimestampPropertyName = "UTCTimestamp";
+    public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
-        public const string UTCTimestampPropertyName = "UTCTimestamp";
-        public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
-        {
-            logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(UTCTimestampPropertyName,
-                $"{DateTimeOffset.UtcNow:yyy-MM-dd HH:mm:ss,fff}"));
-        }
+        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(UTCTimestampPropertyName,
+            $"{DateTimeOffset.UtcNow:yyy-MM-dd HH:mm:ss,fff}"));
     }
 }

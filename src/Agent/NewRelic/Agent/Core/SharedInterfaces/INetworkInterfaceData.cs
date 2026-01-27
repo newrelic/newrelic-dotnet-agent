@@ -4,24 +4,23 @@
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
 
-namespace NewRelic.Agent.Core.SharedInterfaces
+namespace NewRelic.Agent.Core.SharedInterfaces;
+
+public interface INetworkInterfaceData
 {
-    public interface INetworkInterfaceData
+    string DnsSuffix { get; }
+    ICollection<UnicastIPAddressInformation> UnicastIPAddresses { get; }
+}
+
+public class NetworkInterfaceData : INetworkInterfaceData
+{
+    public NetworkInterfaceData(string dnsSuffix, ICollection<UnicastIPAddressInformation> ipAddresses)
     {
-        string DnsSuffix { get; }
-        ICollection<UnicastIPAddressInformation> UnicastIPAddresses { get; }
+        DnsSuffix = dnsSuffix;
+        UnicastIPAddresses = ipAddresses;
     }
 
-    public class NetworkInterfaceData : INetworkInterfaceData
-    {
-        public NetworkInterfaceData(string dnsSuffix, ICollection<UnicastIPAddressInformation> ipAddresses)
-        {
-            DnsSuffix = dnsSuffix;
-            UnicastIPAddresses = ipAddresses;
-        }
+    public string DnsSuffix { get; private set; }
 
-        public string DnsSuffix { get; private set; }
-
-        public ICollection<UnicastIPAddressInformation> UnicastIPAddresses { get; private set; }
-    }
+    public ICollection<UnicastIPAddressInformation> UnicastIPAddresses { get; private set; }
 }

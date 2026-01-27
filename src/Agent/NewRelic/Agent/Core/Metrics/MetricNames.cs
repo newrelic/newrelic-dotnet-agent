@@ -1,17 +1,16 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Text;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Extensions.Parsing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Metrics;
 
