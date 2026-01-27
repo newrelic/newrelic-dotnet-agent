@@ -3,12 +3,11 @@
 
 using System;
 
-namespace NewRelic.Agent.Api.Experimental
-{
-    public interface ISimpleSchedulingService
-    {
-        void StartExecuteEvery(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null);
+namespace NewRelic.Agent.Api.Experimental;
 
-        void StopExecuting(Action action);
-    }
+public interface ISimpleSchedulingService
+{
+    void StartExecuteEvery(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null);
+
+    void StopExecuting(Action action);
 }

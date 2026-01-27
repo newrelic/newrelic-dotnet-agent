@@ -7,170 +7,169 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-namespace NewRelic.Agent.Extensions.SystemExtensions
+namespace NewRelic.Agent.Extensions.SystemExtensions;
+
+public static class StringExtensions
 {
-    public static class StringExtensions
+    public static string TruncateUnicodeStringByLength(this string value, int maxLength)
     {
-        public static string TruncateUnicodeStringByLength(this string value, int maxLength)
+        if (value == null)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException("value");
-            }
-
-            if (maxLength < 0)
-            {
-                throw new ArgumentOutOfRangeException(string.Format("maxLength must be positive.  value: {0}  maxLength: {1}",
-                    value, maxLength));
-            }
-
-            if (value.Length <= maxLength)
-            {
-                return value;
-            }
-
-            var textElements = new StringInfo(value);
-            if (textElements.LengthInTextElements <= maxLength)
-                return value;
-
-            return textElements.SubstringByTextElements(0, maxLength);
+            throw new ArgumentNullException("value");
         }
 
-        public static string TruncateUnicodeStringByBytes(this string value, uint maxBytes)
+        if (maxLength < 0)
         {
-            TruncateUnicodeStringByBytes(value, maxBytes, out var result);
-            return result;
+            throw new ArgumentOutOfRangeException(string.Format("maxLength must be positive.  value: {0}  maxLength: {1}",
+                value, maxLength));
         }
 
-        public static int SizeBytes(this string value)
+        if (value.Length <= maxLength)
         {
-            if(value == null)
-            {
-                return 0;
-            }
-
-            return Encoding.UTF8.GetByteCount(value);
+            return value;
         }
 
-        public static bool TruncateUnicodeStringByBytes(this string value, uint maxBytes, out string resultValue)
+        var textElements = new StringInfo(value);
+        if (textElements.LengthInTextElements <= maxLength)
+            return value;
+
+        return textElements.SubstringByTextElements(0, maxLength);
+    }
+
+    public static string TruncateUnicodeStringByBytes(this string value, uint maxBytes)
+    {
+        TruncateUnicodeStringByBytes(value, maxBytes, out var result);
+        return result;
+    }
+
+    public static int SizeBytes(this string value)
+    {
+        if(value == null)
         {
-            resultValue = value;
-
-            if (string.IsNullOrEmpty(value))
-            {
-                return false;
-            }
-
-            if (maxBytes == 0)
-            {
-                resultValue = string.Empty;
-                return value.Length > 0;
-            }
-
-            if (Encoding.UTF8.GetByteCount(value) <= maxBytes)
-            {
-                return false;
-            }
-
-            var bytes = new byte[maxBytes];
-            var chars = value.ToCharArray();
-
-            try
-            {
-                Encoding.UTF8.GetEncoder().Convert(chars, 0, chars.Length,
-                    bytes, 0, (int)maxBytes,
-                    true, out int charsUsed, out int _, out bool _);
-                resultValue = new string(chars, 0, charsUsed);
-                return true;
-            }
-            //In the case when maxBytes is less than the size of the first character in the input string,
-            //the Encoder.Convert() method will throw buffer is too small exception. In this case, we want
-            //the method to return an empty string instead.
-            catch (ArgumentException)
-            {
-                resultValue = string.Empty;
-                return value.Length > 0;
-            }
+            return 0;
         }
 
-        public static bool ContainsAny(this string source, IEnumerable<string> searchTargets, StringComparison comparison = StringComparison.InvariantCultureIgnoreCase)
-        {
-            if (source == null)
-                return false;
-            if (searchTargets == null)
-                return false;
+        return Encoding.UTF8.GetByteCount(value);
+    }
 
-            return searchTargets.Any(target => target != null && source.IndexOf(target, comparison) > -1);
+    public static bool TruncateUnicodeStringByBytes(this string value, uint maxBytes, out string resultValue)
+    {
+        resultValue = value;
+
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
         }
 
-        public static string TrimAfterAChar(this string source, char token)
+        if (maxBytes == 0)
         {
-            if (source == null)
-                throw new ArgumentNullException("source");
-
-            var stopIndex = source.IndexOf(token);
-            var result = stopIndex == -1 ? source : source.Substring(0, stopIndex);
-
-            return result;
+            resultValue = string.Empty;
+            return value.Length > 0;
         }
 
-        public static string TrimEnd(this string source, char trimChar, int maxCharactersToTrim)
+        if (Encoding.UTF8.GetByteCount(value) <= maxBytes)
         {
-            // Traverse backward through string skipping trimChars until maxCharactersToTrim is hit
-            var index = source.Length - 1;
-            while (maxCharactersToTrim > 0 && source[index] == trimChar)
-            {
-                maxCharactersToTrim--;
-                index--;
-            }
-
-            return source.Substring(0, index + 1);
+            return false;
         }
 
-        public static string EnsureLeading(this string source, string leading)
+        var bytes = new byte[maxBytes];
+        var chars = value.ToCharArray();
+
+        try
         {
-            if (leading == null)
-                return source;
+            Encoding.UTF8.GetEncoder().Convert(chars, 0, chars.Length,
+                bytes, 0, (int)maxBytes,
+                true, out int charsUsed, out int _, out bool _);
+            resultValue = new string(chars, 0, charsUsed);
+            return true;
+        }
+        //In the case when maxBytes is less than the size of the first character in the input string,
+        //the Encoder.Convert() method will throw buffer is too small exception. In this case, we want
+        //the method to return an empty string instead.
+        catch (ArgumentException)
+        {
+            resultValue = string.Empty;
+            return value.Length > 0;
+        }
+    }
 
-            if (source.StartsWith(leading))
-                return source;
+    public static bool ContainsAny(this string source, IEnumerable<string> searchTargets, StringComparison comparison = StringComparison.InvariantCultureIgnoreCase)
+    {
+        if (source == null)
+            return false;
+        if (searchTargets == null)
+            return false;
 
-            return leading + source;
+        return searchTargets.Any(target => target != null && source.IndexOf(target, comparison) > -1);
+    }
+
+    public static string TrimAfterAChar(this string source, char token)
+    {
+        if (source == null)
+            throw new ArgumentNullException("source");
+
+        var stopIndex = source.IndexOf(token);
+        var result = stopIndex == -1 ? source : source.Substring(0, stopIndex);
+
+        return result;
+    }
+
+    public static string TrimEnd(this string source, char trimChar, int maxCharactersToTrim)
+    {
+        // Traverse backward through string skipping trimChars until maxCharactersToTrim is hit
+        var index = source.Length - 1;
+        while (maxCharactersToTrim > 0 && source[index] == trimChar)
+        {
+            maxCharactersToTrim--;
+            index--;
         }
 
-        public static string EnsureTrailing(this string source, string trailing)
+        return source.Substring(0, index + 1);
+    }
+
+    public static string EnsureLeading(this string source, string leading)
+    {
+        if (leading == null)
+            return source;
+
+        if (source.StartsWith(leading))
+            return source;
+
+        return leading + source;
+    }
+
+    public static string EnsureTrailing(this string source, string trailing)
+    {
+        if (trailing == null)
+            return source;
+
+        if (source.EndsWith(trailing))
+            return source;
+
+        return source + trailing;
+    }
+
+    public static string CapitalizeWord(this string word)
+    {
+        if (string.IsNullOrEmpty(word))
         {
-            if (trailing == null)
-                return source;
-
-            if (source.EndsWith(trailing))
-                return source;
-
-            return source + trailing;
+            return word;
         }
-
-        public static string CapitalizeWord(this string word)
+        string result = char.ToUpper(word[0]).ToString();
+        if (word.Length > 1)
         {
-            if (string.IsNullOrEmpty(word))
-            {
-                return word;
-            }
-            string result = char.ToUpper(word[0]).ToString();
-            if (word.Length > 1)
-            {
-                result += word.Substring(1);
-            }
-            return result;
+            result += word.Substring(1);
         }
+        return result;
+    }
 
-        public static string CapitalizeEachWord(this string source, char separator = ' ', bool removeSeparator = true)
+    public static string CapitalizeEachWord(this string source, char separator = ' ', bool removeSeparator = true)
+    {
+        var words = source.Split(separator);
+        for (int idx = 0; idx < words.Length; idx++)
         {
-            var words = source.Split(separator);
-            for (int idx = 0; idx < words.Length; idx++)
-            {
-                words[idx] = CapitalizeWord(words[idx]);
-            }
-            return removeSeparator ? string.Join("", words) : string.Join(separator.ToString(), words);
+            words[idx] = CapitalizeWord(words[idx]);
         }
+        return removeSeparator ? string.Join("", words) : string.Join(separator.ToString(), words);
     }
 }

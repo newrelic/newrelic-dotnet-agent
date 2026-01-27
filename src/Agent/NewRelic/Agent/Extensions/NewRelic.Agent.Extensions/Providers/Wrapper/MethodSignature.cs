@@ -1,16 +1,15 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Extensions.Providers.Wrapper
+namespace NewRelic.Agent.Extensions.Providers.Wrapper;
+
+public class MethodSignature
 {
-    public class MethodSignature
+    public string MethodName;
+    public string ParameterSignature;
+    public MethodSignature(string methodName, string parameterSignature = null)
     {
-        public string MethodName;
-        public string ParameterSignature;
-        public MethodSignature(string methodName, string parameterSignature = null)
-        {
-            MethodName = methodName;
-            ParameterSignature = parameterSignature;
-        }
+        MethodName = methodName;
+        ParameterSignature = parameterSignature;
     }
 }

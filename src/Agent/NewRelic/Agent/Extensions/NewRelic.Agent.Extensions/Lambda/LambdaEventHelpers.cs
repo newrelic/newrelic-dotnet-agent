@@ -5,9 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.JsonConverters;
 using NewRelic.Agent.Extensions.JsonConverters.LambdaPayloads;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Extensions.Lambda;
 

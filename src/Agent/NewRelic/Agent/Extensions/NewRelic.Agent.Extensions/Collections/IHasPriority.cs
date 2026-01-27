@@ -1,12 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Extensions.Collections
+namespace NewRelic.Agent.Extensions.Collections;
+
+public interface IHasPriority
 {
-
-    public interface IHasPriority
-    {
-        float Priority { get; }
-    }
-
+    float Priority { get; }
 }

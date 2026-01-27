@@ -5,61 +5,60 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Extensions.JsonConverters.BedrockPayloads
+namespace NewRelic.Agent.Extensions.JsonConverters.BedrockPayloads;
+
+public class CohereCommandRequestPayload : IRequestPayload
 {
-    public class CohereCommandRequestPayload : IRequestPayload
+    [JsonProperty("prompt")]
+    public string Prompt { get; set; }
+
+    [JsonProperty("temperature")]
+    public float Temperature { get; set; }
+
+    [JsonProperty("max_tokens")]
+    public int MaxTokens { get; set; }
+}
+
+public class CohereCommandResponsePayload : IResponsePayload
+{
+    private ResponseData[] _responses;
+    public ResponseData[] Responses
     {
-        [JsonProperty("prompt")]
-        public string Prompt { get; set; }
-
-        [JsonProperty("temperature")]
-        public float Temperature { get; set; }
-
-        [JsonProperty("max_tokens")]
-        public int MaxTokens { get; set; }
+        get
+        {
+            return _responses ??= Generations.Select(g => new ResponseData { Content = g.Text, TokenCount = null }).ToArray();
+        }
+        set { }
     }
 
-    public class CohereCommandResponsePayload : IResponsePayload
+    // Cohere Command does not expose token counts
+    public int? PromptTokenCount
     {
-        private ResponseData[] _responses;
-        public ResponseData[] Responses
+        get
         {
-            get
-            {
-                return _responses ??= Generations.Select(g => new ResponseData { Content = g.Text, TokenCount = null }).ToArray();
-            }
-            set { }
+            return null;
         }
+        set { }
+    }
 
-        // Cohere Command does not expose token counts
-        public int? PromptTokenCount
+    public string StopReason
+    {
+        get
         {
-            get
-            {
-                return null;
-            }
-            set { }
+            return Generations[0].FinishReason;
         }
+        set { }
+    }
 
-        public string StopReason
-        {
-            get
-            {
-                return Generations[0].FinishReason;
-            }
-            set { }
-        }
+    [JsonProperty("generations")]
+    public List<Generation> Generations { get; set; }
 
-        [JsonProperty("generations")]
-        public List<Generation> Generations { get; set; }
+    public partial class Generation
+    {
+        [JsonProperty("finish_reason")]
+        public string FinishReason { get; set; }
 
-        public partial class Generation
-        {
-            [JsonProperty("finish_reason")]
-            public string FinishReason { get; set; }
-
-            [JsonProperty("text")]
-            public string Text { get; set; }
-        }
+        [JsonProperty("text")]
+        public string Text { get; set; }
     }
 }

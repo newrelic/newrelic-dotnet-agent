@@ -1,30 +1,29 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Extensions.JsonConverters.BedrockPayloads
+namespace NewRelic.Agent.Extensions.JsonConverters.BedrockPayloads;
+
+public interface IRequestPayload
 {
-    public interface IRequestPayload
-    {
-        string Prompt { get; set; }
+    string Prompt { get; set; }
 
-        float Temperature { get; set; }
+    float Temperature { get; set; }
 
-        int MaxTokens { get; set; }
-    }
+    int MaxTokens { get; set; }
+}
 
-    public interface IResponsePayload
-    {
-        ResponseData[] Responses { get; set; }
+public interface IResponsePayload
+{
+    ResponseData[] Responses { get; set; }
 
-        int? PromptTokenCount { get; set; }
+    int? PromptTokenCount { get; set; }
 
-        string StopReason { get; set; }
-    }
+    string StopReason { get; set; }
+}
 
-    public class ResponseData
-    {
-        public string Content { get; set; }
+public class ResponseData
+{
+    public string Content { get; set; }
 
-        public int? TokenCount { get; set; }
-    }
+    public int? TokenCount { get; set; }
 }

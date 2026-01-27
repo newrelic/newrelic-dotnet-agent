@@ -5,68 +5,67 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic
+namespace NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
+
+public class ForEachEnumerable<T> : IEnumerable<T>
 {
-    public class ForEachEnumerable<T> : IEnumerable<T>
+    private readonly IEnumerable<T> _enumerable;
+    private readonly Action<T> _action;
+
+    public ForEachEnumerable(IEnumerable<T> enumerable, Action<T> action)
     {
-        private readonly IEnumerable<T> _enumerable;
+        _enumerable = enumerable;
+        _action = action;
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        return new ForEachEnumerator(_enumerable.GetEnumerator(), _action);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    private class ForEachEnumerator : IEnumerator<T>
+    {
+        private readonly IEnumerator<T> _enumerator;
         private readonly Action<T> _action;
 
-        public ForEachEnumerable(IEnumerable<T> enumerable, Action<T> action)
+        public ForEachEnumerator(IEnumerator<T> enumerator, Action<T> action)
         {
-            _enumerable = enumerable;
+            _enumerator = enumerator;
             _action = action;
         }
 
-        public IEnumerator<T> GetEnumerator()
+        public T Current
         {
-            return new ForEachEnumerator(_enumerable.GetEnumerator(), _action);
+            get
+            {
+                _action(_enumerator.Current);
+                return _enumerator.Current;
+            }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        public void Dispose()
         {
-            return GetEnumerator();
+            _enumerator.Dispose();
         }
 
-        private class ForEachEnumerator : IEnumerator<T>
+        object IEnumerator.Current
         {
-            private readonly IEnumerator<T> _enumerator;
-            private readonly Action<T> _action;
+            get { return Current; }
+        }
 
-            public ForEachEnumerator(IEnumerator<T> enumerator, Action<T> action)
-            {
-                _enumerator = enumerator;
-                _action = action;
-            }
+        public bool MoveNext()
+        {
+            return _enumerator.MoveNext();
+        }
 
-            public T Current
-            {
-                get
-                {
-                    _action(_enumerator.Current);
-                    return _enumerator.Current;
-                }
-            }
-
-            public void Dispose()
-            {
-                _enumerator.Dispose();
-            }
-
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
-
-            public bool MoveNext()
-            {
-                return _enumerator.MoveNext();
-            }
-
-            public void Reset()
-            {
-                _enumerator.Reset();
-            }
+        public void Reset()
+        {
+            _enumerator.Reset();
         }
     }
 }

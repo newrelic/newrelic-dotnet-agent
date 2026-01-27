@@ -7,163 +7,162 @@ using System.Collections.Generic;
 using System.Threading;
 using NewRelic.Agent.Extensions.SystemExtensions.Threading;
 
-namespace NewRelic.Agent.Extensions.Collections
+namespace NewRelic.Agent.Extensions.Collections;
+
+public class ConcurrentList<T> : IList<T>
 {
-    public class ConcurrentList<T> : IList<T>
+    private readonly IList<T> _list = new List<T>();
+
+    private readonly Func<IDisposable> _readLock;
+
+    private readonly Func<IDisposable> _writeLock;
+
+    public ConcurrentList()
     {
-        private readonly IList<T> _list = new List<T>();
+        var theLock = new ReaderWriterLockSlim();
+        _readLock = theLock.ReusableDisposableReadLock();
+        _writeLock = theLock.ReusableDisposableWriteLock();
+    }
 
-        private readonly Func<IDisposable> _readLock;
+    public ConcurrentList(IEnumerable<T> enumerable)
+    {
+        if (enumerable == null)
+            return;
 
-        private readonly Func<IDisposable> _writeLock;
+        _list = new List<T>(enumerable);
+    }
 
-        public ConcurrentList()
+    public IEnumerator<T> GetEnumerator()
+    {
+        using (_readLock())
         {
-            var theLock = new ReaderWriterLockSlim();
-            _readLock = theLock.ReusableDisposableReadLock();
-            _writeLock = theLock.ReusableDisposableWriteLock();
+            return new List<T>(_list).GetEnumerator();
         }
+    }
 
-        public ConcurrentList(IEnumerable<T> enumerable)
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        using (_readLock())
         {
-            if (enumerable == null)
-                return;
-
-            _list = new List<T>(enumerable);
+            return new List<T>(_list).GetEnumerator();
         }
+    }
 
-        public IEnumerator<T> GetEnumerator()
+    public void Add(T item)
+    {
+        using (_writeLock())
+        {
+            _list.Add(item);
+        }
+    }
+
+    /// <summary>
+    /// Adds an item to the list and returns its index.
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns>The index of the item</returns>
+    public int AddAndReturnIndex(T item)
+    {
+        using (_writeLock())
+        {
+            var id = _list.Count;
+            _list.Add(item);
+            return id;
+        }
+    }
+
+    public void Clear()
+    {
+        using (_writeLock())
+        {
+            _list.Clear();
+        }
+    }
+
+    public bool Contains(T item)
+    {
+        using (_readLock())
+        {
+            return _list.Contains(item);
+        }
+    }
+
+    public void CopyTo(T[] array, int arrayIndex)
+    {
+        using (_readLock())
+        {
+            _list.CopyTo(array, arrayIndex);
+        }
+    }
+
+    public bool Remove(T item)
+    {
+        using (_writeLock())
+        {
+            return _list.Remove(item);
+        }
+    }
+
+    public int Count
+    {
+        get
         {
             using (_readLock())
             {
-                return new List<T>(_list).GetEnumerator();
+                return _list.Count;
             }
         }
+    }
 
-        IEnumerator IEnumerable.GetEnumerator()
+    public bool IsReadOnly
+    {
+        get
         {
             using (_readLock())
             {
-                return new List<T>(_list).GetEnumerator();
+                return _list.IsReadOnly;
             }
         }
+    }
 
-        public void Add(T item)
+    public int IndexOf(T item)
+    {
+        using (_readLock())
         {
-            using (_writeLock())
-            {
-                _list.Add(item);
-            }
+            return _list.IndexOf(item);
         }
+    }
 
-        /// <summary>
-        /// Adds an item to the list and returns its index.
-        /// </summary>
-        /// <param name="item"></param>
-        /// <returns>The index of the item</returns>
-        public int AddAndReturnIndex(T item)
+    public void Insert(int index, T item)
+    {
+        using (_writeLock())
         {
-            using (_writeLock())
-            {
-                var id = _list.Count;
-                _list.Add(item);
-                return id;
-            }
+            _list.Insert(index, item);
         }
+    }
 
-        public void Clear()
+    public void RemoveAt(int index)
+    {
+        using (_writeLock())
         {
-            using (_writeLock())
-            {
-                _list.Clear();
-            }
+            _list.RemoveAt(index);
         }
+    }
 
-        public bool Contains(T item)
+    public T this[int index]
+    {
+        get
         {
             using (_readLock())
             {
-                return _list.Contains(item);
+                return _list[index];
             }
         }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            using (_readLock())
-            {
-                _list.CopyTo(array, arrayIndex);
-            }
-        }
-
-        public bool Remove(T item)
+        set
         {
             using (_writeLock())
             {
-                return _list.Remove(item);
-            }
-        }
-
-        public int Count
-        {
-            get
-            {
-                using (_readLock())
-                {
-                    return _list.Count;
-                }
-            }
-        }
-
-        public bool IsReadOnly
-        {
-            get
-            {
-                using (_readLock())
-                {
-                    return _list.IsReadOnly;
-                }
-            }
-        }
-
-        public int IndexOf(T item)
-        {
-            using (_readLock())
-            {
-                return _list.IndexOf(item);
-            }
-        }
-
-        public void Insert(int index, T item)
-        {
-            using (_writeLock())
-            {
-                _list.Insert(index, item);
-            }
-        }
-
-        public void RemoveAt(int index)
-        {
-            using (_writeLock())
-            {
-                _list.RemoveAt(index);
-            }
-        }
-
-        public T this[int index]
-        {
-            get
-            {
-                using (_readLock())
-                {
-                    return _list[index];
-                }
-            }
-            set
-            {
-                using (_writeLock())
-                {
-                    _list[index] = value;
-                }
+                _list[index] = value;
             }
         }
     }

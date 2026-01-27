@@ -4,11 +4,10 @@
 using System;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Agent.Api.Experimental
+namespace NewRelic.Agent.Api.Experimental;
+
+public interface IDatabaseService : IDisposable
 {
-    public interface IDatabaseService : IDisposable
-    {
-        long GetSqlId(string sql, DatastoreVendor vendor);
-        string GetObfuscatedSql(string sql, DatastoreVendor vendor);
-    }
+    long GetSqlId(string sql, DatastoreVendor vendor);
+    string GetObfuscatedSql(string sql, DatastoreVendor vendor);
 }

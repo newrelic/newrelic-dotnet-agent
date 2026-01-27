@@ -5,84 +5,83 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Extensions.JsonConverters.BedrockPayloads
+namespace NewRelic.Agent.Extensions.JsonConverters.BedrockPayloads;
+
+public class JurassicRequestPayload : IRequestPayload
 {
-    public class JurassicRequestPayload : IRequestPayload
+    [JsonProperty("prompt")]
+    public string Prompt { get; set; }
+
+    [JsonProperty("temperature")]
+    public float Temperature { get; set; }
+
+    [JsonProperty("maxTokens")]
+    public int MaxTokens { get; set; }
+}
+
+public class JurassicResponsePayload : IResponsePayload
+{
+    private ResponseData[] _responses;
+    public ResponseData[] Responses
     {
-        [JsonProperty("prompt")]
-        public string Prompt { get; set; }
-
-        [JsonProperty("temperature")]
-        public float Temperature { get; set; }
-
-        [JsonProperty("maxTokens")]
-        public int MaxTokens { get; set; }
+        get
+        {
+            return _responses ??= Completions.Select(c => new ResponseData { Content = c.Data.Text, TokenCount = c.Data.Tokens.Count }).ToArray();
+        }
+        set { }
     }
 
-    public class JurassicResponsePayload : IResponsePayload
+    public int? PromptTokenCount
     {
-        private ResponseData[] _responses;
-        public ResponseData[] Responses
+        get
         {
-            get
-            {
-                return _responses ??= Completions.Select(c => new ResponseData { Content = c.Data.Text, TokenCount = c.Data.Tokens.Count }).ToArray();
-            }
-            set { }
+            return Prompt.Tokens.Count;
         }
+        set { }
+    }
 
-        public int? PromptTokenCount
+    public string StopReason
+    {
+        get
         {
-            get
-            {
-                return Prompt.Tokens.Count;
-            }
-            set { }
+            return Completions[0].FinishReason.Reason;
         }
+        set { }
+    }
 
-        public string StopReason
-        {
-            get
-            {
-                return Completions[0].FinishReason.Reason;
-            }
-            set { }
-        }
+    [JsonProperty("prompt")]
+    public PromptData Prompt { get; set; }
 
-        [JsonProperty("prompt")]
-        public PromptData Prompt { get; set; }
+    public class PromptData
+    {
+        [JsonProperty("tokens")]
+        public List<object> Tokens { get; set; }
+    }
 
-        public class PromptData
-        {
-            [JsonProperty("tokens")]
-            public List<object> Tokens { get; set; }
-        }
+    [JsonProperty("completions")]
+    public List<Completion> Completions { get; set; }
 
-        [JsonProperty("completions")]
-        public List<Completion> Completions { get; set; }
+    public class Completion
+    {
+        [JsonProperty("data")]
+        public Data Data { get; set; }
 
-        public class Completion
-        {
-            [JsonProperty("data")]
-            public Data Data { get; set; }
+        [JsonProperty("finishReason")]
+        public FinishReason FinishReason { get; set; }
+    }
 
-            [JsonProperty("finishReason")]
-            public FinishReason FinishReason { get; set; }
-        }
+    public class Data
+    {
+        [JsonProperty("text")]
+        public string Text { get; set; }
 
-        public class Data
-        {
-            [JsonProperty("text")]
-            public string Text { get; set; }
+        [JsonProperty("tokens")]
+        public List<object> Tokens { get; set; }
+    }
 
-            [JsonProperty("tokens")]
-            public List<object> Tokens { get; set; }
-        }
-
-        public class FinishReason
-        {
-            [JsonProperty("reason")]
-            public string Reason { get; set; }
-        }
+    public class FinishReason
+    {
+        [JsonProperty("reason")]
+        public string Reason { get; set; }
     }
 }

@@ -4,23 +4,22 @@
 using System;
 using NewRelic.Agent.Api;
 
-namespace NewRelic.Agent.Extensions.Api.Experimental
+namespace NewRelic.Agent.Extensions.Api.Experimental;
+
+public interface INewRelicActivity : IDisposable
 {
-    public interface INewRelicActivity : IDisposable
-    {
-        string SpanId { get; }
-        string TraceId { get; }
-        string DisplayName { get; }
-        bool IsStopped { get; }
-        string Id { get; }
+    string SpanId { get; }
+    string TraceId { get; }
+    string DisplayName { get; }
+    bool IsStopped { get; }
+    string Id { get; }
 
-        // can't use a Segment {get; set;} property here because it causes a circular reference between Activity and Segment
-        void SetSegment(ISegment segment);
-        ISegment GetSegment();
+    // can't use a Segment {get; set;} property here because it causes a circular reference between Activity and Segment
+    void SetSegment(ISegment segment);
+    ISegment GetSegment();
 
-        void Start();
+    void Start();
 
-        void Stop();
-        void MakeCurrent();
-    }
+    void Stop();
+    void MakeCurrent();
 }
