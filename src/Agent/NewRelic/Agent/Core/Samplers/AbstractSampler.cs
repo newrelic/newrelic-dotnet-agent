@@ -7,56 +7,55 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core.Samplers
+namespace NewRelic.Agent.Core.Samplers;
+
+public abstract class AbstractSampler : ConfigurationBasedService
 {
-    public abstract class AbstractSampler : ConfigurationBasedService
+    private readonly IScheduler _scheduler;
+    private readonly TimeSpan _frequency;
+
+    protected virtual bool Enabled
     {
-        private readonly IScheduler _scheduler;
-        private readonly TimeSpan _frequency;
-
-        protected virtual bool Enabled
+        get
         {
-            get
-            {
-                return !_configuration.DisableSamplers && !Agent.IsAgentShuttingDown;
-            }
+            return !_configuration.DisableSamplers && !Agent.IsAgentShuttingDown;
+        }
+    }
+
+    protected AbstractSampler(IScheduler scheduler, TimeSpan frequency)
+    {
+        _scheduler = scheduler;
+        _frequency = frequency;
+    }
+
+    public abstract void Sample();
+
+    public override void Dispose()
+    {
+        Stop();
+        base.Dispose();
+    }
+
+    protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+    {
+        Stop();
+        Start();
+    }
+
+    public virtual void Start()
+    {
+        if (!Enabled)
+        {
+            return;
         }
 
-        protected AbstractSampler(IScheduler scheduler, TimeSpan frequency)
-        {
-            _scheduler = scheduler;
-            _frequency = frequency;
-        }
+        // optionalInitialDelay of 1 second allows Samplers to run 1 second after startup
+        _scheduler.ExecuteEvery(Sample, _frequency, TimeSpan.FromSeconds(1));
+    }
 
-        public abstract void Sample();
-
-        public override void Dispose()
-        {
-            Stop();
-            base.Dispose();
-        }
-
-        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
-        {
-            Stop();
-            Start();
-        }
-
-        public virtual void Start()
-        {
-            if (!Enabled)
-            {
-                return;
-            }
-
-            // optionalInitialDelay of 1 second allows Samplers to run 1 second after startup
-            _scheduler.ExecuteEvery(Sample, _frequency, TimeSpan.FromSeconds(1));
-        }
-
-        protected virtual void Stop()
-        {
-            Log.Finest($"Sampler {this.GetType().FullName} has been requested to stop.");
-            _scheduler.StopExecuting(Sample);
-        }
+    protected virtual void Stop()
+    {
+        Log.Finest($"Sampler {this.GetType().FullName} has been requested to stop.");
+        _scheduler.StopExecuting(Sample);
     }
 }

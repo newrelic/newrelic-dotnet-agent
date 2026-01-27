@@ -25,6 +25,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 #endif
 using System.Threading;
+using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.SharedInterfaces;
 using Process = System.Diagnostics.Process;
 

@@ -6,36 +6,35 @@ using System;
 using NewRelic.Agent.Core.WireModels;
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Core.JsonConverters
+namespace NewRelic.Agent.Core.JsonConverters;
+
+public class MetricNameWireModelJsonConverter : JsonConverter<MetricNameWireModel>
 {
-    public class MetricNameWireModelJsonConverter : JsonConverter<MetricNameWireModel>
+    private const string PropertyName = "name";
+    private const string PropertyScope = "scope";
+
+    public override MetricNameWireModel ReadJson(JsonReader reader, Type objectType, MetricNameWireModel existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        private const string PropertyName = "name";
-        private const string PropertyScope = "scope";
+        throw new NotImplementedException();
+    }
 
-        public override MetricNameWireModel ReadJson(JsonReader reader, Type objectType, MetricNameWireModel existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public static void WriteJsonImpl(JsonWriter jsonWriter, MetricNameWireModel value, JsonSerializer serializer)
+    {
+        jsonWriter.WriteStartObject();
+        jsonWriter.WritePropertyName(PropertyName);
+        jsonWriter.WriteValue(value.Name);
+
+        if (!string.IsNullOrEmpty(value.Scope))
         {
-            throw new NotImplementedException();
+            jsonWriter.WritePropertyName(PropertyScope);
+            jsonWriter.WriteValue(value.Scope);
         }
 
-        public static void WriteJsonImpl(JsonWriter jsonWriter, MetricNameWireModel value, JsonSerializer serializer)
-        {
-            jsonWriter.WriteStartObject();
-            jsonWriter.WritePropertyName(PropertyName);
-            jsonWriter.WriteValue(value.Name);
+        jsonWriter.WriteEndObject();
+    }
 
-            if (!string.IsNullOrEmpty(value.Scope))
-            {
-                jsonWriter.WritePropertyName(PropertyScope);
-                jsonWriter.WriteValue(value.Scope);
-            }
-
-            jsonWriter.WriteEndObject();
-        }
-
-        public override void WriteJson(JsonWriter jsonWriter, MetricNameWireModel value, JsonSerializer serializer)
-        {
-            WriteJsonImpl(jsonWriter, value, serializer);
-        }
+    public override void WriteJson(JsonWriter jsonWriter, MetricNameWireModel value, JsonSerializer serializer)
+    {
+        WriteJsonImpl(jsonWriter, value, serializer);
     }
 }

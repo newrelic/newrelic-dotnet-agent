@@ -1,45 +1,44 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using Serilog.Core;
-using Serilog.Events;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Serilog.Core;
+using Serilog.Events;
 
-namespace NewRelic.Agent.Core.Logging
+namespace NewRelic.Agent.Core.Logging;
+
+public class InMemorySink : ILogEventSink, IDisposable
 {
-    public class InMemorySink : ILogEventSink, IDisposable
+    private readonly ConcurrentQueue<LogEvent> _logEvents;
+
+    public InMemorySink()
     {
-        private readonly ConcurrentQueue<LogEvent> _logEvents;
+        _logEvents = new ConcurrentQueue<LogEvent>();
+    }
 
-        public InMemorySink()
-        {
-            _logEvents = new ConcurrentQueue<LogEvent>();
-        }
+    public void Emit(LogEvent logEvent)
+    {
+        _logEvents.Enqueue(logEvent);
+    }
 
-        public void Emit(LogEvent logEvent)
+    public IEnumerable<LogEvent> LogEvents
+    {
+        get
         {
-            _logEvents.Enqueue(logEvent);
+            return _logEvents;
         }
+    }
 
-        public IEnumerable<LogEvent> LogEvents
-        {
-            get
-            {
-                return _logEvents;
-            }
-        }
+    public void Clear()
+    {
+        while (_logEvents.TryDequeue(out _))
+        { }
+    }
 
-        public void Clear()
-        {
-            while (_logEvents.TryDequeue(out _))
-            { }
-        }
-
-        public void Dispose()
-        {
-            Clear();
-        }
+    public void Dispose()
+    {
+        Clear();
     }
 }

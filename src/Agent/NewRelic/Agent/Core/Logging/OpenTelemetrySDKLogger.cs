@@ -6,102 +6,100 @@ using System;
 using System.Diagnostics.Tracing;
 using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core.Logging
+namespace NewRelic.Agent.Core.Logging;
+
+public class OpenTelemetrySDKLogger : EventListener
 {
+    // The OpenTelemetry SDK and documentation has a built in diagnostic logger, all code that wants to be compatible with the
+    // OpenTelemetry SDK diagnostic logger needs to write events to an EventSource that has a name prefixed with "OpenTelemetry-".
+    const string OpenTelemetryEventSourceNamePrefix = "OpenTelemetry-";
 
-    public class OpenTelemetrySDKLogger : EventListener
+    private EventLevel? _eventSourceLevel;
+
+    // We need to configure the EventSource log level outside of the constructor because the OnEventSourceCreated event handler
+    // can be triggered before the constructor completes (after the base constructor completes). For performance reasons, we
+    // only want to subscribe to events written at a level that matches the logging level enabled for our logging library.
+    public EventLevel EventSourceLevel => _eventSourceLevel ??= MapLoggingLevelToEventSourceLevel();
+
+    protected override void OnEventSourceCreated(EventSource eventSource)
     {
-        // The OpenTelemetry SDK and documentation has a built in diagnostic logger, all code that wants to be compatible with the
-        // OpenTelemetry SDK diagnostic logger needs to write events to an EventSource that has a name prefixed with "OpenTelemetry-".
-        const string OpenTelemetryEventSourceNamePrefix = "OpenTelemetry-";
+        // This method can be called before .ctor is finished so we need to ensure that we only access things
+        // on this class that are available before the .ctor completes. For example, the log level is set lazily
+        // using a property and then cached.
 
-        private EventLevel? _eventSourceLevel;
-
-        // We need to configure the EventSource log level outside of the constructor because the OnEventSourceCreated event handler
-        // can be triggered before the constructor completes (after the base constructor completes). For performance reasons, we
-        // only want to subscribe to events written at a level that matches the logging level enabled for our logging library.
-        public EventLevel EventSourceLevel => _eventSourceLevel ??= MapLoggingLevelToEventSourceLevel();
-
-        protected override void OnEventSourceCreated(EventSource eventSource)
+        if (eventSource.Name.StartsWith(OpenTelemetryEventSourceNamePrefix, StringComparison.OrdinalIgnoreCase))
         {
-            // This method can be called before .ctor is finished so we need to ensure that we only access things
-            // on this class that are available before the .ctor completes. For example, the log level is set lazily
-            // using a property and then cached.
+            EnableEvents(eventSource, EventSourceLevel, EventKeywords.All);
+        }
+    }
 
-            if (eventSource.Name.StartsWith(OpenTelemetryEventSourceNamePrefix, StringComparison.OrdinalIgnoreCase))
+    protected override void OnEventWritten(EventWrittenEventArgs eventData)
+    {
+        if (!eventData.EventSource.Name.StartsWith(OpenTelemetryEventSourceNamePrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var formattedMessage = string.Empty;
+        if (eventData.Message != null)
+        {
+            formattedMessage = eventData.Message;
+            if (eventData.Payload != null)
             {
-                EnableEvents(eventSource, EventSourceLevel, EventKeywords.All);
+                // Convert the payload collection to an array to use the string.Format overload that takes an array of objects.
+                var messageArguments = new object[eventData.Payload.Count];
+                eventData.Payload.CopyTo(messageArguments, 0);
+
+                formattedMessage = string.Format(eventData.Message, messageArguments);
             }
         }
 
-        protected override void OnEventWritten(EventWrittenEventArgs eventData)
+        // Map EventSource levels to New Relic agent log levels
+        // EventSource uses standard .NET diagnostics levels; we map them to our agent's LogLevel enum
+        // Reference: LogLevelExtensions.cs maps FINEST→Verbose, DEBUG→Debug, INFO→Information
+        var logLevel = eventData.Level switch
         {
-            if (!eventData.EventSource.Name.StartsWith(OpenTelemetryEventSourceNamePrefix, StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
+            EventLevel.Critical => LogLevel.Error,
+            EventLevel.Error => LogLevel.Error,
+            EventLevel.Warning => LogLevel.Warn,
+            EventLevel.Informational => LogLevel.Debug,
+            EventLevel.LogAlways => LogLevel.Info,
+            EventLevel.Verbose => LogLevel.Finest,
+            _ => LogLevel.Debug
+        };
 
-            var formattedMessage = string.Empty;
-            if (eventData.Message != null)
-            {
-                formattedMessage = eventData.Message;
-                if (eventData.Payload != null)
-                {
-                    // Convert the payload collection to an array to use the string.Format overload that takes an array of objects.
-                    var messageArguments = new object[eventData.Payload.Count];
-                    eventData.Payload.CopyTo(messageArguments, 0);
+        Log.LogMessage(logLevel, "OpenTelemetrySDK: EventSource: '{0}' Message: '{1}'", eventData.EventSource.Name, formattedMessage);
+    }
 
-                    formattedMessage = string.Format(eventData.Message, messageArguments);
-                }
-            }
-
-            // Map EventSource levels to New Relic agent log levels
-            // EventSource uses standard .NET diagnostics levels; we map them to our agent's LogLevel enum
-            // Reference: LogLevelExtensions.cs maps FINEST→Verbose, DEBUG→Debug, INFO→Information
-            var logLevel = eventData.Level switch
-            {
-                EventLevel.Critical => LogLevel.Error,
-                EventLevel.Error => LogLevel.Error,
-                EventLevel.Warning => LogLevel.Warn,
-                EventLevel.Informational => LogLevel.Debug,
-                EventLevel.LogAlways => LogLevel.Info,
-                EventLevel.Verbose => LogLevel.Finest,
-                _ => LogLevel.Debug
-            };
-
-            Log.LogMessage(logLevel, "OpenTelemetrySDK: EventSource: '{0}' Message: '{1}'", eventData.EventSource.Name, formattedMessage);
-        }
-
-        // Map New Relic agent log levels to EventSource levels for subscribing to OpenTelemetry SDK events
+    // Map New Relic agent log levels to EventSource levels for subscribing to OpenTelemetry SDK events
     
-        // EventSource API only has: Verbose, Informational, Warning, Error, Critical, LogAlways
-        // (no equivalent to Serilog.Debug), so we must choose the closest match for each level.
-        private static EventLevel MapLoggingLevelToEventSourceLevel()
+    // EventSource API only has: Verbose, Informational, Warning, Error, Critical, LogAlways
+    // (no equivalent to Serilog.Debug), so we must choose the closest match for each level.
+    private static EventLevel MapLoggingLevelToEventSourceLevel()
+    {
+        if (Log.IsFinestEnabled)
         {
-            if (Log.IsFinestEnabled)
-            {
-                return EventLevel.Verbose;
-            }
-            else if (Log.IsDebugEnabled)
-            {
-                return EventLevel.Informational;
-            }
-            else if (Log.IsInfoEnabled)
-            {
-                return EventLevel.LogAlways;
-            }
-            else if (Log.IsWarnEnabled)
-            {
-                return EventLevel.Warning;
-            }
-            else if (Log.IsErrorEnabled)
-            {
-                return EventLevel.Error;
-            }
-            else
-            {
-                return EventLevel.LogAlways;
-            }
+            return EventLevel.Verbose;
+        }
+        else if (Log.IsDebugEnabled)
+        {
+            return EventLevel.Informational;
+        }
+        else if (Log.IsInfoEnabled)
+        {
+            return EventLevel.LogAlways;
+        }
+        else if (Log.IsWarnEnabled)
+        {
+            return EventLevel.Warning;
+        }
+        else if (Log.IsErrorEnabled)
+        {
+            return EventLevel.Error;
+        }
+        else
+        {
+            return EventLevel.LogAlways;
         }
     }
 }

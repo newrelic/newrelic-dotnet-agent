@@ -10,6 +10,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.AwsSdk;
@@ -17,7 +18,6 @@ using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
-using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 

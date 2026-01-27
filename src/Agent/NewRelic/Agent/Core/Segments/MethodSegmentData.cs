@@ -2,64 +2,61 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
-using static NewRelic.Agent.Core.WireModels.MetricWireModel;
-using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.Time;
+using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
-namespace NewRelic.Agent.Core.Segments
+namespace NewRelic.Agent.Core.Segments;
+
+public class MethodSegmentData : AbstractSegmentData
 {
+    private readonly string _typeName;
+    private readonly string _methodName;
 
-    public class MethodSegmentData : AbstractSegmentData
+    public string Type => _typeName;
+    public string Method => _methodName;
+
+    public MethodSegmentData(string typeName, string methodName)
     {
-        private readonly string _typeName;
-        private readonly string _methodName;
+        _typeName = typeName;
+        _methodName = methodName;
+    }
 
-        public string Type => _typeName;
-        public string Method => _methodName;
+    public override bool IsCombinableWith(AbstractSegmentData otherData)
+    {
+        var otherTypedSegment = otherData as MethodSegmentData;
+        if (otherTypedSegment == null)
+            return false;
 
-        public MethodSegmentData(string typeName, string methodName)
-        {
-            _typeName = typeName;
-            _methodName = methodName;
-        }
+        if (Type != otherTypedSegment.Type)
+            return false;
 
-        public override bool IsCombinableWith(AbstractSegmentData otherData)
-        {
-            var otherTypedSegment = otherData as MethodSegmentData;
-            if (otherTypedSegment == null)
-                return false;
+        if (Method != otherTypedSegment.Method)
+            return false;
 
-            if (Type != otherTypedSegment.Type)
-                return false;
+        return true;
+    }
 
-            if (Method != otherTypedSegment.Method)
-                return false;
+    public override string GetTransactionTraceName()
+    {
+        return MetricNames.GetDotNetInvocation(Type, Method).ToString();
+    }
 
-            return true;
-        }
-
-        public override string GetTransactionTraceName()
-        {
-            return MetricNames.GetDotNetInvocation(Type, Method).ToString();
-        }
-
-        public override void AddMetricStats(Segment segment, TimeSpan durationOfChildren, TransactionMetricStatsCollection txStats, IConfigurationService configService)
-        {
-            var duration = segment.Duration.Value;
-            var exclusiveDuration = TimeSpanMath.Max(TimeSpan.Zero, duration - durationOfChildren);
+    public override void AddMetricStats(Segment segment, TimeSpan durationOfChildren, TransactionMetricStatsCollection txStats, IConfigurationService configService)
+    {
+        var duration = segment.Duration.Value;
+        var exclusiveDuration = TimeSpanMath.Max(TimeSpan.Zero, duration - durationOfChildren);
            
-            if (!string.IsNullOrWhiteSpace(segment.SegmentNameOverride))
-            {
-                MetricBuilder.TryBuildSimpleSegmentMetric(segment.SegmentNameOverride, duration, exclusiveDuration, txStats);
-            }
-            else
-            {
-                MetricBuilder.TryBuildMethodSegmentMetric(Type, Method, duration, exclusiveDuration, txStats);
-            }
-            
+        if (!string.IsNullOrWhiteSpace(segment.SegmentNameOverride))
+        {
+            MetricBuilder.TryBuildSimpleSegmentMetric(segment.SegmentNameOverride, duration, exclusiveDuration, txStats);
         }
+        else
+        {
+            MetricBuilder.TryBuildMethodSegmentMetric(Type, Method, duration, exclusiveDuration, txStats);
+        }
+            
     }
 }
