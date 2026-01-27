@@ -1,28 +1,27 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.Utilities;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace NewRelic.Agent.Core
+namespace NewRelic.Agent.Core.Logging;
+
+/// <summary>
+/// Adds a pid property to the log event containing the current process id
+/// </summary>
+[NrExcludeFromCodeCoverage]
+internal class ProcessIdEnricher : ILogEventEnricher
 {
-    /// <summary>
-    /// Adds a pid property to the log event containing the current process id
-    /// </summary>
-    [NrExcludeFromCodeCoverage]
-    internal class ProcessIdEnricher : ILogEventEnricher
+    private static int _pid = new ProcessStatic().GetCurrentProcess().Id;
+
+    private static LogEventProperty _prop;
+
+    public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
-        private static int _pid = new ProcessStatic().GetCurrentProcess().Id;
+        _prop ??= propertyFactory.CreateProperty("pid", _pid);
 
-        private static LogEventProperty _prop;
-
-        public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
-        {
-            _prop ??= propertyFactory.CreateProperty("pid", _pid);
-
-            logEvent.AddPropertyIfAbsent(_prop);
-        }
+        logEvent.AddPropertyIfAbsent(_prop);
     }
 }

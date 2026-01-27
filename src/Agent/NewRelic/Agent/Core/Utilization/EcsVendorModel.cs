@@ -3,20 +3,19 @@
 
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Core.Utilization
+namespace NewRelic.Agent.Core.Utilization;
+
+public class EcsVendorModel : IVendorModel
 {
-    public class EcsVendorModel : IVendorModel
+    private readonly string _ecsDockerId;
+
+    public string VendorName { get { return "ecs"; } }
+
+    [JsonProperty("ecsDockerId", NullValueHandling = NullValueHandling.Ignore)]
+    public string EcsDockerId { get { return _ecsDockerId; } }
+
+    public EcsVendorModel(string ecsDockerId)
     {
-        private readonly string _ecsDockerId;
-
-        public string VendorName { get { return "ecs"; } }
-
-        [JsonProperty("ecsDockerId", NullValueHandling = NullValueHandling.Ignore)]
-        public string EcsDockerId { get { return _ecsDockerId; } }
-
-        public EcsVendorModel(string ecsDockerId)
-        {
-            _ecsDockerId = ecsDockerId;
-        }
+        _ecsDockerId = ecsDockerId;
     }
 }

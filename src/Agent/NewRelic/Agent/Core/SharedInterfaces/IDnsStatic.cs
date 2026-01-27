@@ -5,73 +5,72 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
 
-namespace NewRelic.Agent.Core.SharedInterfaces
+namespace NewRelic.Agent.Core.SharedInterfaces;
+
+public interface IDnsStatic
 {
-    public interface IDnsStatic
+    string GetHostName();
+
+
+    IPHostEntry GetHostEntry(string hostNameOrAddres);
+
+    string GetFullHostName();
+
+    List<string> GetIpAddresses();
+}
+
+public class DnsStatic : IDnsStatic
+{
+    private const string Ipv6ScopeIDPattern = @"(%[a-zA-Z\d]*)"; // used to remove the scope from IPv6 addresses
+    private readonly INetworkData _networkData;
+    private Regex _regex;
+
+    public DnsStatic(INetworkData networkData)
     {
-        string GetHostName();
-
-
-        IPHostEntry GetHostEntry(string hostNameOrAddres);
-
-        string GetFullHostName();
-
-        List<string> GetIpAddresses();
+        _networkData = networkData;
+        _regex = new Regex(Ipv6ScopeIDPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
     }
 
-    public class DnsStatic : IDnsStatic
+    public string GetHostName()
     {
-        private const string Ipv6ScopeIDPattern = @"(%[a-zA-Z\d]*)"; // used to remove the scope from IPv6 addresses
-        private readonly INetworkData _networkData;
-        private Regex _regex;
+        return Dns.GetHostName();
+    }
 
-        public DnsStatic(INetworkData networkData)
+    public IPHostEntry GetHostEntry(string hostNameOrAddres)
+    {
+        return Dns.GetHostEntry(hostNameOrAddres);
+    }
+
+    public string GetFullHostName()
+    {
+        var hostName = GetHostName();
+        var activeNetworkInterface = GetActiveNetworkInterface();
+        var domainName = _networkData.GetDomainName(activeNetworkInterface);
+        if (!string.IsNullOrEmpty(domainName) && !hostName.EndsWith(domainName))
         {
-            _networkData = networkData;
-            _regex = new Regex(Ipv6ScopeIDPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            hostName += $".{domainName}";
         }
 
-        public string GetHostName()
+        return hostName;
+    }
+
+    public List<string> GetIpAddresses()
+    {
+        var activeNetworkInterface = GetActiveNetworkInterface();
+        var ipAddresses = new List<string>();
+        foreach (var unicastAddress in activeNetworkInterface.UnicastIPAddresses)
         {
-            return Dns.GetHostName();
+            var ipAddress = unicastAddress.Address.ToString();
+            ipAddresses.Add(_regex.Replace(ipAddress, ""));
         }
 
-        public IPHostEntry GetHostEntry(string hostNameOrAddres)
-        {
-            return Dns.GetHostEntry(hostNameOrAddres);
-        }
+        return ipAddresses;
+    }
 
-        public string GetFullHostName()
-        {
-            var hostName = GetHostName();
-            var activeNetworkInterface = GetActiveNetworkInterface();
-            var domainName = _networkData.GetDomainName(activeNetworkInterface);
-            if (!string.IsNullOrEmpty(domainName) && !hostName.EndsWith(domainName))
-            {
-                hostName += $".{domainName}";
-            }
-
-            return hostName;
-        }
-
-        public List<string> GetIpAddresses()
-        {
-            var activeNetworkInterface = GetActiveNetworkInterface();
-            var ipAddresses = new List<string>();
-            foreach (var unicastAddress in activeNetworkInterface.UnicastIPAddresses)
-            {
-                var ipAddress = unicastAddress.Address.ToString();
-                ipAddresses.Add(_regex.Replace(ipAddress, ""));
-            }
-
-            return ipAddresses;
-        }
-
-        private INetworkInterfaceData GetActiveNetworkInterface()
-        {
-            var networkInterfaceData = _networkData.GetNetworkInterfaceData();
-            var localIPAddress = _networkData.GetLocalIPAddress();
-            return _networkData.GetActiveNetworkInterface(localIPAddress, networkInterfaceData);
-        }
+    private INetworkInterfaceData GetActiveNetworkInterface()
+    {
+        var networkInterfaceData = _networkData.GetNetworkInterfaceData();
+        var localIPAddress = _networkData.GetLocalIPAddress();
+        return _networkData.GetActiveNetworkInterface(localIPAddress, networkInterfaceData);
     }
 }

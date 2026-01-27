@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using NewRelic.Agent.Core.Logging;
 
 namespace NewRelic.Agent.Core;
 

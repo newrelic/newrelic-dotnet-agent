@@ -5,108 +5,107 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Helpers;
 using NewRelic.Agent.Extensions.SystemExtensions;
+using NewRelic.Agent.Helpers;
 
-namespace NewRelic.Agent.Core.Labels
+namespace NewRelic.Agent.Core.Labels;
+
+public class LabelsService : ILabelsService
 {
-    public class LabelsService : ILabelsService
+    private readonly Serilog.ILogger Log = Serilog.Log.Logger;
+
+    private const int MaxLabels = 64;
+    private const int MaxLength = 255;
+
+    private readonly IConfigurationService _configurationService;
+
+    public IEnumerable<Label> Labels { get { return GetLabelsFromConfiguration([]); } }
+
+    public IEnumerable<Label> GetFilteredLabels(IEnumerable<string> labelsToExclude)
     {
-        private readonly Serilog.ILogger Log = Serilog.Log.Logger;
+        return GetLabelsFromConfiguration(labelsToExclude);
+    }
 
-        private const int MaxLabels = 64;
-        private const int MaxLength = 255;
+    public LabelsService(IConfigurationService configurationService)
+    {
+        _configurationService = configurationService;
+    }
 
-        private readonly IConfigurationService _configurationService;
+    private IEnumerable<Label> GetLabelsFromConfiguration(IEnumerable<string> labelsToExclude)
+    {
+        var labelsString = _configurationService.Configuration.Labels;
+        if (string.IsNullOrEmpty(labelsString))
+            return Enumerable.Empty<Label>();
 
-        public IEnumerable<Label> Labels { get { return GetLabelsFromConfiguration([]); } }
+        labelsToExclude ??= [];
 
-        public IEnumerable<Label> GetFilteredLabels(IEnumerable<string> labelsToExclude)
+        try
         {
-            return GetLabelsFromConfiguration(labelsToExclude);
-        }
+            var labels = labelsString
+                .Trim()
+                .Trim(StringSeparators.SemiColon)
+                .Split(StringSeparators.SemiColon)
+                .Select(CreateLabelFromString)
+                .Where(label => !labelsToExclude.Contains(label.Type, StringComparer.OrdinalIgnoreCase))
+                .GroupBy(label => label.Type)
+                .Select(labelGrouping => labelGrouping.Last())
+                .Take(MaxLabels)
+                .ToList();
 
-        public LabelsService(IConfigurationService configurationService)
+            if (labels.Count == MaxLabels)
+                Log.Warning("Maximum number of labels reached, some may have been dropped.");
+
+            return labels;
+        }
+        catch (Exception exception)
         {
-            _configurationService = configurationService;
+            Log.Warning(exception, "Failed to parse labels configuration string");
+            return Enumerable.Empty<Label>();
         }
+    }
 
-        private IEnumerable<Label> GetLabelsFromConfiguration(IEnumerable<string> labelsToExclude)
-        {
-            var labelsString = _configurationService.Configuration.Labels;
-            if (string.IsNullOrEmpty(labelsString))
-                return Enumerable.Empty<Label>();
+    private Label CreateLabelFromString(string typeAndValueString)
+    {
+        if (typeAndValueString == null)
+            throw new ArgumentNullException("typeAndValueString");
 
-            labelsToExclude ??= [];
+        var typeAndValueArray = typeAndValueString.Split(StringSeparators.Colon);
+        if (typeAndValueArray.Length != 2)
+            throw new FormatException("Expected colon separated string but received " + typeAndValueString);
 
-            try
-            {
-                var labels = labelsString
-                    .Trim()
-                    .Trim(StringSeparators.SemiColon)
-                    .Split(StringSeparators.SemiColon)
-                    .Select(CreateLabelFromString)
-                    .Where(label => !labelsToExclude.Contains(label.Type, StringComparer.OrdinalIgnoreCase))
-                    .GroupBy(label => label.Type)
-                    .Select(labelGrouping => labelGrouping.Last())
-                    .Take(MaxLabels)
-                    .ToList();
+        var type = typeAndValueArray[0];
+        if (type == null)
+            throw new NullReferenceException("type");
 
-                if (labels.Count == MaxLabels)
-                    Log.Warning("Maximum number of labels reached, some may have been dropped.");
+        var value = typeAndValueArray[1];
+        if (value == null)
+            throw new NullReferenceException("value");
 
-                return labels;
-            }
-            catch (Exception exception)
-            {
-                Log.Warning(exception, "Failed to parse labels configuration string");
-                return Enumerable.Empty<Label>();
-            }
-        }
+        var typeTrimmed = type.Trim();
+        if (typeTrimmed == string.Empty)
+            throw new FormatException("Expected colon separated string containing a non-empty first item but received " + typeTrimmed);
 
-        private Label CreateLabelFromString(string typeAndValueString)
-        {
-            if (typeAndValueString == null)
-                throw new ArgumentNullException("typeAndValueString");
+        var valueTrimmed = value.Trim();
+        if (valueTrimmed == string.Empty)
+            throw new FormatException("Expected colon separated string containing a non-empty second item but received " + valueTrimmed);
 
-            var typeAndValueArray = typeAndValueString.Split(StringSeparators.Colon);
-            if (typeAndValueArray.Length != 2)
-                throw new FormatException("Expected colon separated string but received " + typeAndValueString);
+        var typeTruncated = Truncate(typeTrimmed);
+        var valueTruncated = Truncate(valueTrimmed);
 
-            var type = typeAndValueArray[0];
-            if (type == null)
-                throw new NullReferenceException("type");
+        return new Label(typeTruncated, valueTruncated);
+    }
 
-            var value = typeAndValueArray[1];
-            if (value == null)
-                throw new NullReferenceException("value");
+    private string Truncate(string value)
+    {
+        var result = value.TruncateUnicodeStringByLength(MaxLength);
+        if (result.Length != value.Length)
+            Log.Warning("Truncated label key from {0} to {1}", value, result);
 
-            var typeTrimmed = type.Trim();
-            if (typeTrimmed == string.Empty)
-                throw new FormatException("Expected colon separated string containing a non-empty first item but received " + typeTrimmed);
+        return result;
+    }
 
-            var valueTrimmed = value.Trim();
-            if (valueTrimmed == string.Empty)
-                throw new FormatException("Expected colon separated string containing a non-empty second item but received " + valueTrimmed);
-
-            var typeTruncated = Truncate(typeTrimmed);
-            var valueTruncated = Truncate(valueTrimmed);
-
-            return new Label(typeTruncated, valueTruncated);
-        }
-
-        private string Truncate(string value)
-        {
-            var result = value.TruncateUnicodeStringByLength(MaxLength);
-            if (result.Length != value.Length)
-                Log.Warning("Truncated label key from {0} to {1}", value, result);
-
-            return result;
-        }
-
-        public void Dispose()
-        {
-            // do nothing, just need to implement it to meet the requirements of the interface
-        }
+    public void Dispose()
+    {
+        // do nothing, just need to implement it to meet the requirements of the interface
     }
 }
