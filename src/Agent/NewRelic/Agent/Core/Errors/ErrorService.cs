@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-#if !NETSTANDARD2_0
+#if NETFRAMEWORK
 using System.Web;
 #endif
 using NewRelic.Agent.Configuration;
