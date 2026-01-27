@@ -11,236 +11,235 @@ using System.Web;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Helpers;
 
-namespace NewRelic.Agent.Core.Errors
+namespace NewRelic.Agent.Core.Errors;
+
+public interface IErrorService
 {
-    public interface IErrorService
+    bool ShouldCollectErrors { get; }
+
+    bool ShouldIgnoreException(Exception exception);
+    bool ShouldIgnoreException(ErrorData errorData);
+    bool ShouldIgnoreHttpStatusCode(int statusCode, int? subStatusCode);
+
+    ErrorData FromException(Exception exception);
+    ErrorData FromException(Exception exception, IDictionary<string, string> customAttributes);
+    ErrorData FromException(Exception exception, IDictionary<string, object> customAttributes);
+    ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes, bool isExpected);
+    ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes, bool isExpected);
+    ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, string> customAttributes, bool? isExpected);
+    ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, object> customAttributes, bool? isExpected);
+    ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt);
+}
+
+public class ErrorService : IErrorService
+{
+    private const string CustomErrorTypeName = "Custom Error";
+    private static ReadOnlyDictionary<string, object> _emptyCustomAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+    private IConfigurationService _configurationService;
+
+    public ErrorService(IConfigurationService configurationService)
     {
-        bool ShouldCollectErrors { get; }
-
-        bool ShouldIgnoreException(Exception exception);
-        bool ShouldIgnoreException(ErrorData errorData);
-        bool ShouldIgnoreHttpStatusCode(int statusCode, int? subStatusCode);
-
-        ErrorData FromException(Exception exception);
-        ErrorData FromException(Exception exception, IDictionary<string, string> customAttributes);
-        ErrorData FromException(Exception exception, IDictionary<string, object> customAttributes);
-        ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes, bool isExpected);
-        ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes, bool isExpected);
-        ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, string> customAttributes, bool? isExpected);
-        ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, object> customAttributes, bool? isExpected);
-        ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt);
+        _configurationService = configurationService;
     }
 
-    public class ErrorService : IErrorService
+    public bool ShouldCollectErrors => _configurationService.Configuration.ErrorCollectorEnabled;
+
+    public bool ShouldIgnoreException(Exception exception)
     {
-        private const string CustomErrorTypeName = "Custom Error";
-        private static ReadOnlyDictionary<string, object> _emptyCustomAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
-        private IConfigurationService _configurationService;
+        return IsErrorFromExceptionSpecified(exception, _configurationService.Configuration.IgnoreErrorsConfiguration);
+    }
 
-        public ErrorService(IConfigurationService configurationService)
+    public bool ShouldIgnoreException(ErrorData errorData)
+    {
+        return IsExceptionSpecified(errorData.ErrorMessage, errorData.ErrorTypeName, _configurationService.Configuration.IgnoreErrorsConfiguration);
+    }
+
+    public bool ShouldIgnoreHttpStatusCode(int statusCode, int? subStatusCode)
+    {
+        var formattedStatusCode = GetFormattedHttpStatusCode(statusCode, subStatusCode);
+
+        if (_configurationService.Configuration.IgnoreErrorsConfiguration.ContainsKey(formattedStatusCode))
         {
-            _configurationService = configurationService;
+            return true;
         }
 
-        public bool ShouldCollectErrors => _configurationService.Configuration.ErrorCollectorEnabled;
+        var splitStatusCode = formattedStatusCode.Split(StringSeparators.Period);
 
-        public bool ShouldIgnoreException(Exception exception)
+        if (splitStatusCode[0] != null && _configurationService.Configuration.IgnoreErrorsConfiguration.ContainsKey(splitStatusCode[0]))
         {
-            return IsErrorFromExceptionSpecified(exception, _configurationService.Configuration.IgnoreErrorsConfiguration);
+            return true;
         }
 
-        public bool ShouldIgnoreException(ErrorData errorData)
-        {
-            return IsExceptionSpecified(errorData.ErrorMessage, errorData.ErrorTypeName, _configurationService.Configuration.IgnoreErrorsConfiguration);
-        }
+        return false;
+    }
 
-        public bool ShouldIgnoreHttpStatusCode(int statusCode, int? subStatusCode)
-        {
-            var formattedStatusCode = GetFormattedHttpStatusCode(statusCode, subStatusCode);
+    public ErrorData FromException(Exception exception)
+    {
+        return FromExceptionInternal(exception, _emptyCustomAttributes);
+    }
 
-            if (_configurationService.Configuration.IgnoreErrorsConfiguration.ContainsKey(formattedStatusCode))
-            {
-                return true;
-            }
+    public ErrorData FromException(Exception exception, IDictionary<string, string> customAttributes)
+    {
+        return FromExceptionInternal(exception, CaptureAttributes(customAttributes));
+    }
 
-            var splitStatusCode = formattedStatusCode.Split(StringSeparators.Period);
+    public ErrorData FromException(Exception exception, IDictionary<string, object> customAttributes)
+    {
+        return FromExceptionInternal(exception, CaptureAttributes(customAttributes));
+    }
 
-            if (splitStatusCode[0] != null && _configurationService.Configuration.IgnoreErrorsConfiguration.ContainsKey(splitStatusCode[0]))
-            {
-                return true;
-            }
+    public ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes, bool isExpected)
+    {
+        return FromMessageInternal(errorMessage, customAttributes, isExpected);
+    }
 
-            return false;
-        }
+    public ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes, bool isExpected)
+    {
+        return FromMessageInternal(errorMessage, customAttributes, isExpected);
+    }
 
-        public ErrorData FromException(Exception exception)
-        {
-            return FromExceptionInternal(exception, _emptyCustomAttributes);
-        }
+    public ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, string> customAttributes, bool? isExpected)
+    {
+        return FromMessageInternal(errorMessage, typeName, customAttributes, isExpected ?? IsExceptionSpecified(errorMessage, typeName, _configurationService.Configuration.ExpectedErrorsConfiguration));
+    }
 
-        public ErrorData FromException(Exception exception, IDictionary<string, string> customAttributes)
-        {
-            return FromExceptionInternal(exception, CaptureAttributes(customAttributes));
-        }
+    public ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, object> customAttributes, bool? isExpected)
+    {
+        return FromMessageInternal(errorMessage, typeName, customAttributes, isExpected ?? IsExceptionSpecified(errorMessage, typeName, _configurationService.Configuration.ExpectedErrorsConfiguration));
+    }
 
-        public ErrorData FromException(Exception exception, IDictionary<string, object> customAttributes)
-        {
-            return FromExceptionInternal(exception, CaptureAttributes(customAttributes));
-        }
+    public ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt)
+    {
+        if (statusCode < 400) return null;
 
-        public ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes, bool isExpected)
-        {
-            return FromMessageInternal(errorMessage, customAttributes, isExpected);
-        }
-
-        public ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes, bool isExpected)
-        {
-            return FromMessageInternal(errorMessage, customAttributes, isExpected);
-        }
-
-        public ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, string> customAttributes, bool? isExpected)
-        {
-            return FromMessageInternal(errorMessage, typeName, customAttributes, isExpected ?? IsExceptionSpecified(errorMessage, typeName, _configurationService.Configuration.ExpectedErrorsConfiguration));
-        }
-
-        public ErrorData FromMessage(string errorMessage, string typeName, IDictionary<string, object> customAttributes, bool? isExpected)
-        {
-            return FromMessageInternal(errorMessage, typeName, customAttributes, isExpected ?? IsExceptionSpecified(errorMessage, typeName, _configurationService.Configuration.ExpectedErrorsConfiguration));
-        }
-
-        public ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt)
-        {
-            if (statusCode < 400) return null;
-
-            var statusDescription =
+        var statusDescription =
 #if NETSTANDARD2_0
-				statusCode.ToString();
+            statusCode.ToString();
 #else
                 HttpWorkerRequest.GetStatusDescription(statusCode);
 #endif
-            var errorTypeName = GetFormattedHttpStatusCode(statusCode, subStatusCode);
-            var errorMessage = statusDescription ?? $"Http Error {errorTypeName}";
+        var errorTypeName = GetFormattedHttpStatusCode(statusCode, subStatusCode);
+        var errorMessage = statusDescription ?? $"Http Error {errorTypeName}";
 
-            var isExpected = _configurationService.Configuration.ExpectedStatusCodes.Any(rule => rule.IsMatch(statusCode.ToString()));
+        var isExpected = _configurationService.Configuration.ExpectedStatusCodes.Any(rule => rule.IsMatch(statusCode.ToString()));
 
-            return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null, isExpected, null);
-        }
+        return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null, isExpected, null);
+    }
 
-        private static string GetFriendlyExceptionTypeName(Exception exception)
+    private static string GetFriendlyExceptionTypeName(Exception exception)
+    {
+        var exceptionTypeName = exception.GetType().FullName;
+        return exceptionTypeName?.Split(StringSeparators.BackTick, 2)[0] ?? string.Empty;
+    }
+
+    private string GetFormattedHttpStatusCode(int statusCode, int? subStatusCode)
+    {
+        return subStatusCode == null ? $"{statusCode}" : $"{statusCode}.{subStatusCode}";
+    }
+
+    private ErrorData FromMessageInternal<T>(string errorMessage, IDictionary<string, T> customAttributes, bool isExpected)
+    {
+        var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
+        return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
+    }
+
+    private ErrorData FromMessageInternal<T>(string errorMessage, string typeName, IDictionary<string, T> customAttributes, bool isExpected)
+    {
+        var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
+        return new ErrorData(message, typeName ?? CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
+    }
+
+    private ErrorData FromExceptionInternal(Exception exception, ReadOnlyDictionary<string, object> customAttributes)
+    {
+        // this does more work than just getting the exception, so we want to do this just once.
+        var baseException = exception.GetBaseException();
+        var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : baseException.Message;
+        var baseExceptionTypeName = GetFriendlyExceptionTypeName(baseException);
+        // We want the message from the base exception since that is the real exception.
+        // We want to show to the stacktace from the outermost exception since that will provide the most context for the base exception.
+        var stackTrace = ExceptionFormatter.FormatStackTrace(exception, _configurationService.Configuration.StripExceptionMessages);
+        var noticedAt = DateTime.UtcNow;
+
+        var isExpected = IsErrorFromExceptionSpecified(exception, _configurationService.Configuration.ExpectedErrorsConfiguration);
+        return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected, baseException);
+    }
+
+    private static bool IsErrorFromExceptionSpecified(Exception exception, IDictionary<string, IEnumerable<string>> source)
+    {
+        var isSpecified = IsExceptionSpecified(exception, source);
+
+        if (!isSpecified)
         {
-            var exceptionTypeName = exception.GetType().FullName;
-            return exceptionTypeName?.Split(StringSeparators.BackTick, 2)[0] ?? string.Empty;
-        }
-
-        private string GetFormattedHttpStatusCode(int statusCode, int? subStatusCode)
-        {
-            return subStatusCode == null ? $"{statusCode}" : $"{statusCode}.{subStatusCode}";
-        }
-
-        private ErrorData FromMessageInternal<T>(string errorMessage, IDictionary<string, T> customAttributes, bool isExpected)
-        {
-            var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
-            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
-        }
-
-        private ErrorData FromMessageInternal<T>(string errorMessage, string typeName, IDictionary<string, T> customAttributes, bool isExpected)
-        {
-            var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
-            return new ErrorData(message, typeName ?? CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
-        }
-
-        private ErrorData FromExceptionInternal(Exception exception, ReadOnlyDictionary<string, object> customAttributes)
-        {
-            // this does more work than just getting the exception, so we want to do this just once.
             var baseException = exception.GetBaseException();
-            var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : baseException.Message;
-            var baseExceptionTypeName = GetFriendlyExceptionTypeName(baseException);
-            // We want the message from the base exception since that is the real exception.
-            // We want to show to the stacktace from the outermost exception since that will provide the most context for the base exception.
-            var stackTrace = ExceptionFormatter.FormatStackTrace(exception, _configurationService.Configuration.StripExceptionMessages);
-            var noticedAt = DateTime.UtcNow;
-
-            var isExpected = IsErrorFromExceptionSpecified(exception, _configurationService.Configuration.ExpectedErrorsConfiguration);
-            return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected, baseException);
+            return IsExceptionSpecified(baseException, source);
         }
+        return isSpecified;
+    }
 
-        private static bool IsErrorFromExceptionSpecified(Exception exception, IDictionary<string, IEnumerable<string>> source)
+    private static bool IsExceptionSpecified(Exception exception, IDictionary<string, IEnumerable<string>> source)
+    {
+        var exceptionTypeName = GetFriendlyExceptionTypeName(exception);
+
+        if (source.TryGetValue(exceptionTypeName, out var messages))
         {
-            var isSpecified = IsExceptionSpecified(exception, source);
-
-            if (!isSpecified)
+            if (messages != Enumerable.Empty<string>())
             {
-                var baseException = exception.GetBaseException();
-                return IsExceptionSpecified(baseException, source);
+                return ContainsSubstring(messages, exception.Message);
             }
-            return isSpecified;
-        }
-
-        private static bool IsExceptionSpecified(Exception exception, IDictionary<string, IEnumerable<string>> source)
-        {
-            var exceptionTypeName = GetFriendlyExceptionTypeName(exception);
-
-            if (source.TryGetValue(exceptionTypeName, out var messages))
+            else
             {
-                if (messages != Enumerable.Empty<string>())
-                {
-                    return ContainsSubstring(messages, exception.Message);
-                }
-                else
-                {
-                    return true;
-                }
+                return true;
             }
-
-            return false;
         }
 
-        private static bool IsExceptionSpecified(string message, string exceptionTypeName, IDictionary<string, IEnumerable<string>> source)
+        return false;
+    }
+
+    private static bool IsExceptionSpecified(string message, string exceptionTypeName, IDictionary<string, IEnumerable<string>> source)
+    {
+        if (source.TryGetValue(exceptionTypeName, out var messages))
         {
-            if (source.TryGetValue(exceptionTypeName, out var messages))
+            if (messages != Enumerable.Empty<string>())
             {
-                if (messages != Enumerable.Empty<string>())
-                {
-                    return ContainsSubstring(messages, message);
-                }
-                else
-                {
-                    return true;
-                }
+                return ContainsSubstring(messages, message);
             }
-
-            return false;
-        }
-
-        private static bool ContainsSubstring(IEnumerable<string> subStringList, string sourceString)
-        {
-            foreach (var item in subStringList)
+            else
             {
-                if (sourceString.Contains(item))
-                {
-                    return true;
-                }
+                return true;
             }
-
-            return false;
         }
 
-        private ReadOnlyDictionary<string, object> CaptureAttributes<T>(IDictionary<string, T> attributes)
+        return false;
+    }
+
+    private static bool ContainsSubstring(IEnumerable<string> subStringList, string sourceString)
+    {
+        foreach (var item in subStringList)
         {
-            IDictionary<string, object> result = null;
-            if (attributes != null && _configurationService.Configuration.CaptureCustomParameters)
+            if (sourceString.Contains(item))
             {
-                foreach (var customAttribute in attributes)
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private ReadOnlyDictionary<string, object> CaptureAttributes<T>(IDictionary<string, T> attributes)
+    {
+        IDictionary<string, object> result = null;
+        if (attributes != null && _configurationService.Configuration.CaptureCustomParameters)
+        {
+            foreach (var customAttribute in attributes)
+            {
+                if (customAttribute.Key != null && customAttribute.Value != null)
                 {
-                    if (customAttribute.Key != null && customAttribute.Value != null)
-                    {
-                        if (result == null) result = new Dictionary<string, object>();
-                        result.Add(customAttribute.Key, customAttribute.Value);
-                    }
+                    if (result == null) result = new Dictionary<string, object>();
+                    result.Add(customAttribute.Key, customAttribute.Value);
                 }
             }
-
-            return result == null ? _emptyCustomAttributes : new ReadOnlyDictionary<string, object>(result);
         }
+
+        return result == null ? _emptyCustomAttributes : new ReadOnlyDictionary<string, object>(result);
     }
 }
