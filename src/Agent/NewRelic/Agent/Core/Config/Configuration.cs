@@ -10,12 +10,12 @@
 namespace NewRelic.Agent.Core.Config
 {
     using System;
-    using System.Diagnostics;
-    using System.Xml.Serialization;
     using System.Collections;
-    using System.Xml.Schema;
-    using System.ComponentModel;
     using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Diagnostics;
+    using System.Xml.Schema;
+    using System.Xml.Serialization;
     
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]

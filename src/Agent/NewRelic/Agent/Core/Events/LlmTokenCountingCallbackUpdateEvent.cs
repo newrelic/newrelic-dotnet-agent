@@ -3,15 +3,14 @@
 
 using System;
 
-namespace NewRelic.Agent.Core.Events
-{
-    public class LlmTokenCountingCallbackUpdateEvent
-    {
-        public readonly Func<string, string, int> LlmTokenCountingCallback;
+namespace NewRelic.Agent.Core.Events;
 
-        public LlmTokenCountingCallbackUpdateEvent(Func<string, string, int> llmTokenCountingCallback)
-        {
-            LlmTokenCountingCallback = llmTokenCountingCallback;
-        }
+public class LlmTokenCountingCallbackUpdateEvent
+{
+    public readonly Func<string, string, int> LlmTokenCountingCallback;
+
+    public LlmTokenCountingCallbackUpdateEvent(Func<string, string, int> llmTokenCountingCallback)
+    {
+        LlmTokenCountingCallback = llmTokenCountingCallback;
     }
 }

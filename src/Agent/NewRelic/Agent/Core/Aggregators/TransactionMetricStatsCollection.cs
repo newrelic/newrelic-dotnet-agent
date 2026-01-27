@@ -1,88 +1,87 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Collections.Generic;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.WireModels;
-using System;
-using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.Aggregators
+namespace NewRelic.Agent.Core.Aggregators;
+
+/// <summary>
+/// Reports all metrics recorded during a transaction.
+/// </summary>
+public class TransactionMetricStatsCollection : IAllMetricStatsCollection
 {
-    /// <summary>
-    /// Reports all metrics recorded during a transaction.
-    /// </summary>
-    public class TransactionMetricStatsCollection : IAllMetricStatsCollection
+    private MetricStatsDictionary<MetricName, MetricDataWireModel> unscopedStats = new MetricStatsDictionary<MetricName, MetricDataWireModel>();
+    private MetricStatsDictionary<MetricName, MetricDataWireModel> scopedStats = new MetricStatsDictionary<MetricName, MetricDataWireModel>();
+    private readonly TransactionMetricName transactionName;
+    private Func<MetricDataWireModel, MetricDataWireModel, MetricDataWireModel> mergeFunction = MetricDataWireModel.BuildAggregateData;
+
+    public TransactionMetricStatsCollection(TransactionMetricName txName)
     {
-        private MetricStatsDictionary<MetricName, MetricDataWireModel> unscopedStats = new MetricStatsDictionary<MetricName, MetricDataWireModel>();
-        private MetricStatsDictionary<MetricName, MetricDataWireModel> scopedStats = new MetricStatsDictionary<MetricName, MetricDataWireModel>();
-        private readonly TransactionMetricName transactionName;
-        private Func<MetricDataWireModel, MetricDataWireModel, MetricDataWireModel> mergeFunction = MetricDataWireModel.BuildAggregateData;
+        transactionName = txName;
+    }
 
-        public TransactionMetricStatsCollection(TransactionMetricName txName)
-        {
-            transactionName = txName;
-        }
+    public TransactionMetricName GetTransactionName()
+    {
+        return transactionName;
+    }
 
-        public TransactionMetricName GetTransactionName()
-        {
-            return transactionName;
-        }
+    public MetricDataWireModel GetUnscopedStat(MetricName name)
+    {
+        unscopedStats.TryGetValue(name, out MetricDataWireModel output);
+        return output;
+    }
 
-        public MetricDataWireModel GetUnscopedStat(MetricName name)
+    public void MergeUnscopedStats(MetricName name, MetricDataWireModel metric)
+    {
+        if (name != null)
         {
-            unscopedStats.TryGetValue(name, out MetricDataWireModel output);
-            return output;
+            unscopedStats.Merge(name, metric, mergeFunction);
         }
+    }
 
-        public void MergeUnscopedStats(MetricName name, MetricDataWireModel metric)
+    public void MergeScopedStats(MetricName name, MetricDataWireModel metric)
+    {
+        if (name != null)
         {
-            if (name != null)
-            {
-                unscopedStats.Merge(name, metric, mergeFunction);
-            }
+            scopedStats.Merge(name, metric, mergeFunction);
         }
+    }
 
-        public void MergeScopedStats(MetricName name, MetricDataWireModel metric)
-        {
-            if (name != null)
-            {
-                scopedStats.Merge(name, metric, mergeFunction);
-            }
-        }
+    public void AddMetricsToCollection(MetricStatsCollection collection)
+    {
+        collection.MergeUnscopedStats(ConvertMetricNames(unscopedStats));
+        collection.MergeScopedStats(transactionName.PrefixedName, ConvertMetricNames(scopedStats));
+    }
 
-        public void AddMetricsToCollection(MetricStatsCollection collection)
+    private IEnumerable<KeyValuePair<string, MetricDataWireModel>> ConvertMetricNames(IEnumerable<KeyValuePair<MetricName, MetricDataWireModel>> metricData)
+    {
+        foreach (var kvp in metricData)
         {
-            collection.MergeUnscopedStats(ConvertMetricNames(unscopedStats));
-            collection.MergeScopedStats(transactionName.PrefixedName, ConvertMetricNames(scopedStats));
+            yield return new KeyValuePair<string, MetricDataWireModel>(kvp.Key.ToString(), kvp.Value);
         }
+    }
 
-        private IEnumerable<KeyValuePair<string, MetricDataWireModel>> ConvertMetricNames(IEnumerable<KeyValuePair<MetricName, MetricDataWireModel>> metricData)
+    public MetricStatsDictionary<string, MetricDataWireModel> GetUnscopedForTesting()
+    {
+        var toReturn = new MetricStatsDictionary<string, MetricDataWireModel>();
+        foreach (var current in unscopedStats)
         {
-            foreach (var kvp in metricData)
-            {
-                yield return new KeyValuePair<string, MetricDataWireModel>(kvp.Key.ToString(), kvp.Value);
-            }
+            toReturn[current.Key.ToString()] = current.Value;
         }
+        return toReturn;
+    }
 
-        public MetricStatsDictionary<string, MetricDataWireModel> GetUnscopedForTesting()
+    public MetricStatsDictionary<string, MetricDataWireModel> GetScopedForTesting()
+    {
+        var toReturn = new MetricStatsDictionary<string, MetricDataWireModel>();
+        foreach (var current in scopedStats)
         {
-            var toReturn = new MetricStatsDictionary<string, MetricDataWireModel>();
-            foreach (var current in unscopedStats)
-            {
-                toReturn[current.Key.ToString()] = current.Value;
-            }
-            return toReturn;
+            toReturn[current.Key.ToString()] = current.Value;
         }
-
-        public MetricStatsDictionary<string, MetricDataWireModel> GetScopedForTesting()
-        {
-            var toReturn = new MetricStatsDictionary<string, MetricDataWireModel>();
-            foreach (var current in scopedStats)
-            {
-                toReturn[current.Key.ToString()] = current.Value;
-            }
-            return toReturn;
-        }
+        return toReturn;
     }
 }

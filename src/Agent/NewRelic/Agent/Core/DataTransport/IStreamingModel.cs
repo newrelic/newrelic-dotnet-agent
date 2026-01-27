@@ -1,16 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Core.DataTransport
+namespace NewRelic.Agent.Core.DataTransport;
+
+public interface IStreamingModel
 {
-    public interface IStreamingModel
-    {
-        string DisplayName { get; }
-    }
+    string DisplayName { get; }
+}
 
-    public interface IStreamingBatchModel<TRequest> where TRequest:IStreamingModel
-    {
-        int Count { get; }
-    }
-
+public interface IStreamingBatchModel<TRequest> where TRequest:IStreamingModel
+{
+    int Count { get; }
 }

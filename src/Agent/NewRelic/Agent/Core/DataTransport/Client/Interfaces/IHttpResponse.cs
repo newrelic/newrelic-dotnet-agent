@@ -3,14 +3,12 @@
 
 using System;
 using System.Net;
-using System.Threading.Tasks;
 
-namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces;
+
+public interface IHttpResponse : IDisposable
 {
-    public interface IHttpResponse : IDisposable
-    {
-        bool IsSuccessStatusCode { get; }
-        HttpStatusCode StatusCode { get; }
-        string GetContent();
-    }
+    bool IsSuccessStatusCode { get; }
+    HttpStatusCode StatusCode { get; }
+    string GetContent();
 }

@@ -3,20 +3,19 @@
 
 using System;
 
-namespace NewRelic.Agent.Core.Configuration
+namespace NewRelic.Agent.Core.Configuration;
+
+public class SecurityPoliciesValidationException : Exception
 {
-    public class SecurityPoliciesValidationException : Exception
+    public SecurityPoliciesValidationException()
     {
-        public SecurityPoliciesValidationException()
-        {
-        }
+    }
 
-        public SecurityPoliciesValidationException(string message) : base(message)
-        {
-        }
+    public SecurityPoliciesValidationException(string message) : base(message)
+    {
+    }
 
-        public SecurityPoliciesValidationException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
+    public SecurityPoliciesValidationException(string message, Exception innerException) : base(message, innerException)
+    {
     }
 }

@@ -3,12 +3,11 @@
 
 using System;
 
-namespace NewRelic.Agent.Core.DataTransport
-{
-    public interface IConnectionManager : IDisposable
-    {
-        T SendDataRequest<T>(string method, params object[] data);
+namespace NewRelic.Agent.Core.DataTransport;
 
-        void AttemptAutoStart();
-    }
+public interface IConnectionManager : IDisposable
+{
+    T SendDataRequest<T>(string method, params object[] data);
+
+    void AttemptAutoStart();
 }

@@ -3,10 +3,9 @@
 
 using NewRelic.Agent.Core.DataTransport;
 
-namespace NewRelic.Agent.Core.Events
+namespace NewRelic.Agent.Core.Events;
+
+public class AgentConnectedEvent
 {
-    public class AgentConnectedEvent
-    {
-        public IConnectionInfo ConnectInfo { get; set; }
-    }
+    public IConnectionInfo ConnectInfo { get; set; }
 }

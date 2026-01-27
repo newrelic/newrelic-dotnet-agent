@@ -4,50 +4,49 @@
 using System;
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.Attributes
+namespace NewRelic.Agent.Core.Attributes;
+
+internal class TrieNodeComparor<T> : IComparer<T>, IEqualityComparer<T>
 {
-    internal class TrieNodeComparor<T> : IComparer<T>, IEqualityComparer<T>
+    private readonly Func<T, T, int> _nodeComparor;
+
+    private readonly Func<T, int> _nodeHasher;
+
+    private readonly Func<T, T, bool> _potentialChildChecker;
+
+    public int Compare(T left, T right)
     {
-        private readonly Func<T, T, int> _nodeComparor;
+        if (left == null && right == null)
+            return 0;
 
-        private readonly Func<T, int> _nodeHasher;
+        if (left == null)
+            return -1;
 
-        private readonly Func<T, T, bool> _potentialChildChecker;
+        if (right == null)
+            return 1;
 
-        public int Compare(T left, T right)
-        {
-            if (left == null && right == null)
-                return 0;
+        return _nodeComparor(left, right);
+    }
 
-            if (left == null)
-                return -1;
+    public TrieNodeComparor(Func<T, T, int> nodeComparor, Func<T, int> nodeHasher, Func<T, T, bool> potentialChildChecker)
+    {
+        _nodeComparor = nodeComparor;
+        _nodeHasher = nodeHasher;
+        _potentialChildChecker = potentialChildChecker;
+    }
 
-            if (right == null)
-                return 1;
+    public bool Equals(T left, T right)
+    {
+        return Compare(left, right) == 0;
+    }
 
-            return _nodeComparor(left, right);
-        }
+    public int GetHashCode(T node)
+    {
+        return _nodeHasher(node);
+    }
 
-        public TrieNodeComparor(Func<T, T, int> nodeComparor, Func<T, int> nodeHasher, Func<T, T, bool> potentialChildChecker)
-        {
-            _nodeComparor = nodeComparor;
-            _nodeHasher = nodeHasher;
-            _potentialChildChecker = potentialChildChecker;
-        }
-
-        public bool Equals(T left, T right)
-        {
-            return Compare(left, right) == 0;
-        }
-
-        public int GetHashCode(T node)
-        {
-            return _nodeHasher(node);
-        }
-
-        public bool PotentialChild(T parent, T child)
-        {
-            return _potentialChildChecker(parent, child);
-        }
+    public bool PotentialChild(T parent, T child)
+    {
+        return _potentialChildChecker(parent, child);
     }
 }

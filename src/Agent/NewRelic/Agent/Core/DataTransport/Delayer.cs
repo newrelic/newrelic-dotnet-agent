@@ -5,26 +5,24 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NewRelic.Agent.Core.DataTransport
-{
-    public interface IDelayer
-    {
-        void Delay(int milliseconds, CancellationToken token);
-    }
+namespace NewRelic.Agent.Core.DataTransport;
 
-    public class Delayer : IDelayer
+public interface IDelayer
+{
+    void Delay(int milliseconds, CancellationToken token);
+}
+
+public class Delayer : IDelayer
+{
+    public void Delay(int milliseconds, CancellationToken token)
     {
-        public void Delay(int milliseconds, CancellationToken token)
+        try
         {
-            try
-            {
-                Task.Delay(milliseconds).Wait(token);
-            }
-            catch (OperationCanceledException)
-            {
-                //A cancelation was triggered and we don't need the Delayer to bubble up the exception
-            }
+            Task.Delay(milliseconds).Wait(token);
+        }
+        catch (OperationCanceledException)
+        {
+            //A cancelation was triggered and we don't need the Delayer to bubble up the exception
         }
     }
-
 }

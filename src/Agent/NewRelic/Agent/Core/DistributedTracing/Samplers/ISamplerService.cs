@@ -4,16 +4,15 @@
 using System;
 using NewRelic.Agent.Configuration;
 
-namespace NewRelic.Agent.Core.DistributedTracing.Samplers
+namespace NewRelic.Agent.Core.DistributedTracing.Samplers;
+
+public interface ISamplerService
 {
-    public interface ISamplerService
-    {
-        /// <summary>
-        /// Returns the appropriately configured sampler based on the SamplerType
-        /// </summary>
-        /// <param name="samplerLevel"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
-        ISampler GetSampler(SamplerLevel samplerLevel);
-    }
+    /// <summary>
+    /// Returns the appropriately configured sampler based on the SamplerType
+    /// </summary>
+    /// <param name="samplerLevel"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    ISampler GetSampler(SamplerLevel samplerLevel);
 }

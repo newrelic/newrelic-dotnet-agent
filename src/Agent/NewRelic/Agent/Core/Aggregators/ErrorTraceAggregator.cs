@@ -1,161 +1,160 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Extensions.Collections;
-using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Agent.Core.SharedInterfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Extensions.Collections;
+using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core.Aggregators
+namespace NewRelic.Agent.Core.Aggregators;
+
+public interface IErrorTraceAggregator
 {
-    public interface IErrorTraceAggregator
+    void Collect(ErrorTraceWireModel errorTraceWireModel);
+}
+
+public class ErrorTraceAggregator : AbstractAggregator<ErrorTraceWireModel>, IErrorTraceAggregator
+{
+    private readonly ReaderWriterLockSlim _readerWriterLock = new ReaderWriterLockSlim();
+
+    private ICollection<ErrorTraceWireModel> _errorTraceWireModels = new ConcurrentList<ErrorTraceWireModel>();
+
+    private uint _errorTraceCollectionMaximum;
+    private readonly IAgentHealthReporter _agentHealthReporter;
+
+    public ErrorTraceAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
+        : base(dataTransportService, scheduler, processStatic)
     {
-        void Collect(ErrorTraceWireModel errorTraceWireModel);
+        _agentHealthReporter = agentHealthReporter;
+        GetAndResetCollection();
     }
 
-    public class ErrorTraceAggregator : AbstractAggregator<ErrorTraceWireModel>, IErrorTraceAggregator
+    public override void Dispose()
     {
-        private readonly ReaderWriterLockSlim _readerWriterLock = new ReaderWriterLockSlim();
+        _readerWriterLock.Dispose();
+        base.Dispose();
+    }
 
-        private ICollection<ErrorTraceWireModel> _errorTraceWireModels = new ConcurrentList<ErrorTraceWireModel>();
+    protected override TimeSpan HarvestCycle => _configuration.ErrorTracesHarvestCycle;
 
-        private uint _errorTraceCollectionMaximum;
-        private readonly IAgentHealthReporter _agentHealthReporter;
+    protected override bool IsEnabled => _configuration.ErrorCollectorEnabled;
 
-        public ErrorTraceAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
-            : base(dataTransportService, scheduler, processStatic)
+    public override void Collect(ErrorTraceWireModel errorTraceWireModel)
+    {
+        _agentHealthReporter.ReportErrorTraceCollected();
+
+        _readerWriterLock.EnterReadLock();
+        try
         {
-            _agentHealthReporter = agentHealthReporter;
-            GetAndResetCollection();
+            AddToCollection(errorTraceWireModel);
+        }
+        finally
+        {
+            _readerWriterLock.ExitReadLock();
+        }
+    }
+    protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
+    protected override void Harvest() => InternalHarvest();
+    protected void InternalHarvest(string transactionId = null)
+    {
+        Log.Finest("Error Trace harvest starting.");
+
+        ICollection<ErrorTraceWireModel> errorTraceWireModels;
+
+        _readerWriterLock.EnterWriteLock();
+        try
+        {
+            errorTraceWireModels = GetAndResetCollection();
+        }
+        finally
+        {
+            _readerWriterLock.ExitWriteLock();
         }
 
-        public override void Dispose()
+        // if we don't have any events to publish then don't
+        var traceCount = errorTraceWireModels.Count;
+        if (traceCount > 0)
         {
-            _readerWriterLock.Dispose();
-            base.Dispose();
+            var responseStatus = DataTransportService.Send(errorTraceWireModels, transactionId);
+
+            HandleResponse(responseStatus, errorTraceWireModels);
         }
 
-        protected override TimeSpan HarvestCycle => _configuration.ErrorTracesHarvestCycle;
+        Log.Finest("Error Trace harvest finished.");
+    }
 
-        protected override bool IsEnabled => _configuration.ErrorCollectorEnabled;
+    protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+    {
+        // It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
+        // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-        public override void Collect(ErrorTraceWireModel errorTraceWireModel)
+        GetAndResetCollection();
+    }
+
+    private ICollection<ErrorTraceWireModel> GetAndResetCollection()
+    {
+        _errorTraceCollectionMaximum = _configuration.ErrorsMaximumPerPeriod;
+        return Interlocked.Exchange(ref _errorTraceWireModels, new ConcurrentList<ErrorTraceWireModel>());
+    }
+
+    private void AddToCollection(ErrorTraceWireModel errorTraceWireModel)
+    {
+        if (_errorTraceWireModels.Count >= _errorTraceCollectionMaximum)
+            return;
+
+        _errorTraceWireModels.Add(errorTraceWireModel);
+    }
+
+    private void Retain(IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
+    {
+        errorTraceWireModels = errorTraceWireModels.ToList();
+        _agentHealthReporter.ReportErrorTracesRecollected(errorTraceWireModels.Count());
+
+        // It is possible, but unlikely, to lose incoming error traces here due to a race condition
+        var savedErrorTraceWireModels = GetAndResetCollection();
+
+        // It is possible that newer, incoming error traces will be added to our collection before we add the retained and saved ones.
+        foreach (var model in errorTraceWireModels)
         {
-            _agentHealthReporter.ReportErrorTraceCollected();
-
-            _readerWriterLock.EnterReadLock();
-            try
+            if (model != null)
             {
-                AddToCollection(errorTraceWireModel);
-            }
-            finally
-            {
-                _readerWriterLock.ExitReadLock();
-            }
-        }
-        protected override void ManualHarvest(string transactionId) => InternalHarvest(transactionId);
-        protected override void Harvest() => InternalHarvest();
-        protected void InternalHarvest(string transactionId = null)
-        {
-            Log.Finest("Error Trace harvest starting.");
-
-            ICollection<ErrorTraceWireModel> errorTraceWireModels;
-
-            _readerWriterLock.EnterWriteLock();
-            try
-            {
-                errorTraceWireModels = GetAndResetCollection();
-            }
-            finally
-            {
-                _readerWriterLock.ExitWriteLock();
-            }
-
-            // if we don't have any events to publish then don't
-            var traceCount = errorTraceWireModels.Count;
-            if (traceCount > 0)
-            {
-                var responseStatus = DataTransportService.Send(errorTraceWireModels, transactionId);
-
-                HandleResponse(responseStatus, errorTraceWireModels);
-            }
-
-            Log.Finest("Error Trace harvest finished.");
-        }
-
-        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
-        {
-            // It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
-            // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
-
-            GetAndResetCollection();
-        }
-
-        private ICollection<ErrorTraceWireModel> GetAndResetCollection()
-        {
-            _errorTraceCollectionMaximum = _configuration.ErrorsMaximumPerPeriod;
-            return Interlocked.Exchange(ref _errorTraceWireModels, new ConcurrentList<ErrorTraceWireModel>());
-        }
-
-        private void AddToCollection(ErrorTraceWireModel errorTraceWireModel)
-        {
-            if (_errorTraceWireModels.Count >= _errorTraceCollectionMaximum)
-                return;
-
-            _errorTraceWireModels.Add(errorTraceWireModel);
-        }
-
-        private void Retain(IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
-        {
-            errorTraceWireModels = errorTraceWireModels.ToList();
-            _agentHealthReporter.ReportErrorTracesRecollected(errorTraceWireModels.Count());
-
-            // It is possible, but unlikely, to lose incoming error traces here due to a race condition
-            var savedErrorTraceWireModels = GetAndResetCollection();
-
-            // It is possible that newer, incoming error traces will be added to our collection before we add the retained and saved ones.
-            foreach (var model in errorTraceWireModels)
-            {
-                if (model != null)
-                {
-                    AddToCollection(model);
-                }
-            }
-
-            foreach (var model in savedErrorTraceWireModels)
-            {
-                if (model != null)
-                {
-                    AddToCollection(model);
-                }
+                AddToCollection(model);
             }
         }
 
-        private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<ErrorTraceWireModel> errorTraceWireModels)
+        foreach (var model in savedErrorTraceWireModels)
         {
-            switch (responseStatus)
+            if (model != null)
             {
-                case DataTransportResponseStatus.RequestSuccessful:
-                    _agentHealthReporter.ReportErrorTracesSent(errorTraceWireModels.Count);
-                    break;
-                case DataTransportResponseStatus.Retain:
-                    Retain(errorTraceWireModels);
-                    Log.Debug("Retaining {count} error traces.", errorTraceWireModels.Count);
-                    break;
-                case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
-                case DataTransportResponseStatus.Discard:
-                default:
-                    Log.Debug("Discarding {count} error traces.", errorTraceWireModels.Count);
-                    break;
+                AddToCollection(model);
             }
+        }
+    }
+
+    private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<ErrorTraceWireModel> errorTraceWireModels)
+    {
+        switch (responseStatus)
+        {
+            case DataTransportResponseStatus.RequestSuccessful:
+                _agentHealthReporter.ReportErrorTracesSent(errorTraceWireModels.Count);
+                break;
+            case DataTransportResponseStatus.Retain:
+                Retain(errorTraceWireModels);
+                Log.Debug("Retaining {count} error traces.", errorTraceWireModels.Count);
+                break;
+            case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
+            case DataTransportResponseStatus.Discard:
+            default:
+                Log.Debug("Discarding {count} error traces.", errorTraceWireModels.Count);
+                break;
         }
     }
 }

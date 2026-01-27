@@ -6,11 +6,10 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces;
+
+public interface IHttpClientWrapper : IDisposable
 {
-    public interface IHttpClientWrapper : IDisposable
-    {
-        Task<IHttpResponseMessageWrapper> SendAsync(HttpRequestMessage message);
-    }
+    Task<IHttpResponseMessageWrapper> SendAsync(HttpRequestMessage message);
 }
 #endif

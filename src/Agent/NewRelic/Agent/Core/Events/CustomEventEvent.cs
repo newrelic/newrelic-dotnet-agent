@@ -3,18 +3,17 @@
 
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.Events
+namespace NewRelic.Agent.Core.Events;
+
+public class CustomEventEvent
 {
-    public class CustomEventEvent
+    public readonly string EventType;
+
+    public readonly IEnumerable<KeyValuePair<string, object>> Attributes;
+
+    public CustomEventEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes)
     {
-        public readonly string EventType;
-
-        public readonly IEnumerable<KeyValuePair<string, object>> Attributes;
-
-        public CustomEventEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes)
-        {
-            EventType = eventType;
-            Attributes = attributes;
-        }
+        EventType = eventType;
+        Attributes = attributes;
     }
 }

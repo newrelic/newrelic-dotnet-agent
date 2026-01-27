@@ -1,13 +1,12 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Core.DataTransport
+namespace NewRelic.Agent.Core.DataTransport;
+
+public enum DataTransportResponseStatus
 {
-    public enum DataTransportResponseStatus
-    {
-        RequestSuccessful,
-        Retain,
-        ReduceSizeIfPossibleOtherwiseDiscard,
-        Discard
-    }
+    RequestSuccessful,
+    Retain,
+    ReduceSizeIfPossibleOtherwiseDiscard,
+    Discard
 }

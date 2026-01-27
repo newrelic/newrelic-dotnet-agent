@@ -3,10 +3,9 @@
 
 using NewRelic.Agent.Configuration;
 
-namespace NewRelic.Agent.Core.DistributedTracing.Samplers
+namespace NewRelic.Agent.Core.DistributedTracing.Samplers;
+
+public interface ISamplerFactory 
 {
-    public interface ISamplerFactory 
-    {
-        ISampler GetSampler(SamplerType samplerType, float? traceIdRatioSamplerRatio);
-    }
+    ISampler GetSampler(SamplerType samplerType, float? traceIdRatioSamplerRatio);
 }

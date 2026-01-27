@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading;
 #endif
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
@@ -23,13 +24,20 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DataTransport.Client;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Instrumentation;
+using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NewRelic.Agent.Core.Samplers;
-using NewRelic.Agent.Core.SharedInterfaces;
-using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces.Web;
+using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.TransactionTraces;
@@ -43,230 +51,222 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Core.SharedInterfaces.Web;
-using NewRelic.Agent.Core.Labels;
-using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
-using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics;
-using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
-using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
-using NewRelic.Agent.Api.Experimental;
-using NewRelic.Agent.Core.DistributedTracing.Samplers;
 
-namespace NewRelic.Agent.Core.DependencyInjection
+namespace NewRelic.Agent.Core.DependencyInjection;
+
+public static class AgentServices
 {
-    public static class AgentServices
+    public static IContainer GetContainer()
     {
-        public static IContainer GetContainer()
-        {
-            return new AgentContainer();
-        }
+        return new AgentContainer();
+    }
 
-        /// <summary>
-        /// Registers all of the services needed for the agent to run.
-        /// </summary>
-        /// <param name="container"></param>
-        /// <param name="serverlessModeEnabled"></param>
-        /// <param name="gcSamplerV2Enabled"></param>
-        public static void RegisterServices(IContainer container, bool serverlessModeEnabled, bool gcSamplerV2Enabled)
-        {
-            // we register this factory instead of just loading the storage contexts here because deferring the logic gives us a logger
-            container.RegisterFactory<IEnumerable<IContextStorageFactory>>(ExtensionsLoader.LoadContextStorageFactories);
-            container.Register<ICallStackManagerFactory, ResolvedCallStackManagerFactory>();
+    /// <summary>
+    /// Registers all of the services needed for the agent to run.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="serverlessModeEnabled"></param>
+    /// <param name="gcSamplerV2Enabled"></param>
+    public static void RegisterServices(IContainer container, bool serverlessModeEnabled, bool gcSamplerV2Enabled)
+    {
+        // we register this factory instead of just loading the storage contexts here because deferring the logic gives us a logger
+        container.RegisterFactory<IEnumerable<IContextStorageFactory>>(ExtensionsLoader.LoadContextStorageFactories);
+        container.Register<ICallStackManagerFactory, ResolvedCallStackManagerFactory>();
 
-            // IWrapper map
-            container.RegisterFactory<IEnumerable<IWrapper>>(() => ExtensionsLoader.LoadWrappers());
-            container.Register<IWrapperMap, WrapperMap>();
+        // IWrapper map
+        container.RegisterFactory<IEnumerable<IWrapper>>(() => ExtensionsLoader.LoadWrappers());
+        container.Register<IWrapperMap, WrapperMap>();
 #if NETFRAMEWORK
             container.Register<IHttpClientFactory, WebRequestHttpClientFactory>();
 #else
-            container.Register<IHttpClientFactory, NRHttpClientFactory>();
+        container.Register<IHttpClientFactory, NRHttpClientFactory>();
 #endif
 
-            // Other
-            container.Register<ICpuSampleTransformer, CpuSampleTransformer>();
-            container.RegisterInstance<AgentInstallConfiguration.IsWindowsDelegate>(AgentInstallConfiguration.GetIsWindows);
-            container.Register<IMemorySampleTransformer, MemorySampleTransformer>();
-            container.Register<IThreadStatsSampleTransformer, ThreadStatsSampleTransformer>();
-            container.Register<IEnvironment, SharedInterfaces.Environment>();
-            container.Register<IAgent, Agent>();
-            container.Register<CpuSampler, CpuSampler>();
-            container.Register<MemorySampler, MemorySampler>();
-            container.RegisterInstance<Func<ISampledEventListener<ThreadpoolThroughputEventsSample>>>(() => new ThreadEventsListener());
-            container.Register<ThreadStatsSampler, ThreadStatsSampler>();
-            container.Register<IGcSampleTransformer, GcSampleTransformer>();
+        // Other
+        container.Register<ICpuSampleTransformer, CpuSampleTransformer>();
+        container.RegisterInstance<AgentInstallConfiguration.IsWindowsDelegate>(AgentInstallConfiguration.GetIsWindows);
+        container.Register<IMemorySampleTransformer, MemorySampleTransformer>();
+        container.Register<IThreadStatsSampleTransformer, ThreadStatsSampleTransformer>();
+        container.Register<IEnvironment, SharedInterfaces.Environment>();
+        container.Register<IAgent, Agent>();
+        container.Register<CpuSampler, CpuSampler>();
+        container.Register<MemorySampler, MemorySampler>();
+        container.RegisterInstance<Func<ISampledEventListener<ThreadpoolThroughputEventsSample>>>(() => new ThreadEventsListener());
+        container.Register<ThreadStatsSampler, ThreadStatsSampler>();
+        container.Register<IGcSampleTransformer, GcSampleTransformer>();
 #if NETFRAMEWORK
             container.RegisterInstance<Func<string, IPerformanceCounterCategoryProxy>>(PerformanceCounterProxyFactory.DefaultCreatePerformanceCounterCategoryProxy);
             container.RegisterInstance<Func<string, string, string, IPerformanceCounterProxy>>(PerformanceCounterProxyFactory.DefaultCreatePerformanceCounterProxy);
             container.Register<IPerformanceCounterProxyFactory, PerformanceCounterProxyFactory>();
             container.Register<GcSampler, GcSampler>();
 #else
-            if (gcSamplerV2Enabled)
-            {
-                container.Register<IGCSamplerV2ReflectionHelper, GCSamplerV2ReflectionHelper>();
-                container.Register<IGCSampleTransformerV2, GCSampleTransformerV2>();
-                container.Register<GCSamplerV2, GCSamplerV2>();
-            }
-            else
-            {
-                container.RegisterInstance<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>(() => new GCEventsListener());
-                container.RegisterInstance<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>(GCSamplerNetCore.FXsamplerIsApplicableToFrameworkDefault);
-                container.Register<GCSamplerNetCore, GCSamplerNetCore>();
-            }
+        if (gcSamplerV2Enabled)
+        {
+            container.Register<IGCSamplerV2ReflectionHelper, GCSamplerV2ReflectionHelper>();
+            container.Register<IGCSampleTransformerV2, GCSampleTransformerV2>();
+            container.Register<GCSamplerV2, GCSamplerV2>();
+        }
+        else
+        {
+            container.RegisterInstance<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>(() => new GCEventsListener());
+            container.RegisterInstance<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>(GCSamplerNetCore.FXsamplerIsApplicableToFrameworkDefault);
+            container.Register<GCSamplerNetCore, GCSamplerNetCore>();
+        }
 #endif
 
-            container.Register<IBrowserMonitoringPrereqChecker, BrowserMonitoringPrereqChecker>();
-            container.Register<IProcessStatic, ProcessStatic>();
-            container.Register<INetworkData, NetworkData>();
-            container.Register<IDnsStatic, DnsStatic>();
-            container.Register<IHttpRuntimeStatic, HttpRuntimeStatic>();
-            container.Register<IConfigurationManagerStatic, ConfigurationManagerStatic>();
-            container.Register<ISerializer, JsonSerializer>();
-            container.Register<ICollectorWireFactory, HttpCollectorWireFactory>();
-            container.Register<Environment, Environment>();
+        container.Register<IBrowserMonitoringPrereqChecker, BrowserMonitoringPrereqChecker>();
+        container.Register<IProcessStatic, ProcessStatic>();
+        container.Register<INetworkData, NetworkData>();
+        container.Register<IDnsStatic, DnsStatic>();
+        container.Register<IHttpRuntimeStatic, HttpRuntimeStatic>();
+        container.Register<IConfigurationManagerStatic, ConfigurationManagerStatic>();
+        container.Register<ISerializer, JsonSerializer>();
+        container.Register<ICollectorWireFactory, HttpCollectorWireFactory>();
+        container.Register<Environment, Environment>();
 
-            if (!serverlessModeEnabled)
-            {
-                // Register the connection manager and handler only if serverless mode is not enabled
-                container.Register<IConnectionHandler, ConnectionHandler>();
-                container.Register<IConnectionManager, ConnectionManager>();
-                // Register the data transport service only if serverless mode is not enabled
-                container.Register<IDataTransportService, DataTransportService>();
-            }
-            else
-            {
-                container.Register<IDataTransportService, IServerlessModeDataTransportService, ServerlessModeDataTransportService>();
-                container.Register<IServerlessModePayloadManager, ServerlessModePayloadManager>();
-            }
-
-            container.Register<IFileWrapper, FileWrapper>();
-            container.Register<IDirectoryWrapper, DirectoryWrapper>();
-
-            container.Register<IScheduler, Scheduler>();
-            container.Register<ISystemInfo, SystemInfo>();
-            container.Register<ISimpleTimerFactory, SimpleTimerFactory>();
-            container.Register<IDateTimeStatic, DateTimeStatic>();
-            container.Register<IMetricAggregator, MetricAggregator>();
-            container.Register<IAllMetricStatsCollection, MetricWireModel>();
-            container.Register<IAllMetricStatsCollection, TransactionMetricStatsCollection>();
-            container.RegisterInstance<Func<MetricWireModel, MetricWireModel, MetricWireModel>>(MetricWireModel.Merge);
-            container.Register<ITransactionTraceAggregator, TransactionTraceAggregator>();
-            container.Register<ITransactionEventAggregator, TransactionEventAggregator>();
-            container.Register<ISqlTraceAggregator, SqlTraceAggregator>();
-            container.Register<IErrorTraceAggregator, ErrorTraceAggregator>();
-            container.Register<IErrorEventAggregator, ErrorEventAggregator>();
-            container.Register<ICustomEventAggregator, CustomEventAggregator>();
-            container.Register<ISpanEventAggregator, SpanEventAggregator>();
-            container.Register<ISpanEventAggregatorInfiniteTracing, SpanEventAggregatorInfiniteTracing>();
-            container.Register<ILogEventAggregator, LogEventAggregator>();
-            container.Register<ILogContextDataFilter, LogContextDataFilter>();
-            container.Register<IGrpcWrapper<SpanBatch, RecordStatus>, SpanBatchGrpcWrapper>();
-            container.Register<IDelayer, Delayer>();
-            container.Register<IDataStreamingService<Span, SpanBatch, RecordStatus>, SpanStreamingService>();
-            container.Register<ISpanEventMaker, SpanEventMaker>();
-            container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
-            container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
-            container.Register<IApiSupportabilityMetricCounters, IOutOfBandMetricSource, ApiSupportabilityMetricCounters>();
-            container.Register<ICATSupportabilityMetricCounters, IOutOfBandMetricSource, CATSupportabilityMetricCounters>();
-            container.Register<IOtelBridgeSupportabilityMetricCounters, IOutOfBandMetricSource, OtelBridgeSupportabilityMetricCounters>();
-            container.Register<IAgentTimerService, AgentTimerService>();
-            container.Register<IThreadPoolStatic, ThreadPoolStatic>();
-            container.Register<ITransactionTransformer, TransactionTransformer>();
-            container.Register<ICustomEventTransformer, CustomEventTransformer>();
-            container.Register<ICustomErrorDataTransformer, CustomErrorDataTransformer>();
-            container.Register<ISegmentTreeMaker, SegmentTreeMaker>();
-            container.Register<ITransactionMetricNameMaker, TransactionMetricNameMaker>();
-            container.Register<ITransactionTraceMaker, TransactionTraceMaker>();
-            container.Register<ITransactionEventMaker, TransactionEventMaker>();
-            container.Register<ICallStackManager, CallStackManager>();
-
-            container.Register<ISamplerFactory, SamplerFactory>();
-            container.Register<ISamplerService, SamplerService>();
-
-            var transactionCollectors = new List<ITransactionCollector> {
-                new SlowestTransactionCollector(),
-                new SyntheticsTransactionCollector(),
-                new KeyTransactionCollector() };
-            container.Register<ITransactionCollector, SlowestTransactionCollector>();
-            container.Register<ITransactionCollector, SyntheticsTransactionCollector>();
-            container.Register<ITransactionCollector, KeyTransactionCollector>();
-            container.RegisterInstance<IEnumerable<ITransactionCollector>>(transactionCollectors);
-
-            container.Register<ITransactionAttributeMaker, TransactionAttributeMaker>();
-            container.Register<IErrorTraceMaker, ErrorTraceMaker>();
-            container.Register<IErrorEventMaker, ErrorEventMaker>();
-            container.Register<ICatHeaderHandler, CatHeaderHandler>();
-            container.Register<IDistributedTracePayloadHandler, DistributedTracePayloadHandler>();
-            container.Register<ISyntheticsHeaderHandler, SyntheticsHeaderHandler>();
-            container.Register<IPathHashMaker, PathHashMaker>();
-            container.Register<ITransactionFinalizer, TransactionFinalizer>();
-            container.Register<IBrowserMonitoringScriptMaker, BrowserMonitoringScriptMaker>();
-            container.Register<ISqlTraceMaker, SqlTraceMaker>();
-            container.Register<IAgentApi, AgentApiImplementation>();
-            container.Register<IDefaultWrapper, DefaultWrapper>();
-            container.Register<INoOpWrapper, NoOpWrapper>();
-
-            container.Register<AssemblyResolutionService, AssemblyResolutionService>();
-            container.Register<IConfigurationService, ConfigurationService>();
-            container.Register<IMetricNameService, MetricNameService>();
-            container.Register<IWrapperService, WrapperService>();
-            container.Register<ILabelsService, LabelsService>();
-
-            container.Register<ITransactionService, TransactionService>();
-            container.RegisterInstance<Func<IAttributeFilter, IAttributeDefinitions>>((filter) => new AttributeDefinitions(filter));
-            container.Register<IAttributeDefinitionService, AttributeDefinitionService>();
-
-            if (!serverlessModeEnabled)
-                container.Register<CommandService, CommandService>();
-
-            container.Register<ConfigurationTracker, ConfigurationTracker>();
-            container.Register<IDatabaseService, DatabaseService>();
-            container.Register<IErrorService, ErrorService>();
-
-            container.Register<IInstrumentationService, InstrumentationService>();
-            container.Register<InstrumentationWatcher, InstrumentationWatcher>();
-            container.Register<LiveInstrumentationServerConfigurationListener, LiveInstrumentationServerConfigurationListener>();
-
-            container.Register<IDatabaseStatementParser, DatabaseStatementParser>();
-            container.Register<ITraceMetadataFactory, TraceMetadataFactory>();
-
-            if (AgentInstallConfiguration.IsWindows)
-            {
-                container.Register<INativeMethods, WindowsNativeMethods>();
-            }
-            else
-            {
-                container.Register<INativeMethods, LinuxNativeMethods>();
-            }
-            container.Register<ITracePriorityManager, TracePriorityManager>();
-            container.Register<NewRelic.Agent.Api.Experimental.ISimpleSchedulingService, SimpleSchedulingService>();
-
-            container.Register<UpdatedLoadedModulesService, UpdatedLoadedModulesService>();
-
-            container.Register<ActivityBridge, ActivityBridge>();
-            container.Register<NewRelicActivitySourceProxy, NewRelicActivitySourceProxy>();
-
-            if (!serverlessModeEnabled)
-            {
-                container.Register<IAssemblyProvider, AppDomainAssemblyProvider>();
-                container.Register<IMeterListenerWrapper, DynamicMeterListenerWrapper>();
-                container.Register<MeterBridgeConfiguration, MeterBridgeConfiguration>();
-                container.Register<IOtlpExporterConfigurationService, OtlpExporterConfigurationService>();
-                container.Register<IMeterBridgingService, MeterBridgingService>();
-                container.Register<MeterListenerBridge, MeterListenerBridge>();
-            }
-
-            container.Build();
+        if (!serverlessModeEnabled)
+        {
+            // Register the connection manager and handler only if serverless mode is not enabled
+            container.Register<IConnectionHandler, ConnectionHandler>();
+            container.Register<IConnectionManager, ConnectionManager>();
+            // Register the data transport service only if serverless mode is not enabled
+            container.Register<IDataTransportService, DataTransportService>();
+        }
+        else
+        {
+            container.Register<IDataTransportService, IServerlessModeDataTransportService, ServerlessModeDataTransportService>();
+            container.Register<IServerlessModePayloadManager, ServerlessModePayloadManager>();
         }
 
-        /// <summary>
-        /// Starts all of the services needed by resolving them.
-        /// </summary>
-        public static void StartServices(IContainer container, bool serverlessModeEnabled, bool gcSamplerV2Enabled)
-        {
-            if (!serverlessModeEnabled)
-                container.Resolve<AssemblyResolutionService>();
+        container.Register<IFileWrapper, FileWrapper>();
+        container.Register<IDirectoryWrapper, DirectoryWrapper>();
 
-            container.Resolve<ITransactionFinalizer>();
+        container.Register<IScheduler, Scheduler>();
+        container.Register<ISystemInfo, SystemInfo>();
+        container.Register<ISimpleTimerFactory, SimpleTimerFactory>();
+        container.Register<IDateTimeStatic, DateTimeStatic>();
+        container.Register<IMetricAggregator, MetricAggregator>();
+        container.Register<IAllMetricStatsCollection, MetricWireModel>();
+        container.Register<IAllMetricStatsCollection, TransactionMetricStatsCollection>();
+        container.RegisterInstance<Func<MetricWireModel, MetricWireModel, MetricWireModel>>(MetricWireModel.Merge);
+        container.Register<ITransactionTraceAggregator, TransactionTraceAggregator>();
+        container.Register<ITransactionEventAggregator, TransactionEventAggregator>();
+        container.Register<ISqlTraceAggregator, SqlTraceAggregator>();
+        container.Register<IErrorTraceAggregator, ErrorTraceAggregator>();
+        container.Register<IErrorEventAggregator, ErrorEventAggregator>();
+        container.Register<ICustomEventAggregator, CustomEventAggregator>();
+        container.Register<ISpanEventAggregator, SpanEventAggregator>();
+        container.Register<ISpanEventAggregatorInfiniteTracing, SpanEventAggregatorInfiniteTracing>();
+        container.Register<ILogEventAggregator, LogEventAggregator>();
+        container.Register<ILogContextDataFilter, LogContextDataFilter>();
+        container.Register<IGrpcWrapper<SpanBatch, RecordStatus>, SpanBatchGrpcWrapper>();
+        container.Register<IDelayer, Delayer>();
+        container.Register<IDataStreamingService<Span, SpanBatch, RecordStatus>, SpanStreamingService>();
+        container.Register<ISpanEventMaker, SpanEventMaker>();
+        container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
+        container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
+        container.Register<IApiSupportabilityMetricCounters, IOutOfBandMetricSource, ApiSupportabilityMetricCounters>();
+        container.Register<ICATSupportabilityMetricCounters, IOutOfBandMetricSource, CATSupportabilityMetricCounters>();
+        container.Register<IOtelBridgeSupportabilityMetricCounters, IOutOfBandMetricSource, OtelBridgeSupportabilityMetricCounters>();
+        container.Register<IAgentTimerService, AgentTimerService>();
+        container.Register<IThreadPoolStatic, ThreadPoolStatic>();
+        container.Register<ITransactionTransformer, TransactionTransformer>();
+        container.Register<ICustomEventTransformer, CustomEventTransformer>();
+        container.Register<ICustomErrorDataTransformer, CustomErrorDataTransformer>();
+        container.Register<ISegmentTreeMaker, SegmentTreeMaker>();
+        container.Register<ITransactionMetricNameMaker, TransactionMetricNameMaker>();
+        container.Register<ITransactionTraceMaker, TransactionTraceMaker>();
+        container.Register<ITransactionEventMaker, TransactionEventMaker>();
+        container.Register<ICallStackManager, CallStackManager>();
+
+        container.Register<ISamplerFactory, SamplerFactory>();
+        container.Register<ISamplerService, SamplerService>();
+
+        var transactionCollectors = new List<ITransactionCollector> {
+            new SlowestTransactionCollector(),
+            new SyntheticsTransactionCollector(),
+            new KeyTransactionCollector() };
+        container.Register<ITransactionCollector, SlowestTransactionCollector>();
+        container.Register<ITransactionCollector, SyntheticsTransactionCollector>();
+        container.Register<ITransactionCollector, KeyTransactionCollector>();
+        container.RegisterInstance<IEnumerable<ITransactionCollector>>(transactionCollectors);
+
+        container.Register<ITransactionAttributeMaker, TransactionAttributeMaker>();
+        container.Register<IErrorTraceMaker, ErrorTraceMaker>();
+        container.Register<IErrorEventMaker, ErrorEventMaker>();
+        container.Register<ICatHeaderHandler, CatHeaderHandler>();
+        container.Register<IDistributedTracePayloadHandler, DistributedTracePayloadHandler>();
+        container.Register<ISyntheticsHeaderHandler, SyntheticsHeaderHandler>();
+        container.Register<IPathHashMaker, PathHashMaker>();
+        container.Register<ITransactionFinalizer, TransactionFinalizer>();
+        container.Register<IBrowserMonitoringScriptMaker, BrowserMonitoringScriptMaker>();
+        container.Register<ISqlTraceMaker, SqlTraceMaker>();
+        container.Register<IAgentApi, AgentApiImplementation>();
+        container.Register<IDefaultWrapper, DefaultWrapper>();
+        container.Register<INoOpWrapper, NoOpWrapper>();
+
+        container.Register<AssemblyResolutionService, AssemblyResolutionService>();
+        container.Register<IConfigurationService, ConfigurationService>();
+        container.Register<IMetricNameService, MetricNameService>();
+        container.Register<IWrapperService, WrapperService>();
+        container.Register<ILabelsService, LabelsService>();
+
+        container.Register<ITransactionService, TransactionService>();
+        container.RegisterInstance<Func<IAttributeFilter, IAttributeDefinitions>>((filter) => new AttributeDefinitions(filter));
+        container.Register<IAttributeDefinitionService, AttributeDefinitionService>();
+
+        if (!serverlessModeEnabled)
+            container.Register<CommandService, CommandService>();
+
+        container.Register<ConfigurationTracker, ConfigurationTracker>();
+        container.Register<IDatabaseService, DatabaseService>();
+        container.Register<IErrorService, ErrorService>();
+
+        container.Register<IInstrumentationService, InstrumentationService>();
+        container.Register<InstrumentationWatcher, InstrumentationWatcher>();
+        container.Register<LiveInstrumentationServerConfigurationListener, LiveInstrumentationServerConfigurationListener>();
+
+        container.Register<IDatabaseStatementParser, DatabaseStatementParser>();
+        container.Register<ITraceMetadataFactory, TraceMetadataFactory>();
+
+        if (AgentInstallConfiguration.IsWindows)
+        {
+            container.Register<INativeMethods, WindowsNativeMethods>();
+        }
+        else
+        {
+            container.Register<INativeMethods, LinuxNativeMethods>();
+        }
+        container.Register<ITracePriorityManager, TracePriorityManager>();
+        container.Register<NewRelic.Agent.Api.Experimental.ISimpleSchedulingService, SimpleSchedulingService>();
+
+        container.Register<UpdatedLoadedModulesService, UpdatedLoadedModulesService>();
+
+        container.Register<ActivityBridge, ActivityBridge>();
+        container.Register<NewRelicActivitySourceProxy, NewRelicActivitySourceProxy>();
+
+        if (!serverlessModeEnabled)
+        {
+            container.Register<IAssemblyProvider, AppDomainAssemblyProvider>();
+            container.Register<IMeterListenerWrapper, DynamicMeterListenerWrapper>();
+            container.Register<MeterBridgeConfiguration, MeterBridgeConfiguration>();
+            container.Register<IOtlpExporterConfigurationService, OtlpExporterConfigurationService>();
+            container.Register<IMeterBridgingService, MeterBridgingService>();
+            container.Register<MeterListenerBridge, MeterListenerBridge>();
+        }
+
+        container.Build();
+    }
+
+    /// <summary>
+    /// Starts all of the services needed by resolving them.
+    /// </summary>
+    public static void StartServices(IContainer container, bool serverlessModeEnabled, bool gcSamplerV2Enabled)
+    {
+        if (!serverlessModeEnabled)
+            container.Resolve<AssemblyResolutionService>();
+
+        container.Resolve<ITransactionFinalizer>();
 #if NETFRAMEWORK
             // Start GCSampler on separate thread due to delay in collecting Instance Names,
             // which can stall application startup and cause the app start to timeout
@@ -276,21 +276,20 @@ namespace NewRelic.Agent.Core.DependencyInjection
             samplerStartThread.IsBackground = true;
             samplerStartThread.Start();
 #else
-            if (!gcSamplerV2Enabled)
-                container.Resolve<GCSamplerNetCore>().Start();
-            else
-                container.Resolve<GCSamplerV2>().Start();
+        if (!gcSamplerV2Enabled)
+            container.Resolve<GCSamplerNetCore>().Start();
+        else
+            container.Resolve<GCSamplerV2>().Start();
 #endif
-            container.Resolve<CpuSampler>().Start();
-            container.Resolve<MemorySampler>().Start();
-            container.Resolve<ThreadStatsSampler>().Start();
-            if (!serverlessModeEnabled)
-            {
-                container.Resolve<ConfigurationTracker>();
-                container.Resolve<LiveInstrumentationServerConfigurationListener>();
-                container.Resolve<UpdatedLoadedModulesService>();
-                container.Resolve<MeterListenerBridge>();
-            }
+        container.Resolve<CpuSampler>().Start();
+        container.Resolve<MemorySampler>().Start();
+        container.Resolve<ThreadStatsSampler>().Start();
+        if (!serverlessModeEnabled)
+        {
+            container.Resolve<ConfigurationTracker>();
+            container.Resolve<LiveInstrumentationServerConfigurationListener>();
+            container.Resolve<UpdatedLoadedModulesService>();
+            container.Resolve<MeterListenerBridge>();
         }
     }
 }

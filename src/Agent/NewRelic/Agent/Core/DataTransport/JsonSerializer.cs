@@ -3,18 +3,17 @@
 
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Core.DataTransport
-{
-    public class JsonSerializer : ISerializer
-    {
-        public string Serialize(object[] parameters)
-        {
-            return JsonConvert.SerializeObject(parameters);
-        }
+namespace NewRelic.Agent.Core.DataTransport;
 
-        public T Deserialize<T>(string responseBody)
-        {
-            return JsonConvert.DeserializeObject<T>(responseBody);
-        }
+public class JsonSerializer : ISerializer
+{
+    public string Serialize(object[] parameters)
+    {
+        return JsonConvert.SerializeObject(parameters);
+    }
+
+    public T Deserialize<T>(string responseBody)
+    {
+        return JsonConvert.DeserializeObject<T>(responseBody);
     }
 }
