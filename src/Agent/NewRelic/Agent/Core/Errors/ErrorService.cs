@@ -11,7 +11,6 @@ using System.Web;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Helpers;
 
-
 namespace NewRelic.Agent.Core.Errors
 {
     public interface IErrorService
