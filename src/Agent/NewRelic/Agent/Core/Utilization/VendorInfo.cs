@@ -1,18 +1,18 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Helpers;
-using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Agent.Core.SharedInterfaces;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Helpers;
+using Newtonsoft.Json.Linq;
 
 namespace NewRelic.Agent.Core.Utilization;
 
