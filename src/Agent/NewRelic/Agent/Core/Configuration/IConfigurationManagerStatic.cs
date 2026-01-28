@@ -4,11 +4,6 @@
 using System;
 using NewRelic.Agent.Extensions.Logging;
 
-#if NETSTANDARD2_0
-using System.IO;
-using Microsoft.Extensions.Configuration;
-#endif
-
 namespace NewRelic.Agent.Core.Configuration;
 
 public interface IConfigurationManagerStatic

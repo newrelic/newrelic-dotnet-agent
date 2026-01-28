@@ -2,14 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETSTANDARD2_0
-using System;
 
-namespace NewRelic.Agent.Core.SharedInterfaces.Web
+namespace NewRelic.Agent.Core.SharedInterfaces.Web.Core;
+
+public class HttpRuntimeStatic : IHttpRuntimeStatic
 {
-
-	public class HttpRuntimeStatic : IHttpRuntimeStatic
-	{
-		public string AppDomainAppVirtualPath => string.Empty; //Microsoft.AspNetCore.Http.AppDomainAppVirtualPath;
-	}
+    public string AppDomainAppVirtualPath => string.Empty; //Microsoft.AspNetCore.Http.AppDomainAppVirtualPath;
 }
 #endif

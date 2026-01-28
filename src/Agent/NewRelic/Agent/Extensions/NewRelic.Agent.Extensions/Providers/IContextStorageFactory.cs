@@ -25,6 +25,7 @@ public interface IContextStorageFactory
     /// </summary>
     bool IsHybridStorage { get; }
 
+    /// <summary>
     /// Returns true if this context is valid (and possibly throws if it isn't).
     /// </summary>
     bool IsValid { get; }

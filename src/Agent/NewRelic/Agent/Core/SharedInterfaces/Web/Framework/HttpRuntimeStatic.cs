@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETFRAMEWORK
-using System;
 
 namespace NewRelic.Agent.Core.SharedInterfaces.Web
 {

@@ -13,7 +13,6 @@ using GrpcChannel = Grpc.Core.Channel;
 #else
 using System.Net.Http;
 using Grpc.Net.Client;
-using NewRelic.Agent.Core.Segments;
 #endif
 
 namespace NewRelic.Agent.Core.DataTransport;

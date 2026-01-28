@@ -48,9 +48,9 @@ public abstract class SqlCommandWrapperBase : IWrapper
     /// decorated with the async decorator.  When this happens, the InstrumentedMethodCall.IsAsync cannot be relied upon to determine 
     /// whether or not to attach the AfterWrappedMethod as a continuation or to just run it.
     /// 
-    /// Here is an example of the suble difference:
-    /// public async Task<int> ExecuteScalar(...)
-    /// public Task<int> ExecuteScalar(...)
+    /// Here is an example of the subtle difference:
+    /// public async Task&lt;int&gt; Execute    (...)
+    /// public Task&lt;int&gt; ExecuteScalar(...)
     /// </summary>
     public abstract bool ExecuteAsAsync { get; }
 

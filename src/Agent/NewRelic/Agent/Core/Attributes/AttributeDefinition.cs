@@ -397,7 +397,7 @@ public class AttributeDefinition<TInput, TOutput> : AttributeDefinition
     /// 
     /// </summary>
     /// <param name="collection"></param>
-    /// <param name="getValFx">Function in users code to obtain the value.  Wrapped in a delegate
+    /// <param name="getInputValFx">Function in users code to obtain the value.  Wrapped in a delegate
     /// so as to not run if it is deemed not necessary</param>
     /// <returns>true if the value was set</returns>
     public bool TrySetValue(IAttributeValueCollection collection, Func<TInput> getInputValFx)

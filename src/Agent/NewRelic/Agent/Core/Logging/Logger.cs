@@ -92,7 +92,7 @@ public class Logger : ILogger
         _logger.Error(exception, message, args);
 
     /// <summary>
-    /// Logs <paramref name="exception"/> at the ERROR level by calling exception.ToString(). This log level should be used for information regarding problems in the agent that will adversely affect the user in some way (data loss, performance problems, reduced agent functionality, etc). Do not use if logging that information will create a performance problem (say, due to excessive logging).
+    /// Logs <paramref name="message"/> at the ERROR level. This log level should be used for information regarding problems in the agent that will adversely affect the user in some way (data loss, performance problems, reduced agent functionality, etc). Do not use if logging that information will create a performance problem (say, due to excessive logging).
     /// </summary>
     public void Error(string message, params object[] args) =>
         _logger.Error(message, args);
@@ -113,7 +113,7 @@ public class Logger : ILogger
         _logger.Warning(exception, message, args);
 
     /// <summary>
-    /// Logs <paramref name="exception"/> at the WARN level by calling exception.ToString(). This log level should be used for information regarding *possible* problems in the agent that *might* adversely affect the user in some way (data loss, performance problems, reduced agent functionality, etc). Do not use if logging that information will create a performance problem (say, due to excessive logging).
+    /// Logs <paramref name="message"/> at the WARN level. This log level should be used for information regarding *possible* problems in the agent that *might* adversely affect the user in some way (data loss, performance problems, reduced agent functionality, etc). Do not use if logging that information will create a performance problem (say, due to excessive logging).
     /// </summary>
     public void Warn(string message, params object[] args) =>
         _logger.Warning(message, args);
@@ -134,7 +134,7 @@ public class Logger : ILogger
         _logger.Information(exception, message, args);
 
     /// <summary>
-    /// Logs a message at the INFO level by calling String.Format(<paramref name="format"/>, <paramref name="args"/>). This log level should be used for information for non-error information that may be of interest to the user, such as a the agent noticing a configuration change, or an infrequent "heartbeat". Do not use if logging that information will create a performance problem (say, due to excessive logging).
+    /// Logs a message at the INFO level by calling String.Format(). This log level should be used for information for non-error information that may be of interest to the user, such as a the agent noticing a configuration change, or an infrequent "heartbeat". Do not use if logging that information will create a performance problem (say, due to excessive logging).
     /// </summary>
     public void Info(string message, params object[] args) =>
         _logger.Information(message, args);
@@ -155,7 +155,7 @@ public class Logger : ILogger
         _logger.Debug(exception, message, args);
 
     /// <summary>
-    /// Logs <paramref name="exception"/> at the DEBUG level by calling exception.ToString(). This log level should be used for information that is non-critical and used mainly for troubleshooting common problems such as RUM injection or SQL explain plans. This level is not enabled by default so there is less concern about performance, but this level still should not be used for any logging that would cause significant performance, such as logging every transaction name for every transaction.
+    /// Logs <paramref name="message"/> at the DEBUG level. This log level should be used for information that is non-critical and used mainly for troubleshooting common problems such as RUM injection or SQL explain plans. This level is not enabled by default so there is less concern about performance, but this level still should not be used for any logging that would cause significant performance, such as logging every transaction name for every transaction.
     /// </summary>
     public void Debug(string message, params object[] args) =>
         _logger.Debug(message, args);
@@ -176,7 +176,7 @@ public class Logger : ILogger
         _logger.Verbose(exception, message, args);
 
     /// <summary>
-    /// Logs <paramref name="exception"/> at the FINEST level by calling exception.ToString(). This log level should be used as a last resort for information that would otherwise be too expensive or too noisy to log at DEBUG level, such as logging every transaction name for every transaction. Useful for troubleshooting subtle problems like WCF's dual transactions.
+    /// Logs <paramref name="message"/> at the FINEST level. This log level should be used as a last resort for information that would otherwise be too expensive or too noisy to log at DEBUG level, such as logging every transaction name for every transaction. Useful for troubleshooting subtle problems like WCF's dual transactions.
     /// </summary>
     public void Finest(string message, params object[] args) =>
         _logger.Verbose(message, args);

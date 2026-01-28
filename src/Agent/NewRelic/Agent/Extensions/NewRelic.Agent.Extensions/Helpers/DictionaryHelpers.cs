@@ -12,7 +12,7 @@ public static class DictionaryHelpers
     /// Converts a JSON string to a dictionary.  Will always return a dictionary, even if the JSON is invalid.
     /// </summary>
     /// <param name="json"></param>
-    /// <returns>IReadOnlyDictionary<string, object></returns>
+    /// <returns>IReadOnlyDictionary{string, object}</returns>
     public static IReadOnlyDictionary<string, object> FromJson(string json)
     {
         if (string.IsNullOrEmpty(json))

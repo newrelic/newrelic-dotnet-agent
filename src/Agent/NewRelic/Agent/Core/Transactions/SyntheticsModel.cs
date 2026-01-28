@@ -138,10 +138,10 @@ public class SyntheticsHeader
 
     /// <summary>
     /// IsUnsupportedVersion: https://source.datanerd.us/agents/agent-specs/blob/master/Synthetics-PORTED.md#verify-version
-    // TDDO: evaluate to see if this will need to change for backwards compatibility: i.e.version =< SupportedHeaderVersion
-    // if version = 1 & SupportedHeaderVersion = 2 then true
-    // if version = 2 & SupportedHeaderVersion = 2 then true
-    // if version = 3 & SupportedHeaderVersion = 2 then false
+    /// TODO: evaluate to see if this will need to change for backwards compatibility: i.e.version less than or equal to SupportedHeaderVersion
+    /// if version = 1 and SupportedHeaderVersion = 2 then true
+    /// if version = 2 and SupportedHeaderVersion = 2 then true
+    /// if version = 3 and SupportedHeaderVersion = 2 then false
     /// </summary>
     private static bool IsUnsupportedVersion(long version)
     {

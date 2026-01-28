@@ -22,7 +22,6 @@ public interface IWrapperMap
     /// <summary>
     /// Returns the NoOp wrapper.
     /// </summary>
-    /// <param name="instrumentedMethodInfo"></param>
     TrackedWrapper GetNoOpWrapper();
 }
 

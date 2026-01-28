@@ -31,8 +31,6 @@ public class TracePriorityManager : ITracePriorityManager
     /// <summary>
     /// Creates the a new random, sanitized priority between 0.0 and 1.0. (A sanitized priority is truncated to to six digits to the right of the decimal point.)
     /// </summary>
-    /// <param name="priority">A priority value to adjust</param>
-    /// <param name="adjustment">The amount to adjust the priority.  Can be a negative or positive value</param>
     /// <returns>A sanitized priority value (truncated to six digits to the right of the decimal point.</returns>
     public float Create()
     {

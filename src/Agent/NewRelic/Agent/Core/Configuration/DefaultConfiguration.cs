@@ -13,6 +13,9 @@ using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
+#if NETSTANDARD
+using NewRelic.Agent.Core.SharedInterfaces.Web.Core;
+#endif
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.SystemExtensions;
@@ -286,7 +289,6 @@ public class DefaultConfiguration : IConfiguration
     /// <remarks>
     /// Side effects:
     /// - Sets <see cref="_applicationNamesSource"/> to the source of the resolved names.
-    /// - Sets <see cref="_applicationNamesMissing"/> to true only when resolution fails.
     /// Logging behavior is preserved exactly from the original implementation.
     /// </remarks>
     public bool TryGetApplicationNames(out IEnumerable<string> names)  // CHANGED: was private

@@ -52,7 +52,6 @@ public class ErrorTraceMaker : IErrorTraceMaker
     /// The method won't throw if it is not but will send meaningless data in some of the attributes.
     /// </remarks>
     /// <param name="attribValues"></param>
-    /// <param name="errorData"></param>
     /// <returns></returns>
     public ErrorTraceWireModel GetErrorTrace(IAttributeValueCollection attribValues, ErrorData errorData)
     {
@@ -74,14 +73,9 @@ public class ErrorTraceMaker : IErrorTraceMaker
     /// a transaction, transaction attributes and an error referenced by an <see cref="NewRelic.Agent.Core.Errors.ErrorData"/>
     /// occurring inside of a transaction.
     /// </summary>
-    /// <remarks>
-    /// The <param name="errorData"></param> passed to this method is assumed to contain valid error information.
-    /// The method won't throw if it is not but will send meaningless data in some of the attributes.
-    /// </remarks>
     /// <param name="immutableTransaction"></param>
     /// <param name="transactionAttributes"></param>
     /// <param name="transactionMetricName"></param>
-    /// <param name="errorData"></param>
     /// <returns></returns>
     public ErrorTraceWireModel GetErrorTrace(ImmutableTransaction immutableTransaction, IAttributeValueCollection transactionAttributes, TransactionMetricName transactionMetricName)
     {

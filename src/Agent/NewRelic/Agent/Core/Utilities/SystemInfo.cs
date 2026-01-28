@@ -3,7 +3,9 @@
 
 using System;
 using System.ComponentModel;
+#if NETSTANDARD
 using System.IO;
+#endif
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.Core.SharedInterfaces;

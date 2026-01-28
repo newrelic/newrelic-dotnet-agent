@@ -89,7 +89,7 @@ public class BrowserMonitoringPrereqChecker : IBrowserMonitoringPrereqChecker
 
     /// <summary>
     /// Determines whether the agent's Javascript Instrumentation should be injected for
-    /// a page request whose <see cref="System.Web.HttpRequest.Path" /> is <paramref name="requestPath"/>.
+    /// a page request whose System.Web.HttpRequest.Path is <paramref name="requestPath"/>.
     /// </summary>
     /// <remarks>
     /// Since we're building against .NET 2.0/3.5, we cannot take advantage of a .NET 4.5 addition 

@@ -24,6 +24,7 @@ public class DatabaseService : ConfigurationBasedService, IDatabaseService
     /// The generation of SQL IDs always uses obfuscation in order to normalize the SQL and generate the same ID for queries that differ only in their parameterization.
     /// </summary>
     /// <param name="sql"></param>
+    /// <param name="vendor"></param>
     /// <returns></returns>
     public long GetSqlId(string sql, DatastoreVendor vendor)
     {
@@ -36,6 +37,7 @@ public class DatabaseService : ConfigurationBasedService, IDatabaseService
     /// the value returned from the SQL obfuscator defined by the configuration because there is no need to cache the value of the no sql and raw sql obfuscators.
     /// </summary>
     /// <param name="sql"></param>
+    /// <param name="vendor"></param>
     /// <returns></returns>
     public string GetObfuscatedSql(string sql, DatastoreVendor vendor)
     {
@@ -50,6 +52,7 @@ public class DatabaseService : ConfigurationBasedService, IDatabaseService
     /// results.
     /// </summary>
     /// <param name="sql"></param>
+    /// <param name="vendor"></param>
     /// <returns></returns>
     private string GetObfuscatedSqlFromCache(string sql, DatastoreVendor vendor)
     {

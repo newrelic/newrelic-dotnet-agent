@@ -68,7 +68,11 @@ public class BootstrapConfiguration : IBootstrapConfiguration
     /// </summary>
     /// <param name="localConfiguration"></param>
     /// <param name="configurationFileName"></param>
-    /// <param name="getAppSettingWithProvenance"></param>
+    /// <param name="getWebConfigSettingWithProvenance"></param>
+    /// <param name="configurationManagerStatic"></param>
+    /// <param name="processStatic"></param>
+    /// <param name="checkDirectoryExists"></param>
+    /// <param name="getFullPath"></param>
     public BootstrapConfiguration(configuration localConfiguration, string configurationFileName, Func<string, ValueWithProvenance<string>> getWebConfigSettingWithProvenance, IConfigurationManagerStatic configurationManagerStatic, IProcessStatic processStatic, Predicate<string> checkDirectoryExists, Func<string, string> getFullPath)
     {
         ServerlessModeEnabled = CheckServerlessModeEnabled(localConfiguration);

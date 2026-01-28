@@ -44,9 +44,11 @@ public interface ITransaction
     /// Creates a segment for a datastore operation.
     /// </summary>
     /// <param name="methodCall">The method call that is responsible for starting this segment.</param>
+    /// <param name="connectionInfo"></param>
     /// <param name="commandText">The text representation of the operation being performed.  Not required, though when provided it's used for generating traces.</param>
+    /// <param name="queryParameters"></param>
     /// <param name="isLeaf">If set to true, the created segment is a leaf segment. The default value is false.</param>
-    /// <exception cref="ArgumentNullException">Is thrown if <paramref name="operation"/> is null.</exception>
+    /// <param name="parsedSqlStatement"></param>
     /// <returns>An opaque object that will be needed when you want to end the segment.</returns>
     ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, ConnectionInfo connectionInfo = null, string commandText = null, IDictionary<string, IConvertible> queryParameters = null, bool isLeaf = false);
 
@@ -110,6 +112,7 @@ public interface ITransaction
     /// <param name="operation"></param>
     /// <param name="brokerVendorName">Must not be null.</param>
     /// <param name="destinationName">Can be null.</param>
+    /// <param name="kind">The kind of serialization being performed. Must not be null.</param>
     /// <exception cref="ArgumentNullException"></exception>
     /// <returns>an opaque object that will be needed when you want to end the segment.</returns>
     ISegment StartMessageBrokerSerializationSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string kind);

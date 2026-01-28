@@ -20,7 +20,6 @@ public class HealthCheck
     /// <summary>
     /// Set the health status of the agent, but only update changed values.
     /// </summary>
-    /// <param name="healthy"></param>
     /// <param name="healthStatus"></param>
     /// <param name="statusParams"></param>
     public void TrySetHealth((bool IsHealthy, string Code, string Status) healthStatus, params string[] statusParams)

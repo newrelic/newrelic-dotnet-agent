@@ -534,6 +534,7 @@ public static class AgentApi
     /// Obsolete method that used to return the html snippet to be inserted into the footer of html pages as part of Real User Monitoring.
     /// Now only returns and empty string.
     /// Supports web applications only.
+    /// </summary>
     /// <returns>An empty string.</returns>
     [Obsolete("This method does nothing in version 9.x+ of the Agent.")]
     public static string GetBrowserTimingFooter()

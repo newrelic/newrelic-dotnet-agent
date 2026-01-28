@@ -157,8 +157,9 @@ public class AgentShim
     /// <param name="argumentSignature"></param>
     /// <param name="invocationTarget"></param>
     /// <param name="args"></param>
+    /// <param name="functionId"></param>
     /// <returns></returns>
-    /// <returns>Returns an Action<object, Exception> delegate which invokes ITracer.Finish.  
+    /// <returns>Returns an Action&lt;object, Exception&gt; delegate which invokes ITracer.Finish.  
     /// We can directly invoke this delegate instead of using reflection.  Null should never be returned.</returns>
     /// <exception cref="System.ArgumentNullException"> thrown if any one of <paramref name="assemblyName"/>, <paramref name="type"/>,
     /// <paramref name="typeName"/>, <paramref name="methodName"/>, <paramref name="argumentSignature"/> or <paramref name="args"/> is null. 

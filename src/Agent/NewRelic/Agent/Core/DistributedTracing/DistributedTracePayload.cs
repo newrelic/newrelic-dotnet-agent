@@ -178,9 +178,8 @@ public class DistributedTracePayload
     }
 
     /// <summary>
-    /// Serialize a DistributedTracePayload <paramref name="payload"/> to an, optionally pretty, JSON string.
+    /// Serialize a DistributedTracePayload to an, optionally pretty, JSON string.
     /// </summary>
-    /// <param name="payload">The DistributedTracePayload</param>
     /// <param name="pretty">When true, the JSON string will have extra whitespace/new lines. When false, the JSON will be compact.</param>
     /// <returns>The serialized JSON string</returns>
     public string ToJson(bool pretty = false)

@@ -149,7 +149,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         }
 
         /// <summary>
-        /// If the queue size is invalid (<=0), 
+        /// If the queue size is invalid (less than or equal to 0), 
         /// 1.  The data streaming service should stop streaming events
         /// 2.  Items in the queue should be dropped
         /// 3.  Supportabiilty metric should be recorded
@@ -483,7 +483,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
 
         /// <summary>
-        /// If the queue size is invalid (<=0), 
+        /// If the queue size is invalid (less than or equal to 0), 
         /// 1.  The data streaming service should stop streaming events
         /// 2.  Items in the queue should be dropped
         /// 3.  Supportabiilty metric should be recorded

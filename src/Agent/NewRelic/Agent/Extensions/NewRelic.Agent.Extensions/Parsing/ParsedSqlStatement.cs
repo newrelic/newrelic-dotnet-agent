@@ -33,6 +33,7 @@ public class ParsedSqlStatement
     /// See DatabaseStatementParserTest for additional examples.
     /// 
     /// </summary>
+    /// <param name="datastoreVendor"></param>
     /// <param name="model">What the statement is operating on, eg the "direct object" of the operation.</param>
     /// <param name="operation">What the operation is doing.</param>
     public ParsedSqlStatement(DatastoreVendor datastoreVendor, string model, string operation)
