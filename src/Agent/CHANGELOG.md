@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.48.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.48.0...v10.48.1) (2026-01-28)
+
+
+### Fixes
+
+* Properly handle unsupported DynamoDB SDK requests ([#3403](https://github.com/newrelic/newrelic-dotnet-agent/issues/3403)) ([#3407](https://github.com/newrelic/newrelic-dotnet-agent/issues/3407)) ([d0155ea](https://github.com/newrelic/newrelic-dotnet-agent/commit/d0155eac232c49671514d4a611ed06057ae5f737))
+
 ## [10.48.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.47.2...v10.48.0) (2026-01-14)
 
 
