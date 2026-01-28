@@ -17,15 +17,7 @@ public static class SqsHelper
     private static ConcurrentDictionary<Type, Func<object, IDictionary>> _getMessageAttributes = new();
     private static Func<object> _messageAttributeValueTypeFactory;
 
-    public const string MessagingSystemName = "aws_sqs";
-    public const string VendorName = "SQS";
-
-    private class SqsAttributes
-    {
-        public string QueueName { get; }
-        public string CloudId { get; }
-        public string Region { get; }
-        public string ServerAddress { get; }
+        public const string MessagingSystemName = "aws_sqs";
 
         // https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue
         public SqsAttributes(string url)
@@ -50,8 +42,8 @@ public static class SqsHelper
                 return;
             }
 
-            // subdomain[0] should always be "sqs"
-            Region = subdomain[1];
+            var segment = transaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, MessageBrokerVendorConstants.SQS, destinationName: attr.QueueName, messagingSystemName: MessagingSystemName, cloudAccountId: attr.CloudId, cloudRegion: attr.Region);
+            segment.GetExperimentalApi().MakeLeaf();
 
             ServerAddress = new Uri(url).Host;
         }

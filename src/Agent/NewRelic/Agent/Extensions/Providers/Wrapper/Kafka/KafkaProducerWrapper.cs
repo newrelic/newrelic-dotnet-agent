@@ -13,7 +13,6 @@ namespace NewRelic.Providers.Wrapper.Kafka
     public class KafkaProducerWrapper : IWrapper
     {
         private const string WrapperName = "KafkaProducerWrapper";
-        private const string BrokerVendorName = "Kafka";
 
         public bool IsTransactionRequired => true;
 
@@ -27,7 +26,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
             var topicPartition = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<TopicPartition>(0);
             var messageMetadata = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<MessageMetadata>(1);
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Produce, BrokerVendorName, topicPartition.Topic);
+            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Produce, MessageBrokerVendorConstants.Kafka, topicPartition.Topic);
 
             transaction.InsertDistributedTraceHeaders(messageMetadata, DistributedTraceHeadersSetter);
 

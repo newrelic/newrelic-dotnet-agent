@@ -64,7 +64,7 @@ public class AzureServiceBusReceiveWrapper : AzureServiceBusWrapperBase
             instrumentedMethodCall.MethodCall,
             destinationType,
             action,
-            BrokerVendorName,
+            MessageBrokerVendorConstants.ServiceBus,
             queueOrTopicName,
             serverAddress: fqns);
 

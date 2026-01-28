@@ -29,7 +29,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 instrumentedMethodCall.MethodCall,
                 destType,
                 MessageBrokerAction.Purge,
-                RabbitMqHelper.VendorName,
+                MessageBrokerVendorConstants.RabbitMQ,
                 destName,
                 serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall, agent),
                 serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall, agent));

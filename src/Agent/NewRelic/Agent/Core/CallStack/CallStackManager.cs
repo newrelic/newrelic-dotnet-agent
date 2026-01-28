@@ -1,11 +1,11 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Providers;
-using NewRelic.Agent.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Extensions.Providers;
 
 namespace NewRelic.Agent.Core.CallStack;
 

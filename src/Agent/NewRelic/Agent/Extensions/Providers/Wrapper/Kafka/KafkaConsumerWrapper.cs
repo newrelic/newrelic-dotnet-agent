@@ -17,7 +17,6 @@ namespace NewRelic.Providers.Wrapper.Kafka
     public class KafkaConsumerWrapper : IWrapper
     {
         private const string WrapperName = "KafkaConsumerWrapper";
-        private const string BrokerVendorName = "Kafka";
 
         public bool IsTransactionRequired => true;
 
@@ -38,7 +37,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, BrokerVendorName, "unknown");
+            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, MessageBrokerVendorConstants.Kafka, "unknown");
 
             // if the overload that takes a CancellationToken was used, then we want to make this a leaf segment
             // because that overload calls the overload that takes an int (timeout) many times in a loop until the token is cancelled or a message is received
