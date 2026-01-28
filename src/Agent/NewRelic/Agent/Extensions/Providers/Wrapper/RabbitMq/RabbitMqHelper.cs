@@ -14,7 +14,6 @@ public class RabbitMqHelper
 {
     private const string TempQueuePrefix = "amq.";
     private const string BasicPropertiesType = "RabbitMQ.Client.Framing.BasicProperties";
-    public const string VendorName = "RabbitMQ";
     public const string AssemblyName = "RabbitMQ.Client";
     public const string TypeName = "RabbitMQ.Client.Framing.Impl.Model";
 
@@ -75,7 +74,7 @@ public class RabbitMqHelper
             instrumentedMethodCall.MethodCall,
             destType,
             MessageBrokerAction.Produce,
-            VendorName,
+            MessageBrokerVendorConstants.RabbitMQ,
             destName,
             serverAddress: GetServerAddress(instrumentedMethodCall, agent),
             serverPort: GetServerPort(instrumentedMethodCall, agent),
@@ -122,7 +121,7 @@ public class RabbitMqHelper
             instrumentedMethodCall.MethodCall,
             destType,
             MessageBrokerAction.Produce,
-            VendorName,
+            MessageBrokerVendorConstants.RabbitMQ,
             destName,
             serverAddress: GetServerAddress(instrumentedMethodCall, agent),
             serverPort: GetServerPort(instrumentedMethodCall, agent),

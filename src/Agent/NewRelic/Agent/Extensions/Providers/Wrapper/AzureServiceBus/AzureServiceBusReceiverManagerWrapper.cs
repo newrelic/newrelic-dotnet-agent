@@ -54,11 +54,11 @@ public class AzureServiceBusReceiverManagerWrapper : AzureServiceBusWrapperBase
 
         var destinationType = GetMessageBrokerDestinationType(queueOrTopicName);
 
-        // create a transaction for this method call. This method invokes the ProcessMessageAsync handler
-        transaction = agent.CreateTransaction(
-            destinationType: destinationType,
-            BrokerVendorName,
-            destination: queueOrTopicName);
+            // create a transaction for this method call. This method invokes the ProcessMessageAsync handler
+            transaction = agent.CreateTransaction(
+                destinationType: destinationType,
+                MessageBrokerVendorConstants.ServiceBus,
+                destination: queueOrTopicName);
 
         if (instrumentedMethodCall.IsAsync)
         {
@@ -69,14 +69,14 @@ public class AzureServiceBusReceiverManagerWrapper : AzureServiceBusWrapperBase
         // extract DT headers from the message and create a distributed trace payload
         ExtractAndAcceptDistributedTracePayload(agent, transaction, instrumentedMethodCall.MethodCall.MethodArguments[0]);
 
-        // start a new MessageBroker segment that wraps ProcessOneMessage
-        var segment = transaction.StartMessageBrokerSegment(
-            instrumentedMethodCall.MethodCall,
-            destinationType,
-            MessageBrokerAction.Process,
-            BrokerVendorName,
-            GetQueueOrTopicName(destinationType, queueOrTopicName),
-            serverAddress: fqns);
+            // start a new MessageBroker segment that wraps ProcessOneMessage
+            var segment = transaction.StartMessageBrokerSegment(
+                instrumentedMethodCall.MethodCall,
+                destinationType,
+                MessageBrokerAction.Process,
+                MessageBrokerVendorConstants.ServiceBus,
+                GetQueueOrTopicName(destinationType, queueOrTopicName),
+                serverAddress: fqns);
 
         return instrumentedMethodCall.IsAsync
             ?

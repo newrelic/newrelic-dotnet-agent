@@ -43,7 +43,7 @@ public class AzureServiceBusSendWrapper : AzureServiceBusWrapperBase
             instrumentedMethodCall.MethodCall,
             MessageBrokerDestinationType.Queue, // ASB doesn't differentiate between queue or topic when sending, so we default to Queue which has more features.
             action,
-            BrokerVendorName,
+            MessageBrokerVendorConstants.ServiceBus,
             queueOrTopicName,
             serverAddress: fqns);
 
