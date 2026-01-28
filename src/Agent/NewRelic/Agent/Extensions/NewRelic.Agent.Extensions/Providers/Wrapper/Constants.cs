@@ -3,7 +3,6 @@
 
 using System.Collections.Concurrent;
 using System.Text;
-using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.SystemExtensions;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -109,6 +108,39 @@ public static class DatastoreVendorExtensions
     }
 }
 
+public static class MessageBrokerVendorConstants
+{
+    private const string OtelRabbitMQ = "rabbitmq";
+    private const string OtelKafka = "kafka";
+    private const string OtelSNS = "aws.sns";
+    private const string OtelSQS = "aws.sqs";
+    private const string OtelServiceBus = "servicebus";
+
+    public const string RabbitMQ = "RabbitMQ";
+    public const string Kafka = "Kafka";
+    public const string SNS = "SNS";
+    public const string SQS = "SQS";
+    public const string ServiceBus = "ServiceBus"; // Azure ServiceBus
+
+    /// <summary>
+    /// Converts an OpenTelemetry messaging.system value to the corresponding MessageBrokerVendor enum.
+    /// </summary>
+    /// <param name="messagingSystem">The OTel messaging.system attribute value (e.g., "rabbitmq", "kafka", "aws.sqs").</param>
+    /// <returns>The corresponding MessageBrokerVendor enum value.</returns>
+    public static string ToVendorName(string messagingSystem)
+    {
+        return messagingSystem switch
+        {
+            OtelRabbitMQ => RabbitMQ,
+            OtelKafka => Kafka,
+            OtelSQS => SQS,
+            OtelSNS => SNS,
+            OtelServiceBus => ServiceBus,
+            _ => messagingSystem.CapitalizeEachWord()
+        };
+    }
+}
+
 public static class EnumNameCache<TEnum> // c# 7.3: where TEnum : System.Enum	
 {
     private static readonly ConcurrentDictionary<TEnum, string> Cache = new ConcurrentDictionary<TEnum, string>();
@@ -130,40 +162,7 @@ public static class EnumNameCache<TEnum> // c# 7.3: where TEnum : System.Enum
         return ToUpperSnakeCaseCache.GetOrAdd(enumValue, ConvertToUpperSnakeCase);
     }
 
-    public static class MessageBrokerVendorConstants
-    {
-        private const string OtelRabbitMQ = "rabbitmq";
-        private const string OtelKafka = "kafka";
-        private const string OtelSNS = "aws.sns";
-        private const string OtelSQS = "aws.sqs";
-        private const string OtelServiceBus = "servicebus";
-
-        public const string RabbitMQ = "RabbitMQ";
-        public const string Kafka = "Kafka";
-        public const string SNS = "SNS";
-        public const string SQS = "SQS";
-        public const string ServiceBus = "ServiceBus"; // Azure ServiceBus
-
-        /// <summary>
-        /// Converts an OpenTelemetry messaging.system value to the corresponding MessageBrokerVendor enum.
-        /// </summary>
-        /// <param name="messagingSystem">The OTel messaging.system attribute value (e.g., "rabbitmq", "kafka", "aws.sqs").</param>
-        /// <returns>The corresponding MessageBrokerVendor enum value.</returns>
-        public static string ToVendorName(string messagingSystem)
-        {
-            return messagingSystem switch
-            {
-                OtelRabbitMQ => RabbitMQ,
-                OtelKafka => Kafka,
-                OtelSQS => SQS,
-                OtelSNS => SNS,
-                OtelServiceBus => ServiceBus,
-                _ => messagingSystem.CapitalizeEachWord()
-            };
-        }
-    }
-
-    public static class EnumNameCache<TEnum> // c# 7.3: where TEnum : System.Enum	
+    private static string ConvertToUpperSnakeCase(TEnum enumValue)
     {
         var enumValueAsString = enumValue.ToString();
         var upperSnakeCasedString = new StringBuilder();
