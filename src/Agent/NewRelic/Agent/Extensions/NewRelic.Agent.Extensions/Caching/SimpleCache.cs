@@ -6,183 +6,182 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace NewRelic.Agent.Extensions.Caching
+namespace NewRelic.Agent.Extensions.Caching;
+
+/// <summary>
+/// Simple cache maintains a collection. Periodically, the cache is maintained on a seperate thread.
+/// When it is full, the cache is cleared.
+/// </summary>
+/// <typeparam name="TKey"></typeparam>
+/// <typeparam name="TValue"></typeparam>
+public class SimpleCache<TKey, TValue> : ICacheStats, IDisposable where TValue : class
 {
+    private readonly ConcurrentDictionary<TKey, TValue> _cacheMap = new ConcurrentDictionary<TKey, TValue>();
+
+    private readonly Timer _maintainCacheTimer;
+
     /// <summary>
-    /// Simple cache maintains a collection. Periodically, the cache is maintained on a seperate thread.
-    /// When it is full, the cache is cleared.
+    /// Time in milliseconds. How often the Agent will check cache size and clears off the cache
+    /// if its size is greater than its capacity.
     /// </summary>
-    /// <typeparam name="TKey"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    public class SimpleCache<TKey, TValue> : ICacheStats, IDisposable where TValue : class
+    public const int CleanUpTimePeriod = 500;
+
+    private int _countHits;
+    private int _countMisses;
+    private int _countEjections;
+
+    private int _capacity;
+
+    public int Capacity
     {
-        private readonly ConcurrentDictionary<TKey, TValue> _cacheMap = new ConcurrentDictionary<TKey, TValue>();
+        get => _capacity;
+        set => SetCapacity(value);
+    }
 
-        private readonly Timer _maintainCacheTimer;
 
-        /// <summary>
-        /// Time in milliseconds. How often the Agent will check cache size and clears off the cache
-        /// if its size is greater than its capacity.
-        /// </summary>
-        public const int CleanUpTimePeriod = 500;
+    ///// <summary>
+    ///// Metric for counting the number of items a Get function hits an existing item in the cache
+    ///// </summary>
+    public int CountHits => _countHits;
 
-        private int _countHits;
-        private int _countMisses;
-        private int _countEjections;
+    ///// <summary>
+    ///// Metric for counting the number of items a Get function does not hit an existing item in the cache
+    ///// </summary>
+    public int CountMisses => _countMisses;
 
-        private int _capacity;
+    ///// <summary>
+    ///// Metric for counting the number of items gets removed from the cache
+    ///// </summary>
+    public int CountEjections => _countEjections;
 
-        public int Capacity
+    public SimpleCache(int capacity)
+    {
+        Capacity = capacity;
+        _maintainCacheTimer = new Timer(o => MaintainCache(), null, CleanUpTimePeriod, CleanUpTimePeriod);
+    }
+
+    /// <summary>
+    /// Allows searching of the cache without updating stats or affecting the priority of items in the cache.
+    /// </summary>
+    public TValue Peek(TKey key)
+    {
+        var node = PeekInternal(key);
+        return node;
+    }
+
+    /// <summary>
+    /// Checks whether the specified key exists in the cache without updating stats or affecting the priority of items in the cache.
+    /// </summary>
+    public bool Contains(TKey key) => PeekInternal(key) != null;
+
+    /// <summary>
+    /// Allows searching of the cache.  If found, returns the existing item and updates the statistics.
+    /// If not found, returns NULL.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public TValue Get(TKey key)
+    {
+
+        var node = PeekInternal(key);
+
+        if (node != null)
         {
-            get => _capacity;
-            set => SetCapacity(value);
+            Interlocked.Increment(ref _countHits);
+        }
+        else
+        {
+            Interlocked.Increment(ref _countMisses);
         }
 
+        return node;
+    }
 
-        ///// <summary>
-        ///// Metric for counting the number of items a Get function hits an existing item in the cache
-        ///// </summary>
-        public int CountHits => _countHits;
+    /// <summary>
+    /// Attempts to find an item in the cache.  If found, returns the existing item and updates the statistics.
+    /// If not found, will add the item to the cache.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="valueFx">Function to call to obtain the value if the key is not present in the cache.</param>
+    /// <returns></returns>
+    public TValue GetOrAdd(TKey key, Func<TValue> valueFx)
+    {
+        var result = Get(key);
 
-        ///// <summary>
-        ///// Metric for counting the number of items a Get function does not hit an existing item in the cache
-        ///// </summary>
-        public int CountMisses => _countMisses;
+        return result ?? _cacheMap.GetOrAdd(key, x => valueFx());
+    }
 
-        ///// <summary>
-        ///// Metric for counting the number of items gets removed from the cache
-        ///// </summary>
-        public int CountEjections => _countEjections;
+    /// <summary>
+    /// Attempts to add an item to the cache.  If the item already exists, returns false. Otherwise, returns true.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="valueFunc">Function to call to obtain the value if the key is not present in the cache.</param>
+    /// <returns></returns>
+    public bool TryAdd(TKey key, Func<TValue> valueFunc)
+    {
+        return _cacheMap.TryAdd(key, valueFunc());
+    }
 
-        public SimpleCache(int capacity)
+    /// <summary>
+    /// Allows resetting of the Hit, Miss, and Ejection counters
+    /// </summary>
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public void ResetStats()
+    {
+        _countHits = 0;
+        _countMisses = 0;
+        _countEjections = 0;
+    }
+
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    private void SetCapacity(int newCapacity)
+    {
+        if (newCapacity < 1)
         {
-            Capacity = capacity;
-            _maintainCacheTimer = new Timer(o => MaintainCache(), null, CleanUpTimePeriod, CleanUpTimePeriod);
+            throw new ArgumentOutOfRangeException(nameof(newCapacity), newCapacity, "Cache size cannot be less than 1.");
         }
 
-        /// <summary>
-        /// Allows searching of the cache without updating stats or affecting the priority of items in the cache.
-        /// </summary>
-        public TValue Peek(TKey key)
+        _capacity = newCapacity;
+    }
+
+    /// <summary>
+    /// The number of items stored in the cache
+    /// </summary>
+    public int Size => _cacheMap.Count;
+
+    private TValue PeekInternal(TKey key)
+    {
+        TValue node;
+        if (!_cacheMap.TryGetValue(key, out node))
         {
-            var node = PeekInternal(key);
-            return node;
+            return null;
         }
 
-        /// <summary>
-        /// Checks whether the specified key exists in the cache without updating stats or affecting the priority of items in the cache.
-        /// </summary>
-        public bool Contains(TKey key) => PeekInternal(key) != null;
+        return node;
+    }
 
-        /// <summary>
-        /// Allows searching of the cache.  If found, returns the existing item and updates the statistics.
-        /// If not found, returns NULL.
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public TValue Get(TKey key)
-        {
-
-            var node = PeekInternal(key);
-
-            if (node != null)
-            {
-                Interlocked.Increment(ref _countHits);
-            }
-            else
-            {
-                Interlocked.Increment(ref _countMisses);
-            }
-
-            return node;
-        }
-
-        /// <summary>
-        /// Attempts to find an item in the cache.  If found, returns the existing item and updates the statistics.
-        /// If not found, will add the item to the cache.
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="valueFx">Function to call to obtain the value if the key is not present in the cache.</param>
-        /// <returns></returns>
-        public TValue GetOrAdd(TKey key, Func<TValue> valueFx)
-        {
-            var result = Get(key);
-
-            return result ?? _cacheMap.GetOrAdd(key, x => valueFx());
-        }
-
-        /// <summary>
-        /// Attempts to add an item to the cache.  If the item already exists, returns false. Otherwise, returns true.
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="valueFunc">Function to call to obtain the value if the key is not present in the cache.</param>
-        /// <returns></returns>
-        public bool TryAdd(TKey key, Func<TValue> valueFunc)
-        {
-            return _cacheMap.TryAdd(key, valueFunc());
-        }
-
-        /// <summary>
-        /// Allows resetting of the Hit, Miss, and Ejection counters
-        /// </summary>
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        public void ResetStats()
-        {
-            _countHits = 0;
-            _countMisses = 0;
-            _countEjections = 0;
-        }
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        private void SetCapacity(int newCapacity)
-        {
-            if (newCapacity < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(newCapacity), newCapacity, "Cache size cannot be less than 1.");
-            }
-
-            _capacity = newCapacity;
-        }
-
-        /// <summary>
-        /// The number of items stored in the cache
-        /// </summary>
-        public int Size => _cacheMap.Count;
-
-        private TValue PeekInternal(TKey key)
-        {
-            TValue node;
-            if (!_cacheMap.TryGetValue(key, out node))
-            {
-                return null;
-            }
-
-            return node;
-        }
-
-        /// <summary>
-        /// public only for unit tests. Don't call this method directly!
-        /// </summary>        
-        public void MaintainCache()
-        {
-            var count = _cacheMap.Count;
-            if (count > _capacity)
-            {
-                _cacheMap.Clear();
-                Interlocked.Add(ref _countEjections, count);
-            }
-        }
-
-        public void Dispose()
+    /// <summary>
+    /// public only for unit tests. Don't call this method directly!
+    /// </summary>        
+    public void MaintainCache()
+    {
+        var count = _cacheMap.Count;
+        if (count > _capacity)
         {
             _cacheMap.Clear();
-            _maintainCacheTimer?.Dispose();
+            Interlocked.Add(ref _countEjections, count);
         }
+    }
 
-        public void Reset()
-        {
-            _cacheMap.Clear();
-            ResetStats();
-        }
+    public void Dispose()
+    {
+        _cacheMap.Clear();
+        _maintainCacheTimer?.Dispose();
+    }
+
+    public void Reset()
+    {
+        _cacheMap.Clear();
+        ResetStats();
     }
 }

@@ -6,30 +6,29 @@ using System.Data.Common;
 using System.Linq;
 using System.Net;
 
-namespace NewRelic.Agent.Extensions.Parsing.ConnectionString
+namespace NewRelic.Agent.Extensions.Parsing.ConnectionString;
+
+public static class ConnectionStringParserHelper
 {
-    public static class ConnectionStringParserHelper
+    public static KeyValuePair<string, string>? GetKeyValuePair(DbConnectionStringBuilder connectionStringBuilder, List<string> possibleKeys)
     {
-        public static KeyValuePair<string, string>? GetKeyValuePair(DbConnectionStringBuilder connectionStringBuilder, List<string> possibleKeys)
+        var key = possibleKeys.FirstOrDefault(k => connectionStringBuilder.ContainsKey(k));
+        if (key == null) return null;
+        var value = connectionStringBuilder[key].ToString();
+        return new KeyValuePair<string, string>(key, value);
+    }
+
+    public static string NormalizeHostname(string host, string utilizationHostName)
+    {
+        var localhost = new[] { ".", "localhost" };
+        var hostIsLocalhost = localhost.Contains(host);
+        if (!hostIsLocalhost)
         {
-            var key = possibleKeys.FirstOrDefault(k => connectionStringBuilder.ContainsKey(k));
-            if (key == null) return null;
-            var value = connectionStringBuilder[key].ToString();
-            return new KeyValuePair<string, string>(key, value);
+            var isIpAddress = IPAddress.TryParse(host, out var ipAddress);
+            hostIsLocalhost = isIpAddress && IPAddress.IsLoopback(ipAddress);
         }
 
-        public static string NormalizeHostname(string host, string utilizationHostName)
-        {
-            var localhost = new[] { ".", "localhost" };
-            var hostIsLocalhost = localhost.Contains(host);
-            if (!hostIsLocalhost)
-            {
-                var isIpAddress = IPAddress.TryParse(host, out var ipAddress);
-                hostIsLocalhost = isIpAddress && IPAddress.IsLoopback(ipAddress);
-            }
-
-            var resolvedHostName = hostIsLocalhost ? utilizationHostName : host;
-            return resolvedHostName;
-        }
+        var resolvedHostName = hostIsLocalhost ? utilizationHostName : host;
+        return resolvedHostName;
     }
 }

@@ -1,14 +1,13 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Api
+namespace NewRelic.Agent.Api;
+
+public interface IDistributedTracePayload
 {
-    public interface IDistributedTracePayload
-    {
-        string HttpSafe();
+    string HttpSafe();
 
-        string Text();
+    string Text();
 
-        bool IsEmpty();
-    }
+    bool IsEmpty();
 }

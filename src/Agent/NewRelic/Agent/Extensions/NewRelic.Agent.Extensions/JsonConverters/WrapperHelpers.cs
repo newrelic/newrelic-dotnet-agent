@@ -3,15 +3,14 @@
 
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Extensions.JsonConverters
+namespace NewRelic.Agent.Extensions.JsonConverters;
+
+public static class WrapperHelpers
 {
-    public static class WrapperHelpers
+    // This method is used from the Bedrock wrapper code in order to avoid the wrapper
+    // having a dependency on Newtonsoft.Json being available
+    public static T DeserializeObject<T>(string payload)
     {
-        // This method is used from the Bedrock wrapper code in order to avoid the wrapper
-        // having a dependency on Newtonsoft.Json being available
-        public static T DeserializeObject<T>(string payload)
-        {
-            return JsonConvert.DeserializeObject<T>(payload);
-        }
+        return JsonConvert.DeserializeObject<T>(payload);
     }
 }

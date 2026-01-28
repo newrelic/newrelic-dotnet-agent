@@ -3,18 +3,15 @@
 
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Extensions.JsonConverters.LambdaPayloads
+namespace NewRelic.Agent.Extensions.JsonConverters.LambdaPayloads;
+
+public class SnsMessage
 {
+    public IDictionary<string, MessageAttribute> MessageAttributes { get; set; }
+}
 
-    public class SnsMessage
-    {
-        public IDictionary<string, MessageAttribute> MessageAttributes { get; set; }
-    }
-
-    public class MessageAttribute
-    {
-        public string Type { get; set; }
-        public string Value { get; set; }
-    }
-
+public class MessageAttribute
+{
+    public string Type { get; set; }
+    public string Value { get; set; }
 }

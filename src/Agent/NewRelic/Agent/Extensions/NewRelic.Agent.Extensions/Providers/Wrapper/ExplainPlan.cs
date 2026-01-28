@@ -4,28 +4,27 @@
 using System;
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Extensions.Providers.Wrapper
+namespace NewRelic.Agent.Extensions.Providers.Wrapper;
+
+public class ExplainPlan
 {
-    public class ExplainPlan
+    public List<string> ExplainPlanHeaders;
+
+    public List<List<object>> ExplainPlanDatas;
+
+    public List<int> ObfuscatedHeaders;
+
+    public ExplainPlan(List<string> explainPlanHeaders, List<List<object>> explainPlanDatas, List<int> obfuscatedHeaders)
     {
-        public List<string> ExplainPlanHeaders;
+        if (explainPlanHeaders == null)
+            throw new ArgumentException();
+        if (explainPlanDatas == null)
+            throw new ArgumentException();
+        if (obfuscatedHeaders == null)
+            throw new ArgumentException();
 
-        public List<List<object>> ExplainPlanDatas;
-
-        public List<int> ObfuscatedHeaders;
-
-        public ExplainPlan(List<string> explainPlanHeaders, List<List<object>> explainPlanDatas, List<int> obfuscatedHeaders)
-        {
-            if (explainPlanHeaders == null)
-                throw new ArgumentException();
-            if (explainPlanDatas == null)
-                throw new ArgumentException();
-            if (obfuscatedHeaders == null)
-                throw new ArgumentException();
-
-            ExplainPlanHeaders = explainPlanHeaders;
-            ExplainPlanDatas = explainPlanDatas;
-            ObfuscatedHeaders = obfuscatedHeaders;
-        }
+        ExplainPlanHeaders = explainPlanHeaders;
+        ExplainPlanDatas = explainPlanDatas;
+        ObfuscatedHeaders = obfuscatedHeaders;
     }
 }

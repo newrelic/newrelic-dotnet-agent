@@ -1,10 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Configuration
+namespace NewRelic.Agent.Configuration;
+
+public interface IConfigurationService
 {
-    public interface IConfigurationService
-    {
-        IConfiguration Configuration { get; }
-    }
+    IConfiguration Configuration { get; }
 }

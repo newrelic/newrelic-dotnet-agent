@@ -1,15 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Extensions.Caching
+namespace NewRelic.Agent.Extensions.Caching;
+
+public interface ICacheStats
 {
-    public interface ICacheStats
-    {
-        int Size { get; }
-        int Capacity { get; }
-        int CountHits { get; }
-        int CountMisses { get; }
-        int CountEjections { get; }
-        void ResetStats();
-    }
+    int Size { get; }
+    int Capacity { get; }
+    int CountHits { get; }
+    int CountMisses { get; }
+    int CountEjections { get; }
+    void ResetStats();
 }
