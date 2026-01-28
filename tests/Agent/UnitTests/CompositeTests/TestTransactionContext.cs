@@ -5,38 +5,37 @@ using System.Collections.Generic;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
-namespace CompositeTests
+namespace CompositeTests;
+
+public class TestTransactionContext<T> : IContextStorage<T>
 {
-    public class TestTransactionContext<T> : IContextStorage<T>
+    private readonly string _key = "TEST";
+
+    private readonly Dictionary<string, object> _data = new Dictionary<string, object>();
+
+    public T GetData()
     {
-        private readonly string _key = "TEST";
+        // call is ambiguous in .NET 7 if you use the extension method invocation
+        return (T)DictionaryExtensions.GetValueOrDefault(_data, _key);
+    }
 
-        private readonly Dictionary<string, object> _data = new Dictionary<string, object>();
+    public void SetData(T value)
+    {
+        _data[_key] = value;
+    }
 
-        public T GetData()
-        {
-            // call is ambiguous in .NET 7 if you use the extension method invocation
-            return (T)DictionaryExtensions.GetValueOrDefault(_data, _key);
-        }
+    public void Clear()
+    {
+        _data.Remove(_key);
+    }
 
-        public void SetData(T value)
-        {
-            _data[_key] = value;
-        }
+    public byte Priority
+    {
+        get { return 10; }
+    }
 
-        public void Clear()
-        {
-            _data.Remove(_key);
-        }
-
-        public byte Priority
-        {
-            get { return 10; }
-        }
-
-        public bool CanProvide
-        {
-            get { return true; }
-        }
+    public bool CanProvide
+    {
+        get { return true; }
     }
 }

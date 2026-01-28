@@ -5,58 +5,57 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 
-namespace ParsingTests
+namespace ParsingTests;
+
+// Using a concrete mock so that we can have a mock object that implements 2 unrelated but expected interfaces
+internal class MockDbConnection : IDbConnection, ICloneable
 {
-    // Using a concrete mock so that we can have a mock object that implements 2 unrelated but expected interfaces
-    internal class MockDbConnection : IDbConnection, ICloneable
+    public string ConnectionString { get; set; }
+
+    public int ConnectionTimeout => 0;
+
+    public string Database => null;
+
+    public ConnectionState State => ConnectionState.Closed;
+
+    public List<IDbCommand> CreatedMockCommands { get; private set; } = new List<IDbCommand>();
+
+    public IDbTransaction BeginTransaction()
     {
-        public string ConnectionString { get; set; }
+        return null;
+    }
 
-        public int ConnectionTimeout => 0;
+    public IDbTransaction BeginTransaction(IsolationLevel il)
+    {
+        return null;
+    }
 
-        public string Database => null;
+    public void ChangeDatabase(string databaseName)
+    {
+    }
 
-        public ConnectionState State => ConnectionState.Closed;
+    public object Clone()
+    {
+        return new MockDbConnection();
+    }
 
-        public List<IDbCommand> CreatedMockCommands { get; private set; } = new List<IDbCommand>();
+    public void Close()
+    {
+    }
 
-        public IDbTransaction BeginTransaction()
-        {
-            return null;
-        }
+    public IDbCommand CreateCommand()
+    {
+        var command = new MockDbCommand();
+        CreatedMockCommands.Add(command);
 
-        public IDbTransaction BeginTransaction(IsolationLevel il)
-        {
-            return null;
-        }
+        return command;
+    }
 
-        public void ChangeDatabase(string databaseName)
-        {
-        }
+    public void Dispose()
+    {
+    }
 
-        public object Clone()
-        {
-            return new MockDbConnection();
-        }
-
-        public void Close()
-        {
-        }
-
-        public IDbCommand CreateCommand()
-        {
-            var command = new MockDbCommand();
-            CreatedMockCommands.Add(command);
-
-            return command;
-        }
-
-        public void Dispose()
-        {
-        }
-
-        public void Open()
-        {
-        }
+    public void Open()
+    {
     }
 }

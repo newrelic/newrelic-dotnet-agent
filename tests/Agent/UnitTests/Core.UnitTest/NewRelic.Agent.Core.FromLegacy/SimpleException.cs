@@ -3,18 +3,17 @@
 
 using System;
 
-namespace NewRelic.Agent.Core
+namespace NewRelic.Agent.Core;
+
+[Serializable]
+public class SimpleException : Exception
 {
-    [Serializable]
-    public class SimpleException : Exception
+    public SimpleException(string exceptionName)
+        : base(exceptionName)
     {
-        public SimpleException(string exceptionName)
-            : base(exceptionName)
-        {
-        }
-        public SimpleException(string exceptionName, Exception ex)
-            : base(exceptionName, ex)
-        {
-        }
+    }
+    public SimpleException(string exceptionName, Exception ex)
+        : base(exceptionName, ex)
+    {
     }
 }

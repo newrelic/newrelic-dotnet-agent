@@ -6,11 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using Telerik.JustMock;
-using NUnit.Framework;
 using System.Net;
 using System.Text;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
+using NUnit.Framework;
+using Telerik.JustMock;
 using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.DataTransport.Client

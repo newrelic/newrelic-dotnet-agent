@@ -1,28 +1,27 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using Telerik.JustMock;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Transactions;
+using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.Segments.Tests
+namespace NewRelic.Agent.Core.Segments.Tests;
+
+public static class TransactionSegmentStateHelpers
 {
-    public static class TransactionSegmentStateHelpers
+    public static ITransactionSegmentState GetItransactionSegmentState()
     {
-        public static ITransactionSegmentState GetItransactionSegmentState()
-        {
-            var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+        var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
 
-            var attributeService = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
-            Mock.Arrange(() => transactionSegmentState.AttribDefs).Returns(attributeService.AttributeDefs);
+        var attributeService = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        Mock.Arrange(() => transactionSegmentState.AttribDefs).Returns(attributeService.AttributeDefs);
 
-            var configurationService = Mock.Create<IConfigurationService>();
+        var configurationService = Mock.Create<IConfigurationService>();
 
-            var errorService = new Errors.ErrorService(configurationService);
-            Mock.Arrange(() => transactionSegmentState.ErrorService).Returns(errorService);
+        var errorService = new Errors.ErrorService(configurationService);
+        Mock.Arrange(() => transactionSegmentState.ErrorService).Returns(errorService);
 
-            return transactionSegmentState;
-        }
+        return transactionSegmentState;
     }
 }

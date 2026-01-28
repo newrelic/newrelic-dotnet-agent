@@ -4,42 +4,40 @@
 using System.IO;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Fixtures;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core
+namespace NewRelic.Agent.Core;
+
+[TestFixture]
+public class EnvironmentTest
 {
-
-    [TestFixture]
-    public class EnvironmentTest
+    [Test]
+    public static void TestTotalMemory()
     {
-        [Test]
-        public static void TestTotalMemory()
-        {
-            var configurationService = Mock.Create<IConfigurationService>();
-            var systemInfo = Mock.Create<ISystemInfo>();
-            var processStatic = Mock.Create<IProcessStatic>();
+        var configurationService = Mock.Create<IConfigurationService>();
+        var systemInfo = Mock.Create<ISystemInfo>();
+        var processStatic = Mock.Create<IProcessStatic>();
 
-            Mock.Arrange(() => systemInfo.GetTotalPhysicalMemoryBytes()).Returns(16000);
-            using (new ConfigurationAutoResponder(configurationService.Configuration))
-            {
-                var env = new Environment(systemInfo, processStatic, configurationService);
-                Assert.That(env.TotalPhysicalMemory, Is.GreaterThan(0));
-            }
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "WWW"), Test]
-        public static void TestGetAppPathWithWWWRoot()
+        Mock.Arrange(() => systemInfo.GetTotalPhysicalMemoryBytes()).Returns(16000);
+        using (new ConfigurationAutoResponder(configurationService.Configuration))
         {
-            Assert.That(Environment.TryGetAppPath(() => "c:" + Path.DirectorySeparatorChar + "test" + Path.DirectorySeparatorChar + "myapp" + Path.DirectorySeparatorChar + "WwwRoot"), Is.EqualTo("myapp"));
+            var env = new Environment(systemInfo, processStatic, configurationService);
+            Assert.That(env.TotalPhysicalMemory, Is.GreaterThan(0));
         }
+    }
 
-        [Test]
-        public static void TestGetAppPathTrailingSlash()
-        {
-            Assert.That(Environment.TryGetAppPath(() => "c:" + Path.DirectorySeparatorChar + "test" + Path.DirectorySeparatorChar + "Dude" + Path.DirectorySeparatorChar), Is.EqualTo("Dude"));
-        }
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "WWW"), Test]
+    public static void TestGetAppPathWithWWWRoot()
+    {
+        Assert.That(Environment.TryGetAppPath(() => "c:" + Path.DirectorySeparatorChar + "test" + Path.DirectorySeparatorChar + "myapp" + Path.DirectorySeparatorChar + "WwwRoot"), Is.EqualTo("myapp"));
+    }
+
+    [Test]
+    public static void TestGetAppPathTrailingSlash()
+    {
+        Assert.That(Environment.TryGetAppPath(() => "c:" + Path.DirectorySeparatorChar + "test" + Path.DirectorySeparatorChar + "Dude" + Path.DirectorySeparatorChar), Is.EqualTo("Dude"));
     }
 }
