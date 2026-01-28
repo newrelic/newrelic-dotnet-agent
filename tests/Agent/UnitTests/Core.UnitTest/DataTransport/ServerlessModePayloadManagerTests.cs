@@ -113,7 +113,7 @@ public class ServerlessModePayloadManagerTests
         Mock.Arrange(() => fs.Write(null, 0, 0)).IgnoreArguments()
             .DoInstead((byte[] content, int offset, int len) => actualMS.Write(content, 0, content.Length));
         Mock.Arrange(() => _fileWrapper.Exists(Arg.IsAny<string>())).Returns(true);
-        Mock.Arrange(() => _fileWrapper.OpenWrite(Arg.IsAny<string>())).Returns(fs);
+        Mock.Arrange(() => _fileWrapper.CreateOpenOverwrite(Arg.IsAny<string>())).Returns(fs);
 
         Mock.Arrange(() => _environment.GetEnvironmentVariable("AWS_EXECUTION_ENV")).Returns(testExecutionEnv);
 

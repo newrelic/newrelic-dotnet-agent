@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Utilities;
 public interface IFileWrapper
 {
     bool Exists(string path);
-    FileStream OpenWrite(string path);
+    FileStream CreateOpenOverwrite(string path);
     bool TryCreateFile(string path, bool deleteOnSuccess = true);
     string ReadAllText(string path);
     string[] ReadAllLines(string path);
@@ -29,9 +29,14 @@ public class FileWrapper : IFileWrapper
 
     }
 
-    public FileStream OpenWrite(string path)
+    /// <summary>
+    /// Creates or opens and overwrites a file and returns the file stream.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    public FileStream CreateOpenOverwrite(string path)
     {
-        return File.OpenWrite(path);
+        return File.Create(path);
     }
 
     public bool TryCreateFile(string path, bool deleteOnSuccess = true)
