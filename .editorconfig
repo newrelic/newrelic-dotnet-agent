@@ -24,6 +24,8 @@ dotnet_separate_import_directive_groups = false
 
 # IDE0005: Using directive is unnecessary
 dotnet_diagnostic.IDE0005.severity = warning
+# CS1591: Missing XML comment for publicly visible type or member
+dotnet_diagnostic.CS1591.severity = none
 
 # this. preferences
 dotnet_style_qualification_for_field = false:silent

@@ -8,7 +8,9 @@ using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+#if NETFRAMEWORK
 using NewRelic.Agent.Extensions.SystemExtensions;
+#endif
 using NUnit.Framework;
 
 namespace CompositeTests;

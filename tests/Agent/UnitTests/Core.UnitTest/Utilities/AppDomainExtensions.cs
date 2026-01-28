@@ -5,15 +5,14 @@
 using System;
 using System.Reflection;
 
-namespace NewRelic.Agent.Core.Utilities
-{
+namespace NewRelic.Agent.Core.Utilities;
+
 	public static class AppDomainExtensions
 	{
 		/// <summary>
 		/// Creates a new temporary AppDomain and executes the given action inside of it.
 		/// </summary>
 		/// <param name="method">The code to execute inside the temporary AppDomain.</param>
-		/// <param name="assemblyResolver">Can be null. A static ResolveEventHandler that will be used to resolve assembly load failures.</param>
 		/// <param name="inputData">The parameter to be passed to the action if it takes a parameter.</param>
 		/// <returns>The return value from the function or null if the function doesn't return anything.</returns>
 		public static object IsolateMethodInAppDomain(Delegate method, params object[] inputData)
@@ -82,5 +81,4 @@ namespace NewRelic.Agent.Core.Utilities
 
 		}
 	}
-}
 #endif
