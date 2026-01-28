@@ -1,21 +1,21 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using Grpc.Core;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Fixtures;
-using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using NewRelic.Agent.Core.Utilities;
+using Grpc.Core;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Extensions.Logging;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Testing.Assertions;
+using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.AgentHealth;

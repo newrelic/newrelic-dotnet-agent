@@ -18,107 +18,107 @@ using NewRelic.Agent.Core.Wrapper;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.DependencyInjection
+namespace NewRelic.Agent.Core.DependencyInjection;
+
+[TestFixture]
+public class AgentServicesTests
 {
-    [TestFixture]
-    public class AgentServicesTests
+    [Test]
+    public void ConfigurationServiceCanFullyResolve()
     {
-        [Test]
-        public void ConfigurationServiceCanFullyResolve()
-        {
-            // Prevent the ConnectionManager from trying to connect to anything
-            var configuration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => configuration.AutoStartAgent).Returns(false);
+        // Prevent the ConnectionManager from trying to connect to anything
+        var configuration = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => configuration.AutoStartAgent).Returns(false);
 
-            using (new ConfigurationAutoResponder(configuration))
-            using (var container = AgentServices.GetContainer())
-            {
-                AgentServices.RegisterServices(container, false, false);
-                Assert.DoesNotThrow(() => container.Resolve<IConfigurationService>());
-            }
+        using (new ConfigurationAutoResponder(configuration))
+        using (var container = AgentServices.GetContainer())
+        {
+            AgentServices.RegisterServices(container, false, false);
+            Assert.DoesNotThrow(() => container.Resolve<IConfigurationService>());
         }
+    }
 
-        [Test]
-        public void AllServicesCanFullyResolve()
+    [Test]
+    public void AllServicesCanFullyResolve()
+    {
+        // Prevent the ConnectionManager from trying to connect to anything
+        var configuration = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => configuration.AutoStartAgent).Returns(false);
+        Mock.Arrange(() => configuration.NewRelicConfigFilePath).Returns("c:\\");
+        var configurationService = Mock.Create<IConfigurationService>();
+        Mock.Arrange(() => configurationService.Configuration).Returns(configuration);
+
+        using (new ConfigurationAutoResponder(configuration))
+        using (var container = AgentServices.GetContainer())
         {
-            // Prevent the ConnectionManager from trying to connect to anything
-            var configuration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => configuration.AutoStartAgent).Returns(false);
-            Mock.Arrange(() => configuration.NewRelicConfigFilePath).Returns("c:\\");
-            var configurationService = Mock.Create<IConfigurationService>();
-            Mock.Arrange(() => configurationService.Configuration).Returns(configuration);
+            AgentServices.RegisterServices(container, false, false);
 
-            using (new ConfigurationAutoResponder(configuration))
-            using (var container = AgentServices.GetContainer())
-            {
-                AgentServices.RegisterServices(container, false, false);
-
-                container.ReplaceInstanceRegistration(configurationService);
+            container.ReplaceInstanceRegistration(configurationService);
 #if NET
                 container.ReplaceRegistrations(); // creates a new scope, registering the replacement instances from all .ReplaceRegistration() calls above
 #endif
 
-                Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
-                Assert.DoesNotThrow(() => AgentServices.StartServices(container, false, false));
-            }
+            Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
+            Assert.DoesNotThrow(() => AgentServices.StartServices(container, false, false));
         }
+    }
 
-        [Test]
-        [TestCase(true)]
-        [TestCase(false)]
-        public void CorrectServicesAreRegistered_BasedOnServerlessMode(bool serverlessModeEnabled)
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void CorrectServicesAreRegistered_BasedOnServerlessMode(bool serverlessModeEnabled)
+    {
+        // Arrange
+        var configuration = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => configuration.AutoStartAgent).Returns(false);
+        Mock.Arrange(() => configuration.NewRelicConfigFilePath).Returns("c:\\");
+        var configurationService = Mock.Create<IConfigurationService>();
+        Mock.Arrange(() => configurationService.Configuration).Returns(configuration);
+
+        // Act
+        using (new ConfigurationAutoResponder(configuration))
+        using (var container = AgentServices.GetContainer())
         {
-            // Arrange
-            var configuration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => configuration.AutoStartAgent).Returns(false);
-            Mock.Arrange(() => configuration.NewRelicConfigFilePath).Returns("c:\\");
-            var configurationService = Mock.Create<IConfigurationService>();
-            Mock.Arrange(() => configurationService.Configuration).Returns(configuration);
+            AgentServices.RegisterServices(container, serverlessModeEnabled, false);
 
-            // Act
-            using (new ConfigurationAutoResponder(configuration))
-            using (var container = AgentServices.GetContainer())
-            {
-                AgentServices.RegisterServices(container, serverlessModeEnabled, false);
-
-                container.ReplaceInstanceRegistration(configurationService);
+            container.ReplaceInstanceRegistration(configurationService);
 #if NET
                 container.ReplaceRegistrations(); // creates a new scope, registering the replacement instances from all .ReplaceRegistration() calls above
 #endif
-                // Assert
-                Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
-                Assert.DoesNotThrow(() => AgentServices.StartServices(container, true, false));
+            // Assert
+            Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
+            Assert.DoesNotThrow(() => AgentServices.StartServices(container, true, false));
 
-                // ensure dependent services are registered
-                if (serverlessModeEnabled)
-                {
-                    Assert.DoesNotThrow(() => container.Resolve<IServerlessModePayloadManager>());
-                    var serverlessModePayloadManager = container.Resolve<IServerlessModePayloadManager>();
-                    Assert.That(serverlessModePayloadManager.GetType() == typeof(ServerlessModePayloadManager));
+            // ensure dependent services are registered
+            if (serverlessModeEnabled)
+            {
+                Assert.DoesNotThrow(() => container.Resolve<IServerlessModePayloadManager>());
+                var serverlessModePayloadManager = container.Resolve<IServerlessModePayloadManager>();
+                Assert.That(serverlessModePayloadManager.GetType() == typeof(ServerlessModePayloadManager));
 
-                    Assert.DoesNotThrow(() => container.Resolve<IFileWrapper>());
-                    var fileWrapper = container.Resolve<IFileWrapper>();
-                    Assert.That(fileWrapper.GetType() == typeof(FileWrapper));
-                }
+                Assert.DoesNotThrow(() => container.Resolve<IFileWrapper>());
+                var fileWrapper = container.Resolve<IFileWrapper>();
+                Assert.That(fileWrapper.GetType() == typeof(FileWrapper));
+            }
 
-                var dataTransportService = container.Resolve<IDataTransportService>();
-                var expectedDataTransportServiceType = serverlessModeEnabled ? typeof(ServerlessModeDataTransportService) : typeof(DataTransportService);
-                Assert.That(dataTransportService.GetType() == expectedDataTransportServiceType);
+            var dataTransportService = container.Resolve<IDataTransportService>();
+            var expectedDataTransportServiceType = serverlessModeEnabled ? typeof(ServerlessModeDataTransportService) : typeof(DataTransportService);
+            Assert.That(dataTransportService.GetType() == expectedDataTransportServiceType);
 
-                if (serverlessModeEnabled)
-                {
-                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<IConnectionHandler>());
-                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<IConnectionManager>());
-                    Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<CommandService>());
-                }
-                else
-                {
-                    Assert.DoesNotThrow(() => container.Resolve<IConnectionHandler>());
-                    Assert.DoesNotThrow(() => container.Resolve<IConnectionManager>());
-                    Assert.DoesNotThrow(() => container.Resolve<CommandService>());
-                }
+            if (serverlessModeEnabled)
+            {
+                Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<IConnectionHandler>());
+                Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<IConnectionManager>());
+                Assert.Throws<ComponentNotRegisteredException>(() => container.Resolve<CommandService>());
+            }
+            else
+            {
+                Assert.DoesNotThrow(() => container.Resolve<IConnectionHandler>());
+                Assert.DoesNotThrow(() => container.Resolve<IConnectionManager>());
+                Assert.DoesNotThrow(() => container.Resolve<CommandService>());
             }
         }
+    }
 
 #if NET
         [TestCase(true)]
@@ -167,5 +167,4 @@ namespace NewRelic.Agent.Core.DependencyInjection
             }
         }
 #endif
-    }
 }

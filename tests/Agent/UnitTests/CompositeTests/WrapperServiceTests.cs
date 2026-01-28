@@ -6,52 +6,51 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
 using NUnit.Framework;
 
-namespace CompositeTests
+namespace CompositeTests;
+
+[TestFixture]
+public class WrapperServiceTests
 {
-    [TestFixture]
-    public class WrapperServiceTests
+    private static CompositeTestAgent _compositeTestAgent;
+    private IAgent _agent;
+    private const uint AttributeInstrumentation = 1 << 20;
+
+    [SetUp]
+    public void SetUp()
     {
-        private static CompositeTestAgent _compositeTestAgent;
-        private IAgent _agent;
-        private const uint AttributeInstrumentation = 1 << 20;
+        _compositeTestAgent = new CompositeTestAgent(false, true);
+        _agent = _compositeTestAgent.GetAgent();
+    }
 
-        [SetUp]
-        public void SetUp()
+    [TearDown]
+    public static void TearDown()
+    {
+        _compositeTestAgent.Dispose();
+    }
+
+    [Test]
+    public void BeforeWrappedMethod_ReturnsNoOp_IfTheRequiredTransactionIsFinished()
+    {
+        var transaction = _agent.CreateTransaction(true, "category", "name", true);
+        transaction.End();
+        _compositeTestAgent.SetTransactionOnPrimaryContextStorage(transaction);
+
+        var type = typeof(WrapperServiceTests);
+        var methodName = "MyMethod";
+        var tracerFactoryName = "NewRelic.Agent.Core.Wrapper.DefaultWrapper";
+        var target = new object();
+        var arguments = new object[0];
+
+        using (var logging = new Logging())
         {
-            _compositeTestAgent = new CompositeTestAgent(false, true);
-            _agent = _compositeTestAgent.GetAgent();
-        }
+            var wrapperService = _compositeTestAgent.GetWrapperService();
+            var afterWrappedMethod = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AttributeInstrumentation, 0);
 
-        [TearDown]
-        public static void TearDown()
-        {
-            _compositeTestAgent.Dispose();
-        }
-
-        [Test]
-        public void BeforeWrappedMethod_ReturnsNoOp_IfTheRequiredTransactionIsFinished()
-        {
-            var transaction = _agent.CreateTransaction(true, "category", "name", true);
-            transaction.End();
-            _compositeTestAgent.SetTransactionOnPrimaryContextStorage(transaction);
-
-            var type = typeof(WrapperServiceTests);
-            var methodName = "MyMethod";
-            var tracerFactoryName = "NewRelic.Agent.Core.Wrapper.DefaultWrapper";
-            var target = new object();
-            var arguments = new object[0];
-
-            using (var logging = new Logging())
+            Assert.Multiple(() =>
             {
-                var wrapperService = _compositeTestAgent.GetWrapperService();
-                var afterWrappedMethod = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AttributeInstrumentation, 0);
-
-                Assert.Multiple(() =>
-                {
-                    Assert.That(afterWrappedMethod, Is.EqualTo(Delegates.NoOp), "AfterWrappedMethod was not the NoOp delegate.");
-                    Assert.That(logging.HasMessageThatContains("Transaction has already ended, skipping method"), Is.True, "Expected log message was not found.");
-                });
-            }
+                Assert.That(afterWrappedMethod, Is.EqualTo(Delegates.NoOp), "AfterWrappedMethod was not the NoOp delegate.");
+                Assert.That(logging.HasMessageThatContains("Transaction has already ended, skipping method"), Is.True, "Expected log message was not found.");
+            });
         }
     }
 }

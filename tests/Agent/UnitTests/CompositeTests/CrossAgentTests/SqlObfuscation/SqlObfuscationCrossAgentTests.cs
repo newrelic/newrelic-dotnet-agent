@@ -13,120 +13,119 @@ using NewRelic.Agent.TestUtilities;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-namespace CompositeTests.CrossAgentTests.SqlObfuscation
+namespace CompositeTests.CrossAgentTests.SqlObfuscation;
+
+[TestFixture]
+public class SqlObfuscationCrossAgentTests
 {
-    [TestFixture]
-    public class SqlObfuscationCrossAgentTests
+    private static CompositeTestAgent _compositeTestAgent;
+    private IAgent _agent;
+    private SqlObfuscator _obfuscator = SqlObfuscator.GetSqlObfuscator("obfuscated");
+    private readonly List<string> validVendors = Enum.GetNames(typeof(DatastoreVendor)).Select(s => s.ToLower()).ToList();
+
+    public static List<TestCaseData> SqlObfuscationTestDatas => GetSqlObfuscationTestDatas();
+
+    [SetUp]
+    public void Setup()
     {
-        private static CompositeTestAgent _compositeTestAgent;
-        private IAgent _agent;
-        private SqlObfuscator _obfuscator = SqlObfuscator.GetSqlObfuscator("obfuscated");
-        private readonly List<string> validVendors = Enum.GetNames(typeof(DatastoreVendor)).Select(s => s.ToLower()).ToList();
+        _compositeTestAgent = new CompositeTestAgent();
+        _agent = _compositeTestAgent.GetAgent();
+    }
 
-        public static List<TestCaseData> SqlObfuscationTestDatas => GetSqlObfuscationTestDatas();
+    [TearDown]
+    public static void TearDown()
+    {
+        _compositeTestAgent.Dispose();
+    }
 
-        [SetUp]
-        public void Setup()
+    [TestCaseSource(nameof(SqlObfuscationTestDatas))]
+    public void SqlObfuscationCrossAgentTests_CrossAgentTests(SqlObfuscationTestData testData)
+    {
+        foreach (var dialect in testData.Dialects)
         {
-            _compositeTestAgent = new CompositeTestAgent();
-            _agent = _compositeTestAgent.GetAgent();
-        }
-
-        [TearDown]
-        public static void TearDown()
-        {
-            _compositeTestAgent.Dispose();
-        }
-
-        [TestCaseSource(nameof(SqlObfuscationTestDatas))]
-        public void SqlObfuscationCrossAgentTests_CrossAgentTests(SqlObfuscationTestData testData)
-        {
-            foreach (var dialect in testData.Dialects)
+            if (validVendors.Contains(dialect))
             {
-                if (validVendors.Contains(dialect))
-                {
-                    var datastoreVendor = GetDatastoreVendorFromString(dialect);
-                    var obfuscatedSql = _obfuscator.GetObfuscatedSql(testData.Sql, datastoreVendor);
+                var datastoreVendor = GetDatastoreVendorFromString(dialect);
+                var obfuscatedSql = _obfuscator.GetObfuscatedSql(testData.Sql, datastoreVendor);
 
-                    var exists = testData.ObfuscatedSql.Contains(obfuscatedSql);
-                    Console.WriteLine(obfuscatedSql);
-                    Assert.That(exists, Is.True, "Failed for " + dialect.ToUpper());
+                var exists = testData.ObfuscatedSql.Contains(obfuscatedSql);
+                Console.WriteLine(obfuscatedSql);
+                Assert.That(exists, Is.True, "Failed for " + dialect.ToUpper());
+            }
+        }
+    }
+
+    private DatastoreVendor GetDatastoreVendorFromString(string dialect)
+    {
+        switch (dialect)
+        {
+            case "couchbase":
+                return DatastoreVendor.Couchbase;
+            case "ibmdb2":
+                return DatastoreVendor.IBMDB2;
+            case "memcached":
+                return DatastoreVendor.Memcached;
+            case "mongodb":
+                return DatastoreVendor.MongoDB;
+            case "mysql":
+                return DatastoreVendor.MySQL;
+            case "mssql":
+                return DatastoreVendor.MSSQL;
+            case "oracle":
+                return DatastoreVendor.Oracle;
+            case "postgres":
+                return DatastoreVendor.Postgres;
+            case "redis":
+                return DatastoreVendor.Redis;
+            default:
+                return DatastoreVendor.Other;
+        }
+    }
+
+    private static List<TestCaseData> GetSqlObfuscationTestDatas()
+    {
+        var testCaseDatas = new List<TestCaseData>();
+
+        string location = Assembly.GetExecutingAssembly().GetLocation();
+        var dllPath = Path.GetDirectoryName(new Uri(location).LocalPath);
+        var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "SqlObfuscation", "sql_obfuscation.json");
+        var jsonString = File.ReadAllText(jsonPath);
+
+        var settings = new JsonSerializerSettings
+        {
+            Error = (sender, args) =>
+            {
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    System.Diagnostics.Debugger.Break();
                 }
             }
-        }
+        };
 
-        private DatastoreVendor GetDatastoreVendorFromString(string dialect)
+        var testDatas = JsonConvert.DeserializeObject<List<SqlObfuscationTestData>>(jsonString, settings);
+
+        foreach (var test in testDatas)
         {
-            switch (dialect)
-            {
-                case "couchbase":
-                    return DatastoreVendor.Couchbase;
-                case "ibmdb2":
-                    return DatastoreVendor.IBMDB2;
-                case "memcached":
-                    return DatastoreVendor.Memcached;
-                case "mongodb":
-                    return DatastoreVendor.MongoDB;
-                case "mysql":
-                    return DatastoreVendor.MySQL;
-                case "mssql":
-                    return DatastoreVendor.MSSQL;
-                case "oracle":
-                    return DatastoreVendor.Oracle;
-                case "postgres":
-                    return DatastoreVendor.Postgres;
-                case "redis":
-                    return DatastoreVendor.Redis;
-                default:
-                    return DatastoreVendor.Other;
-            }
+            var testCase = new TestCaseData(test);
+            testCase.SetName("SqlObfuscationCrossAgentTests " + test.Name);
+            testCaseDatas.Add(testCase);
         }
 
-        private static List<TestCaseData> GetSqlObfuscationTestDatas()
-        {
-            var testCaseDatas = new List<TestCaseData>();
+        return testCaseDatas;
+    }
 
-            string location = Assembly.GetExecutingAssembly().GetLocation();
-            var dllPath = Path.GetDirectoryName(new Uri(location).LocalPath);
-            var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "SqlObfuscation", "sql_obfuscation.json");
-            var jsonString = File.ReadAllText(jsonPath);
+    public class SqlObfuscationTestData
+    {
+        [JsonProperty("name")]
+        public string Name { get; set; }
 
-            var settings = new JsonSerializerSettings
-            {
-                Error = (sender, args) =>
-                {
-                    if (System.Diagnostics.Debugger.IsAttached)
-                    {
-                        System.Diagnostics.Debugger.Break();
-                    }
-                }
-            };
+        [JsonProperty("sql")]
+        public string Sql { get; set; }
 
-            var testDatas = JsonConvert.DeserializeObject<List<SqlObfuscationTestData>>(jsonString, settings);
+        [JsonProperty("obfuscated")]
+        public List<string> ObfuscatedSql { get; set; }
 
-            foreach (var test in testDatas)
-            {
-                var testCase = new TestCaseData(test);
-                testCase.SetName("SqlObfuscationCrossAgentTests " + test.Name);
-                testCaseDatas.Add(testCase);
-            }
-
-            return testCaseDatas;
-        }
-
-        public class SqlObfuscationTestData
-        {
-            [JsonProperty("name")]
-            public string Name { get; set; }
-
-            [JsonProperty("sql")]
-            public string Sql { get; set; }
-
-            [JsonProperty("obfuscated")]
-            public List<string> ObfuscatedSql { get; set; }
-
-            [JsonProperty("dialects")]
-            public List<string> Dialects { get; set; }
-        }
+        [JsonProperty("dialects")]
+        public List<string> Dialects { get; set; }
     }
 }

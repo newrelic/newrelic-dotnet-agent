@@ -4,31 +4,30 @@
 
 using System;
 
-namespace NewRelic.Agent.Tests.TestSerializationHelpers.JsonConverters
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.JsonConverters;
+
+public enum TimeUnit
 {
-    public enum TimeUnit
+    Ticks,
+    Milliseconds,
+    Seconds,
+    Minutes,
+    Hours,
+    Days,
+    Years,
+}
+
+public static class DateTimeExtensions
+{
+    private readonly static DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    public static double ToUnixTime(this DateTime dateTime)
     {
-        Ticks,
-        Milliseconds,
-        Seconds,
-        Minutes,
-        Hours,
-        Days,
-        Years,
+        return (dateTime - Epoch).TotalSeconds;
     }
 
-    public static class DateTimeExtensions
+    public static DateTime ToDateTime(this double secondsSinceEpoch)
     {
-        private readonly static DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-        public static double ToUnixTime(this DateTime dateTime)
-        {
-            return (dateTime - Epoch).TotalSeconds;
-        }
-
-        public static DateTime ToDateTime(this double secondsSinceEpoch)
-        {
-            return Epoch.AddSeconds(secondsSinceEpoch);
-        }
+        return Epoch.AddSeconds(secondsSinceEpoch);
     }
 }

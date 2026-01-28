@@ -11,77 +11,76 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
-namespace NewRelic.Agent.Core.Transformers
+namespace NewRelic.Agent.Core.Transformers;
+
+[TestFixture]
+public class ThreadStatsSampleTransformerTests
 {
-    [TestFixture]
-    public class ThreadStatsSampleTransformerTests
+    private IThreadStatsSampleTransformer _threadStatsTransformer;
+
+    private IMetricBuilder _metricBuilder;
+
+    private IMetricAggregator _metricAggregator;
+
+    [SetUp]
+    public void SetUp()
     {
-        private IThreadStatsSampleTransformer _threadStatsTransformer;
+        var metricNameService = new MetricNameService();
+        _metricBuilder = new MetricBuilder(metricNameService);
+        _metricAggregator = Mock.Create<IMetricAggregator>();
 
-        private IMetricBuilder _metricBuilder;
+        _threadStatsTransformer = new ThreadStatsSampleTransformer(_metricBuilder, _metricAggregator);
+    }
 
-        private IMetricAggregator _metricAggregator;
+    [Test]
+    public void TransformSample_ThreadpoolUsageStats_CreatesCorrectMetricValues()
+    {
+        const int countWorkerThreadsRemaining = 83;
+        const int countWorkerThreadsInUse = 17;
+        const int countCompletionThreadsRemaining = 180;
+        const int countCompletionThreadsInUse = 20;
 
-        [SetUp]
-        public void SetUp()
-        {
-            var metricNameService = new MetricNameService();
-            _metricBuilder = new MetricBuilder(metricNameService);
-            _metricAggregator = Mock.Create<IMetricAggregator>();
+        var generatedMetrics = new Dictionary<string, MetricDataWireModel>();
 
-            _threadStatsTransformer = new ThreadStatsSampleTransformer(_metricBuilder, _metricAggregator);
-        }
-
-        [Test]
-        public void TransformSample_ThreadpoolUsageStats_CreatesCorrectMetricValues()
-        {
-            const int countWorkerThreadsRemaining = 83;
-            const int countWorkerThreadsInUse = 17;
-            const int countCompletionThreadsRemaining = 180;
-            const int countCompletionThreadsInUse = 20;
-
-            var generatedMetrics = new Dictionary<string, MetricDataWireModel>();
-
-            Mock.Arrange(() => _metricAggregator
+        Mock.Arrange(() => _metricAggregator
                 .Collect(Arg.IsAny<MetricWireModel>()))
-                .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricNameModel.Name, m.DataModel));
+            .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricNameModel.Name, m.DataModel));
 
-            var sample = new ThreadpoolUsageStatsSample(countWorkerThreadsRemaining + countWorkerThreadsInUse, countWorkerThreadsRemaining, countCompletionThreadsRemaining + countCompletionThreadsInUse, countCompletionThreadsRemaining);
+        var sample = new ThreadpoolUsageStatsSample(countWorkerThreadsRemaining + countWorkerThreadsInUse, countWorkerThreadsRemaining, countCompletionThreadsRemaining + countCompletionThreadsInUse, countCompletionThreadsRemaining);
 
-            _threadStatsTransformer.Transform(sample);
+        _threadStatsTransformer.Transform(sample);
 
-            NrAssert.Multiple(
-                () => Assert.That(generatedMetrics, Has.Count.EqualTo(4)),
-                () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Worker, ThreadStatus.InUse), countWorkerThreadsInUse),
-                () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Worker, ThreadStatus.Available), countWorkerThreadsRemaining),
-                () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Completion, ThreadStatus.InUse), countCompletionThreadsInUse),
-                () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Completion, ThreadStatus.Available), countCompletionThreadsRemaining)
-            );
-        }
+        NrAssert.Multiple(
+            () => Assert.That(generatedMetrics, Has.Count.EqualTo(4)),
+            () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Worker, ThreadStatus.InUse), countWorkerThreadsInUse),
+            () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Worker, ThreadStatus.Available), countWorkerThreadsRemaining),
+            () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Completion, ThreadStatus.InUse), countCompletionThreadsInUse),
+            () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolUsageStatsName(ThreadType.Completion, ThreadStatus.Available), countCompletionThreadsRemaining)
+        );
+    }
 
-        [Test]
-        public void TransformSample_ThreadpoolThroughputStats_CreatesCorrectMetricValues()
-        {
-            const int countThreadRequestsQueued = 5;
-            const int countThreadRequestsDequeued = 7;
-            const int countThreadRequestQueueLength = 19;
+    [Test]
+    public void TransformSample_ThreadpoolThroughputStats_CreatesCorrectMetricValues()
+    {
+        const int countThreadRequestsQueued = 5;
+        const int countThreadRequestsDequeued = 7;
+        const int countThreadRequestQueueLength = 19;
 
-            var generatedMetrics = new Dictionary<string, MetricDataWireModel>();
+        var generatedMetrics = new Dictionary<string, MetricDataWireModel>();
 
-            Mock.Arrange(() => _metricAggregator
+        Mock.Arrange(() => _metricAggregator
                 .Collect(Arg.IsAny<MetricWireModel>()))
-                .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricNameModel.Name, m.DataModel));
+            .DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricNameModel.Name, m.DataModel));
 
-            var sample = new ThreadpoolThroughputEventsSample(countThreadRequestsQueued, countThreadRequestsDequeued, countThreadRequestQueueLength);
+        var sample = new ThreadpoolThroughputEventsSample(countThreadRequestsQueued, countThreadRequestsDequeued, countThreadRequestQueueLength);
 
-            _threadStatsTransformer.Transform(sample);
+        _threadStatsTransformer.Transform(sample);
 
-            NrAssert.Multiple(
-                () => Assert.That(generatedMetrics, Has.Count.EqualTo(3)),
-                () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.Requested), countThreadRequestsQueued),
-                () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.Started), countThreadRequestsDequeued),
-                () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.QueueLength), countThreadRequestQueueLength)
-            );
-        }
+        NrAssert.Multiple(
+            () => Assert.That(generatedMetrics, Has.Count.EqualTo(3)),
+            () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.Requested), countThreadRequestsQueued),
+            () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.Started), countThreadRequestsDequeued),
+            () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType.QueueLength), countThreadRequestQueueLength)
+        );
     }
 }

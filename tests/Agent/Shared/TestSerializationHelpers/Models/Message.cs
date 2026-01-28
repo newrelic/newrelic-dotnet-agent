@@ -4,14 +4,13 @@
 
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
-{
-    public class ConnectResponseMessage
-    {
-        [JsonProperty("message")]
-        public string Message { get; set; }
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 
-        [JsonProperty("level")]
-        public string Level { get; set; }
-    }
+public class ConnectResponseMessage
+{
+    [JsonProperty("message")]
+    public string Message { get; set; }
+
+    [JsonProperty("level")]
+    public string Level { get; set; }
 }

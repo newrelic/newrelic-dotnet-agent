@@ -6,29 +6,28 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NUnit.Framework;
 
-namespace NewRelic.Agent.Core.Configuration
-{
-    [TestFixture]
-    public class ConfigurationEnumHelpersTests
-    {
-        [Test]
-        public void ToRemoteParentSampledBehavior_ValidEnumValues_ReturnsExpectedResults()
-        {
-            Assert.Multiple(() =>
-            {
-                Assert.That(RemoteParentSampledBehaviorType.@default.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.Adaptive));
-                Assert.That(RemoteParentSampledBehaviorType.adaptive.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.Adaptive));
-                Assert.That(RemoteParentSampledBehaviorType.alwaysOn.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.AlwaysOn));
-                Assert.That(RemoteParentSampledBehaviorType.alwaysOff.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.AlwaysOff));
-                Assert.That(RemoteParentSampledBehaviorType.traceIdRatioBased.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.TraceIdRatioBased));
-            });
-        }
+namespace NewRelic.Agent.Core.Configuration;
 
-        [Test]
-        public void ToRemoteParentSampledBehavior_InvalidEnumValue_ThrowsArgumentOutOfRangeException()
+[TestFixture]
+public class ConfigurationEnumHelpersTests
+{
+    [Test]
+    public void ToRemoteParentSampledBehavior_ValidEnumValues_ReturnsExpectedResults()
+    {
+        Assert.Multiple(() =>
         {
-            var invalidValue = (RemoteParentSampledBehaviorType)999;
-            Assert.Throws<ArgumentOutOfRangeException>(() => invalidValue.ToRemoteParentSamplerType());
-        }
+            Assert.That(RemoteParentSampledBehaviorType.@default.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.Adaptive));
+            Assert.That(RemoteParentSampledBehaviorType.adaptive.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.Adaptive));
+            Assert.That(RemoteParentSampledBehaviorType.alwaysOn.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.AlwaysOn));
+            Assert.That(RemoteParentSampledBehaviorType.alwaysOff.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.AlwaysOff));
+            Assert.That(RemoteParentSampledBehaviorType.traceIdRatioBased.ToRemoteParentSamplerType(), Is.EqualTo(SamplerType.TraceIdRatioBased));
+        });
+    }
+
+    [Test]
+    public void ToRemoteParentSampledBehavior_InvalidEnumValue_ThrowsArgumentOutOfRangeException()
+    {
+        var invalidValue = (RemoteParentSampledBehaviorType)999;
+        Assert.Throws<ArgumentOutOfRangeException>(() => invalidValue.ToRemoteParentSamplerType());
     }
 }

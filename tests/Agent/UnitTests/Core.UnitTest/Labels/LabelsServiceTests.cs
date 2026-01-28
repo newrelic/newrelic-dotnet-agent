@@ -8,112 +8,112 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.Labels.Tests
+namespace NewRelic.Agent.Core.Labels.Tests;
+
+[TestFixture]
+public class LabelsServiceTests
 {
-    [TestFixture]
-    public class LabelsServiceTests
+    private const string TestLabel = "test1:value1;test2:value2";
+
+    [TestCase(null)]
+    public void empty_collection(string labelsConfigurationString)
     {
-        private const string TestLabel = "test1:value1;test2:value2";
+        // arrange
+        var configurationService = Mock.Create<IConfigurationService>();
+        Mock.Arrange(() => configurationService.Configuration.Labels).Returns(labelsConfigurationString);
 
-        [TestCase(null)]
-        public void empty_collection(string labelsConfigurationString)
+        // act
+        var labelsService = new LabelsService(configurationService);
+
+        // assert
+        Assert.That(labelsService.Labels, Is.Empty);
+    }
+
+    [Test]
+    public void GetFilteredLabels_NoFilter_Success()
+    {
+        // arrange
+        var configurationService = Mock.Create<IConfigurationService>();
+        Mock.Arrange(() => configurationService.Configuration.Labels).Returns(TestLabel);
+
+        // act
+        var labelsService = new LabelsService(configurationService);
+
+        // assert
+        Assert.That(labelsService.Labels.Count, Is.EqualTo(2));
+    }
+
+    [TestCase("test1", 1, "test2")]
+    [TestCase("TEST1", 1, "test2")]
+    [TestCase("fred", 2, "test1")]
+    [TestCase("test", 2, "test1")]
+    [TestCase(null, 2, "test1")]
+    public void GetFilteredLabels_WithFilter_Success(string filterString, int labelsCount, string remainingLabelType)
+    {
+        // arrange
+        var configurationService = Mock.Create<IConfigurationService>();
+        Mock.Arrange(() => configurationService.Configuration.Labels).Returns(TestLabel);
+        var filter = new List<string> { filterString };
+
+        // act
+        var labelsService = new LabelsService(configurationService);
+        var filteredLabels = labelsService.GetFilteredLabels(filter);
+
+        // assert
+        Assert.That(labelsService.Labels.Count, Is.EqualTo(2));
+        Assert.That(filteredLabels.Count, Is.EqualTo(labelsCount));
+        Assert.That(((List<Label>)filteredLabels)[0].Type, Is.EqualTo(remainingLabelType));
+    }
+
+    [Test]
+    public void GetFilteredLabels_WithNullFilter_Success()
+    {
+        // arrange
+        var configurationService = Mock.Create<IConfigurationService>();
+        Mock.Arrange(() => configurationService.Configuration.Labels).Returns(TestLabel);
+
+        // act
+        var labelsService = new LabelsService(configurationService);
+        var filteredLabels = labelsService.GetFilteredLabels(null);
+
+        // assert
+        Assert.That(labelsService.Labels.Count, Is.EqualTo(2));
+        Assert.That(filteredLabels.Count, Is.EqualTo(2));
+        Assert.That(((List<Label>)filteredLabels)[0].Type, Is.EqualTo("test1"));
+    }
+
+    public class TestCase
+    {
+        [JsonProperty(PropertyName = "name")]
+        public readonly string Name;
+        [JsonProperty(PropertyName = "labelString")]
+        public readonly string LabelConfigurationString;
+        [JsonProperty(PropertyName = "warning")]
+        public readonly bool Warning;
+        [JsonProperty(PropertyName = "expected")]
+        public readonly IEnumerable<Label> Expected;
+
+        public class Label
         {
-            // arrange
-            var configurationService = Mock.Create<IConfigurationService>();
-            Mock.Arrange(() => configurationService.Configuration.Labels).Returns(labelsConfigurationString);
-
-            // act
-            var labelsService = new LabelsService(configurationService);
-
-            // assert
-            Assert.That(labelsService.Labels, Is.Empty);
+            [JsonProperty(PropertyName = "label_type")]
+            public readonly string LabelType;
+            [JsonProperty(PropertyName = "label_value")]
+            public readonly string LabelValue;
         }
 
-        [Test]
-        public void GetFilteredLabels_NoFilter_Success()
+        public override string ToString()
         {
-            // arrange
-            var configurationService = Mock.Create<IConfigurationService>();
-            Mock.Arrange(() => configurationService.Configuration.Labels).Returns(TestLabel);
-
-            // act
-            var labelsService = new LabelsService(configurationService);
-
-            // assert
-            Assert.That(labelsService.Labels.Count, Is.EqualTo(2));
+            return Name;
         }
+    }
 
-        [TestCase("test1", 1, "test2")]
-        [TestCase("TEST1", 1, "test2")]
-        [TestCase("fred", 2, "test1")]
-        [TestCase("test", 2, "test1")]
-        [TestCase(null, 2, "test1")]
-        public void GetFilteredLabels_WithFilter_Success(string filterString, int labelsCount, string remainingLabelType)
+    public static IEnumerable<TestCase> CrossAgentTestCases
+    {
+        get
         {
-            // arrange
-            var configurationService = Mock.Create<IConfigurationService>();
-            Mock.Arrange(() => configurationService.Configuration.Labels).Returns(TestLabel);
-            var filter = new List<string> { filterString };
+            #region testCasesJson
 
-            // act
-            var labelsService = new LabelsService(configurationService);
-            var filteredLabels = labelsService.GetFilteredLabels(filter);
-
-            // assert
-            Assert.That(labelsService.Labels.Count, Is.EqualTo(2));
-            Assert.That(filteredLabels.Count, Is.EqualTo(labelsCount));
-            Assert.That(((List<Label>)filteredLabels)[0].Type, Is.EqualTo(remainingLabelType));
-        }
-
-        [Test]
-        public void GetFilteredLabels_WithNullFilter_Success()
-        {
-            // arrange
-            var configurationService = Mock.Create<IConfigurationService>();
-            Mock.Arrange(() => configurationService.Configuration.Labels).Returns(TestLabel);
-
-            // act
-            var labelsService = new LabelsService(configurationService);
-            var filteredLabels = labelsService.GetFilteredLabels(null);
-
-            // assert
-            Assert.That(labelsService.Labels.Count, Is.EqualTo(2));
-            Assert.That(filteredLabels.Count, Is.EqualTo(2));
-            Assert.That(((List<Label>)filteredLabels)[0].Type, Is.EqualTo("test1"));
-        }
-
-        public class TestCase
-        {
-            [JsonProperty(PropertyName = "name")]
-            public readonly string Name;
-            [JsonProperty(PropertyName = "labelString")]
-            public readonly string LabelConfigurationString;
-            [JsonProperty(PropertyName = "warning")]
-            public readonly bool Warning;
-            [JsonProperty(PropertyName = "expected")]
-            public readonly IEnumerable<Label> Expected;
-
-            public class Label
-            {
-                [JsonProperty(PropertyName = "label_type")]
-                public readonly string LabelType;
-                [JsonProperty(PropertyName = "label_value")]
-                public readonly string LabelValue;
-            }
-
-            public override string ToString()
-            {
-                return Name;
-            }
-        }
-
-        public static IEnumerable<TestCase> CrossAgentTestCases
-        {
-            get
-            {
-                #region testCasesJson
-
-                const string testCasesJson = @"[
+            const string testCasesJson = @"[
   {
     ""name"":        ""empty"",
     ""labelString"": """",
@@ -309,39 +309,38 @@ namespace NewRelic.Agent.Core.Labels.Tests
   }
 ]";
 
-                #endregion
+            #endregion
 
-                var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(testCasesJson);
-                Assert.That(testCases, Is.Not.Null);
-                return testCases
-                    .Where(testCase => testCase != null)
-                    .ToArray();
-            }
+            var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(testCasesJson);
+            Assert.That(testCases, Is.Not.Null);
+            return testCases
+                .Where(testCase => testCase != null)
+                .ToArray();
         }
+    }
 
-        [TestCaseSource(nameof(CrossAgentTestCases))]
-        public void cross_agent_tests(TestCase testCase)
+    [TestCaseSource(nameof(CrossAgentTestCases))]
+    public void cross_agent_tests(TestCase testCase)
+    {
+        using (var logger = new TestUtilities.Logging())
         {
-            using (var logger = new TestUtilities.Logging())
-            {
 
-                // arrange
-                var configurationService = Mock.Create<IConfigurationService>();
-                Mock.Arrange(() => configurationService.Configuration.Labels)
-                    .Returns(testCase.LabelConfigurationString);
+            // arrange
+            var configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configurationService.Configuration.Labels)
+                .Returns(testCase.LabelConfigurationString);
 
-                // act
-                var labelsService = new LabelsService(configurationService);
-                var actualResults = JsonConvert.SerializeObject(labelsService.Labels);
-                var expectedResults = JsonConvert.SerializeObject(testCase.Expected);
+            // act
+            var labelsService = new LabelsService(configurationService);
+            var actualResults = JsonConvert.SerializeObject(labelsService.Labels);
+            var expectedResults = JsonConvert.SerializeObject(testCase.Expected);
 
-                // assert
-                Assert.That(actualResults, Is.EqualTo(expectedResults));
-                if (testCase.Warning)
-                    Assert.That(logger.WarnCount, Is.Not.EqualTo(0));
-                else
-                    Assert.That(logger.MessageCount, Is.EqualTo(0));
-            }
+            // assert
+            Assert.That(actualResults, Is.EqualTo(expectedResults));
+            if (testCase.Warning)
+                Assert.That(logger.WarnCount, Is.Not.EqualTo(0));
+            else
+                Assert.That(logger.MessageCount, Is.EqualTo(0));
         }
     }
 }

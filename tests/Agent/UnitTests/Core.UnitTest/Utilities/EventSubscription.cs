@@ -4,48 +4,47 @@
 using System;
 using NUnit.Framework;
 
-namespace NewRelic.Agent.Core.Utilities.UnitTest
+namespace NewRelic.Agent.Core.Utilities.UnitTest;
+
+[TestFixture]
+public class Class_EventSubscription
 {
-    [TestFixture]
-    public class Class_EventSubscription
+    [Test]
+    public void publishing_outside_using_statement_results_in_no_callback()
     {
-        [Test]
-        public void publishing_outside_using_statement_results_in_no_callback()
+        var wasCalled = false;
+        using (new EventSubscription<object>(_ => wasCalled = true))
         {
-            var wasCalled = false;
-            using (new EventSubscription<object>(_ => wasCalled = true))
-            {
-            }
+        }
 
+        EventBus<object>.Publish(new object());
+
+        Assert.That(wasCalled, Is.False);
+    }
+
+    [Test]
+    public void publishing_inside_using_statement_results_in_callback()
+    {
+        var wasCalled = false;
+        using (new EventSubscription<object>(_ => wasCalled = true))
+        {
             EventBus<object>.Publish(new object());
-
-            Assert.That(wasCalled, Is.False);
         }
 
-        [Test]
-        public void publishing_inside_using_statement_results_in_callback()
+        Assert.That(wasCalled, Is.True);
+    }
+
+    [Test]
+    public void two_disposables_with_same_callback_are_called_once()
+    {
+        var callCount = 0;
+        Action<object> callback = _ => ++callCount;
+        using (new EventSubscription<object>(callback))
+        using (new EventSubscription<object>(callback))
         {
-            var wasCalled = false;
-            using (new EventSubscription<object>(_ => wasCalled = true))
-            {
-                EventBus<object>.Publish(new object());
-            }
-
-            Assert.That(wasCalled, Is.True);
+            EventBus<object>.Publish(new object());
         }
 
-        [Test]
-        public void two_disposables_with_same_callback_are_called_once()
-        {
-            var callCount = 0;
-            Action<object> callback = _ => ++callCount;
-            using (new EventSubscription<object>(callback))
-            using (new EventSubscription<object>(callback))
-            {
-                EventBus<object>.Publish(new object());
-            }
-
-            Assert.That(callCount, Is.EqualTo(1));
-        }
+        Assert.That(callCount, Is.EqualTo(1));
     }
 }

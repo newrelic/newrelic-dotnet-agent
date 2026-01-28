@@ -5,22 +5,21 @@ using System;
 using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 
-namespace NewRelic.Agent.Core.Fixtures
+namespace NewRelic.Agent.Core.Fixtures;
+
+public class EventExpectation<T> : IDisposable
 {
-    public class EventExpectation<T> : IDisposable
+    private readonly EventSubscription<T> _subscription;
+    private bool _eventWasFired;
+
+    public EventExpectation()
     {
-        private readonly EventSubscription<T> _subscription;
-        private bool _eventWasFired;
+        _subscription = new EventSubscription<T>(_ => _eventWasFired = true);
+    }
 
-        public EventExpectation()
-        {
-            _subscription = new EventSubscription<T>(_ => _eventWasFired = true);
-        }
-
-        public void Dispose()
-        {
-            _subscription.Dispose();
-            Assert.That(_eventWasFired, Is.True, $"Expected event {typeof(T).Name} was not fired");
-        }
+    public void Dispose()
+    {
+        _subscription.Dispose();
+        Assert.That(_eventWasFired, Is.True, $"Expected event {typeof(T).Name} was not fired");
     }
 }

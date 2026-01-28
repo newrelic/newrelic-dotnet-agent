@@ -3,18 +3,17 @@
 
 using System.Reflection;
 
-namespace NewRelic.Agent.TestUtilities
+namespace NewRelic.Agent.TestUtilities;
+
+public static class AssemblyExtensions
 {
-    public static class AssemblyExtensions
+    public static string GetLocation(this Assembly assembly)
     {
-        public static string GetLocation(this Assembly assembly)
-        {
 #if NETFRAMEWORK
-            return assembly.CodeBase;
+        return assembly.CodeBase;
 #else
             return assembly.Location;
 #endif            
 
-        }
     }
 }

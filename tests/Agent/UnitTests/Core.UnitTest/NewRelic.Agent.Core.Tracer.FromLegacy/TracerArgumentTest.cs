@@ -4,20 +4,18 @@
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 
-namespace NewRelic.Agent.Core.Tracer
-{
+namespace NewRelic.Agent.Core.Tracer;
 
-    [TestFixture]
-    public class TracerArgumentTest
+[TestFixture]
+public class TracerArgumentTest
+{
+    [Test]
+    public static void TestTransactionNamingPriority()
     {
-        [Test]
-        public static void TestTransactionNamingPriority()
+        Assert.Multiple(() =>
         {
-            Assert.Multiple(() =>
-            {
-                Assert.That(TracerArgument.GetTransactionNamingPriority(0x000012F | (3 << 24)), Is.EqualTo(TransactionNamePriority.Handler));
-                Assert.That(TracerArgument.GetTransactionNamingPriority(0x0000076 | (7 << 24)), Is.EqualTo((TransactionNamePriority)7));
-            });
-        }
+            Assert.That(TracerArgument.GetTransactionNamingPriority(0x000012F | (3 << 24)), Is.EqualTo(TransactionNamePriority.Handler));
+            Assert.That(TracerArgument.GetTransactionNamingPriority(0x0000076 | (7 << 24)), Is.EqualTo((TransactionNamePriority)7));
+        });
     }
 }
