@@ -4,12 +4,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using RestSharp;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
-using System.Runtime.CompilerServices;
+using RestSharp;
 
 // .NET 4.8 and 4.8.1 test v107+ of RestSharp which has a different API than older versions
 #if !NET48_OR_GREATER

@@ -4,12 +4,12 @@
 
 #if NET462
 
-using NewRelic.Api.Agent;
-using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
-using NServiceBus;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
+using NewRelic.Api.Agent;
+using NServiceBus;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
 {

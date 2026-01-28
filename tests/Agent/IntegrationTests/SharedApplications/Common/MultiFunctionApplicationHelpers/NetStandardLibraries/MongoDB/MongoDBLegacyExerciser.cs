@@ -4,11 +4,11 @@
 #if NET462
 
 using System;
-using System.Collections.Generic;
-using MongoDB.Driver;
-using MongoDB.Bson;
-using MongoDB.Driver.Builders;
 using System.Collections;
+using System.Collections.Generic;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using MongoDB.Driver.Builders;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;

@@ -4,15 +4,14 @@
 
 using System.Runtime.CompilerServices;
 
-namespace NetStandardTestLibrary
+namespace NetStandardTestLibrary;
+
+public class MyClass
 {
-    public class MyClass
+    [NewRelic.Api.Agent.Trace]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public int MyMethodToBeInstrumented()
     {
-        [NewRelic.Api.Agent.Trace]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public int MyMethodToBeInstrumented()
-        {
-            return 1;
-        }
+        return 1;
     }
 }

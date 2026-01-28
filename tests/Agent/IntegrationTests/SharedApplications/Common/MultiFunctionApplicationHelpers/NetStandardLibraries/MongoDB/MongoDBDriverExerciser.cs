@@ -14,16 +14,16 @@
 // net462 has the legacy MongoDB client
 #if !NET462
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using MongoDB.Driver;
-using MongoDB.Bson;
-using MongoDB.Driver.Linq;
-using System.Threading.Tasks;
-using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using MongoDB.Driver.Linq;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
-using System;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 {

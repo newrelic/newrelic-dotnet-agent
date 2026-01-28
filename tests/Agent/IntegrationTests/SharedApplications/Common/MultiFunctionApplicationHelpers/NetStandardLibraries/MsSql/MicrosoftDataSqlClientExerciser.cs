@@ -2,269 +2,267 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
-using System.Data;
-
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
-using System.Threading;
-using System;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql;
+
+[Library]
+public class MicrosoftDataSqlClientExerciser : MsSqlExerciserBase
 {
-    [Library]
-    public class MicrosoftDataSqlClientExerciser : MsSqlExerciserBase
+    private static string _connectionString = MsSqlConfiguration.MsSqlConnectionString;
+
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public string MsSql(string tableName)
     {
-        private static string _connectionString = MsSqlConfiguration.MsSqlConnectionString;
+        var teamMembers = new List<string>();
 
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public string MsSql(string tableName)
+        using (var connection = new SqlConnection(_connectionString))
         {
-            var teamMembers = new List<string>();
+            connection.Open();
 
-            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand(SelectPersonByFirstNameMsSql, connection))
             {
-                connection.Open();
 
-                using (var command = new SqlCommand(SelectPersonByFirstNameMsSql, connection))
+                using (var reader = command.ExecuteReader())
                 {
-
-                    using (var reader = command.ExecuteReader())
+                    while (reader.Read())
                     {
-                        while (reader.Read())
+                        teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                        if (reader.NextResult())
                         {
                             teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                            if (reader.NextResult())
-                            {
-                                teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                            }
-                        }
-                    }
-                }
-
-                var insertSql = string.Format(InsertPersonMsSql, tableName);
-                var countSql = string.Format(CountPersonMsSql, tableName);
-                var deleteSql = string.Format(DeletePersonMsSql, tableName);
-
-                using (var command = new SqlCommand(insertSql, connection))
-                {
-                    var insertCount = command.ExecuteNonQuery();
-                }
-
-                using (var command = new SqlCommand(countSql, connection))
-                {
-                    var teamMemberCount = command.ExecuteScalar();
-                }
-
-                using (var command = new SqlCommand(deleteSql, connection))
-                {
-                    var deleteCount = command.ExecuteNonQuery();
-                }
-            }
-
-            return string.Join(",", teamMembers);
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<string> MsSqlAsync(string tableName)
-        {
-            var teamMembers = new List<string>();
-
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                await connection.OpenAsync();
-
-                using (var command = new SqlCommand(SelectPersonByLastNameMsSql, connection))
-                {
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                            if (await reader.NextResultAsync())
-                            {
-                                teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                            }
-                        }
-                    }
-                }
-
-                var insertSql = string.Format(InsertPersonMsSql, tableName);
-                var countSql = string.Format(CountPersonMsSql, tableName);
-                var deleteSql = string.Format(DeletePersonMsSql, tableName);
-
-                using (var command = new SqlCommand(insertSql, connection))
-                {
-                    var insertCount = await command.ExecuteNonQueryAsync();
-                }
-
-                using (var command = new SqlCommand(countSql, connection))
-                {
-                    var teamMemberCount = await command.ExecuteScalarAsync();
-                }
-
-                using (var command = new SqlCommand(deleteSql, connection))
-                {
-                    var deleteCount = await command.ExecuteNonQueryAsync();
-                }
-            }
-
-            return string.Join(",", teamMembers);
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public string MsSqlWithParameterizedQuery(bool paramsWithAtSign)
-        {
-            var teamMembers = new List<string>();
-
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-
-                using (var command = new SqlCommand(SelectPersonByParameterizedFirstNameMsSql, connection))
-                {
-                    command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@FN" : "FN", "O'Keefe"));
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                            if (reader.NextResult())
-                            {
-                                teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                            }
                         }
                     }
                 }
             }
 
-            return string.Join(",", teamMembers);
+            var insertSql = string.Format(InsertPersonMsSql, tableName);
+            var countSql = string.Format(CountPersonMsSql, tableName);
+            var deleteSql = string.Format(DeletePersonMsSql, tableName);
+
+            using (var command = new SqlCommand(insertSql, connection))
+            {
+                var insertCount = command.ExecuteNonQuery();
+            }
+
+            using (var command = new SqlCommand(countSql, connection))
+            {
+                var teamMemberCount = command.ExecuteScalar();
+            }
+
+            using (var command = new SqlCommand(deleteSql, connection))
+            {
+                var deleteCount = command.ExecuteNonQuery();
+            }
         }
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<string> MsSqlAsync_WithParameterizedQuery(bool paramsWithAtSign)
+        return string.Join(",", teamMembers);
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task<string> MsSqlAsync(string tableName)
+    {
+        var teamMembers = new List<string>();
+
+        using (var connection = new SqlConnection(_connectionString))
         {
-            var teamMembers = new List<string>();
+            await connection.OpenAsync();
 
-            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand(SelectPersonByLastNameMsSql, connection))
             {
-                await connection.OpenAsync();
-
-                using (var command = new SqlCommand(SelectPersonByParameterizedLastNameMsSql, connection))
+                using (var reader = await command.ExecuteReaderAsync())
                 {
-                    command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@LN" : "LN", "Lee"));
-                    using (var reader = await command.ExecuteReaderAsync())
+                    while (await reader.ReadAsync())
                     {
-                        while (await reader.ReadAsync())
+                        teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                        if (await reader.NextResultAsync())
                         {
                             teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                            if (await reader.NextResultAsync())
-                            {
-                                teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                            }
                         }
                     }
                 }
             }
 
-            return string.Join(",", teamMembers);
-        }
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void MsSqlParameterizedStoredProcedure(string procedureNameWith, string procedureNameWithout)
-        {
-            ExecuteParameterizedStoredProcedure(procedureNameWith, true);
-            ExecuteParameterizedStoredProcedure(procedureNameWithout, false);
-        }
+            var insertSql = string.Format(InsertPersonMsSql, tableName);
+            var countSql = string.Format(CountPersonMsSql, tableName);
+            var deleteSql = string.Format(DeletePersonMsSql, tableName);
 
-        private void ExecuteParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
-        {
-            EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
-
-            using (var connection = new SqlConnection(_connectionString))
-            using (var command = new SqlCommand(procedureName, connection))
+            using (var command = new SqlCommand(insertSql, connection))
             {
-                connection.Open();
-                command.CommandType = CommandType.StoredProcedure;
-                foreach (var parameter in DbParameterData.MsSqlParameters)
+                var insertCount = await command.ExecuteNonQueryAsync();
+            }
+
+            using (var command = new SqlCommand(countSql, connection))
+            {
+                var teamMemberCount = await command.ExecuteScalarAsync();
+            }
+
+            using (var command = new SqlCommand(deleteSql, connection))
+            {
+                var deleteCount = await command.ExecuteNonQueryAsync();
+            }
+        }
+
+        return string.Join(",", teamMembers);
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public string MsSqlWithParameterizedQuery(bool paramsWithAtSign)
+    {
+        var teamMembers = new List<string>();
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+
+            using (var command = new SqlCommand(SelectPersonByParameterizedFirstNameMsSql, connection))
+            {
+                command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@FN" : "FN", "O'Keefe"));
+                using (var reader = command.ExecuteReader())
                 {
-                    var paramName = paramsWithAtSign
-                        ? parameter.ParameterName
-                        : parameter.ParameterName.TrimStart('@');
-
-                    command.Parameters.Add(new SqlParameter(paramName, parameter.Value));
+                    while (reader.Read())
+                    {
+                        teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                        if (reader.NextResult())
+                        {
+                            teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                        }
+                    }
                 }
+            }
+        }
 
+        return string.Join(",", teamMembers);
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task<string> MsSqlAsync_WithParameterizedQuery(bool paramsWithAtSign)
+    {
+        var teamMembers = new List<string>();
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+
+            using (var command = new SqlCommand(SelectPersonByParameterizedLastNameMsSql, connection))
+            {
+                command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@LN" : "LN", "Lee"));
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                        if (await reader.NextResultAsync())
+                        {
+                            teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                        }
+                    }
+                }
+            }
+        }
+
+        return string.Join(",", teamMembers);
+    }
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void MsSqlParameterizedStoredProcedure(string procedureNameWith, string procedureNameWithout)
+    {
+        ExecuteParameterizedStoredProcedure(procedureNameWith, true);
+        ExecuteParameterizedStoredProcedure(procedureNameWithout, false);
+    }
+
+    private void ExecuteParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
+    {
+        EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
+
+        using (var connection = new SqlConnection(_connectionString))
+        using (var command = new SqlCommand(procedureName, connection))
+        {
+            connection.Open();
+            command.CommandType = CommandType.StoredProcedure;
+            foreach (var parameter in DbParameterData.MsSqlParameters)
+            {
+                var paramName = paramsWithAtSign
+                    ? parameter.ParameterName
+                    : parameter.ParameterName.TrimStart('@');
+
+                command.Parameters.Add(new SqlParameter(paramName, parameter.Value));
+            }
+
+            command.ExecuteNonQuery();
+        }
+    }
+
+    [LibraryMethod]
+    public void CreateTable(string tableName)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+
+            var createTable = string.Format(CreatePersonTableMsSql, tableName);
+            using (var command = new SqlCommand(createTable, connection))
+            {
                 command.ExecuteNonQuery();
             }
         }
+    }
 
-        [LibraryMethod]
-        public void CreateTable(string tableName)
+    [LibraryMethod]
+    public void DropTable(string tableName)
+    {
+        var dropTableSql = string.Format(DropPersonTableMsSql, tableName);
+
+        using (var connection = new SqlConnection(_connectionString))
         {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
+            connection.Open();
 
-                var createTable = string.Format(CreatePersonTableMsSql, tableName);
-                using (var command = new SqlCommand(createTable, connection))
-                {
-                    command.ExecuteNonQuery();
-                }
+            using (var command = new SqlCommand(dropTableSql, connection))
+            {
+                command.ExecuteNonQuery();
             }
         }
+    }
 
-        [LibraryMethod]
-        public void DropTable(string tableName)
+    [LibraryMethod]
+    public void DropProcedure(string procedureName)
+    {
+        var dropProcedureSql = string.Format(DropProcedureSql, procedureName);
+
+        using (var connection = new SqlConnection(_connectionString))
         {
-            var dropTableSql = string.Format(DropPersonTableMsSql, tableName);
+            connection.Open();
 
-            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand(dropProcedureSql, connection))
             {
-                connection.Open();
-
-                using (var command = new SqlCommand(dropTableSql, connection))
-                {
-                    command.ExecuteNonQuery();
-                }
+                command.ExecuteNonQuery();
             }
         }
+    }
 
-        [LibraryMethod]
-        public void DropProcedure(string procedureName)
-        {
-            var dropProcedureSql = string.Format(DropProcedureSql, procedureName);
-
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-
-                using (var command = new SqlCommand(dropProcedureSql, connection))
-                {
-                    command.ExecuteNonQuery();
-                }
-            }
-        }
-
-        [LibraryMethod]
-        public void Wait(int millisecondsTimeOut)
-        {
-            Thread.Sleep(millisecondsTimeOut);
-        }
+    [LibraryMethod]
+    public void Wait(int millisecondsTimeOut)
+    {
+        Thread.Sleep(millisecondsTimeOut);
+    }
 
 #if NET10_0
         [LibraryMethod]
@@ -323,44 +321,43 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         }
 #endif
 
-        private void EnsureProcedure(string procedureName, DbParameter[] dbParameters)
+    private void EnsureProcedure(string procedureName, DbParameter[] dbParameters)
+    {
+        var parameters = string.Join(", ", dbParameters.Select(x => $"{x.ParameterName} {x.DbTypeName}"));
+        var statement = string.Format(CreateProcedureStatement, procedureName, parameters);
+        using (var connection = new SqlConnection(_connectionString))
+        using (var command = new SqlCommand(statement, connection))
         {
-            var parameters = string.Join(", ", dbParameters.Select(x => $"{x.ParameterName} {x.DbTypeName}"));
-            var statement = string.Format(CreateProcedureStatement, procedureName, parameters);
-            using (var connection = new SqlConnection(_connectionString))
-            using (var command = new SqlCommand(statement, connection))
-            {
-                connection.Open();
-                command.ExecuteNonQuery();
-            }
+            connection.Open();
+            command.ExecuteNonQuery();
         }
+    }
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public string MsSqlWithLongQuery()
-        {
-            var longQuery = GenerateLongSqlQuery();
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public string MsSqlWithLongQuery()
+    {
+        var longQuery = GenerateLongSqlQuery();
             
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
 
-                using (var command = new SqlCommand(longQuery, connection))
+            using (var command = new SqlCommand(longQuery, connection))
+            {
+                // Execute the query - it will return no results because the WHERE conditions won't match
+                using (var reader = command.ExecuteReader())
                 {
-                    // Execute the query - it will return no results because the WHERE conditions won't match
-                    using (var reader = command.ExecuteReader())
+                    // Read through any results (there shouldn't be any)
+                    while (reader.Read())
                     {
-                        // Read through any results (there shouldn't be any)
-                        while (reader.Read())
-                        {
-                            // Just iterate, don't need to process results
-                        }
+                        // Just iterate, don't need to process results
                     }
                 }
             }
-
-            return "LongQueryExecuted";
         }
+
+        return "LongQueryExecuted";
     }
 }

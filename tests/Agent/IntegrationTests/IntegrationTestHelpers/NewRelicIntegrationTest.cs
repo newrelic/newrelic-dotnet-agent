@@ -4,15 +4,14 @@
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTestHelpers
-{
-    public abstract class NewRelicIntegrationTest<TFixture> : IClassFixture<TFixture>
-            where TFixture : RemoteApplicationFixture
-    {
+namespace NewRelic.Agent.IntegrationTestHelpers;
 
-        public NewRelicIntegrationTest(TFixture fixture)
-        {
-            fixture.SetTestClassType(this.GetType());
-        }
+public abstract class NewRelicIntegrationTest<TFixture> : IClassFixture<TFixture>
+    where TFixture : RemoteApplicationFixture
+{
+
+    public NewRelicIntegrationTest(TFixture fixture)
+    {
+        fixture.SetTestClassType(this.GetType());
     }
 }

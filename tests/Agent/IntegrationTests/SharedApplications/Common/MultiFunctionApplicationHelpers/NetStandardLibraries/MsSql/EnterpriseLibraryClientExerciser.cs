@@ -5,12 +5,12 @@
 
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using Microsoft.Practices.EnterpriseLibrary.Data.Sql;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
-using Microsoft.Practices.EnterpriseLibrary.Data.Sql;
 using sqlClient = System.Data.SqlClient;
-using System.Threading;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {

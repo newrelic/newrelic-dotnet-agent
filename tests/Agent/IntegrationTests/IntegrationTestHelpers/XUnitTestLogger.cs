@@ -5,35 +5,34 @@
 using System;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTestHelpers
+namespace NewRelic.Agent.IntegrationTestHelpers;
+
+public class XUnitTestLogger : ITestLogger
 {
-    public class XUnitTestLogger : ITestLogger
+    private readonly ITestOutputHelper _xunitOutput;
+
+    public XUnitTestLogger(ITestOutputHelper xunitOutput)
     {
-        private readonly ITestOutputHelper _xunitOutput;
+        _xunitOutput = xunitOutput;
 
-        public XUnitTestLogger(ITestOutputHelper xunitOutput)
+        if (_xunitOutput == null)
         {
-            _xunitOutput = xunitOutput;
-
-            if (_xunitOutput == null)
-            {
-                Console.WriteLine("XUnitTestLogger: xunitOutput was null. no data will be logged.");
-            }
+            Console.WriteLine("XUnitTestLogger: xunitOutput was null. no data will be logged.");
         }
+    }
 
-        public void WriteLine(string message)
-        {
-            _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {message}");
-        }
+    public void WriteLine(string message)
+    {
+        _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {message}");
+    }
 
-        public void WriteLine(string format, params object[] args)
-        {
-            _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {format}", args);
-        }
+    public void WriteLine(string format, params object[] args)
+    {
+        _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {format}", args);
+    }
 
-        public void WriteFormattedOutput(string formattedOutput)
-        {
-            _xunitOutput?.WriteLine(formattedOutput);
-        }
+    public void WriteFormattedOutput(string formattedOutput)
+    {
+        _xunitOutput?.WriteLine(formattedOutput);
     }
 }

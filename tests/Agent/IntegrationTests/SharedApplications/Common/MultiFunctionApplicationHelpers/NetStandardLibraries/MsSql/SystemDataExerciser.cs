@@ -4,16 +4,16 @@
 #if NETFRAMEWORK
 
 using System.Collections.Generic;
+using System.Data;
+using System.Data.OleDb;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Data.SqlClient;
-using System.Data;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
-using System.Threading;
-using System.Data.OleDb;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {

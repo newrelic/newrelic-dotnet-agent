@@ -3,31 +3,29 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries
-{
-    [Library]
-    public class InfiniteTracingTester
-    {
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void Make8TSpan()
-        {
-            var rand = new Random(10);
-            rand.Next();
-            rand.Next();
-            rand.Next();
-            rand.Next();
-        }
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries;
 
-        [LibraryMethod]
-        public static void StartAgent()
-        {
-            NewRelic.Api.Agent.NewRelic.StartAgent();
-        }
+[Library]
+public class InfiniteTracingTester
+{
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void Make8TSpan()
+    {
+        var rand = new Random(10);
+        rand.Next();
+        rand.Next();
+        rand.Next();
+        rand.Next();
+    }
+
+    [LibraryMethod]
+    public static void StartAgent()
+    {
+        NewRelic.Api.Agent.NewRelic.StartAgent();
     }
 }

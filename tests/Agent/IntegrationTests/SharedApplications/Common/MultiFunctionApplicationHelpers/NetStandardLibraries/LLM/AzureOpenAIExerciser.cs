@@ -13,66 +13,65 @@ using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using OpenAI.Chat;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM;
+
+[Library]
+public class AzureOpenAIExerciser
 {
-    [Library]
-    public class AzureOpenAIExerciser
+    private const string Model = "integration-test-gpt-4o-mini"; // the only model available for testing
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task CompleteChatAsync(string base64Prompt)
     {
-        private const string Model = "integration-test-gpt-4o-mini"; // the only model available for testing
+        var endpoint = new Uri(AzureOpenAiConfiguration.Endpoint);
+        var credentials = new ApiKeyCredential(AzureOpenAiConfiguration.ApiKey);
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task CompleteChatAsync(string base64Prompt)
-        {
-            var endpoint = new Uri(AzureOpenAiConfiguration.Endpoint);
-            var credentials = new ApiKeyCredential(AzureOpenAiConfiguration.ApiKey);
+        AzureOpenAIClient azureClient = new(endpoint, credentials);
+        ChatClient client = azureClient.GetChatClient(Model);
 
-            AzureOpenAIClient azureClient = new(endpoint, credentials);
-            ChatClient client = azureClient.GetChatClient(Model);
+        var bytes = Convert.FromBase64String(base64Prompt);
+        var prompt = Encoding.UTF8.GetString(bytes);
 
-            var bytes = Convert.FromBase64String(base64Prompt);
-            var prompt = Encoding.UTF8.GetString(bytes);
+        ChatCompletion completion = await client.CompleteChatAsync(prompt);
 
-            ChatCompletion completion = await client.CompleteChatAsync(prompt);
+        Console.WriteLine(completion.Content.Last().Text);
 
-            Console.WriteLine(completion.Content.Last().Text);
+    }
 
-        }
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void CompleteChat(string base64Prompt)
+    {
+        var endpoint = new Uri(AzureOpenAiConfiguration.Endpoint);
+        var credentials = new ApiKeyCredential(AzureOpenAiConfiguration.ApiKey);
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void CompleteChat(string base64Prompt)
-        {
-            var endpoint = new Uri(AzureOpenAiConfiguration.Endpoint);
-            var credentials = new ApiKeyCredential(AzureOpenAiConfiguration.ApiKey);
+        AzureOpenAIClient azureClient = new(endpoint, credentials);
+        ChatClient client = azureClient.GetChatClient(Model);
 
-            AzureOpenAIClient azureClient = new(endpoint, credentials);
-            ChatClient client = azureClient.GetChatClient(Model);
+        var bytes = Convert.FromBase64String(base64Prompt);
+        var prompt = Encoding.UTF8.GetString(bytes);
 
-            var bytes = Convert.FromBase64String(base64Prompt);
-            var prompt = Encoding.UTF8.GetString(bytes);
+        ChatCompletion completion = client.CompleteChat(prompt);
+        Console.WriteLine(completion.Content.Last().Text);
+    }
 
-            ChatCompletion completion = client.CompleteChat(prompt);
-            Console.WriteLine(completion.Content.Last().Text);
-        }
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task CompleteChatFailureAsync(string base64Prompt)
+    {
+        var endpoint = new Uri(AzureOpenAiConfiguration.Endpoint);
+        var credentials = new ApiKeyCredential(AzureOpenAiConfiguration.ApiKey+"BOGUS");
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task CompleteChatFailureAsync(string base64Prompt)
-        {
-            var endpoint = new Uri(AzureOpenAiConfiguration.Endpoint);
-            var credentials = new ApiKeyCredential(AzureOpenAiConfiguration.ApiKey+"BOGUS");
+        AzureOpenAIClient azureClient = new(endpoint, credentials);
+        ChatClient client = azureClient.GetChatClient(Model);
 
-            AzureOpenAIClient azureClient = new(endpoint, credentials);
-            ChatClient client = azureClient.GetChatClient(Model);
-
-            var bytes = Convert.FromBase64String(base64Prompt);
-            var prompt = Encoding.UTF8.GetString(bytes);
-            ChatCompletion completion = await client.CompleteChatAsync(prompt);
-            Console.WriteLine(completion.Refusal);
-        }
+        var bytes = Convert.FromBase64String(base64Prompt);
+        var prompt = Encoding.UTF8.GetString(bytes);
+        ChatCompletion completion = await client.CompleteChatAsync(prompt);
+        Console.WriteLine(completion.Refusal);
     }
 }

@@ -3,9 +3,7 @@
 
 using System.Threading.Tasks;
 using MultiFunctionApplicationHelpers;
-using NewRelic.Api.Agent;
 using NServiceBus;
-using NServiceBus.Logging;
 
 #if !NET462
 

@@ -1,14 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using MultiFunctionApplicationHelpers;
-using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
-using NewRelic.Api.Agent;
-using NServiceBus;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using MultiFunctionApplicationHelpers;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
+using NewRelic.Api.Agent;
+using NServiceBus;
 
 #if !NET462
 

@@ -10,62 +10,61 @@ using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Internal
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Internal;
+
+[Library]
+internal static class HttpClientDriver
 {
-    [Library]
-    internal static class HttpClientDriver
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void Get() => Get("http://127.0.0.1");
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void Get(string uri)
     {
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void Get() => Get("http://127.0.0.1");
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void Get(string uri)
+        try
         {
-            try
+            Thread.Sleep(5000);
+            using (var client = new HttpClient())
+                client.GetAsync(uri).Wait();
+        }
+        catch { }
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static async Task<string> CancelledGetOperation(string uri)
+    {
+        try
+        {
+            using (var client = new HttpClient())
             {
-                Thread.Sleep(5000);
-                using (var client = new HttpClient())
-                    client.GetAsync(uri).Wait();
+                client.Timeout = new TimeSpan(1);
+                await client.GetStringAsync(uri);
             }
-            catch { }
+        }
+        catch (Exception)
+        {
+            //Swallow for test purposes
         }
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static async Task<string> CancelledGetOperation(string uri)
-        {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    client.Timeout = new TimeSpan(1);
-                    await client.GetStringAsync(uri);
-                }
-            }
-            catch (Exception)
-            {
-                //Swallow for test purposes
-            }
+        return "Worked";
+    }
 
-            return "Worked";
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void FactoryGet(string uri)
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void FactoryGet(string uri)
+    {
+        try
         {
-            try
-            {
-                using (var client = HttpClientFactory.Create())
-                    client.GetAsync(uri).Wait();
-            }
-            catch { }
+            using (var client = HttpClientFactory.Create())
+                client.GetAsync(uri).Wait();
         }
+        catch { }
     }
 }

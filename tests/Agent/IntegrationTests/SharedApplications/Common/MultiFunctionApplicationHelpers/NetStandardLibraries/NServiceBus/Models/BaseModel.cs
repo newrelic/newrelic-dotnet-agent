@@ -3,10 +3,9 @@
 
 using System;
 
-namespace NsbTests
+namespace NsbTests;
+
+public class BaseModel
 {
-    public class BaseModel
-    {
-        public Guid Id = Guid.NewGuid();
-    }
+    public Guid Id = Guid.NewGuid();
 }
