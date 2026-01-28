@@ -3,29 +3,28 @@
 
 using System;
 
-namespace NewRelic.Providers.Storage.CallContext
+namespace NewRelic.Providers.Storage.CallContext;
+
+public class MarshalByRefContainer : MarshalByRefObject
 {
-    public class MarshalByRefContainer : MarshalByRefObject
+    private object _value;
+
+    public object GetValue()
     {
-        private object _value;
+        return _value;
+    }
 
-        public object GetValue()
-        {
-            return _value;
-        }
+    public void SetValue(object value)
+    {
+        _value = value;
+    }
 
-        public void SetValue(object value)
-        {
-            _value = value;
-        }
+    public MarshalByRefContainer(object instance)
+    {
+        SetValue(instance);
+    }
 
-        public MarshalByRefContainer(object instance)
-        {
-            SetValue(instance);
-        }
-
-        public MarshalByRefContainer()
-        {
-        }
+    public MarshalByRefContainer()
+    {
     }
 }

@@ -1,57 +1,56 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Api;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Collections.Generic;
-using NewRelic.Agent.Api.Experimental;
 using System.ServiceModel.Description;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.Wcf3
+namespace NewRelic.Providers.Wrapper.Wcf3;
+
+public class DispatcherBuilderWrapper : IWrapper
 {
-    public class DispatcherBuilderWrapper : IWrapper
+    private const string AssemblyName = "System.ServiceModel";
+    private const string TypeName = "System.ServiceModel.Description.DispatcherBuilder";
+    private const string MethodName = "InitializeServiceHost";
+    private const string WrapperName = "DispatchBuilderWrapper";
+
+    public bool IsTransactionRequired => false;
+    private static readonly object _bindingLock = new object();
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        private const string AssemblyName = "System.ServiceModel";
-        private const string TypeName = "System.ServiceModel.Description.DispatcherBuilder";
-        private const string MethodName = "InitializeServiceHost";
-        private const string WrapperName = "DispatchBuilderWrapper";
+        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+    }
 
-        public bool IsTransactionRequired => false;
-        private static readonly object _bindingLock = new object();
-
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        return Delegates.GetDelegateFor(onComplete: () =>
         {
-            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
-        }
+            var serviceDescription = instrumentedMethodCall.MethodCall.MethodArguments[0] as ServiceDescription;
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
-        {
-            return Delegates.GetDelegateFor(onComplete: () =>
+            lock (_bindingLock)
             {
-                var serviceDescription = instrumentedMethodCall.MethodCall.MethodArguments[0] as ServiceDescription;
-
-                lock (_bindingLock)
+                var bindingsSent = new List<Type>();
+                foreach (var endpoint in serviceDescription.Endpoints)
                 {
-                    var bindingsSent = new List<Type>();
-                    foreach (var endpoint in serviceDescription.Endpoints)
+                    var bindingType = endpoint.Binding.GetType();
+                    if (!bindingsSent.Contains(bindingType))
                     {
-                        var bindingType = endpoint.Binding.GetType();
-                        if (!bindingsSent.Contains(bindingType))
+                        bindingsSent.Add(bindingType);
+                        if (!SystemBindingTypes.Contains(bindingType))
                         {
-                            bindingsSent.Add(bindingType);
-                            if (!SystemBindingTypes.Contains(bindingType))
-                            {
-                                agent.GetExperimentalApi().RecordSupportabilityMetric("WCFService/BindingType/CustomBinding");
-                            }
-                            else
-                            {
-                                agent.GetExperimentalApi().RecordSupportabilityMetric($"WCFService/BindingType/{bindingType.Name}");
-                            }
+                            agent.GetExperimentalApi().RecordSupportabilityMetric("WCFService/BindingType/CustomBinding");
+                        }
+                        else
+                        {
+                            agent.GetExperimentalApi().RecordSupportabilityMetric($"WCFService/BindingType/{bindingType.Name}");
                         }
                     }
                 }
-            });
-        }
+            }
+        });
     }
 }

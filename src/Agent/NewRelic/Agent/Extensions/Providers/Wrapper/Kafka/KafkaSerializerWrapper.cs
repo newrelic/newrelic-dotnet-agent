@@ -5,30 +5,29 @@ using Confluent.Kafka;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.Kafka
+namespace NewRelic.Providers.Wrapper.Kafka;
+
+public class KafkaSerializerWrapper : IWrapper
 {
-    public class KafkaSerializerWrapper : IWrapper
+    private const string WrapperName = "KafkaSerializerWrapper";
+
+    public bool IsTransactionRequired => true;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        private const string WrapperName = "KafkaSerializerWrapper";
+        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+    }
 
-        public bool IsTransactionRequired => true;
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        // Serialize has 2 args, Deserialize has 3
+        var context = instrumentedMethodCall.MethodCall.MethodArguments.Length == 2
+            ? (SerializationContext)instrumentedMethodCall.MethodCall.MethodArguments[1]
+            : (SerializationContext)instrumentedMethodCall.MethodCall.MethodArguments[2];
 
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
-        {
-            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
-        }
+        // MessageBroker/Kafka/Topic/Named/{topic_name}/Serialization/Value
+        var segment = transaction.StartMessageBrokerSerializationSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Produce, "Kafka", context.Topic, context.Component.ToString());
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
-        {
-            // Serialize has 2 args, Deserialize has 3
-            var context = instrumentedMethodCall.MethodCall.MethodArguments.Length == 2
-                ? (SerializationContext)instrumentedMethodCall.MethodCall.MethodArguments[1]
-                : (SerializationContext)instrumentedMethodCall.MethodCall.MethodArguments[2];
-
-            // MessageBroker/Kafka/Topic/Named/{topic_name}/Serialization/Value
-            var segment = transaction.StartMessageBrokerSerializationSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Produce, "Kafka", context.Topic, context.Component.ToString());
-
-            return Delegates.GetDelegateFor(segment);
-        }
+        return Delegates.GetDelegateFor(segment);
     }
 }

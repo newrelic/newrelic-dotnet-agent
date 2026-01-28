@@ -1,32 +1,31 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Providers.Storage.CallContext
+namespace NewRelic.Providers.Storage.CallContext;
+
+/// <summary>
+/// A simple implementation of AsyncLocal that works in .NET 4.5.
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public class AsyncLocal<T>
 {
-    /// <summary>
-    /// A simple implementation of AsyncLocal that works in .NET 4.5.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class AsyncLocal<T>
+    private readonly string _key;
+
+    public AsyncLocal(string key)
     {
-        private readonly string _key;
+        _key = key;
+    }
 
-        public AsyncLocal(string key)
+    public T Value
+    {
+        get
         {
-            _key = key;
+            var obj = System.Runtime.Remoting.Messaging.CallContext.LogicalGetData(_key);
+            return obj == null ? default(T) : (T)obj;
         }
-
-        public T Value
+        set
         {
-            get
-            {
-                var obj = System.Runtime.Remoting.Messaging.CallContext.LogicalGetData(_key);
-                return obj == null ? default(T) : (T)obj;
-            }
-            set
-            {
-                System.Runtime.Remoting.Messaging.CallContext.LogicalSetData(_key, value);
-            }
+            System.Runtime.Remoting.Messaging.CallContext.LogicalSetData(_key, value);
         }
     }
 }

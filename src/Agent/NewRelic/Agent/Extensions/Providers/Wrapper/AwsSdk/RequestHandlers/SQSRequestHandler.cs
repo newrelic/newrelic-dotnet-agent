@@ -11,137 +11,136 @@ using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers
+namespace NewRelic.Providers.Wrapper.AwsSdk.RequestHandlers;
+
+internal static class SQSRequestHandler
 {
-    internal static class SQSRequestHandler
+    private static readonly ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new();
+    private static readonly ConcurrentHashSet<string> _unsupportedSQSRequestTypes = [];
+
+    public static AfterWrappedMethodDelegate HandleSQSRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
     {
-        private static readonly ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new();
-        private static readonly ConcurrentHashSet<string> _unsupportedSQSRequestTypes = [];
+        var requestType = request.GetType().Name;
 
-        public static AfterWrappedMethodDelegate HandleSQSRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
+        MessageBrokerAction action;
+        switch (requestType)
         {
-            var requestType = request.GetType().Name;
+            case "SendMessageRequest":
+            case "SendMessageBatchRequest":
+                action = MessageBrokerAction.Produce;
+                break;
+            case "ReceiveMessageRequest":
+                action = MessageBrokerAction.Consume;
+                break;
+            case "PurgeQueueRequest":
+                action = MessageBrokerAction.Purge;
+                break;
+            default:
+                if (!_unsupportedSQSRequestTypes.Contains(requestType))  // log once per unsupported request type
+                {
+                    agent.Logger.Debug($"AwsSdkPipelineWrapper: SQS Request type {requestType} is not supported. Returning NoOp delegate.");
+                    _unsupportedSQSRequestTypes.Add(requestType);
+                }
 
-            MessageBrokerAction action;
-            switch (requestType)
+                return Delegates.NoOp;
+        }
+
+        var dtHeaders = agent.GetConfiguredDTHeaders();
+
+        string requestQueueUrl = request.QueueUrl;
+        var segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
+        switch (action)
+        {
+            case MessageBrokerAction.Produce when requestType == "SendMessageRequest":
             {
-                case "SendMessageRequest":
-                case "SendMessageBatchRequest":
-                    action = MessageBrokerAction.Produce;
-                    break;
-                case "ReceiveMessageRequest":
-                    action = MessageBrokerAction.Consume;
-                    break;
-                case "PurgeQueueRequest":
-                    action = MessageBrokerAction.Purge;
-                    break;
-                default:
-                    if (!_unsupportedSQSRequestTypes.Contains(requestType))  // log once per unsupported request type
-                    {
-                        agent.Logger.Debug($"AwsSdkPipelineWrapper: SQS Request type {requestType} is not supported. Returning NoOp delegate.");
-                        _unsupportedSQSRequestTypes.Add(requestType);
-                    }
+                if (request.MessageAttributes == null)
+                {
+                    agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.MessageAttributes is null, unable to insert distributed trace headers.");
+                }
+                else
+                {
+                    SqsHelper.InsertDistributedTraceHeaders(transaction, request, dtHeaders.Count);
+                }
 
-                    return Delegates.NoOp;
+                break;
             }
-
-            var dtHeaders = agent.GetConfiguredDTHeaders();
-
-            string requestQueueUrl = request.QueueUrl;
-            var segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
-            switch (action)
+            case MessageBrokerAction.Produce:
             {
-                case MessageBrokerAction.Produce when requestType == "SendMessageRequest":
+                if (requestType == "SendMessageBatchRequest")
+                {
+                    // loop through each message in the batch and insert distributed trace headers
+                    foreach (var message in request.Entries)
                     {
-                        if (request.MessageAttributes == null)
+                        if (message.MessageAttributes == null)
                         {
-                            agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.MessageAttributes is null, unable to insert distributed trace headers.");
+                            agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.Entries.MessageAttributes is null, unable to insert distributed trace headers.");
                         }
                         else
                         {
-                            SqsHelper.InsertDistributedTraceHeaders(transaction, request, dtHeaders.Count);
+                            SqsHelper.InsertDistributedTraceHeaders(transaction, message, dtHeaders.Count);
                         }
-
-                        break;
                     }
-                case MessageBrokerAction.Produce:
-                    {
-                        if (requestType == "SendMessageBatchRequest")
-                        {
-                            // loop through each message in the batch and insert distributed trace headers
-                            foreach (var message in request.Entries)
-                            {
-                                if (message.MessageAttributes == null)
-                                {
-                                    agent.Logger.Debug("AwsSdkPipelineWrapper: requestContext.OriginalRequest.Entries.MessageAttributes is null, unable to insert distributed trace headers.");
-                                }
-                                else
-                                {
-                                    SqsHelper.InsertDistributedTraceHeaders(transaction, message, dtHeaders.Count);
-                                }
-                            }
-                        }
+                }
 
-                        break;
-                    }
-
-                // modify the request to ask for DT headers in the response message attributes.
-                case MessageBrokerAction.Consume:
-                    {
-                        // create a new list or clone the existing one so we don't modify the original list
-                        request.MessageAttributeNames = request.MessageAttributeNames == null ? new List<string>() : new List<string>(request.MessageAttributeNames);
-
-                        foreach (var header in dtHeaders)
-                            request.MessageAttributeNames.Add(header);
-
-                        break;
-                    }
+                break;
             }
 
-            return isAsync ?
-                Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, ProcessResponse, TaskContinuationOptions.ExecuteSynchronously)
-                :
-                Delegates.GetDelegateFor(
-                    onComplete: segment.End,
-                    onSuccess: () =>
-                    {
-                        if (action != MessageBrokerAction.Consume)
-                            return;
-
-                        var ec = executionContext;
-                        var response = ec.ResponseContext.Response; // response is a ReceiveMessageResponse
-
-                        AcceptTracingHeadersIfSafe(transaction, response);
-                    }
-                );
-
-            void ProcessResponse(Task responseTask)
+            // modify the request to ask for DT headers in the response message attributes.
+            case MessageBrokerAction.Consume:
             {
-                if (!ValidTaskResponse(responseTask) || segment == null || action != MessageBrokerAction.Consume)
-                    return;
+                // create a new list or clone the existing one so we don't modify the original list
+                request.MessageAttributeNames = request.MessageAttributeNames == null ? new List<string>() : new List<string>(request.MessageAttributeNames);
 
-                // taskResult is a ReceiveMessageResponse
-                var taskResultGetter = _getRequestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
-                dynamic response = taskResultGetter(responseTask);
+                foreach (var header in dtHeaders)
+                    request.MessageAttributeNames.Add(header);
 
-                AcceptTracingHeadersIfSafe(transaction, response);
-
+                break;
             }
         }
 
-        private static bool ValidTaskResponse(Task response)
-        {
-            return response?.Status == TaskStatus.RanToCompletion;
-        }
+        return isAsync ?
+            Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, ProcessResponse, TaskContinuationOptions.ExecuteSynchronously)
+            :
+            Delegates.GetDelegateFor(
+                onComplete: segment.End,
+                onSuccess: () =>
+                {
+                    if (action != MessageBrokerAction.Consume)
+                        return;
 
-        private static void AcceptTracingHeadersIfSafe(ITransaction transaction, dynamic response)
-        {
-            if (response.Messages != null && response.Messages.Count > 0 && response.Messages[0].MessageAttributes != null)
-            {
-                // accept distributed trace headers from the first message in the response
-                SqsHelper.AcceptDistributedTraceHeaders(transaction, response.Messages[0].MessageAttributes);
-            }
-        }
+                    var ec = executionContext;
+                    var response = ec.ResponseContext.Response; // response is a ReceiveMessageResponse
 
+                    AcceptTracingHeadersIfSafe(transaction, response);
+                }
+            );
+
+        void ProcessResponse(Task responseTask)
+        {
+            if (!ValidTaskResponse(responseTask) || segment == null || action != MessageBrokerAction.Consume)
+                return;
+
+            // taskResult is a ReceiveMessageResponse
+            var taskResultGetter = _getRequestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
+            dynamic response = taskResultGetter(responseTask);
+
+            AcceptTracingHeadersIfSafe(transaction, response);
+
+        }
     }
+
+    private static bool ValidTaskResponse(Task response)
+    {
+        return response?.Status == TaskStatus.RanToCompletion;
+    }
+
+    private static void AcceptTracingHeadersIfSafe(ITransaction transaction, dynamic response)
+    {
+        if (response.Messages != null && response.Messages.Count > 0 && response.Messages[0].MessageAttributes != null)
+        {
+            // accept distributed trace headers from the first message in the response
+            SqsHelper.AcceptDistributedTraceHeaders(transaction, response.Messages[0].MessageAttributes);
+        }
+    }
+
 }

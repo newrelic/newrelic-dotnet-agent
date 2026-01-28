@@ -6,28 +6,27 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
 
-namespace NewRelic.Providers.Wrapper.Mvc3
+namespace NewRelic.Providers.Wrapper.Mvc3;
+
+public class InvokeExceptionFiltersWrapper : IWrapper
 {
-    public class InvokeExceptionFiltersWrapper : IWrapper
+    public bool IsTransactionRequired => true;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        public bool IsTransactionRequired => true;
+        var method = methodInfo.Method;
+        var canWrap = method.MatchesAny(assemblyName: "System.Web.Mvc", typeName: "System.Web.Mvc.ControllerActionInvoker", methodName: "InvokeExceptionFilters");
+        return new CanWrapResponse(canWrap);
+    }
 
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        var exception = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<Exception>(2);
+        if (exception != null)
         {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny(assemblyName: "System.Web.Mvc", typeName: "System.Web.Mvc.ControllerActionInvoker", methodName: "InvokeExceptionFilters");
-            return new CanWrapResponse(canWrap);
+            transaction.NoticeError(exception);
         }
-
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
-        {
-            var exception = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<Exception>(2);
-            if (exception != null)
-            {
-                transaction.NoticeError(exception);
-            }
             
-            return Delegates.NoOp;
-        }
+        return Delegates.NoOp;
     }
 }

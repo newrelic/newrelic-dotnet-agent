@@ -6,39 +6,38 @@ using System.Web.UI;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.AspNet.Shared
+namespace NewRelic.Providers.Wrapper.AspNet.Shared;
+
+public class AspPagesTransactionNameWrapper : IWrapper
 {
-    public class AspPagesTransactionNameWrapper : IWrapper
+    public const string WrapperName = "AspNet.AspPagesTransactionNameTracer";
+
+    public bool IsTransactionRequired => true;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        public const string WrapperName = "AspNet.AspPagesTransactionNameTracer";
+        var canWrap = methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase);
+        return new CanWrapResponse(canWrap);
+    }
 
-        public bool IsTransactionRequired => true;
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        var page = instrumentedMethodCall.MethodCall.InvocationTarget as Page;
+        if (page == null)
+            return Delegates.NoOp;
 
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
-        {
-            var canWrap = methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase);
-            return new CanWrapResponse(canWrap);
-        }
+        var pagePath = page.AppRelativeVirtualPath;
+        if (pagePath == null)
+            return Delegates.NoOp;
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
-        {
-            var page = instrumentedMethodCall.MethodCall.InvocationTarget as Page;
-            if (page == null)
-                return Delegates.NoOp;
+        if (pagePath.StartsWith("~/"))
+            pagePath = pagePath.Substring(2);
 
-            var pagePath = page.AppRelativeVirtualPath;
-            if (pagePath == null)
-                return Delegates.NoOp;
+        pagePath = pagePath.ToLower();
 
-            if (pagePath.StartsWith("~/"))
-                pagePath = pagePath.Substring(2);
+        transaction.SetWebTransactionName(WebTransactionType.ASP, pagePath, TransactionNamePriority.FrameworkHigh);
+        var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, pagePath);
 
-            pagePath = pagePath.ToLower();
-
-            transaction.SetWebTransactionName(WebTransactionType.ASP, pagePath, TransactionNamePriority.FrameworkHigh);
-            var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, pagePath);
-
-            return Delegates.GetDelegateFor(segment);
-        }
+        return Delegates.GetDelegateFor(segment);
     }
 }

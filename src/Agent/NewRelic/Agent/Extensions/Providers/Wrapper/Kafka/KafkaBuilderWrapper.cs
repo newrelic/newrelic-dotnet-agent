@@ -8,52 +8,51 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.Kafka
+namespace NewRelic.Providers.Wrapper.Kafka;
+
+public class KafkaBuilderWrapper : IWrapper
 {
-    public class KafkaBuilderWrapper : IWrapper
+    private ConcurrentDictionary<Type, Func<object, IEnumerable>> _builderConfigGetterDictionary = new();
+
+    private const string WrapperName = "KafkaBuilderWrapper";
+    private const string BootstrapServersKey = "bootstrap.servers";
+
+    public bool IsTransactionRequired => false;
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
     {
-        private ConcurrentDictionary<Type, Func<object, IEnumerable>> _builderConfigGetterDictionary = new();
+        return new CanWrapResponse(WrapperName.Equals(instrumentedMethodInfo.RequestedWrapperName));
+    }
 
-        private const string WrapperName = "KafkaBuilderWrapper";
-        private const string BootstrapServersKey = "bootstrap.servers";
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        var builder = instrumentedMethodCall.MethodCall.InvocationTarget;
 
-        public bool IsTransactionRequired => false;
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
+        if (!_builderConfigGetterDictionary.TryGetValue(builder.GetType(), out var configGetter))
         {
-            return new CanWrapResponse(WrapperName.Equals(instrumentedMethodInfo.RequestedWrapperName));
+            configGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<IEnumerable>(builder.GetType(), "Config");
+            _builderConfigGetterDictionary[builder.GetType()] = configGetter;
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+        dynamic configuration = configGetter(builder);
+
+        string bootstrapServers = null;
+
+        foreach (var kvp in configuration)
         {
-            var builder = instrumentedMethodCall.MethodCall.InvocationTarget;
-
-            if (!_builderConfigGetterDictionary.TryGetValue(builder.GetType(), out var configGetter))
+            if (kvp.Key == BootstrapServersKey)
             {
-                configGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<IEnumerable>(builder.GetType(), "Config");
-                _builderConfigGetterDictionary[builder.GetType()] = configGetter;
+                bootstrapServers = kvp.Value as string;
+                break;
             }
-
-            dynamic configuration = configGetter(builder);
-
-            string bootstrapServers = null;
-
-            foreach (var kvp in configuration)
-            {
-                if (kvp.Key == BootstrapServersKey)
-                {
-                    bootstrapServers = kvp.Value as string;
-                    break;
-                }
-            }
-
-            if (!string.IsNullOrEmpty(bootstrapServers))
-                return Delegates.GetDelegateFor<object>(onSuccess: (builtObject) =>
-                {
-                    KafkaHelper.AddBootstrapServersToCache(builtObject, bootstrapServers);
-                });
-
-            return Delegates.NoOp;
-
         }
+
+        if (!string.IsNullOrEmpty(bootstrapServers))
+            return Delegates.GetDelegateFor<object>(onSuccess: (builtObject) =>
+            {
+                KafkaHelper.AddBootstrapServersToCache(builtObject, bootstrapServers);
+            });
+
+        return Delegates.NoOp;
+
     }
 }

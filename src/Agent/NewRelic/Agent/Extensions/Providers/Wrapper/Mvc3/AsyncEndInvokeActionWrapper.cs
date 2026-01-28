@@ -6,30 +6,29 @@ using System.Web;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.Mvc3
+namespace NewRelic.Providers.Wrapper.Mvc3;
+
+public class AsyncEndInvokeActionWrapper : IWrapper
 {
-    public class AsyncEndInvokeActionWrapper : IWrapper
+    public bool IsTransactionRequired => false;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        public bool IsTransactionRequired => false;
+        var method = methodInfo.Method;
+        var canWrap = method.MatchesAny(assemblyName: "System.Web.Mvc", typeName: "System.Web.Mvc.Async.AsyncControllerActionInvoker", methodName: "EndInvokeAction");
+        return new CanWrapResponse(canWrap);
+    }
 
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        var httpContext = HttpContext.Current;
+        if (httpContext == null)
         {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny(assemblyName: "System.Web.Mvc", typeName: "System.Web.Mvc.Async.AsyncControllerActionInvoker", methodName: "EndInvokeAction");
-            return new CanWrapResponse(canWrap);
+            throw new NullReferenceException("httpContext");
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
-        {
-            var httpContext = HttpContext.Current;
-            if (httpContext == null)
-            {
-                throw new NullReferenceException("httpContext");
-            }
-
-            var segment = agent.CastAsSegment(httpContext.Items[AsyncBeginInvokeActionWrapper.HttpContextSegmentKey]);
-            httpContext.Items[AsyncBeginInvokeActionWrapper.HttpContextSegmentKey] = null;
-            return Delegates.GetDelegateFor(segment);
-        }
+        var segment = agent.CastAsSegment(httpContext.Items[AsyncBeginInvokeActionWrapper.HttpContextSegmentKey]);
+        httpContext.Items[AsyncBeginInvokeActionWrapper.HttpContextSegmentKey] = null;
+        return Delegates.GetDelegateFor(segment);
     }
 }

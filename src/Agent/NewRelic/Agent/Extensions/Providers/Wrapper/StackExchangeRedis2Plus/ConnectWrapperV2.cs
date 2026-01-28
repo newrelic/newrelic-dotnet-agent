@@ -7,48 +7,47 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using StackExchange.Redis;
 
-namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
+namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus;
+
+public class ConnectWrapperV2 : IWrapper
 {
-    public class ConnectWrapperV2 : IWrapper
+    public bool IsTransactionRequired => false;
+
+    private const string WrapperName = "stackexchangeredis-connect";
+    private static readonly object _lock = new();
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        public bool IsTransactionRequired => false;
+        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+    }
 
-        private const string WrapperName = "stackexchangeredis-connect";
-        private static readonly object _lock = new();
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, Agent.Api.ITransaction transaction)
+    {
+        return Delegates.GetDelegateFor<ConnectionMultiplexer>(
+            onSuccess: RegisterProfiler);
 
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+        void RegisterProfiler(IConnectionMultiplexer multiplexer)
         {
-            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
-        }
+            var xAgent = (IAgentExperimental)agent;
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, Agent.Api.ITransaction transaction)
-        {
-            return Delegates.GetDelegateFor<ConnectionMultiplexer>(
-                onSuccess: RegisterProfiler);
-
-            void RegisterProfiler(IConnectionMultiplexer multiplexer)
+            // The SessionCache is not connection-specific.  This checks for an existing cache and creates one if there is none.
+            if (xAgent.StackExchangeRedisCache == null)
             {
-                var xAgent = (IAgentExperimental)agent;
-
-                // The SessionCache is not connection-specific.  This checks for an existing cache and creates one if there is none.
-                if (xAgent.StackExchangeRedisCache == null)
+                lock (_lock)
                 {
-                    lock (_lock)
+                    if (xAgent.StackExchangeRedisCache == null)
                     {
-                        if (xAgent.StackExchangeRedisCache == null)
-                        {
-                            // We only need the hashcode since nothing will change for the methodCall
-                            var hashCode = RuntimeHelpers.GetHashCode(multiplexer);
-                            var sessionCache = new SessionCache(agent, hashCode);
+                        // We only need the hashcode since nothing will change for the methodCall
+                        var hashCode = RuntimeHelpers.GetHashCode(multiplexer);
+                        var sessionCache = new SessionCache(agent, hashCode);
 
-                            xAgent.StackExchangeRedisCache = sessionCache;
-                        }
+                        xAgent.StackExchangeRedisCache = sessionCache;
                     }
                 }
-
-                // Registers the profiling function from the shared SessionCache.
-                multiplexer.RegisterProfiler(((SessionCache)xAgent.StackExchangeRedisCache).GetProfilingSession());
             }
+
+            // Registers the profiling function from the shared SessionCache.
+            multiplexer.RegisterProfiler(((SessionCache)xAgent.StackExchangeRedisCache).GetProfilingSession());
         }
     }
 }

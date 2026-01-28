@@ -8,38 +8,37 @@ using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 
-namespace NewRelic.Providers.Wrapper.MongoDb26
+namespace NewRelic.Providers.Wrapper.MongoDb26;
+
+public class AsyncCursorWrapper : IWrapper
 {
-    public class AsyncCursorWrapper : IWrapper
+    private const string WrapperName = "AsyncCursorWrapper";
+    public bool IsTransactionRequired => true;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        private const string WrapperName = "AsyncCursorWrapper";
-        public bool IsTransactionRequired => true;
+        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+    }
 
-        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
+
+        var caller = instrumentedMethodCall.MethodCall.InvocationTarget;
+        var collectionNamespace = MongoDbHelper.GetCollectionNamespaceFieldFromGeneric(caller);
+        var model = MongoDbHelper.GetCollectionName(collectionNamespace);
+
+        var connectionInfo = MongoDbHelper.GetConnectionInfoFromCursor(caller, collectionNamespace, agent.Configuration.UtilizationHostName);
+
+        var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
+            new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true,
+            connectionInfo: connectionInfo);
+
+        if (!operation.EndsWith("Async", StringComparison.OrdinalIgnoreCase))
         {
-            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+            return Delegates.GetDelegateFor(segment);
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
-        {
-            var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
-
-            var caller = instrumentedMethodCall.MethodCall.InvocationTarget;
-            var collectionNamespace = MongoDbHelper.GetCollectionNamespaceFieldFromGeneric(caller);
-            var model = MongoDbHelper.GetCollectionName(collectionNamespace);
-
-            var connectionInfo = MongoDbHelper.GetConnectionInfoFromCursor(caller, collectionNamespace, agent.Configuration.UtilizationHostName);
-
-            var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
-                new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true,
-                connectionInfo: connectionInfo);
-
-            if (!operation.EndsWith("Async", StringComparison.OrdinalIgnoreCase))
-            {
-                return Delegates.GetDelegateFor(segment);
-            }
-
-            return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true);
-        }
+        return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true);
     }
 }
