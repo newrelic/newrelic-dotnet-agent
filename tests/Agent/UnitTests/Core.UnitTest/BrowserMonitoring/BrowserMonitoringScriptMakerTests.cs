@@ -1,12 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Text.RegularExpressions;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
@@ -16,245 +18,241 @@ using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NUnit.Framework;
-using System;
-using System.Text.RegularExpressions;
-using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.BrowserMonitoring
+namespace NewRelic.Agent.Core.BrowserMonitoring;
+
+[TestFixture]
+public class BrowserMonitoringScriptMakerTests
 {
-    [TestFixture]
-    public class BrowserMonitoringScriptMakerTests
+    private BrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
+
+    private IConfiguration _configuration;
+
+    private ITransactionMetricNameMaker _transactionMetricNameMaker;
+
+    private ITransactionAttributeMaker _transactionAttributeMaker;
+
+    private IAttributeDefinitionService _attribDefSvc;
+    private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+    private ConfigurationAutoResponder _configurationAutoResponder;
+
+    private int _configVersion = 0;
+
+    private void UpdateDefaultConfiguration()
     {
-        private BrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
+        _configVersion++;
 
-        private IConfiguration _configuration;
+        _configuration = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => _configuration.ConfigurationVersion).Returns(_configVersion);
+        Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license key");
+        Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns("the agent");
+        Mock.Arrange(() => _configuration.CaptureBrowserMonitoringAttributes).Returns(true);
+        Mock.Arrange(() => _configuration.CaptureAttributes).Returns(() => true);
+    }
 
-        private ITransactionMetricNameMaker _transactionMetricNameMaker;
+    [SetUp]
+    public void SetUp()
+    {
+        UpdateDefaultConfiguration();
 
-        private ITransactionAttributeMaker _transactionAttributeMaker;
+        var configurationService = Mock.Create<IConfigurationService>();
+        Mock.Arrange(() => configurationService.Configuration).Returns(() => _configuration);
 
-        private IAttributeDefinitionService _attribDefSvc;
-        private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
-        private ConfigurationAutoResponder _configurationAutoResponder;
+        _configurationAutoResponder = new ConfigurationAutoResponder(_configuration);
 
-        private int _configVersion = 0;
+        _transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
+        Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(new TransactionMetricName("prefix", "suffix"));
 
-        private void UpdateDefaultConfiguration()
-        {
-            _configVersion++;
+        _transactionAttributeMaker = Mock.Create<ITransactionAttributeMaker>();
+        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
-            _configuration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => _configuration.ConfigurationVersion).Returns(_configVersion);
-            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license key");
-            Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns("the agent");
-            Mock.Arrange(() => _configuration.CaptureBrowserMonitoringAttributes).Returns(true);
-            Mock.Arrange(() => _configuration.CaptureAttributes).Returns(() => true);
-        }
+        _browserMonitoringScriptMaker = new BrowserMonitoringScriptMaker(configurationService, _transactionMetricNameMaker, _transactionAttributeMaker, _attribDefSvc);
+    }
 
-        [SetUp]
-        public void SetUp()
-        {
-            UpdateDefaultConfiguration();
+    [TearDown]
+    public void TearDown()
+    {
+        _configurationAutoResponder?.Dispose();
+        _attribDefSvc.Dispose();
+    }
 
-            var configurationService = Mock.Create<IConfigurationService>();
-            Mock.Arrange(() => configurationService.Configuration).Returns(() => _configuration);
+    [Test]
+    public void GetScript_ReturnsValidScript_UnderNormalConditions()
+    {
+        UpdateDefaultConfiguration();
+        Mock.Arrange(() => _configuration.CaptureAttributes).Returns(false);
+        EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
 
-            _configurationAutoResponder = new ConfigurationAutoResponder(_configuration);
+        var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
 
-            _transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
-            Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(new TransactionMetricName("prefix", "suffix"));
+        var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
-            _transactionAttributeMaker = Mock.Create<ITransactionAttributeMaker>();
-            _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        const string expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":1000,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
+        Assert.That(script, Is.EqualTo(expectedScript));
+    }
 
-            _browserMonitoringScriptMaker = new BrowserMonitoringScriptMaker(configurationService, _transactionMetricNameMaker, _transactionAttributeMaker, _attribDefSvc);
-        }
+    [Test]
+    public void GetScript_ReturnsValidScriptWithNonce_UnderNormalConditions()
+    {
+        UpdateDefaultConfiguration();
+        Mock.Arrange(() => _configuration.CaptureAttributes).Returns(false);
+        EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
 
-        [TearDown]
-        public void TearDown()
-        {
-            _configurationAutoResponder?.Dispose();
-            _attribDefSvc.Dispose();
-        }
+        var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
 
-        [Test]
-        public void GetScript_ReturnsValidScript_UnderNormalConditions()
-        {
-            UpdateDefaultConfiguration();
-            Mock.Arrange(() => _configuration.CaptureAttributes).Returns(false);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
+        var script = _browserMonitoringScriptMaker.GetScript(transaction, "TmV3IFJlbGlj");
 
-            var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
+        const string expectedScript = @"<script type=""text/javascript"" nonce=""TmV3IFJlbGlj"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":1000,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"" nonce=""TmV3IFJlbGlj"">the agent</script>";
+        Assert.That(script, Is.EqualTo(expectedScript));
+    }
 
-            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
+    [Test]
+    public void GetScript_DefaultsToQueueTimeZero_IfQueueTimeIsNotSet()
+    {
+        UpdateDefaultConfiguration();
+        Mock.Arrange(() => _configuration.CaptureAttributes).Returns(false);
+        EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
 
-            const string expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":1000,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
-            Assert.That(script, Is.EqualTo(expectedScript));
-        }
+        var transaction = BuildTestTransaction(applicationTime: TimeSpan.FromSeconds(2));
 
-        [Test]
-        public void GetScript_ReturnsValidScriptWithNonce_UnderNormalConditions()
-        {
-            UpdateDefaultConfiguration();
-            Mock.Arrange(() => _configuration.CaptureAttributes).Returns(false);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
+        var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
-            var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
+        const string expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":0,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
+        Assert.That(script, Is.EqualTo(expectedScript));
+    }
 
-            var script = _browserMonitoringScriptMaker.GetScript(transaction, "TmV3IFJlbGlj");
+    [Test]
+    public void GetScript_IncludesObfuscatedAttributes_IfAttributesReturnedFromAttributeService()
+    {
+        IAttributeValueCollection mockAttributes;
 
-            const string expectedScript = @"<script type=""text/javascript"" nonce=""TmV3IFJlbGlj"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":1000,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"" nonce=""TmV3IFJlbGlj"">the agent</script>";
-            Assert.That(script, Is.EqualTo(expectedScript));
-        }
-
-        [Test]
-        public void GetScript_DefaultsToQueueTimeZero_IfQueueTimeIsNotSet()
-        {
-            UpdateDefaultConfiguration();
-            Mock.Arrange(() => _configuration.CaptureAttributes).Returns(false);
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
-
-            var transaction = BuildTestTransaction(applicationTime: TimeSpan.FromSeconds(2));
-
-            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
-
-            const string expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":0,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
-            Assert.That(script, Is.EqualTo(expectedScript));
-        }
-
-        [Test]
-        public void GetScript_IncludesObfuscatedAttributes_IfAttributesReturnedFromAttributeService()
-        {
-            IAttributeValueCollection mockAttributes;
-
-            Mock.Arrange(() => _transactionAttributeMaker.SetUserAndAgentAttributes(Arg.IsAny<IAttributeValueCollection>(), Arg.IsAny<ITransactionAttributeMetadata>()))
-                .DoInstead<IAttributeValueCollection, ITransactionAttributeMetadata>((attribVals, txMetadata) =>
-                {
-                    mockAttributes = attribVals;
-                    _attribDefs.OriginalUrl.TrySetValue(attribVals, "http://www.google.com");
-                    _attribDefs.GetCustomAttributeForTransaction("foo").TrySetValue(attribVals, "bar");
-                });
-
-            var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
-            var tripId = transaction.TransactionMetadata.CrossApplicationReferrerTripId ?? transaction.Guid;
-
-            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
-
-            var expectedFormattedAttributes = $"{{\"a\":{{\"nr.tripId\":\"{tripId}\",\"original_url\":\"http://www.google.com\"}},\"u\":{{\"foo\":\"bar\"}}}}";
-
-            var expectedObfuscatedFormattedAttributes = Strings.ObfuscateStringWithKey(expectedFormattedAttributes, "license key");
-            var actualObfuscatedFormattedAttributes = Regex.Match(script, @"""atts"":""([^""]+)""").Groups[1].Value;
-            Assert.That(actualObfuscatedFormattedAttributes, Is.EqualTo(expectedObfuscatedFormattedAttributes));
-        }
-
-        [Test]
-        public void GetScript_ObfuscatesTransactionMetricNameWithLicenseKey()
-        {
-            var transaction = BuildTestTransaction();
-
-            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
-
-            var expectedObfuscatedTransactionMetricName = Strings.ObfuscateStringWithKey("prefix/suffix", "license key");
-            var actualObfuscatedTransactionMetricName = Regex.Match(script, @"""transactionName"":""([^""]+)""").Groups[1].Value;
-            Assert.That(actualObfuscatedTransactionMetricName, Is.EqualTo(expectedObfuscatedTransactionMetricName));
-        }
-
-        [Test]
-        public void GetScript_ReturnsNull_IfBrowserMonitoringJavaScriptAgentIsNull()
-        {
-            var transaction = BuildTestTransaction();
-            Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns(null as string);
-
-            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
-
-            Assert.That(script, Is.Null);
-        }
-
-        [Test]
-        public void GetScript_ReturnsNull_IfBrowserMonitoringJavaScriptAgentIsEmpty()
-        {
-            Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns(string.Empty);
-            var transaction = BuildTestTransaction();
-
-            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
-
-            Assert.That(script, Is.Null);
-        }
-
-        [Test]
-        public void GetScript_ReturnsNull_IfAgentLicenseKeyIsNotSet()
-        {
-            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(null as string);
-            var transaction = BuildTestTransaction();
-
-            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
-
-            Assert.That(script, Is.Null);
-        }
-
-        [Test]
-        public void GetScript_Throws_IfBrowserMonitoringBeaconAddressIsNull()
-        {
-            Mock.Arrange(() => _configuration.BrowserMonitoringBeaconAddress).Returns(null as string);
-            var transaction = BuildTestTransaction();
-
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
-        }
-
-        [Test]
-        public void GetScript_Throws_IfBrowserMonitoringErrorBeaconAddressIsNull()
-        {
-            Mock.Arrange(() => _configuration.BrowserMonitoringErrorBeaconAddress).Returns(null as string);
-            var transaction = BuildTestTransaction();
-
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
-        }
-
-        [Test]
-        public void GetScript_Throws_IfBrowserMonitoringKeyIsNull()
-        {
-            Mock.Arrange(() => _configuration.BrowserMonitoringKey).Returns(null as string);
-            var transaction = BuildTestTransaction();
-
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
-        }
-
-        [Test]
-        public void GetScript_Throws_IfBrowserMonitoringApplicationIdIsNull()
-        {
-            Mock.Arrange(() => _configuration.BrowserMonitoringApplicationId).Returns(null as string);
-            var transaction = BuildTestTransaction();
-
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
-        }
-
-        [Test]
-        public void GetScript_Throws_IfBrowserMonitoringJavaScriptAgentFileIsNull()
-        {
-            Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgentFile).Returns(null as string);
-            var transaction = BuildTestTransaction();
-
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
-        }
-
-        private IInternalTransaction BuildTestTransaction(TimeSpan? queueTime = null, TimeSpan? applicationTime = null)
-        {
-            var name = TransactionName.ForWebTransaction("foo", "bar");
-            var time = applicationTime ?? TimeSpan.FromSeconds(1);
-
-            ISimpleTimer timer = Mock.Create<ISimpleTimer>();
-            Mock.Arrange(() => timer.Duration).Returns(time);
-
-            var priority = 0.5f;
-            var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs, Mock.Create<ISamplerService>());
-
-            if (queueTime != null)
+        Mock.Arrange(() => _transactionAttributeMaker.SetUserAndAgentAttributes(Arg.IsAny<IAttributeValueCollection>(), Arg.IsAny<ITransactionAttributeMetadata>()))
+            .DoInstead<IAttributeValueCollection, ITransactionAttributeMetadata>((attribVals, txMetadata) =>
             {
-                tx.TransactionMetadata.SetQueueTime(queueTime.Value);
-            }
+                mockAttributes = attribVals;
+                _attribDefs.OriginalUrl.TrySetValue(attribVals, "http://www.google.com");
+                _attribDefs.GetCustomAttributeForTransaction("foo").TrySetValue(attribVals, "bar");
+            });
 
-            return tx;
+        var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
+        var tripId = transaction.TransactionMetadata.CrossApplicationReferrerTripId ?? transaction.Guid;
+
+        var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
+
+        var expectedFormattedAttributes = $"{{\"a\":{{\"nr.tripId\":\"{tripId}\",\"original_url\":\"http://www.google.com\"}},\"u\":{{\"foo\":\"bar\"}}}}";
+
+        var expectedObfuscatedFormattedAttributes = Strings.ObfuscateStringWithKey(expectedFormattedAttributes, "license key");
+        var actualObfuscatedFormattedAttributes = Regex.Match(script, @"""atts"":""([^""]+)""").Groups[1].Value;
+        Assert.That(actualObfuscatedFormattedAttributes, Is.EqualTo(expectedObfuscatedFormattedAttributes));
+    }
+
+    [Test]
+    public void GetScript_ObfuscatesTransactionMetricNameWithLicenseKey()
+    {
+        var transaction = BuildTestTransaction();
+
+        var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
+
+        var expectedObfuscatedTransactionMetricName = Strings.ObfuscateStringWithKey("prefix/suffix", "license key");
+        var actualObfuscatedTransactionMetricName = Regex.Match(script, @"""transactionName"":""([^""]+)""").Groups[1].Value;
+        Assert.That(actualObfuscatedTransactionMetricName, Is.EqualTo(expectedObfuscatedTransactionMetricName));
+    }
+
+    [Test]
+    public void GetScript_ReturnsNull_IfBrowserMonitoringJavaScriptAgentIsNull()
+    {
+        var transaction = BuildTestTransaction();
+        Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns(null as string);
+
+        var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
+
+        Assert.That(script, Is.Null);
+    }
+
+    [Test]
+    public void GetScript_ReturnsNull_IfBrowserMonitoringJavaScriptAgentIsEmpty()
+    {
+        Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns(string.Empty);
+        var transaction = BuildTestTransaction();
+
+        var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
+
+        Assert.That(script, Is.Null);
+    }
+
+    [Test]
+    public void GetScript_ReturnsNull_IfAgentLicenseKeyIsNotSet()
+    {
+        Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(null as string);
+        var transaction = BuildTestTransaction();
+
+        var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
+
+        Assert.That(script, Is.Null);
+    }
+
+    [Test]
+    public void GetScript_Throws_IfBrowserMonitoringBeaconAddressIsNull()
+    {
+        Mock.Arrange(() => _configuration.BrowserMonitoringBeaconAddress).Returns(null as string);
+        var transaction = BuildTestTransaction();
+
+        Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
+    }
+
+    [Test]
+    public void GetScript_Throws_IfBrowserMonitoringErrorBeaconAddressIsNull()
+    {
+        Mock.Arrange(() => _configuration.BrowserMonitoringErrorBeaconAddress).Returns(null as string);
+        var transaction = BuildTestTransaction();
+
+        Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
+    }
+
+    [Test]
+    public void GetScript_Throws_IfBrowserMonitoringKeyIsNull()
+    {
+        Mock.Arrange(() => _configuration.BrowserMonitoringKey).Returns(null as string);
+        var transaction = BuildTestTransaction();
+
+        Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
+    }
+
+    [Test]
+    public void GetScript_Throws_IfBrowserMonitoringApplicationIdIsNull()
+    {
+        Mock.Arrange(() => _configuration.BrowserMonitoringApplicationId).Returns(null as string);
+        var transaction = BuildTestTransaction();
+
+        Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
+    }
+
+    [Test]
+    public void GetScript_Throws_IfBrowserMonitoringJavaScriptAgentFileIsNull()
+    {
+        Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgentFile).Returns(null as string);
+        var transaction = BuildTestTransaction();
+
+        Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
+    }
+
+    private IInternalTransaction BuildTestTransaction(TimeSpan? queueTime = null, TimeSpan? applicationTime = null)
+    {
+        var name = TransactionName.ForWebTransaction("foo", "bar");
+        var time = applicationTime ?? TimeSpan.FromSeconds(1);
+
+        ISimpleTimer timer = Mock.Create<ISimpleTimer>();
+        Mock.Arrange(() => timer.Duration).Returns(time);
+
+        var priority = 0.5f;
+        var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs, Mock.Create<ISamplerService>());
+
+        if (queueTime != null)
+        {
+            tx.TransactionMetadata.SetQueueTime(queueTime.Value);
         }
+
+        return tx;
     }
 }

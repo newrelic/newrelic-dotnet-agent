@@ -1,24 +1,23 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NUnit.Framework;
-using Telerik.JustMock;
 using System;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.Segments;
 using System.Collections.Generic;
 using System.Data;
-using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
+using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Transactions;
 

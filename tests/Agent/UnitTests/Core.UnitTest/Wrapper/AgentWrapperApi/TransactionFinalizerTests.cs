@@ -9,7 +9,6 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
-using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
@@ -18,297 +17,296 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
+namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
+
+[TestFixture]
+public class TransactionFinalizerTests
 {
-    [TestFixture]
-    public class TransactionFinalizerTests
+    private TransactionFinalizer _transactionFinalizer;
+
+    private IAgentHealthReporter _agentHealthReporter;
+
+    private ITransactionMetricNameMaker _transactionMetricNameMaker;
+
+    private IPathHashMaker _pathHashMaker;
+
+    private ITransactionTransformer _transactionTransformer;
+    private IAttributeDefinitionService _attribDefSvc;
+    private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+
+
+    [SetUp]
+    public void SetUp()
     {
-        private TransactionFinalizer _transactionFinalizer;
+        _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
+        _transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
+        _pathHashMaker = Mock.Create<IPathHashMaker>();
+        _transactionTransformer = Mock.Create<ITransactionTransformer>();
+        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _transactionFinalizer = new TransactionFinalizer(_agentHealthReporter, _transactionMetricNameMaker, _pathHashMaker, _transactionTransformer);
+    }
 
-        private IAgentHealthReporter _agentHealthReporter;
+    [TearDown]
+    public void TearDown()
+    {
+        _attribDefSvc.Dispose();
+        _transactionFinalizer.Dispose();
+    }
 
-        private ITransactionMetricNameMaker _transactionMetricNameMaker;
+    #region Finish
 
-        private IPathHashMaker _pathHashMaker;
+    [Test]
+    public void Finish_UpdatesTransactionPathHash()
+    {
+        var transaction = Mock.Create<IInternalTransaction>();
+        Mock.Arrange(() => transaction.Finish()).Returns(true);
 
-        private ITransactionTransformer _transactionTransformer;
-        private IAttributeDefinitionService _attribDefSvc;
-        private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+        var transactionName = TransactionName.ForWebTransaction("a", "b");
+        Mock.Arrange(() => transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
+        Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
+        Mock.Arrange(() => transaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");
+        Mock.Arrange(() => _pathHashMaker.CalculatePathHash("c/d", "referrerPathHash")).Returns("pathHash");
 
+        _transactionFinalizer.Finish(transaction);
 
-        [SetUp]
-        public void SetUp()
+        Mock.Assert(() => transaction.TransactionMetadata.SetCrossApplicationPathHash("pathHash"));
+    }
+
+    [Test]
+    public void Finish_CallsTransactionFinish()
+    {
+        var transaction = Mock.Create<IInternalTransaction>();
+
+        _transactionFinalizer.Finish(transaction);
+
+        Mock.Assert(() => transaction.Finish());
+    }
+
+    #endregion Finish
+
+    #region OnTransactionFinalized
+
+    [Test]
+    public void OnTransactionFinalized_CallsForceChangeDurationWith1Millisecond_IfNoSegments()
+    {
+        var transaction = BuildTestTransaction();
+        var internalTransaction = Mock.Create<IInternalTransaction>();
+        Mock.Arrange(() => internalTransaction.ConvertToImmutableTransaction()).Returns(transaction);
+
+        EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(internalTransaction));
+
+        var expectedTimeSpan = TimeSpan.FromMilliseconds(1);
+        Mock.Assert(() => internalTransaction.ForceChangeDuration(expectedTimeSpan));
+    }
+
+    [Test]
+    public void OnTransactionFinalized_CallsForceChangeDurationWithLatestStartTime_IfOnlyUnfinishedSegments()
+    {
+        var startTime = DateTime.Now;
+        var segments = new Segment[]
         {
-            _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
-            _transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
-            _pathHashMaker = Mock.Create<IPathHashMaker>();
-            _transactionTransformer = Mock.Create<ITransactionTransformer>();
-            _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
-            _transactionFinalizer = new TransactionFinalizer(_agentHealthReporter, _transactionMetricNameMaker, _pathHashMaker, _transactionTransformer);
-        }
+            GetUnfinishedSegment(startTime, startTime.AddSeconds(0)),
+            GetUnfinishedSegment(startTime, startTime.AddSeconds(1)),
+            GetUnfinishedSegment(startTime, startTime.AddSeconds(2)),
+        };
+        var transaction = BuildTestTransaction(segments, startTime);
+        var mockedTransaction = Mock.Create<IInternalTransaction>();
+        Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-        [TearDown]
-        public void TearDown()
+        EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+
+        Mock.Assert(() => mockedTransaction.ForceChangeDuration(TimeSpan.FromSeconds(2)));
+    }
+
+    [Test]
+    public void OnTransactionFinalized_CallsForceChangeDurationWithLatestEndTime_IfOnlyFinishedSegments()
+    {
+        var startTime = DateTime.Now;
+        var segments = new Segment[]
         {
-            _attribDefSvc.Dispose();
-            _transactionFinalizer.Dispose();
-        }
+            GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
+            GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
+            GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
+        };
+        var transaction = BuildTestTransaction(segments, startTime);
+        var mockedTransaction = Mock.Create<IInternalTransaction>();
+        Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-        #region Finish
+        EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
 
-        [Test]
-        public void Finish_UpdatesTransactionPathHash()
+        Mock.Assert(() => mockedTransaction.ForceChangeDuration(TimeSpan.FromSeconds(3)));
+    }
+
+    [Test]
+    public void OnTransactionFinalized_CallsForceChangeDurationWithLatestTime_IfMixOfFinishedAndUnfinishedSegments()
+    {
+        var startTime = DateTime.Now;
+        var segments = new Segment[]
         {
-            var transaction = Mock.Create<IInternalTransaction>();
-            Mock.Arrange(() => transaction.Finish()).Returns(true);
+            GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
+            GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
+            GetUnfinishedSegment(startTime, startTime.AddSeconds(5)),
+        };
+        var transaction = BuildTestTransaction(segments, startTime);
+        var mockedTransaction = Mock.Create<IInternalTransaction>();
+        Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-            var transactionName = TransactionName.ForWebTransaction("a", "b");
-            Mock.Arrange(() => transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
-            Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
-            Mock.Arrange(() => transaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");
-            Mock.Arrange(() => _pathHashMaker.CalculatePathHash("c/d", "referrerPathHash")).Returns("pathHash");
+        EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
 
-            _transactionFinalizer.Finish(transaction);
+        Mock.Assert(() => mockedTransaction.ForceChangeDuration(TimeSpan.FromSeconds(5)));
+    }
 
-            Mock.Assert(() => transaction.TransactionMetadata.SetCrossApplicationPathHash("pathHash"));
-        }
+    [Test]
+    public void OnTransactionFinalized_UpdatesTransactionPathHash()
+    {
+        var transaction = BuildTestTransaction();
+        var mockedTransaction = Mock.Create<IInternalTransaction>();
+        Mock.Arrange(() => mockedTransaction.Finish()).Returns(true);
+        Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-        [Test]
-        public void Finish_CallsTransactionFinish()
+        var transactionName = TransactionName.ForWebTransaction("a", "b");
+        Mock.Arrange(() => mockedTransaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
+        Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
+        Mock.Arrange(() => mockedTransaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");
+        Mock.Arrange(() => _pathHashMaker.CalculatePathHash("c/d", "referrerPathHash")).Returns("pathHash");
+
+        EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+
+        Mock.Assert(() => mockedTransaction.TransactionMetadata.SetCrossApplicationPathHash("pathHash"));
+    }
+
+    [Test]
+    public void OnTransactionFinalized_CallsTransactionFinish()
+    {
+        var transaction = BuildTestTransaction();
+        var mockedTransaction = Mock.Create<IInternalTransaction>();
+        Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
+
+        EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+
+        Mock.Assert(() => mockedTransaction.Finish());
+    }
+
+    [Test]
+    public void OnTransactionFinalized_CallsAgentHealthReporter()
+    {
+        var startTime = DateTime.Now;
+        var segments = new Segment[]
         {
-            var transaction = Mock.Create<IInternalTransaction>();
+            GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
+            GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
+            GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
+        };
+        var transaction = BuildTestTransaction(segments, startTime);
+        var mockedTransaction = Mock.Create<IInternalTransaction>();
+        Mock.Arrange(() => mockedTransaction.Finish()).Returns(true);
+        Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
+        Mock.Arrange(() => mockedTransaction.Guid).Returns("TestGuid");
 
-            _transactionFinalizer.Finish(transaction);
+        var transactionMetricName = new TransactionMetricName("c", "d");
+        Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
 
-            Mock.Assert(() => transaction.Finish());
-        }
+        EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
 
-        #endregion Finish
+        Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(mockedTransaction.Guid,transactionMetricName, Arg.IsAny<string>(), Arg.IsAny<string>()));
+    }
 
-        #region OnTransactionFinalized
-
-        [Test]
-        public void OnTransactionFinalized_CallsForceChangeDurationWith1Millisecond_IfNoSegments()
+    [Test]
+    public void OnTransactionFinalized_DoesNotCallAgentHealthReporter_IfTransactionWasAlreadyFinished()
+    {
+        var startTime = DateTime.Now;
+        var segments = new Segment[]
         {
-            var transaction = BuildTestTransaction();
-            var internalTransaction = Mock.Create<IInternalTransaction>();
-            Mock.Arrange(() => internalTransaction.ConvertToImmutableTransaction()).Returns(transaction);
+            GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
+            GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
+            GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
+        };
+        var transaction = BuildTestTransaction(segments, startTime);
+        var mockedTransaction = Mock.Create<IInternalTransaction>();
+        Mock.Arrange(() => mockedTransaction.Finish()).Returns(false);
+        Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
+        Mock.Arrange(() => mockedTransaction.Guid).Returns("TestGuid");
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(internalTransaction));
+        var transactionMetricName = new TransactionMetricName("c", "d");
+        Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
 
-            var expectedTimeSpan = TimeSpan.FromMilliseconds(1);
-            Mock.Assert(() => internalTransaction.ForceChangeDuration(expectedTimeSpan));
-        }
+        EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
 
-        [Test]
-        public void OnTransactionFinalized_CallsForceChangeDurationWithLatestStartTime_IfOnlyUnfinishedSegments()
+        Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(mockedTransaction.Guid, transactionMetricName, Arg.IsAny<string>(), Arg.IsAny<string>()), Occurs.Never());
+    }
+
+    [Test]
+    public void OnTransactionFinalized_CallsTransform_IfTransactionWasAlreadyFinished()
+    {
+        var startTime = DateTime.Now;
+        var segments = new Segment[]
         {
-            var startTime = DateTime.Now;
-            var segments = new Segment[]
-            {
-                GetUnfinishedSegment(startTime, startTime.AddSeconds(0)),
-                GetUnfinishedSegment(startTime, startTime.AddSeconds(1)),
-                GetUnfinishedSegment(startTime, startTime.AddSeconds(2)),
-            };
-            var transaction = BuildTestTransaction(segments, startTime);
-            var mockedTransaction = Mock.Create<IInternalTransaction>();
-            Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
+            GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
+            GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
+            GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
+        };
+        var transaction = BuildTestTransaction(segments, startTime);
+        var mockedTransaction = Mock.Create<IInternalTransaction>();
+        Mock.Arrange(() => mockedTransaction.Finish()).Returns(true);
+        Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+        var transactionMetricName = new TransactionMetricName("c", "d");
+        Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
 
-            Mock.Assert(() => mockedTransaction.ForceChangeDuration(TimeSpan.FromSeconds(2)));
-        }
+        EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
 
-        [Test]
-        public void OnTransactionFinalized_CallsForceChangeDurationWithLatestEndTime_IfOnlyFinishedSegments()
+        Mock.Assert(() => _transactionTransformer.Transform(Arg.IsAny<IInternalTransaction>()));
+    }
+
+    [Test]
+    public void OnTransactionFinalized_DoesNotCallTransform_IfTransactionWasAlreadyFinished()
+    {
+        var startTime = DateTime.Now;
+        var segments = new Segment[]
         {
-            var startTime = DateTime.Now;
-            var segments = new Segment[]
-            {
-                GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
-                GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
-                GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
-            };
-            var transaction = BuildTestTransaction(segments, startTime);
-            var mockedTransaction = Mock.Create<IInternalTransaction>();
-            Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
+            GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
+            GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
+            GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
+        };
+        var transaction = BuildTestTransaction(segments, startTime);
+        var mockedTransaction = Mock.Create<IInternalTransaction>();
+        Mock.Arrange(() => mockedTransaction.Finish()).Returns(false);
+        Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+        var transactionMetricName = new TransactionMetricName("c", "d");
+        Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
 
-            Mock.Assert(() => mockedTransaction.ForceChangeDuration(TimeSpan.FromSeconds(3)));
-        }
+        EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
 
-        [Test]
-        public void OnTransactionFinalized_CallsForceChangeDurationWithLatestTime_IfMixOfFinishedAndUnfinishedSegments()
-        {
-            var startTime = DateTime.Now;
-            var segments = new Segment[]
-            {
-                GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
-                GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
-                GetUnfinishedSegment(startTime, startTime.AddSeconds(5)),
-            };
-            var transaction = BuildTestTransaction(segments, startTime);
-            var mockedTransaction = Mock.Create<IInternalTransaction>();
-            Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
+        Mock.Assert(() => _transactionTransformer.Transform(Arg.IsAny<IInternalTransaction>()), Occurs.Never());
+    }
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+    #endregion OnTransactionFinalized
 
-            Mock.Assert(() => mockedTransaction.ForceChangeDuration(TimeSpan.FromSeconds(5)));
-        }
+    private ImmutableTransaction BuildTestTransaction(IEnumerable<Segment> segments = null, DateTime? startTime = null)
+    {
+        var transactionMetadata = new TransactionMetadata("transactionGuid");
 
-        [Test]
-        public void OnTransactionFinalized_UpdatesTransactionPathHash()
-        {
-            var transaction = BuildTestTransaction();
-            var mockedTransaction = Mock.Create<IInternalTransaction>();
-            Mock.Arrange(() => mockedTransaction.Finish()).Returns(true);
-            Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
+        var name = TransactionName.ForWebTransaction("foo", "bar");
+        segments = segments ?? Enumerable.Empty<Segment>();
+        var metadata = transactionMetadata.ConvertToImmutableMetadata();
+        startTime = startTime ?? DateTime.Now;
+        var duration = TimeSpan.FromSeconds(1);
+        var guid = Guid.NewGuid().ToString();
 
-            var transactionName = TransactionName.ForWebTransaction("a", "b");
-            Mock.Arrange(() => mockedTransaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
-            Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
-            Mock.Arrange(() => mockedTransaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");
-            Mock.Arrange(() => _pathHashMaker.CalculatePathHash("c/d", "referrerPathHash")).Returns("pathHash");
+        return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration, duration, guid, false, false, false, 1.23f, false, string.Empty, null, _attribDefs);
+    }
 
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
+    private static Segment GetUnfinishedSegment(DateTime transactionStartTime, DateTime startTime)
+    {
+        return GetFinishedSegment(transactionStartTime, startTime, null);
+    }
 
-            Mock.Assert(() => mockedTransaction.TransactionMetadata.SetCrossApplicationPathHash("pathHash"));
-        }
+    private static Segment GetFinishedSegment(DateTime transactionStartTime, DateTime startTime, TimeSpan? duration)
+    {
+        var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("type", "method", 1));
+        segment.SetSegmentData(new SimpleSegmentData(""));
 
-        [Test]
-        public void OnTransactionFinalized_CallsTransactionFinish()
-        {
-            var transaction = BuildTestTransaction();
-            var mockedTransaction = Mock.Create<IInternalTransaction>();
-            Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
-
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
-
-            Mock.Assert(() => mockedTransaction.Finish());
-        }
-
-        [Test]
-        public void OnTransactionFinalized_CallsAgentHealthReporter()
-        {
-            var startTime = DateTime.Now;
-            var segments = new Segment[]
-            {
-                GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
-                GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
-                GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
-            };
-            var transaction = BuildTestTransaction(segments, startTime);
-            var mockedTransaction = Mock.Create<IInternalTransaction>();
-            Mock.Arrange(() => mockedTransaction.Finish()).Returns(true);
-            Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
-            Mock.Arrange(() => mockedTransaction.Guid).Returns("TestGuid");
-
-            var transactionMetricName = new TransactionMetricName("c", "d");
-            Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
-
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
-
-            Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(mockedTransaction.Guid,transactionMetricName, Arg.IsAny<string>(), Arg.IsAny<string>()));
-        }
-
-        [Test]
-        public void OnTransactionFinalized_DoesNotCallAgentHealthReporter_IfTransactionWasAlreadyFinished()
-        {
-            var startTime = DateTime.Now;
-            var segments = new Segment[]
-            {
-                GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
-                GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
-                GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
-            };
-            var transaction = BuildTestTransaction(segments, startTime);
-            var mockedTransaction = Mock.Create<IInternalTransaction>();
-            Mock.Arrange(() => mockedTransaction.Finish()).Returns(false);
-            Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
-            Mock.Arrange(() => mockedTransaction.Guid).Returns("TestGuid");
-
-            var transactionMetricName = new TransactionMetricName("c", "d");
-            Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
-
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
-
-            Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(mockedTransaction.Guid, transactionMetricName, Arg.IsAny<string>(), Arg.IsAny<string>()), Occurs.Never());
-        }
-
-        [Test]
-        public void OnTransactionFinalized_CallsTransform_IfTransactionWasAlreadyFinished()
-        {
-            var startTime = DateTime.Now;
-            var segments = new Segment[]
-            {
-                GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
-                GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
-                GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
-            };
-            var transaction = BuildTestTransaction(segments, startTime);
-            var mockedTransaction = Mock.Create<IInternalTransaction>();
-            Mock.Arrange(() => mockedTransaction.Finish()).Returns(true);
-            Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
-
-            var transactionMetricName = new TransactionMetricName("c", "d");
-            Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
-
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
-
-            Mock.Assert(() => _transactionTransformer.Transform(Arg.IsAny<IInternalTransaction>()));
-        }
-
-        [Test]
-        public void OnTransactionFinalized_DoesNotCallTransform_IfTransactionWasAlreadyFinished()
-        {
-            var startTime = DateTime.Now;
-            var segments = new Segment[]
-            {
-                GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
-                GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
-                GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
-            };
-            var transaction = BuildTestTransaction(segments, startTime);
-            var mockedTransaction = Mock.Create<IInternalTransaction>();
-            Mock.Arrange(() => mockedTransaction.Finish()).Returns(false);
-            Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
-
-            var transactionMetricName = new TransactionMetricName("c", "d");
-            Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(transactionMetricName);
-
-            EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
-
-            Mock.Assert(() => _transactionTransformer.Transform(Arg.IsAny<IInternalTransaction>()), Occurs.Never());
-        }
-
-        #endregion OnTransactionFinalized
-
-        private ImmutableTransaction BuildTestTransaction(IEnumerable<Segment> segments = null, DateTime? startTime = null)
-        {
-            var transactionMetadata = new TransactionMetadata("transactionGuid");
-
-            var name = TransactionName.ForWebTransaction("foo", "bar");
-            segments = segments ?? Enumerable.Empty<Segment>();
-            var metadata = transactionMetadata.ConvertToImmutableMetadata();
-            startTime = startTime ?? DateTime.Now;
-            var duration = TimeSpan.FromSeconds(1);
-            var guid = Guid.NewGuid().ToString();
-
-            return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration, duration, guid, false, false, false, 1.23f, false, string.Empty, null, _attribDefs);
-        }
-
-        private static Segment GetUnfinishedSegment(DateTime transactionStartTime, DateTime startTime)
-        {
-            return GetFinishedSegment(transactionStartTime, startTime, null);
-        }
-
-        private static Segment GetFinishedSegment(DateTime transactionStartTime, DateTime startTime, TimeSpan? duration)
-        {
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("type", "method", 1));
-            segment.SetSegmentData(new SimpleSegmentData(""));
-
-            return new Segment(startTime - transactionStartTime, duration, segment, null);
-        }
+        return new Segment(startTime - transactionStartTime, duration, segment, null);
     }
 }

@@ -5,34 +5,33 @@ using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
+namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
+
+[TestFixture]
+public class CrossApplicationRequestDataTests
 {
-    [TestFixture]
-    public class CrossApplicationRequestDataTests
+    [Test]
+    public void SerializesCorrectly()
     {
-        [Test]
-        public void SerializesCorrectly()
-        {
-            var data = new CrossApplicationRequestData("guid", true, "tripId", "pathHash");
+        var data = new CrossApplicationRequestData("guid", true, "tripId", "pathHash");
 
-            var serialized = JsonConvert.SerializeObject(data);
+        var serialized = JsonConvert.SerializeObject(data);
 
-            Assert.That(serialized, Is.EqualTo("[\"guid\",true,\"tripId\",\"pathHash\"]"));
-        }
+        Assert.That(serialized, Is.EqualTo("[\"guid\",true,\"tripId\",\"pathHash\"]"));
+    }
 
-        [Test]
-        public void DeserializesCorrectly()
-        {
-            var json = "[\"guid\",true,\"tripId\",\"pathHash\"]";
-            var deserialized = JsonConvert.DeserializeObject<CrossApplicationRequestData>(json);
+    [Test]
+    public void DeserializesCorrectly()
+    {
+        var json = "[\"guid\",true,\"tripId\",\"pathHash\"]";
+        var deserialized = JsonConvert.DeserializeObject<CrossApplicationRequestData>(json);
 
-            Assert.That(deserialized, Is.Not.Null);
-            NrAssert.Multiple(
-                () => Assert.That(deserialized.TransactionGuid, Is.EqualTo("guid")),
-                () => Assert.That(deserialized.Unused, Is.EqualTo(true)),
-                () => Assert.That(deserialized.TripId, Is.EqualTo("tripId")),
-                () => Assert.That(deserialized.PathHash, Is.EqualTo("pathHash"))
-                );
-        }
+        Assert.That(deserialized, Is.Not.Null);
+        NrAssert.Multiple(
+            () => Assert.That(deserialized.TransactionGuid, Is.EqualTo("guid")),
+            () => Assert.That(deserialized.Unused, Is.EqualTo(true)),
+            () => Assert.That(deserialized.TripId, Is.EqualTo("tripId")),
+            () => Assert.That(deserialized.PathHash, Is.EqualTo("pathHash"))
+        );
     }
 }

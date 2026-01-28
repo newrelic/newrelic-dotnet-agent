@@ -3,12 +3,7 @@
 
 //using NewRelic.Api.Agent;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
 using NUnit.Framework;
 
 namespace CompositeTests.HybridAgent.Helpers;

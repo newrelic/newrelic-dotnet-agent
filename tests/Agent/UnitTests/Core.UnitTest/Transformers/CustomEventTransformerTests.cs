@@ -3,177 +3,176 @@
 
 using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.Transformers
+namespace NewRelic.Agent.Core.Transformers;
+
+[TestFixture]
+public class CustomEventTransformerTests
 {
-    [TestFixture]
-    public class CustomEventTransformerTests
+    private CustomEventTransformer _customEventTransformer;
+
+    private IConfigurationService _configurationService;
+
+    private ICustomEventAggregator _customEventAggregator;
+
+    private CustomEventWireModel _lastPublishedCustomEvent;
+
+    private IAttributeDefinitionService _attribDefSvc;
+
+    [SetUp]
+    public void SetUp()
     {
-        private CustomEventTransformer _customEventTransformer;
+        _lastPublishedCustomEvent = null;
 
-        private IConfigurationService _configurationService;
+        _configurationService = Mock.Create<IConfigurationService>();
+        Mock.Arrange(() => _configurationService.Configuration.CustomEventsEnabled).Returns(true);
+        Mock.Arrange(() => _configurationService.Configuration.CustomEventsAttributesEnabled).Returns(true);
 
-        private ICustomEventAggregator _customEventAggregator;
+        _customEventAggregator = Mock.Create<ICustomEventAggregator>();
+        Mock.Arrange(() => _customEventAggregator.Collect(Arg.IsAny<CustomEventWireModel>()))
+            .DoInstead<CustomEventWireModel>(customEvent => _lastPublishedCustomEvent = customEvent);
 
-        private CustomEventWireModel _lastPublishedCustomEvent;
+        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
-        private IAttributeDefinitionService _attribDefSvc;
+        _customEventTransformer = new CustomEventTransformer(_configurationService, _customEventAggregator, _attribDefSvc);
+    }
 
-        [SetUp]
-        public void SetUp()
+    [TearDown]
+    public void TearDown()
+    {
+        _attribDefSvc.Dispose();
+    }
+
+    [Test]
+    public void Transform_CreatesCustomEvents_IfInputIsValid()
+    {
+        const string expectedEventType = "MyEventType";
+        var expectedAttributes = new Dictionary<string, object>
         {
-            _lastPublishedCustomEvent = null;
+            {"key1", "value1"},
+            {"key2", "key2"}
+        };
 
-            _configurationService = Mock.Create<IConfigurationService>();
-            Mock.Arrange(() => _configurationService.Configuration.CustomEventsEnabled).Returns(true);
-            Mock.Arrange(() => _configurationService.Configuration.CustomEventsAttributesEnabled).Returns(true);
+        var priority = 0.5f;
+        _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
 
-            _customEventAggregator = Mock.Create<ICustomEventAggregator>();
-            Mock.Arrange(() => _customEventAggregator.Collect(Arg.IsAny<CustomEventWireModel>()))
-                .DoInstead<CustomEventWireModel>(customEvent => _lastPublishedCustomEvent = customEvent);
+        Assert.That(_lastPublishedCustomEvent, Is.Not.Null);
 
-            _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        var intrinsicAttributes = _lastPublishedCustomEvent.AttributeValues.GetAttributeValuesDic(AttributeClassification.Intrinsics);
+        var userAttributes = _lastPublishedCustomEvent.AttributeValues.GetAttributeValuesDic(AttributeClassification.UserAttributes);
 
-            _customEventTransformer = new CustomEventTransformer(_configurationService, _customEventAggregator, _attribDefSvc);
-        }
+        NrAssert.Multiple(
+            () => Assert.That(intrinsicAttributes, Has.Count.EqualTo(2)),
+            () => Assert.That(intrinsicAttributes["type"], Is.EqualTo(expectedEventType)),
+            () => Assert.That(intrinsicAttributes.ContainsKey("type"), Is.True),
 
-        [TearDown]
-        public void TearDown()
+            () => Assert.That(userAttributes, Has.Count.EqualTo(2)),
+            () => Assert.That(userAttributes["key1"], Is.EqualTo("value1")),
+            () => Assert.That(userAttributes["key2"], Is.EqualTo("key2"))
+        );
+    }
+
+    [Test]
+    public void Transform_AllAttributeValueTypes_IfValuesAreStringOrSingle()
+    {
+        const string expectedEventType = "MyEventType";
+        var expectedAttributes = new Dictionary<string, object>
         {
-            _attribDefSvc.Dispose();
-        }
+            {"key1", "value1"},
+            {"key2", 2.0f},
+            {"key3", 2.0d},
+            {"key4", 2},
+            {"key5", 2u}
+        };
 
-        [Test]
-        public void Transform_CreatesCustomEvents_IfInputIsValid()
+        var priority = 0.5f;
+        _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
+
+        Assert.That(_lastPublishedCustomEvent, Is.Not.Null);
+
+        var userAttributes = _lastPublishedCustomEvent.AttributeValues.GetAttributeValuesDic(AttributeClassification.UserAttributes);
+
+        NrAssert.Multiple
+        (
+            () => Assert.That(userAttributes, Has.Count.EqualTo(5)),
+            () => Assert.That(userAttributes["key1"], Is.EqualTo("value1")),
+            () => Assert.That(userAttributes["key2"], Is.EqualTo(2.0d)),
+            () => Assert.That(userAttributes["key3"], Is.EqualTo(2.0d)),
+            () => Assert.That(userAttributes["key4"], Is.EqualTo(2L)),
+            () => Assert.That(userAttributes["key5"], Is.EqualTo(2L))
+        );
+    }
+
+    [Test]
+    public void Transform_DoesNotCreateCustomEvents_IfCustomEventsAreDisabled()
+    {
+        Mock.Arrange(() => _configurationService.Configuration.CustomEventsEnabled)
+            .Returns(false);
+
+        const string expectedEventType = "MyEventType";
+        var expectedAttributes = new Dictionary<string, object>
         {
-            const string expectedEventType = "MyEventType";
-            var expectedAttributes = new Dictionary<string, object>
+            {"key1", "value1"},
+            {"key2", "key2"}
+        };
+
+        var priority = 0.5f;
+        _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
+
+        Assert.That(_lastPublishedCustomEvent, Is.Null);
+    }
+
+    [Test]
+    public void Transform_Ignores_IfEventTypeIsTooLarge()
+    {
+        var countCollectedEvents = 0;
+
+        Mock.Arrange(() => _customEventAggregator.Collect(Arg.IsAny<CustomEventWireModel>()))
+            .DoInstead(() =>
             {
-                {"key1", "value1"},
-                {"key2", "key2"}
-            };
+                countCollectedEvents++;
+            });
 
-            var priority = 0.5f;
-            _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
-
-            Assert.That(_lastPublishedCustomEvent, Is.Not.Null);
-
-            var intrinsicAttributes = _lastPublishedCustomEvent.AttributeValues.GetAttributeValuesDic(AttributeClassification.Intrinsics);
-            var userAttributes = _lastPublishedCustomEvent.AttributeValues.GetAttributeValuesDic(AttributeClassification.UserAttributes);
-
-            NrAssert.Multiple(
-                () => Assert.That(intrinsicAttributes, Has.Count.EqualTo(2)),
-                () => Assert.That(intrinsicAttributes["type"], Is.EqualTo(expectedEventType)),
-                () => Assert.That(intrinsicAttributes.ContainsKey("type"), Is.True),
-
-                () => Assert.That(userAttributes, Has.Count.EqualTo(2)),
-                () => Assert.That(userAttributes["key1"], Is.EqualTo("value1")),
-                () => Assert.That(userAttributes["key2"], Is.EqualTo("key2"))
-                );
-        }
-
-        [Test]
-        public void Transform_AllAttributeValueTypes_IfValuesAreStringOrSingle()
+        var expectedEventType = new string('a', 257);
+        var expectedAttributes = new Dictionary<string, object>
         {
-            const string expectedEventType = "MyEventType";
-            var expectedAttributes = new Dictionary<string, object>
+            {"key1", "value1"},
+            {"key2", "key2"}
+        };
+        var priority = 0.5f;
+
+        _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
+
+        Assert.That(countCollectedEvents, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void Transform_Ignores_IfEventTypeIsNotAlphanumeric()
+    {
+        var countCollectedEvents = 0;
+
+        Mock.Arrange(() => _customEventAggregator.Collect(Arg.IsAny<CustomEventWireModel>()))
+            .DoInstead(() =>
             {
-                {"key1", "value1"},
-                {"key2", 2.0f},
-                {"key3", 2.0d},
-                {"key4", 2},
-                {"key5", 2u}
-            };
+                countCollectedEvents++;
+            });
 
-            var priority = 0.5f;
-            _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
-
-            Assert.That(_lastPublishedCustomEvent, Is.Not.Null);
-
-            var userAttributes = _lastPublishedCustomEvent.AttributeValues.GetAttributeValuesDic(AttributeClassification.UserAttributes);
-
-            NrAssert.Multiple
-            (
-                () => Assert.That(userAttributes, Has.Count.EqualTo(5)),
-                () => Assert.That(userAttributes["key1"], Is.EqualTo("value1")),
-                () => Assert.That(userAttributes["key2"], Is.EqualTo(2.0d)),
-                () => Assert.That(userAttributes["key3"], Is.EqualTo(2.0d)),
-                () => Assert.That(userAttributes["key4"], Is.EqualTo(2L)),
-                () => Assert.That(userAttributes["key5"], Is.EqualTo(2L))
-            );
-        }
-
-        [Test]
-        public void Transform_DoesNotCreateCustomEvents_IfCustomEventsAreDisabled()
+        const string expectedEventType = "This has symbols!!";
+        var expectedAttributes = new Dictionary<string, object>
         {
-            Mock.Arrange(() => _configurationService.Configuration.CustomEventsEnabled)
-                .Returns(false);
+            {"key1", "value1"},
+            {"key2", "key2"}
+        };
+        var priority = 0.5f;
 
-            const string expectedEventType = "MyEventType";
-            var expectedAttributes = new Dictionary<string, object>
-            {
-                {"key1", "value1"},
-                {"key2", "key2"}
-            };
+        _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
 
-            var priority = 0.5f;
-            _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
-
-            Assert.That(_lastPublishedCustomEvent, Is.Null);
-        }
-
-        [Test]
-        public void Transform_Ignores_IfEventTypeIsTooLarge()
-        {
-            var countCollectedEvents = 0;
-
-            Mock.Arrange(() => _customEventAggregator.Collect(Arg.IsAny<CustomEventWireModel>()))
-                .DoInstead(() =>
-                {
-                    countCollectedEvents++;
-                });
-
-            var expectedEventType = new string('a', 257);
-            var expectedAttributes = new Dictionary<string, object>
-            {
-                {"key1", "value1"},
-                {"key2", "key2"}
-            };
-            var priority = 0.5f;
-
-            _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
-
-            Assert.That(countCollectedEvents, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void Transform_Ignores_IfEventTypeIsNotAlphanumeric()
-        {
-            var countCollectedEvents = 0;
-
-            Mock.Arrange(() => _customEventAggregator.Collect(Arg.IsAny<CustomEventWireModel>()))
-                .DoInstead(() =>
-                {
-                    countCollectedEvents++;
-                });
-
-            const string expectedEventType = "This has symbols!!";
-            var expectedAttributes = new Dictionary<string, object>
-            {
-                {"key1", "value1"},
-                {"key2", "key2"}
-            };
-            var priority = 0.5f;
-
-            _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
-
-            Assert.That(countCollectedEvents, Is.EqualTo(0));
-        }
+        Assert.That(countCollectedEvents, Is.EqualTo(0));
     }
 }

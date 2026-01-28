@@ -4,29 +4,28 @@
 
 using Newtonsoft.Json;
 
-namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+
+public class UrlRule
 {
-    public class UrlRule
-    {
-        [JsonProperty("match_expression")]
-        public string MatchExpression { get; set; }
+    [JsonProperty("match_expression")]
+    public string MatchExpression { get; set; }
 
-        [JsonProperty("replacement")]
-        public string Replacement { get; set; }
+    [JsonProperty("replacement")]
+    public string Replacement { get; set; }
 
-        [JsonProperty("ignore")]
-        public bool Ignore { get; set; }
+    [JsonProperty("ignore")]
+    public bool Ignore { get; set; }
 
-        [JsonProperty("eval_order")]
-        public int EvalOrder { get; set; }
+    [JsonProperty("eval_order")]
+    public int EvalOrder { get; set; }
 
-        [JsonProperty("terminate_chain")]
-        public bool TerminateChain { get; set; }
+    [JsonProperty("terminate_chain")]
+    public bool TerminateChain { get; set; }
 
-        [JsonProperty("replace_all")]
-        public bool ReplaceAll { get; set; }
+    [JsonProperty("replace_all")]
+    public bool ReplaceAll { get; set; }
 
-        [JsonProperty("each_segment")]
-        public bool EachSegment { get; set; }
-    }
+    [JsonProperty("each_segment")]
+    public bool EachSegment { get; set; }
 }

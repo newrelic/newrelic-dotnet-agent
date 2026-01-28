@@ -3,15 +3,14 @@
 
 using NUnit.Framework;
 
-namespace NewRelic.Agent.Core
+namespace NewRelic.Agent.Core;
+
+[TestFixture]
+class AgentInstallConfigurationTests
 {
-    [TestFixture]
-    class AgentInstallConfigurationTests
+    [Test]
+    public void AgentVersionTimeStampIsGreaterThanZero()
     {
-        [Test]
-        public void AgentVersionTimeStampIsGreaterThanZero()
-        {
-            Assert.That(AgentInstallConfiguration.AgentVersionTimestamp, Is.GreaterThan(0));
-        }
+        Assert.That(AgentInstallConfiguration.AgentVersionTimestamp, Is.GreaterThan(0));
     }
 }

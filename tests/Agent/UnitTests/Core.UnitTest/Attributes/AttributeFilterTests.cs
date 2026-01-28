@@ -3,20 +3,20 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
 using NewRelic.Agent.Core.Attributes.Tests.Models;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
-namespace NewRelic.Agent.Core.Attributes.Tests
+namespace NewRelic.Agent.Core.Attributes.Tests;
+
+public class AttributeFilterTests
 {
-    public class AttributeFilterTests
+    private static string TestCaseData
     {
-        private static string TestCaseData
+        get
         {
-            get
-            {
-                return
-@"[
+            return
+                @"[
   {
 	""testname"":""everything enabled, no include/exclude"",
 	""config"":
@@ -365,58 +365,57 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 	  [""transaction_events"", ""transaction_tracer"", ""error_collector"",""browser_monitoring""]
   }
 ]";
-            }
         }
+    }
 
-        public static IEnumerable<TestCase[]> TestCases
+    public static IEnumerable<TestCase[]> TestCases
+    {
+        get
         {
-            get
-            {
-                return JsonConvert.DeserializeObject<IEnumerable<TestCase>>(TestCaseData)
-                    .Select(testCase => new[] { testCase });
-            }
+            return JsonConvert.DeserializeObject<IEnumerable<TestCase>>(TestCaseData)
+                .Select(testCase => new[] { testCase });
         }
+    }
 
-        [TestCaseSource(typeof(AttributeFilterTests), nameof(TestCases))]
-        public void when(TestCase testCase)
-        {
-            // Arrange
-            var unfilteredAttribs = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+    [TestCaseSource(typeof(AttributeFilterTests), nameof(TestCases))]
+    public void when(TestCase testCase)
+    {
+        // Arrange
+        var unfilteredAttribs = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
 
-            var attributeFilterSettings = testCase.Configuration.ToAttributeFilterSettings();
-            var testCaseDestinations = testCase.AttributeDestinations.ToAttributeDestinations();
+        var attributeFilterSettings = testCase.Configuration.ToAttributeFilterSettings();
+        var testCaseDestinations = testCase.AttributeDestinations.ToAttributeDestinations();
 
-            testCaseDestinations = testCaseDestinations.Length > 0
-                ? testCaseDestinations
-                : new AttributeDestinations[]
-                        {
-                            AttributeDestinations.TransactionEvent,
-                            AttributeDestinations.TransactionTrace,
-                            AttributeDestinations.JavaScriptAgent,
-                            AttributeDestinations.ErrorTrace
-                        };
-
-            var expectedDestinations = testCase.ExpectedDestinations.ToAttributeDestinations();
-            var attributeFilter = new AttributeFilter(attributeFilterSettings);
-
-            var attrib = AttributeDefinitionBuilder.Create<string>(testCase.AttributeKey, AttributeClassification.UserAttributes)
-                .AppliesTo(testCaseDestinations)
-                .Build(attributeFilter);
-
-            attrib.TrySetValue(unfilteredAttribs, "foo");
-
-            foreach(var testDestination in AttributeValueCollection.AllTargetModelTypes)
+        testCaseDestinations = testCaseDestinations.Length > 0
+            ? testCaseDestinations
+            : new AttributeDestinations[]
             {
-                var filteredAttribs = new AttributeValueCollection(unfilteredAttribs, testDestination);
+                AttributeDestinations.TransactionEvent,
+                AttributeDestinations.TransactionTrace,
+                AttributeDestinations.JavaScriptAgent,
+                AttributeDestinations.ErrorTrace
+            };
 
-                var countMatchAttribValues = filteredAttribs.GetAttributeValues(AttributeClassification.UserAttributes)
-                        .Count(x => x.AttributeDefinition.Name == testCase.AttributeKey);
+        var expectedDestinations = testCase.ExpectedDestinations.ToAttributeDestinations();
+        var attributeFilter = new AttributeFilter(attributeFilterSettings);
 
-                var expectedCount = expectedDestinations.Contains(testDestination) ? 1 : 0;
+        var attrib = AttributeDefinitionBuilder.Create<string>(testCase.AttributeKey, AttributeClassification.UserAttributes)
+            .AppliesTo(testCaseDestinations)
+            .Build(attributeFilter);
 
-                Assert.That(countMatchAttribValues, Is.EqualTo(expectedCount), $"{testDestination}");
+        attrib.TrySetValue(unfilteredAttribs, "foo");
 
-            }
+        foreach(var testDestination in AttributeValueCollection.AllTargetModelTypes)
+        {
+            var filteredAttribs = new AttributeValueCollection(unfilteredAttribs, testDestination);
+
+            var countMatchAttribValues = filteredAttribs.GetAttributeValues(AttributeClassification.UserAttributes)
+                .Count(x => x.AttributeDefinition.Name == testCase.AttributeKey);
+
+            var expectedCount = expectedDestinations.Contains(testDestination) ? 1 : 0;
+
+            Assert.That(countMatchAttribValues, Is.EqualTo(expectedCount), $"{testDestination}");
+
         }
     }
 }
