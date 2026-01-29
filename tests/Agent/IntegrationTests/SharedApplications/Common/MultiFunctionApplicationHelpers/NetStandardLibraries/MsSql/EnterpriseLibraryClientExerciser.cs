@@ -12,79 +12,77 @@ using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using sqlClient = System.Data.SqlClient;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql;
+
+[Library]
+public class EnterpriseLibraryClientExerciser : MsSqlExerciserBase
 {
-    [Library]
-    public class EnterpriseLibraryClientExerciser : MsSqlExerciserBase
+    private static string _connectionString = MsSqlConfiguration.MsSqlConnectionString;
+
+    [LibraryMethod]
+    [Transaction]
+    public string MsSql(string tableName)
     {
-        private static string _connectionString = MsSqlConfiguration.MsSqlConnectionString;
+        var teamMembers = new List<string>();
+        var msSqlDatabase = new SqlDatabase(_connectionString);
 
-        [LibraryMethod]
-        [Transaction]
-        public string MsSql(string tableName)
+        using (var reader = msSqlDatabase.ExecuteReader(CommandType.Text, "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'"))
         {
-            var teamMembers = new List<string>();
-            var msSqlDatabase = new SqlDatabase(_connectionString);
-
-            using (var reader = msSqlDatabase.ExecuteReader(CommandType.Text, "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'"))
+            while (reader.Read())
             {
-                while (reader.Read())
+                teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                if (reader.NextResult())
                 {
                     teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                    if (reader.NextResult())
-                    {
-                        teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                    }
                 }
             }
-
-            var insertSql = string.Format(InsertPersonMsSql, tableName);
-            var countSql = string.Format(CountPersonMsSql, tableName);
-            var deleteSql = string.Format(DeletePersonMsSql, tableName);
-            _ = msSqlDatabase.ExecuteNonQuery(CommandType.Text, insertSql);
-            _ = msSqlDatabase.ExecuteScalar(CommandType.Text, countSql);
-            _ = msSqlDatabase.ExecuteNonQuery(CommandType.Text, deleteSql);
-
-            return string.Join(",", teamMembers);
         }
 
-        [LibraryMethod]
-        public void CreateTable(string tableName)
+        var insertSql = string.Format(InsertPersonMsSql, tableName);
+        var countSql = string.Format(CountPersonMsSql, tableName);
+        var deleteSql = string.Format(DeletePersonMsSql, tableName);
+        _ = msSqlDatabase.ExecuteNonQuery(CommandType.Text, insertSql);
+        _ = msSqlDatabase.ExecuteScalar(CommandType.Text, countSql);
+        _ = msSqlDatabase.ExecuteNonQuery(CommandType.Text, deleteSql);
+
+        return string.Join(",", teamMembers);
+    }
+
+    [LibraryMethod]
+    public void CreateTable(string tableName)
+    {
+        using (var connection = new sqlClient.SqlConnection(_connectionString))
         {
-            using (var connection = new sqlClient.SqlConnection(_connectionString))
+            connection.Open();
+
+            var createTable = string.Format(CreatePersonTableMsSql, tableName);
+            using (var command = new sqlClient.SqlCommand(createTable, connection))
             {
-                connection.Open();
-
-                var createTable = string.Format(CreatePersonTableMsSql, tableName);
-                using (var command = new sqlClient.SqlCommand(createTable, connection))
-                {
-                    command.ExecuteNonQuery();
-                }
+                command.ExecuteNonQuery();
             }
-        }
-
-        [LibraryMethod]
-        public void DropTable(string tableName)
-        {
-            var dropTableSql = string.Format(DropPersonTableMsSql, tableName);
-
-            using (var connection = new sqlClient.SqlConnection(_connectionString))
-            {
-                connection.Open();
-
-                using (var command = new sqlClient.SqlCommand(dropTableSql, connection))
-                {
-                    command.ExecuteNonQuery();
-                }
-            }
-        }
-
-        [LibraryMethod]
-        public void Wait(int millisecondsTimeOut)
-        {
-            Thread.Sleep(millisecondsTimeOut);
         }
     }
-}
 
+    [LibraryMethod]
+    public void DropTable(string tableName)
+    {
+        var dropTableSql = string.Format(DropPersonTableMsSql, tableName);
+
+        using (var connection = new sqlClient.SqlConnection(_connectionString))
+        {
+            connection.Open();
+
+            using (var command = new sqlClient.SqlCommand(dropTableSql, connection))
+            {
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+
+    [LibraryMethod]
+    public void Wait(int millisecondsTimeOut)
+    {
+        Thread.Sleep(millisecondsTimeOut);
+    }
+}
 #endif

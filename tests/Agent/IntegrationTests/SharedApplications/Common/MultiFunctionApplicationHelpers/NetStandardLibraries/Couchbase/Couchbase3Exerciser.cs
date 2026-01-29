@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #if !NET462 || NET
 using System;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Couchbase;
@@ -15,8 +14,6 @@ using Couchbase.KeyValue.RangeScan;
 
 using Couchbase.Search;
 using Couchbase.Search.Queries.Simple;
-using LibGit2Sharp;
-using Microsoft.Identity.Client;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
