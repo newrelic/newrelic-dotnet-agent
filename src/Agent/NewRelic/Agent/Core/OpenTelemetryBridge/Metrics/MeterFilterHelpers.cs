@@ -40,7 +40,9 @@ public static class MeterFilterHelpers
 
         if (meterName.StartsWith("NewRelic", StringComparison.OrdinalIgnoreCase) ||
             meterName.StartsWith("OpenTelemetry", StringComparison.OrdinalIgnoreCase) ||
-            meterName.StartsWith("System.Diagnostics.Metrics", StringComparison.OrdinalIgnoreCase))
+            meterName.StartsWith("System.Diagnostics.Metrics", StringComparison.OrdinalIgnoreCase) ||
+            meterName.StartsWith("Private.InternalDiagnostics", StringComparison.OrdinalIgnoreCase))
+
         {
             return false;
         }
