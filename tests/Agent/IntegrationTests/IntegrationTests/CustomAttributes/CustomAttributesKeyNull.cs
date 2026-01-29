@@ -5,53 +5,52 @@
 using System;
 using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.CustomAttributes
+namespace NewRelic.Agent.IntegrationTests.CustomAttributes;
+
+public class CustomAttributesKeyNull : NewRelicIntegrationTest<RemoteServiceFixtures.CustomAttributesWebApi>
 {
-    public class CustomAttributesKeyNull : NewRelicIntegrationTest<RemoteServiceFixtures.CustomAttributesWebApi>
+    private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
+
+    public CustomAttributesKeyNull(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
-
-        public CustomAttributesKeyNull(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions(
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ForceTransactionTraces();
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.GetKeyNull();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
-                });
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var expectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributesKeyNull";
-
-            var unexpectedTransactionEventAttributes = new List<string>
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions(
+            setupConfiguration: () =>
             {
-                "keywithnullvalue"
-            };
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ForceTransactionTraces();
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.GetKeyNull();
+                _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
+            });
+        _fixture.Initialize();
+    }
 
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
+    [Fact]
+    public void Test()
+    {
+        var expectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributesKeyNull";
 
-            NrAssert.Multiple
-            (
-                () => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedTransactionEventAttributes, TransactionEventAttributeType.User, transactionEvent)
-            );
-        }
+        var unexpectedTransactionEventAttributes = new List<string>
+        {
+            "keywithnullvalue"
+        };
+
+        var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
+
+        NrAssert.Multiple
+        (
+            () => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedTransactionEventAttributes, TransactionEventAttributeType.User, transactionEvent)
+        );
     }
 }

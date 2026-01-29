@@ -5,76 +5,75 @@
 using System;
 using System.Data.Common;
 
-namespace NewRelic.Agent.IntegrationTests.Shared
+namespace NewRelic.Agent.IntegrationTests.Shared;
+
+public class PostgresConfiguration
 {
-    public class PostgresConfiguration
+    private static string _postgresConnectionString;
+    private static string _postgresServer;
+    private static string _postgresPort;
+
+    // example: "Server=1.2.3.4;Port=4444;User Id=pgUser;Password=pgPW;Database=dbName;"
+    public static string PostgresConnectionString
     {
-        private static string _postgresConnectionString;
-        private static string _postgresServer;
-        private static string _postgresPort;
-
-        // example: "Server=1.2.3.4;Port=4444;User Id=pgUser;Password=pgPW;Database=dbName;"
-        public static string PostgresConnectionString
+        get
         {
-            get
+            if (_postgresConnectionString == null)
             {
-                if (_postgresConnectionString == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("PostgresTests");
-                        _postgresConnectionString = testConfiguration["ConnectionString"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("PostgresConnectionString configuration is invalid.", ex);
-                    }
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("PostgresTests");
+                    _postgresConnectionString = testConfiguration["ConnectionString"];
                 }
-
-                return _postgresConnectionString;
+                catch (Exception ex)
+                {
+                    throw new Exception("PostgresConnectionString configuration is invalid.", ex);
+                }
             }
+
+            return _postgresConnectionString;
         }
+    }
 
-        public static string PostgresServer
+    public static string PostgresServer
+    {
+        get
         {
-            get
+            if (_postgresServer == null)
             {
-                if (_postgresServer == null)
+                try
                 {
-                    try
-                    {
-                        var builder = new DbConnectionStringBuilder { ConnectionString = PostgresConnectionString };
-                        _postgresServer = builder["Server"].ToString();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("PostgresServer configuration is invalid.", ex);
-                    }
+                    var builder = new DbConnectionStringBuilder { ConnectionString = PostgresConnectionString };
+                    _postgresServer = builder["Server"].ToString();
                 }
-
-                return _postgresServer;
+                catch (Exception ex)
+                {
+                    throw new Exception("PostgresServer configuration is invalid.", ex);
+                }
             }
+
+            return _postgresServer;
         }
+    }
 
-        public static string PostgresPort
+    public static string PostgresPort
+    {
+        get
         {
-            get
+            if (_postgresPort == null)
             {
-                if (_postgresPort == null)
+                try
                 {
-                    try
-                    {
-                        var builder = new DbConnectionStringBuilder { ConnectionString = PostgresConnectionString };
-                        _postgresPort = builder["Port"].ToString();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("PostgresPort configuration is invalid.", ex);
-                    }
+                    var builder = new DbConnectionStringBuilder { ConnectionString = PostgresConnectionString };
+                    _postgresPort = builder["Port"].ToString();
                 }
-
-                return _postgresPort;
+                catch (Exception ex)
+                {
+                    throw new Exception("PostgresPort configuration is invalid.", ex);
+                }
             }
+
+            return _postgresPort;
         }
     }
 }

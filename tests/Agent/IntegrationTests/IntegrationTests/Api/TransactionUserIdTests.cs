@@ -6,74 +6,73 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.Api
+namespace NewRelic.Agent.IntegrationTests.Api;
+
+public abstract class TransactionUserIdTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class TransactionUserIdTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    protected readonly TFixture Fixture;
+
+    public TransactionUserIdTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        protected readonly TFixture Fixture;
+        Fixture = fixture;
+        Fixture.TestLogger = output;
 
-        public TransactionUserIdTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            Fixture = fixture;
-            Fixture.TestLogger = output;
+        Fixture.AddCommand("ApiCalls TestSetTransactionUserId CustomUserId");
 
-            Fixture.AddCommand("ApiCalls TestSetTransactionUserId CustomUserId");
-
-            Fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(Fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.SetOrDeleteDistributedTraceEnabled(true);
-                    configModifier.SetLogLevel("finest");
-                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
-                }
-            );
-
-            Fixture.Initialize();
-        }
-
-        [Fact]
-        public void TestTransactionSetUserId()
-        {
-            var expectedTransactionEventAgentAttributes = new Dictionary<string, string>
+        Fixture.Actions
+        (
+            setupConfiguration: () =>
             {
-                { "enduser.id", "CustomUserId" }
-            };
-            var transactionEvents = Fixture.AgentLog.GetTransactionEvents();
-            var transactionEvent = transactionEvents.FirstOrDefault(e => e.AgentAttributes.ContainsKey("enduser.id"));
+                var configModifier = new NewRelicConfigModifier(Fixture.DestinationNewRelicConfigFilePath);
+                configModifier.SetOrDeleteDistributedTraceEnabled(true);
+                configModifier.SetLogLevel("finest");
+                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
+            }
+        );
 
-            var expectedMetrics = new List<Assertions.ExpectedMetric>
-            {
-                new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/SetUserId"}
-            };
-
-            var actualMetrics = Fixture.AgentLog.GetMetrics().ToList();
-
-            NrAssert.Multiple(
-                () => Assertions.MetricsExist(expectedMetrics, actualMetrics),
-                    () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent)
-                );
-        }
+        Fixture.Initialize();
     }
 
-    public class TransactionUserIdTestsFW : TransactionUserIdTests<ConsoleDynamicMethodFixtureFWLatest>
+    [Fact]
+    public void TestTransactionSetUserId()
     {
-        public TransactionUserIdTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
+        var expectedTransactionEventAgentAttributes = new Dictionary<string, string>
         {
-        }
-    }
+            { "enduser.id", "CustomUserId" }
+        };
+        var transactionEvents = Fixture.AgentLog.GetTransactionEvents();
+        var transactionEvent = transactionEvents.FirstOrDefault(e => e.AgentAttributes.ContainsKey("enduser.id"));
 
-    public class TransactionUserIdTestsCore : TransactionUserIdTests<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public TransactionUserIdTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
+        var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-        }
+            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/SetUserId"}
+        };
+
+        var actualMetrics = Fixture.AgentLog.GetMetrics().ToList();
+
+        NrAssert.Multiple(
+            () => Assertions.MetricsExist(expectedMetrics, actualMetrics),
+            () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent)
+        );
+    }
+}
+
+public class TransactionUserIdTestsFW : TransactionUserIdTests<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public TransactionUserIdTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class TransactionUserIdTestsCore : TransactionUserIdTests<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public TransactionUserIdTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

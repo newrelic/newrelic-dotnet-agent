@@ -7,150 +7,149 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
+namespace NewRelic.Agent.IntegrationTests.AwsLambda.General;
+
+public abstract class AwsLambdaSmokeTestBase<T> : NewRelicIntegrationTest<T> where T : LambdaSnsEventTriggerFixtureBase
 {
-    public abstract class AwsLambdaSmokeTestBase<T> : NewRelicIntegrationTest<T> where T : LambdaSnsEventTriggerFixtureBase
+    private readonly LambdaSnsEventTriggerFixtureBase _fixture;
+    private readonly string _expectedTransactionName;
+    private readonly bool _awsLambdaApmModeEnabled;
+
+    protected AwsLambdaSmokeTestBase(string expectedTransactionName, T fixture, ITestOutputHelper output, bool awsLambdaApmModeEnabled)
+        : base(fixture)
     {
-        private readonly LambdaSnsEventTriggerFixtureBase _fixture;
-        private readonly string _expectedTransactionName;
-        private readonly bool _awsLambdaApmModeEnabled;
+        _expectedTransactionName = expectedTransactionName;
+        _awsLambdaApmModeEnabled = awsLambdaApmModeEnabled;
 
-        protected AwsLambdaSmokeTestBase(string expectedTransactionName, T fixture, ITestOutputHelper output, bool awsLambdaApmModeEnabled)
-            : base(fixture)
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+
+        _fixture.AdditionalSetupConfiguration = () =>
         {
-            _expectedTransactionName = expectedTransactionName;
-            _awsLambdaApmModeEnabled = awsLambdaApmModeEnabled;
-
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-
-            _fixture.AdditionalSetupConfiguration = () =>
+            var configPath = fixture.DestinationNewRelicConfigFilePath;
+            var configModifier = new NewRelicConfigModifier(configPath);
+            configModifier.ForceTransactionTraces();
+            if (_awsLambdaApmModeEnabled)
             {
-                var configPath = fixture.DestinationNewRelicConfigFilePath;
-                var configModifier = new NewRelicConfigModifier(configPath);
-                configModifier.ForceTransactionTraces();
-                if (_awsLambdaApmModeEnabled)
-                {
-                    configModifier.EnableAwsLambdaAPMMode(true);
-                }
-            };
+                configModifier.EnableAwsLambdaAPMMode(true);
+            }
+        };
 
-            _fixture.Actions(
-                exerciseApplication: () =>
-                {
-                    _fixture.EnqueueSnsEvent();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1));
-                }
-                );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var serverlessPayload = _fixture.AgentLog.GetServerlessPayloads().Single();
-
-            var metrics = serverlessPayload.Telemetry.MetricsPayload.Metrics;
-
-            Assert.Multiple(
-                () => Assert.Equal(2, serverlessPayload.Version),
-                () => Assert.Equal("NR_LAMBDA_MONITORING", serverlessPayload.ServerlessType),
-                () => Assert.Equal("dotnet", serverlessPayload.Metadata.AgentLanguage),
-                () => AssertStringNotNullOrWhitespace(serverlessPayload.Metadata.AgentVersion, "Metadata Agent Version"),
-                () => AssertStringNotNullOrWhitespace(serverlessPayload.Metadata.Arn, "Metadata Arn"),
-                () => Assert.Equal("self executing assembly", serverlessPayload.Metadata.ExecutionEnvironment),
-                () => Assert.Equal("1.0", serverlessPayload.Metadata.FunctionVersion),
-                () => Assert.Equal(2, serverlessPayload.Metadata.MetadataVersion),
-                () => Assert.Equal(17, serverlessPayload.Metadata.ProtocolVersion),
-                () => Assert.NotNull(serverlessPayload.Telemetry.MetricsPayload),
-                () => Assert.NotNull(serverlessPayload.Telemetry.TransactionEventsPayload),
-                () => Assert.NotNull(serverlessPayload.Telemetry.SpanEventsPayload),
-                () => Assert.NotNull(serverlessPayload.Telemetry.TransactionTracePayload),
-                () => Assert.Null(serverlessPayload.Telemetry.SqlTracePayload),
-                () => Assert.Null(serverlessPayload.Telemetry.ErrorTracePayload),
-                () => Assert.Null(serverlessPayload.Telemetry.ErrorEventsPayload),
-                () => Assert.Equal(_expectedTransactionName, serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"]),
-                () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("GC/Gen0/Collections")),
-                () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("Threadpool/Worker/InUse")),
-                () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("Memory/Physical")),
-                () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("CPU/User/Utilization"))
-                );
-        }
-
-        private static void AssertStringNotNullOrWhitespace(string actual, string itemName)
-        {
-            Assert.False(string.IsNullOrWhiteSpace(actual), $"Expected {itemName} to contain a value but was '{actual}'.");
-        }
+        _fixture.Actions(
+            exerciseApplication: () =>
+            {
+                _fixture.EnqueueSnsEvent();
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1));
+            }
+        );
+        _fixture.Initialize();
     }
 
-    public class AwsLambdaSmokeTestCoreOldest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreOldest>
+    [Fact]
+    public void Test()
     {
-        public AwsLambdaSmokeTestCoreOldest(LambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
-        {
-        }
+        var serverlessPayload = _fixture.AgentLog.GetServerlessPayloads().Single();
+
+        var metrics = serverlessPayload.Telemetry.MetricsPayload.Metrics;
+
+        Assert.Multiple(
+            () => Assert.Equal(2, serverlessPayload.Version),
+            () => Assert.Equal("NR_LAMBDA_MONITORING", serverlessPayload.ServerlessType),
+            () => Assert.Equal("dotnet", serverlessPayload.Metadata.AgentLanguage),
+            () => AssertStringNotNullOrWhitespace(serverlessPayload.Metadata.AgentVersion, "Metadata Agent Version"),
+            () => AssertStringNotNullOrWhitespace(serverlessPayload.Metadata.Arn, "Metadata Arn"),
+            () => Assert.Equal("self executing assembly", serverlessPayload.Metadata.ExecutionEnvironment),
+            () => Assert.Equal("1.0", serverlessPayload.Metadata.FunctionVersion),
+            () => Assert.Equal(2, serverlessPayload.Metadata.MetadataVersion),
+            () => Assert.Equal(17, serverlessPayload.Metadata.ProtocolVersion),
+            () => Assert.NotNull(serverlessPayload.Telemetry.MetricsPayload),
+            () => Assert.NotNull(serverlessPayload.Telemetry.TransactionEventsPayload),
+            () => Assert.NotNull(serverlessPayload.Telemetry.SpanEventsPayload),
+            () => Assert.NotNull(serverlessPayload.Telemetry.TransactionTracePayload),
+            () => Assert.Null(serverlessPayload.Telemetry.SqlTracePayload),
+            () => Assert.Null(serverlessPayload.Telemetry.ErrorTracePayload),
+            () => Assert.Null(serverlessPayload.Telemetry.ErrorEventsPayload),
+            () => Assert.Equal(_expectedTransactionName, serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"]),
+            () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("GC/Gen0/Collections")),
+            () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("Threadpool/Worker/InUse")),
+            () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("Memory/Physical")),
+            () => Assert.Contains(metrics, m => m.MetricSpec.Name.Equals("CPU/User/Utilization"))
+        );
     }
 
-    public class AwsLambdaAsyncSmokeTestCoreOldest : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureCoreOldest>
+    private static void AssertStringNotNullOrWhitespace(string actual, string itemName)
     {
-        public AwsLambdaAsyncSmokeTestCoreOldest(AsyncLambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output,false)
-        {
-        }
+        Assert.False(string.IsNullOrWhiteSpace(actual), $"Expected {itemName} to contain a value but was '{actual}'.");
     }
+}
 
-    public class AwsLambdaHandlerOnlySmokeTestCoreOldest : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureCoreOldest>
+public class AwsLambdaSmokeTestCoreOldest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreOldest>
+{
+    public AwsLambdaSmokeTestCoreOldest(LambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
     {
-        public AwsLambdaHandlerOnlySmokeTestCoreOldest(LambdaHandlerOnlySnsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
-        {
-        }
     }
+}
 
-    public class AwsLambdaHandlerOnlyAsyncSmokeTestCoreOldest : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest>
+public class AwsLambdaAsyncSmokeTestCoreOldest : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureCoreOldest>
+{
+    public AwsLambdaAsyncSmokeTestCoreOldest(AsyncLambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output,false)
     {
-        public AwsLambdaHandlerOnlyAsyncSmokeTestCoreOldest(AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output, false)
-        {
-        }
     }
+}
 
-    public class AwsLambdaSmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreLatest>
+public class AwsLambdaHandlerOnlySmokeTestCoreOldest : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureCoreOldest>
+{
+    public AwsLambdaHandlerOnlySmokeTestCoreOldest(LambdaHandlerOnlySnsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
     {
-        public AwsLambdaSmokeTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output,false)
-        {
-        }
     }
+}
 
-    public class AwsLambdaAsyncSmokeTestCoreLatest : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureCoreLatest>
+public class AwsLambdaHandlerOnlyAsyncSmokeTestCoreOldest : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest>
+{
+    public AwsLambdaHandlerOnlyAsyncSmokeTestCoreOldest(AsyncLambdaHandlerOnlySnsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output, false)
     {
-        public AwsLambdaAsyncSmokeTestCoreLatest(AsyncLambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output, false)
-        {
-        }
     }
+}
 
-    public class AwsLambdaHandlerOnlySmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureCoreLatest>
+public class AwsLambdaSmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreLatest>
+{
+    public AwsLambdaSmokeTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/SnsHandler", fixture, output,false)
     {
-        public AwsLambdaHandlerOnlySmokeTestCoreLatest(LambdaHandlerOnlySnsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
-        {
-        }
     }
+}
 
-    public class AwsLambdaHandlerOnlyAsyncSmokeTestCoreLatest : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest>
+public class AwsLambdaAsyncSmokeTestCoreLatest : AwsLambdaSmokeTestBase<AsyncLambdaSnsEventTriggerFixtureCoreLatest>
+{
+    public AwsLambdaAsyncSmokeTestCoreLatest(AsyncLambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output, false)
     {
-        public AwsLambdaHandlerOnlyAsyncSmokeTestCoreLatest(AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output,false)
-        {
-        }
     }
-    public class AwsLambdaServerlessModeSmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreLatest>
+}
+
+public class AwsLambdaHandlerOnlySmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaHandlerOnlySnsTriggerFixtureCoreLatest>
+{
+    public AwsLambdaHandlerOnlySmokeTestCoreLatest(LambdaHandlerOnlySnsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/SnsHandler", fixture, output, false)
     {
-        public AwsLambdaServerlessModeSmokeTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Function/SNS SnsHandler", fixture, output, true) // Enable AWS Lambda APM mode
-        {
-        }
+    }
+}
+
+public class AwsLambdaHandlerOnlyAsyncSmokeTestCoreLatest : AwsLambdaSmokeTestBase<AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest>
+{
+    public AwsLambdaHandlerOnlyAsyncSmokeTestCoreLatest(AsyncLambdaHandlerOnlySnsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/SnsHandlerAsync", fixture, output,false)
+    {
+    }
+}
+public class AwsLambdaServerlessModeSmokeTestCoreLatest : AwsLambdaSmokeTestBase<LambdaSnsEventTriggerFixtureCoreLatest>
+{
+    public AwsLambdaServerlessModeSmokeTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Function/SNS SnsHandler", fixture, output, true) // Enable AWS Lambda APM mode
+    {
     }
 }

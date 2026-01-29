@@ -3,93 +3,92 @@
 
 
 using System;
-using System.Linq;
-using Xunit;
-using NewRelic.Agent.IntegrationTestHelpers;
 using System.Collections.Generic;
-using NewRelic.Testing.Assertions;
+using System.Linq;
+using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using NewRelic.Testing.Assertions;
+using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.Owin
+namespace NewRelic.Agent.IntegrationTests.Owin;
+
+public class OwinCATChainTests : NewRelicIntegrationTest<OwinTracingChainFixture>
 {
-    public class OwinCATChainTests : NewRelicIntegrationTest<OwinTracingChainFixture>
+    private readonly OwinTracingChainFixture _fixture;
+
+    public OwinCATChainTests(OwinTracingChainFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly OwinTracingChainFixture _fixture;
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
+            {
+                var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                configModifier.SetOrDeleteDistributedTraceEnabled(false);
+                configModifier.SetOrDeleteSpanEventsEnabled(false);
+                configModifier.SetLogLevel("all");
 
-        public OwinCATChainTests(OwinTracingChainFixture fixture, ITestOutputHelper output) : base(fixture)
+                var environmentVariables = new Dictionary<string, string>();
+
+                _fixture.ReceiverApplication = _fixture.SetupReceiverApplication(isDistributedTracing: false, isWebApplication: false);
+                _fixture.ReceiverApplication.Start(string.Empty, environmentVariables, captureStandardOutput: true);
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.ExecuteTraceRequestChainHttpClient();
+
+                _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(2));
+            }
+        );
+
+        _fixture.Initialize();
+    }
+
+    [Fact]
+    public void Test()
+    {
+        var senderAppTxEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
+        Assert.NotNull(senderAppTxEvent);
+
+        var receiverAppTxEvent = _fixture.ReceiverAppAgentLog.GetTransactionEvents().FirstOrDefault();
+        Assert.NotNull(receiverAppTxEvent);
+
+        var expectedSenderAttributes = new List<string>
         {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.SetOrDeleteDistributedTraceEnabled(false);
-                    configModifier.SetOrDeleteSpanEventsEnabled(false);
-                    configModifier.SetLogLevel("all");
+            "nr.tripId",
+            "nr.guid",
+            "nr.pathHash"
+        };
 
-                    var environmentVariables = new Dictionary<string, string>();
-
-                    _fixture.ReceiverApplication = _fixture.SetupReceiverApplication(isDistributedTracing: false, isWebApplication: false);
-                    _fixture.ReceiverApplication.Start(string.Empty, environmentVariables, captureStandardOutput: true);
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.ExecuteTraceRequestChainHttpClient();
-
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(2));
-                }
-            );
-
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
+        var expectedReceiverAttributes = new List<string>
         {
-            var senderAppTxEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
-            Assert.NotNull(senderAppTxEvent);
+            "nr.tripId",
+            "nr.guid",
+            "nr.pathHash",
+            "nr.referringPathHash",
+            "nr.referringTransactionGuid"
+        };
 
-            var receiverAppTxEvent = _fixture.ReceiverAppAgentLog.GetTransactionEvents().FirstOrDefault();
-            Assert.NotNull(receiverAppTxEvent);
+        var unexpectedAttributes = new List<string>()
+        {
+            "parent.type",
+            "parent.app",
+            "parent.account",
+            "parent.transportType",
+            "parent.transportDuration",
+            "traceId",
+            "priority",
+            "sampled"
+        };
 
-            var expectedSenderAttributes = new List<string>
-            {
-                "nr.tripId",
-                "nr.guid",
-                "nr.pathHash"
-            };
-
-            var expectedReceiverAttributes = new List<string>
-            {
-                "nr.tripId",
-                "nr.guid",
-                "nr.pathHash",
-                "nr.referringPathHash",
-                "nr.referringTransactionGuid"
-            };
-
-            var unexpectedAttributes = new List<string>()
-            {
-                "parent.type",
-                "parent.app",
-                "parent.account",
-                "parent.transportType",
-                "parent.transportDuration",
-                "traceId",
-                "priority",
-                "sampled"
-            };
-
-            NrAssert.Multiple(
-                () => Assertions.TransactionEventHasAttributes(expectedSenderAttributes, TransactionEventAttributeType.Intrinsic, senderAppTxEvent),
-                () => Assertions.TransactionEventHasAttributes(expectedReceiverAttributes, TransactionEventAttributeType.Intrinsic, receiverAppTxEvent),
-                () => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Intrinsic, receiverAppTxEvent),
-                () => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Intrinsic, senderAppTxEvent),
-                () => Assert.Equal(senderAppTxEvent.IntrinsicAttributes["nr.tripId"], receiverAppTxEvent.IntrinsicAttributes["nr.tripId"]),
-                () => Assert.Equal(senderAppTxEvent.IntrinsicAttributes["nr.guid"], receiverAppTxEvent.IntrinsicAttributes["nr.referringTransactionGuid"])
-                );
-        }
+        NrAssert.Multiple(
+            () => Assertions.TransactionEventHasAttributes(expectedSenderAttributes, TransactionEventAttributeType.Intrinsic, senderAppTxEvent),
+            () => Assertions.TransactionEventHasAttributes(expectedReceiverAttributes, TransactionEventAttributeType.Intrinsic, receiverAppTxEvent),
+            () => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Intrinsic, receiverAppTxEvent),
+            () => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Intrinsic, senderAppTxEvent),
+            () => Assert.Equal(senderAppTxEvent.IntrinsicAttributes["nr.tripId"], receiverAppTxEvent.IntrinsicAttributes["nr.tripId"]),
+            () => Assert.Equal(senderAppTxEvent.IntrinsicAttributes["nr.guid"], receiverAppTxEvent.IntrinsicAttributes["nr.referringTransactionGuid"])
+        );
     }
 }

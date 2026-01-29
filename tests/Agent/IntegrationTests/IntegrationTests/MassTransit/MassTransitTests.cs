@@ -1,152 +1,150 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using Xunit;
-using System;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.MassTransit
+namespace NewRelic.Agent.IntegrationTests.MassTransit;
+
+public abstract class MassTransitTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class MassTransitTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture : ConsoleDynamicMethodFixture
+    private readonly TFixture _fixture;
+
+    public MassTransitTestsBase(TFixture fixture, ITestOutputHelper output, bool useStartBus) : base(fixture)
     {
-        private readonly TFixture _fixture;
+        _fixture = fixture;
+        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+        _fixture.TestLogger = output;
 
-        public MassTransitTestsBase(TFixture fixture, ITestOutputHelper output, bool useStartBus) : base(fixture)
+        if (useStartBus)
         {
-            _fixture = fixture;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
-            _fixture.TestLogger = output;
+            _fixture.AddCommand($"MassTransitExerciser StartBus");
+        }
+        else
+        {
+            _fixture.AddCommand("MassTransitExerciser StartHost");
+        }
+        _fixture.AddCommand("MassTransitExerciser Publish publishedMessageOne");
+        _fixture.AddCommand("MassTransitExerciser Publish publishedMessageTwo");
+        _fixture.AddCommand("MassTransitExerciser Send sentMessageOne");
+        _fixture.AddCommand("MassTransitExerciser Send sentMessageTwo");
 
-            if (useStartBus)
+        if (useStartBus)
+        {
+            _fixture.AddCommand($"MassTransitExerciser StopBus");
+        }
+        else
+        {
+            _fixture.AddCommand("MassTransitExerciser StopHost");
+        }
+
+        _fixture.AddActions
+        (
+            setupConfiguration: () =>
             {
-                _fixture.AddCommand($"MassTransitExerciser StartBus");
+                var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+                configModifier.ForceTransactionTraces();
+                configModifier.SetLogLevel("finest");
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
             }
-            else
-            {
-                _fixture.AddCommand("MassTransitExerciser StartHost");
-            }
-            _fixture.AddCommand("MassTransitExerciser Publish publishedMessageOne");
-            _fixture.AddCommand("MassTransitExerciser Publish publishedMessageTwo");
-            _fixture.AddCommand("MassTransitExerciser Send sentMessageOne");
-            _fixture.AddCommand("MassTransitExerciser Send sentMessageTwo");
+        );
 
-            if (useStartBus)
-            {
-                _fixture.AddCommand($"MassTransitExerciser StopBus");
-            }
-            else
-            {
-                _fixture.AddCommand("MassTransitExerciser StopHost");
-            }
-
-            _fixture.AddActions
-            (
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.ForceTransactionTraces();
-                    configModifier.SetLogLevel("finest");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
-                }
-            );
-
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-
-            var massTransitMetricNameRegexBase = @"MessageBroker\/MassTransit\/Queue\/";
-            var queueNameRegex = @"Named\/(.{26})"; // The auto-generated in-memory queue names have 26 chars
-            var massTransitProduceMetricNameRegex = massTransitMetricNameRegexBase + @"Produce\/" + queueNameRegex;
-            var massTransitConsumeMetricNameRegex = massTransitMetricNameRegexBase + @"Consume\/" + queueNameRegex;
-
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
-
-            var expectedMetrics = new List<Assertions.ExpectedMetric>
-            {
-                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true},
-                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true},
-
-                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true, metricScope = @"OtherTransaction\/Message\/MassTransit\/Queue\/" + queueNameRegex, IsRegexScope = true},
-                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
-                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Send"},
-            };
-
-            Assertions.MetricsExist(expectedMetrics, metrics);
-
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish");
-
-            Assert.NotNull( transactionEvent );
-        }
+        _fixture.Initialize();
     }
 
-    // Tests using StartHost (hosted service configuration method)
-    public class MassTransitTests_StartHost_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
+    [Fact]
+    public void Test()
     {
-        public MassTransitTests_StartHost_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, false)
-        {
-        }
-    }
-    public class MassTransitTests_StartHost_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public MassTransitTests_StartHost_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false)
-        {
-        }
-    }
-    public class MassTransitTests_StartHost_CoreOldest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
-    {
-        public MassTransitTests_StartHost_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, false)
-        {
-        }
-    }
-    public class MassTransitTests_StartHost_CoreLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public MassTransitTests_StartHost_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false)
-        {
-        }
-    }
 
-    // Tests using StartBus (bus factory configuration method)
-    public class MassTransitTests_StartBus_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public MassTransitTests_StartBus_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, true)
-        {
-        }
-    }
-    public class MassTransitTests_StartBus_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public MassTransitTests_StartBus_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true)
-        {
-        }
-    }
-    public class MassTransitTests_StartBus_CoreOldest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
-    {
-        public MassTransitTests_StartBus_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, true)
-        {
-        }
-    }
-    public class MassTransitTests_StartBus_CoreLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public MassTransitTests_StartBus_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true)
-        {
-        }
-    }
+        var massTransitMetricNameRegexBase = @"MessageBroker\/MassTransit\/Queue\/";
+        var queueNameRegex = @"Named\/(.{26})"; // The auto-generated in-memory queue names have 26 chars
+        var massTransitProduceMetricNameRegex = massTransitMetricNameRegexBase + @"Produce\/" + queueNameRegex;
+        var massTransitConsumeMetricNameRegex = massTransitMetricNameRegexBase + @"Consume\/" + queueNameRegex;
 
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+        var expectedMetrics = new List<Assertions.ExpectedMetric>
+        {
+            new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true},
+            new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true},
+
+            new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, CallCountAllHarvests = 4, IsRegexName = true, metricScope = @"OtherTransaction\/Message\/MassTransit\/Queue\/" + queueNameRegex, IsRegexScope = true},
+            new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
+            new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Send"},
+        };
+
+        Assertions.MetricsExist(expectedMetrics, metrics);
+
+        var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish");
+
+        Assert.NotNull( transactionEvent );
+    }
+}
+
+// Tests using StartHost (hosted service configuration method)
+public class MassTransitTests_StartHost_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
+{
+    public MassTransitTests_StartHost_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
+    {
+    }
+}
+public class MassTransitTests_StartHost_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public MassTransitTests_StartHost_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
+    {
+    }
+}
+public class MassTransitTests_StartHost_CoreOldest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public MassTransitTests_StartHost_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
+    {
+    }
+}
+public class MassTransitTests_StartHost_CoreLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public MassTransitTests_StartHost_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
+    {
+    }
+}
+
+// Tests using StartBus (bus factory configuration method)
+public class MassTransitTests_StartBus_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
+{
+    public MassTransitTests_StartBus_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
+    {
+    }
+}
+public class MassTransitTests_StartBus_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public MassTransitTests_StartBus_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
+    {
+    }
+}
+public class MassTransitTests_StartBus_CoreOldest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public MassTransitTests_StartBus_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
+    {
+    }
+}
+public class MassTransitTests_StartBus_CoreLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public MassTransitTests_StartBus_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
+    {
+    }
 }

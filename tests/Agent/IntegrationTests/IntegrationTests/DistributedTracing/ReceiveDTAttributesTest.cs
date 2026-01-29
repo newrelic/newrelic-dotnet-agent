@@ -5,76 +5,75 @@
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using NewRelic.Testing.Assertions;
 using Xunit;
 
 
-namespace NewRelic.Agent.IntegrationTests.DistributedTracing
+namespace NewRelic.Agent.IntegrationTests.DistributedTracing;
+
+public class ReceiveDTAttributesTest : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
 {
-    public class ReceiveDTAttributesTest : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
+    private readonly RemoteServiceFixtures.DTBasicMVCApplicationFixture _fixture;
+
+    public ReceiveDTAttributesTest(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly RemoteServiceFixtures.DTBasicMVCApplicationFixture _fixture;
+        _fixture = fixture;
+        _fixture.TestLogger = output;
 
-        public ReceiveDTAttributesTest(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ForceTransactionTraces();
-                    configModifier.SetOrDeleteSpanEventsEnabled(true);
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.ReceiveDTPayload();
-                }
-            );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var expectedAttributes = new List<string>()
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
             {
-                "parent.type",
-                "parent.app",
-                "parent.account",
-                "parent.transportType",
-                "parent.transportDuration",
-                "guid",
-                "traceId",
-                "priority",
-                "sampled"
-            };
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ForceTransactionTraces();
+                configModifier.SetOrDeleteSpanEventsEnabled(true);
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.ReceiveDTPayload();
+            }
+        );
+        _fixture.Initialize();
+    }
 
-            var transactionEventExpectedAttributes = new List<string>(expectedAttributes) { "parentId" };
+    [Fact]
+    public void Test()
+    {
+        var expectedAttributes = new List<string>()
+        {
+            "parent.type",
+            "parent.app",
+            "parent.account",
+            "parent.transportType",
+            "parent.transportDuration",
+            "guid",
+            "traceId",
+            "priority",
+            "sampled"
+        };
 
-            var transactionEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
-            var errorEvent = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
-            var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-            var transactionSample = _fixture.AgentLog.GetTransactionSamples()
-                .FirstOrDefault(sample => sample.Path == @"WebTransaction/MVC/DistributedTracingController/ReceivePayload");
+        var transactionEventExpectedAttributes = new List<string>(expectedAttributes) { "parentId" };
 
-            NrAssert.Multiple(
-                () => Assertions.TransactionEventHasAttributes(transactionEventExpectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvent),
-                () => Assertions.ErrorEventHasAttributes(expectedAttributes, EventAttributeType.Intrinsic, errorEvent),
-                () => Assertions.ErrorTraceHasAttributes(expectedAttributes, ErrorTraceAttributeType.Intrinsic, errorTrace),
-                () => Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Intrinsic, transactionSample)
-            );
+        var transactionEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
+        var errorEvent = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
+        var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
+        var transactionSample = _fixture.AgentLog.GetTransactionSamples()
+            .FirstOrDefault(sample => sample.Path == @"WebTransaction/MVC/DistributedTracingController/ReceivePayload");
 
-            var parentIdKey = "parentId";
-            var expectedParentId = "27856f70d3d314b7";
+        NrAssert.Multiple(
+            () => Assertions.TransactionEventHasAttributes(transactionEventExpectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvent),
+            () => Assertions.ErrorEventHasAttributes(expectedAttributes, EventAttributeType.Intrinsic, errorEvent),
+            () => Assertions.ErrorTraceHasAttributes(expectedAttributes, ErrorTraceAttributeType.Intrinsic, errorTrace),
+            () => Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Intrinsic, transactionSample)
+        );
 
-            var transactionEventParentId = transactionEvent.IntrinsicAttributes[parentIdKey];
+        var parentIdKey = "parentId";
+        var expectedParentId = "27856f70d3d314b7";
 
-            Assert.Equal(expectedParentId, transactionEventParentId);
-        }
+        var transactionEventParentId = transactionEvent.IntrinsicAttributes[parentIdKey];
+
+        Assert.Equal(expectedParentId, transactionEventParentId);
     }
 }

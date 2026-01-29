@@ -4,30 +4,29 @@
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
-namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
+namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
+
+public class MvcAsyncFixture : RemoteApplicationFixture
 {
-    public class MvcAsyncFixture : RemoteApplicationFixture
+    public MvcAsyncFixture() : base(new RemoteWebApplication("MvcAsyncApplication", ApplicationType.Bounded))
     {
-        public MvcAsyncFixture() : base(new RemoteWebApplication("MvcAsyncApplication", ApplicationType.Bounded))
-        {
-        }
+    }
 
-        public void GetIoBoundNoSpecialAsync()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/IoBoundNoSpecialAsync";
-            GetStringAndAssertEqual(address, "Worked");
-        }
+    public void GetIoBoundNoSpecialAsync()
+    {
+        var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/IoBoundNoSpecialAsync";
+        GetStringAndAssertEqual(address, "Worked");
+    }
 
-        public void GetIoBoundConfigureAwaitFalseAsync()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/IoBoundConfigureAwaitFalseAsync";
-            GetStringAndAssertEqual(address, "Worked");
-        }
+    public void GetIoBoundConfigureAwaitFalseAsync()
+    {
+        var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/IoBoundConfigureAwaitFalseAsync";
+        GetStringAndAssertEqual(address, "Worked");
+    }
 
-        public void GetCpuBoundTasksAsync()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/CpuBoundTasksAsync";
-            GetStringAndAssertEqual(address, "Worked");
-        }
+    public void GetCpuBoundTasksAsync()
+    {
+        var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/CpuBoundTasksAsync";
+        GetStringAndAssertEqual(address, "Worked");
     }
 }

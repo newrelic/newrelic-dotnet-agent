@@ -2,22 +2,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
-{
-    public abstract class LambdaScheduledCloudWatchEventTriggerFixtureBase : LambdaSelfExecutingAssemblyFixture
-    {
-        protected LambdaScheduledCloudWatchEventTriggerFixtureBase(string targetFramework, bool isAsync) :
-            base(targetFramework,
-                null,
-                "LambdaSelfExecutingAssembly::LambdaSelfExecutingAssembly.Program::ScheduledCloudWatchEventHandler" + (isAsync ? "Async" : ""),
-                "ScheduledCloudWatchEvent" + (isAsync ? "Async" : ""),
-                null)
-        {
-        }
+namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 
-        public void EnqueueEvent()
-        {
-            var eventJson = @"{
+public abstract class LambdaScheduledCloudWatchEventTriggerFixtureBase : LambdaSelfExecutingAssemblyFixture
+{
+    protected LambdaScheduledCloudWatchEventTriggerFixtureBase(string targetFramework, bool isAsync) :
+        base(targetFramework,
+            null,
+            "LambdaSelfExecutingAssembly::LambdaSelfExecutingAssembly.Program::ScheduledCloudWatchEventHandler" + (isAsync ? "Async" : ""),
+            "ScheduledCloudWatchEvent" + (isAsync ? "Async" : ""),
+            null)
+    {
+    }
+
+    public void EnqueueEvent()
+    {
+        var eventJson = @"{
   ""version"": ""0"",
   ""account"": ""123456789012"",
   ""region"": ""us-east-2"",
@@ -30,27 +30,26 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
     ""arn:aws:events:us-east-2:123456789012:rule/my-schedule""
   ]
 }";
-            EnqueueLambdaEvent(eventJson);
-        }
+        EnqueueLambdaEvent(eventJson);
     }
+}
 
-    public class LambdaScheduledCloudWatchEventTriggerFixtureCoreOldest : LambdaScheduledCloudWatchEventTriggerFixtureBase
-    {
-        public LambdaScheduledCloudWatchEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, false) { }
-    }
+public class LambdaScheduledCloudWatchEventTriggerFixtureCoreOldest : LambdaScheduledCloudWatchEventTriggerFixtureBase
+{
+    public LambdaScheduledCloudWatchEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, false) { }
+}
 
-    public class AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreOldest : LambdaScheduledCloudWatchEventTriggerFixtureBase
-    {
-        public AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, true) { }
-    }
+public class AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreOldest : LambdaScheduledCloudWatchEventTriggerFixtureBase
+{
+    public AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreOldest() : base(CoreOldestTFM, true) { }
+}
 
-    public class LambdaScheduledCloudWatchEventTriggerFixtureCoreLatest : LambdaScheduledCloudWatchEventTriggerFixtureBase
-    {
-        public LambdaScheduledCloudWatchEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, false) { }
-    }
+public class LambdaScheduledCloudWatchEventTriggerFixtureCoreLatest : LambdaScheduledCloudWatchEventTriggerFixtureBase
+{
+    public LambdaScheduledCloudWatchEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, false) { }
+}
 
-    public class AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreLatest : LambdaScheduledCloudWatchEventTriggerFixtureBase
-    {
-        public AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, true) { }
-    }
+public class AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreLatest : LambdaScheduledCloudWatchEventTriggerFixtureBase
+{
+    public AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreLatest() : base(CoreLatestTFM, true) { }
 }

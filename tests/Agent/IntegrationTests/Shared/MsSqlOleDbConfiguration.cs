@@ -4,32 +4,31 @@
 
 using System;
 
-namespace NewRelic.Agent.IntegrationTests.Shared
+namespace NewRelic.Agent.IntegrationTests.Shared;
+
+public class MsSqlOleDbConfiguration
 {
-    public class MsSqlOleDbConfiguration
+    private static string _msSqlOleDbConnectionString;
+
+    // example:  "PROVIDER=SQLXXXX11;Server=1.2.3.4;Database=DBName;Trusted_Connection=no;UID=sa;PWD=password;Encrypt=no;Timeout=30;"
+    public static string MsSqlOleDbConnectionString
     {
-        private static string _msSqlOleDbConnectionString;
-
-        // example:  "PROVIDER=SQLXXXX11;Server=1.2.3.4;Database=DBName;Trusted_Connection=no;UID=sa;PWD=password;Encrypt=no;Timeout=30;"
-        public static string MsSqlOleDbConnectionString
+        get
         {
-            get
+            if (_msSqlOleDbConnectionString == null)
             {
-                if (_msSqlOleDbConnectionString == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MSSQLOleDbTests");
-                        _msSqlOleDbConnectionString = testConfiguration["ConnectionString"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("MsSqlOleDbConnectionString configuration is invalid.", ex);
-                    }
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MSSQLOleDbTests");
+                    _msSqlOleDbConnectionString = testConfiguration["ConnectionString"];
                 }
-
-                return _msSqlOleDbConnectionString;
+                catch (Exception ex)
+                {
+                    throw new Exception("MsSqlOleDbConnectionString configuration is invalid.", ex);
+                }
             }
+
+            return _msSqlOleDbConnectionString;
         }
     }
 }

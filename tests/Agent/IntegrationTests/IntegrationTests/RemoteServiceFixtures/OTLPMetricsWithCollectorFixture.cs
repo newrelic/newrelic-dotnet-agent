@@ -7,102 +7,101 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.IntegrationTests.Models;
 
-namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
+namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
+
+public abstract class OtlpMetricsWithCollectorFixtureBase : MockNewRelicFixture
 {
-    public abstract class OtlpMetricsWithCollectorFixtureBase : MockNewRelicFixture
+    protected OtlpMetricsWithCollectorFixtureBase(string targetFramework, bool isCoreApp, string applicationDirectoryName = "OTelMetricsApplication", string executableName = "OTelMetricsApplication.exe") :
+        base(new RemoteService(
+            applicationDirectoryName,
+            executableName,
+            targetFramework,
+            ApplicationType.Bounded,
+            true,
+            isCoreApp,
+            true))
     {
-        protected OtlpMetricsWithCollectorFixtureBase(string targetFramework, bool isCoreApp, string applicationDirectoryName = "OTelMetricsApplication", string executableName = "OTelMetricsApplication.exe") :
-            base(new RemoteService(
-                applicationDirectoryName,
-                executableName,
-                targetFramework,
-                ApplicationType.Bounded,
-                true,
-                isCoreApp,
-                true))
+        AddActions(setupConfiguration: () =>
         {
-            AddActions(setupConfiguration: () =>
-            {
-                NewRelicConfigModifier configModifier = new NewRelicConfigModifier(DestinationNewRelicConfigFilePath);
+            NewRelicConfigModifier configModifier = new NewRelicConfigModifier(DestinationNewRelicConfigFilePath);
 
-                configModifier.EnableOpenTelemetry(true);
-                configModifier.EnableOpenTelemetryMetrics(true);
+            configModifier.EnableOpenTelemetry(true);
+            configModifier.EnableOpenTelemetryMetrics(true);
 
-                configModifier.IncludeOpenTelemetryMeters("OtelMetricsTest.App");
+            configModifier.IncludeOpenTelemetryMeters("OtelMetricsTest.App");
 
-                // disable event pipe integration due to a known conflict with the OTEL SDK logger
-                // TODO: Remove this line when the conflict is resolved
-                configModifier.EnableEventListenerSamplers(false);
-            });
-        }
-
-        public IEnumerable<MetricsSummaryDto> GetCollectedOTLPMetrics(int count = 1)
-        {
-            var address = $"https://localhost:{MockNewRelicApplication.Port}/v1/metrics/collected?count={count}";
-
-            TestLogger?.WriteLine($"[MockNewRelicFixture] Get collected OTLP Metrics via: {address}");
-
-            return GetJson<List<MetricsSummaryDto>>(address) ?? new List<MetricsSummaryDto>();
-        }
-
-        public int GetCollectedOTLPMetricsCount()
-        {
-            var address = $"https://localhost:{MockNewRelicApplication.Port}/v1/metrics/count";
-            TestLogger?.WriteLine($"[MockNewRelicFixture] Get collected OTLP Metrics count via: {address}");
-            return Convert.ToInt32(GetString(address));
-        }
-
-        public void ClearCollectedOTLPMetrics()
-        {
-            var address = $"https://localhost:{MockNewRelicApplication.Port}/v1/metrics/clear";
-            TestLogger?.WriteLine($"[MockNewRelicFixture] Clear collected OTLP Metrics via: {address}");
-            GetJson<string>(address);
-        }
+            // disable event pipe integration due to a known conflict with the OTEL SDK logger
+            // TODO: Remove this line when the conflict is resolved
+            configModifier.EnableEventListenerSamplers(false);
+        });
     }
 
-    public class OtlpMetricsWithCollectorFixtureCoreLatest : OtlpMetricsWithCollectorFixtureCoreNet10
+    public IEnumerable<MetricsSummaryDto> GetCollectedOTLPMetrics(int count = 1)
     {
-        public OtlpMetricsWithCollectorFixtureCoreLatest() : base()
-        {
-        }
+        var address = $"https://localhost:{MockNewRelicApplication.Port}/v1/metrics/collected?count={count}";
+
+        TestLogger?.WriteLine($"[MockNewRelicFixture] Get collected OTLP Metrics via: {address}");
+
+        return GetJson<List<MetricsSummaryDto>>(address) ?? new List<MetricsSummaryDto>();
     }
 
-    public class OtlpMetricsWithCollectorFixtureCoreNet10 : OtlpMetricsWithCollectorFixtureBase
+    public int GetCollectedOTLPMetricsCount()
     {
-        public OtlpMetricsWithCollectorFixtureCoreNet10() : base("net10.0", true)
-        {
-        }
+        var address = $"https://localhost:{MockNewRelicApplication.Port}/v1/metrics/count";
+        TestLogger?.WriteLine($"[MockNewRelicFixture] Get collected OTLP Metrics count via: {address}");
+        return Convert.ToInt32(GetString(address));
     }
 
-    public class OtlpMetricsWithCollectorFixtureCoreNet8 : OtlpMetricsWithCollectorFixtureBase
+    public void ClearCollectedOTLPMetrics()
     {
-        public OtlpMetricsWithCollectorFixtureCoreNet8() : base("net8.0", true)
-        {
-        }
+        var address = $"https://localhost:{MockNewRelicApplication.Port}/v1/metrics/clear";
+        TestLogger?.WriteLine($"[MockNewRelicFixture] Clear collected OTLP Metrics via: {address}");
+        GetJson<string>(address);
     }
+}
 
-    public class OtlpMetricsWithCollectorFixtureFWLatest : OtlpMetricsWithCollectorFixtureFW481
+public class OtlpMetricsWithCollectorFixtureCoreLatest : OtlpMetricsWithCollectorFixtureCoreNet10
+{
+    public OtlpMetricsWithCollectorFixtureCoreLatest() : base()
     {
     }
+}
 
-    public class OtlpMetricsWithCollectorFixtureFW481 : OtlpMetricsWithCollectorFixtureBase
+public class OtlpMetricsWithCollectorFixtureCoreNet10 : OtlpMetricsWithCollectorFixtureBase
+{
+    public OtlpMetricsWithCollectorFixtureCoreNet10() : base("net10.0", true)
     {
-        public OtlpMetricsWithCollectorFixtureFW481() : base("net481", false)
-        {
-        }
     }
+}
 
-    public class OtlpMetricsWithCollectorFixtureFW472 : OtlpMetricsWithCollectorFixtureBase
+public class OtlpMetricsWithCollectorFixtureCoreNet8 : OtlpMetricsWithCollectorFixtureBase
+{
+    public OtlpMetricsWithCollectorFixtureCoreNet8() : base("net8.0", true)
     {
-        public OtlpMetricsWithCollectorFixtureFW472() : base("net472", false)
-        {
-        }
     }
+}
 
-    public class OtlpMetricsWithCollectorFixtureFW462 : OtlpMetricsWithCollectorFixtureBase
+public class OtlpMetricsWithCollectorFixtureFWLatest : OtlpMetricsWithCollectorFixtureFW481
+{
+}
+
+public class OtlpMetricsWithCollectorFixtureFW481 : OtlpMetricsWithCollectorFixtureBase
+{
+    public OtlpMetricsWithCollectorFixtureFW481() : base("net481", false)
     {
-        public OtlpMetricsWithCollectorFixtureFW462() : base("net462", false)
-        {
-        }
+    }
+}
+
+public class OtlpMetricsWithCollectorFixtureFW472 : OtlpMetricsWithCollectorFixtureBase
+{
+    public OtlpMetricsWithCollectorFixtureFW472() : base("net472", false)
+    {
+    }
+}
+
+public class OtlpMetricsWithCollectorFixtureFW462 : OtlpMetricsWithCollectorFixtureBase
+{
+    public OtlpMetricsWithCollectorFixtureFW462() : base("net462", false)
+    {
     }
 }

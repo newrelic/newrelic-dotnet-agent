@@ -3,213 +3,212 @@
 
 using System;
 
-namespace NewRelic.Agent.IntegrationTests.Shared
+namespace NewRelic.Agent.IntegrationTests.Shared;
+
+public class ElasticSearch9Configuration
 {
-    public class ElasticSearch9Configuration
+    private static string _elasticServer;
+    private static string _elasticUserName;
+    private static string _elasticPassword;
+
+    public static string ElasticServer
     {
-        private static string _elasticServer;
-        private static string _elasticUserName;
-        private static string _elasticPassword;
-
-        public static string ElasticServer
+        get
         {
-            get
+            if (_elasticServer == null)
             {
-                if (_elasticServer == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch9Tests");
-                        _elasticServer = testConfiguration["Server"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("ElasticServer configuration is invalid.", ex);
-                    }
+                    var testConfiguration =
+                        IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch9Tests");
+                    _elasticServer = testConfiguration["Server"];
                 }
+                catch (Exception ex)
+                {
+                    throw new Exception("ElasticServer configuration is invalid.", ex);
+                }
+            }
 
-                return _elasticServer;
-            }
-        }
-
-        public static string ElasticUserName
-        {
-            get
-            {
-                if (_elasticUserName == null)
-                {
-                    try
-                    {
-                        var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch9Tests");
-                        _elasticUserName = testConfiguration["UserName"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("ElasticServer configuration is invalid.", ex);
-                    }
-                }
-                return _elasticUserName;
-            }
-        }
-        public static string ElasticPassword
-        {
-            get
-            {
-                if (_elasticPassword == null)
-                {
-                    try
-                    {
-                        var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch9Tests");
-                        _elasticPassword = testConfiguration["Password"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("ElasticServer configuration is invalid.", ex);
-                    }
-                }
-                return _elasticPassword;
-            }
+            return _elasticServer;
         }
     }
-    public class ElasticSearch8Configuration
+
+    public static string ElasticUserName
     {
-        private static string _elasticServer;
-        private static string _elasticUserName;
-        private static string _elasticPassword;
-
-        public static string ElasticServer
+        get
         {
-            get
+            if (_elasticUserName == null)
             {
-                if (_elasticServer == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch8Tests");
-                        _elasticServer = testConfiguration["Server"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("ElasticServer configuration is invalid.", ex);
-                    }
+                    var testConfiguration =
+                        IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch9Tests");
+                    _elasticUserName = testConfiguration["UserName"];
                 }
-
-                return _elasticServer;
-            }
-        }
-
-        public static string ElasticUserName
-        {
-            get
-            {
-                if (_elasticUserName == null)
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch8Tests");
-                        _elasticUserName = testConfiguration["UserName"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("ElasticServer configuration is invalid.", ex);
-                    }
+                    throw new Exception("ElasticServer configuration is invalid.", ex);
                 }
-                return _elasticUserName;
             }
-        }
-        public static string ElasticPassword
-        {
-            get
-            {
-                if (_elasticPassword == null)
-                {
-                    try
-                    {
-                        var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch8Tests");
-                        _elasticPassword = testConfiguration["Password"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("ElasticServer configuration is invalid.", ex);
-                    }
-                }
-                return _elasticPassword;
-            }
+            return _elasticUserName;
         }
     }
-    public class ElasticSearch7Configuration
+    public static string ElasticPassword
     {
-        private static string _elasticServer;
-        private static string _elasticUserName;
-        private static string _elasticPassword;
-
-        public static string ElasticServer
+        get
         {
-            get
+            if (_elasticPassword == null)
             {
-                if (_elasticServer == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch7Tests");
-                        _elasticServer = testConfiguration["Server"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("ElasticServer configuration is invalid.", ex);
-                    }
+                    var testConfiguration =
+                        IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch9Tests");
+                    _elasticPassword = testConfiguration["Password"];
                 }
-
-                return _elasticServer;
+                catch (Exception ex)
+                {
+                    throw new Exception("ElasticServer configuration is invalid.", ex);
+                }
             }
+            return _elasticPassword;
         }
+    }
+}
+public class ElasticSearch8Configuration
+{
+    private static string _elasticServer;
+    private static string _elasticUserName;
+    private static string _elasticPassword;
 
-        public static string ElasticUserName
+    public static string ElasticServer
+    {
+        get
         {
-            get
+            if (_elasticServer == null)
             {
-                if (_elasticUserName == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch7Tests");
-                        _elasticUserName = testConfiguration["UserName"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("ElasticServer configuration is invalid.", ex);
-                    }
+                    var testConfiguration =
+                        IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch8Tests");
+                    _elasticServer = testConfiguration["Server"];
                 }
-                return _elasticUserName;
+                catch (Exception ex)
+                {
+                    throw new Exception("ElasticServer configuration is invalid.", ex);
+                }
             }
+
+            return _elasticServer;
         }
-        public static string ElasticPassword
+    }
+
+    public static string ElasticUserName
+    {
+        get
         {
-            get
+            if (_elasticUserName == null)
             {
-                if (_elasticPassword == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration =
-                            IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch7Tests");
-                        _elasticPassword = testConfiguration["Password"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("ElasticServer configuration is invalid.", ex);
-                    }
+                    var testConfiguration =
+                        IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch8Tests");
+                    _elasticUserName = testConfiguration["UserName"];
                 }
-                return _elasticPassword;
+                catch (Exception ex)
+                {
+                    throw new Exception("ElasticServer configuration is invalid.", ex);
+                }
             }
+            return _elasticUserName;
+        }
+    }
+    public static string ElasticPassword
+    {
+        get
+        {
+            if (_elasticPassword == null)
+            {
+                try
+                {
+                    var testConfiguration =
+                        IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch8Tests");
+                    _elasticPassword = testConfiguration["Password"];
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("ElasticServer configuration is invalid.", ex);
+                }
+            }
+            return _elasticPassword;
+        }
+    }
+}
+public class ElasticSearch7Configuration
+{
+    private static string _elasticServer;
+    private static string _elasticUserName;
+    private static string _elasticPassword;
+
+    public static string ElasticServer
+    {
+        get
+        {
+            if (_elasticServer == null)
+            {
+                try
+                {
+                    var testConfiguration =
+                        IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch7Tests");
+                    _elasticServer = testConfiguration["Server"];
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("ElasticServer configuration is invalid.", ex);
+                }
+            }
+
+            return _elasticServer;
+        }
+    }
+
+    public static string ElasticUserName
+    {
+        get
+        {
+            if (_elasticUserName == null)
+            {
+                try
+                {
+                    var testConfiguration =
+                        IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch7Tests");
+                    _elasticUserName = testConfiguration["UserName"];
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("ElasticServer configuration is invalid.", ex);
+                }
+            }
+            return _elasticUserName;
+        }
+    }
+    public static string ElasticPassword
+    {
+        get
+        {
+            if (_elasticPassword == null)
+            {
+                try
+                {
+                    var testConfiguration =
+                        IntegrationTestConfiguration.GetIntegrationTestConfiguration("ElasticSearch7Tests");
+                    _elasticPassword = testConfiguration["Password"];
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("ElasticServer configuration is invalid.", ex);
+                }
+            }
+            return _elasticPassword;
         }
     }
 }

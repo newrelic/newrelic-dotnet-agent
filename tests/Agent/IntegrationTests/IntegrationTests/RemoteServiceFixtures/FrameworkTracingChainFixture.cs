@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
+namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
+
+public class FrameworkTracingChainFixture : TracingChainFixture
 {
-    public class FrameworkTracingChainFixture : TracingChainFixture
+    public FrameworkTracingChainFixture() : base("BasicMvcApplication")
     {
-        public FrameworkTracingChainFixture() : base("BasicMvcApplication")
-        {
-        }
     }
 }

@@ -5,46 +5,45 @@
 using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
-namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
+namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
+
+public class OwinRemotingFixture : RemoteApplicationFixture
 {
-    public class OwinRemotingFixture : RemoteApplicationFixture
+    private const string ServerApplicationDirectoryName = @"OwinRemotingServer";
+    private const string ServerExecutableName = @"OwinRemotingServer.exe";
+    private const string ClientApplicationDirectoryName = @"OwinRemotingClient";
+    private const string ClientExecutableName = @"OwinRemotingClient.exe";
+    internal RemoteService OwinRemotingServerApplication { get; set; }
+
+    public OwinRemotingFixture() : base(new RemoteService(ClientApplicationDirectoryName, ClientExecutableName, ApplicationType.Bounded))
     {
-        private const string ServerApplicationDirectoryName = @"OwinRemotingServer";
-        private const string ServerExecutableName = @"OwinRemotingServer.exe";
-        private const string ClientApplicationDirectoryName = @"OwinRemotingClient";
-        private const string ClientExecutableName = @"OwinRemotingClient.exe";
-        internal RemoteService OwinRemotingServerApplication { get; set; }
+        var environmentVariables = new Dictionary<string, string>();
 
-        public OwinRemotingFixture() : base(new RemoteService(ClientApplicationDirectoryName, ClientExecutableName, ApplicationType.Bounded))
-        {
-            var environmentVariables = new Dictionary<string, string>();
+        OwinRemotingServerApplication = new RemoteService(ServerApplicationDirectoryName, ServerExecutableName, ApplicationType.Bounded);
+        OwinRemotingServerApplication.CopyToRemote();
+        OwinRemotingServerApplication.Start(string.Empty, environmentVariables, captureStandardOutput: false, doProfile: false);
+    }
 
-            OwinRemotingServerApplication = new RemoteService(ServerApplicationDirectoryName, ServerExecutableName, ApplicationType.Bounded);
-            OwinRemotingServerApplication.CopyToRemote();
-            OwinRemotingServerApplication.Start(string.Empty, environmentVariables, captureStandardOutput: false, doProfile: false);
-        }
+    public string GetObjectTcp()
+    {
+        var address = string.Format(@"http://{0}:{1}/Remote/GetObjectTcp", DestinationServerName, Port);
+        var result = GetStringAndAssertEqual(address, null);
 
-        public string GetObjectTcp()
-        {
-            var address = string.Format(@"http://{0}:{1}/Remote/GetObjectTcp", DestinationServerName, Port);
-            var result = GetStringAndAssertEqual(address, null);
+        return result;
+    }
 
-            return result;
-        }
+    public string GetObjectHttp()
+    {
+        var address = string.Format(@"http://{0}:{1}/Remote/GetObjectHttp", DestinationServerName, Port);
+        var result = GetStringAndAssertEqual(address, null);
 
-        public string GetObjectHttp()
-        {
-            var address = string.Format(@"http://{0}:{1}/Remote/GetObjectHttp", DestinationServerName, Port);
-            var result = GetStringAndAssertEqual(address, null);
+        return result;
+    }
 
-            return result;
-        }
-
-        public override void Dispose()
-        {
-            OwinRemotingServerApplication.Shutdown(true);
-            OwinRemotingServerApplication.Dispose();
-            base.Dispose();
-        }
+    public override void Dispose()
+    {
+        OwinRemotingServerApplication.Shutdown(true);
+        OwinRemotingServerApplication.Dispose();
+        base.Dispose();
     }
 }

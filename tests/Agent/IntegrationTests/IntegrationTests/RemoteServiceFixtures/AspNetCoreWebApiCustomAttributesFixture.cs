@@ -4,34 +4,32 @@
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
-namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
+namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
+
+public class AspNetCoreWebApiCustomAttributesFixture : RemoteApplicationFixture
 {
-    public class AspNetCoreWebApiCustomAttributesFixture : RemoteApplicationFixture
-    {
-        private const string ApplicationDirectoryName = "AspNetCoreWebApiCustomAttributesApplication";
-        private const string ExecutableName = "AspNetCoreWebApiCustomAttributesApplication.exe";
+    private const string ApplicationDirectoryName = "AspNetCoreWebApiCustomAttributesApplication";
+    private const string ExecutableName = "AspNetCoreWebApiCustomAttributesApplication.exe";
 
-        public AspNetCoreWebApiCustomAttributesFixture() :
-            base(new RemoteService(
-                ApplicationDirectoryName,
-                ExecutableName,
-                "net10.0",
-                ApplicationType.Bounded,
-                true,
-                true,
-                true))
-        {
-        }
-
-        public void Get()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/api/CustomAttributes";
-            GetStringAndAssertEqual(address, "success");
-        }
-    }
-    public class HSMAspNetCoreWebApiCustomAttributesFixture : AspNetCoreWebApiCustomAttributesFixture
+    public AspNetCoreWebApiCustomAttributesFixture() :
+        base(new RemoteService(
+            ApplicationDirectoryName,
+            ExecutableName,
+            "net10.0",
+            ApplicationType.Bounded,
+            true,
+            true,
+            true))
     {
-        public override string TestSettingCategory { get { return "HSM"; } }
     }
 
+    public void Get()
+    {
+        var address = $"http://{DestinationServerName}:{Port}/api/CustomAttributes";
+        GetStringAndAssertEqual(address, "success");
+    }
+}
+public class HSMAspNetCoreWebApiCustomAttributesFixture : AspNetCoreWebApiCustomAttributesFixture
+{
+    public override string TestSettingCategory { get { return "HSM"; } }
 }

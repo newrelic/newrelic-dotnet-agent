@@ -4,56 +4,55 @@
 
 using System;
 
-namespace NewRelic.Agent.IntegrationTests.Shared
+namespace NewRelic.Agent.IntegrationTests.Shared;
+
+public class MongoDbConfiguration
 {
-    public class MongoDbConfiguration
+    private static string _mongoDb3_2ConnectionString;
+    private static string _mongoDb6_0ConnectionString;
+
+    // example: "mongodb://1.2.3.4:4444"
+    public static string MongoDb3_2ConnectionString
     {
-        private static string _mongoDb3_2ConnectionString;
-        private static string _mongoDb6_0ConnectionString;
-
-        // example: "mongodb://1.2.3.4:4444"
-        public static string MongoDb3_2ConnectionString
+        get
         {
-            get
+            if (_mongoDb3_2ConnectionString == null)
             {
-                if (_mongoDb3_2ConnectionString == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MongoDBTests");
-                        _mongoDb3_2ConnectionString = testConfiguration["ConnectionString"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("MongoDb3_2ConnectionString configuration is invalid.", ex);
-                    }
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MongoDBTests");
+                    _mongoDb3_2ConnectionString = testConfiguration["ConnectionString"];
                 }
-
-                return _mongoDb3_2ConnectionString;
-            }
-        }
-
-        public static string MongoDb6_0ConnectionString
-        {
-            get
-            {
-                if (_mongoDb6_0ConnectionString == null)
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        // The name "MongoDB26Tests" is cruft leftover from when the associated tests only tested version 2.6 of the client driver
-                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MongoDB26Tests");
-                        _mongoDb6_0ConnectionString = testConfiguration["ConnectionString"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("MongoDb3_6ConnectionString configuration is invalid.", ex);
-                    }
+                    throw new Exception("MongoDb3_2ConnectionString configuration is invalid.", ex);
                 }
-
-                return _mongoDb6_0ConnectionString;
             }
-        }
 
+            return _mongoDb3_2ConnectionString;
+        }
     }
+
+    public static string MongoDb6_0ConnectionString
+    {
+        get
+        {
+            if (_mongoDb6_0ConnectionString == null)
+            {
+                try
+                {
+                    // The name "MongoDB26Tests" is cruft leftover from when the associated tests only tested version 2.6 of the client driver
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MongoDB26Tests");
+                    _mongoDb6_0ConnectionString = testConfiguration["ConnectionString"];
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("MongoDb3_6ConnectionString configuration is invalid.", ex);
+                }
+            }
+
+            return _mongoDb6_0ConnectionString;
+        }
+    }
+
 }

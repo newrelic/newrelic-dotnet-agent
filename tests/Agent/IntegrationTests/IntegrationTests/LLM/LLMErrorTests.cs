@@ -7,89 +7,87 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.LLM
+namespace NewRelic.Agent.IntegrationTests.LLM;
+
+public abstract class LlmErrorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class LlmErrorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-where TFixture : ConsoleDynamicMethodFixture
+    private readonly TFixture _fixture;
+    private const string _accessDeniedModel = "meta70";
+    private const string _badConfigModel = "meta13";
+    private string _prompt = "In one sentence, what is a large-language model?";
+
+    public LlmErrorTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly TFixture _fixture;
-        private const string _accessDeniedModel = "meta70";
-        private const string _badConfigModel = "meta13";
-        private string _prompt = "In one sentence, what is a large-language model?";
-
-        public LlmErrorTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
-            _fixture.TestLogger = output;
-            _fixture.AddActions(
-                setupConfiguration: () =>
-                {
-                    new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
-                        .ForceTransactionTraces()
-                        .EnableAiMonitoring()
-                        .SetLogLevel("finest");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2);
-                }
-            );
-
-            _fixture.AddCommand($"BedrockExerciser InvokeModel {_accessDeniedModel} {LLMHelpers.ConvertToBase64(_prompt)}");
-            _fixture.AddCommand($"BedrockExerciser InvokeModelWithError {_badConfigModel} {LLMHelpers.ConvertToBase64(_prompt)}");
-
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void BedrockErrorTest()
-        {
-            var customEvents = _fixture.AgentLog.GetCustomEvents();
-
-            var payloads = _fixture.AgentLog.GetErrorEventPayloads();
-            int errors = 0;
-            foreach (var payload in payloads)
+        _fixture = fixture;
+        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+        _fixture.TestLogger = output;
+        _fixture.AddActions(
+            setupConfiguration: () =>
             {
-                foreach (var error in payload.Events)
-                {
-                    Assert.NotNull(error.UserAttributes["error.code"]);
-                    Assert.NotNull(error.UserAttributes["http.statusCode"]);
-                    Assert.True(error.UserAttributes.ContainsKey("completion_id") || error.UserAttributes.ContainsKey("embedding_id"));
-                    errors++;
-                }
-            }
-            Assert.Equal(2, errors);
-
-            var promptEvents = customEvents.Where(evt => evt.Header.Type == "LlmChatCompletionMessage");
-            Assert.Equal(2, promptEvents.Count());
-
-            var completionEvents = customEvents.Where(evt => evt.Header.Type == "LlmChatCompletionSummary");
-            Assert.Equal(2, completionEvents.Count());
-            foreach (var evt  in completionEvents)
+                new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
+                    .ForceTransactionTraces()
+                    .EnableAiMonitoring()
+                    .SetLogLevel("finest");
+            },
+            exerciseApplication: () =>
             {
-                Assert.True((bool)evt.SafeGetAttribute("error"));
+                _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2);
             }
+        );
 
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.BedrockExerciser/InvokeModelWithError");
+        _fixture.AddCommand($"BedrockExerciser InvokeModel {_accessDeniedModel} {LLMHelpers.ConvertToBase64(_prompt)}");
+        _fixture.AddCommand($"BedrockExerciser InvokeModelWithError {_badConfigModel} {LLMHelpers.ConvertToBase64(_prompt)}");
 
-            Assert.NotNull(transactionEvent);
-        }
+        _fixture.Initialize();
     }
-    public class LlmErrorTests_CoreLatest : LlmErrorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+
+    [Fact]
+    public void BedrockErrorTest()
     {
-        public LlmErrorTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
+        var customEvents = _fixture.AgentLog.GetCustomEvents();
 
-    public class LlmErrorTests_FWLatest : LlmErrorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+        var payloads = _fixture.AgentLog.GetErrorEventPayloads();
+        int errors = 0;
+        foreach (var payload in payloads)
+        {
+            foreach (var error in payload.Events)
+            {
+                Assert.NotNull(error.UserAttributes["error.code"]);
+                Assert.NotNull(error.UserAttributes["http.statusCode"]);
+                Assert.True(error.UserAttributes.ContainsKey("completion_id") || error.UserAttributes.ContainsKey("embedding_id"));
+                errors++;
+            }
+        }
+        Assert.Equal(2, errors);
+
+        var promptEvents = customEvents.Where(evt => evt.Header.Type == "LlmChatCompletionMessage");
+        Assert.Equal(2, promptEvents.Count());
+
+        var completionEvents = customEvents.Where(evt => evt.Header.Type == "LlmChatCompletionSummary");
+        Assert.Equal(2, completionEvents.Count());
+        foreach (var evt  in completionEvents)
+        {
+            Assert.True((bool)evt.SafeGetAttribute("error"));
+        }
+
+        var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.BedrockExerciser/InvokeModelWithError");
+
+        Assert.NotNull(transactionEvent);
+    }
+}
+public class LlmErrorTests_CoreLatest : LlmErrorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public LlmErrorTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public LlmErrorTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
     }
+}
 
+public class LlmErrorTests_FWLatest : LlmErrorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public LlmErrorTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

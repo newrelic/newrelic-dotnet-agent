@@ -4,13 +4,12 @@
 
 using System;
 
-namespace OwinRemotingShared
+namespace OwinRemotingShared;
+
+public class MyMarshalByRefClass : MarshalByRefObject
 {
-    public class MyMarshalByRefClass : MarshalByRefObject
+    public int MyMethod()
     {
-        public int MyMethod()
-        {
-            return 666;
-        }
+        return 666;
     }
 }

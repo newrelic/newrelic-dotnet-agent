@@ -5,76 +5,75 @@
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.DistributedTracing
+namespace NewRelic.Agent.IntegrationTests.DistributedTracing;
+
+public class SpanEventsAreCreatedAttributesTest : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
 {
-    public class SpanEventsAreCreatedAttributesTest : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
+    private readonly RemoteServiceFixtures.DTBasicMVCApplicationFixture _fixture;
+
+    public SpanEventsAreCreatedAttributesTest(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly RemoteServiceFixtures.DTBasicMVCApplicationFixture _fixture;
+        _fixture = fixture;
+        _fixture.TestLogger = output;
 
-        public SpanEventsAreCreatedAttributesTest(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
+            {
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ForceTransactionTraces();
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.Initiate();
+            }
+        );
+        _fixture.Initialize();
+    }
+
+    [Fact]
+    public void Test()
+    {
+        var expectedAttributes = new List<string>()
         {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
+            "type",
+            "traceId",
+            "guid",
+            "transactionId",
+            "sampled",
+            "priority",
+            "timestamp",
+            "duration",
+            "name",
+            "category"
+        };
 
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ForceTransactionTraces();
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.Initiate();
-                }
-            );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
+        var expectedAgentAttributes = new List<string>()
         {
-            var expectedAttributes = new List<string>()
-            {
-                "type",
-                "traceId",
-                "guid",
-                "transactionId",
-                "sampled",
-                "priority",
-                "timestamp",
-                "duration",
-                "name",
-                "category"
-            };
+            "error.class",
+            "error.message"
+        };
 
-            var expectedAgentAttributes = new List<string>()
-            {
-                "error.class",
-                "error.message"
-            };
+        var unexpectedAttributes = new List<string>()
+        {
+            "parentId"
+        };
 
-            var unexpectedAttributes = new List<string>()
-            {
-                "parentId"
-            };
+        var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
+        var rootSpanEvent = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes.ContainsKey("nr.entryPoint"));
+        var nonRootSpanEvent = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes.ContainsKey("parentId"));
 
-            var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
-            var rootSpanEvent = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes.ContainsKey("nr.entryPoint"));
-            var nonRootSpanEvent = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes.ContainsKey("parentId"));
-
-            NrAssert.Multiple(
-                () => Assertions.SpanEventHasAttributes(expectedAttributes, SpanEventAttributeType.Intrinsic, rootSpanEvent),
-                () => Assertions.SpanEventDoesNotHaveAttributes(unexpectedAttributes, SpanEventAttributeType.Intrinsic, rootSpanEvent),
-                () => Assert.Empty(rootSpanEvent.GetByType(SpanEventAttributeType.User)),
-                () => Assertions.SpanEventHasAttributes(expectedAgentAttributes, SpanEventAttributeType.Agent, rootSpanEvent),
-                () => Assert.Equal(rootSpanEvent.IntrinsicAttributes["guid"], nonRootSpanEvent.IntrinsicAttributes["parentId"])
-            );
-        }
+        NrAssert.Multiple(
+            () => Assertions.SpanEventHasAttributes(expectedAttributes, SpanEventAttributeType.Intrinsic, rootSpanEvent),
+            () => Assertions.SpanEventDoesNotHaveAttributes(unexpectedAttributes, SpanEventAttributeType.Intrinsic, rootSpanEvent),
+            () => Assert.Empty(rootSpanEvent.GetByType(SpanEventAttributeType.User)),
+            () => Assertions.SpanEventHasAttributes(expectedAgentAttributes, SpanEventAttributeType.Agent, rootSpanEvent),
+            () => Assert.Equal(rootSpanEvent.IntrinsicAttributes["guid"], nonRootSpanEvent.IntrinsicAttributes["parentId"])
+        );
     }
 }

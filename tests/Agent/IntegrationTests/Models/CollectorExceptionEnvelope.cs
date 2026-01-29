@@ -4,15 +4,14 @@
 
 using System;
 
-namespace NewRelic.IntegrationTests.Models
-{
-    public class CollectorExceptionEnvelope
-    {
-        public readonly string Exception;
+namespace NewRelic.IntegrationTests.Models;
 
-        public CollectorExceptionEnvelope(Exception exception)
-        {
-            Exception = null;
-        }
+public class CollectorExceptionEnvelope
+{
+    public readonly string Exception;
+
+    public CollectorExceptionEnvelope(Exception exception)
+    {
+        Exception = null;
     }
 }

@@ -9,35 +9,35 @@ using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
+namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
+
+public class BasicWebService : RemoteApplicationFixture
 {
-    public class BasicWebService : RemoteApplicationFixture
+    private const string ApplicationDirectoryName = "BasicWebService";
+
+    public BasicWebService() : base(new RemoteWebApplication(ApplicationDirectoryName, ApplicationType.Bounded))
     {
-        private const string ApplicationDirectoryName = "BasicWebService";
+    }
 
-        public BasicWebService() : base(new RemoteWebApplication(ApplicationDirectoryName, ApplicationType.Bounded))
+    public void InvokeServiceHttp()
+    {
+        var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/HelloWorld";
+
+        using (var request = new HttpRequestMessage(HttpMethod.Post, address))
         {
-        }
+            request.Content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>());
 
-        public void InvokeServiceHttp()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/HelloWorld";
-
-            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+            using (var response = _httpClient.SendAsync(request).Result)
             {
-                request.Content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>());
-
-                using (var response = _httpClient.SendAsync(request).Result)
-                {
-                    var responseString = response.Content.ReadAsStringAsync().Result;
-                    Assert.Contains("Hello World", responseString);
-                }
+                var responseString = response.Content.ReadAsStringAsync().Result;
+                Assert.Contains("Hello World", responseString);
             }
         }
+    }
 
-        public void InvokeServiceSoap()
-        {
-            const string soapEnvelope =
+    public void InvokeServiceSoap()
+    {
+        const string soapEnvelope =
             @"<?xml version=""1.0"" encoding=""utf-8""?>
 			<soap12:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
 			    xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
@@ -47,38 +47,38 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 			    </soap12:Body>
 			</soap12:Envelope>";
 
-            var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/HelloWorld";
+        var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/HelloWorld";
 
-            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+        using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+        {
+            request.Content = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
+
+            using (var response = _httpClient.SendAsync(request).Result)
             {
-                request.Content = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
-
-                using (var response = _httpClient.SendAsync(request).Result)
-                {
-                    var responseData = response.Content.ReadAsStringAsync().Result;
-                    Assert.Contains("Hello World", responseData);
-                }
+                var responseData = response.Content.ReadAsStringAsync().Result;
+                Assert.Contains("Hello World", responseData);
             }
         }
+    }
 
-        public void ThrowExceptionHttp()
+    public void ThrowExceptionHttp()
+    {
+        var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/ThrowException";
+
+        using (var request = new HttpRequestMessage(HttpMethod.Post, address))
         {
-            var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/ThrowException";
+            request.Content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>());
 
-            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+            using (var response = _httpClient.SendAsync(request).Result)
             {
-                request.Content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>());
-
-                using (var response = _httpClient.SendAsync(request).Result)
-                {
-                    Assert.False(response.IsSuccessStatusCode);
-                }
+                Assert.False(response.IsSuccessStatusCode);
             }
         }
+    }
 
-        public void ThrowExceptionSoap()
-        {
-            const string soapEnvelope =
+    public void ThrowExceptionSoap()
+    {
+        const string soapEnvelope =
             @"<?xml version=""1.0"" encoding=""utf-8""?>
 			<soap12:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
 			    xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
@@ -88,16 +88,15 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 			    </soap12:Body>
 			</soap12:Envelope>";
 
-            var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/ThrowException";
+        var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/ThrowException";
 
-            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+        using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+        {
+            request.Content = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
+
+            using (var response = _httpClient.SendAsync(request).Result)
             {
-                request.Content = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
-
-                using (var response = _httpClient.SendAsync(request).Result)
-                {
-                    Assert.False(response.IsSuccessStatusCode);
-                }
+                Assert.False(response.IsSuccessStatusCode);
             }
         }
     }

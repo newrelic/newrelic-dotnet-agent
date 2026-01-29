@@ -5,47 +5,46 @@
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.CSP
+namespace NewRelic.Agent.IntegrationTests.CSP;
+
+public class HighSecurityModeServerDisabled : NewRelicIntegrationTest<RemoteServiceFixtures.OwinWebApiFixture>
 {
-    public class HighSecurityModeServerDisabled : NewRelicIntegrationTest<RemoteServiceFixtures.OwinWebApiFixture>
+
+    private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
+
+    public HighSecurityModeServerDisabled(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output) : base(fixture)
     {
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
+            {
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
 
-        private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.SetLogLevel("debug");
+                configModifier.SetHighSecurityMode(true);
+                configModifier.AddAttributesInclude("request.parameters.*");
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.GetData();
+                _fixture.Get();
+                _fixture.Get404();
+                _fixture.GetId();
+                _fixture.Post();
+            }
+        );
+        _fixture.Initialize();
+    }
 
-        public HighSecurityModeServerDisabled(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.SetLogLevel("debug");
-                    configModifier.SetHighSecurityMode(true);
-                    configModifier.AddAttributesInclude("request.parameters.*");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.GetData();
-                    _fixture.Get();
-                    _fixture.Get404();
-                    _fixture.GetId();
-                    _fixture.Post();
-                }
-            );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            // This test looks for the connect response body that was intended to be removed in P17, but was not.  If it does get removed this will fail.
-            // 12/14/23 - the response status changed from "Gone" to "Conflict". If this test fails in the future, be alert for it possibly changing back.
-            var notConnectedLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.ErrorResponseLogLinePrefixRegex + "Received HTTP status code Conflict *?");
-            Assert.NotNull(notConnectedLogLine);
-        }
+    [Fact]
+    public void Test()
+    {
+        // This test looks for the connect response body that was intended to be removed in P17, but was not.  If it does get removed this will fail.
+        // 12/14/23 - the response status changed from "Gone" to "Conflict". If this test fails in the future, be alert for it possibly changing back.
+        var notConnectedLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.ErrorResponseLogLinePrefixRegex + "Received HTTP status code Conflict *?");
+        Assert.NotNull(notConnectedLogLine);
     }
 }

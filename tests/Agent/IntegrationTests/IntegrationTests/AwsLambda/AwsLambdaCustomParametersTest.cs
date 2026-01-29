@@ -8,98 +8,97 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom
+namespace NewRelic.Agent.IntegrationTests.AwsLambda.Custom;
+
+public abstract class AwsLambdaCustomParametersTest<T> : NewRelicIntegrationTest<T> where T : LambdaCustomParametersFixtureBase
 {
-    public abstract class AwsLambdaCustomParametersTest<T> : NewRelicIntegrationTest<T> where T : LambdaCustomParametersFixtureBase
+    private readonly string _expectedTransactionName;
+    private readonly LambdaCustomParametersFixtureBase _fixture;
+
+    protected AwsLambdaCustomParametersTest(string expectedTransactionName, T fixture, ITestOutputHelper output)
+        : base(fixture)
     {
-        private readonly string _expectedTransactionName;
-        private readonly LambdaCustomParametersFixtureBase _fixture;
+        _expectedTransactionName = expectedTransactionName;
 
-        protected AwsLambdaCustomParametersTest(string expectedTransactionName, T fixture, ITestOutputHelper output)
-            : base(fixture)
-        {
-            _expectedTransactionName = expectedTransactionName;
-
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions(
-                exerciseApplication: () =>
-                {
-                    _fixture.EnqueueTrigger();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1));
-                }
-                );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var serverlessPayload = _fixture.AgentLog.GetServerlessPayloads().Single();
-            var customEventPayload = serverlessPayload.Telemetry.CustomEventsPayload;
-
-            Assert.Multiple(
-                () => Assert.Equal("$LATEST", serverlessPayload.Metadata.FunctionVersion),
-                () => ValidateServerlessPayload(serverlessPayload),
-                () => ValidateTraceHasNoParent(serverlessPayload)
-                );
-        }
-
-        private void ValidateServerlessPayload(ServerlessPayload serverlessPayload)
-        {
-            var transactionEvent = serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single();
-
-            var expectedMissingAgentAttributes = new[]
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions(
+            exerciseApplication: () =>
             {
-                // These attributes are expected to come from an ILambdaContext parameter which this lambda does not have
-                "aws.lambda.arn",
-                "aws.requestId",
-                // Unknown event types should omit the eventType attribute
-                "aws.lambda.eventSource.eventType"
-            };
-
-            Assert.Equal(_expectedTransactionName, transactionEvent.IntrinsicAttributes["name"]);
-
-            Assertions.TransactionEventDoesNotHaveAttributes(expectedMissingAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent);
-        }
-
-        private void ValidateTraceHasNoParent(ServerlessPayload serverlessPayload)
-        {
-            var entrySpan = serverlessPayload.Telemetry.SpanEventsPayload.SpanEvents.Single(s => (string)s.IntrinsicAttributes["name"] == _expectedTransactionName);
-
-            Assertions.SpanEventDoesNotHaveAttributes(["parentId"], SpanEventAttributeType.Intrinsic, entrySpan);
-        }
+                _fixture.EnqueueTrigger();
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1));
+            }
+        );
+        _fixture.Initialize();
     }
 
-    public class AwsLambdaCustomParametersTestCoreOldest : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureCoreOldest>
+    [Fact]
+    public void Test()
     {
-        public AwsLambdaCustomParametersTestCoreOldest(LambdaCustomParametersFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/StringInputAndOutput", fixture, output)
-        {
-        }
+        var serverlessPayload = _fixture.AgentLog.GetServerlessPayloads().Single();
+        var customEventPayload = serverlessPayload.Telemetry.CustomEventsPayload;
+
+        Assert.Multiple(
+            () => Assert.Equal("$LATEST", serverlessPayload.Metadata.FunctionVersion),
+            () => ValidateServerlessPayload(serverlessPayload),
+            () => ValidateTraceHasNoParent(serverlessPayload)
+        );
     }
 
-    public class AwsLambdaCustomParametersTestCoreLatest : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureCoreLatest>
+    private void ValidateServerlessPayload(ServerlessPayload serverlessPayload)
     {
-        public AwsLambdaCustomParametersTestCoreLatest(LambdaCustomParametersFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/StringInputAndOutput", fixture, output)
+        var transactionEvent = serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single();
+
+        var expectedMissingAgentAttributes = new[]
         {
-        }
+            // These attributes are expected to come from an ILambdaContext parameter which this lambda does not have
+            "aws.lambda.arn",
+            "aws.requestId",
+            // Unknown event types should omit the eventType attribute
+            "aws.lambda.eventSource.eventType"
+        };
+
+        Assert.Equal(_expectedTransactionName, transactionEvent.IntrinsicAttributes["name"]);
+
+        Assertions.TransactionEventDoesNotHaveAttributes(expectedMissingAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent);
     }
 
-    public class AwsLambdaCustomParametersAsyncTestCoreOldest : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureCoreOldest>
+    private void ValidateTraceHasNoParent(ServerlessPayload serverlessPayload)
     {
-        public AwsLambdaCustomParametersAsyncTestCoreOldest(LambdaCustomParametersAsyncFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/StringInputAndOutputAsync", fixture, output)
-        {
-        }
-    }
+        var entrySpan = serverlessPayload.Telemetry.SpanEventsPayload.SpanEvents.Single(s => (string)s.IntrinsicAttributes["name"] == _expectedTransactionName);
 
-    public class AwsLambdaCustomParametersAsyncTestCoreLatest : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureCoreLatest>
+        Assertions.SpanEventDoesNotHaveAttributes(["parentId"], SpanEventAttributeType.Intrinsic, entrySpan);
+    }
+}
+
+public class AwsLambdaCustomParametersTestCoreOldest : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureCoreOldest>
+{
+    public AwsLambdaCustomParametersTestCoreOldest(LambdaCustomParametersFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/StringInputAndOutput", fixture, output)
     {
-        public AwsLambdaCustomParametersAsyncTestCoreLatest(LambdaCustomParametersAsyncFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base("OtherTransaction/Lambda/StringInputAndOutputAsync", fixture, output)
-        {
-        }
+    }
+}
+
+public class AwsLambdaCustomParametersTestCoreLatest : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureCoreLatest>
+{
+    public AwsLambdaCustomParametersTestCoreLatest(LambdaCustomParametersFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/StringInputAndOutput", fixture, output)
+    {
+    }
+}
+
+public class AwsLambdaCustomParametersAsyncTestCoreOldest : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureCoreOldest>
+{
+    public AwsLambdaCustomParametersAsyncTestCoreOldest(LambdaCustomParametersAsyncFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/StringInputAndOutputAsync", fixture, output)
+    {
+    }
+}
+
+public class AwsLambdaCustomParametersAsyncTestCoreLatest : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureCoreLatest>
+{
+    public AwsLambdaCustomParametersAsyncTestCoreLatest(LambdaCustomParametersAsyncFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base("OtherTransaction/Lambda/StringInputAndOutputAsync", fixture, output)
+    {
     }
 }

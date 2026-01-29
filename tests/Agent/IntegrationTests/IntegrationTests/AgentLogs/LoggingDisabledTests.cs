@@ -7,78 +7,77 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.AgentLogs
+namespace NewRelic.Agent.IntegrationTests.AgentLogs;
+
+public abstract class LoggingDisabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class LoggingDisabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture : ConsoleDynamicMethodFixture
+    private readonly TFixture _fixture;
+
+    public LoggingDisabledTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly TFixture _fixture;
+        _fixture = fixture;
+        _fixture.SetTimeout(TimeSpan.FromMinutes(1));
+        _fixture.TestLogger = output;
+        _fixture.AgentLogExpected = false;
 
-        public LoggingDisabledTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(1));
-            _fixture.TestLogger = output;
-            _fixture.AgentLogExpected = false;
+        _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
+        _fixture.AddCommand($"RootCommands DelaySeconds 10");
 
-            _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
-            _fixture.AddCommand($"RootCommands DelaySeconds 10");
-
-            _fixture.AddActions
-            (
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-                    configModifier
+        _fixture.AddActions
+        (
+            setupConfiguration: () =>
+            {
+                var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+                configModifier
                     .SetLogLevel("debug");
 
-                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_LOG_ENABLED", "false");
+                _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_LOG_ENABLED", "false");
 
-                },
-                exerciseApplication: () =>
-                {
-                }
-            );
+            },
+            exerciseApplication: () =>
+            {
+            }
+        );
 
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void LogsDirShouldNotExist()
-        {
-            Assert.False(Directory.Exists(_fixture.RemoteApplication.DefaultLogFileDirectoryPath), "Logs are disabled so logs dir should not exist.");
-        }
+        _fixture.Initialize();
     }
 
-    public class LoggingDisabledFWLatestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    [Fact]
+    public void LogsDirShouldNotExist()
     {
-        public LoggingDisabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
+        Assert.False(Directory.Exists(_fixture.RemoteApplication.DefaultLogFileDirectoryPath), "Logs are disabled so logs dir should not exist.");
     }
+}
 
-    public class LoggingDisabledFW462Tests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFW462>
+public class LoggingDisabledFWLatestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public LoggingDisabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public LoggingDisabledFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
     }
+}
 
-    public class LoggingDisabledCoreLatestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+public class LoggingDisabledFW462Tests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFW462>
+{
+    public LoggingDisabledFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public LoggingDisabledCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
     }
+}
 
-    public class LoggingDisabledCoreOldestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+public class LoggingDisabledCoreLatestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public LoggingDisabledCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public LoggingDisabledCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
+    }
+}
+
+public class LoggingDisabledCoreOldestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public LoggingDisabledCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

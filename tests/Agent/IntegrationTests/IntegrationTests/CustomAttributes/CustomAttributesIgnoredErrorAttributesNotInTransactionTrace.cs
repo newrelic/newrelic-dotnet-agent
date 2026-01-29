@@ -6,75 +6,74 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.CustomAttributes
+namespace NewRelic.Agent.IntegrationTests.CustomAttributes;
+
+public class CustomAttributesIgnoredErrorAttributesNotInTransactionTrace : NewRelicIntegrationTest<RemoteServiceFixtures.CustomAttributesWebApi>
 {
-    public class CustomAttributesIgnoredErrorAttributesNotInTransactionTrace : NewRelicIntegrationTest<RemoteServiceFixtures.CustomAttributesWebApi>
+    private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
+
+    public CustomAttributesIgnoredErrorAttributesNotInTransactionTrace(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
-
-        public CustomAttributesIgnoredErrorAttributesNotInTransactionTrace(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ForceTransactionTraces();
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
-                    configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
-                    CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "errorCollector", "ignoreClasses" }, "errorClass", "System.ArithmeticException");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.Get404();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
-                }
-            );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var unexpectedTransactionTraceAttributes = new List<string>
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
             {
-                "key",
-                "foo",
-                "hey",
-                "faz",
-            };
-            var unexpectedTranscationEventAttributes = new List<string>
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ForceTransactionTraces();
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
+                CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "errorCollector", "ignoreClasses" }, "errorClass", "System.ArithmeticException");
+            },
+            exerciseApplication: () =>
             {
-                "key",
-                "foo",
-                "hey",
-                "faz",
-            };
+                _fixture.Get404();
+                _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
+            }
+        );
+        _fixture.Initialize();
+    }
 
-            var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
-            var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-            var transactionEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
+    [Fact]
+    public void Test()
+    {
+        var unexpectedTransactionTraceAttributes = new List<string>
+        {
+            "key",
+            "foo",
+            "hey",
+            "faz",
+        };
+        var unexpectedTranscationEventAttributes = new List<string>
+        {
+            "key",
+            "foo",
+            "hey",
+            "faz",
+        };
 
-            NrAssert.Multiple
-            (
-                () => Assert.NotNull(transactionSample),
-                () => Assert.NotNull(transactionEvent)
-            );
+        var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
+        var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
+        var transactionEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
 
-            NrAssert.Multiple
-            (
-                () => Assert.Null(errorTrace),
-                () => Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample),
-                () => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedTranscationEventAttributes, TransactionEventAttributeType.User, transactionEvent)
-            );
-        }
+        NrAssert.Multiple
+        (
+            () => Assert.NotNull(transactionSample),
+            () => Assert.NotNull(transactionEvent)
+        );
+
+        NrAssert.Multiple
+        (
+            () => Assert.Null(errorTrace),
+            () => Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample),
+            () => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedTranscationEventAttributes, TransactionEventAttributeType.User, transactionEvent)
+        );
     }
 }

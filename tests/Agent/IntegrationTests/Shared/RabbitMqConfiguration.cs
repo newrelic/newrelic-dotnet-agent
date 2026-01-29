@@ -3,52 +3,51 @@
 
 
 
-namespace NewRelic.Agent.IntegrationTests.Shared
+namespace NewRelic.Agent.IntegrationTests.Shared;
+
+public class RabbitMqConfiguration
 {
-    public class RabbitMqConfiguration
+    private static string _rabbitMqServerIp;
+    private static string _rabbitMqUsername;
+    private static string _rabbitMqPassword;
+
+    public static string RabbitMqServerIp
     {
-        private static string _rabbitMqServerIp;
-        private static string _rabbitMqUsername;
-        private static string _rabbitMqPassword;
-
-        public static string RabbitMqServerIp
+        get
         {
-            get
+            if (_rabbitMqServerIp == null)
             {
-                if (_rabbitMqServerIp == null)
-                {
-                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("RabbitMqTests");
-                    _rabbitMqServerIp = testConfiguration["Server"];
-                }
-
-                return _rabbitMqServerIp;
+                var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("RabbitMqTests");
+                _rabbitMqServerIp = testConfiguration["Server"];
             }
+
+            return _rabbitMqServerIp;
         }
-        public static string RabbitMqUsername
+    }
+    public static string RabbitMqUsername
+    {
+        get
         {
-            get
+            if (_rabbitMqUsername == null)
             {
-                if (_rabbitMqUsername == null)
-                {
-                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("RabbitMqTests");
-                    _rabbitMqUsername = testConfiguration["Username"];
-                }
-
-                return _rabbitMqUsername;
+                var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("RabbitMqTests");
+                _rabbitMqUsername = testConfiguration["Username"];
             }
+
+            return _rabbitMqUsername;
         }
-        public static string RabbitMqPassword
+    }
+    public static string RabbitMqPassword
+    {
+        get
         {
-            get
+            if (_rabbitMqPassword == null)
             {
-                if (_rabbitMqPassword == null)
-                {
-                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("RabbitMqTests");
-                    _rabbitMqPassword = testConfiguration["Password"];
-                }
-
-                return _rabbitMqPassword;
+                var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("RabbitMqTests");
+                _rabbitMqPassword = testConfiguration["Password"];
             }
+
+            return _rabbitMqPassword;
         }
     }
 }

@@ -7,103 +7,102 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
+namespace NewRelic.Agent.IntegrationTests.InfiniteTracing;
+
+public abstract class InfiniteTracingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class InfiniteTracingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture : ConsoleDynamicMethodFixture
+    private readonly TFixture _fixture;
+
+    const int ExpectedSentCount = 2;
+
+    public InfiniteTracingTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly TFixture _fixture;
+        _fixture = fixture;
+        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+        _fixture.TestLogger = output;
 
-        const int ExpectedSentCount = 2;
+        _fixture.AddCommand("InfiniteTracingTester StartAgent");
 
-        public InfiniteTracingTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
-            _fixture.TestLogger = output;
+        _fixture.AddActions(
+            setupConfiguration: () =>
+            {
+                var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
-            _fixture.AddCommand("InfiniteTracingTester StartAgent");
-
-            _fixture.AddActions(
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-
-                    configModifier.ForceTransactionTraces()
+                configModifier.ForceTransactionTraces()
                     .EnableDistributedTrace()
                     .EnableInfiniteTracing(_fixture.TestConfiguration.TraceObserverUrl, _fixture.TestConfiguration.TraceObserverPort)
                     .SetLogLevel("finest");
-                },
-                exerciseApplication: () =>
-                {
-                    // Wait for 8T to connect
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanStreamingServiceStreamConnectedLogLineRegex, TimeSpan.FromSeconds(15));
-                    // Now send the command to make the 8T Span
-                    _fixture.SendCommand("InfiniteTracingTester Make8TSpan");
-                    // Now wait to see that the 8T spans were sent successfully
-                    _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullySentLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
-                }
-
-            );
-
-            _fixture.Initialize();
-        }
-
-        [SkipOnAlpineFact("See https://github.com/newrelic/newrelic-dotnet-agent/issues/289")]
-        public void Test()
-        {
-            //1 span count for the Make8TSpan method, another span count for the root span.
-            var expectedSeenCount = 2;
-
-            var actualMetrics = new List<Assertions.ExpectedMetric>
+            },
+            exerciseApplication: () =>
             {
-                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", CallCountAllHarvests = expectedSeenCount },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", CallCountAllHarvests = ExpectedSentCount },
-            };
+                // Wait for 8T to connect
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanStreamingServiceStreamConnectedLogLineRegex, TimeSpan.FromSeconds(15));
+                // Now send the command to make the 8T Span
+                _fixture.SendCommand("InfiniteTracingTester Make8TSpan");
+                // Now wait to see that the 8T spans were sent successfully
+                _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullySentLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
+            }
 
-            var metrics = _fixture.AgentLog.GetMetrics();
-            Assertions.MetricsExist(actualMetrics, metrics);
-        }
+        );
+
+        _fixture.Initialize();
     }
 
-    public class InfiniteTracingFWLatestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    [SkipOnAlpineFact("See https://github.com/newrelic/newrelic-dotnet-agent/issues/289")]
+    public void Test()
     {
-        public InfiniteTracingFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
+        //1 span count for the Make8TSpan method, another span count for the root span.
+        var expectedSeenCount = 2;
+
+        var actualMetrics = new List<Assertions.ExpectedMetric>
         {
-        }
+            new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", CallCountAllHarvests = expectedSeenCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", CallCountAllHarvests = ExpectedSentCount },
+        };
+
+        var metrics = _fixture.AgentLog.GetMetrics();
+        Assertions.MetricsExist(actualMetrics, metrics);
     }
+}
 
-
-    public class InfiniteTracingFW471Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
+public class InfiniteTracingFWLatestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public InfiniteTracingFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public InfiniteTracingFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
     }
+}
 
-    public class InfiniteTracingFW462Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW462>
+
+public class InfiniteTracingFW471Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
+{
+    public InfiniteTracingFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public InfiniteTracingFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
     }
+}
 
-    public class InfiniteTracingNetCoreLatestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+public class InfiniteTracingFW462Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW462>
+{
+    public InfiniteTracingFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public InfiniteTracingNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
     }
+}
 
-    public class InfiniteTracingNetCoreOldestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+public class InfiniteTracingNetCoreLatestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public InfiniteTracingNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public InfiniteTracingNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
+    }
+}
+
+public class InfiniteTracingNetCoreOldestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public InfiniteTracingNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

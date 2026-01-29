@@ -1,35 +1,34 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.IntegrationTests.Shared
+namespace NewRelic.Agent.IntegrationTests.Shared;
+
+public class AwsConfiguration
 {
-    public class AwsConfiguration
+    public static string AwsAccessKeyId
     {
-        public static string AwsAccessKeyId
+        get
         {
-            get
-            {
-                var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("");
-                return testConfiguration.DefaultSetting.AwsAccessKeyId;
-            }
+            var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("");
+            return testConfiguration.DefaultSetting.AwsAccessKeyId;
         }
+    }
 
-        public static string AwsSecretAccessKey
+    public static string AwsSecretAccessKey
+    {
+        get
         {
-            get
-            {
-                var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("");
-                return testConfiguration.DefaultSetting.AwsSecretAccessKey;
-            }
+            var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("");
+            return testConfiguration.DefaultSetting.AwsSecretAccessKey;
         }
+    }
 
-        public static string AwsRegion
+    public static string AwsRegion
+    {
+        get
         {
-            get
-            {
-                var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("");
-                return testConfiguration.DefaultSetting.AwsRegion;
-            }
+            var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("");
+            return testConfiguration.DefaultSetting.AwsRegion;
         }
     }
 }
