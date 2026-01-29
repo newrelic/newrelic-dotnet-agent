@@ -51,7 +51,7 @@ public class ServerlessModePayloadManager : IServerlessModePayloadManager
                 var payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
                 if (_fileWrapper.Exists(path))
                 {
-                    using (var fs = _fileWrapper.OpenWrite(path))
+                    using (var fs = _fileWrapper.CreateOpenOverwrite(path))
                     {
                         fs.Write(payloadBytes, 0, payloadBytes.Length);
                         fs.Flush(true);
