@@ -15,173 +15,172 @@ using NUnit.Framework;
 using Telerik.JustMock;
 
 
-namespace NewRelic.Agent.Core.Utilization
+namespace NewRelic.Agent.Core.Utilization;
+
+[TestFixture]
+public class VendorInfoTests
 {
+    private IConfiguration _configuration;
+    private IAgentHealthReporter _agentHealthReporter;
+    private IEnvironment _environment;
+    private VendorHttpApiRequestor _vendorHttpApiRequestor;
+    private IFileWrapper _fileWrapper;
 
-    [TestFixture]
-    public class VendorInfoTests
+    private const string PcfInstanceGuid = @"CF_INSTANCE_GUID";
+    private const string PcfInstanceIp = @"CF_INSTANCE_IP";
+    private const string PcfMemoryLimit = @"MEMORY_LIMIT";
+    private const string KubernetesServiceHost = @"KUBERNETES_SERVICE_HOST";
+    private const string AwsEcsMetadataV3EnvVar = "ECS_CONTAINER_METADATA_URI";
+    private const string AwsEcsMetadataV4EnvVar = "ECS_CONTAINER_METADATA_URI_V4";
+    private const string AzureAppServiceWebSiteOwnerName = "WEBSITE_OWNER_NAME";
+    private const string AzureAppServiceWebSiteResourceGroup = "WEBSITE_RESOURCE_GROUP";
+    private const string AzureAppServiceWebSiteSiteName = "WEBSITE_SITE_NAME";
+
+    [SetUp]
+    public void Setup()
     {
-        private IConfiguration _configuration;
-        private IAgentHealthReporter _agentHealthReporter;
-        private IEnvironment _environment;
-        private VendorHttpApiRequestor _vendorHttpApiRequestor;
-        private IFileWrapper _fileWrapper;
+        _configuration = Mock.Create<IConfiguration>();
+        _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
+        _environment = Mock.Create<IEnvironment>();
+        _vendorHttpApiRequestor = Mock.Create<VendorHttpApiRequestor>();
+        _fileWrapper = Mock.Create<IFileWrapper>();
+    }
 
-        private const string PcfInstanceGuid = @"CF_INSTANCE_GUID";
-        private const string PcfInstanceIp = @"CF_INSTANCE_IP";
-        private const string PcfMemoryLimit = @"MEMORY_LIMIT";
-        private const string KubernetesServiceHost = @"KUBERNETES_SERVICE_HOST";
-        private const string AwsEcsMetadataV3EnvVar = "ECS_CONTAINER_METADATA_URI";
-        private const string AwsEcsMetadataV4EnvVar = "ECS_CONTAINER_METADATA_URI_V4";
-        private const string AzureAppServiceWebSiteOwnerName = "WEBSITE_OWNER_NAME";
-        private const string AzureAppServiceWebSiteResourceGroup = "WEBSITE_RESOURCE_GROUP";
-        private const string AzureAppServiceWebSiteSiteName = "WEBSITE_SITE_NAME";
+    [Test]
+    public void GetVendors_Returns_Empty_Dictionary_When_Detect_True_And_Data_Unavailable()
+    {
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        Mock.Arrange(() => _configuration.UtilizationDetectAzure).Returns(true);
+        Mock.Arrange(() => _configuration.UtilizationDetectGcp).Returns(true);
+        Mock.Arrange(() => _configuration.UtilizationDetectPcf).Returns(true);
+        Mock.Arrange(() => _configuration.UtilizationDetectDocker).Returns(true);
+        Mock.Arrange(() => _configuration.UtilizationDetectAzureFunction).Returns(true);
 
-        [SetUp]
-        public void Setup()
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var vendors = vendorInfo.GetVendors();
+        Assert.That(vendors.Any(), Is.False);
+    }
+
+    [Test]
+    public void GetVendors_Returns_Empty_Dictionary_When_Detect_False()
+    {
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var vendors = vendorInfo.GetVendors();
+        Assert.That(vendors.Any(), Is.False);
+    }
+
+    [TestCase("?", "location", "azure", null)]
+    [TestCase("westus2", "location", "azure", "westus2")]
+    [TestCase("<script>do something </script>", "zone", "gcp", null)]
+    [TestCase("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd260", "zone", "aws", "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")]
+    [TestCase("10.96.0.1", "kubernetes_service_host", "kubernetes", "10.96.0.1")]
+    public void GetVendors_NormalizeAndValidateMetadata(string metadataValue, string metadataField, string vendorName, string expectedResponse)
+    {
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var result = vendorInfo.NormalizeAndValidateMetadata(metadataValue, metadataField, vendorName);
+
+        if (expectedResponse == null)
         {
-            _configuration = Mock.Create<IConfiguration>();
-            _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
-            _environment = Mock.Create<IEnvironment>();
-            _vendorHttpApiRequestor = Mock.Create<VendorHttpApiRequestor>();
-            _fileWrapper = Mock.Create<IFileWrapper>();
+            Assert.That(result, Is.Null);
         }
-
-        [Test]
-        public void GetVendors_Returns_Empty_Dictionary_When_Detect_True_And_Data_Unavailable()
+        else
         {
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            Mock.Arrange(() => _configuration.UtilizationDetectAzure).Returns(true);
-            Mock.Arrange(() => _configuration.UtilizationDetectGcp).Returns(true);
-            Mock.Arrange(() => _configuration.UtilizationDetectPcf).Returns(true);
-            Mock.Arrange(() => _configuration.UtilizationDetectDocker).Returns(true);
-            Mock.Arrange(() => _configuration.UtilizationDetectAzureFunction).Returns(true);
-
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var vendors = vendorInfo.GetVendors();
-            Assert.That(vendors.Any(), Is.False);
+            Assert.That(result, Is.EqualTo(expectedResponse));
         }
+    }
 
-        [Test]
-        public void GetVendors_Returns_Empty_Dictionary_When_Detect_False()
-        {
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var vendors = vendorInfo.GetVendors();
-            Assert.That(vendors.Any(), Is.False);
-        }
-
-        [TestCase("?", "location", "azure", null)]
-        [TestCase("westus2", "location", "azure", "westus2")]
-        [TestCase("<script>do something </script>", "zone", "gcp", null)]
-        [TestCase("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd260", "zone", "aws", "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")]
-        [TestCase("10.96.0.1", "kubernetes_service_host", "kubernetes", "10.96.0.1")]
-        public void GetVendors_NormalizeAndValidateMetadata(string metadataValue, string metadataField, string vendorName, string expectedResponse)
-        {
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var result = vendorInfo.NormalizeAndValidateMetadata(metadataValue, metadataField, vendorName);
-
-            if (expectedResponse == null)
-            {
-                Assert.That(result, Is.Null);
-            }
-            else
-            {
-                Assert.That(result, Is.EqualTo(expectedResponse));
-            }
-        }
-
-        [Test]
-        public void GetVendors_ParseAwsVendorInfo_Complete()
-        {
-            var json = @"{
+    [Test]
+    public void GetVendors_ParseAwsVendorInfo_Complete()
+    {
+        var json = @"{
 							""availabilityZone"" : ""us - east - 1d"",
 							""instanceId"" : ""i-1234567890abcdef0"",
 							""instanceType"" : ""t1.micro""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
 
-            Assert.That(model, Is.Not.Null);
-            Assert.Multiple(() =>
-            {
-                Assert.That(model.InstanceId, Is.EqualTo("i-1234567890abcdef0"));
-                Assert.That(model.InstanceType, Is.EqualTo("t1.micro"));
-                Assert.That(model.AvailabilityZone, Is.EqualTo("us - east - 1d"));
-            });
-        }
-
-        [Test]
-        public void GetVendors_ParseAwsVendorInfo_MissingInvalidValues()
+        Assert.That(model, Is.Not.Null);
+        Assert.Multiple(() =>
         {
-            var json = @"{
+            Assert.That(model.InstanceId, Is.EqualTo("i-1234567890abcdef0"));
+            Assert.That(model.InstanceType, Is.EqualTo("t1.micro"));
+            Assert.That(model.AvailabilityZone, Is.EqualTo("us - east - 1d"));
+        });
+    }
+
+    [Test]
+    public void GetVendors_ParseAwsVendorInfo_MissingInvalidValues()
+    {
+        var json = @"{
 							""instanceId"" : ""i-1234567890abcdef0"",
 							""instanceType"" : ""t1.$micro""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
 
-            Assert.That(model, Is.Null);
-        }
+        Assert.That(model, Is.Null);
+    }
 
-        [Test]
-        public void GetVendors_ParseAwsVendorInfo_InvalidJson()
-        {
-            var json = @"{  I am not valid json. Deal with it.
+    [Test]
+    public void GetVendors_ParseAwsVendorInfo_InvalidJson()
+    {
+        var json = @"{  I am not valid json. Deal with it.
 							""availabilityZone"" : ""us - east - 1d"",
 							""instanceId"" : ""i-1234567890abcdef0"",
 							""instanceType"" : ""t1.micro""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = vendorInfo.ParseAwsVendorInfo(json);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = vendorInfo.ParseAwsVendorInfo(json);
 
-            Assert.That(model, Is.Null);
-        }
+        Assert.That(model, Is.Null);
+    }
 
-        [Test]
-        public void GetVendors_ParseAzureVendorInfo_Complete()
-        {
-            var json = @"{
+    [Test]
+    public void GetVendors_ParseAzureVendorInfo_Complete()
+    {
+        var json = @"{
 							  ""location"": ""CentralUS"",
 							  ""name"": ""IMDSCanary"",
 							  ""vmId"": ""5c08b38e-4d57-4c23-ac45-aca61037f084"",
 							  ""vmSize"": ""Standard_DS2""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
-            Assert.That(model, Is.Not.Null);
-            Assert.Multiple(() =>
-            {
-                Assert.That(model.Location, Is.EqualTo("CentralUS"));
-                Assert.That(model.Name, Is.EqualTo("IMDSCanary"));
-                Assert.That(model.VmId, Is.EqualTo("5c08b38e-4d57-4c23-ac45-aca61037f084"));
-                Assert.That(model.VmSize, Is.EqualTo("Standard_DS2"));
-            });
-        }
-
-        [Test]
-        public void GetVendors_ParseAzureVendorInfo_MissingInvalidValues()
+        Assert.That(model, Is.Not.Null);
+        Assert.Multiple(() =>
         {
-            var json = @"{
+            Assert.That(model.Location, Is.EqualTo("CentralUS"));
+            Assert.That(model.Name, Is.EqualTo("IMDSCanary"));
+            Assert.That(model.VmId, Is.EqualTo("5c08b38e-4d57-4c23-ac45-aca61037f084"));
+            Assert.That(model.VmSize, Is.EqualTo("Standard_DS2"));
+        });
+    }
+
+    [Test]
+    public void GetVendors_ParseAzureVendorInfo_MissingInvalidValues()
+    {
+        var json = @"{
 							  ""location"": ""CentralUS"",
 							  ""name"": ""IMDS:Canary"",
 							  ""vmId"": ""5c08b38e-4d57-4c23-ac45-aca61037f084""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
-            Assert.That(model, Is.Null);
-        }
+        Assert.That(model, Is.Null);
+    }
 
-        [Test]
-        public void GetVendors_ParseAzureVendorInfo_InvalidJson()
-        {
-            var json = @"{
+    [Test]
+    public void GetVendors_ParseAzureVendorInfo_InvalidJson()
+    {
+        var json = @"{
 							  I am not valid json. Deal with it.
 							  ""location"": ""CentralUS"",
 							  ""name"": ""IMDSCanary"",
@@ -189,121 +188,121 @@ namespace NewRelic.Agent.Core.Utilization
 							  ""vmSize"": ""Standard_DS2""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
-            Assert.That(model, Is.Null);
-        }
+        Assert.That(model, Is.Null);
+    }
 
-        [Test]
-        public void GetVendors_ParseGcpVendorInfo_Complete()
-        {
-            var json = @"{
+    [Test]
+    public void GetVendors_ParseGcpVendorInfo_Complete()
+    {
+        var json = @"{
 							""id"": 3161347020215157000,
 							""machineType"": ""projects / 492690098729 / machineTypes / custom - 1 - 1024"",
 							""name"": ""aef-default-20170501t160547-7gh8"",
 							""zone"": ""projects/492690098729/zones/us-central1-c""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
-            Assert.That(model, Is.Not.Null);
-            Assert.Multiple(() =>
-            {
-                Assert.That(model.Id, Is.EqualTo("3161347020215157000"));
-                Assert.That(model.MachineType, Is.EqualTo("custom - 1 - 1024"));
-                Assert.That(model.Name, Is.EqualTo("aef-default-20170501t160547-7gh8"));
-                Assert.That(model.Zone, Is.EqualTo("us-central1-c"));
-            });
-        }
-
-        [Test]
-        public void GetVendors_ParseGcpVendorInfo_MissingInvalidValues()
+        Assert.That(model, Is.Not.Null);
+        Assert.Multiple(() =>
         {
-            var json = @"{
+            Assert.That(model.Id, Is.EqualTo("3161347020215157000"));
+            Assert.That(model.MachineType, Is.EqualTo("custom - 1 - 1024"));
+            Assert.That(model.Name, Is.EqualTo("aef-default-20170501t160547-7gh8"));
+            Assert.That(model.Zone, Is.EqualTo("us-central1-c"));
+        });
+    }
+
+    [Test]
+    public void GetVendors_ParseGcpVendorInfo_MissingInvalidValues()
+    {
+        var json = @"{
 							""id"": 3161347020215157000,
 							""machineType"": ""projects / 492690098729 / machineTypes / custom - 1 - 1024"",
 							""name"": ""aef-default-20170501t160547-7gh8?""
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
-            Assert.That(model, Is.Null);
-        }
+        Assert.That(model, Is.Null);
+    }
 
-        [Test]
-        public void GetVendors_ParseGcpVendorInfo_InvalidJson()
-        {
-            var json = @"{
+    [Test]
+    public void GetVendors_ParseGcpVendorInfo_InvalidJson()
+    {
+        var json = @"{
 							""id"": 3161347020215157000,
 							""machineType"": ""projects / 492690098729 / machineTypes / custom - 1 - 1024"",
 							""name"": ""aef-default-20170501t160547-7gh8""
 							I'm not valid json. Deal with it.
 						}";
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
-            Assert.That(model, Is.Null);
-        }
+        Assert.That(model, Is.Null);
+    }
 
-        [Test]
-        public void GetVendors_GetPcfVendorInfo_Complete()
+    [Test]
+    public void GetVendors_GetPcfVendorInfo_Complete()
+    {
+        SetEnvironmentVariable(PcfInstanceGuid, "b977d090-83db-4bdb-793a-bb77");
+        SetEnvironmentVariable(PcfInstanceIp, "10.10.147.130");
+        SetEnvironmentVariable(PcfMemoryLimit, "1024m");
+
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
+
+        Assert.That(model, Is.Not.Null);
+        Assert.Multiple(() =>
         {
-            SetEnvironmentVariable(PcfInstanceGuid, "b977d090-83db-4bdb-793a-bb77");
-            SetEnvironmentVariable(PcfInstanceIp, "10.10.147.130");
-            SetEnvironmentVariable(PcfMemoryLimit, "1024m");
+            Assert.That(model.CfInstanceGuid, Is.EqualTo("b977d090-83db-4bdb-793a-bb77"));
+            Assert.That(model.CfInstanceIp, Is.EqualTo("10.10.147.130"));
+            Assert.That(model.MemoryLimit, Is.EqualTo("1024m"));
+        });
+    }
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
+    [Test]
+    public void GetVendors_GetPcfVendorInfo_None()
+    {
+        SetEnvironmentVariable(PcfInstanceGuid, null);
+        SetEnvironmentVariable(PcfInstanceIp, null);
+        SetEnvironmentVariable(PcfMemoryLimit, null);
 
-            Assert.That(model, Is.Not.Null);
-            Assert.Multiple(() =>
-            {
-                Assert.That(model.CfInstanceGuid, Is.EqualTo("b977d090-83db-4bdb-793a-bb77"));
-                Assert.That(model.CfInstanceIp, Is.EqualTo("10.10.147.130"));
-                Assert.That(model.MemoryLimit, Is.EqualTo("1024m"));
-            });
-        }
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
 
-        [Test]
-        public void GetVendors_GetPcfVendorInfo_None()
-        {
-            SetEnvironmentVariable(PcfInstanceGuid, null);
-            SetEnvironmentVariable(PcfInstanceIp, null);
-            SetEnvironmentVariable(PcfMemoryLimit, null);
+        Assert.That(model, Is.Null);
+    }
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
+    [Test]
+    public void GetVendors_GetKubernetesVendorInfo_Complete()
+    {
+        var serviceHost = "10.96.0.1";
+        SetEnvironmentVariable(KubernetesServiceHost, serviceHost);
 
-            Assert.That(model, Is.Null);
-        }
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
 
-        [Test]
-        public void GetVendors_GetKubernetesVendorInfo_Complete()
-        {
-            var serviceHost = "10.96.0.1";
-            SetEnvironmentVariable(KubernetesServiceHost, serviceHost);
+        Assert.That(model, Is.Not.Null);
+        Assert.That(model.KubernetesServiceHost, Is.EqualTo(serviceHost));
+    }
 
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
+    [Test]
+    public void GetVendors_GetKubernetesVendorInfo_None()
+    {
+        SetEnvironmentVariable(KubernetesServiceHost, null);
 
-            Assert.That(model, Is.Not.Null);
-            Assert.That(model.KubernetesServiceHost, Is.EqualTo(serviceHost));
-        }
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
 
-        [Test]
-        public void GetVendors_GetKubernetesVendorInfo_None()
-        {
-            SetEnvironmentVariable(KubernetesServiceHost, null);
-
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
-
-            Assert.That(model, Is.Null);
-        }
+        Assert.That(model, Is.Null);
+    }
 
 #if NET
         [Test]
@@ -491,613 +490,612 @@ namespace NewRelic.Agent.Core.Utilization
         }
 #endif
 
-        [Test]
-        public void GetVendors_CapturesEcs_WhenAwsExists()
+    [Test]
+    public void GetVendors_CapturesEcs_WhenAwsExists()
+    {
+        // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
+        var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
+        var ecsUri = $"http://169.254.170.2/v4/{dockerId}";
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.Matches<Uri>(u => u.OriginalString == ecsUri), Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
+            {
+                "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
+                "Name": "fargateapp",
+                "DockerName": "fargateapp",
+                "Image": "123456789012.dkr.ecr.us-west-2.amazonaws.com/fargatetest:latest",
+                "ImageID": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
+                "Labels": {
+                    "com.amazonaws.ecs.cluster": "arn:aws:ecs:us-west-2:123456789012:cluster/testcluster",
+                    "com.amazonaws.ecs.container-name": "fargateapp",
+                    "com.amazonaws.ecs.task-arn": "arn:aws:ecs:us-west-2:123456789012:task/testcluster/1e1698469422439ea356071e581e8545",
+                    "com.amazonaws.ecs.task-definition-family": "fargatetestapp",
+                    "com.amazonaws.ecs.task-definition-version": "7"
+                },
+                "DesiredStatus": "RUNNING",
+                "KnownStatus": "RUNNING",
+                "Limits": {
+                    "CPU": 2
+                },
+                "CreatedAt": "2024-04-25T17:38:31.073208914Z",
+                "StartedAt": "2024-04-25T17:38:31.073208914Z",
+                "Type": "NORMAL",
+                "LogDriver": "awslogs",
+                "LogOptions": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/fargatetestapp",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream": "ecs/fargateapp/1e1698469422439ea356071e581e8545"
+                },
+                "ContainerARN": "arn:aws:ecs:us-west-2:123456789012:container/testcluster/1e1698469422439ea356071e581e8545/050256a5-a7f3-461c-a16f-aca4eae37b01",
+                "Networks": [
+                    {
+                        "NetworkMode": "awsvpc",
+                        "IPv4Addresses": [
+                            "10.10.10.10"
+                        ],
+                        "AttachmentIndex": 0,
+                        "MACAddress": "06:d7:3f:49:1d:a7",
+                        "IPv4SubnetCIDRBlock": "10.10.10.0/20",
+                        "DomainNameServers": [
+                            "10.10.10.2"
+                        ],
+                        "DomainNameSearchList": [
+                            "us-west-2.compute.internal"
+                        ],
+                        "PrivateDNSName": "ip-10-10-10-10.us-west-2.compute.internal",
+                        "SubnetGatewayIpv4Address": "10.10.10.1/20"
+                    }
+                ],
+                "Snapshotter": "overlayfs"
+            }
+            """);
+
+        var awsTokenUri = @"http://169.254.169.254/latest/api/token";
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.Matches<Uri>(u => u.OriginalString == awsTokenUri), Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("token");
+
+        var instanceId = "i-1234567890abcdef0";
+        var awsMetadataUri = @"http://169.254.169.254/latest/dynamic/instance-identity/document";
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.Matches<Uri>(u => u.OriginalString == awsMetadataUri), Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
+            {
+            	"availabilityZone" : "us - east - 1d",
+            	"instanceId" : "i-1234567890abcdef0",
+            	"instanceType" : "t1.micro"
+            }
+            """);
+
+        SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, ecsUri);
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var vendors = vendorInfo.GetVendors();
+
+        var ecsModel = vendors["ecs"];
+        var awsModel = vendors["aws"];
+        Assert.That(ecsModel, Is.Not.Null);
+        Assert.That(awsModel, Is.Not.Null);
+        Assert.That(((EcsVendorModel)ecsModel).EcsDockerId.Equals(dockerId));
+        Assert.That(((AwsVendorModel)awsModel).InstanceId.Equals(instanceId));
+    }
+
+    [Test]
+    public void GetVendors_CapturesEcs_WhenAwsIsNull()
+    {
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsNull<IEnumerable<string>>())).Returns("""
+            {
+                "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
+                "Name": "fargateapp",
+                "DockerName": "fargateapp",
+                "Image": "123456789012.dkr.ecr.us-west-2.amazonaws.com/fargatetest:latest",
+                "ImageID": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
+                "Labels": {
+                    "com.amazonaws.ecs.cluster": "arn:aws:ecs:us-west-2:123456789012:cluster/testcluster",
+                    "com.amazonaws.ecs.container-name": "fargateapp",
+                    "com.amazonaws.ecs.task-arn": "arn:aws:ecs:us-west-2:123456789012:task/testcluster/1e1698469422439ea356071e581e8545",
+                    "com.amazonaws.ecs.task-definition-family": "fargatetestapp",
+                    "com.amazonaws.ecs.task-definition-version": "7"
+                },
+                "DesiredStatus": "RUNNING",
+                "KnownStatus": "RUNNING",
+                "Limits": {
+                    "CPU": 2
+                },
+                "CreatedAt": "2024-04-25T17:38:31.073208914Z",
+                "StartedAt": "2024-04-25T17:38:31.073208914Z",
+                "Type": "NORMAL",
+                "LogDriver": "awslogs",
+                "LogOptions": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/fargatetestapp",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream": "ecs/fargateapp/1e1698469422439ea356071e581e8545"
+                },
+                "ContainerARN": "arn:aws:ecs:us-west-2:123456789012:container/testcluster/1e1698469422439ea356071e581e8545/050256a5-a7f3-461c-a16f-aca4eae37b01",
+                "Networks": [
+                    {
+                        "NetworkMode": "awsvpc",
+                        "IPv4Addresses": [
+                            "10.10.10.10"
+                        ],
+                        "AttachmentIndex": 0,
+                        "MACAddress": "06:d7:3f:49:1d:a7",
+                        "IPv4SubnetCIDRBlock": "10.10.10.0/20",
+                        "DomainNameServers": [
+                            "10.10.10.2"
+                        ],
+                        "DomainNameSearchList": [
+                            "us-west-2.compute.internal"
+                        ],
+                        "PrivateDNSName": "ip-10-10-10-10.us-west-2.compute.internal",
+                        "SubnetGatewayIpv4Address": "10.10.10.1/20"
+                    }
+                ],
+                "Snapshotter": "overlayfs"
+            }
+            """);
+
+        // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
+        var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
+        SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}");
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var vendors = vendorInfo.GetVendors();
+
+        var model = vendors["ecs"];
+        Assert.That(model, Is.Not.Null);
+        Assert.That(((EcsVendorModel)model).EcsDockerId.Equals(dockerId));
+    }
+
+    [Test]
+    public void GetVendors_DoesNotCaptureDocker_WhenEcsExists()
+    {
+        // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
+        var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
+        var ecsUri = $"http://169.254.170.2/v4/{dockerId}";
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.Matches<Uri>(u => u.OriginalString == ecsUri), Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
+            {
+                "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
+                "Name": "fargateapp",
+                "DockerName": "fargateapp",
+                "Image": "123456789012.dkr.ecr.us-west-2.amazonaws.com/fargatetest:latest",
+                "ImageID": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
+                "Labels": {
+                    "com.amazonaws.ecs.cluster": "arn:aws:ecs:us-west-2:123456789012:cluster/testcluster",
+                    "com.amazonaws.ecs.container-name": "fargateapp",
+                    "com.amazonaws.ecs.task-arn": "arn:aws:ecs:us-west-2:123456789012:task/testcluster/1e1698469422439ea356071e581e8545",
+                    "com.amazonaws.ecs.task-definition-family": "fargatetestapp",
+                    "com.amazonaws.ecs.task-definition-version": "7"
+                },
+                "DesiredStatus": "RUNNING",
+                "KnownStatus": "RUNNING",
+                "Limits": {
+                    "CPU": 2
+                },
+                "CreatedAt": "2024-04-25T17:38:31.073208914Z",
+                "StartedAt": "2024-04-25T17:38:31.073208914Z",
+                "Type": "NORMAL",
+                "LogDriver": "awslogs",
+                "LogOptions": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/fargatetestapp",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream": "ecs/fargateapp/1e1698469422439ea356071e581e8545"
+                },
+                "ContainerARN": "arn:aws:ecs:us-west-2:123456789012:container/testcluster/1e1698469422439ea356071e581e8545/050256a5-a7f3-461c-a16f-aca4eae37b01",
+                "Networks": [
+                    {
+                        "NetworkMode": "awsvpc",
+                        "IPv4Addresses": [
+                            "10.10.10.10"
+                        ],
+                        "AttachmentIndex": 0,
+                        "MACAddress": "06:d7:3f:49:1d:a7",
+                        "IPv4SubnetCIDRBlock": "10.10.10.0/20",
+                        "DomainNameServers": [
+                            "10.10.10.2"
+                        ],
+                        "DomainNameSearchList": [
+                            "us-west-2.compute.internal"
+                        ],
+                        "PrivateDNSName": "ip-10-10-10-10.us-west-2.compute.internal",
+                        "SubnetGatewayIpv4Address": "10.10.10.1/20"
+                    }
+                ],
+                "Snapshotter": "overlayfs"
+            }
+            """);
+
+        SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, ecsUri);
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        Mock.Arrange(() => _configuration.UtilizationDetectDocker).Returns(true);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var vendors = vendorInfo.GetVendors();
+
+        var ecsModel = vendors["ecs"];
+
+        Assert.That(vendors, Does.Not.ContainKey("docker"));
+        Assert.That(ecsModel, Is.Not.Null);
+        Assert.That(((EcsVendorModel)ecsModel).EcsDockerId.Equals(dockerId));
+    }
+
+    [Test]
+    public void GetVendors_Vendors_IsEmpty_BadEcsMetadata()
+    {
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("{ awesome: 0 }");
+
+        // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
+        var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
+        SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}");
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var vendors = vendorInfo.GetVendors();
+
+        Assert.That(vendors, Is.Empty);
+    }
+
+    [Test]
+    public void GetVendors_GetEcsVendorInfo_VarV4()
+    {
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
+            {
+                "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
+                "Name": "fargateapp",
+                "DockerName": "fargateapp",
+                "Image": "123456789012.dkr.ecr.us-west-2.amazonaws.com/fargatetest:latest",
+                "ImageID": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
+                "Labels": {
+                    "com.amazonaws.ecs.cluster": "arn:aws:ecs:us-west-2:123456789012:cluster/testcluster",
+                    "com.amazonaws.ecs.container-name": "fargateapp",
+                    "com.amazonaws.ecs.task-arn": "arn:aws:ecs:us-west-2:123456789012:task/testcluster/1e1698469422439ea356071e581e8545",
+                    "com.amazonaws.ecs.task-definition-family": "fargatetestapp",
+                    "com.amazonaws.ecs.task-definition-version": "7"
+                },
+                "DesiredStatus": "RUNNING",
+                "KnownStatus": "RUNNING",
+                "Limits": {
+                    "CPU": 2
+                },
+                "CreatedAt": "2024-04-25T17:38:31.073208914Z",
+                "StartedAt": "2024-04-25T17:38:31.073208914Z",
+                "Type": "NORMAL",
+                "LogDriver": "awslogs",
+                "LogOptions": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/fargatetestapp",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream": "ecs/fargateapp/1e1698469422439ea356071e581e8545"
+                },
+                "ContainerARN": "arn:aws:ecs:us-west-2:123456789012:container/testcluster/1e1698469422439ea356071e581e8545/050256a5-a7f3-461c-a16f-aca4eae37b01",
+                "Networks": [
+                    {
+                        "NetworkMode": "awsvpc",
+                        "IPv4Addresses": [
+                            "10.10.10.10"
+                        ],
+                        "AttachmentIndex": 0,
+                        "MACAddress": "06:d7:3f:49:1d:a7",
+                        "IPv4SubnetCIDRBlock": "10.10.10.0/20",
+                        "DomainNameServers": [
+                            "10.10.10.2"
+                        ],
+                        "DomainNameSearchList": [
+                            "us-west-2.compute.internal"
+                        ],
+                        "PrivateDNSName": "ip-10-10-10-10.us-west-2.compute.internal",
+                        "SubnetGatewayIpv4Address": "10.10.10.1/20"
+                    }
+                ],
+                "Snapshotter": "overlayfs"
+            }
+            """);
+
+        // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
+        var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
+        SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}");
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+
+        var model = vendorInfo.GetEcsVendorInfo();
+        Assert.That(model, Is.Not.Null);
+        Assert.That(((EcsVendorModel)model).EcsDockerId.Equals(dockerId));
+    }
+
+    [Test]
+    public void GetVendors_GetEcsVendorInfo_VarV3()
+    {
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
+            {
+                "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
+                "Name": "fargateapp",
+                "DockerName": "fargateapp",
+                "Image": "123456789012.dkr.ecr.us-west-2.amazonaws.com/fargatetest:latest",
+                "ImageID": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
+                "Labels": {
+                    "com.amazonaws.ecs.cluster": "arn:aws:ecs:us-west-2:123456789012:cluster/testcluster",
+                    "com.amazonaws.ecs.container-name": "fargateapp",
+                    "com.amazonaws.ecs.task-arn": "arn:aws:ecs:us-west-2:123456789012:task/testcluster/1e1698469422439ea356071e581e8545",
+                    "com.amazonaws.ecs.task-definition-family": "fargatetestapp",
+                    "com.amazonaws.ecs.task-definition-version": "7"
+                },
+                "DesiredStatus": "RUNNING",
+                "KnownStatus": "RUNNING",
+                "Limits": {
+                    "CPU": 2
+                },
+                "CreatedAt": "2024-04-25T17:38:31.073208914Z",
+                "StartedAt": "2024-04-25T17:38:31.073208914Z",
+                "Type": "NORMAL",
+                "Networks": [
+                    {
+                        "NetworkMode": "awsvpc",
+                        "IPv4Addresses": [
+                            "10.10.10.10"
+                        ]
+                    }
+                ]
+            }
+            """);
+
+        // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
+        var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
+        SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}");
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+
+        var model = vendorInfo.GetEcsVendorInfo();
+        Assert.That(model, Is.Not.Null);
+        Assert.That(((EcsVendorModel)model).EcsDockerId.Equals(dockerId));
+    }
+
+    [Test]
+    public void GetVendors_GetEcsVendorInfo_Throws_VarV4()
+    {
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Throws(new Exception());
+
+        // This docker ID is in the ec2 format
+        var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
+        SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}");
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+
+        var model = vendorInfo.GetEcsVendorInfo();
+        Assert.That(model, Is.Null);
+    }
+
+    [Test]
+    public void GetVendors_GetEcsVendorInfo_Throws_VarV3()
+    {
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Throws(new Exception());
+
+        // This docker ID is in the ec2 format
+        var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
+        SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}");
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+
+        var model = vendorInfo.GetEcsVendorInfo();
+        Assert.That(model, Is.Null);
+    }
+
+    [Test]
+    public void GetVendors_GetEcsVendorInfo_BadMetadata_VarV4()
+    {
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("{ awesome: 0 }");
+
+        // This docker ID is in the ec2 format
+        var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
+        SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}");
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+
+        var model = vendorInfo.GetEcsVendorInfo();
+        Assert.That(model, Is.Null);
+    }
+
+    [Test]
+    public void GetVendors_GetEcsVendorInfo_BadMetadata_VarV3()
+    {
+        Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("{ awesome: 0 }");
+
+        // This docker ID is in the ec2 format
+        var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
+        SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}");
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+
+        var model = vendorInfo.GetEcsVendorInfo();
+        Assert.That(model, Is.Null);
+    }
+
+    [Test]
+    public void GetVendors_GetEcsVendorInfo_Returns_Null()
+    {
+        Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+
+        var model = vendorInfo.GetEcsVendorInfo();
+        Assert.That(model, Is.Null);
+    }
+
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void GetVendors_DoesNotIncludeAzureFunction_IfUtilizationDetectAzureFunction_IsDisabled(bool enableAzureFunctionUtilization)
+    {
+        Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(true);
+        Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(true);
+
+        Mock.Arrange(() => _configuration.UtilizationDetectAzureFunction).Returns(enableAzureFunctionUtilization);
+
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var vendors = vendorInfo.GetVendors();
+
+        if (enableAzureFunctionUtilization)
         {
-            // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
-            var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
-            var ecsUri = $"http://169.254.170.2/v4/{dockerId}";
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.Matches<Uri>(u => u.OriginalString == ecsUri), Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
-{
-    "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
-    "Name": "fargateapp",
-    "DockerName": "fargateapp",
-    "Image": "123456789012.dkr.ecr.us-west-2.amazonaws.com/fargatetest:latest",
-    "ImageID": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
-    "Labels": {
-        "com.amazonaws.ecs.cluster": "arn:aws:ecs:us-west-2:123456789012:cluster/testcluster",
-        "com.amazonaws.ecs.container-name": "fargateapp",
-        "com.amazonaws.ecs.task-arn": "arn:aws:ecs:us-west-2:123456789012:task/testcluster/1e1698469422439ea356071e581e8545",
-        "com.amazonaws.ecs.task-definition-family": "fargatetestapp",
-        "com.amazonaws.ecs.task-definition-version": "7"
-    },
-    "DesiredStatus": "RUNNING",
-    "KnownStatus": "RUNNING",
-    "Limits": {
-        "CPU": 2
-    },
-    "CreatedAt": "2024-04-25T17:38:31.073208914Z",
-    "StartedAt": "2024-04-25T17:38:31.073208914Z",
-    "Type": "NORMAL",
-    "LogDriver": "awslogs",
-    "LogOptions": {
-        "awslogs-create-group": "true",
-        "awslogs-group": "/ecs/fargatetestapp",
-        "awslogs-region": "us-west-2",
-        "awslogs-stream": "ecs/fargateapp/1e1698469422439ea356071e581e8545"
-    },
-    "ContainerARN": "arn:aws:ecs:us-west-2:123456789012:container/testcluster/1e1698469422439ea356071e581e8545/050256a5-a7f3-461c-a16f-aca4eae37b01",
-    "Networks": [
-        {
-            "NetworkMode": "awsvpc",
-            "IPv4Addresses": [
-                "10.10.10.10"
-            ],
-            "AttachmentIndex": 0,
-            "MACAddress": "06:d7:3f:49:1d:a7",
-            "IPv4SubnetCIDRBlock": "10.10.10.0/20",
-            "DomainNameServers": [
-                "10.10.10.2"
-            ],
-            "DomainNameSearchList": [
-                "us-west-2.compute.internal"
-            ],
-            "PrivateDNSName": "ip-10-10-10-10.us-west-2.compute.internal",
-            "SubnetGatewayIpv4Address": "10.10.10.1/20"
+            Assert.That(vendors, Contains.Key("azurefunction"));
+            Assert.That(vendors["azurefunction"], Is.Not.Null);
         }
-    ],
-    "Snapshotter": "overlayfs"
-}
-""");
-
-            var awsTokenUri = @"http://169.254.169.254/latest/api/token";
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.Matches<Uri>(u => u.OriginalString == awsTokenUri), Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("token");
-
-            var instanceId = "i-1234567890abcdef0";
-            var awsMetadataUri = @"http://169.254.169.254/latest/dynamic/instance-identity/document";
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.Matches<Uri>(u => u.OriginalString == awsMetadataUri), Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
-{
-	"availabilityZone" : "us - east - 1d",
-	"instanceId" : "i-1234567890abcdef0",
-	"instanceType" : "t1.micro"
-}
-""");
-
-            SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, ecsUri);
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var vendors = vendorInfo.GetVendors();
-
-            var ecsModel = vendors["ecs"];
-            var awsModel = vendors["aws"];
-            Assert.That(ecsModel, Is.Not.Null);
-            Assert.That(awsModel, Is.Not.Null);
-            Assert.That(((EcsVendorModel)ecsModel).EcsDockerId.Equals(dockerId));
-            Assert.That(((AwsVendorModel)awsModel).InstanceId.Equals(instanceId));
-        }
-
-        [Test]
-        public void GetVendors_CapturesEcs_WhenAwsIsNull()
+        else
         {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsNull<IEnumerable<string>>())).Returns("""
-{
-    "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
-    "Name": "fargateapp",
-    "DockerName": "fargateapp",
-    "Image": "123456789012.dkr.ecr.us-west-2.amazonaws.com/fargatetest:latest",
-    "ImageID": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
-    "Labels": {
-        "com.amazonaws.ecs.cluster": "arn:aws:ecs:us-west-2:123456789012:cluster/testcluster",
-        "com.amazonaws.ecs.container-name": "fargateapp",
-        "com.amazonaws.ecs.task-arn": "arn:aws:ecs:us-west-2:123456789012:task/testcluster/1e1698469422439ea356071e581e8545",
-        "com.amazonaws.ecs.task-definition-family": "fargatetestapp",
-        "com.amazonaws.ecs.task-definition-version": "7"
-    },
-    "DesiredStatus": "RUNNING",
-    "KnownStatus": "RUNNING",
-    "Limits": {
-        "CPU": 2
-    },
-    "CreatedAt": "2024-04-25T17:38:31.073208914Z",
-    "StartedAt": "2024-04-25T17:38:31.073208914Z",
-    "Type": "NORMAL",
-    "LogDriver": "awslogs",
-    "LogOptions": {
-        "awslogs-create-group": "true",
-        "awslogs-group": "/ecs/fargatetestapp",
-        "awslogs-region": "us-west-2",
-        "awslogs-stream": "ecs/fargateapp/1e1698469422439ea356071e581e8545"
-    },
-    "ContainerARN": "arn:aws:ecs:us-west-2:123456789012:container/testcluster/1e1698469422439ea356071e581e8545/050256a5-a7f3-461c-a16f-aca4eae37b01",
-    "Networks": [
-        {
-            "NetworkMode": "awsvpc",
-            "IPv4Addresses": [
-                "10.10.10.10"
-            ],
-            "AttachmentIndex": 0,
-            "MACAddress": "06:d7:3f:49:1d:a7",
-            "IPv4SubnetCIDRBlock": "10.10.10.0/20",
-            "DomainNameServers": [
-                "10.10.10.2"
-            ],
-            "DomainNameSearchList": [
-                "us-west-2.compute.internal"
-            ],
-            "PrivateDNSName": "ip-10-10-10-10.us-west-2.compute.internal",
-            "SubnetGatewayIpv4Address": "10.10.10.1/20"
+            Assert.That(vendors, Does.Not.ContainKey("azurefunction"));
         }
-    ],
-    "Snapshotter": "overlayfs"
-}
-""");
+    }
 
-            // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
-            var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
-            SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}");
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var vendors = vendorInfo.GetVendors();
+    [Test]
+    [TestCase(true, false)]
+    [TestCase(false, true)]
+    public void GetAzureFunctionVendorInfo_ReturnsAzureFunctionModel_WhenAzureMode_IsEnabled(bool azureFunctionModeEnabled, bool expectNull)
+    {
+        Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(azureFunctionModeEnabled);
+        Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(azureFunctionModeEnabled);
 
-            var model = vendors["ecs"];
+        Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns("North Central US");
+        Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns("AzureResourceId");
+
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
+
+        if (expectNull)
+        {
+            Assert.That(model, Is.Null);
+        }
+        else
+        {
             Assert.That(model, Is.Not.Null);
-            Assert.That(((EcsVendorModel)model).EcsDockerId.Equals(dockerId));
+            Assert.That(model.AppName, Is.EqualTo("AzureResourceId"));
+            Assert.That(model.CloudRegion, Is.EqualTo("North Central US"));
         }
+    }
 
-        [Test]
-        public void GetVendors_DoesNotCaptureDocker_WhenEcsExists()
+    [Test]
+    public void GetAzureFunctionVendorInfo_ReturnsNull_WhenRegionIsNotAvailable()
+    {
+        Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(true);
+        Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(true);
+
+        Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns((string)null);
+        Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns("AzureResourceId");
+
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
+
+        Assert.That(model, Is.Null);
+    }
+    [Test]
+    public void GetAzureFunctionVendorInfo_ReturnsNull_WhenResourceIdIsNotAvailable()
+    {
+        Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(true);
+        Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(true);
+
+        Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns("North Central US");
+        Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns((string)null);
+
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
+
+        Assert.That(model, Is.Null);
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void GetVendors_GetAzureAppServiceVendorInfo_Complete(bool enableAzureAppServiceUtilization)
+    {
+        var subscriptionId = "b808887b-cb91-49e0-b922-c9188372bdba";
+        var resourceGroupName = "testgroup";
+        var siteName = "testsitename";
+
+        SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, $"{subscriptionId}+some-name-here-WestUS2webspace");
+        SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName);
+        SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName);
+
+        var cloudResourceId =
+            $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}";
+
+        Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(enableAzureAppServiceUtilization);
+
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var vendors = vendorInfo.GetVendors();
+
+        if (enableAzureAppServiceUtilization)
         {
-            // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
-            var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
-            var ecsUri = $"http://169.254.170.2/v4/{dockerId}";
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.Matches<Uri>(u => u.OriginalString == ecsUri), Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
-{
-    "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
-    "Name": "fargateapp",
-    "DockerName": "fargateapp",
-    "Image": "123456789012.dkr.ecr.us-west-2.amazonaws.com/fargatetest:latest",
-    "ImageID": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
-    "Labels": {
-        "com.amazonaws.ecs.cluster": "arn:aws:ecs:us-west-2:123456789012:cluster/testcluster",
-        "com.amazonaws.ecs.container-name": "fargateapp",
-        "com.amazonaws.ecs.task-arn": "arn:aws:ecs:us-west-2:123456789012:task/testcluster/1e1698469422439ea356071e581e8545",
-        "com.amazonaws.ecs.task-definition-family": "fargatetestapp",
-        "com.amazonaws.ecs.task-definition-version": "7"
-    },
-    "DesiredStatus": "RUNNING",
-    "KnownStatus": "RUNNING",
-    "Limits": {
-        "CPU": 2
-    },
-    "CreatedAt": "2024-04-25T17:38:31.073208914Z",
-    "StartedAt": "2024-04-25T17:38:31.073208914Z",
-    "Type": "NORMAL",
-    "LogDriver": "awslogs",
-    "LogOptions": {
-        "awslogs-create-group": "true",
-        "awslogs-group": "/ecs/fargatetestapp",
-        "awslogs-region": "us-west-2",
-        "awslogs-stream": "ecs/fargateapp/1e1698469422439ea356071e581e8545"
-    },
-    "ContainerARN": "arn:aws:ecs:us-west-2:123456789012:container/testcluster/1e1698469422439ea356071e581e8545/050256a5-a7f3-461c-a16f-aca4eae37b01",
-    "Networks": [
-        {
-            "NetworkMode": "awsvpc",
-            "IPv4Addresses": [
-                "10.10.10.10"
-            ],
-            "AttachmentIndex": 0,
-            "MACAddress": "06:d7:3f:49:1d:a7",
-            "IPv4SubnetCIDRBlock": "10.10.10.0/20",
-            "DomainNameServers": [
-                "10.10.10.2"
-            ],
-            "DomainNameSearchList": [
-                "us-west-2.compute.internal"
-            ],
-            "PrivateDNSName": "ip-10-10-10-10.us-west-2.compute.internal",
-            "SubnetGatewayIpv4Address": "10.10.10.1/20"
-        }
-    ],
-    "Snapshotter": "overlayfs"
-}
-""");
-
-            SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, ecsUri);
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            Mock.Arrange(() => _configuration.UtilizationDetectDocker).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var vendors = vendorInfo.GetVendors();
-
-            var ecsModel = vendors["ecs"];
-
-            Assert.That(vendors, Does.Not.ContainKey("docker"));
-            Assert.That(ecsModel, Is.Not.Null);
-            Assert.That(((EcsVendorModel)ecsModel).EcsDockerId.Equals(dockerId));
-        }
-
-        [Test]
-        public void GetVendors_Vendors_IsEmpty_BadEcsMetadata()
-        {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("{ awesome: 0 }");
-
-            // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
-            var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
-            SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}");
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var vendors = vendorInfo.GetVendors();
-
-            Assert.That(vendors, Is.Empty);
-        }
-
-        [Test]
-        public void GetVendors_GetEcsVendorInfo_VarV4()
-        {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
-{
-    "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
-    "Name": "fargateapp",
-    "DockerName": "fargateapp",
-    "Image": "123456789012.dkr.ecr.us-west-2.amazonaws.com/fargatetest:latest",
-    "ImageID": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
-    "Labels": {
-        "com.amazonaws.ecs.cluster": "arn:aws:ecs:us-west-2:123456789012:cluster/testcluster",
-        "com.amazonaws.ecs.container-name": "fargateapp",
-        "com.amazonaws.ecs.task-arn": "arn:aws:ecs:us-west-2:123456789012:task/testcluster/1e1698469422439ea356071e581e8545",
-        "com.amazonaws.ecs.task-definition-family": "fargatetestapp",
-        "com.amazonaws.ecs.task-definition-version": "7"
-    },
-    "DesiredStatus": "RUNNING",
-    "KnownStatus": "RUNNING",
-    "Limits": {
-        "CPU": 2
-    },
-    "CreatedAt": "2024-04-25T17:38:31.073208914Z",
-    "StartedAt": "2024-04-25T17:38:31.073208914Z",
-    "Type": "NORMAL",
-    "LogDriver": "awslogs",
-    "LogOptions": {
-        "awslogs-create-group": "true",
-        "awslogs-group": "/ecs/fargatetestapp",
-        "awslogs-region": "us-west-2",
-        "awslogs-stream": "ecs/fargateapp/1e1698469422439ea356071e581e8545"
-    },
-    "ContainerARN": "arn:aws:ecs:us-west-2:123456789012:container/testcluster/1e1698469422439ea356071e581e8545/050256a5-a7f3-461c-a16f-aca4eae37b01",
-    "Networks": [
-        {
-            "NetworkMode": "awsvpc",
-            "IPv4Addresses": [
-                "10.10.10.10"
-            ],
-            "AttachmentIndex": 0,
-            "MACAddress": "06:d7:3f:49:1d:a7",
-            "IPv4SubnetCIDRBlock": "10.10.10.0/20",
-            "DomainNameServers": [
-                "10.10.10.2"
-            ],
-            "DomainNameSearchList": [
-                "us-west-2.compute.internal"
-            ],
-            "PrivateDNSName": "ip-10-10-10-10.us-west-2.compute.internal",
-            "SubnetGatewayIpv4Address": "10.10.10.1/20"
-        }
-    ],
-    "Snapshotter": "overlayfs"
-}
-""");
-
-            // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
-            var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
-            SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}");
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-
-            var model = vendorInfo.GetEcsVendorInfo();
+            Assert.That(vendors, Contains.Key("azureappservice"));
+            Assert.That(vendors["azureappservice"], Is.Not.Null);
+            var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
             Assert.That(model, Is.Not.Null);
-            Assert.That(((EcsVendorModel)model).EcsDockerId.Equals(dockerId));
+            Assert.That(model.CloudResourceId, Is.EqualTo(cloudResourceId));
         }
-
-        [Test]
-        public void GetVendors_GetEcsVendorInfo_VarV3()
+        else
         {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("""
-{
-    "DockerId": "1e1698469422439ea356071e581e8545-2769485393",
-    "Name": "fargateapp",
-    "DockerName": "fargateapp",
-    "Image": "123456789012.dkr.ecr.us-west-2.amazonaws.com/fargatetest:latest",
-    "ImageID": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
-    "Labels": {
-        "com.amazonaws.ecs.cluster": "arn:aws:ecs:us-west-2:123456789012:cluster/testcluster",
-        "com.amazonaws.ecs.container-name": "fargateapp",
-        "com.amazonaws.ecs.task-arn": "arn:aws:ecs:us-west-2:123456789012:task/testcluster/1e1698469422439ea356071e581e8545",
-        "com.amazonaws.ecs.task-definition-family": "fargatetestapp",
-        "com.amazonaws.ecs.task-definition-version": "7"
-    },
-    "DesiredStatus": "RUNNING",
-    "KnownStatus": "RUNNING",
-    "Limits": {
-        "CPU": 2
-    },
-    "CreatedAt": "2024-04-25T17:38:31.073208914Z",
-    "StartedAt": "2024-04-25T17:38:31.073208914Z",
-    "Type": "NORMAL",
-    "Networks": [
-        {
-            "NetworkMode": "awsvpc",
-            "IPv4Addresses": [
-                "10.10.10.10"
-            ]
+            Assert.That(vendors, Does.Not.ContainKey("azureappservice"));
         }
-    ]
-}
-""");
+    }
 
-            // This docker ID is in the Fargate format, but the test is still valid for non-Fargate ECS hosts.
-            var dockerId = "1e1698469422439ea356071e581e8545-2769485393";
-            SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}");
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("      ")]
+    [TestCase("this is not properly formatted!")]
+    [TestCase("+some-name-here-WestUS2webspace")] // Missing subscription ID
+    public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenWebSiteOwnerName_BadFormat(string webSiteOwnerName)
+    {
+        var resourceGroupName = "testgroup";
+        var siteName = "testsitename";
 
-            var model = vendorInfo.GetEcsVendorInfo();
-            Assert.That(model, Is.Not.Null);
-            Assert.That(((EcsVendorModel)model).EcsDockerId.Equals(dockerId));
-        }
+        SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, webSiteOwnerName);
+        SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName);
+        SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName);
 
-        [Test]
-        public void GetVendors_GetEcsVendorInfo_Throws_VarV4()
-        {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Throws(new Exception());
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
+        Assert.That(model, Is.Null);
+    }
 
-            // This docker ID is in the ec2 format
-            var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
-            SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}");
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+    [Test]
+    public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenWebSiteOwnerName_NotAvailable()
+    {
+        Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(true);
 
-            var model = vendorInfo.GetEcsVendorInfo();
-            Assert.That(model, Is.Null);
-        }
+        var resourceGroupName = "testgroup";
+        var siteName = "testsitename";
 
-        [Test]
-        public void GetVendors_GetEcsVendorInfo_Throws_VarV3()
-        {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Throws(new Exception());
+        SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName);
+        SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName);
 
-            // This docker ID is in the ec2 format
-            var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
-            SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}");
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
+        Assert.That(model, Is.Null);
+    }
 
-            var model = vendorInfo.GetEcsVendorInfo();
-            Assert.That(model, Is.Null);
-        }
+    [Test]
+    public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenAppServiceWebSiteResourceGroup_NotAvailable()
+    {
+        Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(true);
 
-        [Test]
-        public void GetVendors_GetEcsVendorInfo_BadMetadata_VarV4()
-        {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("{ awesome: 0 }");
+        var subscriptionId = "b808887b-cb91-49e0-b922-c9188372bdba";
+        var siteName = "testsitename";
 
-            // This docker ID is in the ec2 format
-            var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
-            SetEnvironmentVariable(AwsEcsMetadataV4EnvVar, $"http://169.254.170.2/v4/{dockerId}");
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, $"{subscriptionId}+some-name-here-WestUS2webspace");
+        SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName);
 
-            var model = vendorInfo.GetEcsVendorInfo();
-            Assert.That(model, Is.Null);
-        }
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
+        Assert.That(model, Is.Null);
+    }
 
-        [Test]
-        public void GetVendors_GetEcsVendorInfo_BadMetadata_VarV3()
-        {
-            Mock.Arrange(() => _vendorHttpApiRequestor.CallVendorApi(Arg.AnyUri, Arg.AnyString, Arg.AnyString, Arg.IsAny<IEnumerable<string>>())).Returns("{ awesome: 0 }");
+    [Test]
+    public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenWebSiteSiteName_NotAvailable()
+    {
+        Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(true);
 
-            // This docker ID is in the ec2 format
-            var dockerId = "ae4c507ab5956a9dee9b908e221d72616373861d7ccc3c9703aa346571aef9ef";
-            SetEnvironmentVariable(AwsEcsMetadataV3EnvVar, $"http://169.254.170.2/v3/{dockerId}");
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var subscriptionId = "b808887b-cb91-49e0-b922-c9188372bdba";
+        var resourceGroupName = "testgroup";
 
-            var model = vendorInfo.GetEcsVendorInfo();
-            Assert.That(model, Is.Null);
-        }
+        SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, $"{subscriptionId}+some-name-here-WestUS2webspace");
+        SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName);
 
-        [Test]
-        public void GetVendors_GetEcsVendorInfo_Returns_Null()
-        {
-            Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
+        var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
+        Assert.That(model, Is.Null);
+    }
 
-            var model = vendorInfo.GetEcsVendorInfo();
-            Assert.That(model, Is.Null);
-        }
-
-        [Test]
-        [TestCase(true)]
-        [TestCase(false)]
-        public void GetVendors_DoesNotIncludeAzureFunction_IfUtilizationDetectAzureFunction_IsDisabled(bool enableAzureFunctionUtilization)
-        {
-            Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(true);
-            Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(true);
-
-            Mock.Arrange(() => _configuration.UtilizationDetectAzureFunction).Returns(enableAzureFunctionUtilization);
-
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var vendors = vendorInfo.GetVendors();
-
-            if (enableAzureFunctionUtilization)
-            {
-                Assert.That(vendors, Contains.Key("azurefunction"));
-                Assert.That(vendors["azurefunction"], Is.Not.Null);
-            }
-            else
-            {
-                Assert.That(vendors, Does.Not.ContainKey("azurefunction"));
-            }
-        }
-
-        [Test]
-        [TestCase(true, false)]
-        [TestCase(false, true)]
-        public void GetAzureFunctionVendorInfo_ReturnsAzureFunctionModel_WhenAzureMode_IsEnabled(bool azureFunctionModeEnabled, bool expectNull)
-        {
-            Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(azureFunctionModeEnabled);
-            Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(azureFunctionModeEnabled);
-
-            Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns("North Central US");
-            Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns("AzureResourceId");
-
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
-
-            if (expectNull)
-            {
-                Assert.That(model, Is.Null);
-            }
-            else
-            {
-                Assert.That(model, Is.Not.Null);
-                Assert.That(model.AppName, Is.EqualTo("AzureResourceId"));
-                Assert.That(model.CloudRegion, Is.EqualTo("North Central US"));
-            }
-        }
-
-        [Test]
-        public void GetAzureFunctionVendorInfo_ReturnsNull_WhenRegionIsNotAvailable()
-        {
-            Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(true);
-            Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(true);
-
-            Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns((string)null);
-            Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns("AzureResourceId");
-
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
-
-            Assert.That(model, Is.Null);
-        }
-        [Test]
-        public void GetAzureFunctionVendorInfo_ReturnsNull_WhenResourceIdIsNotAvailable()
-        {
-            Mock.Arrange(() => _configuration.AzureFunctionModeDetected).Returns(true);
-            Mock.Arrange(() => _configuration.AzureFunctionModeEnabled).Returns(true);
-
-            Mock.Arrange(() => _configuration.AzureFunctionRegion).Returns("North Central US");
-            Mock.Arrange(() => _configuration.AzureFunctionResourceId).Returns((string)null);
-
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AzureFunctionVendorModel)vendorInfo.GetAzureFunctionVendorInfo();
-
-            Assert.That(model, Is.Null);
-        }
-
-        [TestCase(true)]
-        [TestCase(false)]
-        public void GetVendors_GetAzureAppServiceVendorInfo_Complete(bool enableAzureAppServiceUtilization)
-        {
-            var subscriptionId = "b808887b-cb91-49e0-b922-c9188372bdba";
-            var resourceGroupName = "testgroup";
-            var siteName = "testsitename";
-
-            SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, $"{subscriptionId}+some-name-here-WestUS2webspace");
-            SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName);
-            SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName);
-
-            var cloudResourceId =
-                $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}";
-
-            Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(enableAzureAppServiceUtilization);
-
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var vendors = vendorInfo.GetVendors();
-
-            if (enableAzureAppServiceUtilization)
-            {
-                Assert.That(vendors, Contains.Key("azureappservice"));
-                Assert.That(vendors["azureappservice"], Is.Not.Null);
-                var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
-                Assert.That(model, Is.Not.Null);
-                Assert.That(model.CloudResourceId, Is.EqualTo(cloudResourceId));
-            }
-            else
-            {
-                Assert.That(vendors, Does.Not.ContainKey("azureappservice"));
-            }
-        }
-
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase("      ")]
-        [TestCase("this is not properly formatted!")]
-        [TestCase("+some-name-here-WestUS2webspace")] // Missing subscription ID
-        public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenWebSiteOwnerName_BadFormat(string webSiteOwnerName)
-        {
-            var resourceGroupName = "testgroup";
-            var siteName = "testsitename";
-
-            SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, webSiteOwnerName);
-            SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName);
-            SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName);
-
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
-            Assert.That(model, Is.Null);
-        }
-
-        [Test]
-        public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenWebSiteOwnerName_NotAvailable()
-        {
-            Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(true);
-
-            var resourceGroupName = "testgroup";
-            var siteName = "testsitename";
-
-            SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName);
-            SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName);
-
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
-            Assert.That(model, Is.Null);
-        }
-
-        [Test]
-        public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenAppServiceWebSiteResourceGroup_NotAvailable()
-        {
-            Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(true);
-
-            var subscriptionId = "b808887b-cb91-49e0-b922-c9188372bdba";
-            var siteName = "testsitename";
-
-            SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, $"{subscriptionId}+some-name-here-WestUS2webspace");
-            SetEnvironmentVariable(AzureAppServiceWebSiteSiteName, siteName);
-
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
-            Assert.That(model, Is.Null);
-        }
-
-        [Test]
-        public void GetAzureAppServiceVendorInfo_ReturnsNull_WhenWebSiteSiteName_NotAvailable()
-        {
-            Mock.Arrange(() => _configuration.UtilizationDetectAzureAppService).Returns(true);
-
-            var subscriptionId = "b808887b-cb91-49e0-b922-c9188372bdba";
-            var resourceGroupName = "testgroup";
-
-            SetEnvironmentVariable(AzureAppServiceWebSiteOwnerName, $"{subscriptionId}+some-name-here-WestUS2webspace");
-            SetEnvironmentVariable(AzureAppServiceWebSiteResourceGroup, resourceGroupName);
-
-            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor, _fileWrapper);
-            var model = (AzureAppServiceVendorModel)vendorInfo.GetAzureAppServiceVendorInfo();
-            Assert.That(model, Is.Null);
-        }
-
-        private void SetEnvironmentVariable(string variableName, string value)
-        {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable(variableName)).Returns(value);
-        }
+    private void SetEnvironmentVariable(string variableName, string value)
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariable(variableName)).Returns(value);
     }
 }

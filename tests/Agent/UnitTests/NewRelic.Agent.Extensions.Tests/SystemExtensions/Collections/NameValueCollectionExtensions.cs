@@ -7,103 +7,102 @@ using NewRelic.Agent.Extensions.SystemExtensions.Collections;
 using NUnit.Framework;
 
 
-namespace Agent.Extensions.Tests.SystemExtensions.Collections
+namespace Agent.Extensions.Tests.SystemExtensions.Collections;
+
+public class NameValueCollectionExtensions
 {
-    public class NameValueCollectionExtensions
+    [Test]
+    public void ToDictionary_CreatesCorrectDictionary()
     {
-        [Test]
-        public void ToDictionary_CreatesCorrectDictionary()
+        var collection = new NameValueCollection
         {
-            var collection = new NameValueCollection
-            {
-                {"fruit", "apple"},
-                {"dessert", "pie"}
-            };
+            {"fruit", "apple"},
+            {"dessert", "pie"}
+        };
 
-            var dictionary = collection.ToDictionary();
+        var dictionary = collection.ToDictionary();
 
-            Assert.That(dictionary, Has.Count.EqualTo(2));
-            Assert.Multiple(() =>
-            {
-                Assert.That(dictionary.ContainsKey("fruit"), Is.True);
-                Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
-                Assert.That(dictionary.ContainsKey("dessert"), Is.True);
-                Assert.That(dictionary["dessert"], Is.EqualTo("pie"));
-            });
-        }
-
-        [Test]
-        public void ToDictionary_SkipsNullKeys()
+        Assert.That(dictionary, Has.Count.EqualTo(2));
+        Assert.Multiple(() =>
         {
-            var collection = new NameValueCollection
-            {
-                { "fruit", "apple" },
-                { null, "42" },
-                { "dessert", "pie" },
-            };
+            Assert.That(dictionary.ContainsKey("fruit"), Is.True);
+            Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
+            Assert.That(dictionary.ContainsKey("dessert"), Is.True);
+            Assert.That(dictionary["dessert"], Is.EqualTo("pie"));
+        });
+    }
 
-            var dictionary = collection.ToDictionary();
-
-            Assert.That(dictionary, Has.Count.EqualTo(2));
-            Assert.Multiple(() =>
-            {
-                Assert.That(dictionary.ContainsKey("fruit"), Is.True);
-                Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
-                Assert.That(dictionary.ContainsKey("dessert"), Is.True);
-                Assert.That(dictionary["dessert"], Is.EqualTo("pie"));
-            });
-        }
-
-        [Test]
-        public void ToDictionary_IsCaseInsensitiveByDefault()
+    [Test]
+    public void ToDictionary_SkipsNullKeys()
+    {
+        var collection = new NameValueCollection
         {
-            var collection = new NameValueCollection
-            {
-                {"fruit", "apple"},
-                {"DESSERT", "pie"}
-            };
+            { "fruit", "apple" },
+            { null, "42" },
+            { "dessert", "pie" },
+        };
 
-            var dictionary = collection.ToDictionary();
+        var dictionary = collection.ToDictionary();
 
-            Assert.That(dictionary, Has.Count.EqualTo(2));
-            Assert.Multiple(() =>
-            {
-                Assert.That(dictionary.ContainsKey("fruit"), Is.True);
-                Assert.That(dictionary.ContainsKey("FRUIT"), Is.True);
-                Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
-                Assert.That(dictionary["FRUIT"], Is.EqualTo("apple"));
-                Assert.That(dictionary.ContainsKey("dessert"), Is.True);
-                Assert.That(dictionary.ContainsKey("DESSERT"), Is.True);
-                Assert.That(dictionary["dessert"], Is.EqualTo("pie"));
-                Assert.That(dictionary["DESSERT"], Is.EqualTo("pie"));
-            });
-        }
-
-        [Test]
-        public void ToDictionary_UsesSuppliedEqualityComparer()
+        Assert.That(dictionary, Has.Count.EqualTo(2));
+        Assert.Multiple(() =>
         {
-            var collection = new NameValueCollection
-            {
-                {"fruit", "apple"},
-                {"DESSERT", "pie"}
-            };
+            Assert.That(dictionary.ContainsKey("fruit"), Is.True);
+            Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
+            Assert.That(dictionary.ContainsKey("dessert"), Is.True);
+            Assert.That(dictionary["dessert"], Is.EqualTo("pie"));
+        });
+    }
 
-            var dictionary = collection.ToDictionary(StringComparer.CurrentCulture);
+    [Test]
+    public void ToDictionary_IsCaseInsensitiveByDefault()
+    {
+        var collection = new NameValueCollection
+        {
+            {"fruit", "apple"},
+            {"DESSERT", "pie"}
+        };
 
-            Assert.That(dictionary, Has.Count.EqualTo(2));
-            Assert.Multiple(() =>
-            {
-                Assert.That(dictionary.ContainsKey("fruit"), Is.True);
-                Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
-                Assert.That(dictionary.ContainsKey("DESSERT"), Is.True);
-                Assert.That(dictionary["DESSERT"], Is.EqualTo("pie"));
-            });
+        var dictionary = collection.ToDictionary();
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(dictionary.ContainsKey("FRUIT"), Is.False);
-                Assert.That(dictionary.ContainsKey("dessert"), Is.False);
-            });
-        }
+        Assert.That(dictionary, Has.Count.EqualTo(2));
+        Assert.Multiple(() =>
+        {
+            Assert.That(dictionary.ContainsKey("fruit"), Is.True);
+            Assert.That(dictionary.ContainsKey("FRUIT"), Is.True);
+            Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
+            Assert.That(dictionary["FRUIT"], Is.EqualTo("apple"));
+            Assert.That(dictionary.ContainsKey("dessert"), Is.True);
+            Assert.That(dictionary.ContainsKey("DESSERT"), Is.True);
+            Assert.That(dictionary["dessert"], Is.EqualTo("pie"));
+            Assert.That(dictionary["DESSERT"], Is.EqualTo("pie"));
+        });
+    }
+
+    [Test]
+    public void ToDictionary_UsesSuppliedEqualityComparer()
+    {
+        var collection = new NameValueCollection
+        {
+            {"fruit", "apple"},
+            {"DESSERT", "pie"}
+        };
+
+        var dictionary = collection.ToDictionary(StringComparer.CurrentCulture);
+
+        Assert.That(dictionary, Has.Count.EqualTo(2));
+        Assert.Multiple(() =>
+        {
+            Assert.That(dictionary.ContainsKey("fruit"), Is.True);
+            Assert.That(dictionary["fruit"], Is.EqualTo("apple"));
+            Assert.That(dictionary.ContainsKey("DESSERT"), Is.True);
+            Assert.That(dictionary["DESSERT"], Is.EqualTo("pie"));
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(dictionary.ContainsKey("FRUIT"), Is.False);
+            Assert.That(dictionary.ContainsKey("dessert"), Is.False);
+        });
     }
 }

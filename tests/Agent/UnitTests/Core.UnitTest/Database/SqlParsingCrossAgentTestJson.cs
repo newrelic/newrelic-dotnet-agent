@@ -1,13 +1,13 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
-{
-    public static class SqlParsingCrossAgentTestJson
-    {
+namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database;
 
-        public const string TestCases =
-@"[
+public static class SqlParsingCrossAgentTestJson
+{
+
+    public const string TestCases =
+        @"[
   {""input"":""SELECT * FROM foobar"",                                   ""operation"":""select"", ""table"":""foobar""},
   {""input"":""SELECT F FROM foobar"",                                   ""operation"":""select"", ""table"":""foobar""},
   {""input"":""SELECT Ff FROM foobar"",                                  ""operation"":""select"", ""table"":""foobar""},
@@ -67,5 +67,4 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
   {""input"":""\""mystoredprocedure\""abc"",      ""operation"":""other"", ""table"":null},
   {""input"":""mystoredprocedure"",      ""operation"":""other"", ""table"":null}
 ]";
-    }
 }

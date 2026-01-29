@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -14,114 +12,113 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using Telerik.JustMock.Helpers;
 
-namespace NewRelic.Agent.Core.Utilities
+namespace NewRelic.Agent.Core.Utilities;
+
+[TestFixture]
+public class UpdatedLoadedModulesServiceTests
 {
-    [TestFixture]
-    public class UpdatedLoadedModulesServiceTests
+    private IDataTransportService _dataTransportService;
+    private UpdatedLoadedModulesService _updatedLoadedModulesService;
+
+    private Action _getLoadedModulesAction;
+    private ConfigurationAutoResponder _configurationAutoResponder;
+    private TimeSpan? _harvestCycle;
+
+    [SetUp]
+    public void SetUp()
     {
-        private IDataTransportService _dataTransportService;
-        private UpdatedLoadedModulesService _updatedLoadedModulesService;
+        var configuration = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
+        Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
+        Mock.Arrange(() => configuration.UpdateLoadedModulesCycle).Returns(TimeSpan.FromMinutes(1));
+        _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
-        private Action _getLoadedModulesAction;
-        private ConfigurationAutoResponder _configurationAutoResponder;
-        private TimeSpan? _harvestCycle;
+        var configurationService = Mock.Create<IConfigurationService>();
+        Mock.Arrange(() => configurationService.Configuration).Returns(configuration);
 
-        [SetUp]
-        public void SetUp()
+        _dataTransportService = Mock.Create<IDataTransportService>();
+
+        var scheduler = Mock.Create<IScheduler>();
+
+        Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+            .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _getLoadedModulesAction = action; _harvestCycle = harvestCycle; });
+
+        _updatedLoadedModulesService = new UpdatedLoadedModulesService(scheduler, _dataTransportService, configurationService);
+
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        _updatedLoadedModulesService.Dispose();
+        _configurationAutoResponder.Dispose();
+    }
+
+    [Test]
+    public void GetLoadedModules_SendsModules()
+    {
+        LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
+        Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
+            .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
+            .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
+
+        _getLoadedModulesAction();
+
+        var loadedModules = loadedModulesCollection.LoadedModules;
+
+        Assert.Multiple(() =>
         {
-            var configuration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
-            Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
-            Mock.Arrange(() => configuration.UpdateLoadedModulesCycle).Returns(TimeSpan.FromMinutes(1));
-            _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+            Assert.That(loadedModulesCollection, Is.Not.Null);
+            Assert.That(loadedModules, Is.Not.Empty);
+        });
+    }
 
-            var configurationService = Mock.Create<IConfigurationService>();
-            Mock.Arrange(() => configurationService.Configuration).Returns(configuration);
+    [Test]
+    public void GetLoadedModules_NoNewModules()
+    {
+        LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
+        Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
+            .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
+            .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
 
-            _dataTransportService = Mock.Create<IDataTransportService>();
+        _getLoadedModulesAction();
 
-            var scheduler = Mock.Create<IScheduler>();
+        var initialModules = loadedModulesCollection.LoadedModules;
 
-            Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-                .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _getLoadedModulesAction = action; _harvestCycle = harvestCycle; });
+        // double sure that no new modules are loaded.
+        _getLoadedModulesAction();
 
-            _updatedLoadedModulesService = new UpdatedLoadedModulesService(scheduler, _dataTransportService, configurationService);
+        _ = loadedModulesCollection.LoadedModules;
 
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
-        }
+        _getLoadedModulesAction();
 
-        [TearDown]
-        public void TearDown()
+        var loadedModules = loadedModulesCollection.LoadedModules;
+
+        Assert.That(loadedModules, Has.Count.EqualTo(initialModules.Count));
+    }
+
+    [Test]
+    public void GetLoadedModules_SendError_DuplciatesNotSaved()
+    {
+        LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
+        var result = Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
+            .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
+            .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.Discard);
+
+        _getLoadedModulesAction();
+
+        var initialModules = loadedModulesCollection.LoadedModules;
+
+        _getLoadedModulesAction();
+
+        var loadedModules = loadedModulesCollection.LoadedModules;
+
+        Assert.Multiple(() =>
         {
-            _updatedLoadedModulesService.Dispose();
-            _configurationAutoResponder.Dispose();
-        }
-
-        [Test]
-        public void GetLoadedModules_SendsModules()
-        {
-            LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
-                .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
-                .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
-
-            _getLoadedModulesAction();
-
-            var loadedModules = loadedModulesCollection.LoadedModules;
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(loadedModulesCollection, Is.Not.Null);
-                Assert.That(loadedModules, Is.Not.Empty);
-            });
-        }
-
-        [Test]
-        public void GetLoadedModules_NoNewModules()
-        {
-            LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
-                .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
-                .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
-
-            _getLoadedModulesAction();
-
-            var initialModules = loadedModulesCollection.LoadedModules;
-
-            // double sure that no new modules are loaded.
-            _getLoadedModulesAction();
-
-            _ = loadedModulesCollection.LoadedModules;
-
-            _getLoadedModulesAction();
-
-            var loadedModules = loadedModulesCollection.LoadedModules;
-
-            Assert.That(loadedModules, Has.Count.EqualTo(initialModules.Count));
-        }
-
-        [Test]
-        public void GetLoadedModules_SendError_DuplciatesNotSaved()
-        {
-            LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
-            var result = Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
-                .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
-                .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.Discard);
-
-            _getLoadedModulesAction();
-
-            var initialModules = loadedModulesCollection.LoadedModules;
-
-            _getLoadedModulesAction();
-
-            var loadedModules = loadedModulesCollection.LoadedModules;
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(initialModules.Count, Is.GreaterThan(0));
-                Assert.That(loadedModules.Count, Is.GreaterThan(0));
-            });
-            Assert.That(loadedModules, Has.Count.EqualTo(initialModules.Count));
-        }
+            Assert.That(initialModules.Count, Is.GreaterThan(0));
+            Assert.That(loadedModules.Count, Is.GreaterThan(0));
+        });
+        Assert.That(loadedModules, Has.Count.EqualTo(initialModules.Count));
     }
 }

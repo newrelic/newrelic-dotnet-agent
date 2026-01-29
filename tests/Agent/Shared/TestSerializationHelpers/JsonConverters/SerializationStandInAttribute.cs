@@ -4,8 +4,7 @@
 
 using System;
 
-namespace NewRelic.Agent.Tests.TestSerializationHelpers.JsonConverters
-{
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-    public class SerializationStandInAttribute : System.Attribute { }
-}
+namespace NewRelic.Agent.Tests.TestSerializationHelpers.JsonConverters;
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+public class SerializationStandInAttribute : System.Attribute { }

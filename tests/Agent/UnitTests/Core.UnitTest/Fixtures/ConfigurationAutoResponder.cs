@@ -7,27 +7,26 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Requests;
 using NewRelic.Agent.Core.Utilities;
 
-namespace NewRelic.Agent.Core.Fixtures
+namespace NewRelic.Agent.Core.Fixtures;
+
+public class ConfigurationAutoResponder : IDisposable
 {
-    public class ConfigurationAutoResponder : IDisposable
+    public IConfiguration Configuration;
+    private Subscriptions _subscriptions = new Subscriptions();
+
+    public ConfigurationAutoResponder(IConfiguration configuration = null)
     {
-        public IConfiguration Configuration;
-        private Subscriptions _subscriptions = new Subscriptions();
+        Configuration = configuration ?? DefaultConfiguration.Instance;
+        _subscriptions.Add<GetCurrentConfigurationRequest, IConfiguration>(OnGetCurrentConfiguration);
+    }
 
-        public ConfigurationAutoResponder(IConfiguration configuration = null)
-        {
-            Configuration = configuration ?? DefaultConfiguration.Instance;
-            _subscriptions.Add<GetCurrentConfigurationRequest, IConfiguration>(OnGetCurrentConfiguration);
-        }
+    private void OnGetCurrentConfiguration(GetCurrentConfigurationRequest requestData, RequestBus<GetCurrentConfigurationRequest, IConfiguration>.ResponseCallback callback)
+    {
+        callback(Configuration);
+    }
 
-        private void OnGetCurrentConfiguration(GetCurrentConfigurationRequest requestData, RequestBus<GetCurrentConfigurationRequest, IConfiguration>.ResponseCallback callback)
-        {
-            callback(Configuration);
-        }
-
-        public void Dispose()
-        {
-            _subscriptions.Dispose();
-        }
+    public void Dispose()
+    {
+        _subscriptions.Dispose();
     }
 }

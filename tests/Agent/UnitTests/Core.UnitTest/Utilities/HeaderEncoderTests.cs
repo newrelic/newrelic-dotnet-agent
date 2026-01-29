@@ -7,90 +7,89 @@ using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-namespace NewRelic.Agent.Core.Utilities
+namespace NewRelic.Agent.Core.Utilities;
+
+[TestFixture]
+public class HeaderEncoderTests
 {
-    [TestFixture]
-    public class HeaderEncoderTests
+    [Test]
+    public void SerializeAndEncode_CreatesCorrectEncodedString_IfNullEncodingKey()
     {
-        [Test]
-        public void SerializeAndEncode_CreatesCorrectEncodedString_IfNullEncodingKey()
-        {
-            var data = new CrossApplicationRequestData("guid", false, "tripId", "pathHash");
+        var data = new CrossApplicationRequestData("guid", false, "tripId", "pathHash");
 
-            var encoded = HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(data), null);
+        var encoded = HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(data), null);
 
-            Assert.That(encoded, Is.EqualTo("WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ=="));
-        }
+        Assert.That(encoded, Is.EqualTo("WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ=="));
+    }
 
-        [Test]
-        public void SerializeAndEncode_CreatesCorrectEncodedString_IfNonNullEncodingKey()
-        {
-            var data = new CrossApplicationRequestData("guid", false, "tripId", "pathHash");
+    [Test]
+    public void SerializeAndEncode_CreatesCorrectEncodedString_IfNonNullEncodingKey()
+    {
+        var data = new CrossApplicationRequestData("guid", false, "tripId", "pathHash");
 
-            var encoded = HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(data), "encodingKey");
+        var encoded = HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(data), "encodingKey");
 
-            Assert.That(encoded, Is.EqualTo("PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA=="));
-        }
+        Assert.That(encoded, Is.EqualTo("PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA=="));
+    }
 
-        [Test]
-        public void TryDecodeAndDeserialize_ReturnsCorrectDeserializedObject_IfNullEncodingKey()
-        {
-            const string encoded = "WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ==";
+    [Test]
+    public void TryDecodeAndDeserialize_ReturnsCorrectDeserializedObject_IfNullEncodingKey()
+    {
+        const string encoded = "WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ==";
 
-            var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, null);
-            Assert.That(deserialized, Is.Not.Null);
+        var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, null);
+        Assert.That(deserialized, Is.Not.Null);
 
-            NrAssert.Multiple(
-                () => Assert.That(deserialized.TransactionGuid, Is.EqualTo("guid")),
-                () => Assert.That(deserialized.Unused, Is.EqualTo(false)),
-                () => Assert.That(deserialized.TripId, Is.EqualTo("tripId")),
-                () => Assert.That(deserialized.PathHash, Is.EqualTo("pathHash"))
-            );
-        }
+        NrAssert.Multiple(
+            () => Assert.That(deserialized.TransactionGuid, Is.EqualTo("guid")),
+            () => Assert.That(deserialized.Unused, Is.EqualTo(false)),
+            () => Assert.That(deserialized.TripId, Is.EqualTo("tripId")),
+            () => Assert.That(deserialized.PathHash, Is.EqualTo("pathHash"))
+        );
+    }
 
-        [Test]
-        public void TryDecodeAndDeserialize_ReturnsCorrectDeserializedObject_IfNonNullEncodingKey()
-        {
-            const string encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
+    [Test]
+    public void TryDecodeAndDeserialize_ReturnsCorrectDeserializedObject_IfNonNullEncodingKey()
+    {
+        const string encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
 
-            var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "encodingKey");
-            Assert.That(deserialized, Is.Not.Null);
+        var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "encodingKey");
+        Assert.That(deserialized, Is.Not.Null);
 
-            NrAssert.Multiple(
-                () => Assert.That(deserialized.TransactionGuid, Is.EqualTo("guid")),
-                () => Assert.That(deserialized.Unused, Is.EqualTo(false)),
-                () => Assert.That(deserialized.TripId, Is.EqualTo("tripId")),
-                () => Assert.That(deserialized.PathHash, Is.EqualTo("pathHash"))
-            );
-        }
+        NrAssert.Multiple(
+            () => Assert.That(deserialized.TransactionGuid, Is.EqualTo("guid")),
+            () => Assert.That(deserialized.Unused, Is.EqualTo(false)),
+            () => Assert.That(deserialized.TripId, Is.EqualTo("tripId")),
+            () => Assert.That(deserialized.PathHash, Is.EqualTo("pathHash"))
+        );
+    }
 
-        [Test]
-        public void TryDecodeAndDeserialize_ReturnsNull_IfIncorrectEncodingKey()
-        {
-            const string encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
+    [Test]
+    public void TryDecodeAndDeserialize_ReturnsNull_IfIncorrectEncodingKey()
+    {
+        const string encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
 
-            var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "wrong!");
+        var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "wrong!");
 
-            Assert.That(deserialized, Is.Null);
-        }
+        Assert.That(deserialized, Is.Null);
+    }
 
-        [Test]
-        public void TryDecodeAndDeserialize_ReturnsNull_IfInvalidString()
-        {
-            const string encoded = "not a valid base64 encoded string";
+    [Test]
+    public void TryDecodeAndDeserialize_ReturnsNull_IfInvalidString()
+    {
+        const string encoded = "not a valid base64 encoded string";
 
-            var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "encodingKey");
+        var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "encodingKey");
 
-            Assert.That(deserialized, Is.Null);
-        }
+        Assert.That(deserialized, Is.Null);
+    }
 
-        [Test]
-        public void TryDecodeAndDeserialize_ReturnsNull_IfObjectCannotBeDeserializedAsExpectedType()
-        {
-            const string encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
+    [Test]
+    public void TryDecodeAndDeserialize_ReturnsNull_IfObjectCannotBeDeserializedAsExpectedType()
+    {
+        const string encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
 
-            var deserialized = HeaderEncoder.TryDecodeAndDeserialize<MetricWireModel>(encoded, "encodingKey");
-            Assert.That(deserialized, Is.Null);
-        }
+        var deserialized = HeaderEncoder.TryDecodeAndDeserialize<MetricWireModel>(encoded, "encodingKey");
+        Assert.That(deserialized, Is.Null);
     }
 }

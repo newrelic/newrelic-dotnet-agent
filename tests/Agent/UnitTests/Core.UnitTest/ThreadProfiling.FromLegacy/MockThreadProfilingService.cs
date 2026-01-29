@@ -3,61 +3,60 @@
 
 using System.Collections;
 
-namespace NewRelic.Agent.Core.ThreadProfiling
+namespace NewRelic.Agent.Core.ThreadProfiling;
+
+public class MockThreadProfilingService : IThreadProfilingSessionControl, IThreadProfilingProcessing
 {
-    public class MockThreadProfilingService : IThreadProfilingSessionControl, IThreadProfilingProcessing
+    public int ProfileSessionId { get; private set; }
+
+    public uint Frequency { get; private set; }
+    public uint Duration { get; private set; }
+
+    public int ProfileId { get; private set; }
+    public bool ReportData { get; private set; }
+
+    public bool ProfileSessionIsActive { get; private set; }
+
+    public bool StartThreadProfilingSession(
+        int profileSessionId,
+        uint frequencyInMsec,
+        uint durationInMsec)
     {
-        public int ProfileSessionId { get; private set; }
+        ProfileSessionId = profileSessionId;
+        Frequency = frequencyInMsec;
+        Duration = durationInMsec;
+        ProfileSessionIsActive = true;
+        return true;
+    }
 
-        public uint Frequency { get; private set; }
-        public uint Duration { get; private set; }
+    public bool StopThreadProfilingSession(int profileId, bool reportData)
+    {
+        bool result = true;
 
-        public int ProfileId { get; private set; }
-        public bool ReportData { get; private set; }
+        ProfileId = profileId;
+        ReportData = reportData;
 
-        public bool ProfileSessionIsActive { get; private set; }
-
-        public bool StartThreadProfilingSession(
-            int profileSessionId,
-            uint frequencyInMsec,
-            uint durationInMsec)
+        if (ProfileSessionIsActive)
         {
-            ProfileSessionId = profileSessionId;
-            Frequency = frequencyInMsec;
-            Duration = durationInMsec;
-            ProfileSessionIsActive = true;
-            return true;
+            ProfileSessionIsActive = false;
+            result = false;
         }
+        return result;
+    }
 
-        public bool StopThreadProfilingSession(int profileId, bool reportData)
-        {
-            bool result = true;
+    public void AddNodeToPruningList(ProfileNode node)
+    {
+    }
 
-            ProfileId = profileId;
-            ReportData = reportData;
+    public void ResetCache()
+    {
+    }
 
-            if (ProfileSessionIsActive)
-            {
-                ProfileSessionIsActive = false;
-                result = false;
-            }
-            return result;
-        }
+    public void SortPruningTree()
+    {
+    }
 
-        public void AddNodeToPruningList(ProfileNode node)
-        {
-        }
+    public ArrayList PruningList { get; set; }
 
-        public void ResetCache()
-        {
-        }
-
-        public void SortPruningTree()
-        {
-        }
-
-        public ArrayList PruningList { get; set; }
-
-        public bool IgnoreMinMinimumSamplingDuration { get; private set; }
-}
+    public bool IgnoreMinMinimumSamplingDuration { get; private set; }
 }

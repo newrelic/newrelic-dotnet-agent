@@ -6,13 +6,13 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
-using NUnit.Framework;
-using Telerik.JustMock;
-using Nito.AsyncEx;
 using System.Threading;
 using System.Threading.Tasks;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
+using Nito.AsyncEx;
+using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {

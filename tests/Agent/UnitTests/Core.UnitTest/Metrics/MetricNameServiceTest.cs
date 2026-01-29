@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Fixtures;
-using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Testing.Assertions;
@@ -15,186 +14,271 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.Metrics
+namespace NewRelic.Agent.Core.Metrics;
+
+[TestFixture]
+class MetricNameServiceTest
 {
-    [TestFixture]
-    class MetricNameServiceTest
+    private MetricNameService _metricNameService;
+    private IConfiguration _configuration;
+    private ConfigurationAutoResponder _configurationResponder;
+
+    [SetUp]
+    public void SetUp()
     {
-        private MetricNameService _metricNameService;
-        private IConfiguration _configuration;
-        private ConfigurationAutoResponder _configurationResponder;
+        _configuration = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => _configuration.ConfigurationVersion).Returns(2);
+        _configurationResponder = new ConfigurationAutoResponder(_configuration);
+        _metricNameService = new MetricNameService();
+    }
 
-        [SetUp]
-        public void SetUp()
+    [TearDown]
+    public void TearDown()
+    {
+        _metricNameService.Dispose();
+        _configurationResponder.Dispose();
+    }
+
+    #region NormalizeUrl
+
+    [Test]
+    [TestCase("/apple", "/APPLE", Description = "Simple rule")]
+    [TestCase("/banana", "/banana", Description = "Rule that doesn't match")]
+    [TestCase("/banana/pie", "/BANANA/*", Description = "Rule with regex that matches")]
+    [TestCase("/apple/banana/pie", "/APPLE/BANANA/*", Description = "Two matching rules that don't conflict")]
+    [TestCase("/banana/apple/pie", "/BANANA/*", Description = "Two matching rules that conflict -- evaluation order matters!")]
+    public void NormalizeUrl_RenamesUrlAccordingToRules_IfRuleIsNotIgnore(string input, string expectedOutput)
+    {
+        Mock.Arrange(() => _configuration.UrlRegexRules).Returns(new List<RegexRule>
         {
-            _configuration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => _configuration.ConfigurationVersion).Returns(2);
-            _configurationResponder = new ConfigurationAutoResponder(_configuration);
-            _metricNameService = new MetricNameService();
-        }
+            new RegexRule("/apple", "/APPLE", false, 1, false, false, false),
+            new RegexRule("/banana/.*", "/BANANA/*", false, 2, false, false, false)
+        });
 
-        [TearDown]
-        public void TearDown()
+        var actualOutput = _metricNameService.NormalizeUrl(input);
+
+        Assert.That(actualOutput, Is.EqualTo(expectedOutput));
+    }
+
+    [Test]
+    [TestCase("/apple", true)]
+    [TestCase("/banana", false)]
+    public void NormalizeUrl_Throws_IfIgnoreRuleMatchesInput(string input, bool shouldThrow)
+    {
+        Mock.Arrange(() => _configuration.UrlRegexRules).Returns(new List<RegexRule>
         {
-            _metricNameService.Dispose();
-            _configurationResponder.Dispose();
-        }
+            new RegexRule("/apple", "ThisWillNeverHappen/apple", false, 10, false, false, false),
+            new RegexRule("/apple", null, true, 10, false, false, false)
+        });
 
-        #region NormalizeUrl
+        Action normalizeAction = () => _metricNameService.NormalizeUrl(input);
 
-        [Test]
-        [TestCase("/apple", "/APPLE", Description = "Simple rule")]
-        [TestCase("/banana", "/banana", Description = "Rule that doesn't match")]
-        [TestCase("/banana/pie", "/BANANA/*", Description = "Rule with regex that matches")]
-        [TestCase("/apple/banana/pie", "/APPLE/BANANA/*", Description = "Two matching rules that don't conflict")]
-        [TestCase("/banana/apple/pie", "/BANANA/*", Description = "Two matching rules that conflict -- evaluation order matters!")]
-        public void NormalizeUrl_RenamesUrlAccordingToRules_IfRuleIsNotIgnore(string input, string expectedOutput)
+        if (shouldThrow)
+            NrAssert.Throws<IgnoreTransactionException>(normalizeAction);
+        else
+            normalizeAction();
+    }
+
+    [Test]
+    public void NormalizeUrl_StripsQueryStringParametersBeforeProcessingRules()
+    {
+        Mock.Arrange(() => _configuration.UrlRegexRules).Returns(new List<RegexRule>
         {
-            Mock.Arrange(() => _configuration.UrlRegexRules).Returns(new List<RegexRule>
+            new RegexRule("customer/get", "customer/put", false, 10, false, false, false)
+        });
+
+        var result = _metricNameService.NormalizeUrl("/customer/get?ssn=4356334443");
+
+        Assert.That(result, Is.EqualTo("/customer/put"));
+    }
+
+    [TestCaseSource(typeof(MetricNameServiceTest), nameof(CrossAgentRegexRuleTestCases))]
+    public void NormalizeUrl_PassesAllCrossAgentUrlTests(RegexRuleTestCase testCase)
+    {
+        var regexRules = DefaultConfiguration.GetRegexRules(testCase.Rules);
+        Mock.Arrange(() => _configuration.UrlRegexRules).Returns(regexRules);
+
+        foreach (var test in testCase.Tests)
+        {
+            if (test == null)
+                continue;
+
+            string actualOutput;
+            try
             {
-                new RegexRule("/apple", "/APPLE", false, 1, false, false, false),
-                new RegexRule("/banana/.*", "/BANANA/*", false, 2, false, false, false)
-            });
-
-            var actualOutput = _metricNameService.NormalizeUrl(input);
-
-            Assert.That(actualOutput, Is.EqualTo(expectedOutput));
-        }
-
-        [Test]
-        [TestCase("/apple", true)]
-        [TestCase("/banana", false)]
-        public void NormalizeUrl_Throws_IfIgnoreRuleMatchesInput(string input, bool shouldThrow)
-        {
-            Mock.Arrange(() => _configuration.UrlRegexRules).Returns(new List<RegexRule>
-            {
-                new RegexRule("/apple", "ThisWillNeverHappen/apple", false, 10, false, false, false),
-                new RegexRule("/apple", null, true, 10, false, false, false)
-            });
-
-            Action normalizeAction = () => _metricNameService.NormalizeUrl(input);
-
-            if (shouldThrow)
-                NrAssert.Throws<IgnoreTransactionException>(normalizeAction);
-            else
-                normalizeAction();
-        }
-
-        [Test]
-        public void NormalizeUrl_StripsQueryStringParametersBeforeProcessingRules()
-        {
-            Mock.Arrange(() => _configuration.UrlRegexRules).Returns(new List<RegexRule>
-            {
-                new RegexRule("customer/get", "customer/put", false, 10, false, false, false)
-            });
-
-            var result = _metricNameService.NormalizeUrl("/customer/get?ssn=4356334443");
-
-            Assert.That(result, Is.EqualTo("/customer/put"));
-        }
-
-        [TestCaseSource(typeof(MetricNameServiceTest), nameof(CrossAgentRegexRuleTestCases))]
-        public void NormalizeUrl_PassesAllCrossAgentUrlTests(RegexRuleTestCase testCase)
-        {
-            var regexRules = DefaultConfiguration.GetRegexRules(testCase.Rules);
-            Mock.Arrange(() => _configuration.UrlRegexRules).Returns(regexRules);
-
-            foreach (var test in testCase.Tests)
-            {
-                if (test == null)
-                    continue;
-
-                string actualOutput;
-                try
-                {
-                    actualOutput = _metricNameService.NormalizeUrl(test.Input);
-                }
-                catch (IgnoreTransactionException)
-                {
-                    actualOutput = null;
-                }
-
-                Assert.That(actualOutput, Is.EqualTo(test.Expected));
+                actualOutput = _metricNameService.NormalizeUrl(test.Input);
             }
-        }
-
-        #endregion NormalizeUrl
-
-        #region TryGetApdex_t
-
-        [Test]
-        [TestCase("WebTransaction/Touchdown/Throw", 0.9)]
-        [TestCase("WebTransaction/Touchdown/throw", 0.4)]
-        public void TryGetApdex_t_ReturnsCorrectApdexValue_IfMatchIsFound(string input, double expectedOutput)
-        {
-            Mock.Arrange(() => _configuration.WebTransactionsApdex).Returns(new Dictionary<string, double>
+            catch (IgnoreTransactionException)
             {
-                {"WebTransaction/Touchdown/Throw", 0.9},
-                {"WebTransaction/Touchdown/throw", 0.4}
-            });
+                actualOutput = null;
+            }
 
-            var apdexResult = _metricNameService.TryGetApdex_t(input);
-
-            Assert.That(apdexResult, Is.Not.Null);
-            Assert.That(apdexResult.Value, Is.EqualTo(TimeSpan.FromSeconds(expectedOutput)));
+            Assert.That(actualOutput, Is.EqualTo(test.Expected));
         }
+    }
 
-        [Test]
-        [TestCase("WebTransaction/Touchdown/throw")]
-        [TestCase("WebTransaction/TD/Run")]
-        public void TryGetApdex_t_ReturnsNull_IfMatchIsNotFound(string input)
+    #endregion NormalizeUrl
+
+    #region TryGetApdex_t
+
+    [Test]
+    [TestCase("WebTransaction/Touchdown/Throw", 0.9)]
+    [TestCase("WebTransaction/Touchdown/throw", 0.4)]
+    public void TryGetApdex_t_ReturnsCorrectApdexValue_IfMatchIsFound(string input, double expectedOutput)
+    {
+        Mock.Arrange(() => _configuration.WebTransactionsApdex).Returns(new Dictionary<string, double>
         {
-            Mock.Arrange(() => _configuration.WebTransactionsApdex).Returns(new Dictionary<string, double>
+            {"WebTransaction/Touchdown/Throw", 0.9},
+            {"WebTransaction/Touchdown/throw", 0.4}
+        });
+
+        var apdexResult = _metricNameService.TryGetApdex_t(input);
+
+        Assert.That(apdexResult, Is.Not.Null);
+        Assert.That(apdexResult.Value, Is.EqualTo(TimeSpan.FromSeconds(expectedOutput)));
+    }
+
+    [Test]
+    [TestCase("WebTransaction/Touchdown/throw")]
+    [TestCase("WebTransaction/TD/Run")]
+    public void TryGetApdex_t_ReturnsNull_IfMatchIsNotFound(string input)
+    {
+        Mock.Arrange(() => _configuration.WebTransactionsApdex).Returns(new Dictionary<string, double>
+        {
+            {"WebTransaction/Touchdown/Throw", 0.9}
+        });
+
+        var apdexResult = _metricNameService.TryGetApdex_t(input);
+
+        Assert.That(apdexResult, Is.Null);
+    }
+
+    #endregion TryGetApdex_t
+
+    #region RenameTransaction
+
+    [Test]
+    [TestCase("WebTransaction/apple", "WebTransaction/APPLE", Description = "Simple rule")]
+    [TestCase("WebTransaction/banana", "WebTransaction/banana", Description = "Rule that doesn't match")]
+    [TestCase("WebTransaction/banana/pie", "WebTransaction/BANANA/*", Description = "Rule with regex that matches")]
+    [TestCase("WebTransaction/apple/banana/pie", "WebTransaction/APPLE/BANANA/*", Description = "Two matching rules that don't conflict")]
+    [TestCase("WebTransaction/banana/apple/pie", "WebTransaction/BANANA/*", Description = "Two matching rules that conflict -- evaluation order matters!")]
+    public void RenameTransaction_RenamesTransactionAccordingToRules_IfRuleIsNotIgnore(string originalName, string expectedOutput)
+    {
+        var originalMetricName = AsTransactionMetricName(originalName);
+
+        Mock.Arrange(() => _configuration.TransactionNameRegexRules).Returns(new List<RegexRule>
+        {
+            new RegexRule("/apple", "/APPLE", false, 1, false, false, false),
+            new RegexRule("/banana/.*", "/BANANA/*", false, 2, false, false, false)
+        });
+
+        var actualOutput = _metricNameService.RenameTransaction(originalMetricName);
+
+        Assert.That(actualOutput.PrefixedName, Is.EqualTo(expectedOutput));
+    }
+
+    [Test]
+    [TestCase("WebTransaction/apple", null)]
+    [TestCase("WebTransaction/banana", "WebTransaction/banana")]
+    public void RenameTransaction_ReturnsShouldIgnore_IfIgnoreRuleMatchesInput(string originalName, string expectedOutput)
+    {
+        var originalMetricName = AsTransactionMetricName(originalName);
+
+        Mock.Arrange(() => _configuration.TransactionNameRegexRules).Returns(new List<RegexRule>
+        {
+            new RegexRule("/apple", "ThisWillNeverHappen/apple", false, 10, false, false, false),
+            new RegexRule("/apple", null, true, 10, false, false, false)
+        });
+
+        var actualOutput = _metricNameService.RenameTransaction(originalMetricName);
+
+        if (expectedOutput == null)
+        {
+            Assert.That(actualOutput.ShouldIgnore, Is.True);
+        }
+        else
+        {
+            Assert.Multiple(() =>
             {
-                {"WebTransaction/Touchdown/Throw", 0.9}
+                Assert.That(actualOutput.ShouldIgnore, Is.False);
+                Assert.That(actualOutput.PrefixedName, Is.EqualTo(expectedOutput));
             });
+        }
+    }
 
-            var apdexResult = _metricNameService.TryGetApdex_t(input);
+    [Test]
+    public void RenameTransaction_ShouldNotRenameTransaction_IfRuleCreatesInvalidName()
+    {
+        // The result of this rule is an invalid name -- the renamed metric must still be a WebTransaction
+        Mock.Arrange(() => _configuration.TransactionNameRegexRules).Returns(new List<RegexRule>
+        {
+            new RegexRule("WebTransaction/foo/bar", "*", false, 10, false, false, false)
+        });
 
-            Assert.That(apdexResult, Is.Null);
+        var originalMetricName = new TransactionMetricName("WebTransaction", "foo/bar");
+        var newName = _metricNameService.RenameTransaction(originalMetricName);
+
+        Assert.That(newName.PrefixedName, Is.EqualTo(originalMetricName.PrefixedName));
+    }
+
+    private void CallRenameTransactionAndAssert(string originalName, string expectedRename, bool isWebTransaction = true)
+    {
+        var originalMetricName = AsTransactionMetricName(originalName);
+        var newMetricName = _metricNameService.RenameTransaction(originalMetricName);
+
+        Assert.That(newMetricName.PrefixedName, Is.EqualTo(expectedRename));
+    }
+
+    private TransactionMetricName AsTransactionMetricName(string originalName)
+    {
+        var segments = originalName.Split(MetricNames.PathSeparatorChar);
+        return new TransactionMetricName(segments[0], string.Join(MetricNames.PathSeparator, segments.Skip(1)));
+    }
+
+    [Test]
+    public void RenameTransaction_AppliesRegexRulesBeforeWhitelistRules()
+    {
+        Mock.Arrange(() => _configuration.TransactionNameRegexRules).Returns(new List<RegexRule>
+        {
+            new RegexRule("/InvalidSegment", "/ValidSegment", false, 10, false, false, false)
+        });
+        Mock.Arrange(() => _configuration.TransactionNameWhitelistRules).Returns(new Dictionary<string, IEnumerable<string>>
+        {
+            {"WebTransaction/Uri", new[]{"ValidSegment"}}
+        });
+
+        var originalMetricName = new TransactionMetricName("WebTransaction", "Uri/InvalidSegment/OtherInvalidSegment");
+        var newMetricName = _metricNameService.RenameTransaction(originalMetricName);
+
+        // The URL rule should transform it into "WebTransaction/Uri/ValidSegment/OtherInvalidSegment",
+        // then the transaction segment should transform it into "WebTransaction/Uri/ValidSegment/*"
+        Assert.That(newMetricName.PrefixedName, Is.EqualTo("WebTransaction/Uri/ValidSegment/*"));
+    }
+
+    [TestCaseSource(typeof(MetricNameServiceTest), nameof(CrossAgentWhitelistRuleTestCases))]
+    public void RenameTransaction_PassesAllCrossAgentTransactionSegmentTests(WhitelistRuleTestCase testCase)
+    {
+        if (testCase.TestName == "transaction_name_with_single_segment")
+        {
+            // NOTE: we intentionally ignore this particular test case because it makes no sense in the .NET agent. Our agent does not allow for transaction metric names to only have a single segments -- that would be an invalid name.
+            return;
         }
 
-        #endregion TryGetApdex_t
+        var whitelistRUles = DefaultConfiguration.GetWhitelistRules(testCase.Rules);
+        Mock.Arrange(() => _configuration.TransactionNameWhitelistRules).Returns(whitelistRUles);
 
-        #region RenameTransaction
-
-        [Test]
-        [TestCase("WebTransaction/apple", "WebTransaction/APPLE", Description = "Simple rule")]
-        [TestCase("WebTransaction/banana", "WebTransaction/banana", Description = "Rule that doesn't match")]
-        [TestCase("WebTransaction/banana/pie", "WebTransaction/BANANA/*", Description = "Rule with regex that matches")]
-        [TestCase("WebTransaction/apple/banana/pie", "WebTransaction/APPLE/BANANA/*", Description = "Two matching rules that don't conflict")]
-        [TestCase("WebTransaction/banana/apple/pie", "WebTransaction/BANANA/*", Description = "Two matching rules that conflict -- evaluation order matters!")]
-        public void RenameTransaction_RenamesTransactionAccordingToRules_IfRuleIsNotIgnore(string originalName, string expectedOutput)
+        foreach (var test in testCase.Tests)
         {
+            if (test == null)
+                continue;
+
+            var originalName = test.Input;
             var originalMetricName = AsTransactionMetricName(originalName);
-
-            Mock.Arrange(() => _configuration.TransactionNameRegexRules).Returns(new List<RegexRule>
-            {
-                new RegexRule("/apple", "/APPLE", false, 1, false, false, false),
-                new RegexRule("/banana/.*", "/BANANA/*", false, 2, false, false, false)
-            });
 
             var actualOutput = _metricNameService.RenameTransaction(originalMetricName);
 
-            Assert.That(actualOutput.PrefixedName, Is.EqualTo(expectedOutput));
-        }
-
-        [Test]
-        [TestCase("WebTransaction/apple", null)]
-        [TestCase("WebTransaction/banana", "WebTransaction/banana")]
-        public void RenameTransaction_ReturnsShouldIgnore_IfIgnoreRuleMatchesInput(string originalName, string expectedOutput)
-        {
-            var originalMetricName = AsTransactionMetricName(originalName);
-
-            Mock.Arrange(() => _configuration.TransactionNameRegexRules).Returns(new List<RegexRule>
-            {
-                new RegexRule("/apple", "ThisWillNeverHappen/apple", false, 10, false, false, false),
-                new RegexRule("/apple", null, true, 10, false, false, false)
-            });
-
-            var actualOutput = _metricNameService.RenameTransaction(originalMetricName);
-
-            if (expectedOutput == null)
+            if (test.Expected == null)
             {
                 Assert.That(actualOutput.ShouldIgnore, Is.True);
             }
@@ -203,193 +287,108 @@ namespace NewRelic.Agent.Core.Metrics
                 Assert.Multiple(() =>
                 {
                     Assert.That(actualOutput.ShouldIgnore, Is.False);
-                    Assert.That(actualOutput.PrefixedName, Is.EqualTo(expectedOutput));
+                    Assert.That(actualOutput.PrefixedName, Is.EqualTo(test.Expected));
                 });
             }
         }
+    }
 
-        [Test]
-        public void RenameTransaction_ShouldNotRenameTransaction_IfRuleCreatesInvalidName()
+    #endregion RenameTransaction
+
+    #region RenameMetric
+
+    [Test]
+    [TestCase(null, null, Description = "Null in, null out")]
+    [TestCase("/apple", "/APPLE", Description = "Simple rule")]
+    [TestCase("/banana", "/banana", Description = "Rule that doesn't match")]
+    [TestCase("/banana/pie", "/BANANA/*", Description = "Rule with regex that matches")]
+    [TestCase("/apple/banana/pie", "/APPLE/BANANA/*", Description = "Two matching rules that don't conflict")]
+    [TestCase("/banana/apple/pie", "/BANANA/*", Description = "Two matching rules that conflict -- evaluation order matters!")]
+    public void RenameMetric_RenamesMetricAccordingToRules_IfRuleIsNotIgnore(string input, string expectedOutput)
+    {
+        Mock.Arrange(() => _configuration.MetricNameRegexRules).Returns(new List<RegexRule>
         {
-            // The result of this rule is an invalid name -- the renamed metric must still be a WebTransaction
-            Mock.Arrange(() => _configuration.TransactionNameRegexRules).Returns(new List<RegexRule>
-            {
-                new RegexRule("WebTransaction/foo/bar", "*", false, 10, false, false, false)
-            });
+            new RegexRule("/apple", "/APPLE", false, 1, false, false, false),
+            new RegexRule("/banana/.*", "/BANANA/*", false, 2, false, false, false)
+        });
 
-            var originalMetricName = new TransactionMetricName("WebTransaction", "foo/bar");
-            var newName = _metricNameService.RenameTransaction(originalMetricName);
+        var actualOutput = _metricNameService.RenameMetric(input);
 
-            Assert.That(newName.PrefixedName, Is.EqualTo(originalMetricName.PrefixedName));
+        Assert.That(actualOutput, Is.EqualTo(expectedOutput));
+    }
+
+    [Test]
+    [TestCase("/apple", null)]
+    [TestCase("/banana", "/banana")]
+    public void RenameMetric_ReturnsNull_IfRuleIsIgnore(string input, string expectedOutput)
+    {
+        Mock.Arrange(() => _configuration.MetricNameRegexRules).Returns(new List<RegexRule>
+        {
+            new RegexRule("/apple", "ThisWillNeverHappen/apple", false, 10, false, false, false),
+            new RegexRule("/apple", null, true, 10, false, false, false)
+        });
+
+        var actualOutput = _metricNameService.RenameMetric(input);
+
+        Assert.That(actualOutput, Is.EqualTo(expectedOutput));
+    }
+
+    [TestCaseSource(typeof(MetricNameServiceTest), nameof(CrossAgentRegexRuleTestCases))]
+    public void RenameMetric_PassesAllCrossAgentUrlTests(RegexRuleTestCase testCase)
+    {
+        var regexRules = DefaultConfiguration.GetRegexRules(testCase.Rules);
+        Mock.Arrange(() => _configuration.MetricNameRegexRules).Returns(regexRules);
+
+        foreach (var test in testCase.Tests)
+        {
+            if (test == null)
+                continue;
+
+            var actualOutput = _metricNameService.RenameMetric(test.Input);
+
+            Assert.That(actualOutput, Is.EqualTo(test.Expected));
         }
+    }
 
-        private void CallRenameTransactionAndAssert(string originalName, string expectedRename, bool isWebTransaction = true)
+    #endregion RenameMetric
+
+    #region Cross-agent test data
+
+    public class WhitelistRuleTestCase
+    {
+        [JsonProperty(PropertyName = "testname")]
+        public string TestName { get; set; }
+        [JsonProperty(PropertyName = "transaction_segment_terms")]
+        public IEnumerable<ServerConfiguration.WhitelistRule> Rules { get; set; }
+        [JsonProperty(PropertyName = "tests")]
+        public IEnumerable<TestCase> Tests { get; set; }
+    }
+
+    public class RegexRuleTestCase
+    {
+        [JsonProperty(PropertyName = "testname")]
+        public string TestName { get; set; }
+        [JsonProperty(PropertyName = "rules")]
+        public IEnumerable<ServerConfiguration.RegexRule> Rules { get; set; }
+        [JsonProperty(PropertyName = "tests")]
+        public IEnumerable<TestCase> Tests { get; set; }
+    }
+
+    public class TestCase
+    {
+        [JsonProperty(PropertyName = "input")]
+        public string Input { get; set; }
+        [JsonProperty(PropertyName = "expected")]
+        public string Expected { get; set; }
+    }
+
+    private static IEnumerable<RegexRuleTestCase[]> CrossAgentRegexRuleTestCases
+    {
+        get
         {
-            var originalMetricName = AsTransactionMetricName(originalName);
-            var newMetricName = _metricNameService.RenameTransaction(originalMetricName);
+            #region JSON
 
-            Assert.That(newMetricName.PrefixedName, Is.EqualTo(expectedRename));
-        }
-
-        private TransactionMetricName AsTransactionMetricName(string originalName)
-        {
-            var segments = originalName.Split(MetricNames.PathSeparatorChar);
-            return new TransactionMetricName(segments[0], string.Join(MetricNames.PathSeparator, segments.Skip(1)));
-        }
-
-        [Test]
-        public void RenameTransaction_AppliesRegexRulesBeforeWhitelistRules()
-        {
-            Mock.Arrange(() => _configuration.TransactionNameRegexRules).Returns(new List<RegexRule>
-            {
-                new RegexRule("/InvalidSegment", "/ValidSegment", false, 10, false, false, false)
-            });
-            Mock.Arrange(() => _configuration.TransactionNameWhitelistRules).Returns(new Dictionary<string, IEnumerable<string>>
-            {
-                {"WebTransaction/Uri", new[]{"ValidSegment"}}
-            });
-
-            var originalMetricName = new TransactionMetricName("WebTransaction", "Uri/InvalidSegment/OtherInvalidSegment");
-            var newMetricName = _metricNameService.RenameTransaction(originalMetricName);
-
-            // The URL rule should transform it into "WebTransaction/Uri/ValidSegment/OtherInvalidSegment",
-            // then the transaction segment should transform it into "WebTransaction/Uri/ValidSegment/*"
-            Assert.That(newMetricName.PrefixedName, Is.EqualTo("WebTransaction/Uri/ValidSegment/*"));
-        }
-
-        [TestCaseSource(typeof(MetricNameServiceTest), nameof(CrossAgentWhitelistRuleTestCases))]
-        public void RenameTransaction_PassesAllCrossAgentTransactionSegmentTests(WhitelistRuleTestCase testCase)
-        {
-            if (testCase.TestName == "transaction_name_with_single_segment")
-            {
-                // NOTE: we intentionally ignore this particular test case because it makes no sense in the .NET agent. Our agent does not allow for transaction metric names to only have a single segments -- that would be an invalid name.
-                return;
-            }
-
-            var whitelistRUles = DefaultConfiguration.GetWhitelistRules(testCase.Rules);
-            Mock.Arrange(() => _configuration.TransactionNameWhitelistRules).Returns(whitelistRUles);
-
-            foreach (var test in testCase.Tests)
-            {
-                if (test == null)
-                    continue;
-
-                var originalName = test.Input;
-                var originalMetricName = AsTransactionMetricName(originalName);
-
-                var actualOutput = _metricNameService.RenameTransaction(originalMetricName);
-
-                if (test.Expected == null)
-                {
-                    Assert.That(actualOutput.ShouldIgnore, Is.True);
-                }
-                else
-                {
-                    Assert.Multiple(() =>
-                    {
-                        Assert.That(actualOutput.ShouldIgnore, Is.False);
-                        Assert.That(actualOutput.PrefixedName, Is.EqualTo(test.Expected));
-                    });
-                }
-            }
-        }
-
-        #endregion RenameTransaction
-
-        #region RenameMetric
-
-        [Test]
-        [TestCase(null, null, Description = "Null in, null out")]
-        [TestCase("/apple", "/APPLE", Description = "Simple rule")]
-        [TestCase("/banana", "/banana", Description = "Rule that doesn't match")]
-        [TestCase("/banana/pie", "/BANANA/*", Description = "Rule with regex that matches")]
-        [TestCase("/apple/banana/pie", "/APPLE/BANANA/*", Description = "Two matching rules that don't conflict")]
-        [TestCase("/banana/apple/pie", "/BANANA/*", Description = "Two matching rules that conflict -- evaluation order matters!")]
-        public void RenameMetric_RenamesMetricAccordingToRules_IfRuleIsNotIgnore(string input, string expectedOutput)
-        {
-            Mock.Arrange(() => _configuration.MetricNameRegexRules).Returns(new List<RegexRule>
-            {
-                new RegexRule("/apple", "/APPLE", false, 1, false, false, false),
-                new RegexRule("/banana/.*", "/BANANA/*", false, 2, false, false, false)
-            });
-
-            var actualOutput = _metricNameService.RenameMetric(input);
-
-            Assert.That(actualOutput, Is.EqualTo(expectedOutput));
-        }
-
-        [Test]
-        [TestCase("/apple", null)]
-        [TestCase("/banana", "/banana")]
-        public void RenameMetric_ReturnsNull_IfRuleIsIgnore(string input, string expectedOutput)
-        {
-            Mock.Arrange(() => _configuration.MetricNameRegexRules).Returns(new List<RegexRule>
-            {
-                new RegexRule("/apple", "ThisWillNeverHappen/apple", false, 10, false, false, false),
-                new RegexRule("/apple", null, true, 10, false, false, false)
-            });
-
-            var actualOutput = _metricNameService.RenameMetric(input);
-
-            Assert.That(actualOutput, Is.EqualTo(expectedOutput));
-        }
-
-        [TestCaseSource(typeof(MetricNameServiceTest), nameof(CrossAgentRegexRuleTestCases))]
-        public void RenameMetric_PassesAllCrossAgentUrlTests(RegexRuleTestCase testCase)
-        {
-            var regexRules = DefaultConfiguration.GetRegexRules(testCase.Rules);
-            Mock.Arrange(() => _configuration.MetricNameRegexRules).Returns(regexRules);
-
-            foreach (var test in testCase.Tests)
-            {
-                if (test == null)
-                    continue;
-
-                var actualOutput = _metricNameService.RenameMetric(test.Input);
-
-                Assert.That(actualOutput, Is.EqualTo(test.Expected));
-            }
-        }
-
-        #endregion RenameMetric
-
-        #region Cross-agent test data
-
-        public class WhitelistRuleTestCase
-        {
-            [JsonProperty(PropertyName = "testname")]
-            public string TestName { get; set; }
-            [JsonProperty(PropertyName = "transaction_segment_terms")]
-            public IEnumerable<ServerConfiguration.WhitelistRule> Rules { get; set; }
-            [JsonProperty(PropertyName = "tests")]
-            public IEnumerable<TestCase> Tests { get; set; }
-        }
-
-        public class RegexRuleTestCase
-        {
-            [JsonProperty(PropertyName = "testname")]
-            public string TestName { get; set; }
-            [JsonProperty(PropertyName = "rules")]
-            public IEnumerable<ServerConfiguration.RegexRule> Rules { get; set; }
-            [JsonProperty(PropertyName = "tests")]
-            public IEnumerable<TestCase> Tests { get; set; }
-        }
-
-        public class TestCase
-        {
-            [JsonProperty(PropertyName = "input")]
-            public string Input { get; set; }
-            [JsonProperty(PropertyName = "expected")]
-            public string Expected { get; set; }
-        }
-
-        private static IEnumerable<RegexRuleTestCase[]> CrossAgentRegexRuleTestCases
-        {
-            get
-            {
-                #region JSON
-
-                const string json = @"
+            const string json = @"
 [
   {
     ""testname"":""replace first"",
@@ -557,23 +556,23 @@ namespace NewRelic.Agent.Core.Metrics
 ]
 ";
 
-                #endregion JSON
+            #endregion JSON
 
-                var testCases = JsonConvert.DeserializeObject<IEnumerable<RegexRuleTestCase>>(json);
-                Assert.That(testCases, Is.Not.Null);
-                return testCases
-                    .Where(testCase => testCase != null)
-                    .Select(testCase => new[] { testCase });
-            }
+            var testCases = JsonConvert.DeserializeObject<IEnumerable<RegexRuleTestCase>>(json);
+            Assert.That(testCases, Is.Not.Null);
+            return testCases
+                .Where(testCase => testCase != null)
+                .Select(testCase => new[] { testCase });
         }
+    }
 
-        private static IEnumerable<WhitelistRuleTestCase[]> CrossAgentWhitelistRuleTestCases
+    private static IEnumerable<WhitelistRuleTestCase[]> CrossAgentWhitelistRuleTestCases
+    {
+        get
         {
-            get
-            {
-                #region JSON
+            #region JSON
 
-                const string json = @"
+            const string json = @"
 [
   {
     ""testname"": ""basic"",
@@ -947,16 +946,15 @@ namespace NewRelic.Agent.Core.Metrics
 ]
 ";
 
-                #endregion JSON
+            #endregion JSON
 
-                var testCases = JsonConvert.DeserializeObject<IEnumerable<WhitelistRuleTestCase>>(json);
-                Assert.That(testCases, Is.Not.Null);
-                return testCases
-                    .Where(testCase => testCase != null)
-                    .Select(testCase => new[] { testCase });
-            }
+            var testCases = JsonConvert.DeserializeObject<IEnumerable<WhitelistRuleTestCase>>(json);
+            Assert.That(testCases, Is.Not.Null);
+            return testCases
+                .Where(testCase => testCase != null)
+                .Select(testCase => new[] { testCase });
         }
-
-        #endregion Cross-agent test data
     }
+
+    #endregion Cross-agent test data
 }
