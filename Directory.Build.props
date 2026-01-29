@@ -6,6 +6,6 @@
     <!-- Disable SDK’s pruning of (apparently) unused PackageReferences -->
     <RestoreEnablePackagePruning>false</RestoreEnablePackagePruning>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- save for later <GenerateDocumentationFile>true</GenerateDocumentationFile>-->
   </PropertyGroup>
 </Project>
