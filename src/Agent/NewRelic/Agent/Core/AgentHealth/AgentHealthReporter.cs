@@ -848,7 +848,7 @@ public class AgentHealthReporter : ConfigurationBasedService, IAgentHealthReport
 
         try
         {
-            using var fs = _fileWrapper.OpenWrite(Path.Combine(_healthCheckPath, _healthCheck.FileName));
+            using var fs = _fileWrapper.CreateOpenOverwrite(Path.Combine(_healthCheckPath, _healthCheck.FileName));
             var payloadBytes = Encoding.UTF8.GetBytes(healthCheckYaml);
             fs.Write(payloadBytes, 0, payloadBytes.Length);
             fs.Flush();

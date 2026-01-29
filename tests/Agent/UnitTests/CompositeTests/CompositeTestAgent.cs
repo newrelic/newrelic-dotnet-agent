@@ -200,7 +200,7 @@ public class CompositeTestAgent : IDisposable
                 .DoInstead((byte[] content, int offset, int len) => _serverlessPayloadMemoryStream.Write(content, 0, content.Length));
             var fileWrapper = Mock.Create<IFileWrapper>();
             Mock.Arrange(() => fileWrapper.Exists(Arg.IsAny<string>())).Returns(true);
-            Mock.Arrange(() => fileWrapper.OpenWrite(Arg.IsAny<string>())).Returns(fs);
+            Mock.Arrange(() => fileWrapper.CreateOpenOverwrite(Arg.IsAny<string>())).Returns(fs);
 
             _container.ReplaceInstanceRegistration(fileWrapper);
         }

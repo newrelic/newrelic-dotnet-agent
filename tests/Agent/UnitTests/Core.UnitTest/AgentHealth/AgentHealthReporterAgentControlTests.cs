@@ -107,7 +107,7 @@ public class AgentHealthReporterAgentControlTests
 
         var fileWrapper = Mock.Create<IFileWrapper>();
         Mock.Arrange(() => fileWrapper.TryCreateFile(Arg.IsAny<string>(), Arg.IsAny<bool>())).Returns(true);
-        Mock.Arrange(() => fileWrapper.OpenWrite(Arg.IsAny<string>())).Returns(fs);
+        Mock.Arrange(() => fileWrapper.CreateOpenOverwrite(Arg.IsAny<string>())).Returns(fs);
 
         var directoryWrapper = Mock.Create<IDirectoryWrapper>();
         Mock.Arrange(() => directoryWrapper.Exists(Arg.IsAny<string>())).Returns(true);
@@ -216,7 +216,7 @@ public class AgentHealthReporterAgentControlTests
 
         var fileWrapper = Mock.Create<IFileWrapper>();
         Mock.Arrange(() => fileWrapper.TryCreateFile(Arg.IsAny<string>(), Arg.IsAny<bool>())).Returns(true);
-        Mock.Arrange(() => fileWrapper.OpenWrite(Arg.IsAny<string>())).Throws(new IOException());
+        Mock.Arrange(() => fileWrapper.CreateOpenOverwrite(Arg.IsAny<string>())).Throws(new IOException());
 
         var directoryWrapper = Mock.Create<IDirectoryWrapper>();
         Mock.Arrange(() => directoryWrapper.Exists(Arg.IsAny<string>())).Returns(true);
@@ -247,7 +247,7 @@ public class AgentHealthReporterAgentControlTests
 
         var fileWrapper = Mock.Create<IFileWrapper>();
         Mock.Arrange(() => fileWrapper.TryCreateFile(Arg.IsAny<string>(), Arg.IsAny<bool>())).Returns(true);
-        Mock.Arrange(() => fileWrapper.OpenWrite(Arg.IsAny<string>())).Returns(fs);
+        Mock.Arrange(() => fileWrapper.CreateOpenOverwrite(Arg.IsAny<string>())).Returns(fs);
 
         var directoryWrapper = Mock.Create<IDirectoryWrapper>();
         Mock.Arrange(() => directoryWrapper.Exists(Arg.IsAny<string>())).Returns(true);
@@ -290,7 +290,7 @@ public class AgentHealthReporterAgentControlTests
 
         var fileWrapper = Mock.Create<IFileWrapper>();
         Mock.Arrange(() => fileWrapper.TryCreateFile(Arg.IsAny<string>(), Arg.IsAny<bool>())).Returns(true);
-        Mock.Arrange(() => fileWrapper.OpenWrite(Arg.IsAny<string>())).Returns(fs);
+        Mock.Arrange(() => fileWrapper.CreateOpenOverwrite(Arg.IsAny<string>())).Returns(fs);
 
         var directoryWrapper = Mock.Create<IDirectoryWrapper>();
         Mock.Arrange(() => directoryWrapper.Exists(Arg.IsAny<string>())).Returns(true);
@@ -446,7 +446,7 @@ public class AgentHealthReporterAgentControlTests
 
         var fileWrapper = Mock.Create<IFileWrapper>();
         Mock.Arrange(() => fileWrapper.TryCreateFile(Arg.IsAny<string>(), Arg.IsAny<bool>())).Returns(true);
-        Mock.Arrange(() => fileWrapper.OpenWrite(Arg.IsAny<string>())).Returns(fs);
+        Mock.Arrange(() => fileWrapper.CreateOpenOverwrite(Arg.IsAny<string>())).Returns(fs);
 
         var directoryWrapper = Mock.Create<IDirectoryWrapper>();
         Mock.Arrange(() => directoryWrapper.Exists(Arg.IsAny<string>())).Returns(true);
