@@ -2,124 +2,123 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using NewRelic.Testing.Assertions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Testing.Assertions;
 using Xunit;
 
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
+namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus;
+
+public abstract class NsbAsyncCmdHandlerTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class NsbAsyncCmdHandlerTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture : ConsoleDynamicMethodFixture
+    private readonly ConsoleDynamicMethodFixture _fixture;
+
+    protected NsbAsyncCmdHandlerTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly ConsoleDynamicMethodFixture _fixture;
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.SetTimeout(TimeSpan.FromMinutes(3));
 
-        protected NsbAsyncCmdHandlerTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(3));
+        _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithAsyncCommandHandler");
+        _fixture.AddCommand("NServiceBusDriver SendCommand");
 
-            _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithAsyncCommandHandler");
-            _fixture.AddCommand("NServiceBusDriver SendCommand");
-
-            _fixture.AddActions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ForceTransactionTraces();
-                    configModifier.SetLogLevel("finest");
-                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(30));
-                    _fixture.SendCommand("NServiceBusDriver StopNServiceBus");
-                }
-            );
-
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var expectedMetrics = new List<Assertions.ExpectedMetric>
+        _fixture.AddActions
+        (
+            setupConfiguration: () =>
             {
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Consume/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command"},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Consume/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command",
-                                                metricScope = @"OtherTransaction/Message/NServiceBus/Queue/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command"},
-                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Message/NServiceBus/Queue/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command"}
-            };
-
-            var expectedTransactionTraceSegments = new List<string>
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ForceTransactionTraces();
+                configModifier.SetLogLevel("finest");
+                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
+            },
+            exerciseApplication: () =>
             {
-                @"MessageBroker/NServiceBus/Queue/Consume/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command"
-            };
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(30));
+                _fixture.SendCommand("NServiceBusDriver StopNServiceBus");
+            }
+        );
 
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
-
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Message/NServiceBus/Queue/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Message/NServiceBus/Queue/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command");
-
-            NrAssert.Multiple(
-                () => Assert.NotNull(transactionSample),
-                () => Assert.NotNull(transactionEvent)
-            );
-
-            NrAssert.Multiple
-            (
-                () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
-            );
-
-            Assert.DoesNotContain("Transaction was garbage collected without ever ending", _fixture.AgentLog.GetFullLogAsString());
-        }
+        _fixture.Initialize();
     }
 
-    public class NsbAsyncCmdHandlerTestsFW471 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
+    [Fact]
+    public void Test()
     {
-        public NsbAsyncCmdHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output)
+        var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-        }
-    }
+            new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Consume/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command"},
+            new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Consume/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command",
+                metricScope = @"OtherTransaction/Message/NServiceBus/Queue/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command"},
+            new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Message/NServiceBus/Queue/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command"}
+        };
 
-    public class NsbAsyncCmdHandlerTestsFW48 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
-    {
-        public NsbAsyncCmdHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output)
+        var expectedTransactionTraceSegments = new List<string>
         {
-        }
-    }
+            @"MessageBroker/NServiceBus/Queue/Consume/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command"
+        };
 
-    public class NsbAsyncCmdHandlerTestsFWLatest : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public NsbAsyncCmdHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-    public class NsbAsyncCmdHandlerTestsCoreOldest : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
-    {
-        public NsbAsyncCmdHandlerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
+        var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Message/NServiceBus/Queue/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command");
+        var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Message/NServiceBus/Queue/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command");
 
-    public class NsbAsyncCmdHandlerTestsCoreLatest : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+        NrAssert.Multiple(
+            () => Assert.NotNull(transactionSample),
+            () => Assert.NotNull(transactionEvent)
+        );
+
+        NrAssert.Multiple
+        (
+            () => Assertions.MetricsExist(expectedMetrics, metrics),
+            () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
+        );
+
+        Assert.DoesNotContain("Transaction was garbage collected without ever ending", _fixture.AgentLog.GetFullLogAsString());
+    }
+}
+
+public class NsbAsyncCmdHandlerTestsFW471 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
+{
+    public NsbAsyncCmdHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public NsbAsyncCmdHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
+    }
+}
+
+public class NsbAsyncCmdHandlerTestsFW48 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
+{
+    public NsbAsyncCmdHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class NsbAsyncCmdHandlerTestsFWLatest : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public NsbAsyncCmdHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class NsbAsyncCmdHandlerTestsCoreOldest : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public NsbAsyncCmdHandlerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class NsbAsyncCmdHandlerTestsCoreLatest : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public NsbAsyncCmdHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }
