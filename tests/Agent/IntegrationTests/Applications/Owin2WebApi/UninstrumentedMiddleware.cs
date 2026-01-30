@@ -2,21 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using Microsoft.Owin;
 using System.Threading.Tasks;
+using Microsoft.Owin;
 
-namespace Owin2WebApi
+namespace Owin2WebApi;
+
+public class UninstrumentedMiddleware : OwinMiddleware
 {
-    public class UninstrumentedMiddleware : OwinMiddleware
+    public UninstrumentedMiddleware(OwinMiddleware next) : base(next)
     {
-        public UninstrumentedMiddleware(OwinMiddleware next) : base(next)
-        {
-        }
+    }
 
-        public override async Task Invoke(IOwinContext context)
-        {
-            await Task.Delay(1);
-            await Next.Invoke(context);
-        }
+    public override async Task Invoke(IOwinContext context)
+    {
+        await Task.Delay(1);
+        await Next.Invoke(context);
     }
 }

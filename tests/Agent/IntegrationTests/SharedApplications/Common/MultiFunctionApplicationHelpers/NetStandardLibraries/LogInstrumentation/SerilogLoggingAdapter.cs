@@ -6,7 +6,9 @@ using System.Collections.Generic;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+#if !NET462
 using Serilog.Formatting.Json;
+#endif
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation;
 

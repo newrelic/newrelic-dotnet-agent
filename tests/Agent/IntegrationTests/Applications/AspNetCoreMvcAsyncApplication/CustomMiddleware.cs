@@ -7,30 +7,29 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NewRelic.Api.Agent;
 
-namespace AspNetCoreMvcAsyncApplication
+namespace AspNetCoreMvcAsyncApplication;
+
+public class CustomMiddleware
 {
-    public class CustomMiddleware
+    private readonly RequestDelegate _next;
+
+    public CustomMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
+        _next = next;
+    }
 
-        public CustomMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
+    [Trace]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public async Task Invoke(HttpContext context)
+    {
+        await MiddlewareMethodAsync();
+        await _next(context);
+    }
 
-        [Trace]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public async Task Invoke(HttpContext context)
-        {
-            await MiddlewareMethodAsync();
-            await _next(context);
-        }
-
-        [Trace]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private async Task MiddlewareMethodAsync()
-        {
-            await Task.Delay(1);
-        }
+    [Trace]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private async Task MiddlewareMethodAsync()
+    {
+        await Task.Delay(1);
     }
 }

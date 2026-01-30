@@ -8,39 +8,38 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AspNetCoreBasicWebApiApplication.Controllers
+namespace AspNetCoreBasicWebApiApplication.Controllers;
+
+[ApiController]
+[Route("api/[controller]/[action]")]
+public class DefaultController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]/[action]")]
-    public class DefaultController : ControllerBase
+    public DefaultController()
     {
-        public DefaultController()
-        {
-        }
+    }
 
-        public async Task<string> MakeExternalCallUsingHttpClient(string baseAddress, string path)
+    public async Task<string> MakeExternalCallUsingHttpClient(string baseAddress, string path)
+    {
+        using (var client = new HttpClient())
         {
-            using (var client = new HttpClient())
+            client.BaseAddress = new Uri(baseAddress);
+            var response = await client.GetStringAsync(path);
+
+            if (!string.IsNullOrEmpty(response))
             {
-                client.BaseAddress = new Uri(baseAddress);
-                var response = await client.GetStringAsync(path);
-
-                if (!string.IsNullOrEmpty(response))
-                {
-                    return "Worked";
-                }
-
-                return "Error";
+                return "Worked";
             }
-        }
 
-        public string AwesomeName()
-        {
-            return "Chuck Norris";
+            return "Error";
         }
-        public string GetTraceId()
-        {
-            return Activity.Current.TraceId.ToString();
-        }
+    }
+
+    public string AwesomeName()
+    {
+        return "Chuck Norris";
+    }
+    public string GetTraceId()
+    {
+        return Activity.Current.TraceId.ToString();
     }
 }

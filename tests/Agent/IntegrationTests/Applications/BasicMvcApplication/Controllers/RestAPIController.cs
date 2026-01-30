@@ -5,51 +5,50 @@
 using System.Collections.Generic;
 using System.Web.Http;
 
-namespace BasicMvcApplication.Controllers
+namespace BasicMvcApplication.Controllers;
+
+public class RestAPIController : ApiController
 {
-    public class RestAPIController : ApiController
+    public class Bird
     {
-        public class Bird
-        {
-            public string CommonName { get; set; }
-            public string BandingCode { get; set; }
-        }
+        public string CommonName { get; set; }
+        public string BandingCode { get; set; }
+    }
 
-        // GET: api/RestAPI
-        public IEnumerable<Bird> Get()
-        {
-            return new Bird[] { new Bird { CommonName = "American Kestrel", BandingCode = "AMKE" }, new Bird { CommonName = "Snowy Owl", BandingCode = "SNOW" } };
-        }
+    // GET: api/RestAPI
+    public IEnumerable<Bird> Get()
+    {
+        return new Bird[] { new Bird { CommonName = "American Kestrel", BandingCode = "AMKE" }, new Bird { CommonName = "Snowy Owl", BandingCode = "SNOW" } };
+    }
 
-        // GET: api/RestAPI/5
-        public Bird Get(int id)
+    // GET: api/RestAPI/5
+    public Bird Get(int id)
+    {
+        // If the ID is 4, this request is coming from the RestSharpClientTaskCancelled parent
+        // endpoint and we need to ensure that the client times out before the request succeeds
+        if (id == 4)
         {
-            // If the ID is 4, this request is coming from the RestSharpClientTaskCancelled parent
-            // endpoint and we need to ensure that the client times out before the request succeeds
-            if (id == 4)
-            {
-                System.Threading.Thread.Sleep(100);
-            }    
-            //System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"GET api/RestAPI/{id} called" + System.Environment.NewLine);
-            return new Bird { CommonName = "Northern Flicker", BandingCode = "NOFL" };
-        }
+            System.Threading.Thread.Sleep(100);
+        }    
+        //System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"GET api/RestAPI/{id} called" + System.Environment.NewLine);
+        return new Bird { CommonName = "Northern Flicker", BandingCode = "NOFL" };
+    }
 
-        // POST: api/RestAPI
-        public void Post([FromBody] Bird bird)
-        {
-            //System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"POST api/RestAPI called with {bird.CommonName} ({bird.BandingCode})" + System.Environment.NewLine);
-        }
+    // POST: api/RestAPI
+    public void Post([FromBody] Bird bird)
+    {
+        //System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"POST api/RestAPI called with {bird.CommonName} ({bird.BandingCode})" + System.Environment.NewLine);
+    }
 
-        // PUT: api/RestAPI/5
-        public void Put(int id, [FromBody]Bird bird)
-        {
-            //System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"PUT api/RestAPI/{id} called with {bird.CommonName} ({bird.BandingCode})" + System.Environment.NewLine);
-        }
+    // PUT: api/RestAPI/5
+    public void Put(int id, [FromBody]Bird bird)
+    {
+        //System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"PUT api/RestAPI/{id} called with {bird.CommonName} ({bird.BandingCode})" + System.Environment.NewLine);
+    }
 
-        // DELETE: api/RestAPI/5
-        public void Delete(int id)
-        {
-            //System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"DELETE api/RestAPI/{id} called" + System.Environment.NewLine);
-        }
+    // DELETE: api/RestAPI/5
+    public void Delete(int id)
+    {
+        //System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"DELETE api/RestAPI/{id} called" + System.Environment.NewLine);
     }
 }

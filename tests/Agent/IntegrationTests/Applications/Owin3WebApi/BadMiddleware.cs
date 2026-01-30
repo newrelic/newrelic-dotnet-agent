@@ -3,23 +3,22 @@
 
 
 using System;
-using Microsoft.Owin;
 using System.Threading.Tasks;
+using Microsoft.Owin;
 
-namespace Owin3WebApi
+namespace Owin3WebApi;
+
+public class BadMiddleware : OwinMiddleware
 {
-    public class BadMiddleware : OwinMiddleware
+    public BadMiddleware(OwinMiddleware next) : base(next)
     {
-        public BadMiddleware(OwinMiddleware next) : base(next)
-        {
-        }
+    }
 
 #pragma warning disable 1998
-        public override async Task Invoke(IOwinContext context)
-        {
-            throw new ArgumentException("This exception is from the BadMiddleware");
-        }
+    public override async Task Invoke(IOwinContext context)
+    {
+        throw new ArgumentException("This exception is from the BadMiddleware");
+    }
 #pragma warning restore 1998
 
-    }
 }

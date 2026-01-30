@@ -4,16 +4,16 @@
 
 using System;
 
-namespace BasicAspWebService
+namespace BasicAspWebService;
+
+public partial class TestClient : System.Web.UI.Page
 {
-    public partial class TestClient : System.Web.UI.Page
+
+    protected void Page_Load(object sender, EventArgs e)
     {
+        NewRelic.Api.Agent.NewRelic.IgnoreTransaction();
 
-        protected void Page_Load(object sender, EventArgs e)
-        {
-            NewRelic.Api.Agent.NewRelic.IgnoreTransaction();
-
-            string script = @"
+        string script = @"
 							var helloWorldProxy;
 							function pageLoad() {
 								helloWorldProxy = new BasicAspWebService.HelloWorld();
@@ -35,7 +35,6 @@ namespace BasicAspWebService
 									error.get_message();
 								}
 							}";
-            Page.ClientScript.RegisterStartupScript(this.GetType(), "JsFunc", script, true);
-        }
+        Page.ClientScript.RegisterStartupScript(this.GetType(), "JsFunc", script, true);
     }
 }

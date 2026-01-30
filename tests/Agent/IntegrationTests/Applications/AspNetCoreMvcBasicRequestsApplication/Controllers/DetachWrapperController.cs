@@ -6,30 +6,29 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AspNetCoreMvcBasicRequestsApplication.Controllers
+namespace AspNetCoreMvcBasicRequestsApplication.Controllers;
+
+public class DetachWrapperController : Controller
 {
-    public class DetachWrapperController : Controller
+    public async Task<string> CallAsyncExternal()
     {
-        public async Task<string> CallAsyncExternal()
+        var task = Task.Run(async () => await AsyncMethodWithExternalCall());
+
+        using (var client = new HttpClient())
         {
-            var task = Task.Run(async () => await AsyncMethodWithExternalCall());
-
-            using (var client = new HttpClient())
-            {
-                var result = await client.GetStringAsync("http://www.newrelic.com");
-            }
-
-            await task;
-            return "Worked";
+            var result = await client.GetStringAsync("http://www.newrelic.com");
         }
 
-        private async Task<string> AsyncMethodWithExternalCall()
+        await task;
+        return "Worked";
+    }
+
+    private async Task<string> AsyncMethodWithExternalCall()
+    {
+        using (var client = new HttpClient())
         {
-            using (var client = new HttpClient())
-            {
-                var result = await client.GetStringAsync("http://www.google.com");
-                return result;
-            }
+            var result = await client.GetStringAsync("http://www.google.com");
+            return result;
         }
     }
 }

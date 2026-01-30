@@ -4,13 +4,12 @@
 
 using System;
 
-namespace ServiceStackApplication
+namespace ServiceStackApplication;
+
+public class Global : System.Web.HttpApplication
 {
-    public class Global : System.Web.HttpApplication
+    protected void Application_Start(object sender, EventArgs e)
     {
-        protected void Application_Start(object sender, EventArgs e)
-        {
-            new AppHost().Init();
-        }
+        new AppHost().Init();
     }
 }

@@ -5,30 +5,29 @@
 using System;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AspNetCoreMvcBasicRequestsApplication.Controllers
+namespace AspNetCoreMvcBasicRequestsApplication.Controllers;
+
+public class ExpectedErrorTestController : Controller
 {
-    public class ExpectedErrorTestController : Controller
+    public void ThrowExceptionWithMessage(string exceptionMessage)
     {
-        public void ThrowExceptionWithMessage(string exceptionMessage)
-        {
-            throw new Exception(exceptionMessage);
-        }
-
-        public void ThrowCustomException()
-        {
-            throw new CustomExceptionClass("This in a CustomExceptionClass exception.");
-        }
-
-        public void ReturnADesiredStatusCode(int statusCode)
-        {
-            Request.HttpContext.Response.StatusCode = statusCode;
-        }
+        throw new Exception(exceptionMessage);
     }
 
-    public class CustomExceptionClass : Exception
+    public void ThrowCustomException()
     {
-        public CustomExceptionClass(string message) : base(message)
-        {
-        }
+        throw new CustomExceptionClass("This in a CustomExceptionClass exception.");
+    }
+
+    public void ReturnADesiredStatusCode(int statusCode)
+    {
+        Request.HttpContext.Response.StatusCode = statusCode;
+    }
+}
+
+public class CustomExceptionClass : Exception
+{
+    public CustomExceptionClass(string message) : base(message)
+    {
     }
 }

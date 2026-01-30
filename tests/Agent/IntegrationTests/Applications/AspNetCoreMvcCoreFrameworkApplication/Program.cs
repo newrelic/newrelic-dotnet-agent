@@ -8,30 +8,29 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using NewRelic.Agent.IntegrationTests.Shared.Util;
 
-namespace AspNetCoreMvcCoreFrameworkApplication
+namespace AspNetCoreMvcCoreFrameworkApplication;
+
+public class Program
 {
-    public class Program
+    private const string DefaultPort = "5001";
+
+    public static void Main(string[] args)
     {
-        private const string DefaultPort = "5001";
-
-        public static void Main(string[] args)
+        Task webHostTask = null;
+        IntegrationTestingFrameworkUtil.RegisterProcessWithTestFrameworkAndInitialize(args, DefaultPort, out var eventWaitHandle, out var cancellationTokenSource, (allArgs, cts, port) => webHostTask = BuildWebHost(allArgs, port).RunAsync(cts.Token));
+        using (eventWaitHandle)
         {
-            Task webHostTask = null;
-            IntegrationTestingFrameworkUtil.RegisterProcessWithTestFrameworkAndInitialize(args, DefaultPort, out var eventWaitHandle, out var cancellationTokenSource, (allArgs, cts, port) => webHostTask = BuildWebHost(allArgs, port).RunAsync(cts.Token));
-            using (eventWaitHandle)
-            {
-                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
-            }
-
-            cancellationTokenSource.Cancel();
-
-            webHostTask?.GetAwaiter().GetResult();
+            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
         }
 
-        public static IWebHost BuildWebHost(string[] args, string port) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .UseUrls($@"http://127.0.0.1:{port}/")
-                .Build();
+        cancellationTokenSource.Cancel();
+
+        webHostTask?.GetAwaiter().GetResult();
     }
+
+    public static IWebHost BuildWebHost(string[] args, string port) =>
+        WebHost.CreateDefaultBuilder(args)
+            .UseStartup<Startup>()
+            .UseUrls($@"http://127.0.0.1:{port}/")
+            .Build();
 }

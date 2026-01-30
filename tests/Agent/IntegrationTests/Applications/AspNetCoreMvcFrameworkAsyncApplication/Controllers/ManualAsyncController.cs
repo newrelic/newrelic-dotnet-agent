@@ -7,50 +7,49 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AspNetCoreMvcFrameworkAsyncApplication.Controllers
+namespace AspNetCoreMvcFrameworkAsyncApplication.Controllers;
+
+public class ManualAsyncController : Controller
 {
-    public class ManualAsyncController : Controller
+    public string TaskRunBlocked()
     {
-        public string TaskRunBlocked()
-        {
-            var task = Task.Run(() => TaskRunBackgroundMethod());
+        var task = Task.Run(() => TaskRunBackgroundMethod());
 
-            return task.Result;
-        }
+        return task.Result;
+    }
 
-        public string TaskFactoryStartNewBlocked()
-        {
-            Task.Factory.StartNew(TaskFactoryStartNewBackgroundMethod).Wait();
+    public string TaskFactoryStartNewBlocked()
+    {
+        Task.Factory.StartNew(TaskFactoryStartNewBackgroundMethod).Wait();
 
-            return "Worked";
-        }
+        return "Worked";
+    }
 
-        public string NewThreadStartBlocked()
-        {
-            var thread = new Thread(ThreadStartBackgroundMethod);
-            thread.Start();
+    public string NewThreadStartBlocked()
+    {
+        var thread = new Thread(ThreadStartBackgroundMethod);
+        thread.Start();
 
-            thread.Join();
+        thread.Join();
 
-            return "Worked";
-        }
+        return "Worked";
+    }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private string TaskRunBackgroundMethod()
-        {
-            return "Worked";
-        }
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private string TaskRunBackgroundMethod()
+    {
+        return "Worked";
+    }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private void TaskFactoryStartNewBackgroundMethod()
-        {
-            //do nothing
-        }
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void TaskFactoryStartNewBackgroundMethod()
+    {
+        //do nothing
+    }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ThreadStartBackgroundMethod()
-        {
-            //do nothing
-        }
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ThreadStartBackgroundMethod()
+    {
+        //do nothing
     }
 }

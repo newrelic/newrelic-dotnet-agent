@@ -4,15 +4,14 @@
 
 using System.Web.Http;
 
-namespace Owin4WebApi.Controllers
+namespace Owin4WebApi.Controllers;
+
+public class DistributedTracingReceiverController : ApiController
 {
-    public class DistributedTracingReceiverController : ApiController
+    [HttpGet]
+    [Route("api/CallEnd")]
+    public string CallEnd()
     {
-        [HttpGet]
-        [Route("api/CallEnd")]
-        public string CallEnd()
-        {
-            return "Worked";
-        }
+        return "Worked";
     }
 }
