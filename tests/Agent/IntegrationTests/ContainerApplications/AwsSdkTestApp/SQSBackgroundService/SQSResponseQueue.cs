@@ -7,29 +7,28 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 
-namespace AwsSdkTestApp.SQSBackgroundService
+namespace AwsSdkTestApp.SQSBackgroundService;
+
+public class SQSResponseQueue : ISQSResponseQueue
 {
-    public class SQSResponseQueue : ISQSResponseQueue
+    private readonly Channel<IEnumerable<Message>> _responseQueue;
+
+    public SQSResponseQueue()
     {
-        private readonly Channel<IEnumerable<Message>> _responseQueue;
-
-        public SQSResponseQueue()
+        var options = new BoundedChannelOptions(1)
         {
-            var options = new BoundedChannelOptions(1)
-            {
-                FullMode = BoundedChannelFullMode.Wait
-            };
-            _responseQueue = Channel.CreateBounded<IEnumerable<Message>>(options);
-        }
+            FullMode = BoundedChannelFullMode.Wait
+        };
+        _responseQueue = Channel.CreateBounded<IEnumerable<Message>>(options);
+    }
 
-        public async Task QueueResponseAsync(IEnumerable<Message> messages)
-        {
-            await _responseQueue.Writer.WriteAsync(messages);
-        }
+    public async Task QueueResponseAsync(IEnumerable<Message> messages)
+    {
+        await _responseQueue.Writer.WriteAsync(messages);
+    }
 
-        public async Task<IEnumerable<Message>> DequeueAsync(CancellationToken cancellationToken)
-        {
-            return await _responseQueue.Reader.ReadAsync(cancellationToken);
-        }
+    public async Task<IEnumerable<Message>> DequeueAsync(CancellationToken cancellationToken)
+    {
+        return await _responseQueue.Reader.ReadAsync(cancellationToken);
     }
 }

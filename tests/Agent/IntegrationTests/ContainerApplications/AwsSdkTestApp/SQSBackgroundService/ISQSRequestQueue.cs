@@ -4,12 +4,11 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AwsSdkTestApp.SQSBackgroundService
-{
-    public interface ISQSRequestQueue
-    {
-        Task QueueRequestAsync(string queueUrl);
+namespace AwsSdkTestApp.SQSBackgroundService;
 
-        Task<string> DequeueAsync(CancellationToken cancellationToken);
-    }
+public interface ISQSRequestQueue
+{
+    Task QueueRequestAsync(string queueUrl);
+
+    Task<string> DequeueAsync(CancellationToken cancellationToken);
 }

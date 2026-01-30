@@ -5,10 +5,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 
-namespace AwsSdkTestApp.SQSBackgroundService
+namespace AwsSdkTestApp.SQSBackgroundService;
+
+public interface ISQSReceiverService
 {
-    public interface ISQSReceiverService
-    {
-        Task<IEnumerable<Message>> ReceiveAMessageAsync(string queueUrl);
-    }
+    Task<IEnumerable<Message>> ReceiveAMessageAsync(string queueUrl);
 }

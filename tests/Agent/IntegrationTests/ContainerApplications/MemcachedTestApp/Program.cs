@@ -1,9 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Diagnostics;
-using System.IO;
 using System;
+using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -11,42 +10,41 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace MemcachedTestApp
+namespace MemcachedTestApp;
+
+public class Program
 {
-    public class Program
+    public static async Task Main(string[] args)
     {
-        public static async Task Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-            builder.Services.AddControllers();
-            builder.Services.AddSingleton<IBlogPostService, BlogPostService>();
-            builder.Services.AddEnyimMemcached(options => options.AddServer("memcached-server", 11211));
+        // Add services to the container.
+        builder.Services.AddControllers();
+        builder.Services.AddSingleton<IBlogPostService, BlogPostService>();
+        builder.Services.AddEnyimMemcached(options => options.AddServer("memcached-server", 11211));
 
-            // listen to any ip on port 80 for http
-            IPEndPoint ipEndPointHttp = new IPEndPoint(IPAddress.Any, 80);
-            builder.WebHost.UseUrls($"http://{ipEndPointHttp}");
+        // listen to any ip on port 80 for http
+        IPEndPoint ipEndPointHttp = new IPEndPoint(IPAddress.Any, 80);
+        builder.WebHost.UseUrls($"http://{ipEndPointHttp}");
 
-            var app = builder.Build();
+        var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            app.UseAuthorization();
-            app.MapControllers();
+        // Configure the HTTP request pipeline.
+        app.UseAuthorization();
+        app.MapControllers();
 
-            await app.StartAsync();
+        await app.StartAsync();
 
-            CreatePidFile();
+        CreatePidFile();
 
-            await app.WaitForShutdownAsync();
-        }
+        await app.WaitForShutdownAsync();
+    }
 
-        public static void CreatePidFile()
-        {
-            var pidFileNameAndPath = Path.Combine(Environment.GetEnvironmentVariable("NEW_RELIC_LOG_DIRECTORY"), "containerizedapp.pid");
-            var pid = Environment.ProcessId;
-            using var file = File.CreateText(pidFileNameAndPath);
-            file.WriteLine(pid);
-        }
+    public static void CreatePidFile()
+    {
+        var pidFileNameAndPath = Path.Combine(Environment.GetEnvironmentVariable("NEW_RELIC_LOG_DIRECTORY"), "containerizedapp.pid");
+        var pid = Environment.ProcessId;
+        using var file = File.CreateText(pidFileNameAndPath);
+        file.WriteLine(pid);
     }
 }
