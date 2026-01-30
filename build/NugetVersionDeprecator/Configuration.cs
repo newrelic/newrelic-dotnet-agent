@@ -1,11 +1,10 @@
-﻿// Copyright 2023 New Relic, Inc. All rights reserved.
+// Copyright 2023 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NugetVersionDeprecator
+namespace NugetVersionDeprecator;
+
+public class Configuration
 {
-    public class Configuration
-    {
-        [YamlDotNet.Serialization.YamlMember(Alias = "nuget-packages")]
-        public List<string> Packages { get; set; }
-    }
+    [YamlDotNet.Serialization.YamlMember(Alias = "nuget-packages")]
+    public List<string> Packages { get; set; }
 }
