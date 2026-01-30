@@ -3,7 +3,9 @@
     <LangVersion>default</LangVersion>
     <RootProjectDirectory>$(MSBuildThisFileDirectory)</RootProjectDirectory>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-      <!-- Disable SDK’s pruning of (apparently) unused PackageReferences -->
+    <!-- Disable SDK’s pruning of (apparently) unused PackageReferences -->
     <RestoreEnablePackagePruning>false</RestoreEnablePackagePruning>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- save for later <GenerateDocumentationFile>true</GenerateDocumentationFile>-->
   </PropertyGroup>
 </Project>

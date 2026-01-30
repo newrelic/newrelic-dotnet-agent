@@ -3,7 +3,6 @@
 
 #if NETFRAMEWORK
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using NewRelic.Agent.Extensions.Logging;
@@ -106,6 +105,8 @@ namespace NewRelic.Agent.Core.SharedInterfaces
         /// Used by dependency injection to resolve the factory for creating a perf counter
         /// </summary>
         /// <param name="categoryName"></param>
+        /// <param name="counterName"></param>
+        /// <param name="instanceName"></param>
         /// <returns></returns>
         public static IPerformanceCounterProxy DefaultCreatePerformanceCounterProxy(string categoryName, string counterName, string instanceName)
         {
@@ -118,6 +119,7 @@ namespace NewRelic.Agent.Core.SharedInterfaces
         /// </summary>
         /// <returns>the instance name or NULL if one could not be identified.</returns>
         /// <param name="categoryName"></param>
+        /// <param name="lastKnownName"></param>
         public string GetCurrentProcessInstanceNameForCategory(string categoryName, string lastKnownName)
         {
             var processName = _processStatic.GetCurrentProcess().ProcessName;
@@ -146,6 +148,7 @@ namespace NewRelic.Agent.Core.SharedInterfaces
         /// <param name="perfCategoryName"></param>
         /// <param name="processName"></param>
         /// <param name="pid"></param>
+        /// <param name="lastKnownName"></param>
         /// <returns>The instance name that will be used to collect performance counter data for the process</returns>
         private string GetInstanceNameForProcessAndCategory(string perfCategoryName, string processName, int pid, string lastKnownName)
         {

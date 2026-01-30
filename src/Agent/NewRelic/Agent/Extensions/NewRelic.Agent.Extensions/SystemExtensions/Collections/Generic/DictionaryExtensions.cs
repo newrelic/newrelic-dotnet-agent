@@ -42,7 +42,7 @@ public static class DictionaryExtensions
     /// <typeparam name="TValue">The type of the <paramref name="dictionary"/>'s value.</typeparam>
     /// <param name="dictionary">The dictionary to lookup the value in.</param>
     /// <param name="key">The key to lookup in the <paramref name="dictionary"/>.</param>
-    /// <param name="default">The value to return if nothing is found in <paramref name="dictionary"/> at <paramref name="key"/>.</param>
+    /// <param name="defaultEvaluator">The value to return if nothing is found in <paramref name="dictionary"/> at <paramref name="key"/>.</param>
     /// <returns>Either the value found at <paramref name="key"/> or the result of evaluating <paramref name="defaultEvaluator"/> if <paramref name="key"/> is not found.</returns>
     public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TValue> defaultEvaluator)
     {

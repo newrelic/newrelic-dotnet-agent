@@ -371,6 +371,7 @@ public sealed class AgentManager : IAgentManager, IDisposable
     /// <param name="argumentSignature"></param>
     /// <param name="invocationTarget"></param>
     /// <param name="arguments"></param>
+    /// <param name="functionId"></param>
     /// <returns>Returns an ITracer, although it is given as the much simpler Object;
     /// an Object is the preferred type because it has a trival type signature.</returns>
     public ITracer GetTracerImpl(string tracerFactoryName, uint tracerArguments, string metricName, string assemblyName, Type type, string typeName, string methodName, string argumentSignature, object invocationTarget, object[] arguments, ulong functionId)

@@ -35,7 +35,7 @@ public interface IAgent : IAgentExperimental
     /// <param name="destinationType"></param>
     /// <param name="brokerVendorName">The name of the message broker vendor. Must not be null.</param>
     /// <param name="destination">The destination queue of the message being handled. Can be null.</param>
-    /// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
+    /// <param name="wrapperOnCreate"></param>
     /// <returns></returns>
     ITransaction CreateTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, Action wrapperOnCreate = null);
 

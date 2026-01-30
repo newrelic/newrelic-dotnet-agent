@@ -41,6 +41,7 @@ public interface ITransactionService
     /// Removes any outstanding internal transactions.
     /// </summary>
     /// <param name="removeAsync">If true, removes from async context storage</param>
+    /// <param name="removePrimary"></param>
     void RemoveOutstandingInternalTransactions(bool removeAsync, bool removePrimary);
 
     /// <summary>

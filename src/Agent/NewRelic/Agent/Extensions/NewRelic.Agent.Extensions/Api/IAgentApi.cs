@@ -158,7 +158,7 @@ public interface IAgentApi
 
     /// <summary> Set the name of the current transaction. Supports web applications only. </summary>
     ///
-    /// <exception cref="ArgumentNullException"> Thrown when <paramref name="key"/> is null. </exception>
+    /// <exception cref="ArgumentNullException"> Thrown when <paramref name="name"/> is null. </exception>
     ///
     /// <param name="category"> The category of this transaction, used to distinguish different types
     /// of transactions. Only the first 1000 characters are retained.  If null is passed, the

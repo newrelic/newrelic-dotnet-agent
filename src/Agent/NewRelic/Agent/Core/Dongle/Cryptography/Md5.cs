@@ -241,7 +241,7 @@ public class Md5
      *********************************************************/
 
     /// <summary>
-    /// perform transformation using f(((b&c) | (~(b)&d))
+    /// perform transformation using f(((b&amp;c) | (~(b)&amp;d))
     /// </summary>
     protected void TransF(ref uint a, uint b, uint c, uint d, uint k, ushort s, uint i)
     {
@@ -249,7 +249,7 @@ public class Md5
     }
 
     /// <summary>
-    /// perform transformation using g((b&d) | (c & ~d) )
+    /// perform transformation using g((b&amp;d) | (c &amp; ~d) )
     /// </summary>
     protected void TransG(ref uint a, uint b, uint c, uint d, uint k, ushort s, uint i)
     {

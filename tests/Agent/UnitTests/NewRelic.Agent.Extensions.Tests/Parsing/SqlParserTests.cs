@@ -6,9 +6,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+#if NETFRAMEWORK
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
+#endif
+using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.SqlServer.Server;
@@ -238,7 +240,7 @@ public class SqlParserTests
             Assert.That(parsedDatabaseStatement.ToString(), Is.EqualTo("dude - [dudeservice.getalldudes]/select"));
         });
     }
-        
+
     [Test]
     public void SqlParserTest_PullNameFromComment_ReplaceSlashes()
     {
@@ -289,7 +291,7 @@ public class SqlParserTests
             Assert.That(parsedDatabaseStatement.ToString(), Is.EqualTo("MyCustomQueryName/other"));
         });
     }
-                
+
 
     [Test]
     public void SqlParserTest_TestSelectWithBracket()

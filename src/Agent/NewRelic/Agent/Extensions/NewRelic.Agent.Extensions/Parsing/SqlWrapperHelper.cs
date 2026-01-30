@@ -27,7 +27,6 @@ public static class SqlWrapperHelper
     /// Gets the name of the datastore being used by a dbCommand.
     /// </summary>
     /// <param name="command">The command to get the datastore name from</param>
-    /// <param name="typeName">Optional. If included, this method will not spend any CPU cycles using reflection to determine the type name of command.</param>
     /// <returns></returns>
     public static DatastoreVendor GetVendorName(IDbCommand command)
     {

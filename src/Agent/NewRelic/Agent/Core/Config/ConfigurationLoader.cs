@@ -366,7 +366,6 @@ public static class ConfigurationLoader
     /// </summary>
     /// <param name="fileName"></param>
     /// <param name="publishDeserializedEvent"></param>
-    /// <exception cref="">System.UnauthorizedAccessException</exception>
     /// <returns>The configuration.</returns>
     public static configuration Initialize(string fileName, bool publishDeserializedEvent = true)
     {

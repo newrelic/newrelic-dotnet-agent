@@ -22,6 +22,12 @@ charset = utf-8 # supposed to get rid of the BOM issue
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
 
+# save for later, only enabled for the `src` folder now
+# IDE0005: Using directive is unnecessary
+#dotnet_diagnostic.IDE0005.severity = warning
+# CS1591: Missing XML comment for publicly visible type or member
+#dotnet_diagnostic.CS1591.severity = none
+
 # this. preferences
 dotnet_style_qualification_for_field = false:silent
 dotnet_style_qualification_for_property = false:silent

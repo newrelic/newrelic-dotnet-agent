@@ -1,7 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-
+#if NETFRAMEWORK
 using System;
+#endif
 using System.Threading;
 using Grpc.Core;
 using NewRelic.Agent.Core.Segments;

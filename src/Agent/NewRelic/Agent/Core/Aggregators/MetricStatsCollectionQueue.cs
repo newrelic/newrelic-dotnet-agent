@@ -51,7 +51,7 @@ public class MetricStatsCollectionQueue
     /// wait for us to finish before fetching/replacing the entire queue
     /// </summary>
     /// <param name="statsCollectionQueue"></param>
-    /// <param name="metric"></param>
+    /// <param name="metrics"></param>
     private void AddMetricsToCollection(ConcurrentQueue<MetricStatsCollection> statsCollectionQueue, IAllMetricStatsCollection metrics)
     {
         MetricStatsCollection statsCollectionToMergeWith = null;

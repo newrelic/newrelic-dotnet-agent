@@ -12,7 +12,7 @@ public static class CrossApplicationTracingJsonHelper
     /// Responsible for performing a more performant json parse into an array.  Heavily influenced by CAT Headers implementation.
     /// Accepts expected minimum and maximum sizes and returns null in most cases if the JSON cannot be converted to an array.
     /// </summary>
-    /// <param name="json"></param>
+    /// <param name="reader"></param>
     /// <param name="minimumTokens">The minimum number of tokens in the array.  If less than this, return null.</param>
     /// <param name="maximumTokens">The maximum number of array items that can be in the json array.  The returned array is always this size.</param>
     /// <returns>An array containing the string from the JSON.</returns>

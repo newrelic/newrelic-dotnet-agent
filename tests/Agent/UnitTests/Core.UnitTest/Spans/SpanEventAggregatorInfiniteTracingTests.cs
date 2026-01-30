@@ -148,23 +148,23 @@ internal class SpanEventAggregatorInfiniteTracingTests
         );
     }
 
-    /// <summary>
-    /// If the queue size is invalid (<=0), 
-    /// 1.  The data streaming service should stop streaming events
-    /// 2.  Items in the queue should be dropped
-    /// 3.  Supportabiilty metric should be recorded
-    /// </summary>
-    [TestCase(-1, false, "Invalid Config Option")]
-    [TestCase(0, false, "Invalid Config Option")]
-    [TestCase(1, true, "Queue Capacity Smaller than Requests (5)")]
-    [TestCase(2, true, "Queue Capacity Smaller than Requests (5)")]
-    [TestCase(5, true, "Queue Capacity >= requests (5)")]
-    [TestCase(6, true, "Queue Capacity >= requests (5)")]
-    public void Queue_ValidConfigSetting(int configQueueSize, bool expectedIsAvailable, string scenarioName)
-    {
-        var countShutdown = 0;
-        var countStartConsuming = 0;
-        var actualQueue = null as PartitionedBlockingCollection<Span>;
+        /// <summary>
+        /// If the queue size is invalid (less than or equal to 0), 
+        /// 1.  The data streaming service should stop streaming events
+        /// 2.  Items in the queue should be dropped
+        /// 3.  Supportabiilty metric should be recorded
+        /// </summary>
+        [TestCase(-1, false, "Invalid Config Option")]
+        [TestCase(0, false, "Invalid Config Option")]
+        [TestCase(1, true, "Queue Capacity Smaller than Requests (5)")]
+        [TestCase(2, true, "Queue Capacity Smaller than Requests (5)")]
+        [TestCase(5, true, "Queue Capacity >= requests (5)")]
+        [TestCase(6, true, "Queue Capacity >= requests (5)")]
+        public void Queue_ValidConfigSetting(int configQueueSize, bool expectedIsAvailable, string scenarioName)
+        {
+            var countShutdown = 0;
+            var countStartConsuming = 0;
+            var actualQueue = null as PartitionedBlockingCollection<Span>;
 
         var streamingSvc = GetMockStreamingService(true, true);
         Mock.Arrange(() => streamingSvc.StartConsumingCollection(Arg.IsAny<PartitionedBlockingCollection<Span>>()))
@@ -482,23 +482,23 @@ internal class SpanEventAggregatorInfiniteTracingTests
     }
 
 
-    /// <summary>
-    /// If the queue size is invalid (<=0), 
-    /// 1.  The data streaming service should stop streaming events
-    /// 2.  Items in the queue should be dropped
-    /// 3.  Supportabiilty metric should be recorded
-    /// </summary>
-    [TestCase(-1, ExpectedResult = false)]
-    [TestCase(0, ExpectedResult = false)]
-    [TestCase(1, ExpectedResult = true)]
-    [TestCase(2, ExpectedResult = true)]
-    [TestCase(62, ExpectedResult = true)]
-    [TestCase(63, ExpectedResult = false)]
-    [TestCase(200, ExpectedResult = false)]
-    public bool PartitionCount_ValidConfigSetting(int configPartitionCount)
-    {
-        Mock.Arrange(() => _currentConfiguration.InfiniteTracingPartitionCountSpans).Returns(configPartitionCount);
-        Mock.Arrange(() => _currentConfiguration.InfiniteTracingQueueSizeSpans).Returns(10000);
+        /// <summary>
+        /// If the queue size is invalid (less than or equal to 0), 
+        /// 1.  The data streaming service should stop streaming events
+        /// 2.  Items in the queue should be dropped
+        /// 3.  Supportabiilty metric should be recorded
+        /// </summary>
+        [TestCase(-1, ExpectedResult = false)]
+        [TestCase(0, ExpectedResult = false)]
+        [TestCase(1, ExpectedResult = true)]
+        [TestCase(2, ExpectedResult = true)]
+        [TestCase(62, ExpectedResult = true)]
+        [TestCase(63, ExpectedResult = false)]
+        [TestCase(200, ExpectedResult = false)]
+        public bool PartitionCount_ValidConfigSetting(int configPartitionCount)
+        {
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingPartitionCountSpans).Returns(configPartitionCount);
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingQueueSizeSpans).Returns(10000);
 
         var streamingSvc = GetMockStreamingService(true, true);
 

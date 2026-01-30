@@ -1,82 +1,77 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if !NETFRAMEWORK
-using System;
+#if NET
 using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
+namespace NewRelic.Agent.Core.DataTransport.Client;
+
+internal class NRHttpClientFactoryTests
 {
-    internal class NRHttpClientFactoryTests
+    private IConfiguration _mockConfiguration;
+    private IWebProxy _mockProxy;
+    private IHttpClientFactory _httpClientFactory;
+
+    [SetUp]
+    public void SetUp()
     {
-        private IConfiguration _mockConfiguration;
-        private IWebProxy _mockProxy;
-        private IHttpClientFactory _httpClientFactory;
+        _mockConfiguration = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => _mockConfiguration.AgentLicenseKey).Returns("12345");
+        Mock.Arrange(() => _mockConfiguration.AgentRunId).Returns("123");
+        Mock.Arrange(() => _mockConfiguration.CollectorMaxPayloadSizeInBytes).Returns(int.MaxValue);
+        Mock.Arrange(() => _mockConfiguration.CollectorTimeout).Returns(12345);
 
-        [SetUp]
-        public void SetUp()
-        {
-            _mockConfiguration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => _mockConfiguration.AgentLicenseKey).Returns("12345");
-            Mock.Arrange(() => _mockConfiguration.AgentRunId).Returns("123");
-            Mock.Arrange(() => _mockConfiguration.CollectorMaxPayloadSizeInBytes).Returns(int.MaxValue);
-            Mock.Arrange(() => _mockConfiguration.CollectorTimeout).Returns(12345);
+        _mockProxy = Mock.Create<IWebProxy>();
 
-            _mockProxy = Mock.Create<IWebProxy>();
+        _httpClientFactory = new NRHttpClientFactory();
+    }
 
-            _httpClientFactory = new NRHttpClientFactory();
-        }
+    [Test]
+    public void CreateClient_NotNull()
+    {
+        var client = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
 
-        [Test]
-        public void CreateClient_NotNull()
-        {
-            var client = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
+        Assert.That(client, Is.Not.Null);
+    }
 
-            Assert.That(client, Is.Not.Null);
-        }
+    [Test]
+    public void CreateClient_NoProxy_ReturnsSameClient()
+    {
+        var clientA = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
+        var clientB = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
 
-        [Test]
-        public void CreateClient_NoProxy_ReturnsSameClient()
-        {
-            var clientA = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
-            var clientB = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
+        Assert.That(clientA, Is.EqualTo(clientB));
+    }
 
-            Assert.That(clientA, Is.EqualTo(clientB));
-        }
+    [Test]
+    public void CreateClient_Proxy_ReturnsSameClient()
+    {
+        var clientA = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
+        var clientB = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
 
-        [Test]
-        public void CreateClient_Proxy_ReturnsSameClient()
-        {
-            var clientA = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
-            var clientB = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
+        Assert.That(clientA, Is.EqualTo(clientB));
+    }
 
-            Assert.That(clientA, Is.EqualTo(clientB));
-        }
+    [Test]
+    public void CreateClient_NoProxyToProxy_ReturnsNewClient()
+    {
+        var clientA = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
+        var clientB = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
 
-        [Test]
-        public void CreateClient_NoProxyToProxy_ReturnsNewClient()
-        {
-            var clientA = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
-            var clientB = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
+        Assert.That(clientA, Is.Not.EqualTo(clientB));
+    }
 
-            Assert.That(clientA, Is.Not.EqualTo(clientB));
-        }
+    [Test]
+    public void CreateClient_ProxyToNoProxy_ReturnsNewClient()
+    {
+        var clientA = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
+        var clientB = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
 
-        [Test]
-        public void CreateClient_ProxyToNoProxy_ReturnsNewClient()
-        {
-            var clientA = _httpClientFactory.GetOrCreateClient(_mockProxy, _mockConfiguration);
-            var clientB = _httpClientFactory.GetOrCreateClient(null, _mockConfiguration);
-
-            Assert.That(clientA, Is.Not.EqualTo(clientB));
-        }
+        Assert.That(clientA, Is.Not.EqualTo(clientB));
     }
 }
 #endif
