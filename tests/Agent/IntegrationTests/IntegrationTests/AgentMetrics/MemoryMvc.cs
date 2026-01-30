@@ -9,50 +9,49 @@ using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.AgentMetrics
+namespace NewRelic.Agent.IntegrationTests.AgentMetrics;
+
+public class MemoryMvc : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
-    public class MemoryMvc : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
+
+    public MemoryMvc(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper testLogger)
+        : base(fixture)
     {
-        private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
-
-        public MemoryMvc(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper testLogger)
-            : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = testLogger;
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.Get();
-                    var startTime = DateTime.Now;
-                    while (DateTime.Now <= startTime.AddSeconds(20))
-                    {
-                        if (_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Memory/Physical"))
-                            break;
-                        Thread.Sleep(TimeSpan.FromMilliseconds(500));
-                    }
-                }
-            );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var expectedMetrics = new List<Assertions.ExpectedMetric>
+        _fixture = fixture;
+        _fixture.TestLogger = testLogger;
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
             {
-                new Assertions.ExpectedMetric {metricName = @"Memory/Physical"}
-            };
+                var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.Get();
+                var startTime = DateTime.Now;
+                while (DateTime.Now <= startTime.AddSeconds(20))
+                {
+                    if (_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Memory/Physical"))
+                        break;
+                    Thread.Sleep(TimeSpan.FromMilliseconds(500));
+                }
+            }
+        );
+        _fixture.Initialize();
+    }
 
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+    [Fact]
+    public void Test()
+    {
+        var expectedMetrics = new List<Assertions.ExpectedMetric>
+        {
+            new Assertions.ExpectedMetric {metricName = @"Memory/Physical"}
+        };
 
-            Assertions.MetricsExist(expectedMetrics, metrics);
-        }
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+        Assertions.MetricsExist(expectedMetrics, metrics);
     }
 }

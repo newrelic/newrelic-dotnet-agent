@@ -7,110 +7,108 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
+namespace NewRelic.Agent.IntegrationTests.AppDomainCaching;
+
+public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture : ConsoleDynamicMethodFixture
+    private readonly TFixture _fixture;
+    private bool _appDomainCachingDisabled;
+
+    public AppDomainCachingTestsBase(TFixture fixture, ITestOutputHelper output, bool appDomainCachingDisabled) : base(fixture)
     {
-        private readonly TFixture _fixture;
-        private bool _appDomainCachingDisabled;
+        _fixture = fixture;
+        _appDomainCachingDisabled = appDomainCachingDisabled;
+        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+        _fixture.TestLogger = output;
 
-        public AppDomainCachingTestsBase(TFixture fixture, ITestOutputHelper output, bool appDomainCachingDisabled) : base(fixture)
+        _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
+
+        if(_appDomainCachingDisabled)
         {
-            _fixture = fixture;
-            _appDomainCachingDisabled = appDomainCachingDisabled;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
-            _fixture.TestLogger = output;
+            _fixture.SetAdditionalEnvironmentVariable("NEW_RELIC_DISABLE_APPDOMAIN_CACHING", _appDomainCachingDisabled ? "true" : "false");
+        }
 
-            _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
-
-            if(_appDomainCachingDisabled)
+        _fixture.AddActions
+        (
+            setupConfiguration: () =>
             {
-                _fixture.SetAdditionalEnvironmentVariable("NEW_RELIC_DISABLE_APPDOMAIN_CACHING", _appDomainCachingDisabled ? "true" : "false");
-            }
-
-            _fixture.AddActions
-            (
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                    configModifier
+                var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier
                     .EnableDistributedTrace()
                     .SetLogLevel("debug");
-                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.AgentLog.WaitForConnect(TimeSpan.FromSeconds(30));
-                }
-            );
-
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void ProfilerObservesEnvironmentVariable()
-        {
-            if( _appDomainCachingDisabled)
+                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
+            },
+            exerciseApplication: () =>
             {
-                Assert.Contains("The use of AppDomain for method information caching is disabled", _fixture.ProfilerLog.GetFullLogAsString());
+                _fixture.AgentLog.WaitForConnect(TimeSpan.FromSeconds(30));
             }
-            else
-            {
-                Assert.DoesNotContain("The use of AppDomain for method information caching is disabled", _fixture.ProfilerLog.GetFullLogAsString());
-            }
-        }
+        );
 
-        [Fact]
-        public void SupportabilityMetricReported()
-        {
-            var actualMetrics = _fixture.AgentLog.GetMetrics();
-            if (_appDomainCachingDisabled)
-            {
-                Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/DotNET/AppDomainCaching/Disabled");
-            }
-            else
-            {
-                Assert.DoesNotContain(actualMetrics, x => x.MetricSpec.Name == "Supportability/DotNET/AppDomainCaching/Disabled");
-            }
-        }
+        _fixture.Initialize();
     }
 
-    #region Enabled (not disabled) tests
-    public class AppDomainCachingEnabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    [Fact]
+    public void ProfilerObservesEnvironmentVariable()
     {
-        public AppDomainCachingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false)
+        if( _appDomainCachingDisabled)
         {
+            Assert.Contains("The use of AppDomain for method information caching is disabled", _fixture.ProfilerLog.GetFullLogAsString());
+        }
+        else
+        {
+            Assert.DoesNotContain("The use of AppDomain for method information caching is disabled", _fixture.ProfilerLog.GetFullLogAsString());
         }
     }
 
-    public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    [Fact]
+    public void SupportabilityMetricReported()
     {
-        public AppDomainCachingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false)
+        var actualMetrics = _fixture.AgentLog.GetMetrics();
+        if (_appDomainCachingDisabled)
         {
+            Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/DotNET/AppDomainCaching/Disabled");
+        }
+        else
+        {
+            Assert.DoesNotContain(actualMetrics, x => x.MetricSpec.Name == "Supportability/DotNET/AppDomainCaching/Disabled");
         }
     }
-    #endregion
-
-    #region Disabled tests
-    public class AppDomainCachingDisabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public AppDomainCachingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true)
-        {
-        }
-    }
-
-    public class AppDomainCachingDisabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public AppDomainCachingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true)
-        {
-        }
-    }
-    #endregion
-
 }
+
+#region Enabled (not disabled) tests
+public class AppDomainCachingEnabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public AppDomainCachingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
+    {
+    }
+}
+
+public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public AppDomainCachingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
+    {
+    }
+}
+#endregion
+
+#region Disabled tests
+public class AppDomainCachingDisabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public AppDomainCachingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
+    {
+    }
+}
+
+public class AppDomainCachingDisabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public AppDomainCachingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
+    {
+    }
+}
+#endregion

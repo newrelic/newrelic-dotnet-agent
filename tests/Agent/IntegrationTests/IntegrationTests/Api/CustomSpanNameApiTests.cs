@@ -5,88 +5,87 @@
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using Xunit;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.Api
+namespace NewRelic.Agent.IntegrationTests.Api;
+
+public class CustomSpanNameApiTestsFWLatest : CustomSpanNameApiTests<ConsoleDynamicMethodFixtureFWLatest>
 {
-    public class CustomSpanNameApiTestsFWLatest : CustomSpanNameApiTests<ConsoleDynamicMethodFixtureFWLatest>
+    public CustomSpanNameApiTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public CustomSpanNameApiTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
     }
+}
 
-    public class CustomSpanNameApiTestsCoreLatest : CustomSpanNameApiTests<ConsoleDynamicMethodFixtureCoreLatest>
+public class CustomSpanNameApiTestsCoreLatest : CustomSpanNameApiTests<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public CustomSpanNameApiTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public CustomSpanNameApiTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
     }
+}
 
-    public abstract class CustomSpanNameApiTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
+public abstract class CustomSpanNameApiTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
+{
+    protected readonly TFixture _fixture;
+
+    public CustomSpanNameApiTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        protected readonly TFixture _fixture;
+        _fixture = fixture;
+        _fixture.TestLogger = output;
 
-        public CustomSpanNameApiTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
+        _fixture.AddCommand($"AttributeInstrumentation TransactionWithCustomSpanName CustomSpanName");
 
-            _fixture.AddCommand($"AttributeInstrumentation TransactionWithCustomSpanName CustomSpanName");
-
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ForceTransactionTraces();
-                    configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
-                }
-            );
-
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void SupportabilityMetricExists()
-        {
-            var expectedMetric = new Assertions.ExpectedMetric { metricName = $"Supportability/ApiInvocation/SpanSetName", callCount = 1 };
-            Assertions.MetricExists(expectedMetric, _fixture.AgentLog.GetMetrics());
-        }
-
-        [Fact]
-        public void MethodMetricsHaveCustomSpanName()
-        {
-            var expectedMetrics = new List<Assertions.ExpectedMetric>
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
             {
-                new Assertions.ExpectedMetric { metricName = $"DotNet/CustomSpanName", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"DotNet/CustomSpanName", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.AttributeInstrumentation/TransactionWithCustomSpanName", callCount = 1 }
-            };
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ForceTransactionTraces();
+                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
+            }
+        );
 
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+        _fixture.Initialize();
+    }
 
-            Assertions.MetricsExist(expectedMetrics, metrics);
-        }
+    [Fact]
+    public void SupportabilityMetricExists()
+    {
+        var expectedMetric = new Assertions.ExpectedMetric { metricName = $"Supportability/ApiInvocation/SpanSetName", callCount = 1 };
+        Assertions.MetricExists(expectedMetric, _fixture.AgentLog.GetMetrics());
+    }
 
-        [Fact]
-        public void TransactionTraceContainsSegmentWithCustomSpanName()
+    [Fact]
+    public void MethodMetricsHaveCustomSpanName()
+    {
+        var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            var transactionTrace = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
-            Assert.NotNull(transactionTrace);
+            new Assertions.ExpectedMetric { metricName = $"DotNet/CustomSpanName", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"DotNet/CustomSpanName", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.AttributeInstrumentation/TransactionWithCustomSpanName", callCount = 1 }
+        };
 
-            transactionTrace.TraceData.ContainsSegment("CustomSpanName");
-        }
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-        [Fact]
-        public void SpanEventDataHasCustomSpanName()
-        {
-            var spanEvents = _fixture.AgentLog.GetSpanEvents();
-            Assert.Contains(spanEvents, x => (string)x.IntrinsicAttributes["name"] == "CustomSpanName");
-        }
+        Assertions.MetricsExist(expectedMetrics, metrics);
+    }
+
+    [Fact]
+    public void TransactionTraceContainsSegmentWithCustomSpanName()
+    {
+        var transactionTrace = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
+        Assert.NotNull(transactionTrace);
+
+        transactionTrace.TraceData.ContainsSegment("CustomSpanName");
+    }
+
+    [Fact]
+    public void SpanEventDataHasCustomSpanName()
+    {
+        var spanEvents = _fixture.AgentLog.GetSpanEvents();
+        Assert.Contains(spanEvents, x => (string)x.IntrinsicAttributes["name"] == "CustomSpanName");
     }
 }

@@ -7,87 +7,86 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.Api
+namespace NewRelic.Agent.IntegrationTests.Api;
+
+public abstract class ErrorGroupCallbackTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class ErrorGroupCallbackTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    private const string ErrorGroupName = "error.group.name";
+    private const string ErrorGroupValue = "TestErrors";
+
+    protected readonly TFixture Fixture;
+
+    public ErrorGroupCallbackTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        private const string ErrorGroupName = "error.group.name";
-        private const string ErrorGroupValue = "TestErrors";
+        Fixture = fixture;
+        Fixture.TestLogger = output;
 
-        protected readonly TFixture Fixture;
+        Fixture.AddCommand($"ApiCalls TestSetErrorGroupCallback");
+        Fixture.AddCommand("AttributeInstrumentation MakeWebTransactionWithException");
 
-        public ErrorGroupCallbackTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            Fixture = fixture;
-            Fixture.TestLogger = output;
-
-            Fixture.AddCommand($"ApiCalls TestSetErrorGroupCallback");
-            Fixture.AddCommand("AttributeInstrumentation MakeWebTransactionWithException");
-
-            Fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(Fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.SetOrDeleteDistributedTraceEnabled(true);
-                    configModifier.SetLogLevel("finest");
-                    configModifier.AddExpectedErrorMessages("System.Exception", new List<string> { "Test Message" });
-                    configModifier.EnableAgentTiming(true);
-                }
-            );
-
-            Fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var errorEvents = Fixture.AgentLog.GetErrorEvents();
-            var errorEvent = errorEvents.FirstOrDefault();
-
-            var errorTraces = Fixture.AgentLog.GetErrorTraces();
-            var errorTrace = errorTraces.FirstOrDefault();
-
-            var actualMetrics = Fixture.AgentLog.GetMetrics().ToList();
-
-            var apiMetrics = new List<Assertions.ExpectedMetric>
+        Fixture.Actions
+        (
+            setupConfiguration: () =>
             {
-                new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/SetErrorGroupCallback"},
-                new Assertions.ExpectedMetric() { callCount = 1, metricName = "Supportability/AgentTiming/ErrorEventMakerSetErrorGroup" },
-                new Assertions.ExpectedMetric() { callCount = 1, metricName = "Supportability/AgentTiming/ErrorTraceMakerSetErrorGroup" }
-            };
+                var configModifier = new NewRelicConfigModifier(Fixture.DestinationNewRelicConfigFilePath);
+                configModifier.SetOrDeleteDistributedTraceEnabled(true);
+                configModifier.SetLogLevel("finest");
+                configModifier.AddExpectedErrorMessages("System.Exception", new List<string> { "Test Message" });
+                configModifier.EnableAgentTiming(true);
+            }
+        );
 
-            var expectedAgentAttributes = new Dictionary<string, string>
-            {
-                { ErrorGroupName, ErrorGroupValue}
-            };
-            var asserts = new List<Action> {  };
-
-            NrAssert.Multiple(
-                () => Assertions.MetricsExist(apiMetrics, actualMetrics),
-                () => Assertions.ErrorEventHasAttributes(expectedAgentAttributes, EventAttributeType.Agent, errorEvent),
-                () => Assertions.ErrorTraceHasAttributes(expectedAgentAttributes, ErrorTraceAttributeType.Agent, errorTrace)
-            );
-        }
+        Fixture.Initialize();
     }
 
-    public class ErrorGroupCallbackReturnsStringTestsFW : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    [Fact]
+    public void Test()
     {
-        public ErrorGroupCallbackReturnsStringTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
+        var errorEvents = Fixture.AgentLog.GetErrorEvents();
+        var errorEvent = errorEvents.FirstOrDefault();
 
-    public class ErrorGroupCallbackReturnsStringTestsCore : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public ErrorGroupCallbackReturnsStringTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
+        var errorTraces = Fixture.AgentLog.GetErrorTraces();
+        var errorTrace = errorTraces.FirstOrDefault();
+
+        var actualMetrics = Fixture.AgentLog.GetMetrics().ToList();
+
+        var apiMetrics = new List<Assertions.ExpectedMetric>
         {
-        }
+            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/SetErrorGroupCallback"},
+            new Assertions.ExpectedMetric() { callCount = 1, metricName = "Supportability/AgentTiming/ErrorEventMakerSetErrorGroup" },
+            new Assertions.ExpectedMetric() { callCount = 1, metricName = "Supportability/AgentTiming/ErrorTraceMakerSetErrorGroup" }
+        };
+
+        var expectedAgentAttributes = new Dictionary<string, string>
+        {
+            { ErrorGroupName, ErrorGroupValue}
+        };
+        var asserts = new List<Action> {  };
+
+        NrAssert.Multiple(
+            () => Assertions.MetricsExist(apiMetrics, actualMetrics),
+            () => Assertions.ErrorEventHasAttributes(expectedAgentAttributes, EventAttributeType.Agent, errorEvent),
+            () => Assertions.ErrorTraceHasAttributes(expectedAgentAttributes, ErrorTraceAttributeType.Agent, errorTrace)
+        );
+    }
+}
+
+public class ErrorGroupCallbackReturnsStringTestsFW : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public ErrorGroupCallbackReturnsStringTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class ErrorGroupCallbackReturnsStringTestsCore : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public ErrorGroupCallbackReturnsStringTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

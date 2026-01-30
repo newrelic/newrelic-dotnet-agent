@@ -6,88 +6,87 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.AgentFeatures
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
+
+public abstract class BrowserAgentAutoInjectionBase : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
-    public abstract class BrowserAgentAutoInjectionBase : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
+
+    private string _htmlContent;
+
+    protected BrowserAgentAutoInjectionBase(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output, string loaderType)
+        : base(fixture)
     {
-        private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
+            {
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
 
-        private string _htmlContent;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.AutoInstrumentBrowserMonitoring(true);
+                configModifier.BrowserMonitoringEnableAttributes(true);
 
-        protected BrowserAgentAutoInjectionBase(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output, string loaderType)
-            : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
+                if (!string.IsNullOrEmpty(loaderType))
                 {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.AutoInstrumentBrowserMonitoring(true);
-                    configModifier.BrowserMonitoringEnableAttributes(true);
-
-                    if (!string.IsNullOrEmpty(loaderType))
-                    {
-                        configModifier.BrowserMonitoringLoader(loaderType);
-                    }
-                },
-                exerciseApplication: () =>
-                {
-                    _htmlContent = _fixture.Get();
+                    configModifier.BrowserMonitoringLoader(loaderType);
                 }
-            );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            NrAssert.Multiple(
-                () => Assert.NotNull(_htmlContent)
-            );
-
-            var connectResponseData = _fixture.AgentLog.GetConnectResponseData();
-
-            var jsAgentFromConnectResponse = connectResponseData.JsAgentLoader;
-
-            var jsAgentFromHtmlContent = JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_htmlContent);
-
-            Assert.Equal(jsAgentFromConnectResponse, jsAgentFromHtmlContent);
-        }
+            },
+            exerciseApplication: () =>
+            {
+                _htmlContent = _fixture.Get();
+            }
+        );
+        _fixture.Initialize();
     }
 
-    public class BrowserAgentAutoInjectionDefault : BrowserAgentAutoInjectionBase
+    [Fact]
+    public void Test()
     {
-        public BrowserAgentAutoInjectionDefault(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, null /* use default loader */)
-        {
-        }
-    }
+        NrAssert.Multiple(
+            () => Assert.NotNull(_htmlContent)
+        );
 
-    public class BrowserAgentAutoInjectionRum : BrowserAgentAutoInjectionBase
-    {
-        public BrowserAgentAutoInjectionRum(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, "rum")
-        {
-        }
-    }
+        var connectResponseData = _fixture.AgentLog.GetConnectResponseData();
 
-    public class BrowserAgentAutoInjectionFull : BrowserAgentAutoInjectionBase
-    {
-        public BrowserAgentAutoInjectionFull(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, "full")
-        {
-        }
-    }
+        var jsAgentFromConnectResponse = connectResponseData.JsAgentLoader;
 
-    public class BrowserAgentAutoInjectionSpa : BrowserAgentAutoInjectionBase
+        var jsAgentFromHtmlContent = JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_htmlContent);
+
+        Assert.Equal(jsAgentFromConnectResponse, jsAgentFromHtmlContent);
+    }
+}
+
+public class BrowserAgentAutoInjectionDefault : BrowserAgentAutoInjectionBase
+{
+    public BrowserAgentAutoInjectionDefault(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        : base(fixture, output, null /* use default loader */)
     {
-        public BrowserAgentAutoInjectionSpa(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, "spa")
-        {
-        }
+    }
+}
+
+public class BrowserAgentAutoInjectionRum : BrowserAgentAutoInjectionBase
+{
+    public BrowserAgentAutoInjectionRum(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        : base(fixture, output, "rum")
+    {
+    }
+}
+
+public class BrowserAgentAutoInjectionFull : BrowserAgentAutoInjectionBase
+{
+    public BrowserAgentAutoInjectionFull(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        : base(fixture, output, "full")
+    {
+    }
+}
+
+public class BrowserAgentAutoInjectionSpa : BrowserAgentAutoInjectionBase
+{
+    public BrowserAgentAutoInjectionSpa(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        : base(fixture, output, "spa")
+    {
     }
 }

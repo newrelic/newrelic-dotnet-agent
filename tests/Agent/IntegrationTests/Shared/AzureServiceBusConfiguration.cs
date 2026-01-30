@@ -3,32 +3,31 @@
 
 using System;
 
-namespace NewRelic.Agent.IntegrationTests.Shared
+namespace NewRelic.Agent.IntegrationTests.Shared;
+
+public class AzureServiceBusConfiguration
 {
-    public class AzureServiceBusConfiguration
-    {
-        public const string FuncTestQueueName = "azure_func_test_queue";
-        private static string _connectionString;
+    public const string FuncTestQueueName = "azure_func_test_queue";
+    private static string _connectionString;
 
     public static string ConnectionString
     {
         get
         {
-                if (_connectionString == null)
+            if (_connectionString == null)
+            {
+                try
                 {
-                    try
-                    {
-            var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("AzureServiceBusTests");
-                        _connectionString = testConfiguration["ConnectionString"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("Azure Service Bus configuration is invalid.", ex);
-                    }
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("AzureServiceBusTests");
+                    _connectionString = testConfiguration["ConnectionString"];
                 }
-
-                return _connectionString;
+                catch (Exception ex)
+                {
+                    throw new Exception("Azure Service Bus configuration is invalid.", ex);
+                }
             }
+
+            return _connectionString;
         }
     }
 }

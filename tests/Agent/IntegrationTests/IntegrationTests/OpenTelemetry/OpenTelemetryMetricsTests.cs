@@ -9,112 +9,111 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.IntegrationTests.Models;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.OpenTelemetry
+namespace NewRelic.Agent.IntegrationTests.OpenTelemetry;
+
+public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : OtlpMetricsWithCollectorFixtureBase
 {
-    public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture : OtlpMetricsWithCollectorFixtureBase
+    protected readonly TFixture _fixture;
+    private IEnumerable<MetricsSummaryDto> _otlpSummaries;
+
+    protected OpenTelemetryMetricsTestsBase(TFixture fixture, ITestOutputHelper outputHelper) : base(fixture)
     {
-        protected readonly TFixture _fixture;
-        private IEnumerable<MetricsSummaryDto> _otlpSummaries;
+        _fixture = fixture;
+        _fixture.TestLogger = outputHelper;
 
-        protected OpenTelemetryMetricsTestsBase(TFixture fixture, ITestOutputHelper outputHelper) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = outputHelper;
-
-            _fixture.AddActions(
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.SetLogLevel("finest");
-                    configModifier.ConfigureFasterOpenTelemetryOtlpExportInterval(5);
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
-
-                    // otlp metrics export will be complete before the first analytics event harvest
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
-
-                    _otlpSummaries = _fixture.GetCollectedOTLPMetrics();
-                }
-            );
-
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Metrics_are_collected_and_match_expected_names_with_positive_counts()
-        {
-            Assert.NotNull(_otlpSummaries);
-            Assert.NotEmpty(_otlpSummaries);
-
-            // Aggregate metrics from summaries
-            var metricEntries = new List<MetricSummary>();
-            foreach (var s in _otlpSummaries)
+        _fixture.AddActions(
+            setupConfiguration: () =>
             {
-                foreach (var r in s.Resources)
+                var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+                configModifier.SetLogLevel("finest");
+                configModifier.ConfigureFasterOpenTelemetryOtlpExportInterval(5);
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.AgentLog.WaitForLogLine(AgentLogFile.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
+
+                // otlp metrics export will be complete before the first analytics event harvest
+                _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+
+                _otlpSummaries = _fixture.GetCollectedOTLPMetrics();
+            }
+        );
+
+        _fixture.Initialize();
+    }
+
+    [Fact]
+    public void Metrics_are_collected_and_match_expected_names_with_positive_counts()
+    {
+        Assert.NotNull(_otlpSummaries);
+        Assert.NotEmpty(_otlpSummaries);
+
+        // Aggregate metrics from summaries
+        var metricEntries = new List<MetricSummary>();
+        foreach (var s in _otlpSummaries)
+        {
+            foreach (var r in s.Resources)
+            {
+                foreach (var scope in r.Scopes)
                 {
-                    foreach (var scope in r.Scopes)
-                    {
-                        metricEntries.AddRange(scope.Metrics);
-                    }
+                    metricEntries.AddRange(scope.Metrics);
                 }
             }
-
-            Assert.NotEmpty(metricEntries);
-
-            // Aggregate to unique metric name and total count for that name
-            var aggregatedTotals = metricEntries
-                .GroupBy(m => m.Name)
-                .Select(g => new { Name = g.Key, TotalCount = g.Sum(m => m.DataPointCount) })
-                .OrderBy(x => x.Name)
-                .ToList();
-
-            // serialize aggregated metric entries for easier debugging on failure
-            _fixture.TestLogger.WriteLine("Aggregated OTLP Metrics Totals:");
-            foreach (var metric in aggregatedTotals)
-            {
-                _fixture.TestLogger.WriteLine($"Name: {metric.Name}, TotalCount: {metric.TotalCount}");
-            }
-
-            // Verify all expected metrics are present by name (ignore type differences across platforms)
-            foreach (var expectedMetric in GetExpectedMetrics())
-            {
-                var found = aggregatedTotals.Any(m => m.Name == expectedMetric);
-                Assert.True(found, $"Expected metric '{expectedMetric}' not found. Available metrics: {string.Join(", ", aggregatedTotals.Select(m => m.Name))}");
-            }
         }
 
-        protected virtual string[] GetExpectedMetrics()
+        Assert.NotEmpty(metricEntries);
+
+        // Aggregate to unique metric name and total count for that name
+        var aggregatedTotals = metricEntries
+            .GroupBy(m => m.Name)
+            .Select(g => new { Name = g.Key, TotalCount = g.Sum(m => m.DataPointCount) })
+            .OrderBy(x => x.Name)
+            .ToList();
+
+        // serialize aggregated metric entries for easier debugging on failure
+        _fixture.TestLogger.WriteLine("Aggregated OTLP Metrics Totals:");
+        foreach (var metric in aggregatedTotals)
         {
-            return new[] { "requests_total", "payload_size_bytes", "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
+            _fixture.TestLogger.WriteLine($"Name: {metric.Name}, TotalCount: {metric.TotalCount}");
+        }
+
+        // Verify all expected metrics are present by name (ignore type differences across platforms)
+        foreach (var expectedMetric in GetExpectedMetrics())
+        {
+            var found = aggregatedTotals.Any(m => m.Name == expectedMetric);
+            Assert.True(found, $"Expected metric '{expectedMetric}' not found. Available metrics: {string.Join(", ", aggregatedTotals.Select(m => m.Name))}");
         }
     }
 
-    // NET10 test targets DiagnosticSource v10.x
-    public class OpenTelemetryMetricsTestsCoreLatest : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreLatest>
+    protected virtual string[] GetExpectedMetrics()
     {
-        public OpenTelemetryMetricsTestsCoreLatest(OtlpMetricsWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+        return new[] { "requests_total", "payload_size_bytes", "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
     }
+}
 
-    // Net8 test targets DiagnosticSource v8.x
-    public class OpenTelemetryMetricsTestsCoreNet8 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
-    {
-        public OpenTelemetryMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
-    }
+// NET10 test targets DiagnosticSource v10.x
+public class OpenTelemetryMetricsTestsCoreLatest : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreLatest>
+{
+    public OpenTelemetryMetricsTestsCoreLatest(OtlpMetricsWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+}
 
-    // Net472 test targets DiagnosticSource v8.x
-    public class OpenTelemetryMetricsTestsFw472 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW472>
-    {
-        public OpenTelemetryMetricsTestsFw472(OtlpMetricsWithCollectorFixtureFW472 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
-        protected override string[] GetExpectedMetrics() => new[] { "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
-    }
+// Net8 test targets DiagnosticSource v8.x
+public class OpenTelemetryMetricsTestsCoreNet8 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
+{
+    public OpenTelemetryMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+}
 
-    // Net481 test targets DiagnosticSource v9.x
-    public class OpenTelemetryMetricsTestsFw481 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW481>
-    {
-        public OpenTelemetryMetricsTestsFw481(OtlpMetricsWithCollectorFixtureFW481 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
-        protected override string[] GetExpectedMetrics() => new[] { "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
-    }
+// Net472 test targets DiagnosticSource v8.x
+public class OpenTelemetryMetricsTestsFw472 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW472>
+{
+    public OpenTelemetryMetricsTestsFw472(OtlpMetricsWithCollectorFixtureFW472 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+    protected override string[] GetExpectedMetrics() => new[] { "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
+}
+
+// Net481 test targets DiagnosticSource v9.x
+public class OpenTelemetryMetricsTestsFw481 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW481>
+{
+    public OpenTelemetryMetricsTestsFw481(OtlpMetricsWithCollectorFixtureFW481 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+    protected override string[] GetExpectedMetrics() => new[] { "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
 }

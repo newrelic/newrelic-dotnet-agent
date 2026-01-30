@@ -2,106 +2,103 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
-using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
+namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF;
+
+public abstract class AllowAllHeadersEnabledTests : AllowAllHeadersDisabledTests
 {
-    public abstract class AllowAllHeadersEnabledTests : AllowAllHeadersDisabledTests
+    public AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, HostingModel hostingModel, WCFBindingType bindingType)
+        : base(fixture, output, hostingModel, bindingType) { }
+
+    protected override void SetupConfiguration()
     {
-        public AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, HostingModel hostingModel, WCFBindingType bindingType)
-            : base(fixture, output, hostingModel, bindingType) { }
+        base.SetupConfiguration();
 
-        protected override void SetupConfiguration()
-        {
-            base.SetupConfiguration();
-
-            _fixture.RemoteApplication.NewRelicConfig.SetAllowAllHeaders(true);
-        }
-
-        protected override IDictionary<string, string> ExpectedHeaders => new Dictionary<string, string>
-        {
-            { "request.method", "POST" },
-            { "request.headers.referer", "http://example.com/" },
-            { "request.headers.accept", "text/html" },
-            { "request.headers.content-length", GetExpectedContentLength() },
-            { "request.headers.host", $"localhost:{_fixture.RemoteApplication.Port}" },
-            { "request.headers.user-agent", "FakeUserAgent" },
-            { "request.headers.foo", "bar" },
-            { "request.headers.dashes-are-valid", "true" },
-            { "request.headers.dashesarevalid", "definitely" }
-        };
-
-        protected override IEnumerable<string> UnexpectedHeaders => new[] { "request.headers.was-never-included" };
+        _fixture.RemoteApplication.NewRelicConfig.SetAllowAllHeaders(true);
     }
 
-    #region IIS
-
-    public class IIS_Basic_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
+    protected override IDictionary<string, string> ExpectedHeaders => new Dictionary<string, string>
     {
-        public IIS_Basic_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, HostingModel.IIS, WCFBindingType.BasicHttp) { }
-    }
+        { "request.method", "POST" },
+        { "request.headers.referer", "http://example.com/" },
+        { "request.headers.accept", "text/html" },
+        { "request.headers.content-length", GetExpectedContentLength() },
+        { "request.headers.host", $"localhost:{_fixture.RemoteApplication.Port}" },
+        { "request.headers.user-agent", "FakeUserAgent" },
+        { "request.headers.foo", "bar" },
+        { "request.headers.dashes-are-valid", "true" },
+        { "request.headers.dashesarevalid", "definitely" }
+    };
 
-    public class IIS_Web_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
-    {
-        public IIS_Web_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, HostingModel.IIS, WCFBindingType.WebHttp) { }
-    }
-
-    public class IIS_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
-    {
-        public IIS_WS_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, HostingModel.IIS, WCFBindingType.WSHttpUnsecure) { }
-    }
-
-    #endregion IIS
-
-    #region IISNoAsp
-
-    public class IISNoAsp_Basic_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
-    {
-        public IISNoAsp_Basic_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, HostingModel.IISNoAsp, WCFBindingType.BasicHttp) { }
-    }
-
-    public class IISNoAsp_Web_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
-    {
-        public IISNoAsp_Web_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, HostingModel.IISNoAsp, WCFBindingType.WebHttp) { }
-    }
-
-
-    public class IISNoAsp_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
-    {
-        public IISNoAsp_WS_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, HostingModel.IISNoAsp, WCFBindingType.WSHttp) { }
-    }
-
-    #endregion IISNoAsp
-
-    #region Self
-
-    public class Self_Basic_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
-    {
-        public Self_Basic_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, HostingModel.Self, WCFBindingType.BasicHttp) { }
-    }
-
-    public class Self_Web_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
-    {
-        public Self_Web_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, HostingModel.Self, WCFBindingType.WebHttp) { }
-    }
-
-    public class Self_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
-    {
-        public Self_WS_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, HostingModel.Self, WCFBindingType.WSHttp) { }
-    }
-
-    #endregion Self
-
+    protected override IEnumerable<string> UnexpectedHeaders => new[] { "request.headers.was-never-included" };
 }
+
+#region IIS
+
+public class IIS_Basic_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
+{
+    public IIS_Basic_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, HostingModel.IIS, WCFBindingType.BasicHttp) { }
+}
+
+public class IIS_Web_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
+{
+    public IIS_Web_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, HostingModel.IIS, WCFBindingType.WebHttp) { }
+}
+
+public class IIS_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
+{
+    public IIS_WS_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, HostingModel.IIS, WCFBindingType.WSHttpUnsecure) { }
+}
+
+#endregion IIS
+
+#region IISNoAsp
+
+public class IISNoAsp_Basic_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
+{
+    public IISNoAsp_Basic_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, HostingModel.IISNoAsp, WCFBindingType.BasicHttp) { }
+}
+
+public class IISNoAsp_Web_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
+{
+    public IISNoAsp_Web_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, HostingModel.IISNoAsp, WCFBindingType.WebHttp) { }
+}
+
+
+public class IISNoAsp_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
+{
+    public IISNoAsp_WS_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, HostingModel.IISNoAsp, WCFBindingType.WSHttp) { }
+}
+
+#endregion IISNoAsp
+
+#region Self
+
+public class Self_Basic_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
+{
+    public Self_Basic_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, HostingModel.Self, WCFBindingType.BasicHttp) { }
+}
+
+public class Self_Web_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
+{
+    public Self_Web_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, HostingModel.Self, WCFBindingType.WebHttp) { }
+}
+
+public class Self_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
+{
+    public Self_WS_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, HostingModel.Self, WCFBindingType.WSHttp) { }
+}
+
+#endregion Self

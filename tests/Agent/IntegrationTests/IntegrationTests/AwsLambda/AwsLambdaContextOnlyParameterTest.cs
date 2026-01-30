@@ -7,53 +7,52 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.AwsLambda.General
+namespace NewRelic.Agent.IntegrationTests.AwsLambda.General;
+
+public abstract class AwsLambdaContextOnlyParameterTest<T> : NewRelicIntegrationTest<T> where T : LambdaContextOnlyParameterFixtureBase
 {
-    public abstract class AwsLambdaContextOnlyParameterTest<T> : NewRelicIntegrationTest<T> where T : LambdaContextOnlyParameterFixtureBase
+    private readonly LambdaContextOnlyParameterFixtureBase _fixture;
+
+    protected AwsLambdaContextOnlyParameterTest(T fixture, ITestOutputHelper output)
+        : base(fixture)
     {
-        private readonly LambdaContextOnlyParameterFixtureBase _fixture;
-
-        protected AwsLambdaContextOnlyParameterTest(T fixture, ITestOutputHelper output)
-            : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions(
-                exerciseApplication: () =>
-                {
-                    _fixture.EnqueueTrigger();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1));
-                }
-                );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var serverlessPayload = _fixture.AgentLog.GetServerlessPayloads().Single();
-            var customEventPayload = serverlessPayload.Telemetry.CustomEventsPayload;
-
-            Assert.Multiple(
-                () => Assert.Equal("$LATEST", serverlessPayload.Metadata.FunctionVersion),
-                () => Assert.Equal("OtherTransaction/Lambda/LambdaContextOnly", serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"])
-                );
-        }
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions(
+            exerciseApplication: () =>
+            {
+                _fixture.EnqueueTrigger();
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1));
+            }
+        );
+        _fixture.Initialize();
     }
 
-    public class AwsLambdaContextOnlyParameterTestCoreOldest : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureCoreOldest>
+    [Fact]
+    public void Test()
     {
-        public AwsLambdaContextOnlyParameterTestCoreOldest(LambdaContextOnlyParameterFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
+        var serverlessPayload = _fixture.AgentLog.GetServerlessPayloads().Single();
+        var customEventPayload = serverlessPayload.Telemetry.CustomEventsPayload;
 
-    public class AwsLambdaContextOnlyParameterTestCoreLatest : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureCoreLatest>
+        Assert.Multiple(
+            () => Assert.Equal("$LATEST", serverlessPayload.Metadata.FunctionVersion),
+            () => Assert.Equal("OtherTransaction/Lambda/LambdaContextOnly", serverlessPayload.Telemetry.TransactionEventsPayload.TransactionEvents.Single().IntrinsicAttributes["name"])
+        );
+    }
+}
+
+public class AwsLambdaContextOnlyParameterTestCoreOldest : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureCoreOldest>
+{
+    public AwsLambdaContextOnlyParameterTestCoreOldest(LambdaContextOnlyParameterFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public AwsLambdaContextOnlyParameterTestCoreLatest(LambdaContextOnlyParameterFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
+    }
+}
+
+public class AwsLambdaContextOnlyParameterTestCoreLatest : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureCoreLatest>
+{
+    public AwsLambdaContextOnlyParameterTestCoreLatest(LambdaContextOnlyParameterFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

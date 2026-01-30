@@ -9,195 +9,193 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVariables
+namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVariables;
+
+public abstract class EnvironmentVariableAllowAllHeadersDisabledTestsBase : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
-    
-    public abstract class EnvironmentVariableAllowAllHeadersDisabledTestsBase : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
+
+    public Dictionary<string, object> expectedAttributes;
+    public List<string> unexpectedAttributes;
+
+    public EnvironmentVariableAllowAllHeadersDisabledTestsBase(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        : base(fixture)
     {
-        private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
-
-        public Dictionary<string, object> expectedAttributes;
-        public List<string> unexpectedAttributes;
-
-        public EnvironmentVariableAllowAllHeadersDisabledTestsBase(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
-            : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
-                    configModifier.SetAllowAllHeaders(true)
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
+            {
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
+                configModifier.SetAllowAllHeaders(true)
                     .EnableDistributedTrace().ForceTransactionTraces();
-                },
-                exerciseApplication: () =>
-                {
-                    var customRequestHeaders = new Dictionary<string, string> { { "foo", "bar" } };
+            },
+            exerciseApplication: () =>
+            {
+                var customRequestHeaders = new Dictionary<string, string> { { "foo", "bar" } };
 
-                    _fixture.PostWithTestHeaders(customRequestHeaders);
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
-                }
-            );
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var expectedTransactionName = "WebTransaction/MVC/DefaultController/Index";
-
-            var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
-            var spanEvent = _fixture.AgentLog.TryGetSpanEvent(expectedTransactionName);
-
-            Assert.NotNull(transactionSample);
-
-            Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
-            Assertions.SpanEventHasAttributes(expectedAttributes, SpanEventAttributeType.Agent, spanEvent);
-            Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
-
-            Assertions.SpanEventDoesNotHaveAttributes(unexpectedAttributes, SpanEventAttributeType.Agent, spanEvent);
-            Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
-            Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
-        }
+                _fixture.PostWithTestHeaders(customRequestHeaders);
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+            }
+        );
     }
 
-    public class EnvironmentVariableAllowAllHeadersDisabledTests_Defaults : EnvironmentVariableAllowAllHeadersDisabledTestsBase
+    [Fact]
+    public void Test()
     {
-        public EnvironmentVariableAllowAllHeadersDisabledTests_Defaults(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-            expectedAttributes = new Dictionary<string, object>
-            {
-                { "request.method", "POST" },
-                { "request.headers.referer", "http://example.com/" },
-                { "request.headers.accept", "text/html" },
-                { "request.headers.content-length", "5" },
-                { "request.headers.host", "fakehost" },
-                { "request.headers.user-agent", "FakeUserAgent" }
-            };
+        var expectedTransactionName = "WebTransaction/MVC/DefaultController/Index";
 
-            unexpectedAttributes = new List<string>
-            {
-                "request.headers.foo",
-                "request.headers.cookie",
-                "request.headers.authorization",
-                "request.headers.proxy-authorization",
-                "request.headers.x-forwarded-for"
-            };
+        var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
+        var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
+        var spanEvent = _fixture.AgentLog.TryGetSpanEvent(expectedTransactionName);
 
-            fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
-                    configModifier.SetAllowAllHeaders(true)
-                        .ForceTransactionTraces()
-                        .EnableSpanEvents(true);
+        Assert.NotNull(transactionSample);
 
-                    fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "false");
-                }
-            );
+        Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
+        Assertions.SpanEventHasAttributes(expectedAttributes, SpanEventAttributeType.Agent, spanEvent);
+        Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
 
-            fixture.Initialize();
-        }
+        Assertions.SpanEventDoesNotHaveAttributes(unexpectedAttributes, SpanEventAttributeType.Agent, spanEvent);
+        Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
+        Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
     }
+}
 
-    public class EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaDelimited : EnvironmentVariableAllowAllHeadersDisabledTestsBase
+public class EnvironmentVariableAllowAllHeadersDisabledTests_Defaults : EnvironmentVariableAllowAllHeadersDisabledTestsBase
+{
+    public EnvironmentVariableAllowAllHeadersDisabledTests_Defaults(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
-        public EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+        expectedAttributes = new Dictionary<string, object>
         {
-            expectedAttributes = new Dictionary<string, object>
+            { "request.method", "POST" },
+            { "request.headers.referer", "http://example.com/" },
+            { "request.headers.accept", "text/html" },
+            { "request.headers.content-length", "5" },
+            { "request.headers.host", "fakehost" },
+            { "request.headers.user-agent", "FakeUserAgent" }
+        };
+
+        unexpectedAttributes = new List<string>
+        {
+            "request.headers.foo",
+            "request.headers.cookie",
+            "request.headers.authorization",
+            "request.headers.proxy-authorization",
+            "request.headers.x-forwarded-for"
+        };
+
+        fixture.Actions
+        (
+            setupConfiguration: () =>
             {
-                { "request.method", "POST" },
-                { "request.headers.content-length", "5" },
-                { "request.headers.host", "fakehost" },
-                { "request.headers.user-agent", "FakeUserAgent" }
-            };
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+                configModifier.SetAllowAllHeaders(true)
+                    .ForceTransactionTraces()
+                    .EnableSpanEvents(true);
 
-            unexpectedAttributes = new List<string>
-            {
-                "request.headers.referer",
-                "request.headers.accept",
-                "request.headers.foo",
-                "request.headers.cookie",
-                "request.headers.authorization",
-                "request.headers.proxy-authorization",
-                "request.headers.x-forwarded-for"
-            };
+                fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "false");
+            }
+        );
 
-            fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
-                    configModifier.SetAllowAllHeaders(true)
-                        .ForceTransactionTraces()
-                        .EnableSpanEvents(true);
-
-                    fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "false");
-                    fixture.EnvironmentVariables.Add("NEW_RELIC_ATTRIBUTES_EXCLUDE", "request.headers.referer,request.headers.accept");
-                }
-            );
-
-            fixture.Initialize();
-        }
+        fixture.Initialize();
     }
+}
 
-    public class EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaSpaceDelimited : EnvironmentVariableAllowAllHeadersDisabledTestsBase
+public class EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaDelimited : EnvironmentVariableAllowAllHeadersDisabledTestsBase
+{
+    public EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
-        public EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaSpaceDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+        expectedAttributes = new Dictionary<string, object>
         {
-            expectedAttributes = new Dictionary<string, object>
+            { "request.method", "POST" },
+            { "request.headers.content-length", "5" },
+            { "request.headers.host", "fakehost" },
+            { "request.headers.user-agent", "FakeUserAgent" }
+        };
+
+        unexpectedAttributes = new List<string>
+        {
+            "request.headers.referer",
+            "request.headers.accept",
+            "request.headers.foo",
+            "request.headers.cookie",
+            "request.headers.authorization",
+            "request.headers.proxy-authorization",
+            "request.headers.x-forwarded-for"
+        };
+
+        fixture.Actions
+        (
+            setupConfiguration: () =>
             {
-                { "request.method", "POST" },
-                { "request.headers.content-length", "5" },
-                { "request.headers.host", "fakehost" },
-                { "request.headers.user-agent", "FakeUserAgent" }
-            };
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+                configModifier.SetAllowAllHeaders(true)
+                    .ForceTransactionTraces()
+                    .EnableSpanEvents(true);
 
-            unexpectedAttributes = new List<string>
+                fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "false");
+                fixture.EnvironmentVariables.Add("NEW_RELIC_ATTRIBUTES_EXCLUDE", "request.headers.referer,request.headers.accept");
+            }
+        );
+
+        fixture.Initialize();
+    }
+}
+
+public class EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaSpaceDelimited : EnvironmentVariableAllowAllHeadersDisabledTestsBase
+{
+    public EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaSpaceDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+        expectedAttributes = new Dictionary<string, object>
+        {
+            { "request.method", "POST" },
+            { "request.headers.content-length", "5" },
+            { "request.headers.host", "fakehost" },
+            { "request.headers.user-agent", "FakeUserAgent" }
+        };
+
+        unexpectedAttributes = new List<string>
+        {
+            "request.headers.referer",
+            "request.headers.accept",
+            "request.headers.foo",
+            "request.headers.cookie",
+            "request.headers.authorization",
+            "request.headers.proxy-authorization",
+            "request.headers.x-forwarded-for"
+        };
+
+        fixture.Actions
+        (
+            setupConfiguration: () =>
             {
-                "request.headers.referer",
-                "request.headers.accept",
-                "request.headers.foo",
-                "request.headers.cookie",
-                "request.headers.authorization",
-                "request.headers.proxy-authorization",
-                "request.headers.x-forwarded-for"
-            };
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+                configModifier.SetAllowAllHeaders(true)
+                    .ForceTransactionTraces()
+                    .EnableSpanEvents(true);
 
-            fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
-                    configModifier.SetAllowAllHeaders(true)
-                        .ForceTransactionTraces()
-                        .EnableSpanEvents(true);
+                fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "false");
+                fixture.EnvironmentVariables.Add("NEW_RELIC_ATTRIBUTES_EXCLUDE", "request.headers.referer, request.headers.accept");
+            }
+        );
 
-                    fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "false");
-                    fixture.EnvironmentVariables.Add("NEW_RELIC_ATTRIBUTES_EXCLUDE", "request.headers.referer, request.headers.accept");
-                }
-            );
-
-            fixture.Initialize();
-        }
+        fixture.Initialize();
     }
 }

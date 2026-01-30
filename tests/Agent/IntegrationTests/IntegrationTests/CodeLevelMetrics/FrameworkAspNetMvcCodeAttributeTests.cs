@@ -8,66 +8,65 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
+namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics;
+
+public class FrameworkAspNetMvcCodeAttributeTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
-    public class FrameworkAspNetMvcCodeAttributeTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+
+    private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
+
+    public FrameworkAspNetMvcCodeAttributeTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        : base(fixture)
     {
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
+            {
+                var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.Get();
+                _fixture.GetWithAsyncDisabled();
 
-        private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+            }
+        );
+        _fixture.Initialize();
+    }
 
-        public FrameworkAspNetMvcCodeAttributeTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
-            : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.Get();
-                    _fixture.GetWithAsyncDisabled();
+    [Fact]
+    public void AsyncDisabledControllerTest()
+    {
+        var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
 
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
-                }
-            );
-            _fixture.Initialize();
-        }
+        const string spanName = "DotNet/DisableAsyncSupportController/Index";
+        Assert.Contains(spanEvents, x => x.IntrinsicAttributes["name"].ToString() == spanName);
+        var spanEvent = spanEvents.FirstOrDefault(x => x.IntrinsicAttributes["name"].ToString() == spanName);
+        Assert.NotNull(spanEvent);
 
-        [Fact]
-        public void AsyncDisabledControllerTest()
-        {
-            var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
+        Assertions.SpanEventHasAttributes(new Dictionary<string, string>{
+            { "code.namespace", "BasicMvcApplication.Controllers.DisableAsyncSupportController" },
+            { "code.function", "Index" }
+        }, SpanEventAttributeType.Agent, spanEvent);
+    }
 
-            const string spanName = "DotNet/DisableAsyncSupportController/Index";
-            Assert.Contains(spanEvents, x => x.IntrinsicAttributes["name"].ToString() == spanName);
-            var spanEvent = spanEvents.FirstOrDefault(x => x.IntrinsicAttributes["name"].ToString() == spanName);
-            Assert.NotNull(spanEvent);
+    [Fact]
+    public void DefaultControllerTest()
+    {
+        var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
 
-            Assertions.SpanEventHasAttributes(new Dictionary<string, string>{
-                { "code.namespace", "BasicMvcApplication.Controllers.DisableAsyncSupportController" },
-                { "code.function", "Index" }
-            }, SpanEventAttributeType.Agent, spanEvent);
-        }
+        const string spanName = "DotNet/DefaultController/Index";
+        Assert.Contains(spanEvents, x => x.IntrinsicAttributes["name"].ToString() == spanName);
+        var spanEvent = spanEvents.FirstOrDefault(x => x.IntrinsicAttributes["name"].ToString() == spanName);
+        Assert.NotNull(spanEvent);
 
-        [Fact]
-        public void DefaultControllerTest()
-        {
-            var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
-
-            const string spanName = "DotNet/DefaultController/Index";
-            Assert.Contains(spanEvents, x => x.IntrinsicAttributes["name"].ToString() == spanName);
-            var spanEvent = spanEvents.FirstOrDefault(x => x.IntrinsicAttributes["name"].ToString() == spanName);
-            Assert.NotNull(spanEvent);
-
-            Assertions.SpanEventHasAttributes(new Dictionary<string, string>{
-                { "code.namespace", "BasicMvcApplication.Controllers.DefaultController" },
-                { "code.function", "Index" }
-            }, SpanEventAttributeType.Agent, spanEvent);
-        }
+        Assertions.SpanEventHasAttributes(new Dictionary<string, string>{
+            { "code.namespace", "BasicMvcApplication.Controllers.DefaultController" },
+            { "code.function", "Index" }
+        }, SpanEventAttributeType.Agent, spanEvent);
     }
 }

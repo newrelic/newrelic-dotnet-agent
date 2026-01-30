@@ -9,77 +9,76 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNet
+namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNet;
+
+public class AllowAllHeadersDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
-    public class AllowAllHeadersDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
+
+    public AllowAllHeadersDisabledTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        : base(fixture)
     {
-        private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
-
-        public AllowAllHeadersDisabledTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
-            : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
-                    configModifier.SetAllowAllHeaders(false)
-                        .ForceTransactionTraces()
-                        .EnableSpanEvents(true);
-                },
-                exerciseApplication: () =>
-                {
-                    var customRequestHeaders = new Dictionary<string, string> { { "foo", "bar" } };
-
-                    _fixture.PostWithTestHeaders(customRequestHeaders);
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
-                }
-            );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var expectedTransactionName = "WebTransaction/MVC/DefaultController/Index";
-            var expectedAttributes = new Dictionary<string, object>
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
             {
-                { "request.method", "POST" },
-                { "request.headers.referer", "http://example.com/" },
-                { "request.headers.accept", "text/html" },
-                { "request.headers.content-length", "5" },
-                { "request.headers.host", "fakehost" },
-                { "request.headers.user-agent", "FakeUserAgent" }
-            };
-
-            var unexpectedAttributes = new List<string>
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
+                configModifier.SetAllowAllHeaders(false)
+                    .ForceTransactionTraces()
+                    .EnableSpanEvents(true);
+            },
+            exerciseApplication: () =>
             {
-                "request.headers.foo",
-                "request.headers.cookie",
-                "request.headers.authorization",
-                "request.headers.proxy-authorization",
-                "request.headers.x-forwarded-for"
-            };
+                var customRequestHeaders = new Dictionary<string, string> { { "foo", "bar" } };
 
-            var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
-            var spanEvent = _fixture.AgentLog.TryGetSpanEvent(expectedTransactionName);
+                _fixture.PostWithTestHeaders(customRequestHeaders);
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+            }
+        );
+        _fixture.Initialize();
+    }
 
-            Assert.NotNull(transactionSample);
+    [Fact]
+    public void Test()
+    {
+        var expectedTransactionName = "WebTransaction/MVC/DefaultController/Index";
+        var expectedAttributes = new Dictionary<string, object>
+        {
+            { "request.method", "POST" },
+            { "request.headers.referer", "http://example.com/" },
+            { "request.headers.accept", "text/html" },
+            { "request.headers.content-length", "5" },
+            { "request.headers.host", "fakehost" },
+            { "request.headers.user-agent", "FakeUserAgent" }
+        };
 
-            Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
-            Assertions.SpanEventHasAttributes(expectedAttributes, SpanEventAttributeType.Agent, spanEvent);
-            Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
+        var unexpectedAttributes = new List<string>
+        {
+            "request.headers.foo",
+            "request.headers.cookie",
+            "request.headers.authorization",
+            "request.headers.proxy-authorization",
+            "request.headers.x-forwarded-for"
+        };
 
-            Assertions.SpanEventDoesNotHaveAttributes(unexpectedAttributes, SpanEventAttributeType.Agent, spanEvent);
-            Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
-            Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
-        }
+        var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
+        var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
+        var spanEvent = _fixture.AgentLog.TryGetSpanEvent(expectedTransactionName);
+
+        Assert.NotNull(transactionSample);
+
+        Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
+        Assertions.SpanEventHasAttributes(expectedAttributes, SpanEventAttributeType.Agent, spanEvent);
+        Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
+
+        Assertions.SpanEventDoesNotHaveAttributes(unexpectedAttributes, SpanEventAttributeType.Agent, spanEvent);
+        Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
+        Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
     }
 }

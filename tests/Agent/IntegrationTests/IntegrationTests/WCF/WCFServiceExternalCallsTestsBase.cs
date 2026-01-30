@@ -8,39 +8,38 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.WCF.Service
+namespace NewRelic.Agent.IntegrationTests.WCF.Service;
+
+public abstract class WCFServiceExternalCallsTestsBase : WCFEmptyTestBase<ConsoleDynamicMethodFixtureFWLatest>
 {
-    public abstract class WCFServiceExternalCallsTestsBase : WCFEmptyTestBase<ConsoleDynamicMethodFixtureFWLatest>
+    public WCFServiceExternalCallsTestsBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, HostingModel hostingModelOption)
+        : base(fixture, output, hostingModelOption, WCFBindingType.BasicHttp) { }
+
+    protected override void SetupConfiguration()
     {
-        public WCFServiceExternalCallsTestsBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, HostingModel hostingModelOption)
-            : base(fixture, output, hostingModelOption, WCFBindingType.BasicHttp) { }
+        base.SetupConfiguration();
 
-        protected override void SetupConfiguration()
+        _fixture.RemoteApplication.NewRelicConfig.SetRequestTimeout(TimeSpan.FromSeconds(10));
+    }
+
+    protected override void AddFixtureCommands()
+    {
+        base.AddFixtureCommands();
+
+        _fixture.AddCommand($"WCFClient TellWCFServerToMakeExternalCalls");
+    }
+
+    [Fact]
+    protected void ExternalCallsTests()
+    {
+        var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            base.SetupConfiguration();
+            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransactionTotalTime/WCF/NewRelic.Agent.IntegrationTests.Shared.Wcf.IWcfService.TAPMakeExternalCalls" },
+            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"External/google.com/Stream/GET" },
+            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"External/bing.com/Stream/GET" },
+            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"External/yahoo.com/Stream/GET" }
+        };
 
-            _fixture.RemoteApplication.NewRelicConfig.SetRequestTimeout(TimeSpan.FromSeconds(10));
-        }
-
-        protected override void AddFixtureCommands()
-        {
-            base.AddFixtureCommands();
-
-            _fixture.AddCommand($"WCFClient TellWCFServerToMakeExternalCalls");
-        }
-
-        [Fact]
-        protected void ExternalCallsTests()
-        {
-            var expectedMetrics = new List<Assertions.ExpectedMetric>
-            {
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransactionTotalTime/WCF/NewRelic.Agent.IntegrationTests.Shared.Wcf.IWcfService.TAPMakeExternalCalls" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"External/google.com/Stream/GET" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"External/bing.com/Stream/GET" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"External/yahoo.com/Stream/GET" }
-            };
-
-            Assertions.MetricsExist(expectedMetrics, _logHelpers.MetricValues);
-        }
+        Assertions.MetricsExist(expectedMetrics, _logHelpers.MetricValues);
     }
 }

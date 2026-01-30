@@ -9,57 +9,56 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
+namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation;
+
+/// <summary>
+/// This test verifies that our TerminatingSegmentWrapper behaves correctly when running on .NET Core. In particular, we really care
+/// about testing the behavior of removing the transaction data from AsyncLocal storage.
+/// </summary>
+public class DetachWrapperTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
 {
-    /// <summary>
-    /// This test verifies that our TerminatingSegmentWrapper behaves correctly when running on .NET Core. In particular, we really care
-    /// about testing the behavior of removing the transaction data from AsyncLocal storage.
-    /// </summary>
-    public class DetachWrapperTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+    private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+
+    public DetachWrapperTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+        : base(fixture)
     {
-        private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
+            {
+                var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "TerminatingSegmentInstrumentation.xml");
 
-        public DetachWrapperTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
-            : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "TerminatingSegmentInstrumentation.xml");
-
-                    CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "AspNetCoreMvcBasicRequestsApplication", "AspNetCoreMvcBasicRequestsApplication.Controllers.DetachWrapperController", "AsyncMethodWithExternalCall", "DetachWrapper");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.GetCallAsyncExternal();
-                }
-            );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            Assert.NotNull(metrics);
-
-            NrAssert.Multiple(
-                () => Assertions.MetricsExist(_expectedMetrics, metrics),
-                () => Assertions.MetricsDoNotExist(_unexpectedMetrics, metrics)
-                );
-        }
-
-        private readonly List<Assertions.ExpectedMetric> _expectedMetrics = new List<Assertions.ExpectedMetric>
-        {
-            new Assertions.ExpectedMetric { metricName = @"External/www.newrelic.com/Stream/GET"}
-        };
-
-        private readonly List<Assertions.ExpectedMetric> _unexpectedMetrics = new List<Assertions.ExpectedMetric>
-        {
-            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET"}
-        };
+                CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "AspNetCoreMvcBasicRequestsApplication", "AspNetCoreMvcBasicRequestsApplication.Controllers.DetachWrapperController", "AsyncMethodWithExternalCall", "DetachWrapper");
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.GetCallAsyncExternal();
+            }
+        );
+        _fixture.Initialize();
     }
+
+    [Fact]
+    public void Test()
+    {
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+        Assert.NotNull(metrics);
+
+        NrAssert.Multiple(
+            () => Assertions.MetricsExist(_expectedMetrics, metrics),
+            () => Assertions.MetricsDoNotExist(_unexpectedMetrics, metrics)
+        );
+    }
+
+    private readonly List<Assertions.ExpectedMetric> _expectedMetrics = new List<Assertions.ExpectedMetric>
+    {
+        new Assertions.ExpectedMetric { metricName = @"External/www.newrelic.com/Stream/GET"}
+    };
+
+    private readonly List<Assertions.ExpectedMetric> _unexpectedMetrics = new List<Assertions.ExpectedMetric>
+    {
+        new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET"}
+    };
 }

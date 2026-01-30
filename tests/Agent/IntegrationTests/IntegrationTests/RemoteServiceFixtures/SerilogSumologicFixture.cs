@@ -4,34 +4,33 @@
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
-namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
+namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
+
+public class SerilogSumologicFixture : RemoteApplicationFixture
 {
-    public class SerilogSumologicFixture : RemoteApplicationFixture
+    private const string ApplicationDirectoryName = @"SerilogSumologicApplication";
+    private const string ExecutableName = @"SerilogSumologicApplication.exe";
+    public SerilogSumologicFixture() :
+        base(new RemoteService(
+            ApplicationDirectoryName,
+            ExecutableName,
+            "net10.0",
+            ApplicationType.Bounded,
+            true,
+            true,
+            true))
     {
-        private const string ApplicationDirectoryName = @"SerilogSumologicApplication";
-        private const string ExecutableName = @"SerilogSumologicApplication.exe";
-        public SerilogSumologicFixture() :
-            base(new RemoteService(
-                ApplicationDirectoryName,
-                ExecutableName,
-                "net10.0",
-                ApplicationType.Bounded,
-                true,
-                true,
-                true))
-        {
-        }
+    }
 
-        public void SyncControllerMethod()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/Home/SyncControllerMethod";
-            GetStringAndAssertContains(address, "<html>");
-        }
+    public void SyncControllerMethod()
+    {
+        var address = $"http://{DestinationServerName}:{Port}/Home/SyncControllerMethod";
+        GetStringAndAssertContains(address, "<html>");
+    }
 
-        public void AsyncControllerMethod()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/Home/AsyncControllerMethod";
-            GetStringAndAssertContains(address, "<html>");
-        }
+    public void AsyncControllerMethod()
+    {
+        var address = $"http://{DestinationServerName}:{Port}/Home/AsyncControllerMethod";
+        GetStringAndAssertContains(address, "<html>");
     }
 }

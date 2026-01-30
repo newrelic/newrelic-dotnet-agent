@@ -4,22 +4,21 @@
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
-namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
+namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
+
+public class NetCoreAsyncTestsFixture : RemoteApplicationFixture
 {
-    public class NetCoreAsyncTestsFixture : RemoteApplicationFixture
+    private const string ApplicationDirectoryName = @"NetCoreAsyncApplication";
+    private const string ExecutableName = @"NetCoreAsyncApplication.exe";
+    public NetCoreAsyncTestsFixture() :
+        base(new RemoteService(
+            ApplicationDirectoryName,
+            ExecutableName,
+            "net10.0",
+            ApplicationType.Bounded,
+            true,
+            true,
+            true))
     {
-        private const string ApplicationDirectoryName = @"NetCoreAsyncApplication";
-        private const string ExecutableName = @"NetCoreAsyncApplication.exe";
-        public NetCoreAsyncTestsFixture() :
-            base(new RemoteService(
-                ApplicationDirectoryName,
-                ExecutableName,
-                "net10.0",
-                ApplicationType.Bounded,
-                true,
-                true,
-                true))
-        {
-        }
     }
 }

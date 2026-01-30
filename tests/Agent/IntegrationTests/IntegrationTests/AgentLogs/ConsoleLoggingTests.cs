@@ -6,81 +6,80 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.AgentLogs
+namespace NewRelic.Agent.IntegrationTests.AgentLogs;
+
+public abstract class ConsoleLoggingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class ConsoleLoggingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture : ConsoleDynamicMethodFixture
+    private readonly TFixture _fixture;
+
+    public ConsoleLoggingTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly TFixture _fixture;
+        _fixture = fixture;
+        _fixture.SetTimeout(TimeSpan.FromMinutes(1));
+        _fixture.TestLogger = output;
+        _fixture.AgentLogExpected = false;
 
-        public ConsoleLoggingTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(1));
-            _fixture.TestLogger = output;
-            _fixture.AgentLogExpected = false;
+        _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
+        _fixture.AddCommand($"RootCommands DelaySeconds 10");
 
-            _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
-            _fixture.AddCommand($"RootCommands DelaySeconds 10");
-
-            _fixture.AddActions
-            (
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-                    configModifier
+        _fixture.AddActions
+        (
+            setupConfiguration: () =>
+            {
+                var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+                configModifier
                     .SetLogLevel("debug");
 
-                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_LOG_CONSOLE", "true");
+                _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_LOG_CONSOLE", "true");
 
-                },
-                exerciseApplication: () =>
-                {
-                }
-            );
+            },
+            exerciseApplication: () =>
+            {
+            }
+        );
 
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void ConsoleLogsExist()
-        {
-            var stdOut = _fixture.RemoteApplication.CapturedOutput.StandardOutput;
-
-            Assert.Contains("Console logging enabled", stdOut); // A profiler log message
-            Assert.Contains("Log level set to DEBUG", stdOut);  // An agent log message
-        }
+        _fixture.Initialize();
     }
 
-    public class ConsoleLoggingFWLatestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    [Fact]
+    public void ConsoleLogsExist()
     {
-        public ConsoleLoggingFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
+        var stdOut = _fixture.RemoteApplication.CapturedOutput.StandardOutput;
 
-    public class ConsoleLoggingFW462Tests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public ConsoleLoggingFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
+        Assert.Contains("Console logging enabled", stdOut); // A profiler log message
+        Assert.Contains("Log level set to DEBUG", stdOut);  // An agent log message
     }
+}
 
-    public class ConsoleLoggingCoreLatestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+public class ConsoleLoggingFWLatestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public ConsoleLoggingFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public ConsoleLoggingCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
     }
+}
 
-    public class ConsoleLoggingCoreOldestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+public class ConsoleLoggingFW462Tests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureFW462>
+{
+    public ConsoleLoggingFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public ConsoleLoggingCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
+    }
+}
+
+public class ConsoleLoggingCoreLatestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public ConsoleLoggingCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class ConsoleLoggingCoreOldestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public ConsoleLoggingCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

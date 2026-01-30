@@ -4,53 +4,52 @@
 
 using System;
 
-namespace NewRelic.Agent.IntegrationTests.Shared
+namespace NewRelic.Agent.IntegrationTests.Shared;
+
+public class CosmosDBConfiguration
 {
-    public class CosmosDBConfiguration
+    private static string _authKey;
+    private static string _cosmosDBServer;
+
+    public static string AuthKey
     {
-        private static string _authKey;
-        private static string _cosmosDBServer;
-
-        public static string AuthKey
+        get
         {
-            get
+            if (_authKey == null)
             {
-                if (_authKey == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("CosmosDBTests");
-                        _authKey = testConfiguration["AuthKey"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("CosmosDB authentication key configuration is invalid.", ex);
-                    }
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("CosmosDBTests");
+                    _authKey = testConfiguration["AuthKey"];
                 }
-
-                return _authKey;
+                catch (Exception ex)
+                {
+                    throw new Exception("CosmosDB authentication key configuration is invalid.", ex);
+                }
             }
+
+            return _authKey;
         }
+    }
 
-        public static string CosmosDBServer
+    public static string CosmosDBServer
+    {
+        get
         {
-            get
+            if (_cosmosDBServer == null)
             {
-                if (_cosmosDBServer == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("CosmosDBTests");
-                        _cosmosDBServer = testConfiguration["Server"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("CosmosDB configuration is invalid.", ex);
-                    }
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("CosmosDBTests");
+                    _cosmosDBServer = testConfiguration["Server"];
                 }
-
-                return _cosmosDBServer;
+                catch (Exception ex)
+                {
+                    throw new Exception("CosmosDB configuration is invalid.", ex);
+                }
             }
+
+            return _cosmosDBServer;
         }
     }
 }

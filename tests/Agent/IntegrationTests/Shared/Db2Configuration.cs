@@ -5,55 +5,54 @@
 using System;
 using System.Data.Common;
 
-namespace NewRelic.Agent.IntegrationTests.Shared
+namespace NewRelic.Agent.IntegrationTests.Shared;
+
+public class Db2Configuration
 {
-    public class Db2Configuration
+    private static string _db2ConnectionString;
+    private static string _db2Server;
+
+
+    // example: "Server=1.2.3.4;Database=SAMPLE;UserID=db2User;Password=db2password"
+    public static string Db2ConnectionString
     {
-        private static string _db2ConnectionString;
-        private static string _db2Server;
-
-
-        // example: "Server=1.2.3.4;Database=SAMPLE;UserID=db2User;Password=db2password"
-        public static string Db2ConnectionString
+        get
         {
-            get
+            if (_db2ConnectionString == null)
             {
-                if (_db2ConnectionString == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("Db2Tests");
-                        _db2ConnectionString = testConfiguration["ConnectionString"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("Db2ConnectionString configuration is invalid.", ex);
-                    }
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("Db2Tests");
+                    _db2ConnectionString = testConfiguration["ConnectionString"];
                 }
-
-                return _db2ConnectionString;
+                catch (Exception ex)
+                {
+                    throw new Exception("Db2ConnectionString configuration is invalid.", ex);
+                }
             }
+
+            return _db2ConnectionString;
         }
+    }
 
-        public static string Db2Server
+    public static string Db2Server
+    {
+        get
         {
-            get
+            if (_db2Server == null)
             {
-                if (_db2Server == null)
+                try
                 {
-                    try
-                    {
-                        var builder = new DbConnectionStringBuilder { ConnectionString = Db2ConnectionString };
-                        _db2Server = builder["Server"].ToString();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("Db2Server configuration is invalid.", ex);
-                    }
+                    var builder = new DbConnectionStringBuilder { ConnectionString = Db2ConnectionString };
+                    _db2Server = builder["Server"].ToString();
                 }
-
-                return _db2Server;
+                catch (Exception ex)
+                {
+                    throw new Exception("Db2Server configuration is invalid.", ex);
+                }
             }
+
+            return _db2Server;
         }
     }
 }

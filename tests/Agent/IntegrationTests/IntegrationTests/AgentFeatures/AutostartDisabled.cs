@@ -6,47 +6,46 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.AgentFeatures
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
+
+public class AutoStartDisabled : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
-    public class AutoStartDisabled : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+
+    private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
+
+    public AutoStartDisabled(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        : base(fixture)
     {
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _fixture.Actions(
+            setupConfiguration: () =>
+            {
+                var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
 
-        private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "autoStart", "false");
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.Get();
+                _fixture.StartAgent();
+                _fixture.Get();
+            }
+        );
+        _fixture.Initialize();
+    }
 
-        public AutoStartDisabled(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
-            : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions(
-                setupConfiguration: () =>
-                {
-                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+    [Fact]
+    public void Test()
+    {
+        var events = _fixture.AgentLog.GetTransactionEvents();
 
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "autoStart", "false");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.Get();
-                    _fixture.StartAgent();
-                    _fixture.Get();
-                }
-                );
-            _fixture.Initialize();
-        }
+        // Calls to "Get" endpoint will have the transaction name WebTransaction/MVC/DefaultController/Index
+        var getEvents = events.Where(e => e?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/DefaultController/Index");
 
-        [Fact]
-        public void Test()
-        {
-            var events = _fixture.AgentLog.GetTransactionEvents();
+        // The first call to the "Get" endpoint should be ignored because the agent wasn't enabled.
+        Assert.Single(getEvents);
 
-            // Calls to "Get" endpoint will have the transaction name WebTransaction/MVC/DefaultController/Index
-            var getEvents = events.Where(e => e?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/DefaultController/Index");
-
-            // The first call to the "Get" endpoint should be ignored because the agent wasn't enabled.
-            Assert.Single(getEvents);
-
-            // There may or may not be a transaction event generated for the "StartAgent" endpoint, but it doesn't really matter. Either behavior is acceptable.
-        }
+        // There may or may not be a transaction event generated for the "StartAgent" endpoint, but it doesn't really matter. Either behavior is acceptable.
     }
 }

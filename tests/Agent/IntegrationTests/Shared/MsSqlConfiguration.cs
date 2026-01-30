@@ -5,54 +5,53 @@
 using System;
 using System.Data.Common;
 
-namespace NewRelic.Agent.IntegrationTests.Shared
+namespace NewRelic.Agent.IntegrationTests.Shared;
+
+public class MsSqlConfiguration
 {
-    public class MsSqlConfiguration
+    private static string _msSqlConnectionString;
+    private static string _msSqlServer;
+
+    // example: "Server=1.2.3.4;Database=DBName;User ID=sa;Password=password;Trusted_Connection=False;Encrypt=False;Connection Timeout=30;"
+    public static string MsSqlConnectionString
     {
-        private static string _msSqlConnectionString;
-        private static string _msSqlServer;
-
-        // example: "Server=1.2.3.4;Database=DBName;User ID=sa;Password=password;Trusted_Connection=False;Encrypt=False;Connection Timeout=30;"
-        public static string MsSqlConnectionString
+        get
         {
-            get
+            if (_msSqlConnectionString == null)
             {
-                if (_msSqlConnectionString == null)
+                try
                 {
-                    try
-                    {
-                        var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MSSQLTests");
-                        _msSqlConnectionString = testConfiguration["ConnectionString"];
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("MsSqlConnectionString configuration is invalid.", ex);
-                    }
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MSSQLTests");
+                    _msSqlConnectionString = testConfiguration["ConnectionString"];
                 }
-
-                return _msSqlConnectionString;
+                catch (Exception ex)
+                {
+                    throw new Exception("MsSqlConnectionString configuration is invalid.", ex);
+                }
             }
+
+            return _msSqlConnectionString;
         }
+    }
 
-        public static string MsSqlServer
+    public static string MsSqlServer
+    {
+        get
         {
-            get
+            if (_msSqlServer == null)
             {
-                if (_msSqlServer == null)
+                try
                 {
-                    try
-                    {
-                        var builder = new DbConnectionStringBuilder { ConnectionString = MsSqlConnectionString };
-                        _msSqlServer = builder["Server"].ToString();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("MsSqlServer configuration is invalid.", ex);
-                    }
+                    var builder = new DbConnectionStringBuilder { ConnectionString = MsSqlConnectionString };
+                    _msSqlServer = builder["Server"].ToString();
                 }
-
-                return _msSqlServer;
+                catch (Exception ex)
+                {
+                    throw new Exception("MsSqlServer configuration is invalid.", ex);
+                }
             }
+
+            return _msSqlServer;
         }
     }
 }

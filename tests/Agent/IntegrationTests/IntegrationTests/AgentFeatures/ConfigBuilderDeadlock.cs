@@ -2,40 +2,39 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using System;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.AgentFeatures
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
+
+public class ConfigBuilderDeadlock : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW471>
 {
-    public class ConfigBuilderDeadlock : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW471>
+    protected readonly ConsoleDynamicMethodFixtureFW471 _fixture;
+
+    public ConfigBuilderDeadlock(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture)
     {
-        protected readonly ConsoleDynamicMethodFixtureFW471 _fixture;
+        _fixture = fixture;
+        _fixture.TestLogger = output;
 
-        public ConfigBuilderDeadlock(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
+        _fixture.Actions
+        (
+            setupConfiguration: () =>
+            {
+                _fixture.AddCommand($"ConfigBuilderDeadlock Run");
+                _fixture.SetTimeout(TimeSpan.FromMinutes(1));
+                _fixture.AgentLogExpected = false;
+                _fixture.SetAdditionalEnvironmentVariable("NEW_RELIC_DELAY_AGENT_INIT_METHOD_LIST", "ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.ConfigBuilderDeadlock.DoTransaction");
+            }
+        );
 
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    _fixture.AddCommand($"ConfigBuilderDeadlock Run");
-                    _fixture.SetTimeout(TimeSpan.FromMinutes(1));
-                    _fixture.AgentLogExpected = false;
-                    _fixture.SetAdditionalEnvironmentVariable("NEW_RELIC_DELAY_AGENT_INIT_METHOD_LIST", "ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.ConfigBuilderDeadlock.DoTransaction");
-                }
-            );
+        _fixture.Initialize();
+    }
 
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            Assert.Equal(0, _fixture.RemoteApplication.ExitCode.Value);
-        }
+    [Fact]
+    public void Test()
+    {
+        Assert.Equal(0, _fixture.RemoteApplication.ExitCode.Value);
     }
 }

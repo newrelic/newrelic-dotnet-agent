@@ -9,137 +9,136 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.LLM
+namespace NewRelic.Agent.IntegrationTests.LLM;
+
+public abstract class BedrockInvokeTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class BedrockInvokeTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    private readonly TFixture _fixture;
+
+    // Prompts have spaces in them, which will not be parsed correctly
+    private string _prompt = "In one sentence, what is a large-language model?";
+    private List<string> _bedrockModelsToTest = new List<string>
     {
-        private readonly TFixture _fixture;
+        "amazonembed",
+        //"amazonexpress", // Model is EOLed as of 12/29/25
+        //"anthropic" // Model is EOLed as of 9/11/25
+    };
 
-        // Prompts have spaces in them, which will not be parsed correctly
-        private string _prompt = "In one sentence, what is a large-language model?";
-        private List<string> _bedrockModelsToTest = new List<string>
-        {
-            "amazonembed",
-            //"amazonexpress", // Model is EOLed as of 12/29/25
-            //"anthropic" // Model is EOLed as of 9/11/25
-        };
+    private Dictionary<string, LlmMessageTypes> _expectedAttributes = new Dictionary<string, LlmMessageTypes>
+    {
+        {"id", LlmMessageTypes.All},
+        {"request_id", LlmMessageTypes.All},
+        {"span_id", LlmMessageTypes.All},
+        {"trace_id", LlmMessageTypes.All},
+        {"request.temperature", LlmMessageTypes.LlmChatCompletionSummary},
+        {"request.max_tokens", LlmMessageTypes.LlmChatCompletionSummary},
+        {"request.model", LlmMessageTypes.LlmChatCompletionSummary | LlmMessageTypes.LlmEmbedding},
+        {"response.model", LlmMessageTypes.All},
+        {"response.number_of_messages", LlmMessageTypes.LlmChatCompletionSummary},
+        {"response.choices.finish_reason", LlmMessageTypes.LlmChatCompletionSummary},
+        {"vendor", LlmMessageTypes.All},
+        {"ingest_source", LlmMessageTypes.All},
+        {"duration", LlmMessageTypes.LlmChatCompletionSummary | LlmMessageTypes.LlmEmbedding},
+        {"content", LlmMessageTypes.LlmChatCompletionMessage},
+        {"role", LlmMessageTypes.LlmChatCompletionMessage},
+        {"sequence", LlmMessageTypes.LlmChatCompletionMessage},
+        {"completion_id", LlmMessageTypes.LlmChatCompletionMessage},
+        {"input", LlmMessageTypes.LlmEmbedding},
+    };
 
-        private Dictionary<string, LlmMessageTypes> _expectedAttributes = new Dictionary<string, LlmMessageTypes>
-        {
-            {"id", LlmMessageTypes.All},
-            {"request_id", LlmMessageTypes.All},
-            {"span_id", LlmMessageTypes.All},
-            {"trace_id", LlmMessageTypes.All},
-            {"request.temperature", LlmMessageTypes.LlmChatCompletionSummary},
-            {"request.max_tokens", LlmMessageTypes.LlmChatCompletionSummary},
-            {"request.model", LlmMessageTypes.LlmChatCompletionSummary | LlmMessageTypes.LlmEmbedding},
-            {"response.model", LlmMessageTypes.All},
-            {"response.number_of_messages", LlmMessageTypes.LlmChatCompletionSummary},
-            {"response.choices.finish_reason", LlmMessageTypes.LlmChatCompletionSummary},
-            {"vendor", LlmMessageTypes.All},
-            {"ingest_source", LlmMessageTypes.All},
-            {"duration", LlmMessageTypes.LlmChatCompletionSummary | LlmMessageTypes.LlmEmbedding},
-            {"content", LlmMessageTypes.LlmChatCompletionMessage},
-            {"role", LlmMessageTypes.LlmChatCompletionMessage},
-            {"sequence", LlmMessageTypes.LlmChatCompletionMessage},
-            {"completion_id", LlmMessageTypes.LlmChatCompletionMessage},
-            {"input", LlmMessageTypes.LlmEmbedding},
-        };
-
-        public BedrockInvokeTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
-            _fixture.TestLogger = output;
-            _fixture.AddActions(
-                setupConfiguration: () =>
-                {
-                    new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
-                        .ForceTransactionTraces()
-                        .EnableAiMonitoring()
-                        .SetLogLevel("finest");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), _bedrockModelsToTest.Count);
-                }
-            );
-
-            foreach (var model in _bedrockModelsToTest)
+    public BedrockInvokeTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+    {
+        _fixture = fixture;
+        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+        _fixture.TestLogger = output;
+        _fixture.AddActions(
+            setupConfiguration: () =>
             {
-                _fixture.AddCommand($"BedrockExerciser InvokeModel {model} {LLMHelpers.ConvertToBase64(_prompt)}");
+                new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
+                    .ForceTransactionTraces()
+                    .EnableAiMonitoring()
+                    .SetLogLevel("finest");
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), _bedrockModelsToTest.Count);
             }
+        );
 
-            _fixture.Initialize();
+        foreach (var model in _bedrockModelsToTest)
+        {
+            _fixture.AddCommand($"BedrockExerciser InvokeModel {model} {LLMHelpers.ConvertToBase64(_prompt)}");
         }
 
-        private void ValidateCommonAttributes(IEnumerable<CustomEventData> customEvents)
-        {
-            foreach (var evt in customEvents)
-            {
-                if (!Enum.TryParse<LlmMessageTypes>(evt.Header.Type, out var type))
-                {
-                    Assert.Fail($"{evt.Header.Type} is not a recognized LLM message type");
-                }
-                foreach (var pair in evt.Attributes)
-                {
-                    if (_expectedAttributes.TryGetValue(pair.Key, out var expectedTypes))
-                    {
-                        Assert.True(expectedTypes.HasFlag(type), $"{type} is not expected to have the attribute {pair.Key}");
-                    }
-                }
+        _fixture.Initialize();
+    }
 
-                foreach (var pair in _expectedAttributes)
+    private void ValidateCommonAttributes(IEnumerable<CustomEventData> customEvents)
+    {
+        foreach (var evt in customEvents)
+        {
+            if (!Enum.TryParse<LlmMessageTypes>(evt.Header.Type, out var type))
+            {
+                Assert.Fail($"{evt.Header.Type} is not a recognized LLM message type");
+            }
+            foreach (var pair in evt.Attributes)
+            {
+                if (_expectedAttributes.TryGetValue(pair.Key, out var expectedTypes))
                 {
-                    if (pair.Value.HasFlag(type))
-                    {
-                        if (!evt.Attributes.TryGetValue(pair.Key, out _))
-                        {
-                            Assert.Fail($"The attribute '{pair.Key}' is expected in an '{type}' event but it was not found");
-                        }
-                    }
+                    Assert.True(expectedTypes.HasFlag(type), $"{type} is not expected to have the attribute {pair.Key}");
                 }
             }
 
-        }
-
-        [Fact]
-        public void BedrockTest()
-        {
-            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            foreach (var pair in _expectedAttributes)
             {
-                //new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/Bedrock/InvokeModelAsync", CallCountAllHarvests = _bedrockModelsToTest.Count - 1 }, // We are only testing one embedding model right now
-                new Assertions.ExpectedMetric { metricName = @"Custom/Llm/embedding/Bedrock/InvokeModelAsync", CallCountAllHarvests = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true},
-                new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/LLM/.*/.*", IsRegexName = true}, // Supportability/DotNet/LLM/{vendor}/{model}
-                new() { metricName = @"Supportability/DotNet/LLM/Bedrock-Invoke"},
-            };
-
-            var customEvents = _fixture.AgentLog.GetCustomEvents().ToList();
-            ValidateCommonAttributes(customEvents);
-
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            Assertions.MetricsExist(expectedMetrics, metrics);
-
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.BedrockExerciser/InvokeModel");
-
-            Assert.NotNull( transactionEvent );
+                if (pair.Value.HasFlag(type))
+                {
+                    if (!evt.Attributes.TryGetValue(pair.Key, out _))
+                    {
+                        Assert.Fail($"The attribute '{pair.Key}' is expected in an '{type}' event but it was not found");
+                    }
+                }
+            }
         }
+
     }
 
-    public class BedrockInvokeTests_Basic_CoreLatest : BedrockInvokeTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    [Fact]
+    public void BedrockTest()
     {
-        public BedrockInvokeTests_Basic_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
+        var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-        }
-    }
+            //new Assertions.ExpectedMetric { metricName = @"Custom/Llm/completion/Bedrock/InvokeModelAsync", CallCountAllHarvests = _bedrockModelsToTest.Count - 1 }, // We are only testing one embedding model right now
+            new Assertions.ExpectedMetric { metricName = @"Custom/Llm/embedding/Bedrock/InvokeModelAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/ML/.*", IsRegexName = true},
+            new Assertions.ExpectedMetric { metricName = @"Supportability/DotNet/LLM/.*/.*", IsRegexName = true}, // Supportability/DotNet/LLM/{vendor}/{model}
+            new() { metricName = @"Supportability/DotNet/LLM/Bedrock-Invoke"},
+        };
 
-    public class BedrockInvokeTests_Basic_FWLatest : BedrockInvokeTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+        var customEvents = _fixture.AgentLog.GetCustomEvents().ToList();
+        ValidateCommonAttributes(customEvents);
+
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+        Assertions.MetricsExist(expectedMetrics, metrics);
+
+        var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.BedrockExerciser/InvokeModel");
+
+        Assert.NotNull( transactionEvent );
+    }
+}
+
+public class BedrockInvokeTests_Basic_CoreLatest : BedrockInvokeTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public BedrockInvokeTests_Basic_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
     {
-        public BedrockInvokeTests_Basic_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
+    }
+}
+
+public class BedrockInvokeTests_Basic_FWLatest : BedrockInvokeTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public BedrockInvokeTests_Basic_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

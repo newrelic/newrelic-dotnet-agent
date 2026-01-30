@@ -2,33 +2,32 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda
+namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
+
+public abstract class LambdaContextOnlyParameterFixtureBase : LambdaSelfExecutingAssemblyFixture
 {
-    public abstract class LambdaContextOnlyParameterFixtureBase : LambdaSelfExecutingAssemblyFixture
+    protected LambdaContextOnlyParameterFixtureBase(string targetFramework) :
+        base(targetFramework,
+            null,
+            "LambdaSelfExecutingAssembly::LambdaSelfExecutingAssembly.Program::LambdaContextOnlyHandler",
+            "LambdaContextOnly",
+            null)
     {
-        protected LambdaContextOnlyParameterFixtureBase(string targetFramework) :
-            base(targetFramework,
-                null,
-                "LambdaSelfExecutingAssembly::LambdaSelfExecutingAssembly.Program::LambdaContextOnlyHandler",
-                "LambdaContextOnly",
-                null)
-        {
-        }
-
-        public void EnqueueTrigger()
-        {
-            var json = "{}";
-            EnqueueLambdaEvent(json);
-        }
     }
 
-    public class LambdaContextOnlyParameterFixtureCoreOldest : LambdaContextOnlyParameterFixtureBase
+    public void EnqueueTrigger()
     {
-        public LambdaContextOnlyParameterFixtureCoreOldest() : base(CoreOldestTFM) { }
+        var json = "{}";
+        EnqueueLambdaEvent(json);
     }
+}
 
-    public class LambdaContextOnlyParameterFixtureCoreLatest : LambdaContextOnlyParameterFixtureBase
-    {
-        public LambdaContextOnlyParameterFixtureCoreLatest() : base(CoreLatestTFM) { }
-    }
+public class LambdaContextOnlyParameterFixtureCoreOldest : LambdaContextOnlyParameterFixtureBase
+{
+    public LambdaContextOnlyParameterFixtureCoreOldest() : base(CoreOldestTFM) { }
+}
+
+public class LambdaContextOnlyParameterFixtureCoreLatest : LambdaContextOnlyParameterFixtureBase
+{
+    public LambdaContextOnlyParameterFixtureCoreLatest() : base(CoreLatestTFM) { }
 }
