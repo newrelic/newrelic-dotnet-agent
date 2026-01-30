@@ -2,22 +2,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.W3C
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.W3C;
+
+public class W3CTestModel
 {
-    public class W3CTestModel
+    [JsonProperty("url")]
+    public string Url { get; set; }
+
+    [JsonProperty("arguments")]
+    public List<W3CTestModel> Arguments { get; set; }
+
+    public override string ToString()
     {
-        [JsonProperty("url")]
-        public string Url { get; set; }
-
-        [JsonProperty("arguments")]
-        public List<W3CTestModel> Arguments { get; set; }
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        return JsonConvert.SerializeObject(this);
     }
 }

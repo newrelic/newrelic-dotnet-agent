@@ -9,63 +9,62 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers
+namespace NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
+
+/// <summary>
+/// Provides utilities that allow execution of a method using reflection
+/// </summary>
+public class DynamicMethodExecutor
 {
-    /// <summary>
-    /// Provides utilities that allow execution of a method using reflection
-    /// </summary>
-    public class DynamicMethodExecutor
+    private readonly Dictionary<Type, object> _instanceDic = new Dictionary<Type, object>();
+
+    public void ExecuteDynamicMethod(MethodInfo method, string[] args)
     {
-        private readonly Dictionary<Type, object> _instanceDic = new Dictionary<Type, object>();
+        var paramValues = MapParameterValues(method, args);
 
-        public void ExecuteDynamicMethod(MethodInfo method, string[] args)
+        object objInst = null;
+        if (!method.IsStatic)
         {
-            var paramValues = MapParameterValues(method, args);
-
-            object objInst = null;
-            if (!method.IsStatic)
+            if (!_instanceDic.TryGetValue(method.DeclaringType, out objInst))
             {
-                if (!_instanceDic.TryGetValue(method.DeclaringType, out objInst))
-                {
-                    objInst = Activator.CreateInstance(method.DeclaringType);
-                    _instanceDic[method.DeclaringType] = objInst;
-                }
+                objInst = Activator.CreateInstance(method.DeclaringType);
+                _instanceDic[method.DeclaringType] = objInst;
             }
-
-            var returnValue = method.Invoke(objInst, paramValues.ToArray());
-
-            if (returnValue is Task task)
-            {
-                task.Wait();
-            }
-
         }
 
-        public static IEnumerable<object> MapParameterValues(MethodInfo method, string[] args)
+        var returnValue = method.Invoke(objInst, paramValues.ToArray());
+
+        if (returnValue is Task task)
         {
-            var methodParams = method.GetParameters();
-            var result = new object[methodParams.Length];
-
-            for (var i = 0; i < methodParams.Length; i++)
-            {
-                var paramType = methodParams[i].ParameterType;
-
-                var converter = TypeDescriptor.GetConverter(paramType);
-                var val = converter.ConvertFromInvariantString(args[i]);
-                result[i] = val;
-            }
-
-            return result;
+            task.Wait();
         }
+
     }
 
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class LibraryAttribute : Attribute
+    public static IEnumerable<object> MapParameterValues(MethodInfo method, string[] args)
     {
-    }
+        var methodParams = method.GetParameters();
+        var result = new object[methodParams.Length];
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    public class LibraryMethodAttribute : Attribute
-    {
+        for (var i = 0; i < methodParams.Length; i++)
+        {
+            var paramType = methodParams[i].ParameterType;
+
+            var converter = TypeDescriptor.GetConverter(paramType);
+            var val = converter.ConvertFromInvariantString(args[i]);
+            result[i] = val;
+        }
+
+        return result;
     }
+}
+
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+public class LibraryAttribute : Attribute
+{
+}
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+public class LibraryMethodAttribute : Attribute
+{
 }

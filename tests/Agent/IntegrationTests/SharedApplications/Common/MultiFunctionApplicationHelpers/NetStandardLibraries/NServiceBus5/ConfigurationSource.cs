@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 #if NET462
@@ -7,6 +7,8 @@ using System;
 using System.Configuration;
 using NServiceBus.Config;
 using NServiceBus.Config.ConfigurationSource;
+
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5;
 
 public class ConfigurationSource : IConfigurationSource
 {

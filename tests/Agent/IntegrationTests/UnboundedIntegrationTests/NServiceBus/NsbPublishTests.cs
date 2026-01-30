@@ -52,17 +52,17 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/NsbTests.Event", callCount = 1},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/NsbTests.Event", callCount = 1, metricScope = "OtherTransaction/Custom/NsbTests.NServiceBusDriver/PublishEventInTransaction"}
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Event", callCount = 1},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Event", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.NServiceBusDriver/PublishEventInTransaction"}
             };
             var expectedTransactionTraceSegments = new List<string>
             {
-                @"MessageBroker/NServiceBus/Queue/Produce/Named/NsbTests.Event"
+                @"MessageBroker/NServiceBus/Queue/Produce/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Event"
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Custom/NsbTests.NServiceBusDriver/PublishEventInTransaction");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Custom/NsbTests.NServiceBusDriver/PublishEventInTransaction");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.NServiceBusDriver/PublishEventInTransaction");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.NServiceBusDriver/PublishEventInTransaction");
 
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),

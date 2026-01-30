@@ -13,492 +13,463 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
+namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+
+public abstract class RemoteApplicationFixture : IDisposable
 {
-    public abstract class RemoteApplicationFixture : IDisposable
+    public virtual string TestSettingCategory { get { return "Default"; } }
+
+    public int? BaselinePayloadBytes { get; set; }
+
+    private Action _setupConfiguration;
+    private Action _exerciseApplication;
+    private HashSet<uint> _errorsToRetryOn = new HashSet<uint>
     {
-        public virtual string TestSettingCategory { get { return "Default"; } }
+        0xC000_0005     // System.AccessViolationException. This is a .NET bug that
+        // is supposed to be fixed but we're still seeing
+        // https://github.com/dotnet/runtime/issues/62145
+    };
 
-        public int? BaselinePayloadBytes { get; set; }
+    public Dictionary<string, string> EnvironmentVariables;
 
-        private Action _setupConfiguration;
-        private Action _exerciseApplication;
-        private HashSet<uint> _errorsToRetryOn = new HashSet<uint>
+    private bool _initialized;
+
+    protected readonly HttpClient _httpClient = new HttpClient();
+
+    public void SetTestClassType(Type testClassType)
+    {
+        RemoteApplication?.SetTestClassType(testClassType);
+    }
+
+    public int? ExitCode => RemoteApplication?.ExitCode;
+
+    private readonly object _initializeLock = new object();
+
+    public readonly RemoteApplication RemoteApplication;
+
+    public string UniqueFolderName { get { return RemoteApplication.UniqueFolderName; } }
+    private string AgentLogFileName { get { return CommonUtils.GetAgentLogFileNameFromNewRelicConfig(DestinationNewRelicConfigFilePath); } }
+
+
+    private AgentLogFile _agentLogFile;
+    public bool AgentLogExpected { get; set; } = true;
+
+    public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, AgentLogFileName, Timing.TimeToWaitForLog, AgentLogExpected));
+
+    private AuditLogFile _auditLogFile;
+    public bool AuditLogExpected { get; set; } = false;
+    public AuditLogFile AuditLog => _auditLogFile ?? (_auditLogFile = new AuditLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, timeoutOrZero: Timing.TimeToWaitForLog, throwIfNotFound: AuditLogExpected));
+
+
+    public ProfilerLogFile ProfilerLog { get { return RemoteApplication.ProfilerLog; } }
+
+    public virtual string DestinationServerName { get { return RemoteApplication.DestinationServerName; } }
+
+    public string DestinationDomainName => System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName;
+
+    public string DestinationHostAndDomain
+    {
+        get
         {
-            0xC000_0005     // System.AccessViolationException. This is a .NET bug that
-                            // is supposed to be fixed but we're still seeing
-                            // https://github.com/dotnet/runtime/issues/62145
+            var domain = DestinationDomainName;
+            if (string.IsNullOrEmpty(domain))
+            {
+                return DestinationServerName;
+            }
+
+            return $"{DestinationServerName}.{domain}";
+        }
+    }
+
+    public int Port => RemoteApplication.Port;
+
+    public string CommandLineArguments { get; set; }
+
+    public string DestinationNewRelicConfigFilePath { get { return RemoteApplication.DestinationNewRelicConfigFilePath; } }
+
+    public string DestinationNewRelicLogFileDirectoryPath { get { return RemoteApplication.DestinationNewRelicLogFileDirectoryPath; } }
+
+    public string DestinationApplicationDirectoryPath { get { return RemoteApplication.DestinationApplicationDirectoryPath; } }
+
+    public string DestinationNewRelicExtensionsDirectoryPath => RemoteApplication.DestinationNewRelicExtensionsDirectoryPath;
+
+    public ITestOutputHelper TestLogger { get; set; }
+
+    public bool UseLocalConfig
+    {
+        get { return RemoteApplication.UseLocalConfig; }
+        set { RemoteApplication.UseLocalConfig = value; }
+    }
+    public bool KeepWorkingDirectory
+    {
+        get { return RemoteApplication.KeepWorkingDirectory; }
+        set { RemoteApplication.KeepWorkingDirectory = value; }
+    }
+
+    // Tests are only retried if they return a known error not related to the test
+    protected virtual int MaxTries => 3;
+
+    public void DisableAsyncLocalCallStack()
+    {
+        var filesToDelete = new List<string>
+        {
+            DestinationNewRelicExtensionsDirectoryPath + @"\NewRelic.Providers.Storage.AsyncLocal.dll",
+            DestinationNewRelicExtensionsDirectoryPath + @"\NewRelic.Providers.Storage.CallContext.dll",
+            DestinationNewRelicExtensionsDirectoryPath + @"\NewRelic.Providers.Storage.HybridHttpContext.dll"
         };
 
-        public Dictionary<string, string> EnvironmentVariables;
-
-        private bool _initialized;
-
-        protected readonly HttpClient _httpClient = new HttpClient();
-
-        public void SetTestClassType(Type testClassType)
+        foreach (var file in filesToDelete)
         {
-            RemoteApplication?.SetTestClassType(testClassType);
-        }
-
-        public int? ExitCode => RemoteApplication?.ExitCode;
-
-        private readonly object _initializeLock = new object();
-
-        public readonly RemoteApplication RemoteApplication;
-
-        public string UniqueFolderName { get { return RemoteApplication.UniqueFolderName; } }
-        private string AgentLogFileName { get { return CommonUtils.GetAgentLogFileNameFromNewRelicConfig(DestinationNewRelicConfigFilePath); } }
-
-
-        private AgentLogFile _agentLogFile;
-        public bool AgentLogExpected { get; set; } = true;
-
-        public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, AgentLogFileName, Timing.TimeToWaitForLog, AgentLogExpected));
-
-        private AuditLogFile _auditLogFile;
-        public bool AuditLogExpected { get; set; } = false;
-        public AuditLogFile AuditLog => _auditLogFile ?? (_auditLogFile = new AuditLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, timeoutOrZero: Timing.TimeToWaitForLog, throwIfNotFound: AuditLogExpected));
-
-
-        public ProfilerLogFile ProfilerLog { get { return RemoteApplication.ProfilerLog; } }
-
-        public virtual string DestinationServerName { get { return RemoteApplication.DestinationServerName; } }
-
-        public string DestinationDomainName => System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName;
-
-        public string DestinationHostAndDomain
-        {
-            get
+            if (File.Exists(file))
             {
-                var domain = DestinationDomainName;
-                if (string.IsNullOrEmpty(domain))
-                {
-                    return DestinationServerName;
-                }
-
-                return $"{DestinationServerName}.{domain}";
+                File.Delete(file);
             }
         }
+    }
 
-        public int Port => RemoteApplication.Port;
+    private IntegrationTestConfiguration _testConfiguration;
 
-        public string CommandLineArguments { get; set; }
-
-        public string DestinationNewRelicConfigFilePath { get { return RemoteApplication.DestinationNewRelicConfigFilePath; } }
-
-        public string DestinationNewRelicLogFileDirectoryPath { get { return RemoteApplication.DestinationNewRelicLogFileDirectoryPath; } }
-
-        public string DestinationApplicationDirectoryPath { get { return RemoteApplication.DestinationApplicationDirectoryPath; } }
-
-        public string DestinationNewRelicExtensionsDirectoryPath => RemoteApplication.DestinationNewRelicExtensionsDirectoryPath;
-
-        public ITestOutputHelper TestLogger { get; set; }
-
-        public bool UseLocalConfig
+    public IntegrationTestConfiguration TestConfiguration
+    {
+        get
         {
-            get { return RemoteApplication.UseLocalConfig; }
-            set { RemoteApplication.UseLocalConfig = value; }
-        }
-        public bool KeepWorkingDirectory
-        {
-            get { return RemoteApplication.KeepWorkingDirectory; }
-            set { RemoteApplication.KeepWorkingDirectory = value; }
-        }
-
-        // Tests are only retried if they return a known error not related to the test
-        protected virtual int MaxTries => 3;
-
-        public void DisableAsyncLocalCallStack()
-        {
-            var filesToDelete = new List<string>
+            if (_testConfiguration == null)
             {
-                DestinationNewRelicExtensionsDirectoryPath + @"\NewRelic.Providers.Storage.AsyncLocal.dll",
-                DestinationNewRelicExtensionsDirectoryPath + @"\NewRelic.Providers.Storage.CallContext.dll",
-                DestinationNewRelicExtensionsDirectoryPath + @"\NewRelic.Providers.Storage.HybridHttpContext.dll"
+                _testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration(TestSettingCategory);
+            }
+
+            return _testConfiguration;
+        }
+    }
+
+    protected RemoteApplicationFixture(RemoteApplication remoteApplication)
+    {
+        EnvironmentVariables = new Dictionary<string, string>();
+        RemoteApplication = remoteApplication;
+    }
+
+    public void Actions(Action setupConfiguration = null, Action exerciseApplication = null)
+    {
+        if (setupConfiguration != null)
+            _setupConfiguration = setupConfiguration;
+
+        if (exerciseApplication != null)
+            _exerciseApplication = exerciseApplication;
+    }
+
+    public void AddActions(Action setupConfiguration = null, Action exerciseApplication = null)
+    {
+        if (setupConfiguration != null)
+        {
+            var oldSetupConfiguration = _setupConfiguration;
+            _setupConfiguration = () =>
+            {
+                oldSetupConfiguration?.Invoke();
+                setupConfiguration();
             };
+        }
 
-            foreach (var file in filesToDelete)
+        if (exerciseApplication != null)
+        {
+            var oldExerciseApplication = _exerciseApplication;
+            _exerciseApplication = () =>
             {
-                if (File.Exists(file))
-                {
-                    File.Delete(file);
-                }
+                oldExerciseApplication?.Invoke();
+                exerciseApplication();
+            };
+        }
+    }
+
+    private void SetupConfiguration()
+    {
+        SetSecrets(DestinationNewRelicConfigFilePath);
+        _setupConfiguration?.Invoke();
+    }
+
+    protected void SetSecrets(string destinationNewRelicConfigFilePath)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "licenseKey", TestConfiguration.LicenseKey);
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "host", TestConfiguration.CollectorUrl);
+        if (TestSettingCategory == "CSP")
+        {
+            var securityPoliciesToken = "ffff-ffff-ffff-ffff";
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration" }, "securityPoliciesToken", securityPoliciesToken);
+        }
+    }
+
+    public RemoteApplicationFixture SetAdditionalEnvironmentVariables(IDictionary<string, string> envVars)
+    {
+        RemoteApplication.SetAdditionalEnvironmentVariables(envVars);
+        return this;
+    }
+
+    public RemoteApplicationFixture SetAdditionalEnvironmentVariable(string key, string value)
+    {
+        RemoteApplication.SetAdditionalEnvironmentVariable(key, value);
+        return this;
+    }
+
+    public void AddErrorToRetryOn(uint error)
+    {
+        _errorsToRetryOn.Add(error);
+    }
+
+    private void ExerciseApplication()
+    {
+        _exerciseApplication?.Invoke();
+    }
+
+    private string FormatExitCode(int? exitCode)
+    {
+        if (exitCode == null) return "[null]";
+        if (Math.Abs(exitCode.Value) < 10) return exitCode.Value.ToString();
+        return exitCode.Value.ToString("X8");
+    }
+
+    /// <summary>
+    /// Adds or replaces known problems. This is used to check for things like transaction garbage collected.
+    /// Add an empty/null string[] with keepDefaults = false to clear the defaults.
+    ///
+    /// Includes by default:
+    /// - AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx
+    /// </summary>
+    /// <param name="keepDefaults">If true, the default problems will be kept. If false, the default problems will be cleared.</param>
+    /// <param name="problems">Regex values to check for from AgentLogBase.</param>
+    public void SetKnownProblems(bool keepDefaults = true, params string[] problems)
+    {
+        _problemsToCheck = keepDefaults ? _problemsToCheck.Concat(problems).ToList() : new List<string>(problems);
+    }
+
+    private List<string> _problemsToCheck = new List<string>
+    {
+        AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx
+    };
+
+    public virtual void Initialize()
+    {
+        lock (_initializeLock)
+        {
+            if (_initialized)
+            {
+                return;
             }
-        }
 
-        private IntegrationTestConfiguration _testConfiguration;
+            _initialized = true;
 
-        public IntegrationTestConfiguration TestConfiguration
-        {
-            get
+            TestLogger?.WriteLine(RemoteApplication.AppName);
+
+
+            var numberOfTries = 0;
+            var applicationHadNonZeroExitCode = false;
+
+            try
             {
-                if (_testConfiguration == null)
+                var retryTest = false;
+                var retryMessage = "";
+
+                do
                 {
-                    _testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration(TestSettingCategory);
-                }
+                    TestLogger?.WriteLine($"Test name: {TestContext.Current.TestClass.TestClassSimpleName}");
+                    TestLogger?.WriteLine("Test Home: " + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
 
-                return _testConfiguration;
-            }
-        }
+                    // reset these for each loop iteration
+                    applicationHadNonZeroExitCode = false;
+                    retryTest = false;
 
-        protected RemoteApplicationFixture(RemoteApplication remoteApplication)
-        {
-            EnvironmentVariables = new Dictionary<string, string>();
-            RemoteApplication = remoteApplication;
-        }
+                    RemoteApplication.TestLogger = new XUnitTestLogger(TestLogger);
 
-        public void Actions(Action setupConfiguration = null, Action exerciseApplication = null)
-        {
-            if (setupConfiguration != null)
-                _setupConfiguration = setupConfiguration;
+                    var captureStandardOutput = RemoteApplication.CaptureStandardOutput;
 
-            if (exerciseApplication != null)
-                _exerciseApplication = exerciseApplication;
-        }
-
-        public void AddActions(Action setupConfiguration = null, Action exerciseApplication = null)
-        {
-            if (setupConfiguration != null)
-            {
-                var oldSetupConfiguration = _setupConfiguration;
-                _setupConfiguration = () =>
-                {
-                    oldSetupConfiguration?.Invoke();
-                    setupConfiguration();
-                };
-            }
-
-            if (exerciseApplication != null)
-            {
-                var oldExerciseApplication = _exerciseApplication;
-                _exerciseApplication = () =>
-                {
-                    oldExerciseApplication?.Invoke();
-                    exerciseApplication();
-                };
-            }
-        }
-
-        private void SetupConfiguration()
-        {
-            SetSecrets(DestinationNewRelicConfigFilePath);
-            _setupConfiguration?.Invoke();
-        }
-
-        protected void SetSecrets(string destinationNewRelicConfigFilePath)
-        {
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "licenseKey", TestConfiguration.LicenseKey);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "host", TestConfiguration.CollectorUrl);
-            if (TestSettingCategory == "CSP")
-            {
-                var securityPoliciesToken = "ffff-ffff-ffff-ffff";
-                CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration" }, "securityPoliciesToken", securityPoliciesToken);
-            }
-        }
-
-        public RemoteApplicationFixture SetAdditionalEnvironmentVariables(IDictionary<string, string> envVars)
-        {
-            RemoteApplication.SetAdditionalEnvironmentVariables(envVars);
-            return this;
-        }
-
-        public RemoteApplicationFixture SetAdditionalEnvironmentVariable(string key, string value)
-        {
-            RemoteApplication.SetAdditionalEnvironmentVariable(key, value);
-            return this;
-        }
-
-        public void AddErrorToRetryOn(uint error)
-        {
-            _errorsToRetryOn.Add(error);
-        }
-
-        private void ExerciseApplication()
-        {
-            _exerciseApplication?.Invoke();
-        }
-
-        private string FormatExitCode(int? exitCode)
-        {
-            if (exitCode == null) return "[null]";
-            if (Math.Abs(exitCode.Value) < 10) return exitCode.Value.ToString();
-            return exitCode.Value.ToString("X8");
-        }
-
-        /// <summary>
-        /// Adds or replaces known problems. This is used to check for things like transaction garbage collected.
-        /// Add an empty/null string[] with keepDefaults = false to clear the defaults.
-        ///
-        /// Includes by default:
-        /// - AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx
-        /// </summary>
-        /// <param name="keepDefaults">If true, the default problems will be kept. If false, the default problems will be cleared.</param>
-        /// <param name="problems">Regex values to check for from AgentLogBase.</param>
-        public void SetKnownProblems(bool keepDefaults = true, params string[] problems)
-        {
-            _problemsToCheck = keepDefaults ? _problemsToCheck.Concat(problems).ToList() : new List<string>(problems);
-        }
-
-        private List<string> _problemsToCheck = new List<string>
-        {
-            AgentLogBase.TransactionEndedByGCFinalizerLogLineRegEx
-        };
-
-        public virtual void Initialize()
-        {
-            lock (_initializeLock)
-            {
-                if (_initialized)
-                {
-                    return;
-                }
-
-                _initialized = true;
-
-                TestLogger?.WriteLine(RemoteApplication.AppName);
-
-
-                var numberOfTries = 0;
-                var applicationHadNonZeroExitCode = false;
-
-                try
-                {
-                    var retryTest = false;
-                    var retryMessage = "";
-
-                    do
+                    var timer = new ExecutionTimer();
+                    timer.Aggregate(() =>
                     {
-                        TestLogger?.WriteLine($"Test name: {TestContext.Current.TestClass.TestClassSimpleName}");
-                        TestLogger?.WriteLine("Test Home: " + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
+                        RemoteApplication.DeleteWorkingSpace();
 
-                        // reset these for each loop iteration
-                        applicationHadNonZeroExitCode = false;
-                        retryTest = false;
+                        RemoteApplication.CopyToRemote();
 
-                        RemoteApplication.TestLogger = new XUnitTestLogger(TestLogger);
+                        SetupConfiguration();
 
-                        var captureStandardOutput = RemoteApplication.CaptureStandardOutput;
+                        RemoteApplication.Start(CommandLineArguments, EnvironmentVariables, captureStandardOutput);
+                    });
 
-                        var timer = new ExecutionTimer();
+                    TestLogger?.WriteLine($"Remote application build/startup time: {timer.Total:N4} seconds");
+
+                    try
+                    {
+                        timer = new ExecutionTimer();
+                        timer.Aggregate(ExerciseApplication);
+                        TestLogger?.WriteLine($"ExerciseApplication execution time: {timer.Total:N4} seconds");
+
+                    }
+                    catch (Exception ex)
+                    {
+                        TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.ToString());
+                        retryMessage = "Exception thrown.";
+                    }
+                    finally
+                    {
+                        timer = new ExecutionTimer();
+
                         timer.Aggregate(() =>
                         {
-                            RemoteApplication.DeleteWorkingSpace();
 
-                            RemoteApplication.CopyToRemote();
+                            ShutdownRemoteApplication();
 
-                            SetupConfiguration();
-
-                            RemoteApplication.Start(CommandLineArguments, EnvironmentVariables, captureStandardOutput);
-                        });
-
-                        TestLogger?.WriteLine($"Remote application build/startup time: {timer.Total:N4} seconds");
-
-                        try
-                        {
-                            timer = new ExecutionTimer();
-                            timer.Aggregate(ExerciseApplication);
-                            TestLogger?.WriteLine($"ExerciseApplication execution time: {timer.Total:N4} seconds");
-
-                        }
-                        catch (Exception ex)
-                        {
-                            TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.ToString());
-                            retryMessage = "Exception thrown.";
-                        }
-                        finally
-                        {
-                            timer = new ExecutionTimer();
-
-                            timer.Aggregate(() =>
+                            if (captureStandardOutput)
                             {
+                                RemoteApplication.CapturedOutput.WriteProcessOutputToLog("RemoteApplication:");
 
-                                ShutdownRemoteApplication();
-
-                                if (captureStandardOutput)
+                                // Most of our tests run in HostedWebCore, but some don't, e.g. the self-hosted
+                                // WCF tests. For the HWC tests we carefully validate the console output in order
+                                // to detect process-level failures that may cause test flickers. For the self-
+                                // hosted tests, unfortunately, we just punt that.
+                                if (RemoteApplication.ValidateHostedWebCoreOutput)
                                 {
-                                    RemoteApplication.CapturedOutput.WriteProcessOutputToLog("RemoteApplication:");
-
-                                    // Most of our tests run in HostedWebCore, but some don't, e.g. the self-hosted
-                                    // WCF tests. For the HWC tests we carefully validate the console output in order
-                                    // to detect process-level failures that may cause test flickers. For the self-
-                                    // hosted tests, unfortunately, we just punt that.
-                                    if (RemoteApplication.ValidateHostedWebCoreOutput)
-                                    {
-                                        SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
-                                    }
-                                    else
-                                    {
-                                        TestLogger?.WriteLine("Note: child process is not required for log validation because _remoteApplication.ValidateHostedWebCoreOutput = false");
-                                    }
+                                    SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
                                 }
                                 else
                                 {
-                                    TestLogger?.WriteLine("Note: child process application does not redirect output because _remoteApplication.CaptureStandardOutput = false. HostedWebCore validation cannot take place without the standard output. This is common for non-web and self-hosted applications.");
+                                    TestLogger?.WriteLine("Note: child process is not required for log validation because _remoteApplication.ValidateHostedWebCoreOutput = false");
                                 }
+                            }
+                            else
+                            {
+                                TestLogger?.WriteLine("Note: child process application does not redirect output because _remoteApplication.CaptureStandardOutput = false. HostedWebCore validation cannot take place without the standard output. This is common for non-web and self-hosted applications.");
+                            }
 
-                                RemoteApplication.WaitForExit();
+                            RemoteApplication.WaitForExit();
 
-                                applicationHadNonZeroExitCode = RemoteApplication.ExitCode != 0;
-                                var formattedExitCode = FormatExitCode(RemoteApplication.ExitCode);
+                            applicationHadNonZeroExitCode = RemoteApplication.ExitCode != 0;
+                            var formattedExitCode = FormatExitCode(RemoteApplication.ExitCode);
 
-                                TestLogger?.WriteLine($"Remote application exited with a {(applicationHadNonZeroExitCode ? "failure" : "success")} exit code of {formattedExitCode}.");
+                            TestLogger?.WriteLine($"Remote application exited with a {(applicationHadNonZeroExitCode ? "failure" : "success")} exit code of {formattedExitCode}.");
 
-                                if (applicationHadNonZeroExitCode && _errorsToRetryOn.Contains((uint)RemoteApplication.ExitCode.Value))
-                                {
-                                    retryMessage = $"{formattedExitCode} is a known error.";
-                                    retryTest = true;
-                                }
+                            if (applicationHadNonZeroExitCode && _errorsToRetryOn.Contains((uint)RemoteApplication.ExitCode.Value))
+                            {
+                                retryMessage = $"{formattedExitCode} is a known error.";
+                                retryTest = true;
+                            }
 
-                                if (retryTest && (numberOfTries < MaxTries))
-                                {
-                                    TestLogger?.WriteLine(retryMessage + " Retrying test.");
-                                    Thread.Sleep(1000);
-                                    numberOfTries++;
-                                }
-                            });
-                            TestLogger?.WriteLine($"Remote application shutdown time: {timer.Total:N4} seconds");
-                        }
-
-                    } while (retryTest && numberOfTries < MaxTries);
-
-                    if (retryTest)
-                    {
-                        var message = ($"Test failed after {MaxTries} tries.");
-                        TestLogger?.WriteLine(message);
-                        throw new Exception(message);
+                            if (retryTest && (numberOfTries < MaxTries))
+                            {
+                                TestLogger?.WriteLine(retryMessage + " Retrying test.");
+                                Thread.Sleep(1000);
+                                numberOfTries++;
+                            }
+                        });
+                        TestLogger?.WriteLine($"Remote application shutdown time: {timer.Total:N4} seconds");
                     }
-                }
-                catch (Exception ex)
+
+                } while (retryTest && numberOfTries < MaxTries);
+
+                if (retryTest)
                 {
-                    TestLogger?.WriteLine("Exception occurred in Initialize: " + ex.ToString());
-                    AgentLogExpected = false;
-                    throw;
+                    var message = ($"Test failed after {MaxTries} tries.");
+                    TestLogger?.WriteLine(message);
+                    throw new Exception(message);
                 }
-                finally
+            }
+            catch (Exception ex)
+            {
+                TestLogger?.WriteLine("Exception occurred in Initialize: " + ex.ToString());
+                AgentLogExpected = false;
+                throw;
+            }
+            finally
+            {
+                if (AgentLogExpected)
                 {
-                    if (AgentLogExpected)
+                    TestLogger?.WriteLine("===== Begin Agent log file =====");
+                    try
                     {
-                        TestLogger?.WriteLine("===== Begin Agent log file =====");
-                        try
-                        {
-                            TestLogger?.WriteLine(AgentLog.GetFullLogAsString());
-                        }
-                        catch (Exception)
-                        {
-                            TestLogger?.WriteLine("No log file found.");
-                        }
-                        TestLogger?.WriteLine("----- End of Agent log file -----");
+                        TestLogger?.WriteLine(AgentLog.GetFullLogAsString());
+                    }
+                    catch (Exception)
+                    {
+                        TestLogger?.WriteLine("No log file found.");
+                    }
+                    TestLogger?.WriteLine("----- End of Agent log file -----");
 
-                        TestLogger?.WriteLine("===== Begin Payload Bytes Summary =====");
-                        // get the payload by category and log it
-                        TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}: Payload bytes sent by category:");
-                        var payloadByCategory = AgentLog.GetPayloadBytesByCategory();
-                        foreach (var category in payloadByCategory.Keys)
-                        {
-                            TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}:     {category}: {payloadByCategory[category]} bytes");
-                        }
+                    TestLogger?.WriteLine("===== Begin Payload Bytes Summary =====");
+                    // get the payload by category and log it
+                    TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}: Payload bytes sent by category:");
+                    var payloadByCategory = AgentLog.GetPayloadBytesByCategory();
+                    foreach (var category in payloadByCategory.Keys)
+                    {
+                        TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}:     {category}: {payloadByCategory[category]} bytes");
+                    }
 
-                        TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}: Total payload bytes sent: {AgentLog.GetTotalPayloadBytes()}");
+                    TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}: Total payload bytes sent: {AgentLog.GetTotalPayloadBytes()}");
 
-                        if (BaselinePayloadBytes.HasValue)
-                        {
-                            TestForExpectedPayloadSize();
-                        }
-                        TestLogger?.WriteLine("----- End Payload Bytes Summary -----");
+                    if (BaselinePayloadBytes.HasValue)
+                    {
+                        TestForExpectedPayloadSize();
+                    }
+                    TestLogger?.WriteLine("----- End Payload Bytes Summary -----");
 
-                        if (!applicationHadNonZeroExitCode)
-                        {
-                            TestForKnownProblems();
-                        }
+                    if (!applicationHadNonZeroExitCode)
+                    {
+                        TestForKnownProblems();
                     }
                 }
             }
         }
+    }
 
-        private void TestForExpectedPayloadSize()
+    private void TestForExpectedPayloadSize()
+    {
+        if (!BaselinePayloadBytes.HasValue)
         {
-            if (!BaselinePayloadBytes.HasValue)
-            {
-                throw new InvalidOperationException("Baseline payload bytes not set.");
-            }
-
-            var actualPayloadBytes = AgentLog.GetTotalPayloadBytes();
-            var expectedPayloadBytes = BaselinePayloadBytes.Value;
-            var allowedDeviation = expectedPayloadBytes * 0.05;
-            var lowerBound = expectedPayloadBytes - allowedDeviation;
-            var upperBound = expectedPayloadBytes + allowedDeviation;
-            var percentDeviation = ((double)(actualPayloadBytes - expectedPayloadBytes) / expectedPayloadBytes) * 100;
-
-            if (actualPayloadBytes < lowerBound || actualPayloadBytes > upperBound)
-            {
-                Assert.Fail($"{TestContext.Current.TestClass.TestClassSimpleName}: Payload size out of acceptable range. Expected: {expectedPayloadBytes} bytes, Actual: {actualPayloadBytes} bytes, Deviation: {percentDeviation:F2}% (allowed: ±5%)");
-            }
-            else
-            {
-                TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}: Payload size within acceptable range. Expected: {expectedPayloadBytes} bytes, Actual: {actualPayloadBytes} bytes, Deviation: {percentDeviation:F2}%");
-            }
+            throw new InvalidOperationException("Baseline payload bytes not set.");
         }
 
-        public virtual void ShutdownRemoteApplication()
+        var actualPayloadBytes = AgentLog.GetTotalPayloadBytes();
+        var expectedPayloadBytes = BaselinePayloadBytes.Value;
+        var allowedDeviation = expectedPayloadBytes * 0.05;
+        var lowerBound = expectedPayloadBytes - allowedDeviation;
+        var upperBound = expectedPayloadBytes + allowedDeviation;
+        var percentDeviation = ((double)(actualPayloadBytes - expectedPayloadBytes) / expectedPayloadBytes) * 100;
+
+        if (actualPayloadBytes < lowerBound || actualPayloadBytes > upperBound)
         {
-            RemoteApplication.Shutdown();
+            Assert.Fail($"{TestContext.Current.TestClass.TestClassSimpleName}: Payload size out of acceptable range. Expected: {expectedPayloadBytes} bytes, Actual: {actualPayloadBytes} bytes, Deviation: {percentDeviation:F2}% (allowed: ±5%)");
         }
-
-        public virtual void Dispose()
+        else
         {
-            RemoteApplication.Shutdown(true);
-            RemoteApplication.Dispose();
+            TestLogger?.WriteLine($"{TestContext.Current.TestClass.TestClassSimpleName}: Payload size within acceptable range. Expected: {expectedPayloadBytes} bytes, Actual: {actualPayloadBytes} bytes, Deviation: {percentDeviation:F2}%");
         }
+    }
 
-        public virtual void WriteProcessOutputToLog()
+    public virtual void ShutdownRemoteApplication()
+    {
+        RemoteApplication.Shutdown();
+    }
+
+    public virtual void Dispose()
+    {
+        RemoteApplication.Shutdown(true);
+        RemoteApplication.Dispose();
+    }
+
+    public virtual void WriteProcessOutputToLog()
+    {
+        RemoteApplication.CapturedOutput.WriteProcessOutputToLog("Remote application:");
+    }
+
+    public virtual string ReturnProcessOutput()
+    {
+        return RemoteApplication.CapturedOutput.ReturnProcessOutput();
+    }
+
+    protected string GetStringAndAssertEqual(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers = null)
+    {
+        string result;
+
+        if (headers == null)
         {
-            RemoteApplication.CapturedOutput.WriteProcessOutputToLog("Remote application:");
+            result = _httpClient.GetStringAsync(address).Result; // throws an AggregateException if there's a problem making the call
         }
-
-        public virtual string ReturnProcessOutput()
-        {
-            return RemoteApplication.CapturedOutput.ReturnProcessOutput();
-        }
-
-        protected string GetStringAndAssertEqual(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers = null)
-        {
-            string result;
-
-            if (headers == null)
-            {
-                result = _httpClient.GetStringAsync(address).Result; // throws an AggregateException if there's a problem making the call
-            }
-            else
-            {
-                using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, address))
-                {
-                    if (headers != null)
-                    {
-                        foreach (var header in headers)
-                        {
-                            requestMessage.Headers.Add(header.Key, header.Value);
-                        }
-                    }
-
-                    using (var response = _httpClient.SendAsync(requestMessage).Result)
-                    {
-                        result = response.Content.ReadAsStringAsync().Result;
-                    }
-                }
-            }
-
-            Assert.NotNull(result);
-            if (expectedResult != null)
-            {
-                Assert.Equal(expectedResult, result);
-            }
-
-            return result;
-
-        }
-
-        protected string GetStringAndAssertContains(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers = null)
+        else
         {
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, address))
             {
@@ -512,172 +483,200 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 using (var response = _httpClient.SendAsync(requestMessage).Result)
                 {
-                    var result = response.Content.ReadAsStringAsync().Result;
-
-                    Assert.NotNull(result);
-
-                    if (expectedResult != null)
-                    {
-                        Assert.Contains(expectedResult, result);
-                    }
-
-                    return result;
+                    result = response.Content.ReadAsStringAsync().Result;
                 }
             }
         }
 
-        protected T GetJsonAndAssertEqual<T>(string address, T expectedResult, List<KeyValuePair<string, string>> headers = null)
+        Assert.NotNull(result);
+        if (expectedResult != null)
         {
-            var result = GetJson<T>(address, headers);
-
-            Assert.NotEqual(default(T), result);
-
-            if (expectedResult != null)
-            {
-                Assert.Equal(expectedResult, result);
-            }
-
-            return result;
+            Assert.Equal(expectedResult, result);
         }
 
-        protected string GetStringAndAssertIsNotNull(string address)
+        return result;
+
+    }
+
+    protected string GetStringAndAssertContains(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers = null)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, address))
         {
-            var result = _httpClient.GetStringAsync(address).Result;
-            Assert.NotNull(result);
-            return result;
-        }
-
-        protected void GetStringAndIgnoreResult(string address, List<KeyValuePair<string, string>> headers = null)
-        {
-            using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, address))
-            {
-                if (headers != null)
-                {
-                    foreach (var header in headers)
-                    {
-                        requestMessage.Headers.Add(header.Key, header.Value);
-                    }
-                }
-
-                _httpClient.SendAsync(requestMessage).Wait();
-            }
-        }
-
-        protected string GetString(string address) => _httpClient.GetStringAsync(address).Result;
-
-        protected T GetJson<T>(string address, IEnumerable<KeyValuePair<string, string>> headers = null)
-        {
-            if (headers == null)
-            {
-                var result = _httpClient.GetStringAsync(address).Result;
-                var jsonResult = JsonConvert.DeserializeObject<T>(result);
-                return jsonResult;
-            }
-            else
-            {
-                using (var request = new HttpRequestMessage(HttpMethod.Get, address))
-                {
-                    if (headers != null)
-                    {
-                        foreach (var header in headers)
-                        {
-                            request.Headers.Add(header.Key, header.Value);
-                        }
-                    }
-
-                    using (var response = _httpClient.SendAsync(request).Result)
-                    {
-                        var result = response.Content.ReadAsStringAsync().Result;
-                        var jsonResult = JsonConvert.DeserializeObject<T>(result);
-                        return jsonResult;
-                    }
-                }
-            }
-        }
-
-        protected void GetAndAssertStatusCode(string address, HttpStatusCode expectedStatusCode, IEnumerable<KeyValuePair<string, string>> headers = null)
-        {
-            using (var request = new HttpRequestMessage(HttpMethod.Get, address))
-            {
-                if (headers != null)
-                {
-                    foreach (var header in headers)
-                    {
-                        request.Headers.Add(header.Key, header.Value);
-                    }
-                }
-
-                using (var response = _httpClient.SendAsync(request).Result)
-                {
-                    Assert.Equal(expectedStatusCode, response.StatusCode);
-                }
-            }
-        }
-
-        protected void GetAndAssertSuccessStatus(string address, bool expectedSuccessStatus, IEnumerable<KeyValuePair<string, string>> headers = null)
-        {
-            using (var request = new HttpRequestMessage(HttpMethod.Get, address))
-            {
-                if (headers != null)
-                {
-                    foreach (var header in headers)
-                    {
-                        request.Headers.Add(header.Key, header.Value);
-                    }
-                }
-
-                using (var response = _httpClient.SendAsync(request).Result)
-                {
-                    Assert.Equal(expectedSuccessStatus, response.IsSuccessStatusCode);
-                }
-            }
-        }
-
-        protected void PostJson(string address, string payload, List<KeyValuePair<string, string>> headers = null)
-        {
-            var content = new StringContent(payload);
-
-            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-            if (headers != null && headers.Any())
+            if (headers != null)
             {
                 foreach (var header in headers)
                 {
-                    content.Headers.Add(header.Key, header.Value);
+                    requestMessage.Headers.Add(header.Key, header.Value);
                 }
             }
 
-            var result = _httpClient.PostAsync(address, content).GetAwaiter().GetResult();
+            using (var response = _httpClient.SendAsync(requestMessage).Result)
+            {
+                var result = response.Content.ReadAsStringAsync().Result;
 
-            Assert.True(result.IsSuccessStatusCode);
+                Assert.NotNull(result);
+
+                if (expectedResult != null)
+                {
+                    Assert.Contains(expectedResult, result);
+                }
+
+                return result;
+            }
         }
+    }
 
-        // Tests for things like transaction garbage collected and other errors.
-        // Works best when logging is at FINEST.
-        private void TestForKnownProblems()
+    protected T GetJsonAndAssertEqual<T>(string address, T expectedResult, List<KeyValuePair<string, string>> headers = null)
+    {
+        var result = GetJson<T>(address, headers);
+
+        Assert.NotEqual(default(T), result);
+
+        if (expectedResult != null)
         {
-            // Using AgentLog when the file doesn't exist results in a 3 minute wait - manually checking is faster.
-            if (!Directory.Exists(DestinationNewRelicLogFileDirectoryPath) ||
-                !File.Exists(AgentLog.FilePath))
-            {
-                return;
-            }
-
-            try
-            {
-                Assert.Multiple(
-                    _problemsToCheck.Select(problem => (Action)(
-                        () => Assert.Null(
-                            AgentLog.WaitForLogLines(problem, TimeSpan.FromSeconds(5), 0).FirstOrDefault())
-                    )).ToArray()
-                );
-            }
-            catch
-            {
-                TestLogger?.WriteLine("WARNING: Found one or more known problems!");
-                throw;
-            }
-
-            TestLogger?.WriteLine("Finished known problems check.");
+            Assert.Equal(expectedResult, result);
         }
+
+        return result;
+    }
+
+    protected string GetStringAndAssertIsNotNull(string address)
+    {
+        var result = _httpClient.GetStringAsync(address).Result;
+        Assert.NotNull(result);
+        return result;
+    }
+
+    protected void GetStringAndIgnoreResult(string address, List<KeyValuePair<string, string>> headers = null)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, address))
+        {
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                {
+                    requestMessage.Headers.Add(header.Key, header.Value);
+                }
+            }
+
+            _httpClient.SendAsync(requestMessage).Wait();
+        }
+    }
+
+    protected string GetString(string address) => _httpClient.GetStringAsync(address).Result;
+
+    protected T GetJson<T>(string address, IEnumerable<KeyValuePair<string, string>> headers = null)
+    {
+        if (headers == null)
+        {
+            var result = _httpClient.GetStringAsync(address).Result;
+            var jsonResult = JsonConvert.DeserializeObject<T>(result);
+            return jsonResult;
+        }
+        else
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Get, address))
+            {
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        request.Headers.Add(header.Key, header.Value);
+                    }
+                }
+
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    var result = response.Content.ReadAsStringAsync().Result;
+                    var jsonResult = JsonConvert.DeserializeObject<T>(result);
+                    return jsonResult;
+                }
+            }
+        }
+    }
+
+    protected void GetAndAssertStatusCode(string address, HttpStatusCode expectedStatusCode, IEnumerable<KeyValuePair<string, string>> headers = null)
+    {
+        using (var request = new HttpRequestMessage(HttpMethod.Get, address))
+        {
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                {
+                    request.Headers.Add(header.Key, header.Value);
+                }
+            }
+
+            using (var response = _httpClient.SendAsync(request).Result)
+            {
+                Assert.Equal(expectedStatusCode, response.StatusCode);
+            }
+        }
+    }
+
+    protected void GetAndAssertSuccessStatus(string address, bool expectedSuccessStatus, IEnumerable<KeyValuePair<string, string>> headers = null)
+    {
+        using (var request = new HttpRequestMessage(HttpMethod.Get, address))
+        {
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                {
+                    request.Headers.Add(header.Key, header.Value);
+                }
+            }
+
+            using (var response = _httpClient.SendAsync(request).Result)
+            {
+                Assert.Equal(expectedSuccessStatus, response.IsSuccessStatusCode);
+            }
+        }
+    }
+
+    protected void PostJson(string address, string payload, List<KeyValuePair<string, string>> headers = null)
+    {
+        var content = new StringContent(payload);
+
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+        if (headers != null && headers.Any())
+        {
+            foreach (var header in headers)
+            {
+                content.Headers.Add(header.Key, header.Value);
+            }
+        }
+
+        var result = _httpClient.PostAsync(address, content).GetAwaiter().GetResult();
+
+        Assert.True(result.IsSuccessStatusCode);
+    }
+
+    // Tests for things like transaction garbage collected and other errors.
+    // Works best when logging is at FINEST.
+    private void TestForKnownProblems()
+    {
+        // Using AgentLog when the file doesn't exist results in a 3 minute wait - manually checking is faster.
+        if (!Directory.Exists(DestinationNewRelicLogFileDirectoryPath) ||
+            !File.Exists(AgentLog.FilePath))
+        {
+            return;
+        }
+
+        try
+        {
+            Assert.Multiple(
+                _problemsToCheck.Select(problem => (Action)(
+                    () => Assert.Null(
+                        AgentLog.WaitForLogLines(problem, TimeSpan.FromSeconds(5), 0).FirstOrDefault())
+                )).ToArray()
+            );
+        }
+        catch
+        {
+            TestLogger?.WriteLine("WARNING: Found one or more known problems!");
+            throw;
+        }
+
+        TestLogger?.WriteLine("Finished known problems check.");
     }
 }

@@ -2,54 +2,52 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using MultiFunctionApplicationHelpers.NetStandardLibraries.Owin;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
-using System;
-using System.Net.Http;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp;
+
+[Library]
+public class RestSharpService
 {
-    [Library]
-    public class RestSharpService
+    private OwinService _owinService;
+
+    /// <summary>
+    /// Starts the RestSharp Test Service with a specific port and path
+    /// </summary>
+    /// <param name="server"></param>
+    /// <param name="port"></param>
+    /// <param name="relativePath"></param>
+    [LibraryMethod]
+    public void StartService(string server, int port)
     {
-        private OwinService _owinService;
-
-        /// <summary>
-        /// Starts the RestSharp Test Service with a specific port and path
-        /// </summary>
-        /// <param name="server"></param>
-        /// <param name="port"></param>
-        /// <param name="relativePath"></param>
-        [LibraryMethod]
-        public void StartService(string server, int port)
+        try
         {
-            try
-            {
-                ConsoleMFLogger.Info("Starting RestSharp Test Service.");
+            ConsoleMFLogger.Info("Starting RestSharp Test Service.");
 
-                // build owin service
-                _owinService = new OwinServiceBuilder()
-                    .RegisterController(typeof(RestAPIController))
-                    .AddStartup(new FullRoutesStartup())
-                    .Build();
+            // build owin service
+            _owinService = new OwinServiceBuilder()
+                .RegisterController(typeof(RestAPIController))
+                .AddStartup(new FullRoutesStartup())
+                .Build();
 
-                // Start OWIN host 
-                _owinService.StartService(server, port);
-            }
-            catch (Exception ex)
-            {
-                ConsoleMFLogger.Error(ex);
-            }
+            // Start OWIN host 
+            _owinService.StartService(server, port);
         }
-
-        /// <summary>
-        /// Stops the RestSharp Test Service
-        /// </summary>
-        [LibraryMethod]
-        public void StopService()
+        catch (Exception ex)
         {
-            ConsoleMFLogger.Info("Stopping RestSharp Test Service");
-            _owinService.StopService();
+            ConsoleMFLogger.Error(ex);
         }
+    }
+
+    /// <summary>
+    /// Stops the RestSharp Test Service
+    /// </summary>
+    [LibraryMethod]
+    public void StopService()
+    {
+        ConsoleMFLogger.Info("Stopping RestSharp Test Service");
+        _owinService.StopService();
     }
 }

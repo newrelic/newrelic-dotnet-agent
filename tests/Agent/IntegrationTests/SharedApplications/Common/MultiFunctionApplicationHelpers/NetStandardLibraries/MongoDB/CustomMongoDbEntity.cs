@@ -3,23 +3,22 @@
 
 using MongoDB.Bson;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB;
+
+public class CustomMongoDbEntity
 {
-    public class CustomMongoDbEntity
+    public ObjectId Id { get; set; }
+
+    public string Name { get; set; }
+
+    public CustomMongoDbEntity()
     {
-        public ObjectId Id { get; set; }
 
-        public string Name { get; set; }
+    }
 
-        public CustomMongoDbEntity()
-        {
-
-        }
-
-        public CustomMongoDbEntity(ObjectId id, string name)
-        {
-            Id = id;
-            Name = name;
-        }
+    public CustomMongoDbEntity(ObjectId id, string name)
+    {
+        Id = id;
+        Name = name;
     }
 }

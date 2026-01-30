@@ -5,23 +5,22 @@
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 
-namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
+namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF;
+
+public class CustomClassBinding : Binding
 {
-    public class CustomClassBinding : Binding
+    public override string Scheme => "http";
+
+    public override BindingElementCollection CreateBindingElements()
     {
-        public override string Scheme => "http";
-
-        public override BindingElementCollection CreateBindingElements()
+        var collection = new BindingElementCollection();
+        var httpTransport = new HttpTransportBindingElement
         {
-            var collection = new BindingElementCollection();
-            var httpTransport = new HttpTransportBindingElement
-            {
-                AuthenticationScheme = System.Net.AuthenticationSchemes.Anonymous,
-                HostNameComparisonMode = HostNameComparisonMode.StrongWildcard
-            };
+            AuthenticationScheme = System.Net.AuthenticationSchemes.Anonymous,
+            HostNameComparisonMode = HostNameComparisonMode.StrongWildcard
+        };
 
-            collection.Add(httpTransport);
-            return collection;
-        }
+        collection.Add(httpTransport);
+        return collection;
     }
 }

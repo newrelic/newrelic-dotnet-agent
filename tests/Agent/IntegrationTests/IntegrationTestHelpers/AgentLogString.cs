@@ -3,21 +3,20 @@
 
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.IntegrationTestHelpers
+namespace NewRelic.Agent.IntegrationTestHelpers;
+
+public class AgentLogString : AgentLogBase
 {
-    public class AgentLogString : AgentLogBase
+    private readonly string _logContents;
+
+    public AgentLogString(string logContents)
+        : base(null)
     {
-        private readonly string _logContents;
+        _logContents = logContents;
+    }
 
-        public AgentLogString(string logContents)
-            : base(null)
-        {
-            _logContents = logContents;
-        }
-
-        public override IEnumerable<string> GetFileLines()
-        {
-            return _logContents.Split('\n');
-        }
+    public override IEnumerable<string> GetFileLines()
+    {
+        return _logContents.Split('\n');
     }
 }

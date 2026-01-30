@@ -8,28 +8,27 @@ using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
-namespace MultiFunctionApplicationHelpers
+namespace MultiFunctionApplicationHelpers;
+
+[Library]
+public static class RootCommands
 {
-    [Library]
-    public static class RootCommands
+    [LibraryMethod]
+    public static void DelaySeconds(int seconds)
     {
-        [LibraryMethod]
-        public static void DelaySeconds(int seconds)
-        {
-            Task.Delay(TimeSpan.FromSeconds(seconds)).Wait();
-        }
+        Task.Delay(TimeSpan.FromSeconds(seconds)).Wait();
+    }
 
-        [LibraryMethod]
-        public static void LaunchDebugger()
-        {
-            Debugger.Launch();
-        }
+    [LibraryMethod]
+    public static void LaunchDebugger()
+    {
+        Debugger.Launch();
+    }
 
-        [LibraryMethod]
-        [Transaction]
-        public static void InstrumentedMethodToStartAgent()
-        {
-            // Mission accomplished
-        }
+    [LibraryMethod]
+    [Transaction]
+    public static void InstrumentedMethodToStartAgent()
+    {
+        // Mission accomplished
     }
 }

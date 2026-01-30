@@ -13,241 +13,240 @@ using NewRelic.Api.Agent;
 using Npgsql;
 using NpgsqlTypes;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql;
+
+[Library]
+internal class PostgresSqlExerciser
 {
-    [Library]
-    internal class PostgresSqlExerciser
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void SimpleQuery()
     {
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void SimpleQuery()
+        var teamMembers = new List<string>();
+
+        var connectionString = PostgresConfiguration.PostgresConnectionString;
+
+        using (var connection = new NpgsqlConnection(connectionString))
+        using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'", connection))
         {
-            var teamMembers = new List<string>();
-
-            var connectionString = PostgresConfiguration.PostgresConnectionString;
-
-            using (var connection = new NpgsqlConnection(connectionString))
-            using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'", connection))
+            connection.Open();
+            using (var reader = command.ExecuteReader())
             {
-                connection.Open();
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                    }
-                }
-            }
-
-            ConsoleMFLogger.Info(string.Join(",", teamMembers));
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task SimpleQueryAsync()
-        {
-            var teamMembers = new List<string>();
-
-            var connectionString = PostgresConfiguration.PostgresConnectionString;
-
-            using (var connection = new NpgsqlConnection(connectionString))
-            using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'", connection))
-            {
-                await connection.OpenAsync();
-                using (var reader = await command.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                    }
-                }
-            }
-
-            ConsoleMFLogger.Info(string.Join(",", teamMembers));
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void ParameterizedStoredProcedure(string procedureName)
-        {
-            // Switches required for v6+, no effect on v5 or lower
-            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-            AppContext.SetSwitch("Npgsql.EnableStoredProcedureCompatMode", true);
-
-            CreateProcedure(procedureName);
-
-            try
-            {
-                using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
-                using (var command = new NpgsqlCommand(procedureName, connection))
-                {
-                    connection.Open();
-                    command.CommandType = CommandType.StoredProcedure;
-
-                    foreach (var p in DbParameterData.PostgresParameters)
-                    {
-                        if (p.Value is DateTime)
-                            command.Parameters.AddWithValue(p.ParameterName, NpgsqlDbType.Date, p.Value);
-                        else
-                            command.Parameters.AddWithValue(p.ParameterName, p.Value);
-                    }
-
-                    ConsoleMFLogger.Info(command.ExecuteNonQuery().ToString());
-                }
-            }
-            finally
-            {
-                DropProcedure(procedureName);
-            }
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task ParameterizedStoredProcedureAsync(string procedureName)
-        {
-            // Switches required for v6+, no effect on v5 or lower
-            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-            AppContext.SetSwitch("Npgsql.EnableStoredProcedureCompatMode", true);
-
-            CreateProcedure(procedureName);
-
-            try
-            {
-                using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
-                using (var command = new NpgsqlCommand(procedureName, connection))
-                {
-                    await connection.OpenAsync();
-                    command.CommandType = CommandType.StoredProcedure;
-
-                    foreach (var p in DbParameterData.PostgresParameters)
-                    {
-                        if (p.Value is DateTime)
-                            command.Parameters.AddWithValue(p.ParameterName, NpgsqlDbType.Date, p.Value);
-                        else
-                            command.Parameters.AddWithValue(p.ParameterName, p.Value);
-                    }
-
-                    ConsoleMFLogger.Info((await command.ExecuteNonQueryAsync()).ToString());
-                }
-            }
-            finally
-            {
-                DropProcedure(procedureName);
-            }
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void ExecuteScalar()
-        {
-            using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
-            using (var command =
-                   new NpgsqlCommand("SELECT lastname FROM newrelic.teammembers WHERE firstname = 'Matthew'",
-                       connection))
-            {
-                connection.Open();
-                var result = (string)command.ExecuteScalar();
-                ConsoleMFLogger.Info(result);
-            }
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task ExecuteScalarAsync()
-        {
-            using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
-            using (var command =
-                   new NpgsqlCommand("SELECT firstname FROM newrelic.teammembers WHERE lastname = 'Sneeden'",
-                       connection))
-            {
-                await connection.OpenAsync();
-                var result = (string)await command.ExecuteScalarAsync();
-                ConsoleMFLogger.Info(result);
-            }
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void IteratorTest()
-        {
-            var teamMembers = new List<string>();
-
-            var connectionString = PostgresConfiguration.PostgresConnectionString;
-
-            using (var connection = new NpgsqlConnection(connectionString))
-            using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'",
-                       connection))
-            {
-                connection.Open();
-                using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
                 }
             }
-
-            ConsoleMFLogger.Info(string.Join(",", teamMembers));
         }
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task AsyncIteratorTest()
+        ConsoleMFLogger.Info(string.Join(",", teamMembers));
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task SimpleQueryAsync()
+    {
+        var teamMembers = new List<string>();
+
+        var connectionString = PostgresConfiguration.PostgresConnectionString;
+
+        using (var connection = new NpgsqlConnection(connectionString))
+        using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'", connection))
         {
-            var teamMembers = new List<string>();
-
-            var connectionString = PostgresConfiguration.PostgresConnectionString;
-
-            using (var connection = new NpgsqlConnection(connectionString))
-            using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'", connection))
+            await connection.OpenAsync();
+            using (var reader = await command.ExecuteReaderAsync())
             {
-                await connection.OpenAsync();
-                using (var reader = await command.ExecuteReaderAsync())
+                while (await reader.ReadAsync())
                 {
-                    while (await reader.ReadAsync())
-                    {
-                        teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                    }
+                    teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
                 }
             }
-
-            ConsoleMFLogger.Info(string.Join(",", teamMembers));
         }
 
-
-        private const string createProcedureStatement = @"CREATE FUNCTION {0} ({1}) RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;";
-        private const string dropProcedureStatement = @"DROP FUNCTION {0} ({1});";
-
-        private void CreateProcedure(string procedureName)
-        {
-            var parameters = string.Join(", ", DbParameterData.PostgresParameters.Select(x => $"\"{x.ParameterName}\" {x.DbTypeName}"));
-            var statement = string.Format(createProcedureStatement, procedureName, parameters);
-            using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
-            using (var command = new NpgsqlCommand(statement, connection))
-            {
-                connection.Open();
-                command.ExecuteNonQuery();
-            }
-        }
-
-        private void DropProcedure(string procedureName)
-        {
-            var parameters = string.Join(", ", DbParameterData.PostgresParameters.Select(x => $"{x.DbTypeName}"));
-            var statement = string.Format(dropProcedureStatement, procedureName, parameters);
-            using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
-            using (var command = new NpgsqlCommand(statement, connection))
-            {
-                connection.Open();
-                command.ExecuteNonQuery();
-            }
-        }
-
+        ConsoleMFLogger.Info(string.Join(",", teamMembers));
     }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void ParameterizedStoredProcedure(string procedureName)
+    {
+        // Switches required for v6+, no effect on v5 or lower
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        AppContext.SetSwitch("Npgsql.EnableStoredProcedureCompatMode", true);
+
+        CreateProcedure(procedureName);
+
+        try
+        {
+            using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
+            using (var command = new NpgsqlCommand(procedureName, connection))
+            {
+                connection.Open();
+                command.CommandType = CommandType.StoredProcedure;
+
+                foreach (var p in DbParameterData.PostgresParameters)
+                {
+                    if (p.Value is DateTime)
+                        command.Parameters.AddWithValue(p.ParameterName, NpgsqlDbType.Date, p.Value);
+                    else
+                        command.Parameters.AddWithValue(p.ParameterName, p.Value);
+                }
+
+                ConsoleMFLogger.Info(command.ExecuteNonQuery().ToString());
+            }
+        }
+        finally
+        {
+            DropProcedure(procedureName);
+        }
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task ParameterizedStoredProcedureAsync(string procedureName)
+    {
+        // Switches required for v6+, no effect on v5 or lower
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        AppContext.SetSwitch("Npgsql.EnableStoredProcedureCompatMode", true);
+
+        CreateProcedure(procedureName);
+
+        try
+        {
+            using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
+            using (var command = new NpgsqlCommand(procedureName, connection))
+            {
+                await connection.OpenAsync();
+                command.CommandType = CommandType.StoredProcedure;
+
+                foreach (var p in DbParameterData.PostgresParameters)
+                {
+                    if (p.Value is DateTime)
+                        command.Parameters.AddWithValue(p.ParameterName, NpgsqlDbType.Date, p.Value);
+                    else
+                        command.Parameters.AddWithValue(p.ParameterName, p.Value);
+                }
+
+                ConsoleMFLogger.Info((await command.ExecuteNonQueryAsync()).ToString());
+            }
+        }
+        finally
+        {
+            DropProcedure(procedureName);
+        }
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void ExecuteScalar()
+    {
+        using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
+        using (var command =
+               new NpgsqlCommand("SELECT lastname FROM newrelic.teammembers WHERE firstname = 'Matthew'",
+                   connection))
+        {
+            connection.Open();
+            var result = (string)command.ExecuteScalar();
+            ConsoleMFLogger.Info(result);
+        }
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task ExecuteScalarAsync()
+    {
+        using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
+        using (var command =
+               new NpgsqlCommand("SELECT firstname FROM newrelic.teammembers WHERE lastname = 'Sneeden'",
+                   connection))
+        {
+            await connection.OpenAsync();
+            var result = (string)await command.ExecuteScalarAsync();
+            ConsoleMFLogger.Info(result);
+        }
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void IteratorTest()
+    {
+        var teamMembers = new List<string>();
+
+        var connectionString = PostgresConfiguration.PostgresConnectionString;
+
+        using (var connection = new NpgsqlConnection(connectionString))
+        using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'",
+                   connection))
+        {
+            connection.Open();
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+            }
+        }
+
+        ConsoleMFLogger.Info(string.Join(",", teamMembers));
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task AsyncIteratorTest()
+    {
+        var teamMembers = new List<string>();
+
+        var connectionString = PostgresConfiguration.PostgresConnectionString;
+
+        using (var connection = new NpgsqlConnection(connectionString))
+        using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'", connection))
+        {
+            await connection.OpenAsync();
+            using (var reader = await command.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                }
+            }
+        }
+
+        ConsoleMFLogger.Info(string.Join(",", teamMembers));
+    }
+
+
+    private const string createProcedureStatement = @"CREATE FUNCTION {0} ({1}) RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;";
+    private const string dropProcedureStatement = @"DROP FUNCTION {0} ({1});";
+
+    private void CreateProcedure(string procedureName)
+    {
+        var parameters = string.Join(", ", DbParameterData.PostgresParameters.Select(x => $"\"{x.ParameterName}\" {x.DbTypeName}"));
+        var statement = string.Format(createProcedureStatement, procedureName, parameters);
+        using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
+        using (var command = new NpgsqlCommand(statement, connection))
+        {
+            connection.Open();
+            command.ExecuteNonQuery();
+        }
+    }
+
+    private void DropProcedure(string procedureName)
+    {
+        var parameters = string.Join(", ", DbParameterData.PostgresParameters.Select(x => $"{x.DbTypeName}"));
+        var statement = string.Format(dropProcedureStatement, procedureName, parameters);
+        using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
+        using (var command = new NpgsqlCommand(statement, connection))
+        {
+            connection.Open();
+            command.ExecuteNonQuery();
+        }
+    }
+
 }

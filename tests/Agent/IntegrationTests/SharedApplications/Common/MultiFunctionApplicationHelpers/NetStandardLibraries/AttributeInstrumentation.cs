@@ -3,150 +3,148 @@
 
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Internal
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Internal;
+
+[Library]
+internal static class AttributeInstrumentation
 {
-    [Library]
-    internal static class AttributeInstrumentation
+    /// <summary>
+    /// Synchronous method creating a Web transaction
+    /// </summary>
+    [LibraryMethod]
+    [Transaction(Web = true)]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void MakeWebTransaction()
     {
-        /// <summary>
-        /// Synchronous method creating a Web transaction
-        /// </summary>
-        [LibraryMethod]
-        [Transaction(Web = true)]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void MakeWebTransaction()
+        DoSomeWork();
+    }
+
+    /// <summary>
+    /// Synchronous method creating a Web transaction and utilizing SetTransactionUri
+    /// </summary>
+    [LibraryMethod]
+    [Transaction(Web = true)]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void MakeWebTransactionWithCustomUri()
+    {
+        var uri = new Uri("http://foo.bar.net/fizz/buzz");
+        NewRelic.Api.Agent.NewRelic.SetTransactionUri(uri);
+        DoSomeWork();
+    }
+
+    /// <summary>
+    /// Synchronous method creating an Other transaction
+    /// </summary>
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void MakeOtherTransaction()
+    {
+        DoSomeWork();
+    }
+
+    /// <summary>
+    /// Async method creating an Other transaction
+    /// </summary>
+    /// <returns></returns>
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static async Task MakeOtherTransactionAsync()
+    {
+        await DoSomeWorkAsync();
+    }
+
+    /// <summary>
+    /// Synchronous method that calls async methods.
+    /// This use case illustrates that this scenario is possible, but it is
+    /// recommended that transactions involving async code start with an 
+    /// async entry point to avoid potential pitfalls.
+    /// </summary>
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void MakeOtherTransactionThenCallAsyncMethod()
+    {
+        DoSomeWorkAsync().Wait();
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void MakeOtherTransactionWithCallToNetStandardMethod()
+    {
+        var myObj = new NetStandardTestLibrary.MyClass();
+        myObj.MyMethodToBeInstrumented();
+    }
+
+    [Trace]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    private static void DoSomeWork(string customSpanName = null)
+    {
+        if (!string.IsNullOrEmpty(customSpanName))
         {
-            DoSomeWork();
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentSpan.SetName(customSpanName);
         }
+    }
 
-        /// <summary>
-        /// Synchronous method creating a Web transaction and utilizing SetTransactionUri
-        /// </summary>
-        [LibraryMethod]
-        [Transaction(Web = true)]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void MakeWebTransactionWithCustomUri()
-        {
-            var uri = new Uri("http://foo.bar.net/fizz/buzz");
-            NewRelic.Api.Agent.NewRelic.SetTransactionUri(uri);
-            DoSomeWork();
-        }
+    [Trace]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    private static async Task<string> DoSomeWorkAsync()
+    {
+        await Task.Delay(TimeSpan.FromMilliseconds(10));
+        return await DoSomeMoreWorkAsync();
+    }
 
-        /// <summary>
-        /// Synchronous method creating an Other transaction
-        /// </summary>
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void MakeOtherTransaction()
-        {
-            DoSomeWork();
-        }
+    [Trace]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    private static async Task<string> DoSomeMoreWorkAsync()
+    {
+        return await Task.FromResult("Some work.");
+    }
 
-        /// <summary>
-        /// Async method creating an Other transaction
-        /// </summary>
-        /// <returns></returns>
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static async Task MakeOtherTransactionAsync()
-        {
-            await DoSomeWorkAsync();
-        }
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static async Task<string> MakeOtherTransactionWithThreadedCallToInstrumentedMethod()
+    {
+        return await Task.Run(SpanOrTransactionBasedOnConfig);
 
-        /// <summary>
-        /// Synchronous method that calls async methods.
-        /// This use case illustrates that this scenario is possible, but it is
-        /// recommended that transactions involving async code start with an 
-        /// async entry point to avoid potential pitfalls.
-        /// </summary>
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void MakeOtherTransactionThenCallAsyncMethod()
-        {
-            DoSomeWorkAsync().Wait();
-        }
+    }
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void MakeOtherTransactionWithCallToNetStandardMethod()
-        {
-            var myObj = new NetStandardTestLibrary.MyClass();
-            myObj.MyMethodToBeInstrumented();
-        }
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    private static async Task<string> SpanOrTransactionBasedOnConfig()
+    {
+        return await Task.FromResult("New Transaction or span based on config.");
+    }
 
-        [Trace]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        private static void DoSomeWork(string customSpanName = null)
-        {
-            if (!string.IsNullOrEmpty(customSpanName))
-            {
-                NewRelic.Api.Agent.NewRelic.GetAgent().CurrentSpan.SetName(customSpanName);
-            }
-        }
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void TransactionWithCustomSpanName(string spanName)
+    {
+        Task.Delay(TimeSpan.FromMilliseconds(10)).Wait();
 
-        [Trace]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        private static async Task<string> DoSomeWorkAsync()
-        {
-            await Task.Delay(TimeSpan.FromMilliseconds(10));
-            return await DoSomeMoreWorkAsync();
-        }
+        DoSomeWork(spanName);
+    }
 
-        [Trace]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        private static async Task<string> DoSomeMoreWorkAsync()
-        {
-            return await Task.FromResult("Some work.");
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static async Task<string> MakeOtherTransactionWithThreadedCallToInstrumentedMethod()
-        {
-            return await Task.Run(SpanOrTransactionBasedOnConfig);
-
-        }
-
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        private static async Task<string> SpanOrTransactionBasedOnConfig()
-        {
-            return await Task.FromResult("New Transaction or span based on config.");
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void TransactionWithCustomSpanName(string spanName)
-        {
-            Task.Delay(TimeSpan.FromMilliseconds(10)).Wait();
-
-            DoSomeWork(spanName);
-        }
-
-        /// <summary>
-        /// Synchronous method creating a Web transaction With Exception (NoticeError)
-        /// </summary>
-        [LibraryMethod]
-        [Transaction(Web = true)]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void MakeWebTransactionWithException()
-        {
-            Task.Delay(TimeSpan.FromMilliseconds(100)).Wait();
-            var exception = new Exception("Test Message");
-            NewRelic.Api.Agent.NewRelic.NoticeError(exception);
-            Task.Delay(TimeSpan.FromMilliseconds(1000)).Wait();
-        }
+    /// <summary>
+    /// Synchronous method creating a Web transaction With Exception (NoticeError)
+    /// </summary>
+    [LibraryMethod]
+    [Transaction(Web = true)]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void MakeWebTransactionWithException()
+    {
+        Task.Delay(TimeSpan.FromMilliseconds(100)).Wait();
+        var exception = new Exception("Test Message");
+        NewRelic.Api.Agent.NewRelic.NoticeError(exception);
+        Task.Delay(TimeSpan.FromMilliseconds(1000)).Wait();
     }
 }

@@ -3,20 +3,19 @@
 
 using System;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation;
+
+public static class ExceptionBuilder
 {
-    public static class ExceptionBuilder
+    public static Exception BuildException(string message)
     {
-        public static Exception BuildException(string message)
+        try
         {
-            try
-            {
-                throw new Exception(message);
-            }
-            catch (Exception ex)
-            {
-                return ex;
-            }
+            throw new Exception(message);
+        }
+        catch (Exception ex)
+        {
+            return ex;
         }
     }
 }

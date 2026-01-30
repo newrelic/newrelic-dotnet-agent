@@ -4,13 +4,12 @@
 
 using MultiFunctionApplicationHelpers;
 
-namespace ConsoleMultiFunctionApplicationCore
+namespace ConsoleMultiFunctionApplicationCore;
+
+class Program
 {
-    class Program
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
-        {
-            MultiFunctionApplication.Execute(args);
-        }
+        MultiFunctionApplication.Execute(args);
     }
 }

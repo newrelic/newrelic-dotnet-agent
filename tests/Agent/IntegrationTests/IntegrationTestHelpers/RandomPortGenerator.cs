@@ -3,80 +3,76 @@
 
 
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Sockets;
-using System.Threading;
 
-namespace NewRelic.Agent.IntegrationTestHelpers
+namespace NewRelic.Agent.IntegrationTestHelpers;
+
+public static class RandomPortGenerator
 {
-    public static class RandomPortGenerator
+    private const int minPortID = 50000;
+    private const int maxPortID = 60000;
+    private const int portPoolSize = maxPortID - minPortID;
+    private const int maxAttempts = 200;
+    private static readonly Random _randomNumberDiety;
+    private static readonly HashSet<int> _usedPorts = new HashSet<int>();
+
+    static RandomPortGenerator()
     {
-        private const int minPortID = 50000;
-        private const int maxPortID = 60000;
-        private const int portPoolSize = maxPortID - minPortID;
-        private const int maxAttempts = 200;
-        private static readonly Random _randomNumberDiety;
-        private static readonly HashSet<int> _usedPorts = new HashSet<int>();
+        var seed = Process.GetCurrentProcess().Id + AppDomain.CurrentDomain.Id + Environment.TickCount;
+        _randomNumberDiety = new Random(seed);
+    }
 
-        static RandomPortGenerator()
+    private static readonly object _usedPortLock = new object();
+    public static int NextPort()
+    {
+        lock (_usedPortLock)
         {
-            var seed = Process.GetCurrentProcess().Id + AppDomain.CurrentDomain.Id + Environment.TickCount;
-            _randomNumberDiety = new Random(seed);
-        }
-
-        private static readonly object _usedPortLock = new object();
-        public static int NextPort()
-        {
-            lock (_usedPortLock)
+            var countAttempts = 0;
+            do
             {
-                var countAttempts = 0;
-                do
+                var potentialPort = _randomNumberDiety.Next(portPoolSize) + minPortID;
+                if (_usedPorts.Contains(potentialPort) && _usedPorts.Count <= 10000)
                 {
-                    var potentialPort = _randomNumberDiety.Next(portPoolSize) + minPortID;
-                    if (_usedPorts.Contains(potentialPort) && _usedPorts.Count <= 10000)
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    if (IsPortAvailable(potentialPort))
-                    {
-                        _usedPorts.Add(potentialPort);
-                        return potentialPort;
-                    }
-                    countAttempts++;
-                } while (countAttempts < maxAttempts);
-            }
-
-            throw new Exception($"Unable to obtain port after {maxAttempts} attempts.");
+                if (IsPortAvailable(potentialPort))
+                {
+                    _usedPorts.Add(potentialPort);
+                    return potentialPort;
+                }
+                countAttempts++;
+            } while (countAttempts < maxAttempts);
         }
 
-        //Checks if something outside our current test run instance is currently using the port.
-        //This does not prevent us from getting into a conflict with another process taking that port after this check,
-        //but before the test app uses the assigned port.
-        private static bool IsPortAvailable(int potentialPort)
-        {
-            try
-            {
-                var tcpListener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
-                tcpListener.ExclusiveAddressUse = true; // This is necessary to make this check meaningful at all
-                tcpListener.Start();
-                tcpListener.Stop();
-                return true;
-            }
-            catch (Exception) { }
-            return false;
-        }
+        throw new Exception($"Unable to obtain port after {maxAttempts} attempts.");
+    }
 
-        public static bool TryReleasePort(int port)
+    //Checks if something outside our current test run instance is currently using the port.
+    //This does not prevent us from getting into a conflict with another process taking that port after this check,
+    //but before the test app uses the assigned port.
+    private static bool IsPortAvailable(int potentialPort)
+    {
+        try
         {
-            lock (_usedPortLock)
-            {
-                _usedPorts.Remove(port);
-            }
+            var tcpListener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
+            tcpListener.ExclusiveAddressUse = true; // This is necessary to make this check meaningful at all
+            tcpListener.Start();
+            tcpListener.Stop();
             return true;
         }
+        catch (Exception) { }
+        return false;
+    }
+
+    public static bool TryReleasePort(int port)
+    {
+        lock (_usedPortLock)
+        {
+            _usedPorts.Remove(port);
+        }
+        return true;
     }
 }

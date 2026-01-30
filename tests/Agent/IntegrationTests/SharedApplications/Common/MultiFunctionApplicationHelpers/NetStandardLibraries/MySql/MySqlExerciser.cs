@@ -10,100 +10,99 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql;
+
+[Library]
+public class MySqlExerciser
 {
-    [Library]
-    public class MySqlExerciser
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void SingleDateQuery()
     {
+        var dates = new List<string>();
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void SingleDateQuery()
+        using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
+        using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1", connection))
         {
-            var dates = new List<string>();
-
-            using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
-            using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1", connection))
+            connection.Open();
+            using (var reader = command.ExecuteReader())
             {
-                connection.Open();
-                using (var reader = command.ExecuteReader())
+                while (reader.Read())
                 {
-                    while (reader.Read())
-                    {
-                        dates.Add(reader.GetString(reader.GetOrdinal("_date")));
-                    }
+                    dates.Add(reader.GetString(reader.GetOrdinal("_date")));
                 }
             }
-            ConsoleMFLogger.Info(string.Join(",", dates));
         }
+        ConsoleMFLogger.Info(string.Join(",", dates));
+    }
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task SingleDateQueryAsync()
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task SingleDateQueryAsync()
+    {
+        var dates = new List<string>();
+
+        using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
+        using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1", connection))
         {
-            var dates = new List<string>();
-
-            using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
-            using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1", connection))
+            await connection.OpenAsync();
+            using (var reader = await command.ExecuteReaderAsync())
             {
-                await connection.OpenAsync();
-                using (var reader = await command.ExecuteReaderAsync())
+                while (await reader.ReadAsync())
                 {
-                    while (await reader.ReadAsync())
-                    {
-                        dates.Add(reader.GetString(reader.GetOrdinal("_date")));
-                    }
+                    dates.Add(reader.GetString(reader.GetOrdinal("_date")));
                 }
             }
-
-            ConsoleMFLogger.Info(string.Join(",", dates));
         }
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void CreateAndExecuteStoredProcedures(string procedureNameWith, string procedureNameWithout)
-        {
-            CreateProcedure(procedureNameWith);
-            ExecuteProcedure(procedureNameWith, true);
-            CreateProcedure(procedureNameWithout);
-            ExecuteProcedure(procedureNameWithout, false);
-        }
+        ConsoleMFLogger.Info(string.Join(",", dates));
+    }
 
-        private static void ExecuteProcedure(string procedureName, bool paramsWithAtSigns)
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void CreateAndExecuteStoredProcedures(string procedureNameWith, string procedureNameWithout)
+    {
+        CreateProcedure(procedureNameWith);
+        ExecuteProcedure(procedureNameWith, true);
+        CreateProcedure(procedureNameWithout);
+        ExecuteProcedure(procedureNameWithout, false);
+    }
+
+    private static void ExecuteProcedure(string procedureName, bool paramsWithAtSigns)
+    {
+        using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
+        using (var command = new MySqlCommand(procedureName, connection))
         {
-            using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
-            using (var command = new MySqlCommand(procedureName, connection))
+            connection.Open();
+            command.CommandType = System.Data.CommandType.StoredProcedure;
+            foreach (var parameter in DbParameterData.MySqlParameters)
             {
-                connection.Open();
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-                foreach (var parameter in DbParameterData.MySqlParameters)
-                {
-                    var sqlParam = paramsWithAtSigns
-                        ? new MySqlParameter(parameter.ParameterName, parameter.Value)
-                        : new MySqlParameter(parameter.ParameterName.TrimStart('@'), parameter.Value);
+                var sqlParam = paramsWithAtSigns
+                    ? new MySqlParameter(parameter.ParameterName, parameter.Value)
+                    : new MySqlParameter(parameter.ParameterName.TrimStart('@'), parameter.Value);
 
-                    command.Parameters.Add(sqlParam);
-                }
-
-                ConsoleMFLogger.Info(command.ExecuteNonQuery().ToString());
+                command.Parameters.Add(sqlParam);
             }
+
+            ConsoleMFLogger.Info(command.ExecuteNonQuery().ToString());
         }
+    }
 
-        private static readonly string CreateProcedureStatement = @"CREATE PROCEDURE `{0}`.`{1}`({2}) BEGIN END;";
+    private static readonly string CreateProcedureStatement = @"CREATE PROCEDURE `{0}`.`{1}`({2}) BEGIN END;";
 
-        private void CreateProcedure(string procedureName)
+    private void CreateProcedure(string procedureName)
+    {
+        var parameters = string.Join(", ", DbParameterData.MySqlParameters.Select(x => $"{x.ParameterName} {x.DbTypeName}"));
+        var statement = string.Format(CreateProcedureStatement, MySqlTestConfiguration.MySqlDbName, procedureName, parameters);
+        using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
+        using (var command = new MySqlCommand(statement, connection))
         {
-            var parameters = string.Join(", ", DbParameterData.MySqlParameters.Select(x => $"{x.ParameterName} {x.DbTypeName}"));
-            var statement = string.Format(CreateProcedureStatement, MySqlTestConfiguration.MySqlDbName, procedureName, parameters);
-            using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
-            using (var command = new MySqlCommand(statement, connection))
-            {
-                connection.Open();
-                command.ExecuteNonQuery();
-            }
+            connection.Open();
+            command.ExecuteNonQuery();
         }
     }
 }

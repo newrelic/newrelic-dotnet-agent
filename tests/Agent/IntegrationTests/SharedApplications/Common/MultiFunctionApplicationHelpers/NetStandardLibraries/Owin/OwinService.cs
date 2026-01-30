@@ -2,48 +2,47 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using Microsoft.Owin.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Owin.Hosting;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Owin
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Owin;
+
+public class OwinService
 {
-    public class OwinService
+    private IStartup _startup;
+    private IDisposable _service;
+    private List<Type> _controllers;
+
+    internal OwinService()
     {
-        private IStartup _startup;
-        private IDisposable _service;
-        private List<Type> _controllers;
+        _controllers = new List<Type>();
+    }
 
-        internal OwinService()
-        {
-            _controllers = new List<Type>();
-        }
+    internal OwinService(IStartup startup) : this()
+    {
+        _startup = startup;
+    }
 
-        internal OwinService(IStartup startup) : this()
-        {
-            _startup = startup;
-        }
+    public void StartService(string server, int port)
+    {
+        _service = WebApp.Start(url: $"http://{server}:{port}/", _startup.Configuration);
+        Task.Delay(7000).Wait();
+    }
 
-        public void StartService(string server, int port)
-        {
-            _service = WebApp.Start(url: $"http://{server}:{port}/", _startup.Configuration);
-            Task.Delay(7000).Wait();
-        }
+    public void StopService()
+    {
+        _service.Dispose();
+    }
 
-        public void StopService()
-        {
-            _service.Dispose();
-        }
+    internal void AddStartup(IStartup startup)
+    {
+        _startup = startup;
+    }
 
-        internal void AddStartup(IStartup startup)
-        {
-            _startup = startup;
-        }
-
-        internal void RegisterController(Type controller)
-        {
-            _controllers.Add(controller);
-        }
+    internal void RegisterController(Type controller)
+    {
+        _controllers.Add(controller);
     }
 }

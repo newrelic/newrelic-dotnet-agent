@@ -5,48 +5,47 @@
 using System;
 using System.Collections.Generic;
 
-namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Owin
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Owin;
+
+public class OwinServiceBuilder
 {
-    public class OwinServiceBuilder
+    private IStartup _startup;
+    private List<Type> _controllers;
+
+    public OwinServiceBuilder()
     {
-        private IStartup _startup;
-        private List<Type> _controllers;
+        _controllers = new List<Type>();
+    }
 
-        public OwinServiceBuilder()
+    public OwinServiceBuilder AddStartup(IStartup startup)
+    {
+        _startup = startup;
+        return this;
+    }
+
+    public OwinServiceBuilder RegisterController(Type controller)
+    {
+        _controllers.Add(controller);
+        return this;
+    }
+
+    public OwinService Build()
+    {
+        var service = new OwinService();
+        if (_startup == null)
         {
-            _controllers = new List<Type>();
+            service.AddStartup(new DefaultStartup());
+        }
+        else
+        {
+            service.AddStartup(_startup);
         }
 
-        public OwinServiceBuilder AddStartup(IStartup startup)
+        foreach (var controller in _controllers)
         {
-            _startup = startup;
-            return this;
+            service.RegisterController(controller);
         }
 
-        public OwinServiceBuilder RegisterController(Type controller)
-        {
-            _controllers.Add(controller);
-            return this;
-        }
-
-        public OwinService Build()
-        {
-            var service = new OwinService();
-            if (_startup == null)
-            {
-                service.AddStartup(new DefaultStartup());
-            }
-            else
-            {
-                service.AddStartup(_startup);
-            }
-
-            foreach (var controller in _controllers)
-            {
-                service.RegisterController(controller);
-            }
-
-            return service;
-        }
+        return service;
     }
 }
