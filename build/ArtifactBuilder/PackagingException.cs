@@ -1,9 +1,8 @@
 using System;
 
-namespace ArtifactBuilder
+namespace ArtifactBuilder;
+
+public class PackagingException : Exception
 {
-    public class PackagingException : Exception
-    {
-        public PackagingException(string message) : base(message) { }
-    }
+    public PackagingException(string message) : base(message) { }
 }

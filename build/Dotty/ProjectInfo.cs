@@ -1,10 +1,9 @@
 using System.Text.Json.Serialization;
 
-namespace Dotty
+namespace Dotty;
+
+public class ProjectInfo
 {
-    public class ProjectInfo
-    {
-        [JsonPropertyName("projectFile")]
-        public string ProjectFile { get; set; }
-    }
+    [JsonPropertyName("projectFile")]
+    public string ProjectFile { get; set; }
 }

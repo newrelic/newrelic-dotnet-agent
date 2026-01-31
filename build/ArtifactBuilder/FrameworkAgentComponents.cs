@@ -1,176 +1,175 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ArtifactBuilder
+namespace ArtifactBuilder;
+
+public class FrameworkAgentComponents : AgentComponents
 {
-    public class FrameworkAgentComponents : AgentComponents
+    public FrameworkAgentComponents(string configuration, string platform, string repoRootDirectory, string homeRootPath)
+        : base(configuration, platform, repoRootDirectory, homeRootPath) { }
+
+    protected override string SourceHomeBuilderPath => $@"{HomeRootPath}\newrelichome_{Platform}";
+
+    protected override List<string> IgnoredHomeBuilderFiles => new List<string>() {
+        $@"{SourceHomeBuilderPath}\extensions\NewRelic.Core.Instrumentation.xml",
+        $@"{SourceHomeBuilderPath}\extensions\NewRelic.Parsing.Instrumentation.xml",
+        $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WrapperUtilities.Instrumentation.xml"
+    };
+
+    protected override void CreateAgentComponents()
     {
-        public FrameworkAgentComponents(string configuration, string platform, string repoRootDirectory, string homeRootPath)
-            : base(configuration, platform, repoRootDirectory, homeRootPath) { }
+        var agentDllsForExtensionDirectory = new List<string>();
 
-        protected override string SourceHomeBuilderPath => $@"{HomeRootPath}\newrelichome_{Platform}";
-
-        protected override List<string> IgnoredHomeBuilderFiles => new List<string>() {
-            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Core.Instrumentation.xml",
-            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Parsing.Instrumentation.xml",
-            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WrapperUtilities.Instrumentation.xml"
+        var storageProviders = new List<string>()
+        {
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.CallContext.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.HttpContext.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.HybridHttpContext.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.OperationContext.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.AsyncLocal.dll",
         };
 
-        protected override void CreateAgentComponents()
+        var wrapperProviders = new List<string>()
         {
-            var agentDllsForExtensionDirectory = new List<string>();
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNet.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.CosmosDb.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Couchbase.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Couchbase3.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Elasticsearch.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.HttpClient.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.HttpWebRequest.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Log4NetLogging.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.SerilogLogging.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.NLogLogging.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb26.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Msmq.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Mvc3.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.NServiceBus.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenRasta.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RabbitMq.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RestSharp.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.ServiceStackRedis.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Sql.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis2Plus.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Wcf3.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebApi1.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebApi2.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebOptimization.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebServices.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNetCore.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Owin.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransit.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Bedrock.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenAI.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsSdk.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Memcached.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenSearch.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll",
+        };
 
-            var storageProviders = new List<string>()
-            {
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.CallContext.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.HttpContext.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.HybridHttpContext.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.OperationContext.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.AsyncLocal.dll",
-            };
+        var wrapperXmls = new[]
+        {
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNet.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Couchbase3.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.HttpWebRequest.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Log4NetLogging.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.SerilogLogging.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb26.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Msmq.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Mvc3.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenRasta.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Owin.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RestSharp.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.ServiceStackRedis.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis2Plus.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Wcf3.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebApi1.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebApi2.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebOptimization.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebServices.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransit.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenAI.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml",
+        };
 
-            var wrapperProviders = new List<string>()
-            {
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNet.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.CosmosDb.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Couchbase.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Couchbase3.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Elasticsearch.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.HttpClient.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.HttpWebRequest.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Log4NetLogging.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.SerilogLogging.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.NLogLogging.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb26.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Msmq.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Mvc3.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.NServiceBus.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenRasta.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RabbitMq.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RestSharp.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.ServiceStackRedis.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Sql.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis2Plus.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Wcf3.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebApi1.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebApi2.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebOptimization.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebServices.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNetCore.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Owin.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransit.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Bedrock.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenAI.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsSdk.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureFunction.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Memcached.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenSearch.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll",
-            };
+        ExtensionXsd = $@"{SourceHomeBuilderPath}\extensions\extension.xsd";
+        NewRelicXsd = $@"{SourceHomeBuilderPath}\newrelic.xsd";
+        NewRelicConfig = $@"{SourceHomeBuilderPath}\newrelic.config";
 
-            var wrapperXmls = new[]
-            {
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNet.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Couchbase3.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.HttpWebRequest.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Log4NetLogging.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.SerilogLogging.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb26.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Msmq.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Mvc3.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenRasta.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Owin.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RestSharp.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.ServiceStackRedis.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis2Plus.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Wcf3.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebApi1.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebApi2.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebOptimization.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebServices.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransit.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Bedrock.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenAI.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AwsSdk.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureFunction.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml",
-            };
+        NewRelicLicenseFile = $@"{SourceHomeBuilderPath}\LICENSE.txt";
+        NewRelicThirdPartyNoticesFile = $@"{SourceHomeBuilderPath}\THIRD_PARTY_NOTICES.txt";
 
-            ExtensionXsd = $@"{SourceHomeBuilderPath}\extensions\extension.xsd";
-            NewRelicXsd = $@"{SourceHomeBuilderPath}\newrelic.xsd";
-            NewRelicConfig = $@"{SourceHomeBuilderPath}\newrelic.config";
+        WindowsProfiler = $@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll";
 
-            NewRelicLicenseFile = $@"{SourceHomeBuilderPath}\LICENSE.txt";
-            NewRelicThirdPartyNoticesFile = $@"{SourceHomeBuilderPath}\THIRD_PARTY_NOTICES.txt";
+        GRPCExtensionsLibWindows = new[]
+        {   $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x86.dll",
+            $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x64.dll"
+        };
 
-            WindowsProfiler = $@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll";
+        var installRootFiles = new List<string>()
+        {
+            NewRelicLicenseFile,
+            NewRelicThirdPartyNoticesFile,
+        };
 
-            GRPCExtensionsLibWindows = new[]
-                {   $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x86.dll",
-                    $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x64.dll"
-                };
+        SetRootInstallDirectoryComponents(installRootFiles.ToArray());
 
-            var installRootFiles = new List<string>()
-            {
-                NewRelicLicenseFile,
-                NewRelicThirdPartyNoticesFile,
-            };
+        var agentHomeDirFiles = new List<string>()
+        {
+            $@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
+            $@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
+            WindowsProfiler,
+            NewRelicConfig,
+            NewRelicXsd
+        };
 
-            SetRootInstallDirectoryComponents(installRootFiles.ToArray());
-
-            var agentHomeDirFiles = new List<string>()
-            {
-                $@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
-                $@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
-                WindowsProfiler,
-                NewRelicConfig,
-                NewRelicXsd
-            };
-
-            agentHomeDirFiles.AddRange(GRPCExtensionsLibWindows);
+        agentHomeDirFiles.AddRange(GRPCExtensionsLibWindows);
 
 
-            SetAgentHomeDirComponents(agentHomeDirFiles.ToArray());
+        SetAgentHomeDirComponents(agentHomeDirFiles.ToArray());
 
-            var extensions = agentDllsForExtensionDirectory
-                .Concat(storageProviders)
-                .Concat(wrapperProviders)
-                .Append(ExtensionXsd)
-                .ToArray();
+        var extensions = agentDllsForExtensionDirectory
+            .Concat(storageProviders)
+            .Concat(wrapperProviders)
+            .Append(ExtensionXsd)
+            .ToArray();
 
-            SetExtensionDirectoryComponents(extensions);
+        SetExtensionDirectoryComponents(extensions);
 
-            SetWrapperXmlFiles(wrapperXmls);
+        SetWrapperXmlFiles(wrapperXmls);
 
-            AgentInfoJson = $@"{SourcePath}\..\src\Agent\Miscellaneous\{Platform}\agentinfo.json";
+        AgentInfoJson = $@"{SourcePath}\..\src\Agent\Miscellaneous\{Platform}\agentinfo.json";
 
-            AgentApiDll = $@"{SourcePath}\..\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\net462\NewRelic.Api.Agent.dll";
+        AgentApiDll = $@"{SourcePath}\..\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\net462\NewRelic.Api.Agent.dll";
 
-            SetConfigurationComponents(NewRelicXsd, AgentInfoJson);
-        }
+        SetConfigurationComponents(NewRelicXsd, AgentInfoJson);
     }
 }
