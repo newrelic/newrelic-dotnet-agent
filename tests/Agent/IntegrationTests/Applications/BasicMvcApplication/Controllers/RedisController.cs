@@ -6,37 +6,36 @@ using System;
 using System.Web.Mvc;
 using ServiceStack.Redis;
 
-namespace BasicMvcApplication.Controllers
+namespace BasicMvcApplication.Controllers;
+
+public class RedisController : Controller
 {
-    public class RedisController : Controller
+    public string Get()
     {
-        public string Get()
+        using (var client = new RedisClient("localhost"))
         {
-            using (var client = new RedisClient("localhost"))
-            {
-                client.ServerVersionNumber = 1;
+            client.ServerVersionNumber = 1;
 
-                ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.SaveAsync());
-                ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.Shutdown());
-                ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.RewriteAppendOnlyFileAsync());
-            }
-
-            return "Worked";
+            ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.SaveAsync());
+            ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.Shutdown());
+            ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.RewriteAppendOnlyFileAsync());
         }
 
-        public class ThisIsBadAndYouShouldFeelBad
+        return "Worked";
+    }
+
+    public class ThisIsBadAndYouShouldFeelBad
+    {
+        public static void SwallowExceptionsFromInvalidRedisHost(Action command)
         {
-            public static void SwallowExceptionsFromInvalidRedisHost(Action command)
+            try
             {
-                try
-                {
-                    command();
-                }
-                catch
-                {
-                    //For reals, we should test against a real redis instance instead of 
-                    //throwing exceptions every call.
-                }
+                command();
+            }
+            catch
+            {
+                //For reals, we should test against a real redis instance instead of 
+                //throwing exceptions every call.
             }
         }
     }

@@ -4,13 +4,12 @@
 
 using ServiceStack;
 
-namespace ServiceStackApplication
+namespace ServiceStackApplication;
+
+public class MyServices : Service
 {
-    public class MyServices : Service
+    public object Any(Hello request)
     {
-        public object Any(Hello request)
-        {
-            return new HelloResponse { Result = $"{request.Name}" };
-        }
+        return new HelloResponse { Result = $"{request.Name}" };
     }
 }

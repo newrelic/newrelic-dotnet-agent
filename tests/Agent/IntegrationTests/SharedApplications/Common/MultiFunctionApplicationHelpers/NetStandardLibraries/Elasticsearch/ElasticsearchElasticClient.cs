@@ -10,8 +10,10 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Clients.Elasticsearch;
+#if NET481_OR_GREATER || NET10_0
 using Elastic.Clients.Elasticsearch.Core.MSearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
+#endif
 using Elastic.Transport;
 using NewRelic.Agent.IntegrationTests.Shared;
 

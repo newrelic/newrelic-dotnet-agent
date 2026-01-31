@@ -2,14 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
+namespace AspNetCoreMvcAsyncApplication.Models;
 
-namespace AspNetCoreMvcAsyncApplication.Models
+public class ErrorViewModel
 {
-    public class ErrorViewModel
-    {
-        public string RequestId { get; set; }
+    public string RequestId { get; set; }
 
-        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
-    }
+    public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 }

@@ -10,10 +10,9 @@ using Couchbase.KeyValue;
 
 #if NET481_OR_GREATER || NET
 using Couchbase.KeyValue.RangeScan;
-#endif
-
 using Couchbase.Search;
 using Couchbase.Search.Queries.Simple;
+#endif
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;

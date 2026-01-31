@@ -6,38 +6,37 @@ using ApplicationLifecycle;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace AspNetCoreDistTracingApplication
+namespace AspNetCoreDistTracingApplication;
+
+public class Program
 {
-    public class Program
+    private static string _port;
+
+    public static void Main(string[] args)
     {
-        private static string _port;
+        _port = AppLifecycleManager.GetPortFromArgs(args);
 
-        public static void Main(string[] args)
-        {
-            _port = AppLifecycleManager.GetPortFromArgs(args);
+        var ct = new CancellationTokenSource();
+        var host = BuildHost(args);
 
-            var ct = new CancellationTokenSource();
-            var host = BuildHost(args);
+        var runTask = host.RunAsync(ct.Token);
 
-            var runTask = host.RunAsync(ct.Token);
+        AppLifecycleManager.CreatePidFile();
 
-            AppLifecycleManager.CreatePidFile();
+        AppLifecycleManager.WaitForTestCompletion(_port);
 
-            AppLifecycleManager.WaitForTestCompletion(_port);
+        ct.Cancel();
 
-            ct.Cancel();
-
-            runTask.GetAwaiter().GetResult();
-        }
-
-        public static IHost BuildHost(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder
-                        .UseStartup<Startup>()
-                        .UseUrls(string.Format(@"http://127.0.0.1:{0}/", _port));
-                })
-                .Build();
+        runTask.GetAwaiter().GetResult();
     }
+
+    public static IHost BuildHost(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder
+                    .UseStartup<Startup>()
+                    .UseUrls(string.Format(@"http://127.0.0.1:{0}/", _port));
+            })
+            .Build();
 }

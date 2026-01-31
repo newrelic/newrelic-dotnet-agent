@@ -2,38 +2,37 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
-using NewRelic.Api.Agent;
 using System;
 using System.Runtime.CompilerServices;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
+using NewRelic.Api.Agent;
 
-namespace ConsoleInstrumentationLoaderCore
+namespace ConsoleInstrumentationLoaderCore;
+
+class Program
 {
-    class Program
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
+        Environment.ExitCode = -1;
+        try
         {
-            Environment.ExitCode = -1;
-            try
-            {
-                InstrumentedMethod();
+            InstrumentedMethod();
 
-                ReflectionUtil.ScanAssembliesAndTypes();
-            }
-            catch (Exception)
-            {
-                Environment.ExitCode = -2;
-                throw;
-            }
-
-            Environment.ExitCode = 0;
+            ReflectionUtil.ScanAssembliesAndTypes();
+        }
+        catch (Exception)
+        {
+            Environment.ExitCode = -2;
+            throw;
         }
 
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void InstrumentedMethod()
-        {
-            Console.WriteLine("Instrumented Method");
-        }
+        Environment.ExitCode = 0;
+    }
+
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void InstrumentedMethod()
+    {
+        Console.WriteLine("Instrumented Method");
     }
 }

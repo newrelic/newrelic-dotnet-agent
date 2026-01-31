@@ -2,65 +2,63 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Web.Http;
 
-namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
+namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi;
+
+public class MyController : ApiController
 {
-    public class MyController : ApiController
+    [HttpGet]
+    [Route("api/CustomAttributes")]
+    public string CustomAttributes()
     {
-        [HttpGet]
-        [Route("api/CustomAttributes")]
-        public string CustomAttributes()
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("key", "value");
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("foo", "bar");
+
+        // Attempt to force this as the captured transaction trace.
+        Thread.Sleep(1000);
+
+        return "success";
+    }
+
+    [HttpGet]
+    [Route("api/CustomErrorAttributes")]
+    public string CustomErrorAttributes()
+    {
+        var errorAttributes = new Dictionary<string, string>
         {
-            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("key", "value");
-            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("foo", "bar");
+            {"hey", "dude"},
+            {"faz", "baz"},
+        };
+        NewRelic.Api.Agent.NewRelic.NoticeError(new System.ArithmeticException("Error occurred."), errorAttributes);
 
-            // Attempt to force this as the captured transaction trace.
-            Thread.Sleep(1000);
+        return "success";
+    }
 
-            return "success";
-        }
+    [HttpGet]
+    [Route("api/IgnoreTransaction")]
+    public string IgnoreTransaction()
+    {
+        NewRelic.Api.Agent.NewRelic.IgnoreTransaction();
 
-        [HttpGet]
-        [Route("api/CustomErrorAttributes")]
-        public string CustomErrorAttributes()
-        {
-            var errorAttributes = new Dictionary<string, string>
-            {
-                {"hey", "dude"},
-                {"faz", "baz"},
-            };
-            NewRelic.Api.Agent.NewRelic.NoticeError(new System.ArithmeticException("Error occurred."), errorAttributes);
+        return "success";
+    }
 
-            return "success";
-        }
+    [HttpGet]
+    [Route("api/CustomAttributesKeyNull")]
+    public string CustomAttributesKeyNull()
+    {
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute(null, "valuewithnullkey");
+        return "success";
+    }
 
-        [HttpGet]
-        [Route("api/IgnoreTransaction")]
-        public string IgnoreTransaction()
-        {
-            NewRelic.Api.Agent.NewRelic.IgnoreTransaction();
-
-            return "success";
-        }
-
-        [HttpGet]
-        [Route("api/CustomAttributesKeyNull")]
-        public string CustomAttributesKeyNull()
-        {
-            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute(null, "valuewithnullkey");
-            return "success";
-        }
-
-        [HttpGet]
-        [Route("api/CustomAttributesValueNull")]
-        public string CustomAttributesValueNull()
-        {
-            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("keywithnullvalue", null);
-            return "success";
-        }
+    [HttpGet]
+    [Route("api/CustomAttributesValueNull")]
+    public string CustomAttributesValueNull()
+    {
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("keywithnullvalue", null);
+        return "success";
     }
 }

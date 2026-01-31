@@ -2,45 +2,43 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Web.Http;
 using Microsoft.Owin;
 using Owin;
 
-namespace Owin4WebApi
+namespace Owin4WebApi;
+
+public class Startup
 {
-    public class Startup
+    // This code configures Web API. The Startup class is specified as a type parameter in the WebApp.Start method.
+    public void Configuration(IAppBuilder appBuilder)
     {
-        // This code configures Web API. The Startup class is specified as a type parameter in the WebApp.Start method.
-        public void Configuration(IAppBuilder appBuilder)
+        var config = new HttpConfiguration();
+        config.MapHttpAttributeRoutes();
+
+        appBuilder.MapWhen(ShouldUseBadMiddleware, app =>
         {
-            var config = new HttpConfiguration();
-            config.MapHttpAttributeRoutes();
+            app.Use<BadMiddleware>();
+        });
 
-            appBuilder.MapWhen(ShouldUseBadMiddleware, app =>
-            {
-                app.Use<BadMiddleware>();
-            });
-
-            appBuilder.MapWhen(ShouldUseCustomMiddleware, app =>
-            {
-                app.Use<UninstrumentedMiddleware>();
-                app.Use<CustomMiddleware>();
-                app.UseWebApi(config);
-            });
-            appBuilder.UseWebApi(config);
-        }
-
-        private bool ShouldUseCustomMiddleware(IOwinContext context)
+        appBuilder.MapWhen(ShouldUseCustomMiddleware, app =>
         {
-            var shouldUse = context.Request.Path.Value.Contains("CustomMiddleware");
-            return shouldUse;
-        }
+            app.Use<UninstrumentedMiddleware>();
+            app.Use<CustomMiddleware>();
+            app.UseWebApi(config);
+        });
+        appBuilder.UseWebApi(config);
+    }
 
-        private bool ShouldUseBadMiddleware(IOwinContext context)
-        {
-            var shouldUse = context.Request.Path.Value.Contains("BadMiddleware");
-            return shouldUse;
-        }
+    private bool ShouldUseCustomMiddleware(IOwinContext context)
+    {
+        var shouldUse = context.Request.Path.Value.Contains("CustomMiddleware");
+        return shouldUse;
+    }
+
+    private bool ShouldUseBadMiddleware(IOwinContext context)
+    {
+        var shouldUse = context.Request.Path.Value.Contains("BadMiddleware");
+        return shouldUse;
     }
 }

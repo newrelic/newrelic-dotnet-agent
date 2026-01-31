@@ -12,68 +12,67 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.CodeAnalysis;
 
-namespace AspNetCoreMvcFrameworkApplication
+namespace AspNetCoreMvcFrameworkApplication;
+
+public class Program
 {
-    public class Program
+    private const string DefaultPort = "5001";
+
+    private static string _port;
+
+    private static string _applicationName;
+
+    public static void Main(string[] args)
     {
-        private const string DefaultPort = "5001";
+        var commandLine = string.Join(" ", args);
 
-        private static string _port;
+        _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
 
-        private static string _applicationName;
+        Console.WriteLine($"[{_applicationName}] Joined args: {commandLine}");
 
-        public static void Main(string[] args)
+        var result = CommandLineParser.SplitCommandLineIntoArguments(commandLine, true).ToList();
+
+        var argPort = result[1];
+        _port = argPort ?? DefaultPort;
+
+        Console.WriteLine($"[{_applicationName}] Received port: {argPort} | Using port: {_port}");
+
+        var ct = new CancellationTokenSource();
+        var task = BuildWebHost(args).RunAsync(ct.Token);
+
+        using (var eventWaitHandle =
+               new EventWaitHandle(false, EventResetMode.AutoReset,
+                   "app_server_wait_for_all_request_done_" + _port))
         {
-            var commandLine = string.Join(" ", args);
-
-            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
-
-            Console.WriteLine($"[{_applicationName}] Joined args: {commandLine}");
-
-            var result = CommandLineParser.SplitCommandLineIntoArguments(commandLine, true).ToList();
-
-            var argPort = result[1];
-            _port = argPort ?? DefaultPort;
-
-            Console.WriteLine($"[{_applicationName}] Received port: {argPort} | Using port: {_port}");
-
-            var ct = new CancellationTokenSource();
-            var task = BuildWebHost(args).RunAsync(ct.Token);
-
-            using (var eventWaitHandle =
-                   new EventWaitHandle(false, EventResetMode.AutoReset,
-                       "app_server_wait_for_all_request_done_" + _port))
-            {
-                CreatePidFile();
-                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
-            }
-
-            ct.Cancel();
-
-            task.GetAwaiter().GetResult();
+            CreatePidFile();
+            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
         }
 
-        private static void CreatePidFile()
-        {
-            var pid = Process.GetCurrentProcess().Id;
-            var applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) +
-                                  ".exe";
-            var applicationDirectory =
-                Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath),
-                    applicationName);
-            var pidFilePath = applicationDirectory + ".pid";
+        ct.Cancel();
 
-            using (var file = File.CreateText(pidFilePath))
-            {
-                file.WriteLine(pid);
-            }
-
-        }
-
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .UseUrls($@"http://127.0.0.1:{_port}/")
-                .Build();
+        task.GetAwaiter().GetResult();
     }
+
+    private static void CreatePidFile()
+    {
+        var pid = Process.GetCurrentProcess().Id;
+        var applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) +
+                              ".exe";
+        var applicationDirectory =
+            Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath),
+                applicationName);
+        var pidFilePath = applicationDirectory + ".pid";
+
+        using (var file = File.CreateText(pidFilePath))
+        {
+            file.WriteLine(pid);
+        }
+
+    }
+
+    public static IWebHost BuildWebHost(string[] args) =>
+        WebHost.CreateDefaultBuilder(args)
+            .UseStartup<Startup>()
+            .UseUrls($@"http://127.0.0.1:{_port}/")
+            .Build();
 }

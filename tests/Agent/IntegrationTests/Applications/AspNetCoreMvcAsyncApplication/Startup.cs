@@ -9,55 +9,54 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace AspNetCoreMvcAsyncApplication
+namespace AspNetCoreMvcAsyncApplication;
+
+public class Startup
 {
-    public class Startup
+    public Startup(IConfiguration configuration)
     {
-        public Startup(IConfiguration configuration)
+        Configuration = configuration;
+    }
+
+    public IConfiguration Configuration { get; }
+
+    // This method gets called by the runtime. Use this method to add services to the container.
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddMvc(x => { x.EnableEndpointRouting = false; x.SuppressAsyncSuffixInActionNames = false; });
+    }
+
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
         {
-            Configuration = configuration;
+            app.UseDeveloperExceptionPage();
+        }
+        else
+        {
+            app.UseExceptionHandler("/Home/Error");
         }
 
-        public IConfiguration Configuration { get; }
+        app.UseStaticFiles();
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        app.UseWhen(ShouldUseMiddleware, appBuilder =>
         {
-            services.AddMvc(x => { x.EnableEndpointRouting = false; x.SuppressAsyncSuffixInActionNames = false; });
-        }
+            appBuilder.UseMiddleware<UninstrumentedMiddleware>();
+            appBuilder.UseMiddleware<CustomMiddleware>();
+        });
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        app.UseMvc(routes =>
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
+            routes.MapRoute(
+                name: "default",
+                template: "{controller=Home}/{action=Index}/{id?}");
+        });
+    }
 
-            app.UseStaticFiles();
-
-            app.UseWhen(ShouldUseMiddleware, appBuilder =>
-            {
-                appBuilder.UseMiddleware<UninstrumentedMiddleware>();
-                appBuilder.UseMiddleware<CustomMiddleware>();
-            });
-
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
-        }
-
-        private static bool ShouldUseMiddleware(HttpContext context)
-        {
-            var shouldUse = context.Request.Path.Value.Contains("CustomMiddleware");
-            return shouldUse;
-        }
+    private static bool ShouldUseMiddleware(HttpContext context)
+    {
+        var shouldUse = context.Request.Path.Value.Contains("CustomMiddleware");
+        return shouldUse;
     }
 }

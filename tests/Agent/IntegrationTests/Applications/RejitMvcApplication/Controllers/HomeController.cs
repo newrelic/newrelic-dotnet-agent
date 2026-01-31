@@ -3,17 +3,16 @@
 
 using System.Web.Mvc;
 
-namespace RejitMvcApplication.Controllers
+namespace RejitMvcApplication.Controllers;
+
+/// <summary>
+/// Simple endpoint to get the agent spun up.
+/// Specifically outside the CustomInstrumentationController to make it easier to see the real data.
+/// </summary>
+public class HomeController : Controller
 {
-    /// <summary>
-    /// Simple endpoint to get the agent spun up.
-    /// Specifically outside the CustomInstrumentationController to make it easier to see the real data.
-    /// </summary>
-    public class HomeController : Controller
+    public ActionResult Index()
     {
-        public ActionResult Index()
-        {
-            return Content("It am working", "text/plain");
-        }
+        return Content("It am working", "text/plain");
     }
 }

@@ -7,30 +7,28 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Serilog;
 
-namespace SerilogSumologicApplication
+namespace SerilogSumologicApplication;
+
+public class LoggingMiddleware
 {
+    private readonly RequestDelegate _next;
 
-    public class LoggingMiddleware
+
+    public LoggingMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
+        _next = next;
+    }
 
 
-        public LoggingMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
+    public async Task Invoke(HttpContext context)
+    {
+        string path = context.Request.Path;
 
 
-        public async Task Invoke(HttpContext context)
-        {
-            string path = context.Request.Path;
+        Console.WriteLine("####### Logging -- in theory.");
+        Log.Information("Middleware logging. Request path is " + path);
 
-
-            Console.WriteLine("####### Logging -- in theory.");
-            Log.Information("Middleware logging. Request path is " + path);
-
-            await _next(context);
-            return;
-        }
+        await _next(context);
+        return;
     }
 }

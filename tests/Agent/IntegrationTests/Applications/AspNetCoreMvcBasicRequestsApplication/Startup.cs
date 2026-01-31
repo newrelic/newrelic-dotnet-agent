@@ -8,58 +8,57 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace AspNetCoreMvcBasicRequestsApplication
+namespace AspNetCoreMvcBasicRequestsApplication;
+
+public class Startup
 {
-    public class Startup
+    readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+    public Startup(IConfiguration configuration)
     {
-        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+        Configuration = configuration;
+    }
 
-        public Startup(IConfiguration configuration)
+    public IConfiguration Configuration { get; }
+
+    // This method gets called by the runtime. Use this method to add services to the container.
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddCors(options =>
         {
-            Configuration = configuration;
+            options.AddPolicy(MyAllowSpecificOrigins,
+                builder =>
+                {
+                    builder.WithOrigins("http://example.com", "http://newrelic.com");
+                });
+        });
+        services.AddMvc(options => options.EnableEndpointRouting = false);
+        services.AddHttpClient();
+        services.AddHttpClient<NewRelicDownloadSiteClient>();
+    }
+
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+            app.UseBrowserLink();
+        }
+        else
+        {
+            app.UseExceptionHandler("/Home/Error");
         }
 
-        public IConfiguration Configuration { get; }
+        app.UseStaticFiles();
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        app.UseCors(MyAllowSpecificOrigins);
+
+        app.UseMvc(routes =>
         {
-            services.AddCors(options =>
-            {
-                options.AddPolicy(MyAllowSpecificOrigins,
-                    builder =>
-                    {
-                        builder.WithOrigins("http://example.com", "http://newrelic.com");
-                    });
-            });
-            services.AddMvc(options => options.EnableEndpointRouting = false);
-            services.AddHttpClient();
-            services.AddHttpClient<NewRelicDownloadSiteClient>();
-        }
-
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseBrowserLink();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
-
-            app.UseStaticFiles();
-
-            app.UseCors(MyAllowSpecificOrigins);
-
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
-        }
+            routes.MapRoute(
+                name: "default",
+                template: "{controller=Home}/{action=Index}/{id?}");
+        });
     }
 }

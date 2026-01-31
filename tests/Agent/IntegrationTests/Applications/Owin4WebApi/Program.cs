@@ -10,44 +10,43 @@ using System.Threading;
 using CommandLine;
 using Microsoft.Owin.Hosting;
 
-namespace Owin4WebApi
+namespace Owin4WebApi;
+
+public class Program
 {
-    public class Program
+    [Option("port", Required = true)]
+    public string Port { get; set; }
+
+    static void Main(string[] args)
     {
-        [Option("port", Required = true)]
-        public string Port { get; set; }
+        if (Parser.Default == null)
+            throw new NullReferenceException("CommandLine.Parser.Default");
 
-        static void Main(string[] args)
-        {
-            if (Parser.Default == null)
-                throw new NullReferenceException("CommandLine.Parser.Default");
+        var program = new Program();
+        if (!Parser.Default.ParseArgumentsStrict(args, program))
+            return;
 
-            var program = new Program();
-            if (!Parser.Default.ParseArgumentsStrict(args, program))
-                return;
-
-            program.RealMain();
-        }
-
-        private void RealMain()
-        {
-            var baseAddress = string.Format(@"http://127.0.0.1:{0}/", Port);
-            using (WebApp.Start<Startup>(baseAddress))
-            {
-                var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + Port.ToString());
-                CreatePidFile();
-                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
-            }
-        }
-
-        private static void CreatePidFile()
-        {
-            var pid = Process.GetCurrentProcess().Id;
-            var thisAssemblyPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-            var pidFilePath = thisAssemblyPath + ".pid";
-            var file = File.CreateText(pidFilePath);
-            file.WriteLine(pid);
-        }
-
+        program.RealMain();
     }
+
+    private void RealMain()
+    {
+        var baseAddress = string.Format(@"http://127.0.0.1:{0}/", Port);
+        using (WebApp.Start<Startup>(baseAddress))
+        {
+            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + Port.ToString());
+            CreatePidFile();
+            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+        }
+    }
+
+    private static void CreatePidFile()
+    {
+        var pid = Process.GetCurrentProcess().Id;
+        var thisAssemblyPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+        var pidFilePath = thisAssemblyPath + ".pid";
+        var file = File.CreateText(pidFilePath);
+        file.WriteLine(pid);
+    }
+
 }

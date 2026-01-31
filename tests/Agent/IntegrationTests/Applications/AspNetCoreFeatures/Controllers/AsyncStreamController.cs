@@ -9,37 +9,36 @@ using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace AspNetCoreFeatures.Controllers
+namespace AspNetCoreFeatures.Controllers;
+
+[Route("api/[controller]")]
+public class AsyncStreamController : Controller
 {
-    [Route("api/[controller]")]
-    public class AsyncStreamController : Controller
+    // GET: api/<controller>
+    [HttpGet]
+    public async Task<string> Get()
     {
-        // GET: api/<controller>
-        [HttpGet]
-        public async Task<string> Get()
+        int sum = 0;
+
+        await foreach (var number in GetNumbers())
         {
-            int sum = 0;
-
-            await foreach (var number in GetNumbers())
-            {
-                sum += number;
-            }
-
-            return sum.ToString();
+            sum += number;
         }
 
-        private async IAsyncEnumerable<int> GetNumbers()
-        {
-            for (var i = 0; i < 10; i++)
-            {
-                await DoSomethingAsync();
-                yield return i;
-            }
-        }
+        return sum.ToString();
+    }
 
-        private async Task DoSomethingAsync()
+    private async IAsyncEnumerable<int> GetNumbers()
+    {
+        for (var i = 0; i < 10; i++)
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(50));
+            await DoSomethingAsync();
+            yield return i;
         }
+    }
+
+    private async Task DoSomethingAsync()
+    {
+        await Task.Delay(TimeSpan.FromMilliseconds(50));
     }
 }

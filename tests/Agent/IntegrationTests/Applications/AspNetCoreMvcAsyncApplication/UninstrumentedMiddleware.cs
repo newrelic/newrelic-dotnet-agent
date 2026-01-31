@@ -2,25 +2,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
-namespace AspNetCoreMvcAsyncApplication
+namespace AspNetCoreMvcAsyncApplication;
+
+public class UninstrumentedMiddleware
 {
-    public class UninstrumentedMiddleware
+    private readonly RequestDelegate _next;
+
+    public UninstrumentedMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
-
-        public UninstrumentedMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
-
-        public async Task Invoke(HttpContext context)
-        {
-            await Task.Delay(1);
-            await _next(context);
-        }
-
+        _next = next;
     }
+
+    public async Task Invoke(HttpContext context)
+    {
+        await Task.Delay(1);
+        await _next(context);
+    }
+
 }

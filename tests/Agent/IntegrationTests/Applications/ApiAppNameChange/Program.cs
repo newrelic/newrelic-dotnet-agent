@@ -9,46 +9,45 @@ using System.Reflection;
 using System.Threading;
 using CommandLine;
 
-namespace NewRelic.Agent.IntegrationTests.Applications.ApiAppNameChange
+namespace NewRelic.Agent.IntegrationTests.Applications.ApiAppNameChange;
+
+public class Program
 {
-    public class Program
+    [Option("port", Required = true)]
+    public string Port { get; set; }
+
+    static void Main(string[] args)
     {
-        [Option("port", Required = true)]
-        public string Port { get; set; }
+        if (Parser.Default == null)
+            throw new NullReferenceException("CommandLine.Parser.Default");
 
-        static void Main(string[] args)
+        var program = new Program();
+        if (!Parser.Default.ParseArgumentsStrict(args, program))
+            return;
+
+        // Create handle that RemoteApplication expects
+        using (var eventWaitHandle =
+               new EventWaitHandle(false, EventResetMode.ManualReset,
+                   "app_server_wait_for_all_request_done_" + program.Port))
         {
-            if (Parser.Default == null)
-                throw new NullReferenceException("CommandLine.Parser.Default");
 
-            var program = new Program();
-            if (!Parser.Default.ParseArgumentsStrict(args, program))
-                return;
+            CreatePidFile();
 
-            // Create handle that RemoteApplication expects
-            using (var eventWaitHandle =
-                   new EventWaitHandle(false, EventResetMode.ManualReset,
-                       "app_server_wait_for_all_request_done_" + program.Port))
-            {
+            Api.Agent.NewRelic.SetApplicationName("AgentApi");
+            Api.Agent.NewRelic.StartAgent();
+            Api.Agent.NewRelic.SetApplicationName("AgentApi2");
 
-                CreatePidFile();
-
-                Api.Agent.NewRelic.SetApplicationName("AgentApi");
-                Api.Agent.NewRelic.StartAgent();
-                Api.Agent.NewRelic.SetApplicationName("AgentApi2");
-
-                // Wait for the test harness to tell us to shut down
-                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
-            }
+            // Wait for the test harness to tell us to shut down
+            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
         }
+    }
 
-        private static void CreatePidFile()
-        {
-            var pid = Process.GetCurrentProcess().Id;
-            var thisAssemblyPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-            var pidFilePath = thisAssemblyPath + ".pid";
-            var file = File.CreateText(pidFilePath);
-            file.WriteLine(pid);
-        }
+    private static void CreatePidFile()
+    {
+        var pid = Process.GetCurrentProcess().Id;
+        var thisAssemblyPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+        var pidFilePath = thisAssemblyPath + ".pid";
+        var file = File.CreateText(pidFilePath);
+        file.WriteLine(pid);
     }
 }

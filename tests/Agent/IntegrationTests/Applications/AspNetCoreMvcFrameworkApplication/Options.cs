@@ -4,11 +4,10 @@
 
 using CommandLine;
 
-namespace AspNetCoreMvcFrameworkApplication
+namespace AspNetCoreMvcFrameworkApplication;
+
+public class Options
 {
-    public class Options
-    {
-        [Option("port", Required = true)]
-        public string Port { get; set; }
-    }
+    [Option("port", Required = true)]
+    public string Port { get; set; }
 }

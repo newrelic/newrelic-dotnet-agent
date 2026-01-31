@@ -4,36 +4,34 @@
 #if NET10_0
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
-namespace AzureFunctionApplication
+namespace AzureFunctionApplication;
+
+public class HttpTriggerFunctionUsingAspNetCorePipeline
 {
-    public class HttpTriggerFunctionUsingAspNetCorePipeline
+    private static bool _firstTime = true;
+    private readonly ILogger<HttpTriggerFunctionUsingAspNetCorePipeline> _logger;
+
+    public HttpTriggerFunctionUsingAspNetCorePipeline(ILogger<HttpTriggerFunctionUsingAspNetCorePipeline> logger)
     {
-        private static bool _firstTime = true;
-        private readonly ILogger<HttpTriggerFunctionUsingAspNetCorePipeline> _logger;
+        _logger = logger;
+    }
 
-        public HttpTriggerFunctionUsingAspNetCorePipeline(ILogger<HttpTriggerFunctionUsingAspNetCorePipeline> logger)
+    [Function("HttpTriggerFunctionUsingAspNetCorePipeline")]
+    public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")][FromQuery, Required] string someParam)
+    {
+        _logger.LogInformation("HttpTriggerFunctionUsingAspNetCorePipeline processed a request.");
+
+        if (_firstTime)
         {
-            _logger = logger;
+            await Task.Delay(500); // to ensure that the first invocation gets sampled
+            _firstTime = false;
         }
 
-        [Function("HttpTriggerFunctionUsingAspNetCorePipeline")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] [FromQuery, Required] string someParam)
-        {
-            _logger.LogInformation("HttpTriggerFunctionUsingAspNetCorePipeline processed a request.");
-
-            if (_firstTime)
-            {
-                await Task.Delay(500); // to ensure that the first invocation gets sampled
-                _firstTime = false;
-            }
-
-            return new OkObjectResult("Welcome to Azure Functions!");
-        }
+        return new OkObjectResult("Welcome to Azure Functions!");
     }
 }
 #endif

@@ -5,18 +5,17 @@
 using System;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AspNetCoreDistTracingApplication.Controllers
-{
-    public class LastCallController : Controller
-    {
-        public string CallEnd()
-        {
-            return "Worked";
-        }
+namespace AspNetCoreDistTracingApplication.Controllers;
 
-        public string CallError()
-        {
-            throw new Exception("Borked");
-        }
+public class LastCallController : Controller
+{
+    public string CallEnd()
+    {
+        return "Worked";
+    }
+
+    public string CallError()
+    {
+        throw new Exception("Borked");
     }
 }

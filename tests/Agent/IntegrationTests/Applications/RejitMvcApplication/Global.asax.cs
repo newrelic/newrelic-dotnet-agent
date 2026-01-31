@@ -5,15 +5,14 @@
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace RejitMvcApplication
+namespace RejitMvcApplication;
+
+public class MvcApplication : System.Web.HttpApplication
 {
-    public class MvcApplication : System.Web.HttpApplication
+    protected void Application_Start()
     {
-        protected void Application_Start()
-        {
-            AreaRegistration.RegisterAllAreas();
-            FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
-            RouteConfig.RegisterRoutes(RouteTable.Routes);
-        }
+        AreaRegistration.RegisterAllAreas();
+        FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
+        RouteConfig.RegisterRoutes(RouteTable.Routes);
     }
 }
