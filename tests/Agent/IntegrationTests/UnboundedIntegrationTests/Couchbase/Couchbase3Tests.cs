@@ -3,15 +3,12 @@
 
 
 using System;
-using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
-using NewRelic.Testing.Assertions;
 using Xunit;
 
 

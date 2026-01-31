@@ -8,109 +8,107 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
 
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
+namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB;
+
+public abstract class MongoDBDriverAsyncCursorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class MongoDBDriverAsyncCursorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture : ConsoleDynamicMethodFixture
+    private readonly ConsoleDynamicMethodFixture _fixture;
+    private string _mongoUrl;
+
+    private readonly string DatastorePath = "Datastore/statement/MongoDB/myCollection";
+
+    public MongoDBDriverAsyncCursorTestsBase(TFixture fixture, ITestOutputHelper output, string mongoUrl) : base(fixture)
     {
-        private readonly ConsoleDynamicMethodFixture _fixture;
-        private string _mongoUrl;
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+        _mongoUrl = mongoUrl;
 
-        private readonly string DatastorePath = "Datastore/statement/MongoDB/myCollection";
+        _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
+        _fixture.AddCommand("MongoDBDriverExerciser GetNextBatch");
+        _fixture.AddCommand("MongoDBDriverExerciser GetNextBatchAsync");
 
-        public MongoDBDriverAsyncCursorTestsBase(TFixture fixture, ITestOutputHelper output, string mongoUrl) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _mongoUrl = mongoUrl;
+        _fixture.AddActions
+        (
+            setupConfiguration: () =>
+            {
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ConfigureFasterMetricsHarvestCycle(15);
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+            }
+        );
 
-            _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
-            _fixture.AddCommand("MongoDBDriverExerciser GetNextBatch");
-            _fixture.AddCommand("MongoDBDriverExerciser GetNextBatchAsync");
-
-            _fixture.AddActions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
-                }
-            );
-
-            _fixture.Initialize();
-            _mongoUrl = mongoUrl;
-        }
-
-        [Fact]
-        public void CheckForDatastoreInstanceMetrics()
-        {
-            var mongoUri = new UriBuilder(_mongoUrl);
-            var serverHost = CommonUtils.NormalizeHostname(mongoUri.Host);
-            var m = _fixture.AgentLog.GetMetricByName($"Datastore/instance/MongoDB/{serverHost}/{mongoUri.Port}");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void GetNextBatch()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/GetNextBatch");
-
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void GetNextBatchAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/GetNextBatchAsync");
-
-            Assert.NotNull(m);
-        }
-
+        _fixture.Initialize();
+        _mongoUrl = mongoUrl;
     }
 
-    public class MongoDBDriverAsyncCursorTestsFWLatest : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    [Fact]
+    public void CheckForDatastoreInstanceMetrics()
     {
-        public MongoDBDriverAsyncCursorTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
-        {
-        }
+        var mongoUri = new UriBuilder(_mongoUrl);
+        var serverHost = CommonUtils.NormalizeHostname(mongoUri.Host);
+        var m = _fixture.AgentLog.GetMetricByName($"Datastore/instance/MongoDB/{serverHost}/{mongoUri.Port}");
+        Assert.NotNull(m);
     }
 
-    public class MongoDBDriverAsyncCursorTestsFW48 : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFW48>
+    [Fact]
+    public void GetNextBatch()
     {
-        public MongoDBDriverAsyncCursorTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
-        {
-        }
+        var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/GetNextBatch");
+
+        Assert.NotNull(m);
     }
 
-    public class MongoDBDriverAsyncCursorTestsFW471 : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFW471>
+    [Fact]
+    public void GetNextBatchAsync()
     {
-        public MongoDBDriverAsyncCursorTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString)
-        {
-        }
+        var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/GetNextBatchAsync");
+
+        Assert.NotNull(m);
     }
 
-    public class MongoDBDriverAsyncCursorTestsCoreLatest : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public MongoDBDriverAsyncCursorTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
-        {
-        }
-    }
+}
 
-    public class MongoDBDriverAsyncCursorTestsCoreOldest : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+public class MongoDBDriverAsyncCursorTestsFWLatest : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public MongoDBDriverAsyncCursorTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
     {
-        public MongoDBDriverAsyncCursorTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
-        {
-        }
     }
+}
 
+public class MongoDBDriverAsyncCursorTestsFW48 : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFW48>
+{
+    public MongoDBDriverAsyncCursorTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+        : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+    {
+    }
+}
+
+public class MongoDBDriverAsyncCursorTestsFW471 : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFW471>
+{
+    public MongoDBDriverAsyncCursorTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString)
+    {
+    }
+}
+
+public class MongoDBDriverAsyncCursorTestsCoreLatest : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public MongoDBDriverAsyncCursorTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+    {
+    }
+}
+
+public class MongoDBDriverAsyncCursorTestsCoreOldest : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public MongoDBDriverAsyncCursorTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+    {
+    }
 }

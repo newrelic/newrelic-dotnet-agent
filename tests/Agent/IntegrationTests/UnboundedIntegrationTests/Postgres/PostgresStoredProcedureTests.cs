@@ -12,146 +12,145 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
+namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres;
+
+public abstract class PostgresSqlStoredProcedureTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
 {
-    public abstract class PostgresSqlStoredProcedureTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    private readonly ConsoleDynamicMethodFixture _fixture;
+    private readonly string _procedureName = $"PostgresTestStoredProc{Guid.NewGuid():N}";
+
+    public PostgresSqlStoredProcedureTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
-        private readonly ConsoleDynamicMethodFixture _fixture;
-        private readonly string _procedureName = $"PostgresTestStoredProc{Guid.NewGuid():N}";
+        _fixture = fixture;
+        _fixture.TestLogger = output;
 
-        public PostgresSqlStoredProcedureTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
+        _fixture.AddCommand($"PostgresSqlExerciser ParameterizedStoredProcedure {_procedureName}");
 
-            _fixture.AddCommand($"PostgresSqlExerciser ParameterizedStoredProcedure {_procedureName}");
+        _fixture.AddActions
+        (
+            setupConfiguration: () =>
+            {
+                var configPath = fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
+                configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
 
-            _fixture.AddActions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
-                    configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
-
-                    configModifier.ForceTransactionTraces()
+                configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
 
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "datastoreTracer", "queryParameters" }, "enabled", "true");
-                },
-                exerciseApplication: () =>
-                {
-                    // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)); // must be 2 minutes since this can take a while.
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
-                }
-            );
-
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/ParameterizedStoredProcedure";
-
-            var expectedMetrics = new List<Assertions.ExpectedMetric>
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "datastoreTracer", "queryParameters" }, "enabled", "true");
+            },
+            exerciseApplication: () =>
             {
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = expectedTransactionName}
-            };
+                // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)); // must be 2 minutes since this can take a while.
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+            }
+        );
 
-            var expectedTransactionTraceSegments = new List<string>
+        _fixture.Initialize();
+    }
+
+    [Fact]
+    public void Test()
+    {
+        var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/ParameterizedStoredProcedure";
+
+        var expectedMetrics = new List<Assertions.ExpectedMetric>
+        {
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = expectedTransactionName}
+        };
+
+        var expectedTransactionTraceSegments = new List<string>
+        {
+            $"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure"
+        };
+
+        var expectedQueryParameters = DbParameterData.PostgresParameters.ToDictionary(p => p.ParameterName, p => p.ExpectedValue);
+
+        var expectedTransactionTraceQueryParameters = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", QueryParameters = expectedQueryParameters };
+
+        var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
+        {
+            new Assertions.ExpectedSqlTrace
             {
-                $"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure"
-            };
+                TransactionName = expectedTransactionName,
+                Sql = _procedureName,
+                DatastoreMetricName = $"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure",
+                QueryParameters = expectedQueryParameters,
+                HasExplainPlan = false
+            }
+        };
 
-            var expectedQueryParameters = DbParameterData.PostgresParameters.ToDictionary(p => p.ParameterName, p => p.ExpectedValue);
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+        var transactionSample = _fixture.AgentLog.TryGetTransactionSample(expectedTransactionName);
+        var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
+        var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
 
-            var expectedTransactionTraceQueryParameters = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", QueryParameters = expectedQueryParameters };
+        NrAssert.Multiple(
+            () => Assert.NotNull(transactionSample),
+            () => Assert.NotNull(transactionEvent)
+        );
 
-            var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
-            {
-                new Assertions.ExpectedSqlTrace
-                {
-                    TransactionName = expectedTransactionName,
-                    Sql = _procedureName,
-                    DatastoreMetricName = $"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure",
-                    QueryParameters = expectedQueryParameters,
-                    HasExplainPlan = false
-                }
-            };
-
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample(expectedTransactionName);
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
-            var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
-
-            NrAssert.Multiple(
-                () => Assert.NotNull(transactionSample),
-                () => Assert.NotNull(transactionEvent)
-            );
-
-            NrAssert.Multiple
-            (
-                () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
-                () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParameters, transactionSample),
-                () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
-            );
-        }
+        NrAssert.Multiple
+        (
+            () => Assertions.MetricsExist(expectedMetrics, metrics),
+            () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+            () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParameters, transactionSample),
+            () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
+        );
     }
+}
 
-    public class PostgresSqlStoredProcedureTestsFW462 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
+public class PostgresSqlStoredProcedureTestsFW462 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
+{
+    public PostgresSqlStoredProcedureTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
     {
-        public PostgresSqlStoredProcedureTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
 
-        }
     }
+}
 
-    public class PostgresSqlStoredProcedureTestsFW471 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
+public class PostgresSqlStoredProcedureTestsFW471 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
+{
+    public PostgresSqlStoredProcedureTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
     {
-        public PostgresSqlStoredProcedureTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
 
-        }
     }
+}
 
-    public class PostgresSqlStoredProcedureTestsFW48 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
+public class PostgresSqlStoredProcedureTestsFW48 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
+{
+    public PostgresSqlStoredProcedureTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
     {
-        public PostgresSqlStoredProcedureTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
 
-        }
     }
+}
 
-    public class PostgresSqlStoredProcedureTestsFWLatest : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+public class PostgresSqlStoredProcedureTestsFWLatest : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public PostgresSqlStoredProcedureTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
     {
-        public PostgresSqlStoredProcedureTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
-        {
 
-        }
     }
+}
 
-    public class PostgresSqlStoredProcedureTestsCoreOldest : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+public class PostgresSqlStoredProcedureTestsCoreOldest : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public PostgresSqlStoredProcedureTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
     {
-        public PostgresSqlStoredProcedureTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
-        {
 
-        }
     }
+}
 
-    public class PostgresSqlStoredProcedureTestsCoreLatest : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+public class PostgresSqlStoredProcedureTestsCoreLatest : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public PostgresSqlStoredProcedureTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
     {
-        public PostgresSqlStoredProcedureTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
-        {
 
-        }
     }
 }
