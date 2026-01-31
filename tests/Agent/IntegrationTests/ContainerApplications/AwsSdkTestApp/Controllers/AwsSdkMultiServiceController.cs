@@ -9,51 +9,50 @@ using AwsSdkTestApp.AwsSdkExercisers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace AwsSdkTestApp.Controllers
+namespace AwsSdkTestApp.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class AwsSdkMultiServiceController : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class AwsSdkMultiServiceController : ControllerBase
+    private readonly ILogger<AwsSdkMultiServiceController> _logger;
+
+    public AwsSdkMultiServiceController(ILogger<AwsSdkMultiServiceController> logger)
     {
-        private readonly ILogger<AwsSdkMultiServiceController> _logger;
+        _logger = logger;
+        _logger.LogInformation("Created AwsSdkMultiServiceController");
+    }
 
-        public AwsSdkMultiServiceController(ILogger<AwsSdkMultiServiceController> logger)
-        {
-            _logger = logger;
-            _logger.LogInformation("Created AwsSdkMultiServiceController");
-        }
+    [HttpGet("CallMultipleServicesAsync")]
+    public async Task CallMultipleServicesAsync([FromQuery, Required]string queueName, [FromQuery, Required]string tableName, [FromQuery, Required]string bookName)
+    {
+        _logger.LogInformation("Starting CallMultipleServicesAsync");
 
-        [HttpGet("CallMultipleServicesAsync")]
-        public async Task CallMultipleServicesAsync([FromQuery, Required]string queueName, [FromQuery, Required]string tableName, [FromQuery, Required]string bookName)
-        {
-            _logger.LogInformation("Starting CallMultipleServicesAsync");
+        using var sqsExerciser = new AwsSdkSQSExerciser();
+        using var dynamoDbExerciser = new AwsSdkDynamoDBExerciser();
 
-            using var sqsExerciser = new AwsSdkSQSExerciser();
-            using var dynamoDbExerciser = new AwsSdkDynamoDBExerciser();
+        await sqsExerciser.SQS_InitializeAsync(queueName);
 
-            await sqsExerciser.SQS_InitializeAsync(queueName);
+        // send an SQS message
+        await sqsExerciser.SQS_SendMessageAsync(bookName);
 
-            // send an SQS message
-            await sqsExerciser.SQS_SendMessageAsync(bookName);
+        await Task.Delay(TimeSpan.FromSeconds(2)); // may not really be necessary
 
-            await Task.Delay(TimeSpan.FromSeconds(2)); // may not really be necessary
+        // receive an SQS message
+        var messages = await sqsExerciser.SQS_ReceiveMessageAsync();
 
-            // receive an SQS message
-            var messages = await sqsExerciser.SQS_ReceiveMessageAsync();
+        var movieName = messages.First().Body;
 
-            var movieName = messages.First().Body;
+        // create a DynamoDB table
+        await dynamoDbExerciser.CreateTableAsync(tableName);
+        // put an item in a DynamoDB table
+        await dynamoDbExerciser.PutItemAsync(tableName, movieName, "2021");
 
-            // create a DynamoDB table
-            await dynamoDbExerciser.CreateTableAsync(tableName);
-            // put an item in a DynamoDB table
-            await dynamoDbExerciser.PutItemAsync(tableName, movieName, "2021");
+        // delete the table
+        await dynamoDbExerciser.DeleteTableAsync(tableName);
 
-            // delete the table
-            await dynamoDbExerciser.DeleteTableAsync(tableName);
+        await sqsExerciser.SQS_TeardownAsync();
 
-            await sqsExerciser.SQS_TeardownAsync();
-
-            _logger.LogInformation("Finished CallMultipleServicesAsync");
-        }
+        _logger.LogInformation("Finished CallMultipleServicesAsync");
     }
 }

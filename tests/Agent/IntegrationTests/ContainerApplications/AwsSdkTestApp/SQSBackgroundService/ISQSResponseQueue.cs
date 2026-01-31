@@ -6,12 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 
-namespace AwsSdkTestApp.SQSBackgroundService
-{
-    public interface ISQSResponseQueue
-    {
-        Task QueueResponseAsync(IEnumerable<Message> messages);
+namespace AwsSdkTestApp.SQSBackgroundService;
 
-        Task<IEnumerable<Message>> DequeueAsync(CancellationToken cancellationToken);
-    }
+public interface ISQSResponseQueue
+{
+    Task QueueResponseAsync(IEnumerable<Message> messages);
+
+    Task<IEnumerable<Message>> DequeueAsync(CancellationToken cancellationToken);
 }

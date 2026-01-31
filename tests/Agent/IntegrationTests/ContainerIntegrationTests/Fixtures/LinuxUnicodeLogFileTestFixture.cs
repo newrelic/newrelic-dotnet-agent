@@ -3,15 +3,14 @@
 
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
 
-namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures
-{
-    public class LinuxUnicodeLogFileTestFixture : ContainerTestFixtureBase
-    {
-        private const string Dockerfile = "SmokeTestApp/Dockerfile";
-        private const string DockerComposeServiceName = "LinuxUnicodeLogfileTestApp";
-        private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-        private const string DistroTag = "noble";
+namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
-        public LinuxUnicodeLogFileTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
-    }
+public class LinuxUnicodeLogFileTestFixture : ContainerTestFixtureBase
+{
+    private const string Dockerfile = "SmokeTestApp/Dockerfile";
+    private const string DockerComposeServiceName = "LinuxUnicodeLogfileTestApp";
+    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private const string DistroTag = "noble";
+
+    public LinuxUnicodeLogFileTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 }

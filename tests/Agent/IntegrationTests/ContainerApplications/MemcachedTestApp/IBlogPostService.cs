@@ -3,10 +3,9 @@
 
 using System.Collections.Generic;
 
-namespace MemcachedTestApp
+namespace MemcachedTestApp;
+
+public interface IBlogPostService
 {
-    public interface IBlogPostService
-    {
-        Dictionary<string, List<BlogPost>> GetRecent(int itemCount);
-    }
+    Dictionary<string, List<BlogPost>> GetRecent(int itemCount);
 }
