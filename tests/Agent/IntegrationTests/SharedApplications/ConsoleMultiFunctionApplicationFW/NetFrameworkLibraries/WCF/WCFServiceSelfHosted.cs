@@ -21,6 +21,7 @@ public class WCFServiceSelfHosted
     /// </summary>
     /// <param name="bindingType"></param>
     /// <param name="port"></param>
+    /// <param name="relativePath"></param>
     [LibraryMethod]
     public void StartService(string bindingType, int port, string relativePath)
     {

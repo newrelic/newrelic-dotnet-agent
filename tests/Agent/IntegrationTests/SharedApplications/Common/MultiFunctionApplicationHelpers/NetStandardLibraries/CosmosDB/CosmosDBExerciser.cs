@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -307,6 +307,7 @@ public class CosmosDBExerciser
     /// </summary>
     /// <param name="databaseId"></param>
     /// <param name="containerId"></param>
+    /// <param name="itemsToCreate"></param>
     /// <returns></returns>
     [LibraryMethod]
     [Transaction]

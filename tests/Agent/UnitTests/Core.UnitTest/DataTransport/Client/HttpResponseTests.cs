@@ -13,96 +13,94 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using Telerik.JustMock.Helpers;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
+namespace NewRelic.Agent.Core.DataTransport.Client;
+
+[TestFixture]
+public class HttpResponseTests
 {
+    private HttpResponse _httpResponse;
+    private IHttpResponseMessageWrapper _mockHttpResponseMessage;
+    private const string TestResponseBody = "testResponseBody";
+    private Guid _testGuid = Guid.NewGuid();
 
-    [TestFixture]
-    public class HttpResponseTests
+    [SetUp]
+    public void Setup()
     {
-        private HttpResponse _httpResponse;
-        private IHttpResponseMessageWrapper _mockHttpResponseMessage;
-        private const string TestResponseBody = "testResponseBody";
-        private Guid _testGuid = Guid.NewGuid();
+        _mockHttpResponseMessage = Mock.Create<IHttpResponseMessageWrapper>();
+        _httpResponse = new HttpResponse(_testGuid, _mockHttpResponseMessage);
+    }
+    [TearDown]
+    public void TearDown()
+    {
+        _httpResponse.Dispose();
+        _mockHttpResponseMessage.Dispose();
+    }
 
-        [SetUp]
-        public void Setup()
+    [Test]
+    public void GetContent_ReturnsEmptyResponseBody_WhenContentIsNull()
+    {
+        _mockHttpResponseMessage.Arrange(message => message.Content).Returns((IHttpContentWrapper)null);
+
+        var result = _httpResponse.GetContent();
+
+        Assert.That(result, Is.EqualTo(Constants.EmptyResponseBody));
+    }
+
+    [Test]
+    public void GetContent_ReturnsContent_WhenContentIsNotNull()
+    {
+        var mockContent = Mock.Create<IHttpContentWrapper>();
+        var stream = new MemoryStream(Encoding.UTF8.GetBytes(TestResponseBody));
+        _mockHttpResponseMessage.Arrange(message => message.Content).Returns(mockContent);
+        mockContent.Arrange(content => content.ReadAsStream()).Returns(stream);
+
+        var result = _httpResponse.GetContent();
+
+        Assert.That(result, Is.EqualTo(TestResponseBody));
+    }
+
+    [Test]
+    public void GetContent_HandlesGzipDecompression_WhenContentEncodingIsGzip()
+    {
+        var compressedStream = new MemoryStream();
+        using (var gzipStream = new GZipStream(compressedStream, CompressionMode.Compress, true))
         {
-            _mockHttpResponseMessage = Mock.Create<IHttpResponseMessageWrapper>();
-            _httpResponse = new HttpResponse(_testGuid, _mockHttpResponseMessage);
+            var bytes = Encoding.UTF8.GetBytes(TestResponseBody);
+            gzipStream.Write(bytes, 0, bytes.Length);
         }
-        [TearDown]
-        public void TearDown()
-        {
-            _httpResponse.Dispose();
-            _mockHttpResponseMessage.Dispose();
-        }
+        compressedStream.Position = 0;
 
-        [Test]
-        public void GetContent_ReturnsEmptyResponseBody_WhenContentIsNull()
-        {
-            _mockHttpResponseMessage.Arrange(message => message.Content).Returns((IHttpContentWrapper)null);
+        var mockContent = Mock.Create<IHttpContentWrapper>();
+        _mockHttpResponseMessage.Arrange(message => message.Content).Returns(mockContent);
 
-            var result = _httpResponse.GetContent();
+        var mockHeaders = Mock.Create<IHttpContentHeadersWrapper>();
+        mockContent.Arrange(content => content.Headers).Returns(mockHeaders);
+        mockHeaders.Arrange(headers => headers.ContentEncoding).Returns(new List<string> { "gzip" });
+        mockContent.Arrange(content => content.ReadAsStream()).Returns(compressedStream);
 
-            Assert.That(result, Is.EqualTo(Constants.EmptyResponseBody));
-        }
+        var result = _httpResponse.GetContent();
 
-        [Test]
-        public void GetContent_ReturnsContent_WhenContentIsNotNull()
-        {
-            var mockContent = Mock.Create<IHttpContentWrapper>();
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(TestResponseBody));
-            _mockHttpResponseMessage.Arrange(message => message.Content).Returns(mockContent);
-            mockContent.Arrange(content => content.ReadAsStream()).Returns(stream);
+        Assert.That(result, Is.EqualTo(TestResponseBody));
+    }
 
-            var result = _httpResponse.GetContent();
+    [Test]
+    public void IsSuccessStatusCode_ReturnsCorrectStatusCode()
+    {
+        _mockHttpResponseMessage.Arrange(message => message.IsSuccessStatusCode).Returns(true);
 
-            Assert.That(result, Is.EqualTo(TestResponseBody));
-        }
+        var result = _httpResponse.IsSuccessStatusCode;
 
-        [Test]
-        public void GetContent_HandlesGzipDecompression_WhenContentEncodingIsGzip()
-        {
-            var compressedStream = new MemoryStream();
-            using (var gzipStream = new GZipStream(compressedStream, CompressionMode.Compress, true))
-            {
-                var bytes = Encoding.UTF8.GetBytes(TestResponseBody);
-                gzipStream.Write(bytes, 0, bytes.Length);
-            }
-            compressedStream.Position = 0;
+        Assert.That(result, Is.True);
+    }
 
-            var mockContent = Mock.Create<IHttpContentWrapper>();
-            _mockHttpResponseMessage.Arrange(message => message.Content).Returns(mockContent);
+    [Test]
+    public void StatusCode_ReturnsCorrectStatusCode()
+    {
+        _mockHttpResponseMessage.Arrange(message => message.StatusCode).Returns(HttpStatusCode.OK);
 
-            var mockHeaders = Mock.Create<IHttpContentHeadersWrapper>();
-            mockContent.Arrange(content => content.Headers).Returns(mockHeaders);
-            mockHeaders.Arrange(headers => headers.ContentEncoding).Returns(new List<string> { "gzip" });
-            mockContent.Arrange(content => content.ReadAsStream()).Returns(compressedStream);
+        var result = _httpResponse.StatusCode;
 
-            var result = _httpResponse.GetContent();
-
-            Assert.That(result, Is.EqualTo(TestResponseBody));
-        }
-
-        [Test]
-        public void IsSuccessStatusCode_ReturnsCorrectStatusCode()
-        {
-            _mockHttpResponseMessage.Arrange(message => message.IsSuccessStatusCode).Returns(true);
-
-            var result = _httpResponse.IsSuccessStatusCode;
-
-            Assert.That(result, Is.True);
-        }
-
-        [Test]
-        public void StatusCode_ReturnsCorrectStatusCode()
-        {
-            _mockHttpResponseMessage.Arrange(message => message.StatusCode).Returns(HttpStatusCode.OK);
-
-            var result = _httpResponse.StatusCode;
-
-            Assert.That(result, Is.EqualTo(HttpStatusCode.OK));
-        }
+        Assert.That(result, Is.EqualTo(HttpStatusCode.OK));
     }
 }
 #endif
