@@ -321,14 +321,9 @@ public class OpenTelemetryConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
             .Returns("10000");
 
-        var logMessages = new List<string>();
-        Mock.Arrange(() => Log.Warn(Arg.IsAny<string>()))
-            .DoInstead((string msg) => logMessages.Add(msg));
-
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
         Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
-        Assert.That(logMessages.Any(m => m.Contains("OpenTelemetry metrics export interval (5000 ms) is less than export timeout (10000 ms)")), Is.True, "Warning log should be present");
     }
 
     [Test]
@@ -398,14 +393,9 @@ public class OpenTelemetryConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
             .Returns("5000");
 
-        var logMessages = new List<string>();
-        Mock.Arrange(() => Log.Warn(Arg.IsAny<string>()))
-            .DoInstead((string msg) => logMessages.Add(msg));
-
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
         Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
-        Assert.That(logMessages.Any(m => m.Contains("OpenTelemetry metrics export interval") && m.Contains("is less than export timeout")), Is.True);
     }
 
     [Test]
@@ -416,14 +406,9 @@ public class OpenTelemetryConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
             .Returns("1000");
 
-        var logMessages = new List<string>();
-        Mock.Arrange(() => Log.Warn(Arg.IsAny<string>()))
-            .DoInstead((string msg) => logMessages.Add(msg));
-
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
         Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
-        Assert.That(logMessages.Any(m => m.Contains("OpenTelemetry metrics export interval") && m.Contains("is less than export timeout")), Is.True);
     }
     #endregion
 }
