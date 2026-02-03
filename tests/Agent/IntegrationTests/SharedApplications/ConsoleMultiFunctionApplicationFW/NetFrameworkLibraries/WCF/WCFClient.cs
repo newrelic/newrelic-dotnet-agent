@@ -61,6 +61,7 @@ public class WCFClient
     /// </summary>
     /// <param name="bindingType"></param>
     /// <param name="port"></param>
+    /// <param name="relativePath"></param>
     [LibraryMethod]
     public void InitializeClient_SelfHosted(string bindingType, int port, string relativePath)
     {
@@ -73,6 +74,7 @@ public class WCFClient
     /// </summary>
     /// <param name="bindingType"></param>
     /// <param name="port"></param>
+    /// <param name="relativePath"></param>
     [LibraryMethod]
     public void InitializeClient_IISHosted(string bindingType, int port, string relativePath)
     {
@@ -240,7 +242,7 @@ public class WCFClient
     /// </summary>
     /// <param name="clientInvocationMethod"></param>
     /// <param name="serviceInvocationMethod"></param>
-    /// <param name="value"></param>
+    /// <param name="asyncThrowOnBegin"></param>
     [LibraryMethod]
     [Transaction]
     public void ThrowException(WCFInvocationMethod clientInvocationMethod, WCFInvocationMethod serviceInvocationMethod, bool asyncThrowOnBegin)

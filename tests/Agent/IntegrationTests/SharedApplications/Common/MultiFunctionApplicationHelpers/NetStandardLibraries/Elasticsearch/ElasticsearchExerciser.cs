@@ -21,12 +21,12 @@ public class ElasticsearchExerciser
     private ClientType _clientType;
     private ElasticsearchTestClient _client;
 
-    [LibraryMethod]
-    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     /// <summary>
     /// Sets the library to use for further actions
     /// </summary>
-    /// <param name="client">ElasticsearchNet, NEST, or ElasticClients</param>
+    /// <param name="clientType">ElasticsearchNet, NEST, or ElasticClients</param>
+    [LibraryMethod]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task SetClient(string clientType)
     {
         if (Enum.TryParse(clientType, out ClientType client))

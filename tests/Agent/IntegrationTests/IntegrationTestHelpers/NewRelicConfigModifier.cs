@@ -252,7 +252,7 @@ public class NewRelicConfigModifier
     /// <summary>
     /// Sets or deletes the excludeNewrelicHeader setting in the newrelic.config.
     /// </summary>
-    /// <param name="enabled">If null, the setting will be deleted; otherwise, the setting will be set to the value of this parameter.</param>
+    /// <param name="exclude">If null, the setting will be deleted; otherwise, the setting will be set to the value of this parameter.</param>
     public void SetOrDeleteDistributedTraceExcludeNewRelicHeader(bool? exclude)
     {
         const string config = "configuration";
