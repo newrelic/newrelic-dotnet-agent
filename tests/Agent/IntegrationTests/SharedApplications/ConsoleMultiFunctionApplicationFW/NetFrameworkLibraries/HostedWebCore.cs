@@ -60,8 +60,6 @@ public class HostedWebCore
     /// <summary>
     /// After the app has been staged, starts the web server
     /// </summary>
-    /// <param name="port"></param>
-    /// <param name="processDescription"></param>
     [LibraryMethod]
     public void Start()
     {

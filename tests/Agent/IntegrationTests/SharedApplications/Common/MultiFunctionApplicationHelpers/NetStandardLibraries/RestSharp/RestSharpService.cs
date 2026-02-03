@@ -18,7 +18,6 @@ public class RestSharpService
     /// </summary>
     /// <param name="server"></param>
     /// <param name="port"></param>
-    /// <param name="relativePath"></param>
     [LibraryMethod]
     public void StartService(string server, int port)
     {

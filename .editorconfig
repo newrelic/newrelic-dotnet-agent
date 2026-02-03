@@ -22,11 +22,10 @@ charset = utf-8 # supposed to get rid of the BOM issue
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
 
-# save for later, only enabled for the `src` folder now
 # IDE0005: Using directive is unnecessary
-#dotnet_diagnostic.IDE0005.severity = warning
+dotnet_diagnostic.IDE0005.severity = warning
 # CS1591: Missing XML comment for publicly visible type or member
-#dotnet_diagnostic.CS1591.severity = none
+dotnet_diagnostic.CS1591.severity = none
 
 # this. preferences
 dotnet_style_qualification_for_field = false:silent
@@ -167,7 +166,7 @@ csharp_style_prefer_local_over_anonymous_function = true:suggestion
 csharp_style_prefer_index_operator = true:suggestion
 
 # Code-block preferences
-csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_style_namespace_declarations = file_scoped:warning
 
 # error if file doesn't have the required header
 dotnet_diagnostic.SA1633.severity = error
