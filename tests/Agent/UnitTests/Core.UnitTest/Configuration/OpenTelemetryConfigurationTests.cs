@@ -299,9 +299,9 @@ public class OpenTelemetryConfigurationTests
     }
 
     [Test]
-    public void OpenTelemetryOtlpExportIntervalSeconds_DefaultValue_ShouldBe5()
+    public void OpenTelemetryOtlpExportIntervalSeconds_DefaultValue_ShouldBe60()
     {
-        Assert.That(_configuration.OpenTelemetryOtlpExportIntervalSeconds, Is.EqualTo(5));
+        Assert.That(_configuration.OpenTelemetryOtlpExportIntervalSeconds, Is.EqualTo(60));
     }
 
     [Test]
@@ -323,7 +323,7 @@ public class OpenTelemetryConfigurationTests
 
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-        Assert.That(cfg.OpenTelemetryOtlpExportIntervalSeconds, Is.EqualTo(5));
+        Assert.That(cfg.OpenTelemetryOtlpExportIntervalSeconds, Is.EqualTo(60));
     }
 
     [Test]

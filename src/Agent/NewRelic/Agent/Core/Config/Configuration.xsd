@@ -2302,7 +2302,7 @@
                                 </xs:annotation>
 
                                 <xs:complexType>
-                                    <xs:attribute name="enabled" type="xs:boolean" default="false">
+                                    <xs:attribute name="enabled" type="xs:boolean" default="true">
                                         <xs:annotation>
                                             <xs:documentation>
                                                 Set this to "true" to enable OpenTelemetry metrics collection and export to New Relic.

@@ -16,8 +16,7 @@ namespace NewRelic.Agent.Core.Config
     using System.Diagnostics;
     using System.Xml.Schema;
     using System.Xml.Serialization;
-    
-    
+
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
@@ -6873,11 +6872,11 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configurationOpenTelemetryMetrics()
         {
-            this.enabledField = false;
+            this.enabledField = true;
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(false)]
+        [System.ComponentModel.DefaultValueAttribute(true)]
         public bool enabled
         {
             get

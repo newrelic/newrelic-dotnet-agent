@@ -2945,8 +2945,8 @@ public class DefaultConfiguration : IConfiguration
     {
         get
         {
-            var value = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("OpenTelemetryOtlpExportIntervalSeconds", 5), "NEW_RELIC_OPENTELEMETRY_OTLP_EXPORT_INTERVAL_SECONDS").GetValueOrDefault(5);
-            return value > 0 ? value : 5;
+            var value = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("OpenTelemetryOtlpExportIntervalSeconds", 60), "NEW_RELIC_OPENTELEMETRY_OTLP_EXPORT_INTERVAL_SECONDS").GetValueOrDefault(60);
+            return value > 0 ? value : 60;
         }
     }
 
