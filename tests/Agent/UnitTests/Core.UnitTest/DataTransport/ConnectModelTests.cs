@@ -436,8 +436,6 @@ public class ConnectModelTests
                                                     "opentelemetry.metrics.exclude": ["ExcludedMeter1","ExcludedMeter2"],
                                                     "opentelemetry.metrics.export_interval": 60000,
                                                     "opentelemetry.metrics.export_timeout": 10000,
-                                                    "opentelemetry.otlp.timeout_seconds": 10,
-                                                    "opentelemetry.otlp.export_interval_seconds": 5,
                                                     "hybrid_http_context_storage.enabled":false
                                                 },
                                                 "metadata": {
