@@ -797,11 +797,13 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("opentelemetry.metrics.exclude")]
     public IEnumerable<string> OpenTelemetryMetricsExcludeFilters => _configuration.OpenTelemetryMetricsExcludeFilters;
 
-    [JsonProperty("opentelemetry.otlp.timeout_seconds")]
-    public int OpenTelemetryOtlpTimeoutSeconds => _configuration.OpenTelemetryOtlpTimeoutSeconds;
 
-    [JsonProperty("opentelemetry.otlp.export_interval_seconds")]
-    public int OpenTelemetryOtlpExportIntervalSeconds => _configuration.OpenTelemetryOtlpExportIntervalSeconds;
+    [JsonProperty("opentelemetry.metrics.export_interval")]
+    public int OpenTelemetryMetricsExportInterval => _configuration.OpenTelemetryMetricsExportInterval;
+
+    [JsonProperty("opentelemetry.metrics.export_timeout")]
+    public int OpenTelemetryMetricsExportTimeout => _configuration.OpenTelemetryMetricsExportTimeout;
+
 
     [JsonProperty("hybrid_http_context_storage.enabled")]
     public bool HybridHttpContextStorageEnabled => _configuration.HybridHttpContextStorageEnabled;

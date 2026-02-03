@@ -6,6 +6,7 @@ using System.Linq;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -291,50 +292,138 @@ public class OpenTelemetryConfigurationTests
     }
     #endregion
 
-    #region OTLP Configuration Tests
+    #region OpenTelemetry Metrics Export Configuration Tests
     [Test]
-    public void OpenTelemetryOtlpTimeoutSeconds_DefaultValue_ShouldBe10()
+    public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_Defaults_ShouldBe60000_And_10000()
     {
-        Assert.That(_configuration.OpenTelemetryOtlpTimeoutSeconds, Is.EqualTo(10));
+        // No env or config set
+        Assert.That(_configuration.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
+        Assert.That(_configuration.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
     }
 
     [Test]
-    public void OpenTelemetryOtlpExportIntervalSeconds_DefaultValue_ShouldBe5()
+    public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_CustomValidConfig_ShouldBeUsed()
     {
-        Assert.That(_configuration.OpenTelemetryOtlpExportIntervalSeconds, Is.EqualTo(5));
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL"))
+            .Returns("70000");
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
+            .Returns("20000");
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(70000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(20000));
     }
 
     [Test]
-    public void OpenTelemetryOtlpTimeoutSeconds_WithNegativeValue_ShouldReturnDefault()
+    public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_InvalidConfig_ShouldRevertToDefaults_AndLogWarning()
     {
-        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_OTLP_TIMEOUT_SECONDS"))
-            .Returns("-5");
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL"))
+            .Returns("5000"); // less than timeout
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
+            .Returns("10000");
+
+        var logMessages = new List<string>();
+        Mock.Arrange(() => Log.Warn(Arg.IsAny<string>()))
+            .DoInstead((string msg) => logMessages.Add(msg));
 
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-
-        Assert.That(cfg.OpenTelemetryOtlpTimeoutSeconds, Is.EqualTo(10));
+        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
+        Assert.That(logMessages.Any(m => m.Contains("OpenTelemetry metrics export interval (5000 ms) is less than export timeout (10000 ms)")), Is.True, "Warning log should be present");
     }
 
     [Test]
-    public void OpenTelemetryOtlpExportIntervalSeconds_WithNegativeValue_ShouldReturnDefault()
+    public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_EqualValues_ShouldBeValid()
     {
-        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_OTLP_EXPORT_INTERVAL_SECONDS"))
-            .Returns("-3");
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL"))
+            .Returns("30000");
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
+            .Returns("30000");
 
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-
-        Assert.That(cfg.OpenTelemetryOtlpExportIntervalSeconds, Is.EqualTo(5));
+        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(30000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(30000));
     }
 
     [Test]
-    public void OpenTelemetryOtlpTimeoutSeconds_WithZeroValue_ShouldReturnDefault()
+    public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_EnvironmentOverridesLocalConfig()
     {
-        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_OTLP_TIMEOUT_SECONDS"))
+        _localConfig.appSettings = new List<configurationAdd>
+        {
+            new configurationAdd { key = "OpenTelemetryMetricsExportInterval", value = "80000" },
+            new configurationAdd { key = "OpenTelemetryMetricsExportTimeout", value = "25000" }
+        };
+
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL"))
+            .Returns("90000");
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
+            .Returns("30000");
+
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(90000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(30000));
+    }
+
+    [Test]
+    public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_FromLocalConfig_WhenNoEnvironmentVariables()
+    {
+        _localConfig.appSettings = new List<configurationAdd>
+        {
+            new configurationAdd { key = "OpenTelemetryMetricsExportInterval", value = "75000" },
+            new configurationAdd { key = "OpenTelemetryMetricsExportTimeout", value = "15000" }
+        };
+
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(75000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(15000));
+    }
+
+    [Test]
+    public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_InvalidNonNumericValues_ShouldUseDefaults()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL"))
+            .Returns("invalid");
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
+            .Returns("notanumber");
+
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
+    }
+
+    [Test]
+    public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_NegativeValues_ShouldRevertToDefaults_AndLogWarning()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL"))
+            .Returns("-1000");
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
+            .Returns("5000");
+
+        var logMessages = new List<string>();
+        Mock.Arrange(() => Log.Warn(Arg.IsAny<string>()))
+            .DoInstead((string msg) => logMessages.Add(msg));
+
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
+        Assert.That(logMessages.Any(m => m.Contains("OpenTelemetry metrics export interval") && m.Contains("is less than export timeout")), Is.True);
+    }
+
+    [Test]
+    public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_ZeroValues_ShouldRevertToDefaults_AndLogWarning()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL"))
             .Returns("0");
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
+            .Returns("1000");
+
+        var logMessages = new List<string>();
+        Mock.Arrange(() => Log.Warn(Arg.IsAny<string>()))
+            .DoInstead((string msg) => logMessages.Add(msg));
 
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-
-        Assert.That(cfg.OpenTelemetryOtlpTimeoutSeconds, Is.EqualTo(10));
+        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
+        Assert.That(logMessages.Any(m => m.Contains("OpenTelemetry metrics export interval") && m.Contains("is less than export timeout")), Is.True);
     }
     #endregion
 }
