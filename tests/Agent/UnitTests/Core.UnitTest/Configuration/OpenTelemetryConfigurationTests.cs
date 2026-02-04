@@ -296,8 +296,8 @@ public class OpenTelemetryConfigurationTests
     public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_Defaults_ShouldBe60000_And_10000()
     {
         // No env or config set
-        Assert.That(_configuration.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
-        Assert.That(_configuration.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
+        Assert.That(_configuration.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(60000));
+        Assert.That(_configuration.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(10000));
     }
 
     [Test]
@@ -308,8 +308,8 @@ public class OpenTelemetryConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
             .Returns("20000");
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(70000));
-        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(20000));
+        Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(70000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(20000));
     }
 
     [Test]
@@ -321,8 +321,8 @@ public class OpenTelemetryConfigurationTests
             .Returns("10000");
 
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
-        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
+        Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(60000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(10000));
     }
 
     [Test]
@@ -334,8 +334,8 @@ public class OpenTelemetryConfigurationTests
             .Returns("30000");
 
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(30000));
-        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(30000));
+        Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(30000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(30000));
     }
 
     [Test]
@@ -353,8 +353,8 @@ public class OpenTelemetryConfigurationTests
             .Returns("30000");
 
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(90000));
-        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(30000));
+        Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(90000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(30000));
     }
 
     [Test]
@@ -367,8 +367,8 @@ public class OpenTelemetryConfigurationTests
         };
 
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(75000));
-        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(15000));
+        Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(75000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(15000));
     }
 
     [Test]
@@ -380,8 +380,8 @@ public class OpenTelemetryConfigurationTests
             .Returns("notanumber");
 
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
-        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
+        Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(60000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(10000));
     }
 
     [Test]
@@ -393,8 +393,8 @@ public class OpenTelemetryConfigurationTests
             .Returns("5000");
 
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
-        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
+        Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(60000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(10000));
     }
 
     [Test]
@@ -406,8 +406,8 @@ public class OpenTelemetryConfigurationTests
             .Returns("1000");
 
         var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-        Assert.That(cfg.OpenTelemetryMetricsExportInterval, Is.EqualTo(60000));
-        Assert.That(cfg.OpenTelemetryMetricsExportTimeout, Is.EqualTo(10000));
+        Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(60000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(10000));
     }
     #endregion
 }

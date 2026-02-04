@@ -48,8 +48,8 @@ public class MeterListenerBridgeTests
         Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
         Mock.Arrange(() => _configuration.OpenTelemetryMetricsIncludeFilters).Returns(new List<string>());
         Mock.Arrange(() => _configuration.OpenTelemetryMetricsExcludeFilters).Returns(new List<string>());
-        Mock.Arrange(() => _configuration.OpenTelemetryMetricsExportInterval).Returns(60000);
-        Mock.Arrange(() => _configuration.OpenTelemetryMetricsExportTimeout).Returns(10000);
+        Mock.Arrange(() => _configuration.OpenTelemetryMetricsExportIntervalMs).Returns(60000);
+        Mock.Arrange(() => _configuration.OpenTelemetryMetricsExportTimeoutMs).Returns(10000);
 
         // Setup connection info mock
         _connectionInfo = Mock.Create<IConnectionInfo>();

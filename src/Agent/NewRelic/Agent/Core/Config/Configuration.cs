@@ -10,12 +10,12 @@
 namespace NewRelic.Agent.Core.Config
 {
     using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Diagnostics;
-    using System.Xml.Schema;
     using System.Xml.Serialization;
+    using System.Collections;
+    using System.Xml.Schema;
+    using System.ComponentModel;
+    using System.Collections.Generic;
     
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
@@ -6868,6 +6868,10 @@ namespace NewRelic.Agent.Core.Config
         
         private string excludeField;
         
+        private System.Nullable<int> export_intervalField;
+        
+        private System.Nullable<int> export_timeoutField;
+        
         /// <summary>
         /// configurationOpenTelemetryMetrics class constructor
         /// </summary>
@@ -6913,6 +6917,78 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.excludeField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int export_interval
+        {
+            get
+            {
+                if (this.export_intervalField.HasValue)
+                {
+                    return this.export_intervalField.Value;
+                }
+                else
+                {
+                    return default(int);
+                }
+            }
+            set
+            {
+                this.export_intervalField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool export_intervalSpecified
+        {
+            get
+            {
+                return this.export_intervalField.HasValue;
+            }
+            set
+            {
+                if (value==false)
+                {
+                    this.export_intervalField = null;
+                }
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int export_timeout
+        {
+            get
+            {
+                if (this.export_timeoutField.HasValue)
+                {
+                    return this.export_timeoutField.Value;
+                }
+                else
+                {
+                    return default(int);
+                }
+            }
+            set
+            {
+                this.export_timeoutField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool export_timeoutSpecified
+        {
+            get
+            {
+                return this.export_timeoutField.HasValue;
+            }
+            set
+            {
+                if (value==false)
+                {
+                    this.export_timeoutField = null;
+                }
             }
         }
         

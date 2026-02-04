@@ -273,12 +273,12 @@ public interface IConfiguration
     /// <summary>
     /// Gets the OpenTelemetry metrics export interval in milliseconds (validated, see agent spec).
     /// </summary>
-    int OpenTelemetryMetricsExportInterval { get; }
+    int OpenTelemetryMetricsExportIntervalMs { get; }
 
     /// <summary>
     /// Gets the OpenTelemetry metrics export timeout in milliseconds (validated, see agent spec).
     /// </summary>
-    int OpenTelemetryMetricsExportTimeout { get; }
+    int OpenTelemetryMetricsExportTimeoutMs { get; }
 
     #endregion
 

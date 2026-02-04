@@ -798,11 +798,11 @@ public class ReportedConfiguration : IConfiguration
     public IEnumerable<string> OpenTelemetryMetricsExcludeFilters => _configuration.OpenTelemetryMetricsExcludeFilters;
 
 
-    [JsonProperty("opentelemetry.metrics.export_interval")]
-    public int OpenTelemetryMetricsExportInterval => _configuration.OpenTelemetryMetricsExportInterval;
+    [JsonProperty("opentelemetry.metrics.export_interval_ms")]
+    public int OpenTelemetryMetricsExportIntervalMs => _configuration.OpenTelemetryMetricsExportIntervalMs;
 
-    [JsonProperty("opentelemetry.metrics.export_timeout")]
-    public int OpenTelemetryMetricsExportTimeout => _configuration.OpenTelemetryMetricsExportTimeout;
+    [JsonProperty("opentelemetry.metrics.export_timeout_ms")]
+    public int OpenTelemetryMetricsExportTimeoutMs => _configuration.OpenTelemetryMetricsExportTimeoutMs;
 
 
     [JsonProperty("hybrid_http_context_storage.enabled")]

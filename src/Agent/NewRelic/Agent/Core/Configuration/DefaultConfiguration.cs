@@ -2941,7 +2941,7 @@ public class DefaultConfiguration : IConfiguration
     /// <summary>
     /// Gets the OpenTelemetry metrics export interval in milliseconds, with validation.
     /// </summary>
-    public int OpenTelemetryMetricsExportInterval
+    public int OpenTelemetryMetricsExportIntervalMs
     {
         get
         {
@@ -2953,7 +2953,7 @@ public class DefaultConfiguration : IConfiguration
     /// <summary>
     /// Gets the OpenTelemetry metrics export timeout in milliseconds, with validation.
     /// </summary>
-    public int OpenTelemetryMetricsExportTimeout
+    public int OpenTelemetryMetricsExportTimeoutMs
     {
         get
         {
@@ -2972,9 +2972,24 @@ public class DefaultConfiguration : IConfiguration
         if (_otelExportIntervalMs.HasValue && _otelExportTimeoutMs.HasValue)
             return;
 
-        // Read from config/env, fallback to defaults
-        int intervalMs = (EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("OpenTelemetryMetricsExportInterval", DefaultOtelExportIntervalMs), "NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL").GetValueOrDefault(DefaultOtelExportIntervalMs));
-        int timeoutMs = (EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("OpenTelemetryMetricsExportTimeout", DefaultOtelExportTimeoutMs), "NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT").GetValueOrDefault(DefaultOtelExportTimeoutMs));
+        // Read from XML config first (only if explicitly specified), then appSettings, then apply environment variable overrides, fallback to defaults
+        // Priority: Environment Variable > XML Attribute (if specified) > AppSettings > Default
+        var xmlIntervalMs = _localConfiguration.openTelemetry?.metrics?.export_intervalSpecified == true
+            ? _localConfiguration.openTelemetry.metrics.export_interval
+            : (int?)null;
+        var xmlTimeoutMs = _localConfiguration.openTelemetry?.metrics?.export_timeoutSpecified == true
+            ? _localConfiguration.openTelemetry.metrics.export_timeout
+            : (int?)null;
+
+        int intervalMs = EnvironmentOverrides(
+            xmlIntervalMs ?? TryGetAppSettingAsIntWithDefault("OpenTelemetryMetricsExportInterval", DefaultOtelExportIntervalMs),
+            "NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL"
+        ).GetValueOrDefault(DefaultOtelExportIntervalMs);
+
+        int timeoutMs = EnvironmentOverrides(
+            xmlTimeoutMs ?? TryGetAppSettingAsIntWithDefault("OpenTelemetryMetricsExportTimeout", DefaultOtelExportTimeoutMs),
+            "NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"
+        ).GetValueOrDefault(DefaultOtelExportTimeoutMs);
 
         // Validation: interval must be >= timeout
         if (intervalMs < timeoutMs)

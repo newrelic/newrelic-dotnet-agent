@@ -33,8 +33,8 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => _mockConfig.ApplicationNames).Returns(new[] { "TestApp" });
         Mock.Arrange(() => _mockConfig.AgentLicenseKey).Returns("test-license-key");
         Mock.Arrange(() => _mockConfig.EntityGuid).Returns("test-guid");
-        Mock.Arrange(() => _mockConfig.OpenTelemetryMetricsExportInterval).Returns(60000);
-        Mock.Arrange(() => _mockConfig.OpenTelemetryMetricsExportTimeout).Returns(30000);
+        Mock.Arrange(() => _mockConfig.OpenTelemetryMetricsExportIntervalMs).Returns(60000);
+        Mock.Arrange(() => _mockConfig.OpenTelemetryMetricsExportTimeoutMs).Returns(30000);
 
         _service = new OtlpExporterConfigurationService(_mockConfigService, _mockMetrics, _mockAgentHealthReporter, mockBridgeConfig);
     }

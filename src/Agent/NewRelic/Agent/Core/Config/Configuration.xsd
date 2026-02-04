@@ -2333,6 +2333,29 @@
                                             </xs:documentation>
                                         </xs:annotation>
                                     </xs:attribute>
+
+                                    <xs:attribute name="export_interval" type="xs:int" use="optional">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                The number of milliseconds between each attempt to ship opentelemetry metrics.
+                                                This value must be equal to or greater than the value of export_timeout.
+                                                If export_interval is less than export_timeout, the agent will log a warning and use the default values for both settings.
+                                                Default: 60000 (60 seconds)
+                                                Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+
+                                    <xs:attribute name="export_timeout" type="xs:int" use="optional">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                The number of milliseconds an export operation is allowed in order to successfully complete.
+                                                This value must be equal to or less than the value of export_interval.
+                                                Default: 10000 (10 seconds)
+                                                Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
                                 </xs:complexType>
                             </xs:element>
                         </xs:all>
