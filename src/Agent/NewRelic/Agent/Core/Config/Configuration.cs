@@ -6877,11 +6877,11 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configurationOpenTelemetryMetrics()
         {
-            this.enabledField = false;
+            this.enabledField = true;
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(false)]
+        [System.ComponentModel.DefaultValueAttribute(true)]
         public bool enabled
         {
             get

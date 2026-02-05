@@ -47,10 +47,10 @@ public class OpenTelemetryConfigurationTests
     [Test]
     public void OpenTelemetryEnabled_DefaultValue_ShouldBeFalse()
     {
-        // Act & Assert
+        // Act & Assert - global opentelemetry.enabled defaults to false, but metrics.enabled defaults to true
         NrAssert.Multiple(
             () => Assert.That(_configuration.OpenTelemetryEnabled, Is.False),
-            () => Assert.That(_configuration.OpenTelemetryMetricsEnabled, Is.False)
+            () => Assert.That(_configuration.OpenTelemetryMetricsEnabled, Is.False) // Still false because global is false
         );
     }
 
@@ -78,7 +78,7 @@ public class OpenTelemetryConfigurationTests
     }
 
     [Test]
-    public void OpenTelemetryMetricsEnabled_WithOnlyGlobalSettingTrue_ShouldBeFalse()
+    public void OpenTelemetryMetricsEnabled_WithOnlyGlobalSettingTrue_AndMetricsExplicitlyDisabled_ShouldBeFalse()
     {
         // Arrange
         _localConfig.openTelemetry = new configurationOpenTelemetry
@@ -86,7 +86,7 @@ public class OpenTelemetryConfigurationTests
             enabled = true,
             metrics = new configurationOpenTelemetryMetrics
             {
-                enabled = false // metrics specific setting is false
+                enabled = false // metrics specific setting is explicitly disabled
             }
         };
 
@@ -96,6 +96,25 @@ public class OpenTelemetryConfigurationTests
         NrAssert.Multiple(
             () => Assert.That(configuration.OpenTelemetryEnabled, Is.True),
             () => Assert.That(configuration.OpenTelemetryMetricsEnabled, Is.False)
+        );
+    }
+
+    [Test]
+    public void OpenTelemetryMetricsEnabled_WithOnlyGlobalSettingTrue_DefaultMetrics_ShouldBeTrue()
+    {
+        // Arrange - metrics.enabled now defaults to true
+        _localConfig.openTelemetry = new configurationOpenTelemetry
+        {
+            enabled = true
+            // metrics element not specified, should use default (true)
+        };
+
+        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        // Act & Assert
+        NrAssert.Multiple(
+            () => Assert.That(configuration.OpenTelemetryEnabled, Is.True),
+            () => Assert.That(configuration.OpenTelemetryMetricsEnabled, Is.True)
         );
     }
 

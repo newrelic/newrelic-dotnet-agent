@@ -2302,10 +2302,11 @@
                                 </xs:annotation>
 
                                 <xs:complexType>
-                                    <xs:attribute name="enabled" type="xs:boolean" default="false">
+                                    <xs:attribute name="enabled" type="xs:boolean" default="true">
                                         <xs:annotation>
                                             <xs:documentation>
-                                                Set this to "true" to enable OpenTelemetry metrics collection and export to New Relic.
+                                                This setting controls whether OpenTelemetry metrics collection and export to New Relic is enabled.
+                                                Defaults to "true".
                                                 This feature must be used together with the global openTelemetry enabled setting.
                                                 Environment variable: NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED
                                             </xs:documentation>
