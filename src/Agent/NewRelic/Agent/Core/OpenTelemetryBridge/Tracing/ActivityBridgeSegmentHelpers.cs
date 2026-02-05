@@ -18,7 +18,7 @@ using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 
@@ -604,47 +604,77 @@ public static class ActivityBridgeSegmentHelpers
     {
         Log.Finest($"{activityLogPrefix} for LLMs");
 
-        foreach (var tag in tags)
-        {
-            Log.Finest(operation + " tag: " + tag.Key + " = " + tag.Value);
-        }
-
         tags.TryGetTag<string>(["gen_ai.provider.name"], out var providerName);
         tags.TryGetTag<string>(["gen_ai.request.model"], out var requestModel);
         tags.TryGetTag<string>(["gen_ai.response.model"], out var responseModel);
-        tags.TryGetTag<string>(["gen_ai.response.finish_reasons"], out var finishReasonsJson);
+        tags.TryGetTag<string>(["gen_ai.response.finish_reasons"], out var finishReasonsJson); // actually don't think we need this
         tags.TryGetTag<string>(["gen_ai.output.id"], out var responseId);
-        tags.TryGetTag<string>(["gen_ai.output.messages"], out var messagesJson);
+        tags.TryGetTag<string>(["gen_ai.output.messages"], out var outputMessagesJson);
+        tags.TryGetTag<string>(["gen_ai.input.messages"], out var inputMessagesJson);
+        tags.TryGetTag<int>(["gen_ai.usage.input_tokens"], out var inputTokenCount);
+        tags.TryGetTag<int>(["gen_ai.usage.output_tokens"], out var outputTokenCount);
 
-        // Convert JSON array string to first element string
-        string finishReason = null;
-        if (!string.IsNullOrEmpty(finishReasonsJson))
+        try
         {
-            try
+            var inputMessages = JsonConvert.DeserializeObject<List<InputMessage>>(inputMessagesJson);
+            var outputMessages = JsonConvert.DeserializeObject<List<OutputMessage>>(outputMessagesJson);
+
+            string requestId = null; // TODO: figure out where to get this
+            float? temperature = null; // TODO: figure out where to get this
+            int? maxTokens = null; // TODO: figure out where to get this
+
+            var completionId = EventHelper.CreateChatCompletionEvent(
+                                 agent,
+                                 segment,
+                                 requestId,
+                                 temperature,
+                                 maxTokens,
+                                 requestModel,
+                                 string.IsNullOrEmpty(responseModel) ? requestModel : responseModel,
+                                 outputMessages.Count,
+                                 outputMessages[0].FinishReason,
+                                 providerName,
+                                 false, // not an error
+                                 null, // we have no headers dictionary
+                                 null); // organization comes from the headers
+
+            // Prompt
+            EventHelper.CreateChatMessageEvent(
+                agent,
+                segment,
+                requestId,
+                responseId,
+                responseModel,
+                inputMessages[0].Parts[0].Content,
+                inputMessages[0].Role,
+                0,
+                completionId,
+                false,
+                providerName,
+                inputTokenCount);
+
+            // Response
+            if (outputMessages[0].FinishReason == "stop")
             {
-                finishReason = JArray.Parse(finishReasonsJson)[0].ToString();
-            }
-            catch (Exception ex)
-            {
-                Log.Debug($"Failed to parse finish_reasons JSON '{finishReasonsJson}': {ex.Message}");
-                finishReason = finishReasonsJson;
+                EventHelper.CreateChatMessageEvent(
+                    agent,
+                    segment,
+                    requestId,
+                    responseId,
+                    responseModel,
+                    outputMessages[0].Parts[0].Content,
+                    outputMessages[0].Role,
+                    1,
+                    completionId,
+                    true,
+                    providerName,
+                    outputTokenCount);
             }
         }
-
-        int numMessages = 0;
-        if (!string.IsNullOrEmpty(messagesJson))
+        catch (Exception ex)
         {
-            try
-            {
-                numMessages = JArray.Parse(messagesJson).Count;
-            }
-            catch (Exception ex)
-            {
-                Log.Debug($"Failed to parse output messages JSON '{messagesJson}': {ex.Message}");
-            }
+            Log.Debug($"Failed to deserialize JSON messages for {activityLogPrefix}: {ex.Message}");
         }
-
-        EventHelper.CreateChatCompletionEvent(agent, segment, null, null, null, requestModel, string.IsNullOrEmpty(responseModel) ? requestModel : responseModel, numMessages, finishReason, providerName, false, null, null);
     }
 
 
@@ -800,4 +830,25 @@ public enum GrpcStatusCodes
     Unavailable = 14,
     DataLoss = 15,
     Unauthenticated = 16
+}
+
+
+public class OutputMessage
+{
+    public string Role { get; set; }
+    public Part[] Parts { get; set; }
+
+    [JsonProperty("finish_reason")]
+    public string FinishReason { get; set; }
+}
+public class InputMessage
+{
+    public string Role { get; set; }
+    public Part[] Parts { get; set; }
+}
+
+public class Part
+{
+    public string Type { get; set; }
+    public string Content { get; set; }
 }
