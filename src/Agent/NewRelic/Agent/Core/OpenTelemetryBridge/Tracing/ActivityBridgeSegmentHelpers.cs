@@ -13,10 +13,12 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Extensions.Llm;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
+using Newtonsoft.Json.Linq;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 
@@ -607,18 +609,44 @@ public static class ActivityBridgeSegmentHelpers
             Log.Finest(operation + " tag: " + tag.Key + " = " + tag.Value);
         }
 
-        //ISegmentData segmentData = vendor switch
-        //{
-        //    DatastoreVendor.Elasticsearch => GetElasticSearchDatastoreSegmentData(agent, tags, vendor, activityLogPrefix),
-        //    DatastoreVendor.DynamoDB => GetDynamoDbDatastoreSegmentData(agent, activity, activityLogPrefix, tags, segment),
-        //    _ => GetDefaultDatastoreSegmentData(agent, activity, activityLogPrefix, tags, vendor)
-        //};
+        tags.TryGetTag<string>(["gen_ai.provider.name"], out var providerName);
+        tags.TryGetTag<string>(["gen_ai.request.model"], out var requestModel);
+        tags.TryGetTag<string>(["gen_ai.response.model"], out var responseModel);
+        tags.TryGetTag<string>(["gen_ai.response.finish_reasons"], out var finishReasonsJson);
+        tags.TryGetTag<string>(["gen_ai.output.id"], out var responseId);
+        tags.TryGetTag<string>(["gen_ai.output.messages"], out var messagesJson);
 
-        //if (segmentData != null)
-        //{
-        //    segment.GetExperimentalApi().SetSegmentData(segmentData);
-        //}
+        // Convert JSON array string to first element string
+        string finishReason = null;
+        if (!string.IsNullOrEmpty(finishReasonsJson))
+        {
+            try
+            {
+                finishReason = JArray.Parse(finishReasonsJson)[0].ToString();
+            }
+            catch (Exception ex)
+            {
+                Log.Debug($"Failed to parse finish_reasons JSON '{finishReasonsJson}': {ex.Message}");
+                finishReason = finishReasonsJson;
+            }
+        }
+
+        int numMessages = 0;
+        if (!string.IsNullOrEmpty(messagesJson))
+        {
+            try
+            {
+                numMessages = JArray.Parse(messagesJson).Count;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug($"Failed to parse output messages JSON '{messagesJson}': {ex.Message}");
+            }
+        }
+
+        EventHelper.CreateChatCompletionEvent(agent, segment, null, null, null, requestModel, string.IsNullOrEmpty(responseModel) ? requestModel : responseModel, numMessages, finishReason, providerName, false, null, null);
     }
+
 
     #endregion
 
