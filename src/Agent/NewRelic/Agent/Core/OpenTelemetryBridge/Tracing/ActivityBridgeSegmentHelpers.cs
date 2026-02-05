@@ -62,6 +62,10 @@ public static class ActivityBridgeSegmentHelpers
                 {
                     ProcessClientExternalTags(segment, agent, tags, activityLogPrefix, method);
                 }
+                else if (tags.TryGetAndRemoveTag<string>(["gen_ai.operation.name"], out var aiOp)) // it's Microsoft.Extensions.AI
+                {
+                    ProcessLLMChatClientTags(segment, agent, activity, activityLogPrefix, tags, aiOp);
+                }
                 else
                 {
                     Log.Finest($"{activityLogPrefix} is missing required tags to determine whether it's an external or database activity.");
@@ -134,6 +138,7 @@ public static class ActivityBridgeSegmentHelpers
         }
     }
 
+    #region RPC
     private static void ProcessRpcClientTags(ISegment segment, IAgent agent, IErrorService errorService, Dictionary<string, object> tags, string activityLogPrefix, string rpcSystem)
     {
         tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code"], out var statusCode);
@@ -218,6 +223,9 @@ public static class ActivityBridgeSegmentHelpers
             Log.Debug($"{activityLogPrefix} recorded gRPC exception: {errorMessage}");
         }
     }
+    #endregion
+
+    #region HTTP
 
     private static void ProcessHttpServerTags(ISegment segment, IAgent agent, Dictionary<string, object> tags, string activityLogPrefix, string requestMethod)
     {
@@ -286,6 +294,10 @@ public static class ActivityBridgeSegmentHelpers
             }
         }
     }
+
+    #endregion
+
+    #region MessageBrokers
 
     /// <summary>
     /// Processes messaging system tags for producer and consumer activities, creating and configuring a <see
@@ -393,6 +405,9 @@ public static class ActivityBridgeSegmentHelpers
             : queueNameOrRoutingKey;
     }
 
+    #endregion
+
+    #region Externals
     private static void ProcessClientExternalTags(ISegment segment, IAgent agent, Dictionary<string, object> tags, string activityLogPrefix, string method)
     {
         if (!tags.TryGetAndRemoveTag<string>(["url.full", "http.url"], out var url))
@@ -427,6 +442,10 @@ public static class ActivityBridgeSegmentHelpers
 
         segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
     }
+
+    #endregion
+
+    #region Datastores
 
     private static void ProcessClientDatabaseTags(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, string dbSystemName)
     {
@@ -574,6 +593,34 @@ public static class ActivityBridgeSegmentHelpers
         Log.Finest($"Created DatastoreSegmentData for DynamoDB {activityLogPrefix}");
         return new DatastoreSegmentData(agent.GetExperimentalApi().DatabaseService, parsedSqlStatement, string.Empty, null);
     }
+
+    #endregion
+
+    #region LLM Chat
+
+    private static void ProcessLLMChatClientTags(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, string operation)
+    {
+        Log.Finest($"{activityLogPrefix} for LLMs");
+
+        foreach (var tag in tags)
+        {
+            Log.Finest(operation + " tag: " + tag.Key + " = " + tag.Value);
+        }
+
+        //ISegmentData segmentData = vendor switch
+        //{
+        //    DatastoreVendor.Elasticsearch => GetElasticSearchDatastoreSegmentData(agent, tags, vendor, activityLogPrefix),
+        //    DatastoreVendor.DynamoDB => GetDynamoDbDatastoreSegmentData(agent, activity, activityLogPrefix, tags, segment),
+        //    _ => GetDefaultDatastoreSegmentData(agent, activity, activityLogPrefix, tags, vendor)
+        //};
+
+        //if (segmentData != null)
+        //{
+        //    segment.GetExperimentalApi().SetSegmentData(segmentData);
+        //}
+    }
+
+    #endregion
 
     public static void CaptureEventsOnSpan(this ISegment segment, object originalActivity)
     {
