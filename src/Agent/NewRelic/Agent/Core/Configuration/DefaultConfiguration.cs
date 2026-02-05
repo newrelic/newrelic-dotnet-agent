@@ -2991,8 +2991,15 @@ public class DefaultConfiguration : IConfiguration
             "NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"
         ).GetValueOrDefault(DefaultOtelExportTimeoutMs);
 
+        // Validation: both values must be positive
+        if (intervalMs <= 0 || timeoutMs <= 0)
+        {
+            Log.Warn($"Invalid OpenTelemetry metrics export values: interval={intervalMs} ms, timeout={timeoutMs} ms. Both values must be positive. Reverting to defaults: interval={DefaultOtelExportIntervalMs} ms, timeout={DefaultOtelExportTimeoutMs} ms.");
+            intervalMs = DefaultOtelExportIntervalMs;
+            timeoutMs = DefaultOtelExportTimeoutMs;
+        }
         // Validation: interval must be >= timeout
-        if (intervalMs < timeoutMs)
+        else if (intervalMs < timeoutMs)
         {
             Log.Warn($"OpenTelemetry metrics export interval ({intervalMs} ms) is less than export timeout ({timeoutMs} ms). Reverting to defaults: interval={DefaultOtelExportIntervalMs} ms, timeout={DefaultOtelExportTimeoutMs} ms.");
             intervalMs = DefaultOtelExportIntervalMs;
