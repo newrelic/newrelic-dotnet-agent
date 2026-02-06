@@ -611,40 +611,73 @@ public class MeterBridgingServiceTests
     }
 
     [Test]
-    public void OnInstrumentPublished_WithBridgedMeter_ShouldIgnore()
+    public void OnInstrumentPublished_WithEmptyMeterName_DoesNotProcess()
     {
-        // Arrange - Create a customer instrument that will cause a bridged meter to be created
-        using var customerMeter = new Meter("CustomerMeter", "1.0");
-        var customerCounter = customerMeter.CreateCounter<int>("customer-counter");
-        
-        // First call - should process and create bridged meter
-        _service.OnInstrumentPublished(customerCounter, _mockListener);
-        
-        // Create another instrument from the same meter (which will use the cached bridged meter)
-        var customerCounter2 = customerMeter.CreateCounter<int>("customer-counter-2");
+        // Arrange - Create meter with empty name
+        using var meter = new Meter("");
+        var counter = meter.CreateCounter<int>("test-counter");
 
-        // Act - Publish second instrument from same meter
-        _service.OnInstrumentPublished(customerCounter2, _mockListener);
+        // Act
+        _service.OnInstrumentPublished(counter, _mockListener);
 
-        // Assert - Should process both instruments (they're from the same customer meter, not our bridged meter)
-        Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Exactly(2));
+        // Assert - Should not enable measurement events for empty meter name
+        Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Never());
     }
 
     [Test]
-    public void CreateBridgedMeter_AddsToReferenceTracking()
+    public void OnInstrumentPublished_WithExceptionInCallback_DoesNotThrow()
     {
-        // Arrange
-        using var meter1 = new Meter("TestMeter1", "1.0");
-        using var meter2 = new Meter("TestMeter2", "2.0");
+        // Arrange - Create an instrument that will cause an exception
+        using var meter = new Meter("TestMeter");
+        var counter = meter.CreateCounter<int>("test-counter");
         
-        var counter1 = meter1.CreateCounter<int>("counter1");
-        var counter2 = meter2.CreateCounter<int>("counter2");
+        // Mock EnableMeasurementEvents to throw
+        Mock.Arrange(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()))
+            .Throws<InvalidOperationException>();
 
-        // Act - Publish instruments which will create bridged meters
-        _service.OnInstrumentPublished(counter1, _mockListener);
-        _service.OnInstrumentPublished(counter2, _mockListener);
+        // Act & Assert - Should catch exception internally
+        Assert.DoesNotThrow(() => _service.OnInstrumentPublished(counter, _mockListener));
+    }
 
-        // Assert - Both should be processed (reference tracking should allow both)
-        Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Exactly(2));
+    [Test]
+    public void GetInstrumentTags_WithNullTags_HandlesGracefully()
+    {
+        // Arrange - Create instrument with null tags (Meter constructor without tags)
+        using var meter = new Meter("TestMeter");
+        var counter = meter.CreateCounter<int>("test-counter");
+
+        // Act - This will internally call GetInstrumentTags
+        _service.OnInstrumentPublished(counter, _mockListener);
+
+        // Assert - Should handle null tags gracefully
+        Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
+    }
+
+    [Test]
+    public void OnMeasurementRecorded_WithObservableGauge_HandlesCorrectly()
+    {
+        // Arrange - Create observable gauge
+        using var meter = new Meter("TestMeter");
+        var gauge = meter.CreateObservableGauge<int>("test-gauge", () => 42);
+
+        // Act - Publish the gauge (observable instruments are bridged differently)
+        _service.OnInstrumentPublished(gauge, _mockListener);
+
+        // Assert - Should enable measurement events
+        Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
+    }
+
+    [Test]
+    public void CreateBridgedMeter_WithValidMeter_CreatesBridgedVersion()
+    {
+        // Arrange - Create instrument with valid meter
+        using var meter = new Meter("TestMeter", "1.0");
+        var counter = meter.CreateCounter<int>("test-counter");
+
+        // Act - Publish instrument (will create bridged meter)
+        _service.OnInstrumentPublished(counter, _mockListener);
+
+        // Assert
+        Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
     }
 }

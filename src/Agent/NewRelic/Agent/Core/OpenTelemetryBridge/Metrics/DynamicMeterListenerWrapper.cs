@@ -76,7 +76,11 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
             _meterListenerType = assembly.GetType("System.Diagnostics.Metrics.MeterListener", throwOnError: true);
 
             // Check if NewRelic assembly has ILRepacked MeterListener type to avoid processing our own bridged meters
-            TryFindILRepackedMeterListenerType();
+            if (!TryFindILRepackedMeterListenerType())
+            {
+                _isAvailable = false;
+                return;
+            }
 
             _startMethod = _meterListenerType.GetMethod("Start") ?? throw new MissingMethodException(_meterListenerType.Name, "Start");
             _enableMeasurementEventsMethod = _meterListenerType.GetMethod("EnableMeasurementEvents") ?? throw new MissingMethodException(_meterListenerType.Name, "EnableMeasurementEvents");
@@ -101,7 +105,7 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
         }
     }
 
-    private void TryFindILRepackedMeterListenerType()
+    private bool TryFindILRepackedMeterListenerType()
     {
         try
         {
@@ -125,7 +129,7 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
                 {
                     _ilrepackedMeterListenerType = ilrepackedType;
                     Log.Debug($"Found ILRepacked MeterListener type in assembly: {nrAssembly.GetName().Name}");
-                    return;
+                    return true;
                 }
             }
             
@@ -135,6 +139,7 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
         {
             Log.Debug(ex, "Failed to find ILRepacked MeterListener type. This is expected if not using ILRepack.");
         }
+        return false;
     }
 
     public bool IsInstrumentFromILRepackedAssembly(object instrument)

@@ -25,7 +25,6 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
 
     private readonly Meter _newRelicBridgeMeter = new Meter("NewRelicOTelBridgeMeter");
     private readonly ConcurrentDictionary<string, Meter> _bridgedMeters = new ConcurrentDictionary<string, Meter>();
-    private readonly ConcurrentDictionary<object, byte> _bridgedMeterReferences = new ConcurrentDictionary<object, byte>();
     // NOTE: These caches are unbounded and grow with the number of unique instrument types encountered.
     // This is acceptable because the set of instrument types is typically small and bounded by application code.
     private readonly ConcurrentDictionary<Type, object> _createInstrumentDelegates = new ConcurrentDictionary<Type, object>();
@@ -42,9 +41,6 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
         _meterListener = meterListener;
         _configurationService = configurationService;
         _supportabilityMetricCounters = supportabilityMetricCounters;
-
-        // Track our bridge meter in the reference set
-        _bridgedMeterReferences.TryAdd(_newRelicBridgeMeter, 0);
 
         _meterListener.InstrumentPublished = OnInstrumentPublished;
         _meterListener.MeasurementsCompleted = OnMeasurementsCompleted;
@@ -86,21 +82,12 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
             var meterObj = accessors.MeterAccessor?.Invoke(instrument);
             if (meterObj == null) return;
 
-            // Two-layer protection against infinite recursion when bridging observable instruments:
-            // 1. Reference check: Prevents recursion in test scenarios (non-ILRepacked assemblies)
-            //    Observable instrument constructors synchronously call Publish(), which would trigger OnInstrumentPublished
-            //    again for our bridged instruments, creating an infinite loop. By tracking meter references in a ConcurrentDictionary,
-            //    we can quickly identify and ignore instruments from our own bridged meters.
-            // 2. Assembly check: Handles production ILRepack.
-            //    System.Diagnostics.DiagnosticSource is ILRepacked into NewRelic.Agent.Core.dll, creating duplicate type 
-            //    identities. This check compares the instrument's assembly with the ILRepacked assembly to filter out
-            //    instruments created by the agent itself.
-            if (_bridgedMeterReferences.ContainsKey(meterObj))
-            {
-                return;
-            }
-
-            // Also check ILRepacked assembly (for production scenarios where ILRepack is used)
+            // Protection against infinite recursion when bridging observable instruments:
+            // Observable instrument constructors synchronously call Publish(), which would trigger OnInstrumentPublished
+            // again for our bridged instruments, creating an infinite loop.
+            // System.Diagnostics.DiagnosticSource is ILRepacked into NewRelic.Agent.Core.dll, creating duplicate type 
+            // identities. This check compares the instrument's assembly with the ILRepacked assembly to filter out
+            // instruments created by the agent itself.
             if (_meterListener.IsInstrumentFromILRepackedAssembly(instrument))
             {
                 return;
@@ -312,7 +299,6 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
             if (constructor4 != null)
             {
                 bridgedMeter = (Meter)constructor4.Invoke(new object[] { name, version, tags, scope });
-                _bridgedMeterReferences.TryAdd(bridgedMeter, 0);
                 return bridgedMeter;
             }
         }
@@ -330,14 +316,12 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
             if (constructor3 != null)
             {
                 bridgedMeter = (Meter)constructor3.Invoke(new object[] { name, version, tags });
-                _bridgedMeterReferences.TryAdd(bridgedMeter, 0);
                 return bridgedMeter;
             }
         }
             
         // Fallback to 2-parameter constructor (name, version)
         bridgedMeter = new Meter(name, version);
-        _bridgedMeterReferences.TryAdd(bridgedMeter, 0);
         return bridgedMeter;
     }
 
