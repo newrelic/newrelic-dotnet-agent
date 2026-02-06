@@ -36,6 +36,9 @@ public class MeterBridgingServiceTests
         Mock.Arrange(() => _mockConfigService.Configuration).Returns(_mockConfig);
         Mock.Arrange(() => _mockConfig.OpenTelemetryMetricsIncludeFilters).Returns((IEnumerable<string>)null);
         Mock.Arrange(() => _mockConfig.OpenTelemetryMetricsExcludeFilters).Returns((IEnumerable<string>)null);
+        
+        // Mock the ILRepack assembly check to return false (instruments are from customer code, not ILRepacked)
+        Mock.Arrange(() => _mockListener.IsInstrumentFromILRepackedAssembly(Arg.IsAny<object>())).Returns(false);
 
         _service = new MeterBridgingService(_mockListener, _mockConfigService, _mockMetrics);
     }
@@ -588,5 +591,22 @@ public class MeterBridgingServiceTests
 
         // Assert
         Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Exactly(2));
+    }
+
+    [Test]
+    public void OnInstrumentPublished_WithILRepackedInstrument_ShouldIgnore()
+    {
+        // Arrange - Simulate an instrument from ILRepacked assembly
+        using var meter = new Meter("ILRepackedMeter");
+        var counter = meter.CreateCounter<int>("ilrepacked-counter");
+        
+        // Mock IsInstrumentFromILRepackedAssembly to return true for this instrument
+        Mock.Arrange(() => _mockListener.IsInstrumentFromILRepackedAssembly(counter)).Returns(true);
+
+        // Act
+        _service.OnInstrumentPublished(counter, _mockListener);
+
+        // Assert - Should not enable measurement events for ILRepacked instruments
+        Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Never());
     }
 }

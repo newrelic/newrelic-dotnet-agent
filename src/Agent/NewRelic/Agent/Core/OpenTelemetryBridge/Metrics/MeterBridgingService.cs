@@ -82,6 +82,13 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
             var meterObj = accessors.MeterAccessor?.Invoke(instrument);
             if (meterObj == null) return;
 
+            // Ignore instruments from ILRepacked NewRelic assemblies to avoid infinite loops
+            // Check if this instrument originates from our ILRepacked DiagnosticSource assembly
+            if (_meterListener.IsInstrumentFromILRepackedAssembly(instrument))
+            {
+                return;
+            }
+
             var meterType = meterObj.GetType();
             var meterNameAccessor = _meterNameAccessorCache.GetOrAdd(meterType, type =>
             {
