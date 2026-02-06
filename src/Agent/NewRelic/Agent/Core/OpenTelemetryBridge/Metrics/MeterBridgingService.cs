@@ -25,6 +25,8 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
 
     private readonly Meter _newRelicBridgeMeter = new Meter("NewRelicOTelBridgeMeter");
     private readonly ConcurrentDictionary<string, Meter> _bridgedMeters = new ConcurrentDictionary<string, Meter>();
+    private readonly HashSet<object> _bridgedMeterReferences = new HashSet<object>();
+    private readonly object _bridgedMeterReferencesLock = new object();
     // NOTE: These caches are unbounded and grow with the number of unique instrument types encountered.
     // This is acceptable because the set of instrument types is typically small and bounded by application code.
     private readonly ConcurrentDictionary<Type, object> _createInstrumentDelegates = new ConcurrentDictionary<Type, object>();
@@ -41,6 +43,12 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
         _meterListener = meterListener;
         _configurationService = configurationService;
         _supportabilityMetricCounters = supportabilityMetricCounters;
+
+        // Track our bridge meter in the reference set
+        lock (_bridgedMeterReferencesLock)
+        {
+            _bridgedMeterReferences.Add(_newRelicBridgeMeter);
+        }
 
         _meterListener.InstrumentPublished = OnInstrumentPublished;
         _meterListener.MeasurementsCompleted = OnMeasurementsCompleted;
@@ -82,8 +90,27 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
             var meterObj = accessors.MeterAccessor?.Invoke(instrument);
             if (meterObj == null) return;
 
-            // Ignore instruments from ILRepacked NewRelic assemblies to avoid infinite loops
-            // Check if this instrument originates from our ILRepacked DiagnosticSource assembly
+            // Two-layer protection against infinite recursion when bridging observable instruments:
+            // 1. Reference check: Prevents recursion in test scenarios (non-ILRepacked assemblies) and provides fast O(1) lookup.
+            //    Observable instrument constructors synchronously call Publish(), which would trigger OnInstrumentPublished
+            //    again for our bridged instruments, creating an infinite loop. By tracking meter references in a HashSet,
+            //    we can quickly identify and ignore instruments from our own bridged meters.
+            // 2. Assembly check: Handles production ILRepack scenarios per code review requirement. In production, 
+            //    System.Diagnostics.DiagnosticSource is ILRepacked into NewRelic.Agent.Core.dll, creating duplicate type 
+            //    identities. This check compares the instrument's assembly with the ILRepacked assembly to filter out
+            //    instruments created by the agent itself.
+            bool isOurMeter;
+            lock (_bridgedMeterReferencesLock)
+            {
+                isOurMeter = _bridgedMeterReferences.Contains(meterObj);
+            }
+            
+            if (isOurMeter)
+            {
+                return;
+            }
+
+            // Also check ILRepacked assembly (for production scenarios where ILRepack is used)
             if (_meterListener.IsInstrumentFromILRepackedAssembly(instrument))
             {
                 return;
@@ -266,12 +293,15 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
     private Meter CreateBridgedMeter(object originalMeter)
     {
         if (originalMeter == null) return _newRelicBridgeMeter;
+        
         var type = originalMeter.GetType();
         var name = type.GetProperty("Name")?.GetValue(originalMeter) as string ?? "Unknown";
         var version = type.GetProperty("Version")?.GetValue(originalMeter) as string;
         var tags = GetInstrumentTags(originalMeter);
         var scope = GetMeterScope(originalMeter);
 
+        Meter bridgedMeter;
+        
         // Reflection logic for Meter constructor compatibility across .NET versions:
         // - .NET 9.0+/DiagnosticSource 9.0+: 4-parameter constructor with scope support
         // - .NET 8.0+/DiagnosticSource 8.0+: 3-parameter constructor with tags support
@@ -292,7 +322,12 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
                 
             if (constructor4 != null)
             {
-                return (Meter)constructor4.Invoke(new object[] { name, version, tags, scope });
+                bridgedMeter = (Meter)constructor4.Invoke(new object[] { name, version, tags, scope });
+                lock (_bridgedMeterReferencesLock)
+                {
+                    _bridgedMeterReferences.Add(bridgedMeter);
+                }
+                return bridgedMeter;
             }
         }
             
@@ -308,12 +343,22 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
                 
             if (constructor3 != null)
             {
-                return (Meter)constructor3.Invoke(new object[] { name, version, tags });
+                bridgedMeter = (Meter)constructor3.Invoke(new object[] { name, version, tags });
+                lock (_bridgedMeterReferencesLock)
+                {
+                    _bridgedMeterReferences.Add(bridgedMeter);
+                }
+                return bridgedMeter;
             }
         }
             
         // Fallback to 2-parameter constructor (name, version)
-        return new Meter(name, version);
+        bridgedMeter = new Meter(name, version);
+        lock (_bridgedMeterReferencesLock)
+        {
+            _bridgedMeterReferences.Add(bridgedMeter);
+        }
+        return bridgedMeter;
     }
 
     /// <summary>
