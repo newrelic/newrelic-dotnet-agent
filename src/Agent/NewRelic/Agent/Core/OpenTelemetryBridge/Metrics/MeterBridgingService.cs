@@ -82,6 +82,17 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
             var meterObj = accessors.MeterAccessor?.Invoke(instrument);
             if (meterObj == null) return;
 
+            // Protection against infinite recursion when bridging observable instruments:
+            // Observable instrument constructors synchronously call Publish(), which would trigger OnInstrumentPublished
+            // again for our bridged instruments, creating an infinite loop.
+            // System.Diagnostics.DiagnosticSource is ILRepacked into NewRelic.Agent.Core.dll, creating duplicate type 
+            // identities. This check compares the instrument's assembly with the ILRepacked assembly to filter out
+            // instruments created by the agent itself.
+            if (_meterListener.IsInstrumentFromILRepackedAssembly(instrument))
+            {
+                return;
+            }
+
             var meterType = meterObj.GetType();
             var meterNameAccessor = _meterNameAccessorCache.GetOrAdd(meterType, type =>
             {
@@ -265,6 +276,8 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
         var tags = GetInstrumentTags(originalMeter);
         var scope = GetMeterScope(originalMeter);
 
+        Meter bridgedMeter;
+        
         // Reflection logic for Meter constructor compatibility across .NET versions:
         // - .NET 9.0+/DiagnosticSource 9.0+: 4-parameter constructor with scope support
         // - .NET 8.0+/DiagnosticSource 8.0+: 3-parameter constructor with tags support
@@ -285,7 +298,8 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
                 
             if (constructor4 != null)
             {
-                return (Meter)constructor4.Invoke(new object[] { name, version, tags, scope });
+                bridgedMeter = (Meter)constructor4.Invoke(new object[] { name, version, tags, scope });
+                return bridgedMeter;
             }
         }
             
@@ -301,12 +315,14 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
                 
             if (constructor3 != null)
             {
-                return (Meter)constructor3.Invoke(new object[] { name, version, tags });
+                bridgedMeter = (Meter)constructor3.Invoke(new object[] { name, version, tags });
+                return bridgedMeter;
             }
         }
             
         // Fallback to 2-parameter constructor (name, version)
-        return new Meter(name, version);
+        bridgedMeter = new Meter(name, version);
+        return bridgedMeter;
     }
 
     /// <summary>

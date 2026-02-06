@@ -533,8 +533,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
     public bool OpenTelemetryMetricsEnabled => true;
     public IEnumerable<string> OpenTelemetryMetricsIncludeFilters => ["IncludedMeter1", "IncludedMeter2"];
     public IEnumerable<string> OpenTelemetryMetricsExcludeFilters => ["ExcludedMeter1", "ExcludedMeter2"];
-    public int OpenTelemetryOtlpTimeoutSeconds => 10;
-    public int OpenTelemetryOtlpExportIntervalSeconds => 5;
+    public int OpenTelemetryMetricsExportIntervalMs => 60000;
+    public int OpenTelemetryMetricsExportTimeoutMs => 10000;
 
     public bool HybridHttpContextStorageEnabled => false;
 }
