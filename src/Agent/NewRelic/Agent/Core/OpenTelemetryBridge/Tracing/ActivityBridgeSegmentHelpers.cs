@@ -611,8 +611,11 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetTag<string>(["gen_ai.output.id"], out var responseId);
         tags.TryGetTag<string>(["gen_ai.output.messages"], out var outputMessagesJson);
         tags.TryGetTag<string>(["gen_ai.input.messages"], out var inputMessagesJson);
+        tags.TryGetTag<string>(["telemetry.sdk.version"], out var libraryVersion);
         tags.TryGetTag<int>(["gen_ai.usage.input_tokens"], out var inputTokenCount);
         tags.TryGetTag<int>(["gen_ai.usage.output_tokens"], out var outputTokenCount);
+
+        RecordLlmMetrics(agent, providerName, libraryVersion, string.IsNullOrEmpty(responseModel) ? requestModel : responseModel);
 
         try
         {
@@ -676,6 +679,17 @@ public static class ActivityBridgeSegmentHelpers
             Log.Debug($"Failed to deserialize JSON messages for {activityLogPrefix}: {ex.Message}");
         }
     }
+    private static void RecordLlmMetrics(IAgent agent, string vendorName, string version, string model)
+    {
+        // required per spec
+        agent.RecordSupportabilityMetric($"DotNet/ML/{vendorName}/{version}");
+
+        SupportabilityHelpers.CreateModelIdSupportabilityMetricsForOpenAi(model, agent); // prepend vendor name to model id
+
+        // useful for tracking LLM usage by vendor
+        agent.RecordSupportabilityMetric($"DotNet/LLM/{vendorName}-Chat");
+    }
+
 
 
     #endregion
