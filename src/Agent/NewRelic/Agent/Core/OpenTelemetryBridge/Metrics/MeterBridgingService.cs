@@ -91,11 +91,11 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
             if (meterObj == null) return;
 
             // Two-layer protection against infinite recursion when bridging observable instruments:
-            // 1. Reference check: Prevents recursion in test scenarios (non-ILRepacked assemblies) and provides fast O(1) lookup.
+            // 1. Reference check: Prevents recursion in test scenarios (non-ILRepacked assemblies)
             //    Observable instrument constructors synchronously call Publish(), which would trigger OnInstrumentPublished
             //    again for our bridged instruments, creating an infinite loop. By tracking meter references in a HashSet,
             //    we can quickly identify and ignore instruments from our own bridged meters.
-            // 2. Assembly check: Handles production ILRepack scenarios per code review requirement. In production, 
+            // 2. Assembly check: Handles production ILRepack.
             //    System.Diagnostics.DiagnosticSource is ILRepacked into NewRelic.Agent.Core.dll, creating duplicate type 
             //    identities. This check compares the instrument's assembly with the ILRepacked assembly to filter out
             //    instruments created by the agent itself.
