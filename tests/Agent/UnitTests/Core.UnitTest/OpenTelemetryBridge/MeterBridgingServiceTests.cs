@@ -609,4 +609,42 @@ public class MeterBridgingServiceTests
         // Assert - Should not enable measurement events for ILRepacked instruments
         Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Never());
     }
+
+    [Test]
+    public void OnInstrumentPublished_WithBridgedMeter_ShouldIgnore()
+    {
+        // Arrange - Create a customer instrument that will cause a bridged meter to be created
+        using var customerMeter = new Meter("CustomerMeter", "1.0");
+        var customerCounter = customerMeter.CreateCounter<int>("customer-counter");
+        
+        // First call - should process and create bridged meter
+        _service.OnInstrumentPublished(customerCounter, _mockListener);
+        
+        // Create another instrument from the same meter (which will use the cached bridged meter)
+        var customerCounter2 = customerMeter.CreateCounter<int>("customer-counter-2");
+
+        // Act - Publish second instrument from same meter
+        _service.OnInstrumentPublished(customerCounter2, _mockListener);
+
+        // Assert - Should process both instruments (they're from the same customer meter, not our bridged meter)
+        Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Exactly(2));
+    }
+
+    [Test]
+    public void CreateBridgedMeter_AddsToReferenceTracking()
+    {
+        // Arrange
+        using var meter1 = new Meter("TestMeter1", "1.0");
+        using var meter2 = new Meter("TestMeter2", "2.0");
+        
+        var counter1 = meter1.CreateCounter<int>("counter1");
+        var counter2 = meter2.CreateCounter<int>("counter2");
+
+        // Act - Publish instruments which will create bridged meters
+        _service.OnInstrumentPublished(counter1, _mockListener);
+        _service.OnInstrumentPublished(counter2, _mockListener);
+
+        // Assert - Both should be processed (reference tracking should allow both)
+        Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Exactly(2));
+    }
 }

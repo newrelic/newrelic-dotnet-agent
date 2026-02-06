@@ -299,4 +299,70 @@ public class DynamicMeterListenerWrapperTests
         // Post-disposal calls should be no-ops
         Assert.DoesNotThrow(() => wrapper.Start());
     }
+
+    [Test]
+    public void IsInstrumentFromILRepackedAssembly_WithNoILRepackedType_ReturnsFalse()
+    {
+        // Arrange - Create wrapper without ILRepacked assembly
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
+        
+        using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+        using var meter = new System.Diagnostics.Metrics.Meter("TestMeter");
+        var counter = meter.CreateCounter<int>("test-counter");
+
+        // Act
+        var result = wrapper.IsInstrumentFromILRepackedAssembly(counter);
+
+        // Assert
+        Assert.That(result, Is.False, "Should return false when no ILRepacked type found");
+    }
+
+    [Test]
+    public void IsInstrumentFromILRepackedAssembly_WithNullInstrument_ReturnsFalse()
+    {
+        // Arrange
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
+        
+        using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+
+        // Act
+        var result = wrapper.IsInstrumentFromILRepackedAssembly(null);
+
+        // Assert
+        Assert.That(result, Is.False, "Should return false for null instrument");
+    }
+
+    [Test]
+    public void IsInstrumentFromILRepackedAssembly_WithDifferentAssembly_ReturnsFalse()
+    {
+        // Arrange
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        // Create a mock NewRelic.Agent.Core assembly that doesn't have ILRepacked types
+        var mockAgentAssembly = Mock.Create<Assembly>();
+        Mock.Arrange(() => mockAgentAssembly.GetName()).Returns(new AssemblyName("NewRelic.Agent.Core"));
+        Mock.Arrange(() => mockAgentAssembly.GetType("System.Diagnostics.Metrics.MeterListener", false)).Returns((Type)null);
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly, mockAgentAssembly });
+        
+        using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+        using var meter = new System.Diagnostics.Metrics.Meter("TestMeter");
+        var counter = meter.CreateCounter<int>("test-counter");
+
+        // Act
+        var result = wrapper.IsInstrumentFromILRepackedAssembly(counter);
+
+        // Assert
+        Assert.That(result, Is.False, "Should return false when instrument is from different assembly");
+    }
 }
