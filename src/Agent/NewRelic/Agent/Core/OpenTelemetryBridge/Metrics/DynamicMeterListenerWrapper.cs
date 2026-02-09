@@ -22,6 +22,7 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
     private volatile bool _disposed;
     private object _meterListener;
     private Type _meterListenerType;
+    private Type _ilrepackedMeterListenerType;
     private bool _isAvailable;
 
     private MethodInfo _startMethod;
@@ -74,6 +75,13 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
 
             _meterListenerType = assembly.GetType("System.Diagnostics.Metrics.MeterListener", throwOnError: true);
 
+            // Check if NewRelic assembly has ILRepacked MeterListener type to avoid processing our own bridged meters
+            if (!TryFindILRepackedMeterListenerType())
+            {
+                _isAvailable = false;
+                return;
+            }
+
             _startMethod = _meterListenerType.GetMethod("Start") ?? throw new MissingMethodException(_meterListenerType.Name, "Start");
             _enableMeasurementEventsMethod = _meterListenerType.GetMethod("EnableMeasurementEvents") ?? throw new MissingMethodException(_meterListenerType.Name, "EnableMeasurementEvents");
             _recordObservableInstrumentsMethod = _meterListenerType.GetMethod("RecordObservableInstruments") ?? throw new MissingMethodException(_meterListenerType.Name, "RecordObservableInstruments");
@@ -94,6 +102,72 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
         {
             Log.Error(ex, "Failed to initialize MeterListener via reflection. OpenTelemetry metrics bridging will be unavailable.");
             _isAvailable = false;
+        }
+    }
+
+    private bool TryFindILRepackedMeterListenerType()
+    {
+        try
+        {
+            // Find NewRelic agent assemblies (agent core assembly contains ILRepacked types)
+            // check assemblies starting with "NewRelic.Agent"
+            var allAssemblies = _assemblyProvider.GetAssemblies().ToList();
+            Log.Debug($"Searching {allAssemblies.Count} assemblies for ILRepacked MeterListener type");
+            
+            var newRelicAssemblies = allAssemblies
+                .Where(a => a.GetName().Name != null && 
+                           a.GetName().Name.StartsWith("NewRelic.Agent", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            Log.Debug($"Found {newRelicAssemblies.Count} NewRelic.Agent assemblies: {string.Join(", ", newRelicAssemblies.Select(a => a.GetName().Name))}");
+
+            foreach (var nrAssembly in newRelicAssemblies)
+            {
+                // Look for ILRepacked MeterListener type in NewRelic assemblies
+                var ilrepackedType = nrAssembly.GetType("System.Diagnostics.Metrics.MeterListener", throwOnError: false);
+                if (ilrepackedType != null)
+                {
+                    _ilrepackedMeterListenerType = ilrepackedType;
+                    Log.Debug($"Found ILRepacked MeterListener type in assembly: {nrAssembly.GetName().Name}");
+                    return true;
+                }
+            }
+            
+            Log.Debug("No ILRepacked MeterListener type found in any NewRelic.Agent assembly");
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "Failed to find ILRepacked MeterListener type. This is expected if not using ILRepack.");
+        }
+        return false;
+    }
+
+    public bool IsInstrumentFromILRepackedAssembly(object instrument)
+    {
+        if (_ilrepackedMeterListenerType == null)
+        {
+            Log.Debug("ILRepacked MeterListener type is null - cannot filter instruments");
+            return false;
+        }
+        
+        if (instrument == null) return false;
+
+        try
+        {
+            var instrumentAssembly = instrument.GetType().Assembly;
+            var ilrepackedAssembly = _ilrepackedMeterListenerType.Assembly;
+            
+            var isFromILRepacked = instrumentAssembly == ilrepackedAssembly;
+            
+            Log.Debug($"Instrument assembly check: {instrument.GetType().Name} from {instrumentAssembly.GetName().Name}, ILRepacked assembly: {ilrepackedAssembly.GetName().Name}, Match: {isFromILRepacked}");
+            
+            // Check if instrument is from the same assembly as our ILRepacked MeterListener
+            return isFromILRepacked;
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "Failed to check if instrument is from ILRepacked assembly");
+            return false;
         }
     }
 

@@ -27,7 +27,9 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
             {
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                 configModifier.SetLogLevel("finest");
-                configModifier.ConfigureFasterOpenTelemetryOtlpExportInterval(5);
+                // Set both interval and timeout to pass validation (interval must be > timeout)
+                configModifier.SetOpenTelemetryMetricsExportInterval(5000); // 5 seconds
+                configModifier.SetOpenTelemetryMetricsExportTimeout(4000); // 4 seconds
             },
             exerciseApplication: () =>
             {

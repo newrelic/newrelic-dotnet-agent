@@ -115,7 +115,8 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
                 exporterOptions.Headers = $"api-key={config.AgentLicenseKey}";
                 exporterOptions.HttpClientFactory = () => _httpClient;
 
-                metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = config.OpenTelemetryOtlpExportIntervalSeconds * 1000;
+                metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = config.OpenTelemetryMetricsExportIntervalMs;
+                metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportTimeoutMilliseconds = config.OpenTelemetryMetricsExportTimeoutMs;
                 metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
             });
 
@@ -146,7 +147,7 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
             var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = httpClientHandler };
 #endif
             var httpClient = new HttpClient(auditHandler);
-            httpClient.Timeout = TimeSpan.FromSeconds(_configurationService.Configuration.OpenTelemetryOtlpTimeoutSeconds);
+            httpClient.Timeout = TimeSpan.FromMilliseconds(_configurationService.Configuration.OpenTelemetryMetricsExportTimeoutMs);
             httpClient.DefaultRequestHeaders.Add("User-Agent", $"NewRelic-DotNet-Agent/{AgentInstallConfiguration.AgentVersion ?? "Unknown"}");
 
             return httpClient;

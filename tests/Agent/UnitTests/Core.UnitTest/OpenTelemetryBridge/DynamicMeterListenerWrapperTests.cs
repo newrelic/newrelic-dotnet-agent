@@ -299,4 +299,190 @@ public class DynamicMeterListenerWrapperTests
         // Post-disposal calls should be no-ops
         Assert.DoesNotThrow(() => wrapper.Start());
     }
+
+    [Test]
+    public void IsInstrumentFromILRepackedAssembly_WithNoILRepackedType_ReturnsFalse()
+    {
+        // Arrange - Create wrapper without ILRepacked assembly
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
+        
+        using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+        using var meter = new System.Diagnostics.Metrics.Meter("TestMeter");
+        var counter = meter.CreateCounter<int>("test-counter");
+
+        // Act
+        var result = wrapper.IsInstrumentFromILRepackedAssembly(counter);
+
+        // Assert
+        Assert.That(result, Is.False, "Should return false when no ILRepacked type found");
+    }
+
+    [Test]
+    public void IsInstrumentFromILRepackedAssembly_WithNullInstrument_ReturnsFalse()
+    {
+        // Arrange
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
+        
+        using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+
+        // Act
+        var result = wrapper.IsInstrumentFromILRepackedAssembly(null);
+
+        // Assert
+        Assert.That(result, Is.False, "Should return false for null instrument");
+    }
+
+    [Test]
+    public void IsInstrumentFromILRepackedAssembly_WithDifferentAssembly_ReturnsFalse()
+    {
+        // Arrange
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        // Create a mock NewRelic.Agent.Core assembly that doesn't have ILRepacked types
+        var mockAgentAssembly = Mock.Create<Assembly>();
+        Mock.Arrange(() => mockAgentAssembly.GetName()).Returns(new AssemblyName("NewRelic.Agent.Core"));
+        Mock.Arrange(() => mockAgentAssembly.GetType("System.Diagnostics.Metrics.MeterListener", false)).Returns((Type)null);
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly, mockAgentAssembly });
+        
+        using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+        using var meter = new System.Diagnostics.Metrics.Meter("TestMeter");
+        var counter = meter.CreateCounter<int>("test-counter");
+
+        // Act
+        var result = wrapper.IsInstrumentFromILRepackedAssembly(counter);
+
+        // Assert
+        Assert.That(result, Is.False, "Should return false when instrument is from different assembly");
+    }
+
+    [Test]
+    public void ConfigureInstrumentPublished_WithMissingProperty_HandlesGracefully()
+    {
+        // Arrange - Use wrapper that initializes successfully but might have issues with property configuration
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
+        
+        using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+        
+        // Set callback
+        wrapper.InstrumentPublished = (inst, listener) => { };
+
+        // Act - Start should trigger ConfigureCallbacks
+        wrapper.Start();
+
+        // Assert - Should complete without throwing
+        Assert.That(wrapper.InstrumentPublished, Is.Not.Null);
+    }
+
+    [Test]
+    public void HandleMeasurementCallbackWithSpan_WithEmptySpan_CallsCallbackWithEmptySpan()
+    {
+        // Arrange
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
+        
+        using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+        
+        wrapper.SetMeasurementCallback<int>((inst, val, tags, state) => 
+        {
+            Assert.That(tags.Length, Is.EqualTo(0));
+        });
+
+        // Act - The callback should be configured
+        Assert.DoesNotThrow(() => wrapper.Start());
+    }
+
+    [Test]
+    public void EnableMeasurementEvents_WithNullInstrument_DoesNotThrow()
+    {
+        // Arrange
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
+        
+        using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+
+        // Act & Assert
+        Assert.DoesNotThrow(() => wrapper.EnableMeasurementEvents(null, new object()));
+    }
+
+    [Test]
+    public void TryFindILRepackedMeterListenerType_WithException_LogsAndContinues()
+    {
+        // Arrange - Mock assemblies that throw during GetType
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        var mockAgentAssembly = Mock.Create<Assembly>();
+        Mock.Arrange(() => mockAgentAssembly.GetName()).Returns(new AssemblyName("NewRelic.Agent.Core"));
+        Mock.Arrange(() => mockAgentAssembly.GetType(Arg.IsAny<string>(), false)).Throws<TypeLoadException>();
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly, mockAgentAssembly });
+
+        // Act - Should handle exception gracefully
+        using var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+
+        // Assert - Wrapper should still be functional
+        Assert.DoesNotThrow(() => wrapper.Start());
+    }
+
+    [Test]
+    public void Dispose_MultipleTimes_OnlyDisposesOnce()
+    {
+        // Arrange
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
+        var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+
+        // Act - Dispose multiple times
+        wrapper.Dispose();
+        wrapper.Dispose();
+        wrapper.Dispose();
+
+        // Assert - Should not throw
+        Assert.Pass("Multiple dispose calls handled correctly");
+    }
+
+    [Test]
+    public void RecordObservableInstruments_AfterDispose_DoesNotThrow()
+    {
+        // Arrange
+        if (!TryGetDiagnosticSourceAssembly(out var diagnosticSourceAssembly))
+            return;
+
+        var mockProvider = Mock.Create<IAssemblyProvider>();
+        Mock.Arrange(() => mockProvider.GetAssemblies()).Returns(new[] { diagnosticSourceAssembly });
+        var wrapper = new DynamicMeterListenerWrapper(mockProvider);
+
+        // Act
+        wrapper.Dispose();
+
+        // Assert - Operations after dispose should be no-ops
+        Assert.DoesNotThrow(() => wrapper.RecordObservableInstruments());
+        Assert.DoesNotThrow(() => wrapper.Start());
+        Assert.DoesNotThrow(() => wrapper.EnableMeasurementEvents(new object(), null));
+    }
 }

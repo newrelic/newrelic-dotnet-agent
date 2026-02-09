@@ -2932,22 +2932,82 @@ public class DefaultConfiguration : IConfiguration
         }
     }
 
-    public int OpenTelemetryOtlpTimeoutSeconds
+
+    private const int DefaultOtelExportIntervalMs = 60000; // 60,000 ms
+    private const int DefaultOtelExportTimeoutMs = 10000;  // 10,000 ms
+    private int? _otelExportIntervalMs;
+    private int? _otelExportTimeoutMs;
+
+    /// <summary>
+    /// Gets the OpenTelemetry metrics export interval in milliseconds, with validation.
+    /// </summary>
+    public int OpenTelemetryMetricsExportIntervalMs
     {
         get
         {
-            var value = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("OpenTelemetryOtlpTimeoutSeconds", 10), "NEW_RELIC_OPENTELEMETRY_OTLP_TIMEOUT_SECONDS").GetValueOrDefault(10);
-            return value > 0 ? value : 10;
+            EnsureOtelExportIntervalAndTimeout();
+            return _otelExportIntervalMs ?? DefaultOtelExportIntervalMs;
         }
     }
 
-    public int OpenTelemetryOtlpExportIntervalSeconds
+    /// <summary>
+    /// Gets the OpenTelemetry metrics export timeout in milliseconds, with validation.
+    /// </summary>
+    public int OpenTelemetryMetricsExportTimeoutMs
     {
         get
         {
-            var value = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("OpenTelemetryOtlpExportIntervalSeconds", 5), "NEW_RELIC_OPENTELEMETRY_OTLP_EXPORT_INTERVAL_SECONDS").GetValueOrDefault(5);
-            return value > 0 ? value : 5;
+            EnsureOtelExportIntervalAndTimeout();
+            return _otelExportTimeoutMs ?? DefaultOtelExportTimeoutMs;
         }
+    }
+
+    /// <summary>
+    /// Ensures export interval and timeout are loaded, validated, and logs a warning if invalid.
+    /// Validation rule: interval must be greater than or equal to timeout (interval >= timeout).
+    /// If validation fails, both values are reverted to defaults (60,000 ms and 10,000 ms).
+    /// </summary>
+    private void EnsureOtelExportIntervalAndTimeout()
+    {
+        if (_otelExportIntervalMs.HasValue && _otelExportTimeoutMs.HasValue)
+            return;
+
+        // Read from XML config first (only if explicitly specified), then appSettings, then apply environment variable overrides, fallback to defaults
+        // Priority: Environment Variable > XML Attribute (if specified) > AppSettings > Default
+        var xmlIntervalMs = _localConfiguration.openTelemetry?.metrics?.export_intervalSpecified == true
+            ? _localConfiguration.openTelemetry.metrics.export_interval
+            : (int?)null;
+        var xmlTimeoutMs = _localConfiguration.openTelemetry?.metrics?.export_timeoutSpecified == true
+            ? _localConfiguration.openTelemetry.metrics.export_timeout
+            : (int?)null;
+
+        int intervalMs = EnvironmentOverrides(
+            xmlIntervalMs ?? TryGetAppSettingAsIntWithDefault("OpenTelemetryMetricsExportInterval", DefaultOtelExportIntervalMs),
+            "NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL"
+        ).GetValueOrDefault(DefaultOtelExportIntervalMs);
+
+        int timeoutMs = EnvironmentOverrides(
+            xmlTimeoutMs ?? TryGetAppSettingAsIntWithDefault("OpenTelemetryMetricsExportTimeout", DefaultOtelExportTimeoutMs),
+            "NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"
+        ).GetValueOrDefault(DefaultOtelExportTimeoutMs);
+
+        // Validation: both values must be positive
+        if (intervalMs <= 0 || timeoutMs <= 0)
+        {
+            Log.Warn($"Invalid OpenTelemetry metrics export values: interval={intervalMs} ms, timeout={timeoutMs} ms. Both values must be positive. Reverting to defaults: interval={DefaultOtelExportIntervalMs} ms, timeout={DefaultOtelExportTimeoutMs} ms.");
+            intervalMs = DefaultOtelExportIntervalMs;
+            timeoutMs = DefaultOtelExportTimeoutMs;
+        }
+        // Validation: interval must be >= timeout
+        else if (intervalMs < timeoutMs)
+        {
+            Log.Warn($"OpenTelemetry metrics export interval ({intervalMs} ms) is less than export timeout ({timeoutMs} ms). Reverting to defaults: interval={DefaultOtelExportIntervalMs} ms, timeout={DefaultOtelExportTimeoutMs} ms.");
+            intervalMs = DefaultOtelExportIntervalMs;
+            timeoutMs = DefaultOtelExportTimeoutMs;
+        }
+
+        _otelExportIntervalMs = intervalMs;
+        _otelExportTimeoutMs = timeoutMs;
     }
 
     /// <summary>

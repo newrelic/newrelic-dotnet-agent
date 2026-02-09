@@ -270,8 +270,16 @@ public interface IConfiguration
     bool OpenTelemetryMetricsEnabled { get; }
     IEnumerable<string> OpenTelemetryMetricsIncludeFilters { get; }
     IEnumerable<string> OpenTelemetryMetricsExcludeFilters { get; }
-    int OpenTelemetryOtlpTimeoutSeconds { get; }
-    int OpenTelemetryOtlpExportIntervalSeconds { get; }
+    /// <summary>
+    /// Gets the OpenTelemetry metrics export interval in milliseconds (validated, see agent spec).
+    /// </summary>
+    int OpenTelemetryMetricsExportIntervalMs { get; }
+
+    /// <summary>
+    /// Gets the OpenTelemetry metrics export timeout in milliseconds (validated, see agent spec).
+    /// </summary>
+    int OpenTelemetryMetricsExportTimeoutMs { get; }
+
     #endregion
 
     bool HybridHttpContextStorageEnabled { get; }

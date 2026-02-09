@@ -629,4 +629,16 @@ public class NewRelicConfigModifier
         CommonUtils.SetConfigAppSetting(_configFilePath, "NewRelic.EventListenerSamplersEnabled", enabled.ToString(), "urn:newrelic-config");
         return this;
     }
+
+    public NewRelicConfigModifier SetOpenTelemetryMetricsExportInterval(int intervalMs)
+    {
+        CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetryMetricsExportInterval", intervalMs.ToString(), "urn:newrelic-config");
+        return this;
+    }
+
+    public NewRelicConfigModifier SetOpenTelemetryMetricsExportTimeout(int timeoutMs)
+    {
+        CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetryMetricsExportTimeout", timeoutMs.ToString(), "urn:newrelic-config");
+        return this;
+    }
 }
