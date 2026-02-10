@@ -602,12 +602,11 @@ public static class ActivityBridgeSegmentHelpers
 
     private static void ProcessLLMChatClientTags(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, string operation)
     {
-        Log.Finest($"{activityLogPrefix} for LLMs");
+        Log.Finest($"{activityLogPrefix} for Microsoft.Extensions.AI");
 
         tags.TryGetTag<string>(["gen_ai.provider.name"], out var providerName);
         tags.TryGetTag<string>(["gen_ai.request.model"], out var requestModel);
         tags.TryGetTag<string>(["gen_ai.response.model"], out var responseModel);
-        tags.TryGetTag<string>(["gen_ai.response.finish_reasons"], out var finishReasonsJson); // actually don't think we need this
         tags.TryGetTag<string>(["gen_ai.output.id"], out var responseId);
         tags.TryGetTag<string>(["gen_ai.output.messages"], out var outputMessagesJson);
         tags.TryGetTag<string>(["gen_ai.input.messages"], out var inputMessagesJson);
@@ -622,9 +621,11 @@ public static class ActivityBridgeSegmentHelpers
             var inputMessages = JsonConvert.DeserializeObject<List<InputMessage>>(inputMessagesJson);
             var outputMessages = JsonConvert.DeserializeObject<List<OutputMessage>>(outputMessagesJson);
 
-            string requestId = null; // TODO: figure out where to get this
-            float? temperature = null; // TODO: figure out where to get this
-            int? maxTokens = null; // TODO: figure out where to get this
+            // requestId, temperature and maxTokens are defined in a ChatOptions type that can be passed to a
+            // MEA client chat API method, but that data isn't recorded in the Activity anywhere
+            string requestId = null;
+            float? temperature = null;
+            int? maxTokens = null;
 
             var completionId = EventHelper.CreateChatCompletionEvent(
                                  agent,
@@ -639,7 +640,7 @@ public static class ActivityBridgeSegmentHelpers
                                  providerName,
                                  false, // not an error
                                  null, // we have no headers dictionary
-                                 null); // organization comes from the headers
+                                 null); // organization comes from the headers that we can't access
 
             // Prompt
             EventHelper.CreateChatMessageEvent(
@@ -689,8 +690,6 @@ public static class ActivityBridgeSegmentHelpers
         // useful for tracking LLM usage by vendor
         agent.RecordSupportabilityMetric($"DotNet/LLM/{vendorName}-Chat");
     }
-
-
 
     #endregion
 
