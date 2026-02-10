@@ -192,6 +192,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             LogTrace(_X("App Pool Id: ") + appPoolId);
             LogTrace(_X("Is Core CLR: ") + xstring_t(isCoreClr ? _X("true") : _X("false")));
 
+            if (!_agentEnabled) {
+                LogInfo("New Relic has been disabled via newrelic.config file.");
+                return false;
+            }
+
             if (ProcessExcludedByConfig(processPath))
             {
                 LogInfo(L"Process ", processPath , L" excluded by configuration.");
@@ -820,11 +825,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
         bool ShouldInstrumentProcess(const xstring_t& processName, xstring_t const& parentProcessName, const xstring_t& appPoolId)
         {
-            if (!_agentEnabled) {
-                LogInfo("New Relic has been disabled via newrelic.config file.");
-                return false;
-            }
-
             if (IsIgnoreProcess(processName))
             {
                 return false;
