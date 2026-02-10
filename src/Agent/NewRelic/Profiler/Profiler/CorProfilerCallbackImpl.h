@@ -1121,6 +1121,9 @@ namespace NewRelic { namespace Profiler {
             if (nrlog::StdLog.GetEnabled())
             {
                 LogInfo(L"<-- New logging level set: ", nrlog::GetLevelString(nrlog::StdLog.GetLevel()));
+                if (nrlog::StdLog.GetLevelIsRestricted()) {
+                    LogWarn(L"Logging level is restricted to ", nrlog::GetLevelString(nrlog::StdLog.GetLevel()), L", because either console logging is enabled or this is an Azure Function.");
+                }
                 if (nrlog::StdLog.GetConsoleLogging())
                 {
                     LogInfo(L"Console logging enabled");

@@ -85,15 +85,14 @@ namespace NewRelic {
 
                 Level GetLevel() const noexcept
                 {
-                    if (!_console && (!_azureFunctionModeEnabled || _azureFunctionLogLevelOverride))
+                    if (GetLevelIsRestricted())
                     {
-                        return _level;
+                        // Console logging at debug or trace level incurs a very large
+                        // performance hit. Clamp the log level to INFO in that case.
+                        // In Azure function mode, TRACE level debugging causes a crash, so limit to INFO or higher for now
+                        return (_level < Level::LEVEL_INFO) ? Level::LEVEL_INFO : _level;
                     }
-
-                    // Console logging at debug or trace level incurs a very large
-                    // performance hit. Clamp the log level to INFO in that case.
-                    // In Azure function mode, TRACE level debugging causes a crash, so limit to INFO or higher for now
-                    return (_level < Level::LEVEL_INFO) ? Level::LEVEL_INFO : _level;
+                    return _level;
                 }
 
 
@@ -130,6 +129,11 @@ namespace NewRelic {
                 bool GetInitialized()
                 {
                     return _initialized;
+                }
+
+                bool GetLevelIsRestricted() const
+                {
+                    return (_console || (_azureFunctionModeEnabled && !_azureFunctionLogLevelOverride));
                 }
 
                 _Mymut& mutex() const noexcept
