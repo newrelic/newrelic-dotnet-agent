@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.49.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.48.1...v10.49.0) (2026-02-10)
+
+
+### New features
+
+* The .NET Hybrid Agent provides a future-proof observability solution with integrated support for OpenTelemetry Tracing and Metrics APIs. OpenTelemetry Logs will continue to be supported through the existing Microsoft.Extensions.Logging integration. This release delivers critical OpenTelemetry features including Span Links, Events on Spans, and unified sampling algorithms. It is designed to bridge the gap for .NET teams looking to adopt OpenTelemetry standards while maintaining backwards compatibility with their existing New Relic dashboards. ([72a0414](https://github.com/newrelic/newrelic-dotnet-agent/commit/72a0414d49273d412cddc11dcb329b30680aa8f0))
+
+
+### Fixes
+
+* Agent correctly overwrites files when necessary. ([#3425](https://github.com/newrelic/newrelic-dotnet-agent/issues/3425)) ([9cafa88](https://github.com/newrelic/newrelic-dotnet-agent/commit/9cafa886f19b709a8b1f6138992479c067475736))
+
 ## [10.48.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.48.0...v10.48.1) (2026-01-28)
 
 
