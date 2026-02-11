@@ -613,71 +613,104 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetTag<string>(["telemetry.sdk.version"], out var libraryVersion);
         tags.TryGetTag<int>(["gen_ai.usage.input_tokens"], out var inputTokenCount);
         tags.TryGetTag<int>(["gen_ai.usage.output_tokens"], out var outputTokenCount);
+        tags.TryGetTag<string>(["error.type"], out var errorType);
 
         RecordLlmMetrics(agent, providerName, libraryVersion, string.IsNullOrEmpty(responseModel) ? requestModel : responseModel);
 
-        try
+        // requestId, temperature and maxTokens are defined in a ChatOptions type that can be passed to a
+        // MEA client chat API method, but that data isn't recorded in the Activity anywhere
+        string requestId = null;
+        float? temperature = null;
+        int? maxTokens = null;
+
+        if (!string.IsNullOrEmpty(errorType))
         {
-            var inputMessages = JsonConvert.DeserializeObject<List<InputMessage>>(inputMessagesJson);
-            var outputMessages = JsonConvert.DeserializeObject<List<OutputMessage>>(outputMessagesJson);
+            var errorMessage = activity.StatusDescription as string ?? "An error occurred during the LLM chat operation.";
+            Log.Info($"Error invoking OpenAI model {requestModel}: {errorMessage}");
+            agent.CurrentTransaction.NoticeError(new Exception(errorMessage));
 
-            // requestId, temperature and maxTokens are defined in a ChatOptions type that can be passed to a
-            // MEA client chat API method, but that data isn't recorded in the Activity anywhere
-            string requestId = null;
-            float? temperature = null;
-            int? maxTokens = null;
+            var errorData = new LlmErrorData
+            {
+                HttpStatusCode = "401", // fake for now
+                ErrorCode = null,
+                ErrorParam = null,
+                ErrorMessage = errorMessage,
+            };
 
-            var completionId = EventHelper.CreateChatCompletionEvent(
-                                 agent,
-                                 segment,
-                                 requestId,
-                                 temperature,
-                                 maxTokens,
-                                 requestModel,
-                                 string.IsNullOrEmpty(responseModel) ? requestModel : responseModel,
-                                 outputMessages.Count,
-                                 outputMessages[0].FinishReason,
-                                 providerName,
-                                 false, // not an error
-                                 null, // we have no headers dictionary
-                                 null); // organization comes from the headers that we can't access
-
-            // Prompt
-            EventHelper.CreateChatMessageEvent(
+            EventHelper.CreateChatCompletionEvent(
                 agent,
                 segment,
                 requestId,
-                responseId,
-                responseModel,
-                inputMessages[0].Parts[0].Content,
-                inputMessages[0].Role,
+                null,
+                null,
+                requestModel,
+                null,
                 0,
-                completionId,
-                false,
+                null,
                 providerName,
-                inputTokenCount);
-
-            // Response
-            if (outputMessages[0].FinishReason == "stop")
+                true,
+                null,
+                errorData);
+        }
+        else
+        {
+            try
             {
+                var inputMessages = JsonConvert.DeserializeObject<List<InputMessage>>(inputMessagesJson);
+                var outputMessages = JsonConvert.DeserializeObject<List<OutputMessage>>(outputMessagesJson);
+
+                var completionId = EventHelper.CreateChatCompletionEvent(
+                                     agent,
+                                     segment,
+                                     requestId,
+                                     temperature,
+                                     maxTokens,
+                                     requestModel,
+                                     string.IsNullOrEmpty(responseModel) ? requestModel : responseModel,
+                                     outputMessages.Count,
+                                     outputMessages[0].FinishReason,
+                                     providerName,
+                                     false, // not an error
+                                     null, // we have no headers dictionary
+                                     null); // organization comes from the headers that we can't access
+
+                // Prompt
                 EventHelper.CreateChatMessageEvent(
                     agent,
                     segment,
                     requestId,
                     responseId,
                     responseModel,
-                    outputMessages[0].Parts[0].Content,
-                    outputMessages[0].Role,
-                    1,
+                    inputMessages[0].Parts[0].Content,
+                    inputMessages[0].Role,
+                    0,
                     completionId,
-                    true,
+                    false,
                     providerName,
-                    outputTokenCount);
+                    inputTokenCount);
+
+                // Response
+                if (outputMessages[0].FinishReason == "stop")
+                {
+                    EventHelper.CreateChatMessageEvent(
+                        agent,
+                        segment,
+                        requestId,
+                        responseId,
+                        responseModel,
+                        outputMessages[0].Parts[0].Content,
+                        outputMessages[0].Role,
+                        1,
+                        completionId,
+                        true,
+                        providerName,
+                        outputTokenCount);
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"Failed to deserialize JSON messages for {activityLogPrefix}: {ex.Message}");
+            catch (Exception ex)
+            {
+                Log.Debug($"Failed to deserialize JSON messages for {activityLogPrefix}: {ex.Message}");
+            }
         }
     }
     private static void RecordLlmMetrics(IAgent agent, string vendorName, string version, string model)
