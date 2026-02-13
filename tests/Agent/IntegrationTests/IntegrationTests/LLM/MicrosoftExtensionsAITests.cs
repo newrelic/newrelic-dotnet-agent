@@ -131,6 +131,8 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
             "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.MicrosoftExtensionsAIExerciser/CompleteChatStreamingAsync");
         var transactionEventSync = _fixture.AgentLog.TryGetTransactionEvent(
             "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.MicrosoftExtensionsAIExerciser/CompleteChat");
+        var transactionEventFailure = _fixture.AgentLog.TryGetTransactionEvent(
+            "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.MicrosoftExtensionsAIExerciser/CompleteChatFailureAsync");
 
         Assert.Multiple(() =>
         {
@@ -142,6 +144,15 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
 
             Assert.NotNull(customEventFailure);
             Assert.Equal(true, customEventFailure.Attributes["error"]);
+
+            // Verify the failure event is a LlmChatCompletionSummary
+            Assert.Equal("LlmChatCompletionSummary", customEventFailure.Header.Type);
+
+            // Verify the failure event is correlated to the CompleteChatFailureAsync transaction
+            Assert.NotNull(transactionEventFailure);
+            var expectedTraceId = transactionEventFailure.IntrinsicAttributes["traceId"]?.ToString();
+            Assert.True(customEventFailure.Attributes.ContainsKey("trace_id"));
+            Assert.Equal(expectedTraceId, customEventFailure.Attributes["trace_id"]?.ToString());
 
             Assert.NotNull(applicationErrorEvent);
             Assert.Contains("completion_id", applicationErrorEvent.UserAttributes.Keys);
