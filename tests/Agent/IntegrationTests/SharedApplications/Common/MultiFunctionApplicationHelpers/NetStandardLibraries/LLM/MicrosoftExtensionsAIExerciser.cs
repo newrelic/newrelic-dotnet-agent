@@ -20,6 +20,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM;
 public class MicrosoftExtensionsAIExerciser
 {
     private const string Model = "integration-test-gpt-4o-mini"; // the only model available for testing
+    private const string ActivitySource = "Experimental.Microsoft.Extensions.AI";
 
     private IChatClient CreateChatClient(bool useBogusKey = false)
     {
@@ -32,7 +33,10 @@ public class MicrosoftExtensionsAIExerciser
 
         // Wrap the OpenAI ChatClient with MEAI and enable OpenTelemetry instrumentation
         IChatClient chatClient = new ChatClientBuilder(openAIChatClient.AsIChatClient())
-            .UseOpenTelemetry()
+            .UseOpenTelemetry(sourceName: ActivitySource, configure: options =>
+            {
+                options.EnableSensitiveData = true; // this is necessary to see all the data we need to build our LLM events
+            })
             .Build();
 
         return chatClient;

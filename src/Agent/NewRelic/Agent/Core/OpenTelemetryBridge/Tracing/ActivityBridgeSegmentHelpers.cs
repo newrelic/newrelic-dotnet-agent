@@ -604,6 +604,22 @@ public static class ActivityBridgeSegmentHelpers
     {
         Log.Finest($"{activityLogPrefix} for Microsoft.Extensions.AI");
 
+        var llmTags = ExtractLlmTags(tags);
+
+        RecordLlmMetrics(agent, llmTags.ProviderName, llmTags.LibraryVersion, llmTags.EffectiveModel);
+
+        if (!string.IsNullOrEmpty(llmTags.ErrorType))
+        {
+            HandleLlmError(segment, agent, activity, activityLogPrefix, llmTags);
+        }
+        else
+        {
+            HandleLlmSuccess(segment, agent, activityLogPrefix, llmTags);
+        }
+    }
+
+    private static LlmTagValues ExtractLlmTags(Dictionary<string, object> tags)
+    {
         tags.TryGetTag<string>(["gen_ai.provider.name"], out var providerName);
         tags.TryGetTag<string>(["gen_ai.request.model"], out var requestModel);
         tags.TryGetTag<string>(["gen_ai.response.model"], out var responseModel);
@@ -615,104 +631,134 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetTag<int>(["gen_ai.usage.output_tokens"], out var outputTokenCount);
         tags.TryGetTag<string>(["error.type"], out var errorType);
 
-        RecordLlmMetrics(agent, providerName, libraryVersion, string.IsNullOrEmpty(responseModel) ? requestModel : responseModel);
-
-        // requestId, temperature and maxTokens are defined in a ChatOptions type that can be passed to a
-        // MEA client chat API method, but that data isn't recorded in the Activity anywhere
-        string requestId = null;
-        float? temperature = null;
-        int? maxTokens = null;
-
-        if (!string.IsNullOrEmpty(errorType))
+        return new LlmTagValues
         {
-            var errorMessage = activity.StatusDescription as string ?? "An error occurred during the LLM chat operation.";
-            Log.Info($"Error invoking OpenAI model {requestModel}: {errorMessage}");
-            agent.CurrentTransaction.NoticeError(new Exception(errorMessage));
+            ProviderName = providerName,
+            RequestModel = requestModel,
+            ResponseModel = responseModel,
+            ResponseId = responseId,
+            OutputMessagesJson = outputMessagesJson,
+            InputMessagesJson = inputMessagesJson,
+            LibraryVersion = libraryVersion,
+            InputTokenCount = inputTokenCount,
+            OutputTokenCount = outputTokenCount,
+            ErrorType = errorType
+        };
+    }
 
-            var errorData = new LlmErrorData
-            {
-                HttpStatusCode = "401", // fake for now
-                ErrorCode = null,
-                ErrorParam = null,
-                ErrorMessage = errorMessage,
-            };
+    private static void HandleLlmError(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, LlmTagValues llmTags)
+    {
+        var errorMessage = activity.StatusDescription as string ?? "An error occurred during the LLM chat operation.";
+        Log.Info($"Error invoking OpenAI model {llmTags.RequestModel}: {errorMessage}");
+        agent.CurrentTransaction.NoticeError(new Exception(errorMessage));
 
-            EventHelper.CreateChatCompletionEvent(
+        var errorData = new LlmErrorData
+        {
+            HttpStatusCode = ExtractHttpStatusCodeFromDescription(errorMessage),
+            ErrorCode = null,
+            ErrorParam = null,
+            ErrorMessage = errorMessage,
+        };
+
+        EventHelper.CreateChatCompletionEvent(
+            agent,
+            segment,
+            requestId: null,
+            temperature: null,
+            maxTokens: null,
+            requestModel: llmTags.RequestModel,
+            responseModel: null,
+            numMessages: 0,
+            finishReason: null,
+            vendor: llmTags.ProviderName,
+            isError: true,
+            headers: null,
+            errorData: errorData);
+    }
+
+    /// <summary>
+    /// Extracts the HTTP status code from a status description string in the format "HTTP XXX (...)".
+    /// Returns null if the description does not match the expected format.
+    /// </summary>
+    private static string ExtractHttpStatusCodeFromDescription(string statusDescription)
+    {
+        if (string.IsNullOrEmpty(statusDescription))
+            return null;
+
+        // Expected format: "HTTP 401 (Unauthorized)" or similar
+        if (!statusDescription.StartsWith("HTTP ", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var spaceIndex = statusDescription.IndexOf(' ', 5); // find space after the status code digits
+        var codeStr = spaceIndex > 5
+            ? statusDescription.Substring(5, spaceIndex - 5)
+            : statusDescription.Substring(5); // no trailing text, take the rest
+
+        // Validate it's actually a numeric status code
+        return int.TryParse(codeStr, out _) ? codeStr : null;
+    }
+
+    private static void HandleLlmSuccess(ISegment segment, IAgent agent, string activityLogPrefix, LlmTagValues llmTags)
+    {
+        try
+        {
+            var inputMessages = JsonConvert.DeserializeObject<List<InputMessage>>(llmTags.InputMessagesJson);
+            var outputMessages = JsonConvert.DeserializeObject<List<OutputMessage>>(llmTags.OutputMessagesJson);
+
+            var completionId = EventHelper.CreateChatCompletionEvent(
                 agent,
                 segment,
-                requestId,
-                null,
-                null,
-                requestModel,
-                null,
-                0,
-                null,
-                providerName,
-                true,
-                null,
-                errorData);
-        }
-        else
-        {
-            try
+                requestId: null,
+                temperature: null,
+                maxTokens: null,
+                requestModel: llmTags.RequestModel,
+                responseModel: llmTags.EffectiveModel,
+                numMessages: outputMessages.Count,
+                finishReason: outputMessages[0].FinishReason,
+                vendor: llmTags.ProviderName,
+                isError: false,
+                headers: null,
+                errorData: null);
+
+            // Prompt
+            EventHelper.CreateChatMessageEvent(
+                agent,
+                segment,
+                requestId: null,
+                responseId: llmTags.ResponseId,
+                responseModel: llmTags.ResponseModel,
+                content: inputMessages[0].Parts[0].Content,
+                role: inputMessages[0].Role,
+                sequence: 0,
+                completionId: completionId,
+                isResponse: false,
+                vendor: llmTags.ProviderName,
+                tokenCount: llmTags.InputTokenCount);
+
+            // Response
+            if (outputMessages[0].FinishReason == "stop")
             {
-                var inputMessages = JsonConvert.DeserializeObject<List<InputMessage>>(inputMessagesJson);
-                var outputMessages = JsonConvert.DeserializeObject<List<OutputMessage>>(outputMessagesJson);
-
-                var completionId = EventHelper.CreateChatCompletionEvent(
-                                     agent,
-                                     segment,
-                                     requestId,
-                                     temperature,
-                                     maxTokens,
-                                     requestModel,
-                                     string.IsNullOrEmpty(responseModel) ? requestModel : responseModel,
-                                     outputMessages.Count,
-                                     outputMessages[0].FinishReason,
-                                     providerName,
-                                     false, // not an error
-                                     null, // we have no headers dictionary
-                                     null); // organization comes from the headers that we can't access
-
-                // Prompt
                 EventHelper.CreateChatMessageEvent(
                     agent,
                     segment,
-                    requestId,
-                    responseId,
-                    responseModel,
-                    inputMessages[0].Parts[0].Content,
-                    inputMessages[0].Role,
-                    0,
-                    completionId,
-                    false,
-                    providerName,
-                    inputTokenCount);
-
-                // Response
-                if (outputMessages[0].FinishReason == "stop")
-                {
-                    EventHelper.CreateChatMessageEvent(
-                        agent,
-                        segment,
-                        requestId,
-                        responseId,
-                        responseModel,
-                        outputMessages[0].Parts[0].Content,
-                        outputMessages[0].Role,
-                        1,
-                        completionId,
-                        true,
-                        providerName,
-                        outputTokenCount);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Debug($"Failed to deserialize JSON messages for {activityLogPrefix}: {ex.Message}");
+                    requestId: null,
+                    responseId: llmTags.ResponseId,
+                    responseModel: llmTags.ResponseModel,
+                    content: outputMessages[0].Parts[0].Content,
+                    role: outputMessages[0].Role,
+                    sequence: 1,
+                    completionId: completionId,
+                    isResponse: true,
+                    vendor: llmTags.ProviderName,
+                    tokenCount: llmTags.OutputTokenCount);
             }
         }
+        catch (Exception ex)
+        {
+            Log.Debug($"Failed to deserialize JSON messages for {activityLogPrefix}: {ex.Message}");
+        }
     }
+
     private static void RecordLlmMetrics(IAgent agent, string vendorName, string version, string model)
     {
         // required per spec
@@ -722,6 +768,22 @@ public static class ActivityBridgeSegmentHelpers
 
         // useful for tracking LLM usage by vendor
         agent.RecordSupportabilityMetric($"DotNet/LLM/{vendorName}-Chat");
+    }
+
+    private class LlmTagValues
+    {
+        public string ProviderName { get; set; }
+        public string RequestModel { get; set; }
+        public string ResponseModel { get; set; }
+        public string ResponseId { get; set; }
+        public string OutputMessagesJson { get; set; }
+        public string InputMessagesJson { get; set; }
+        public string LibraryVersion { get; set; }
+        public int InputTokenCount { get; set; }
+        public int OutputTokenCount { get; set; }
+        public string ErrorType { get; set; }
+
+        public string EffectiveModel => string.IsNullOrEmpty(ResponseModel) ? RequestModel : ResponseModel;
     }
 
     #endregion
