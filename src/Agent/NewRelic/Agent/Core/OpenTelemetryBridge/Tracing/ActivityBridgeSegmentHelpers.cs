@@ -705,6 +705,40 @@ public static class ActivityBridgeSegmentHelpers
             var inputMessages = JsonConvert.DeserializeObject<List<InputMessage>>(llmTags.InputMessagesJson);
             var outputMessages = JsonConvert.DeserializeObject<List<OutputMessage>>(llmTags.OutputMessagesJson);
 
+            // Find the last user message with text content
+            string promptContent = null;
+            string promptRole = null;
+
+            for (int i = inputMessages.Count - 1; i >= 0; i--)
+            {
+                var message = inputMessages[i];
+                if (message.Role?.Equals("user", StringComparison.OrdinalIgnoreCase) == true && 
+                    message.Parts != null)
+                {
+                    // Find the first text part in this message
+                    foreach (var part in message.Parts)
+                    {
+                        if (part.Type?.Equals("text", StringComparison.OrdinalIgnoreCase) == true && 
+                            part.Content is string textContent && 
+                            !string.IsNullOrEmpty(textContent))
+                        {
+                            promptContent = textContent;
+                            promptRole = message.Role;
+                            break;
+                        }
+                    }
+
+                    if (promptContent != null)
+                        break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(promptContent))
+            {
+                Log.Debug($"{activityLogPrefix} could not find a user message with text content. Skipping LLM event creation.");
+                return;
+            }
+
             var completionId = EventHelper.CreateChatCompletionEvent(
                 agent,
                 segment,
@@ -720,37 +754,54 @@ public static class ActivityBridgeSegmentHelpers
                 headers: null,
                 errorData: null);
 
-            // Prompt
+            // Prompt - using the last user message with text content
             EventHelper.CreateChatMessageEvent(
                 agent,
                 segment,
                 requestId: null,
                 responseId: llmTags.ResponseId,
                 responseModel: llmTags.ResponseModel,
-                content: inputMessages[0].Parts[0].Content,
-                role: inputMessages[0].Role,
+                content: promptContent,
+                role: promptRole,
                 sequence: 0,
                 completionId: completionId,
                 isResponse: false,
                 vendor: llmTags.ProviderName,
                 tokenCount: llmTags.InputTokenCount);
 
-            // Response
-            if (outputMessages[0].FinishReason == "stop")
+            // Response - find first text part in output
+            string responseContent = null;
+            string responseRole = null;
+            if (outputMessages[0].FinishReason == "stop" && outputMessages[0].Parts != null)
             {
-                EventHelper.CreateChatMessageEvent(
-                    agent,
-                    segment,
-                    requestId: null,
-                    responseId: llmTags.ResponseId,
-                    responseModel: llmTags.ResponseModel,
-                    content: outputMessages[0].Parts[0].Content,
-                    role: outputMessages[0].Role,
-                    sequence: 1,
-                    completionId: completionId,
-                    isResponse: true,
-                    vendor: llmTags.ProviderName,
-                    tokenCount: llmTags.OutputTokenCount);
+                foreach (var part in outputMessages[0].Parts)
+                {
+                    if (part.Type?.Equals("text", StringComparison.OrdinalIgnoreCase) == true && 
+                        part.Content is string textContent && 
+                        !string.IsNullOrEmpty(textContent))
+                    {
+                        responseContent = textContent;
+                        responseRole = outputMessages[0].Role;
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(responseContent))
+                {
+                    EventHelper.CreateChatMessageEvent(
+                        agent,
+                        segment,
+                        requestId: null,
+                        responseId: llmTags.ResponseId,
+                        responseModel: llmTags.ResponseModel,
+                        content: responseContent,
+                        role: responseRole,
+                        sequence: 1,
+                        completionId: completionId,
+                        isResponse: true,
+                        vendor: llmTags.ProviderName,
+                        tokenCount: llmTags.OutputTokenCount);
+                }
             }
         }
         catch (Exception ex)
