@@ -140,6 +140,8 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
             Assert.NotNull(transactionEventAsync);
             Assert.NotNull(transactionEventStreaming);
             Assert.NotNull(transactionEventSync);
+
+            Assert.Equal(3, customEventsSuccess.Count);
             ValidateCommonAttributes(customEventsSuccess);
 
             Assert.NotNull(customEventFailure);
