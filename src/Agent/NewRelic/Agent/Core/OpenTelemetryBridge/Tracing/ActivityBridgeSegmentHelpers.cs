@@ -708,6 +708,7 @@ public static class ActivityBridgeSegmentHelpers
             // Find the last user message with text content
             string promptContent = null;
             string promptRole = null;
+            int sequenceNumber = 0;
 
             for (int i = inputMessages.Count - 1; i >= 0; i--)
             {
@@ -724,6 +725,7 @@ public static class ActivityBridgeSegmentHelpers
                         {
                             promptContent = textContent;
                             promptRole = message.Role;
+                            sequenceNumber = i; // TODO: figure out if this is actually right
                             break;
                         }
                     }
@@ -763,7 +765,7 @@ public static class ActivityBridgeSegmentHelpers
                 responseModel: llmTags.ResponseModel,
                 content: promptContent,
                 role: promptRole,
-                sequence: 0,
+                sequence: sequenceNumber,
                 completionId: completionId,
                 isResponse: false,
                 vendor: llmTags.ProviderName,
@@ -796,7 +798,7 @@ public static class ActivityBridgeSegmentHelpers
                         responseModel: llmTags.ResponseModel,
                         content: responseContent,
                         role: responseRole,
-                        sequence: 1,
+                        sequence: sequenceNumber + 1, // TODO: figure out if this is actually right
                         completionId: completionId,
                         isResponse: true,
                         vendor: llmTags.ProviderName,
@@ -1009,5 +1011,5 @@ public class InputMessage
 public class Part
 {
     public string Type { get; set; }
-    public string Content { get; set; }
+    public object Content { get; set; }
 }
