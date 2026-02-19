@@ -4,8 +4,8 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- retain alphabetical order please! -->
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.15.1" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.15.1" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.16" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.16" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="AWSSDK.Lambda" Version="4.0.0.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="AWSSDK.Lambda" Version="4.0.0.1" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.9" Condition="'$(TargetFramework)' == 'net481'" />
@@ -34,12 +34,12 @@
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.57.0" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" Condition="'$(TargetFramework)' == 'net10.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" Condition="'$(TargetFramework)' == 'net10.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.2" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.2" Condition="'$(TargetFramework)' == 'net10.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.2" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.2" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.3" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.3" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.3" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.3" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.3" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.3" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="MongoDB.Driver" Version="3.6.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="MongoDB.Driver" Version="3.6.0" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="MySql.Data" Version="9.6.0" Condition="'$(TargetFramework)' == 'net481'" />
@@ -60,7 +60,7 @@
     <PackageReference Include="npgsql" Version="7.0.7" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- NServiceBus v9+ only supports .NET8+, so constrain FW target to the latest 8.x version -->
     <PackageReference Include="NServiceBus" Version="8.2.4" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="NServiceBus" Version="10.0.0" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="NServiceBus" Version="10.1.0" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!--OpenAI -->
     <PackageReference Include="OpenAI" Version="2.8.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="OpenAI" Version="2.8.0" Condition="'$(TargetFramework)' == 'net10.0'" />
@@ -75,8 +75,8 @@
     <PackageReference Include="RabbitMQ.Client" Version="7.1.2" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- Latest version of RestSharp to test against. Relies on HttpClient instrumentation. -->
     <PackageReference Include="RestSharp" Version="113.1.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Serilog" Version="4.3.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Serilog" Version="4.3.0" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Serilog" Version="4.3.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Serilog" Version="4.3.1" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" Condition="'$(TargetFramework)' == 'net10.0'" />
@@ -84,9 +84,9 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" Condition="'$(TargetFramework)' == 'net10.0'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.9.25" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.9.25" Condition="'$(TargetFramework)' == 'net10.0'" />
-    <PackageReference Include="System.Data.Odbc" Version="10.0.2" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="System.Data.Odbc" Version="10.0.2" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.11.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.11.0" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="System.Data.Odbc" Version="10.0.3" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="System.Data.Odbc" Version="10.0.3" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
 </Project>
