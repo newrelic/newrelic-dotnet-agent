@@ -66,6 +66,9 @@ public class AttributeTestingController : Controller
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("intArray", new[] { 1, 2, 3, 4, 5 });
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("boolArray", new[] { true, false, true });
 
+        // Attempt to force this as the captured transaction trace.
+        System.Threading.Thread.Sleep(1000);
+
         return "success";
     }
 
