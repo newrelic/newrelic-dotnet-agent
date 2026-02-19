@@ -80,6 +80,10 @@ public class MyController : ApiController
     [Route("api/CustomEmptyArrayAttributes")]
     public string CustomEmptyArrayAttributes()
     {
+        // Add a regular attribute to ensure transaction gets traced
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("test", "empty-arrays");
+
+        // These should be skipped by our array logic
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("emptyArray", new string[] { });
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("nullOnlyArray", new object[] { null, null });
 
