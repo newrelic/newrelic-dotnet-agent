@@ -1083,6 +1083,37 @@ public static class Assertions
 
                 break;
             }
+            case object[] expectedArray:
+            {
+                var actualValue = rawActualValue as object[];
+                if (actualValue == null)
+                {
+                    builder.AppendFormat("Attribute named {0} in the {3} had an unexpected value.  Expected: array [{1}], Actual: {2}", expectedAttribute.Key, string.Join(", ", expectedArray), rawActualValue, wireModelTypeName);
+                    builder.AppendLine();
+                    succeeded = false;
+                }
+                else if (actualValue.Length != expectedArray.Length)
+                {
+                    builder.AppendFormat("Attribute named {0} in the {3} had an unexpected array length.  Expected: {1}, Actual: {2}", expectedAttribute.Key, expectedArray.Length, actualValue.Length, wireModelTypeName);
+                    builder.AppendLine();
+                    succeeded = false;
+                }
+                else
+                {
+                    // Compare array elements
+                    for (int i = 0; i < expectedArray.Length; i++)
+                    {
+                        if (!Equals(expectedArray[i], actualValue[i]))
+                        {
+                            builder.AppendFormat("Attribute named {0} in the {3} had an unexpected value at index {4}.  Expected: {1}, Actual: {2}", expectedAttribute.Key, expectedArray[i], actualValue[i], wireModelTypeName, i);
+                            builder.AppendLine();
+                            succeeded = false;
+                        }
+                    }
+                }
+
+                break;
+            }
             default:
                 throw new NotImplementedException("Attribute handling for your type has not yet been implemented. The method only supports strings and bools. Update to add your type!");
         }
