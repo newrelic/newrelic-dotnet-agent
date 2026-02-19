@@ -46,12 +46,6 @@ public class AspNetCoreWebApiCustomAttributesFixture : RemoteApplicationFixture
         var address = $"http://{DestinationServerName}:{Port}/api/CustomArrayWithNulls";
         GetStringAndAssertEqual(address, "success");
     }
-
-    public void GetCustomArrayErrorAttributes()
-    {
-        var address = $"http://{DestinationServerName}:{Port}/api/CustomArrayErrorAttributes";
-        GetStringAndAssertEqual(address, "success");
-    }
 }
 public class HSMAspNetCoreWebApiCustomAttributesFixture : AspNetCoreWebApiCustomAttributesFixture
 {

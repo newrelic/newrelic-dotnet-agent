@@ -110,12 +110,6 @@ public class CustomAttributesWebApi : RemoteApplicationFixture
         var address = string.Format("http://{0}:{1}/api/CustomArrayWithNulls", DestinationServerName, Port);
         GetJsonAndAssertEqual(address, "success");
     }
-
-    public void GetCustomArrayErrorAttributes()
-    {
-        var address = string.Format("http://{0}:{1}/api/CustomArrayErrorAttributes", DestinationServerName, Port);
-        GetJsonAndAssertEqual(address, "success");
-    }
 }
 
 public class HSMCustomAttributesWebApi : CustomAttributesWebApi

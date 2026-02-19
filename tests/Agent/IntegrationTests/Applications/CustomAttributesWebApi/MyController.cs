@@ -97,19 +97,8 @@ public class MyController : ApiController
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("arrayWithNulls", new object[] { "first", null, "third" });
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("listAttribute", new List<string> { "list1", "list2", "list3" });
 
-        return "success";
-    }
-
-    [HttpGet]
-    [Route("api/CustomArrayErrorAttributes")]
-    public string CustomArrayErrorAttributes()
-    {
-        var errorAttributes = new Dictionary<string, object>
-        {
-            {"errorTags", new[] { "error", "critical", "timeout" }},
-            {"errorCodes", new[] { 500, 503, 404 }},
-        };
-        NewRelic.Api.Agent.NewRelic.NoticeError(new System.InvalidOperationException("Array error occurred."), errorAttributes);
+        // Attempt to force this as the captured transaction trace.
+        Thread.Sleep(1000);
 
         return "success";
     }
