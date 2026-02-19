@@ -59,25 +59,10 @@ public static class JsonSerializerHelpers
 
     private static bool ShouldSkipValue(object value)
     {
-        if (value == null)
-        {
-            return true;
-        }
-
-        if (value is IEnumerable enumerable && !(value is string))
-        {
-            // Check if the enumerable is empty or contains only nulls
-            foreach (var element in enumerable)
-            {
-                if (element != null)
-                {
-                    return false; // Found a non-null element, don't skip
-                }
-            }
-            return true; // Empty or all nulls, skip it
-        }
-
-        return false;
+        // Skip null values and collections that only contain null values. This prevents us from sending empty arrays to New Relic,
+        // which can cause issues with some of our backend processing.
+        return value == null || value is IEnumerable enumerable and not string &&
+            enumerable.Cast<object>().All(element => element == null);
     }
 
     private static void WriteValue(JsonWriter writer, object value, string contextKey = null)
