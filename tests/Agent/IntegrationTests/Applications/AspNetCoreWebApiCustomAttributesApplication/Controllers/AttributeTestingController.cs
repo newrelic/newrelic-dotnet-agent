@@ -96,17 +96,4 @@ public class AttributeTestingController : Controller
         return "success";
     }
 
-    [HttpGet]
-    [Route("api/CustomArrayErrorAttributes")]
-    public string CustomArrayErrorAttributes()
-    {
-        var errorAttributes = new Dictionary<string, object>
-        {
-            {"errorTags", new[] { "error", "critical", "timeout" }},
-            {"errorCodes", new[] { 500, 503, 404 }},
-        };
-        NewRelic.Api.Agent.NewRelic.NoticeError("Array error occurred.", errorAttributes);
-
-        return "success";
-    }
 }
