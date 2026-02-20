@@ -69,47 +69,47 @@ public static class JsonSerializerHelpers
     {
         switch (value)
         {
-            case string s:
-                writer.WriteValue(s);
+            case string _:
+                writer.WriteValue(value);
                 break;
-            case long l:
-                writer.WriteValue(l);
+            case long _:
+                writer.WriteValue(value);
                 break;
-            case int i:
-                writer.WriteValue(i);
+            case int _:
+                writer.WriteValue(value);
                 break;
-            case bool b:
-                writer.WriteValue(b);
+            case bool _:
+                writer.WriteValue(value);
                 break;
-            case double d:
-                writer.WriteValue(d);
+            case double _:
+                writer.WriteValue(value);
                 break;
-            case float f:
-                writer.WriteValue(f);
+            case float _:
+                writer.WriteValue(value);
                 break;
-            case decimal value1:
-                writer.WriteValue(value1);
+            case decimal _:
+                writer.WriteValue(value);
                 break;
-            case char c:
-                writer.WriteValue(c);
+            case char _:
+                writer.WriteValue(value);
                 break;
-            case ushort value1:
-                writer.WriteValue(value1);
+            case ushort _:
+                writer.WriteValue(value);
                 break;
-            case uint u:
-                writer.WriteValue(u);
+            case uint _:
+                writer.WriteValue(value);
                 break;
-            case ulong value1:
-                writer.WriteValue(value1);
+            case ulong _:
+                writer.WriteValue(value);
                 break;
-            case short s:
-                writer.WriteValue(s);
+            case short _:
+                writer.WriteValue(value);
                 break;
-            case sbyte value1:
-                writer.WriteValue(value1);
+            case sbyte _:
+                writer.WriteValue(value);
                 break;
-            case byte b:
-                writer.WriteValue(b);
+            case byte _:
+                writer.WriteValue(value);
                 break;
             case IEnumerable enumerable:
                 writer.WriteStartArray();
