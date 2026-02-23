@@ -1,0 +1,33 @@
+# Rust build artifacts
+/target/
+
+# Cargo lock file - keep for applications to ensure reproducible builds
+# Cargo.lock is committed for POC to maintain exact dependency versions
+
+# Local configuration
+.cargo/config.toml.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Docker build context (we want to keep Docker files for documentation)
+# But ignore any temporary Docker artifacts
+.docker-build-cache/

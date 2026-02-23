@@ -1,0 +1,50 @@
+[package]
+name = "newrelic-profiler-poc"
+version = "0.1.0"
+edition = "2021"
+description = "New Relic .NET Agent Profiler - Rust POC"
+authors = ["New Relic, Inc."]
+
+[lib]
+name = "newrelic_profiler_poc"
+crate-type = ["cdylib"]
+
+[dependencies]
+# Cross-platform dependencies
+log = "0.4"
+env_logger = "0.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Windows COM support
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.52", features = [
+    "implement",
+    "Win32_System_Com",
+    "Win32_System_Diagnostics_Debug",
+    "Win32_Foundation",
+    "Win32_System_Threading",
+    "Win32_System_ProcessStatus",
+    "Win32_System_SystemServices",
+    "Win32_System_Diagnostics_ToolHelp"
+] }
+
+# Unix-specific dependencies
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3.8"
+
+# Build profiles
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+panic = "abort"  # COM doesn't handle Rust panics well
+
+# Platform-specific build targets
+# Windows x86/x64, Linux x64/ARM64 (glibc + musl), macOS ARM64 (stretch goal)
+# Key value: musl support for Alpine Linux (current C++ limitation)

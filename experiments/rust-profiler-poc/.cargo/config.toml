@@ -1,0 +1,62 @@
+# Cargo configuration for cross-platform builds
+# Supports Windows x86/x64, Linux x64/ARM64, and macOS ARM64
+
+# Build targets that we need to support
+[build]
+# Default to native target for development
+
+# Cross-compilation targets
+[target.i686-pc-windows-msvc]
+linker = "link.exe"
+
+[target.x86_64-pc-windows-msvc]
+linker = "link.exe"
+
+[target.x86_64-unknown-linux-gnu]
+linker = "x86_64-linux-gnu-gcc"
+
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+
+# Musl targets - key value proposition (current C++ limitation)
+[target.x86_64-unknown-linux-musl]
+linker = "rust-lld"
+rustflags = [
+    "-C", "target-feature=-crt-static",
+    "-C", "link-arg=-nostdlib",
+    "-C", "link-arg=-static-libgcc"
+]
+
+[target.aarch64-unknown-linux-musl]
+linker = "rust-lld"
+rustflags = [
+    "-C", "target-feature=-crt-static",
+    "-C", "link-arg=-nostdlib",
+    "-C", "link-arg=-static-libgcc"
+]
+
+[target.aarch64-apple-darwin]
+linker = "clang"
+
+# Environment variables for profiler development
+[env]
+# Enable validation by default in development
+NEWRELIC_VALIDATION_ENABLED = "1"
+NEWRELIC_VALIDATION_OUTPUT = "./target/validation"
+
+# Profiler logging
+NEWRELIC_PROFILER_LOG = "1"
+RUST_LOG = "debug"
+
+# Build flags for performance
+[target.'cfg(not(debug_assertions))']
+rustflags = ["-C", "target-cpu=native"]
+
+# Debug symbols for troubleshooting
+[profile.dev]
+debug = true
+split-debuginfo = "packed"
+
+[profile.release]
+debug = true
+split-debuginfo = "packed"
