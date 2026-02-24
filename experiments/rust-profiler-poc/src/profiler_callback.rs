@@ -99,6 +99,11 @@ class! {
                     minor_version
                 );
 
+                // Check if this process should be instrumented
+                if !crate::process_filter::should_instrument_process(is_core_clr) {
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+
                 // Set event mask — matches the C++ profiler's mask exactly
                 let event_mask: DWORD = (COR_PRF_MONITOR::COR_PRF_MONITOR_JIT_COMPILATION
                     | COR_PRF_MONITOR::COR_PRF_MONITOR_MODULE_LOADS

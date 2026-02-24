@@ -144,6 +144,40 @@ Full analysis: [docs/logging-requirements.md](logging-requirements.md)
 
 **Status**: `env_logger` is fine for POC development. Custom file logger needed before integration testing phase.
 
+### Process Filtering / ShouldInstrument (Identified 2026-02-24)
+
+The C++ profiler's `Initialize()` checks whether the current process should be instrumented
+before subscribing to events. Key logic in `CorProfilerCallbackImpl.h`:
+
+```cpp
+if (!forceProfiling && !configuration->ShouldInstrument(processPath, parentProcessPath, appPoolId, commandLine, _isCoreClr)) {
+    LogInfo("This process should not be instrumented, unloading profiler.");
+    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+}
+```
+
+This includes:
+- Process name/path exclusion lists (e.g., `SMSvcHost.exe`)
+- Parent process detection (is this an IIS worker?)
+- App pool ID filtering
+- Configuration-driven include/exclude rules
+- `NEW_RELIC_PROFILER_FORCE_PROFILING` override
+
+Without this, the Rust profiler attaches to **every** .NET process that inherits the
+environment variables — including the `dotnet` CLI host itself. During testing we observed
+the profiler loading twice: once for the dotnet host (CoreCLR v10.0) and once for the
+actual target app (CoreCLR v8.0).
+
+**Status**: Basic filtering implemented in `src/process_filter.rs` (2026-02-24). Covers:
+- ✅ `dotnet run/publish/restore/new` CLI command exclusion
+- ✅ MSBuild invocation exclusion
+- ✅ Kudu / DiagServer (Azure) exclusion
+- ✅ SMSvcHost.exe exclusion (.NET Framework)
+- ⏳ Configuration-driven process exclusion lists (Phase 2/3)
+- ⏳ Parent process detection / IIS w3wp identification (Phase 2/3)
+- ⏳ App pool filtering (Phase 2/3)
+- ⏳ `NEW_RELIC_PROFILER_FORCE_PROFILING` override (Phase 2/3)
+
 ## Questions for Next Session
 
 1. **Build Testing**: Which platform should we prioritize for initial testing?
@@ -172,3 +206,81 @@ All POC files are staged and ready for:
 4. Begin side-by-side profiler comparison testing
 
 All POC files ready on branch `poc/tippmar-nr-rust-profiler` with comprehensive implementation strategy documented.
+
+## Session 2: COM Interface & CLR Attachment (2026-02-24)
+
+### ✅ Completed Tasks
+
+#### COM Interface Implementation
+- Full `ICorProfilerCallback` through `ICorProfilerCallback4` interface definitions with all ~80 vtable methods
+- `DllGetClassObject` / `DllCanUnloadNow` exports via `com` crate's `class!` macro
+- `IClassFactory` generated automatically by the `com` crate
+- `NewRelicProfiler` COM class with proper CLSID matching the C++ profiler
+
+#### ICorProfilerInfo Interfaces
+- `ICorProfilerInfo` through `ICorProfilerInfo5` interface definitions (~80 vtable methods)
+- Methods we don't call use opaque `*const c_void` for ABI compatibility
+- Full signatures for methods we do call: `SetEventMask`, `GetRuntimeInformation`, `SetEventMask2`
+
+#### Working Initialize() Implementation
+- Queries `ICorProfilerInfo4` via `QueryInterface`
+- Calls `GetRuntimeInformation` to detect Desktop CLR vs CoreCLR
+- Sets event mask matching the C++ profiler exactly (JIT, module loads, threads, ReJIT, etc.)
+- Tries `SetEventMask2` (ICorProfilerInfo5) to disable tiered compilation, falls back to `SetEventMask`
+
+#### Process Filtering
+- `process_filter.rs` module with command-line-based exclusion logic
+- Excludes `dotnet run/publish/restore/new` CLI commands
+- Excludes MSBuild, Kudu, DiagServer (Azure), SMSvcHost.exe
+- 6 unit tests covering exclusion and pass-through cases
+
+#### Test Infrastructure
+- `ProfilerTestApp` — .NET 8 console app exercising JIT, async, generics, exception handling
+- `run-with-profiler.ps1` (Windows) and `run-with-profiler.sh` (Linux) launch scripts
+- Sets `CORECLR_ENABLE_PROFILING`, `CORECLR_PROFILER`, `CORECLR_PROFILER_PATH`
+
+#### Documentation Updates
+- Logging requirements doc (`docs/logging-requirements.md`)
+- Validation strategy rewritten with concrete three-layer approach
+- ICorProfilerCallback version upgrade notes
+- Process filtering documented as known risk with implementation status
+
+### 🎯 Key Achievement: CLR Attachment Proven
+
+The Rust profiler successfully:
+1. Loads into the CLR via `DllGetClassObject`
+2. Creates profiler instance via class factory
+3. Receives `Initialize()` callback
+4. Queries `ICorProfilerInfo4` and `ICorProfilerInfo5`
+5. Detects CoreCLR v8.0 runtime
+6. Sets event mask with tiered compilation disabled
+7. Receives **623 JIT compilation events** and **9 module loads**
+8. Excludes `dotnet` CLI host process (only instruments the target app)
+9. Clean `Shutdown()` on process exit
+
+### 📊 Updated Status
+
+| Component | Status | Confidence |
+|-----------|--------|------------|
+| Project Structure | ✅ Complete | High |
+| Build System | ✅ Complete | High |
+| Musl Compilation | ✅ Proven | High |
+| COM Interface (Callback) | ✅ Complete | High |
+| COM Interface (ProfilerInfo) | ✅ Complete | High |
+| CLR Attachment | ✅ **Proven** | High |
+| Process Filtering (basic) | ✅ Complete | High |
+| Event Reception (JIT/Module) | ✅ **Proven** | High |
+| Validation Framework | ✅ Complete | High |
+| Documentation | ✅ Complete | High |
+| Logging (file-based) | ⏳ Not started | — |
+| Configuration Loading | ⏳ Not started | — |
+| Method Resolution | ⏳ Not started | — |
+| IL Manipulation | ⏳ Not started | — |
+
+### Next Steps
+
+1. **Capture C++ IL reference data** — Enable `WRITE_BYTES_TO_DISK` in C++ profiler, run test app, collect `.bin` files for Layer 1 validation
+2. **Method resolution** — Use `ICorProfilerInfo4::GetFunctionInfo` to resolve method names from FunctionIDs received in JIT events
+3. **IL injection POC** — Start with simplest case (void, no args, tiny header)
+
+## End of Session 2 (2026-02-24)
