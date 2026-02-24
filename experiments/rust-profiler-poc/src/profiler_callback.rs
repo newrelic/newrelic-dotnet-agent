@@ -197,11 +197,23 @@ class! {
                         if let Some(ref matcher) = *matcher_borrow {
                             if matcher.matches(&func_info.assembly_name, &func_info.type_name, &func_info.method_name) {
                                 info!(
-                                    "MATCH: [{}] {}.{} (FunctionID=0x{:x})",
+                                    "MATCH: [{}] {}.{} — requesting ReJIT",
                                     func_info.assembly_name, func_info.type_name,
-                                    func_info.method_name, functionId
+                                    func_info.method_name
                                 );
-                                // TODO: Request ReJIT for this method
+                                let mut module_ids = [func_info.module_id];
+                                let mut method_ids = [func_info.method_token];
+                                let hr = profiler_info.RequestReJIT(
+                                    1,
+                                    module_ids.as_mut_ptr(),
+                                    method_ids.as_mut_ptr(),
+                                );
+                                if failed(hr) {
+                                    error!(
+                                        "RequestReJIT failed: 0x{:08x} for {}.{}",
+                                        hr, func_info.type_name, func_info.method_name
+                                    );
+                                }
                             }
                         }
 
@@ -294,13 +306,14 @@ class! {
 
     impl ICorProfilerCallback4 for NewRelicProfiler {
         pub fn ReJITCompilationStarted(&self, functionId: FunctionID, rejitId: ReJITID, fIsSafeToBlock: BOOL) -> HRESULT {
-            trace!("ReJITCompilationStarted: FunctionID=0x{:x}, ReJITID={}", functionId, rejitId);
-            // TODO: Phase 2 - Implement IL rewriting here
+            info!("ReJITCompilationStarted: FunctionID=0x{:x}, ReJITID={}", functionId, rejitId);
             S_OK
         }
 
         pub fn GetReJITParameters(&self, moduleId: ModuleID, methodId: mdMethodDef, pFunctionControl: *const c_void) -> HRESULT {
-            trace!("GetReJITParameters: ModuleID=0x{:x}, MethodDef=0x{:x}", moduleId, methodId);
+            info!("GetReJITParameters: ModuleID=0x{:x}, MethodDef=0x{:x}", moduleId, methodId);
+            // TODO: This is where IL rewriting will happen.
+            // The pFunctionControl parameter has SetILFunctionBody to inject modified IL.
             S_OK
         }
 
