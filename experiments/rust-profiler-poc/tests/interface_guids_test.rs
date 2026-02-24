@@ -100,3 +100,14 @@ fn imetadata_import_guid_matches_cor_h() {
     assert_eq!(iid.data2, 0xD3AE);
     assert_eq!(iid.data3, 0x4C75);
 }
+
+#[test]
+fn icor_profiler_function_control_guid_matches_corprof_h() {
+    use newrelic_profiler_poc::function_control::ICorProfilerFunctionControl;
+
+    // ICorProfilerFunctionControl: {F0963021-E1EA-4732-8581-E01B0BD3C0C6}
+    let iid = ICorProfilerFunctionControl::IID;
+    assert_eq!(iid.data1, 0xF0963021);
+    assert_eq!(iid.data2, 0xE1EA);
+    assert_eq!(iid.data3, 0x4732);
+}

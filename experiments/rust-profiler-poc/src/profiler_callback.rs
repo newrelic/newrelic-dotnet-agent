@@ -8,6 +8,7 @@
 //! handles vtable layout, reference counting, and QueryInterface automatically.
 
 use crate::ffi::*;
+use crate::function_control::ICorProfilerFunctionControl;
 use crate::instrumentation::InstrumentationMatcher;
 use crate::interfaces::*;
 use crate::method_resolver;
@@ -312,8 +313,49 @@ class! {
 
         pub fn GetReJITParameters(&self, moduleId: ModuleID, methodId: mdMethodDef, pFunctionControl: *const c_void) -> HRESULT {
             info!("GetReJITParameters: ModuleID=0x{:x}, MethodDef=0x{:x}", moduleId, methodId);
-            // TODO: This is where IL rewriting will happen.
-            // The pFunctionControl parameter has SetILFunctionBody to inject modified IL.
+
+            unsafe {
+                if pFunctionControl.is_null() {
+                    error!("GetReJITParameters: pFunctionControl is null");
+                    return S_OK;
+                }
+
+                // Get the ICorProfilerFunctionControl interface
+                let function_control: ICorProfilerFunctionControl =
+                    std::mem::transmute(pFunctionControl);
+
+                // Get the original IL body
+                if let Some(ref profiler_info) = *self.profiler_info.borrow() {
+                    let mut il_header: LPCBYTE = std::ptr::null();
+                    let mut il_size: ULONG = 0;
+
+                    let hr = profiler_info.GetILFunctionBody(
+                        moduleId,
+                        methodId,
+                        &mut il_header,
+                        &mut il_size,
+                    );
+                    if failed(hr) || il_header.is_null() || il_size == 0 {
+                        error!("GetILFunctionBody failed: 0x{:08x}", hr);
+                        return S_OK;
+                    }
+
+                    info!(
+                        "  Original IL: {} bytes at 0x{:x}",
+                        il_size, il_header as usize
+                    );
+
+                    // Identity rewrite: write the original IL back unchanged.
+                    // This proves the full pipeline works without risking bad bytecode.
+                    let hr = function_control.SetILFunctionBody(il_size, il_header);
+                    if failed(hr) {
+                        error!("SetILFunctionBody failed: 0x{:08x}", hr);
+                    } else {
+                        info!("  IL identity rewrite successful ({} bytes)", il_size);
+                    }
+                }
+            }
+
             S_OK
         }
 
