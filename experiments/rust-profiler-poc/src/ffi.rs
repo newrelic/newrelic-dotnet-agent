@@ -39,8 +39,21 @@ pub type mdToken = u32;
 pub type mdMethodDef = mdToken;
 pub type mdTypeDef = mdToken;
 
-// GUID reference type
+// Pointer/handle types
+pub type HANDLE = *mut std::ffi::c_void;
+pub type ULONG32 = u32;
+
+// GUID reference types
 pub type REFGUID = *const GUID;
+pub type REFIID = *const GUID;
+
+// Additional CLR ID types
+pub type ContextID = usize;
+pub type mdFieldDef = mdToken;
+
+// Profiling API opaque types (pointer-sized)
+pub type COR_PRF_FRAME_INFO = usize;
+pub type COR_PRF_ELT_INFO = usize;
 
 // COR_PRF_JIT_CACHE enum
 pub type COR_PRF_JIT_CACHE = u32;

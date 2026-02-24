@@ -9,12 +9,13 @@
 
 use crate::ffi::*;
 use crate::interfaces::*;
+use crate::profiler_info::{ICorProfilerInfo4, ICorProfilerInfo5};
 use com::{
     interfaces::iunknown::IUnknown,
     sys::{GUID, HRESULT},
+    Interface,
 };
-use log::{debug, error, info, trace, warn};
-use std::cell::RefCell;
+use log::{error, info, trace};
 use std::ffi::c_void;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
@@ -56,9 +57,91 @@ class! {
         pub fn Initialize(&self, pICorProfilerInfoUnk: IUnknown) -> HRESULT {
             info!("New Relic Rust Profiler: Initialize called");
 
-            // TODO: Phase 2 - Query for ICorProfilerInfo4, set event mask, load config
-            // For now, just log that we were called and return S_OK to stay attached
-            info!("Profiler initialized successfully (POC - no event mask set yet)");
+            unsafe {
+                // Query for ICorProfilerInfo4
+                let mut profiler_info: Option<ICorProfilerInfo4> = None;
+                let hr = pICorProfilerInfoUnk.QueryInterface(
+                    &ICorProfilerInfo4::IID,
+                    &mut profiler_info as *mut _ as *mut *mut c_void,
+                );
+                if failed(hr) || profiler_info.is_none() {
+                    error!("Failed to get ICorProfilerInfo4: 0x{:08x}", hr);
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+                let profiler_info = profiler_info.unwrap();
+
+                // Get runtime information to determine CLR type
+                let mut runtime_type: u32 = 0;
+                let mut major_version: USHORT = 0;
+                let mut minor_version: USHORT = 0;
+                let hr = profiler_info.GetRuntimeInformation(
+                    std::ptr::null_mut(), // pClrInstanceId - don't need
+                    &mut runtime_type,
+                    &mut major_version,
+                    &mut minor_version,
+                    std::ptr::null_mut(), // pBuildNumber
+                    std::ptr::null_mut(), // pQFEVersion
+                    0,                     // cchVersionString
+                    std::ptr::null_mut(), // pcchVersionString
+                    std::ptr::null_mut(), // szVersionString
+                );
+                if failed(hr) {
+                    error!("Failed to get runtime information: 0x{:08x}", hr);
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+
+                let is_core_clr = runtime_type == COR_PRF_RUNTIME_TYPE::COR_PRF_CORE_CLR as u32;
+                self.is_core_clr.store(is_core_clr, Ordering::Relaxed);
+                info!(
+                    "Runtime: {} v{}.{}",
+                    if is_core_clr { "CoreCLR" } else { "Desktop CLR" },
+                    major_version,
+                    minor_version
+                );
+
+                // Set event mask — matches the C++ profiler's mask exactly
+                let event_mask: DWORD = (COR_PRF_MONITOR::COR_PRF_MONITOR_JIT_COMPILATION
+                    | COR_PRF_MONITOR::COR_PRF_MONITOR_MODULE_LOADS
+                    | COR_PRF_MONITOR::COR_PRF_USE_PROFILE_IMAGES
+                    | COR_PRF_MONITOR::COR_PRF_MONITOR_THREADS
+                    | COR_PRF_MONITOR::COR_PRF_ENABLE_STACK_SNAPSHOT
+                    | COR_PRF_MONITOR::COR_PRF_ENABLE_REJIT
+                    | COR_PRF_MONITOR::COR_PRF_DISABLE_ALL_NGEN_IMAGES)
+                    .bits();
+
+                // Try SetEventMask2 (ICorProfilerInfo5) to also disable tiered compilation
+                let mut profiler_info5: Option<ICorProfilerInfo5> = None;
+                let hr5 = pICorProfilerInfoUnk.QueryInterface(
+                    &ICorProfilerInfo5::IID,
+                    &mut profiler_info5 as *mut _ as *mut *mut c_void,
+                );
+                if !failed(hr5) {
+                    if let Some(info5) = profiler_info5 {
+                        // 0x8 = COR_PRF_HIGH_DISABLE_TIERED_COMPILATION
+                        let hr = info5.SetEventMask2(event_mask, 0x8);
+                        if failed(hr) {
+                            error!("SetEventMask2 failed: 0x{:08x}, falling back to SetEventMask", hr);
+                            let hr = profiler_info.SetEventMask(event_mask);
+                            if failed(hr) {
+                                error!("SetEventMask failed: 0x{:08x}", hr);
+                                return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                            }
+                        } else {
+                            info!("Event mask set via SetEventMask2 (tiered compilation disabled)");
+                        }
+                    }
+                } else {
+                    // Fall back to SetEventMask (no tiered compilation control)
+                    let hr = profiler_info.SetEventMask(event_mask);
+                    if failed(hr) {
+                        error!("SetEventMask failed: 0x{:08x}", hr);
+                        return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                    }
+                    info!("Event mask set via SetEventMask");
+                }
+
+                info!("Profiler initialized successfully");
+            }
             S_OK
         }
 
