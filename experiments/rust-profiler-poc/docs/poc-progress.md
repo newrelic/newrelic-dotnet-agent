@@ -134,6 +134,16 @@
 - **Build Reliability**: Eliminate ARM64 compilation issues
 - **Platform Expansion**: Enable macOS support if needed
 
+## Known Risks and Open Items
+
+### Logging Compatibility (Identified 2026-02-24)
+
+The current POC uses `log` + `env_logger` which only writes to stderr. The C++ profiler has a custom logging system that writes to per-process files (`NewRelic.Profiler.<PID>.log`) in a specific format (`[Level] YYYY-MM-DD HH:MM:SS message`). **Integration tests pattern-match against these log files**, so the Rust profiler must produce compatible output before side-by-side testing can begin.
+
+Full analysis: [docs/logging-requirements.md](logging-requirements.md)
+
+**Status**: `env_logger` is fine for POC development. Custom file logger needed before integration testing phase.
+
 ## Questions for Next Session
 
 1. **Build Testing**: Which platform should we prioritize for initial testing?
