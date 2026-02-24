@@ -1,3 +1,6 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Validation framework for ensuring perfect fidelity with C++ profiler
 //!
 //! This module provides tools for side-by-side comparison between the

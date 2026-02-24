@@ -1,65 +1,206 @@
-//! Simplified profiler callback for POC
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+//! New Relic .NET Agent Profiler - COM callback implementation
 //!
-//! This module contains a minimal profiler implementation to prove
-//! cross-platform compilation works, especially musl targets.
+//! This module implements the ICorProfilerCallback4 COM interface that the CLR
+//! calls into when profiling events occur. The `com` crate's `class!` macro
+//! handles vtable layout, reference counting, and QueryInterface automatically.
 
-use log::{info, debug};
+use crate::ffi::*;
+use crate::interfaces::*;
+use com::{
+    interfaces::iunknown::IUnknown,
+    sys::{GUID, HRESULT},
+};
+use log::{debug, error, info, trace, warn};
+use std::cell::RefCell;
+use std::ffi::c_void;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
-/// Profiler GUIDs - must match exactly with C++ implementation
-#[cfg(windows)]
-pub const PROFILER_GUID_NETFX: &str = "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}";
-#[cfg(windows)]
-pub const PROFILER_GUID_NETCORE: &str = "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}";
+/// New Relic profiler CLSID for .NET Framework
+/// Must match C++ profiler: {71DA0A04-7777-4EC6-9643-7D28B46A8A41}
+pub const CLSID_PROFILER_NETFX: com::CLSID = com::CLSID {
+    data1: 0x71DA0A04,
+    data2: 0x7777,
+    data3: 0x4EC6,
+    data4: [0x96, 0x43, 0x7D, 0x28, 0xB4, 0x6A, 0x8A, 0x41],
+};
 
-/// Simplified profiler callback for POC
-/// Real implementation will add COM interfaces later
-pub struct CorProfilerCallbackImpl {
-    /// Track initialization state
-    initialized: bool,
+/// New Relic profiler CLSID for .NET Core/.NET
+/// Must match C++ profiler: {36032161-FFC0-4B61-B559-F6C5D41BAE5A}
+pub const CLSID_PROFILER_CORECLR: com::CLSID = com::CLSID {
+    data1: 0x36032161,
+    data2: 0xFFC0,
+    data3: 0x4B61,
+    data4: [0xB5, 0x59, 0xF6, 0xC5, 0xD4, 0x1B, 0xAE, 0x5A],
+};
 
-    /// Simple event counter for validation
-    jit_events_received: std::sync::atomic::AtomicU64,
-    module_load_events: std::sync::atomic::AtomicU64,
-}
+class! {
+    /// The New Relic profiler COM object.
+    ///
+    /// Implements ICorProfilerCallback4 (which inherits Callback3 → 2 → 1 → IUnknown).
+    /// The CLR creates an instance via our class factory and calls these methods
+    /// as profiling events occur.
+    pub class NewRelicProfiler:
+        ICorProfilerCallback4(ICorProfilerCallback3(
+            ICorProfilerCallback2(ICorProfilerCallback))) {
+        is_core_clr: AtomicBool,
+        jit_event_count: AtomicU64,
+        module_load_count: AtomicU64,
+    }
 
-impl CorProfilerCallbackImpl {
-    pub fn new() -> Self {
-        info!("Creating new CorProfilerCallbackImpl");
+    // ==================== ICorProfilerCallback ====================
 
-        Self {
-            initialized: false,
-            jit_events_received: std::sync::atomic::AtomicU64::new(0),
-            module_load_events: std::sync::atomic::AtomicU64::new(0),
+    impl ICorProfilerCallback for NewRelicProfiler {
+        pub fn Initialize(&self, pICorProfilerInfoUnk: IUnknown) -> HRESULT {
+            info!("New Relic Rust Profiler: Initialize called");
+
+            // TODO: Phase 2 - Query for ICorProfilerInfo4, set event mask, load config
+            // For now, just log that we were called and return S_OK to stay attached
+            info!("Profiler initialized successfully (POC - no event mask set yet)");
+            S_OK
         }
-    }
 
-    /// Handle JIT compilation started event
-    pub fn jit_compilation_started(&mut self, function_id: usize, f_is_safe_to_block: bool) -> i32 {
-        let count = self.jit_events_received.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
-
-        if count <= 10 || count % 1000 == 0 {
-            debug!("JITCompilationStarted: FunctionID={}, SafeToBlock={}, Count={}",
-                   function_id, f_is_safe_to_block, count);
+        pub fn Shutdown(&self) -> HRESULT {
+            let jit_count = self.jit_event_count.load(Ordering::Relaxed);
+            let module_count = self.module_load_count.load(Ordering::Relaxed);
+            info!(
+                "New Relic Rust Profiler: Shutdown. JIT events: {}, Module loads: {}",
+                jit_count, module_count
+            );
+            S_OK
         }
 
-        0 // S_OK equivalent
+        pub fn AppDomainCreationStarted(&self, appDomainId: AppDomainID) -> HRESULT { S_OK }
+        pub fn AppDomainCreationFinished(&self, appDomainId: AppDomainID, hrStatus: HRESULT) -> HRESULT { S_OK }
+        pub fn AppDomainShutdownStarted(&self, appDomainId: AppDomainID) -> HRESULT { S_OK }
+        pub fn AppDomainShutdownFinished(&self, appDomainId: AppDomainID, hrStatus: HRESULT) -> HRESULT { S_OK }
+        pub fn AssemblyLoadStarted(&self, assemblyId: AssemblyID) -> HRESULT { S_OK }
+        pub fn AssemblyLoadFinished(&self, assemblyId: AssemblyID, hrStatus: HRESULT) -> HRESULT { S_OK }
+        pub fn AssemblyUnloadStarted(&self, assemblyId: AssemblyID) -> HRESULT { S_OK }
+        pub fn AssemblyUnloadFinished(&self, assemblyId: AssemblyID, hrStatus: HRESULT) -> HRESULT { S_OK }
+        pub fn ModuleLoadStarted(&self, moduleId: ModuleID) -> HRESULT { S_OK }
+
+        pub fn ModuleLoadFinished(&self, moduleId: ModuleID, hrStatus: HRESULT) -> HRESULT {
+            let count = self.module_load_count.fetch_add(1, Ordering::Relaxed) + 1;
+            trace!("ModuleLoadFinished: ModuleID=0x{:x}, Count={}", moduleId, count);
+            S_OK
+        }
+
+        pub fn ModuleUnloadStarted(&self, moduleId: ModuleID) -> HRESULT { S_OK }
+        pub fn ModuleUnloadFinished(&self, moduleId: ModuleID, hrStatus: HRESULT) -> HRESULT { S_OK }
+        pub fn ModuleAttachedToAssembly(&self, moduleId: ModuleID, AssemblyId: AssemblyID) -> HRESULT { S_OK }
+        pub fn ClassLoadStarted(&self, classId: ClassID) -> HRESULT { S_OK }
+        pub fn ClassLoadFinished(&self, classId: ClassID, hrStatus: HRESULT) -> HRESULT { S_OK }
+        pub fn ClassUnloadStarted(&self, classId: ClassID) -> HRESULT { S_OK }
+        pub fn ClassUnloadFinished(&self, classId: ClassID, hrStatus: HRESULT) -> HRESULT { S_OK }
+        pub fn FunctionUnloadStarted(&self, functionId: FunctionID) -> HRESULT { S_OK }
+
+        pub fn JITCompilationStarted(&self, functionId: FunctionID, fIsSafeToBlock: BOOL) -> HRESULT {
+            let count = self.jit_event_count.fetch_add(1, Ordering::Relaxed) + 1;
+
+            // Log first few events and then periodically to avoid log spam
+            if count <= 10 || count % 1000 == 0 {
+                trace!(
+                    "JITCompilationStarted: FunctionID=0x{:x}, SafeToBlock={}, Count={}",
+                    functionId, fIsSafeToBlock != 0, count
+                );
+            }
+
+            // TODO: Phase 2 - Check if method should be instrumented, request ReJIT
+            S_OK
+        }
+
+        pub fn JITCompilationFinished(&self, functionId: FunctionID, hrStatus: HRESULT, fIsSafeToBlock: BOOL) -> HRESULT { S_OK }
+        pub fn JITCachedFunctionSearchStarted(&self, functionId: FunctionID, pbUseCachedFunction: *mut BOOL) -> HRESULT { S_OK }
+        pub fn JITCachedFunctionSearchFinished(&self, functionId: FunctionID, result: COR_PRF_JIT_CACHE) -> HRESULT { S_OK }
+        pub fn JITFunctionPitched(&self, functionId: FunctionID) -> HRESULT { S_OK }
+        pub fn JITInlining(&self, callerId: FunctionID, calleeId: FunctionID, pfShouldInline: *mut BOOL) -> HRESULT { S_OK }
+        pub fn ThreadCreated(&self, threadId: ThreadID) -> HRESULT { S_OK }
+        pub fn ThreadDestroyed(&self, threadId: ThreadID) -> HRESULT { S_OK }
+        pub fn ThreadAssignedToOSThread(&self, managedThreadId: ThreadID, osThreadId: DWORD) -> HRESULT { S_OK }
+        pub fn RemotingClientInvocationStarted(&self) -> HRESULT { S_OK }
+        pub fn RemotingClientSendingMessage(&self, pCookie: *const GUID, fIsAsync: BOOL) -> HRESULT { S_OK }
+        pub fn RemotingClientReceivingReply(&self, pCookie: *const GUID, fIsAsync: BOOL) -> HRESULT { S_OK }
+        pub fn RemotingClientInvocationFinished(&self) -> HRESULT { S_OK }
+        pub fn RemotingServerReceivingMessage(&self, pCookie: *const GUID, fIsAsync: BOOL) -> HRESULT { S_OK }
+        pub fn RemotingServerInvocationStarted(&self) -> HRESULT { S_OK }
+        pub fn RemotingServerInvocationReturned(&self) -> HRESULT { S_OK }
+        pub fn RemotingServerSendingReply(&self, pCookie: *const GUID, fIsAsync: BOOL) -> HRESULT { S_OK }
+        pub fn UnmanagedToManagedTransition(&self, functionId: FunctionID, reason: COR_PRF_TRANSITION_REASON) -> HRESULT { S_OK }
+        pub fn ManagedToUnmanagedTransition(&self, functionId: FunctionID, reason: COR_PRF_TRANSITION_REASON) -> HRESULT { S_OK }
+        pub fn RuntimeSuspendStarted(&self, suspendReason: COR_PRF_SUSPEND_REASON) -> HRESULT { S_OK }
+        pub fn RuntimeSuspendFinished(&self) -> HRESULT { S_OK }
+        pub fn RuntimeSuspendAborted(&self) -> HRESULT { S_OK }
+        pub fn RuntimeResumeStarted(&self) -> HRESULT { S_OK }
+        pub fn RuntimeResumeFinished(&self) -> HRESULT { S_OK }
+        pub fn RuntimeThreadSuspended(&self, threadId: ThreadID) -> HRESULT { S_OK }
+        pub fn RuntimeThreadResumed(&self, threadId: ThreadID) -> HRESULT { S_OK }
+        pub fn MovedReferences(&self, cMovedObjectIDRanges: ULONG, oldObjectIDRangeStart: *const ObjectID, newObjectIDRangeStart: *const ObjectID, cObjectIDRangeLength: *const ULONG) -> HRESULT { S_OK }
+        pub fn ObjectAllocated(&self, objectId: ObjectID, classId: ClassID) -> HRESULT { S_OK }
+        pub fn ObjectsAllocatedByClass(&self, cClassCount: ULONG, classIds: *const ClassID, cObjects: *const ULONG) -> HRESULT { S_OK }
+        pub fn ObjectReferences(&self, objectId: ObjectID, classId: ClassID, cObjectRefs: ULONG, objectRefIds: *const ObjectID) -> HRESULT { S_OK }
+        pub fn RootReferences(&self, cRootRefs: ULONG, rootRefIds: *const ObjectID) -> HRESULT { S_OK }
+        pub fn ExceptionThrown(&self, thrownObjectId: ObjectID) -> HRESULT { S_OK }
+        pub fn ExceptionSearchFunctionEnter(&self, functionId: FunctionID) -> HRESULT { S_OK }
+        pub fn ExceptionSearchFunctionLeave(&self) -> HRESULT { S_OK }
+        pub fn ExceptionSearchFilterEnter(&self, functionId: FunctionID) -> HRESULT { S_OK }
+        pub fn ExceptionSearchFilterLeave(&self) -> HRESULT { S_OK }
+        pub fn ExceptionSearchCatcherFound(&self, functionId: FunctionID) -> HRESULT { S_OK }
+        pub fn ExceptionOSHandlerEnter(&self, __unused: UINT_PTR) -> HRESULT { S_OK }
+        pub fn ExceptionOSHandlerLeave(&self, __unused: UINT_PTR) -> HRESULT { S_OK }
+        pub fn ExceptionUnwindFunctionEnter(&self, functionId: FunctionID) -> HRESULT { S_OK }
+        pub fn ExceptionUnwindFunctionLeave(&self) -> HRESULT { S_OK }
+        pub fn ExceptionUnwindFinallyEnter(&self, functionId: FunctionID) -> HRESULT { S_OK }
+        pub fn ExceptionUnwindFinallyLeave(&self) -> HRESULT { S_OK }
+        pub fn ExceptionCatcherEnter(&self, functionId: FunctionID, objectId: ObjectID) -> HRESULT { S_OK }
+        pub fn ExceptionCatcherLeave(&self) -> HRESULT { S_OK }
+        pub fn COMClassicVTableCreated(&self, wrappedClassId: ClassID, implementedIID: REFGUID, pVTable: *const c_void, cSlots: ULONG) -> HRESULT { S_OK }
+        pub fn COMClassicVTableDestroyed(&self, wrappedClassId: ClassID, implementedIID: REFGUID, pVTable: *const c_void) -> HRESULT { S_OK }
+        pub fn ExceptionCLRCatcherFound(&self) -> HRESULT { S_OK }
+        pub fn ExceptionCLRCatcherExecute(&self) -> HRESULT { S_OK }
     }
 
-    /// Handle module load finished event
-    pub fn module_load_finished(&mut self, module_id: usize) -> i32 {
-        let count = self.module_load_events.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+    // ==================== ICorProfilerCallback2 ====================
 
-        debug!("ModuleLoadFinished: ModuleID={}, Count={}", module_id, count);
-
-        0 // S_OK equivalent
+    impl ICorProfilerCallback2 for NewRelicProfiler {
+        pub fn ThreadNameChanged(&self, threadId: ThreadID, cchName: ULONG, name: *const WCHAR) -> HRESULT { S_OK }
+        pub fn GarbageCollectionStarted(&self, cGenerations: i32, generationCollected: *const BOOL, reason: COR_PRF_GC_REASON) -> HRESULT { S_OK }
+        pub fn SurvivingReferences(&self, cSurvivingObjectIDRanges: ULONG, objectIDRangeStart: *const ObjectID, cObjectIDRangeLength: *const ULONG) -> HRESULT { S_OK }
+        pub fn GarbageCollectionFinished(&self) -> HRESULT { S_OK }
+        pub fn FinalizeableObjectQueued(&self, finalizerFlags: DWORD, objectID: ObjectID) -> HRESULT { S_OK }
+        pub fn RootReferences2(&self, cRootRefs: ULONG, rootRefIds: *const ObjectID, rootKinds: *const COR_PRF_GC_ROOT_KIND, rootFlags: *const COR_PRF_GC_ROOT_FLAGS, rootIds: *const UINT_PTR) -> HRESULT { S_OK }
+        pub fn HandleCreated(&self, handleId: GCHandleID, initialObjectId: ObjectID) -> HRESULT { S_OK }
+        pub fn HandleDestroyed(&self, handleId: GCHandleID) -> HRESULT { S_OK }
     }
 
-    /// Get event counts for validation
-    pub fn get_event_counts(&self) -> (u64, u64) {
-        (
-            self.jit_events_received.load(std::sync::atomic::Ordering::Relaxed),
-            self.module_load_events.load(std::sync::atomic::Ordering::Relaxed),
-        )
+    // ==================== ICorProfilerCallback3 ====================
+
+    impl ICorProfilerCallback3 for NewRelicProfiler {
+        pub fn InitializeForAttach(&self, pCorProfilerInfoUnk: IUnknown, pvClientData: *const c_void, cbClientData: UINT) -> HRESULT { S_OK }
+        pub fn ProfilerAttachComplete(&self) -> HRESULT { S_OK }
+        pub fn ProfilerDetachSucceeded(&self) -> HRESULT { S_OK }
+    }
+
+    // ==================== ICorProfilerCallback4 ====================
+
+    impl ICorProfilerCallback4 for NewRelicProfiler {
+        pub fn ReJITCompilationStarted(&self, functionId: FunctionID, rejitId: ReJITID, fIsSafeToBlock: BOOL) -> HRESULT {
+            trace!("ReJITCompilationStarted: FunctionID=0x{:x}, ReJITID={}", functionId, rejitId);
+            // TODO: Phase 2 - Implement IL rewriting here
+            S_OK
+        }
+
+        pub fn GetReJITParameters(&self, moduleId: ModuleID, methodId: mdMethodDef, pFunctionControl: *const c_void) -> HRESULT {
+            trace!("GetReJITParameters: ModuleID=0x{:x}, MethodDef=0x{:x}", moduleId, methodId);
+            S_OK
+        }
+
+        pub fn ReJITCompilationFinished(&self, functionId: FunctionID, rejitId: ReJITID, hrStatus: HRESULT, fIsSafeToBlock: BOOL) -> HRESULT { S_OK }
+        pub fn ReJITError(&self, moduleId: ModuleID, methodId: mdMethodDef, functionId: FunctionID, hrStatus: HRESULT) -> HRESULT { S_OK }
+        pub fn MovedReferences2(&self, cMovedObjectIDRanges: ULONG, oldObjectIDRangeStart: *const ObjectID, newObjectIDRangeStart: *const ObjectID, cObjectIDRangeLength: *const SIZE_T) -> HRESULT { S_OK }
+        pub fn SurvivingReferences2(&self, cSurvivingObjectIDRanges: ULONG, objectIDRangeStart: *const ObjectID, cObjectIDRangeLength: *const SIZE_T) -> HRESULT { S_OK }
     }
 }
 
@@ -68,32 +209,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_profiler_creation() {
-        let _callback = CorProfilerCallbackImpl::new();
-        // Basic smoke test - just ensure we can create the callback
+    fn test_profiler_clsid_netfx() {
+        // Verify GUID matches C++ profiler: {71DA0A04-7777-4EC6-9643-7D28B46A8A41}
+        assert_eq!(CLSID_PROFILER_NETFX.data1, 0x71DA0A04);
+        assert_eq!(CLSID_PROFILER_NETFX.data2, 0x7777);
+        assert_eq!(CLSID_PROFILER_NETFX.data3, 0x4EC6);
+        assert_eq!(CLSID_PROFILER_NETFX.data4, [0x96, 0x43, 0x7D, 0x28, 0xB4, 0x6A, 0x8A, 0x41]);
     }
 
     #[test]
-    fn test_profiler_guids() {
-        #[cfg(windows)]
-        {
-            // Verify our GUIDs match the expected values from C++ implementation
-            assert_eq!(PROFILER_GUID_NETFX, "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}");
-            assert_eq!(PROFILER_GUID_NETCORE, "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}");
-        }
-    }
-
-    #[test]
-    fn test_event_handling() {
-        let mut callback = CorProfilerCallbackImpl::new();
-
-        // Test event handling
-        assert_eq!(callback.jit_compilation_started(12345, true), 0);
-        assert_eq!(callback.module_load_finished(67890), 0);
-
-        // Check event counts
-        let (jit_count, module_count) = callback.get_event_counts();
-        assert_eq!(jit_count, 1);
-        assert_eq!(module_count, 1);
+    fn test_profiler_clsid_coreclr() {
+        // Verify GUID matches C++ profiler: {36032161-FFC0-4B61-B559-F6C5D41BAE5A}
+        assert_eq!(CLSID_PROFILER_CORECLR.data1, 0x36032161);
+        assert_eq!(CLSID_PROFILER_CORECLR.data2, 0xFFC0);
+        assert_eq!(CLSID_PROFILER_CORECLR.data3, 0x4B61);
+        assert_eq!(CLSID_PROFILER_CORECLR.data4, [0xB5, 0x59, 0xF6, 0xC5, 0xD4, 0x1B, 0xAE, 0x5A]);
     }
 }

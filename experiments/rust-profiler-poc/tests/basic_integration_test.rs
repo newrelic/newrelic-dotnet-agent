@@ -1,13 +1,13 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Basic integration tests for New Relic Profiler POC
 //!
 //! These tests verify that the POC can be built and basic functionality works.
 //! More comprehensive testing will be added as the implementation progresses.
 
-use std::ffi::CString;
-
 #[test]
 fn test_profiler_version_export() {
-    // Test that we can call the P/Invoke export
     extern "C" {
         fn NewRelic_Profiler_GetVersion() -> *const std::ffi::c_char;
     }
@@ -16,7 +16,7 @@ fn test_profiler_version_export() {
         let version_ptr = NewRelic_Profiler_GetVersion();
         assert!(!version_ptr.is_null(), "Version pointer should not be null");
 
-        let version_cstr = CString::from_raw(version_ptr as *mut _);
+        let version_cstr = std::ffi::CStr::from_ptr(version_ptr);
         let version_str = version_cstr.to_string_lossy();
 
         assert!(
@@ -28,49 +28,48 @@ fn test_profiler_version_export() {
 }
 
 #[test]
+fn test_profiler_platform_export() {
+    extern "C" {
+        fn NewRelic_Profiler_GetPlatformInfo() -> *const std::ffi::c_char;
+    }
+
+    unsafe {
+        let platform_ptr = NewRelic_Profiler_GetPlatformInfo();
+        assert!(!platform_ptr.is_null());
+
+        let platform = std::ffi::CStr::from_ptr(platform_ptr).to_string_lossy();
+        assert!(
+            platform.contains("Windows") || platform.contains("Linux") || platform.contains("macOS"),
+            "Platform should be recognized: {}",
+            platform
+        );
+    }
+}
+
+#[test]
+fn test_profiler_clsid_constants() {
+    use newrelic_profiler_poc::profiler_callback::{CLSID_PROFILER_CORECLR, CLSID_PROFILER_NETFX};
+
+    // .NET Framework: {71DA0A04-7777-4EC6-9643-7D28B46A8A41}
+    assert_eq!(CLSID_PROFILER_NETFX.data1, 0x71DA0A04);
+    assert_eq!(CLSID_PROFILER_NETFX.data2, 0x7777);
+    assert_eq!(CLSID_PROFILER_NETFX.data3, 0x4EC6);
+
+    // .NET Core: {36032161-FFC0-4B61-B559-F6C5D41BAE5A}
+    assert_eq!(CLSID_PROFILER_CORECLR.data1, 0x36032161);
+    assert_eq!(CLSID_PROFILER_CORECLR.data2, 0xFFC0);
+    assert_eq!(CLSID_PROFILER_CORECLR.data3, 0x4B61);
+}
+
+#[test]
 fn test_validation_framework() {
     let framework = newrelic_profiler_poc::validation::ValidationFramework::new();
 
-    // Test basic event logging
     framework.log_jit_compilation(12345, true);
     framework.log_module_load(67890, Some("TestAssembly".to_string()));
 
-    // Test event export (will create file if validation enabled)
     assert!(
         framework.export_events("test_basic_integration.json").is_ok(),
         "Should be able to export events"
     );
 }
-
-#[cfg(windows)]
-#[test]
-fn test_profiler_guids() {
-    use newrelic_profiler_poc::profiler_callback::{PROFILER_GUID_NETFX, PROFILER_GUID_NETCORE};
-
-    // Verify GUIDs are set correctly
-    assert_eq!(
-        PROFILER_GUID_NETFX.to_string(),
-        "{71da0a04-7777-4ec6-9643-7d28b46a8a41}",
-        ".NET Framework profiler GUID must match C++ implementation"
-    );
-
-    assert_eq!(
-        PROFILER_GUID_NETCORE.to_string(),
-        "{36032161-ffc0-4b61-b559-f6c5d41bae5a}",
-        ".NET Core profiler GUID must match C++ implementation"
-    );
-}
-
-#[test]
-fn test_profiler_callback_creation() {
-    // Test that we can create profiler callback instances
-    let _callback = newrelic_profiler_poc::profiler_callback::CorProfilerCallbackImpl::new();
-    // If this doesn't panic, the basic structure is working
-}
-
-// TODO: Add tests for:
-// - COM interface functionality (Windows)
-// - Event logging and validation
-// - Cross-platform compatibility
-// - Performance benchmarks
-// - Side-by-side comparison with C++ profiler

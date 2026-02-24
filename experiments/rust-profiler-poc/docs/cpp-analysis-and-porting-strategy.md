@@ -120,6 +120,33 @@ public static Action<object, Exception> GetFinishTracerDelegate(
 | Performance Optimization | High | High | Medium | Hot path optimization |
 | Cross-Platform Polish | Low | Medium | Low | Linux/macOS specific code |
 
+### Future: ICorProfilerCallback Version Upgrade
+
+The C++ profiler implements `ICorProfilerCallback4` (.NET Framework 4.5+). The CLR negotiates
+the callback version via `QueryInterface` — it probes for the highest version the profiler
+supports and falls back gracefully. Implementing a higher callback version does NOT break
+attachment to older CLRs; they simply never ask for the newer interface.
+
+This means the Rust profiler can safely upgrade to a higher callback version in the future:
+
+| Callback | Added In | Notable Methods |
+|----------|----------|-----------------|
+| 5 | .NET Fx 4.5.2 | `ConditionalWeakTableElementReferences` |
+| 6 | .NET Fx 4.6 | `GetAssemblyReferences` |
+| 7 | .NET Fx 4.6.1 | `ModuleInMemorySymbolsUpdated` |
+| 8 | .NET Core 2.1 | `DynamicMethodJITCompilationStarted/Finished` |
+| 9 | .NET Core 2.1 | `DynamicMethodUnloaded` |
+| 10 | .NET 5 | EventPipe integration |
+| 11 | .NET 8 | `LoadAsNotificationOnly` |
+
+**POC decision**: Match C++ at Callback4 for fidelity validation. Upgrading to Callback9+
+is a concrete capability improvement the Rust profiler could deliver over C++ — particularly
+`DynamicMethodJITCompilation` support for .NET Core dynamic methods.
+
+Note: The callback interface version is independent from the `ICorProfilerInfo` version.
+The C++ profiler already queries for `ICorProfilerInfo5` (for `SetEventMask2`) and probes
+up to `ICorProfilerInfo11` for feature detection, while only implementing Callback4.
+
 ## Technical Implementation Plan
 
 ### 1. Complete COM Interface (Next Session)
