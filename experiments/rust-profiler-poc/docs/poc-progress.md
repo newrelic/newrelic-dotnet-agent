@@ -245,9 +245,22 @@ All POC files ready on branch `poc/tippmar-nr-rust-profiler` with comprehensive 
 - ICorProfilerCallback version upgrade notes
 - Process filtering documented as known risk with implementation status
 
-### 🎯 Key Achievement: CLR Attachment Proven
+#### Method Resolution
+- `method_resolver.rs` module resolves FunctionIDs to assembly/type/method names
+- Uses `ICorProfilerInfo::GetFunctionInfo`, `GetModuleInfo`, `GetAssemblyInfo`
+- Uses `IMetaDataImport::GetMethodProps`, `GetTypeDefProps` for method/type names
+- `metadata_import.rs` defines IMetaDataImport COM interface (62 vtable methods)
+- Stores `ICorProfilerInfo4` in `RefCell` from `Initialize()` for use in JIT callbacks
+- Verified output: `[System.Private.CoreLib] System.Collections.Generic.Dictionary'2..ctor`
+- 4 unit tests for UTF-16 string conversion
 
-The Rust profiler successfully:
+#### Test Suite
+- Split monolithic test file into 5 focused test files (38 tests total)
+- COM exports, interface GUIDs, FFI constants, process filter, validation framework
+
+### 🎯 Key Achievements
+
+**CLR Attachment Proven:**
 1. Loads into the CLR via `DllGetClassObject`
 2. Creates profiler instance via class factory
 3. Receives `Initialize()` callback
@@ -258,6 +271,10 @@ The Rust profiler successfully:
 8. Excludes `dotnet` CLI host process (only instruments the target app)
 9. Clean `Shutdown()` on process exit
 
+**Method Resolution Proven:**
+- Resolves FunctionIDs → `[Assembly] Namespace.Type.Method` in real time
+- Works with IMetaDataImport COM interface across JIT callbacks
+
 ### 📊 Updated Status
 
 | Component | Status | Confidence |
@@ -267,20 +284,24 @@ The Rust profiler successfully:
 | Musl Compilation | ✅ Proven | High |
 | COM Interface (Callback) | ✅ Complete | High |
 | COM Interface (ProfilerInfo) | ✅ Complete | High |
+| COM Interface (MetaDataImport) | ✅ Complete | High |
 | CLR Attachment | ✅ **Proven** | High |
 | Process Filtering (basic) | ✅ Complete | High |
 | Event Reception (JIT/Module) | ✅ **Proven** | High |
+| Method Resolution | ✅ **Proven** | High |
 | Validation Framework | ✅ Complete | High |
+| Test Suite | ✅ 38 tests | High |
 | Documentation | ✅ Complete | High |
 | Logging (file-based) | ⏳ Not started | — |
 | Configuration Loading | ⏳ Not started | — |
-| Method Resolution | ⏳ Not started | — |
+| Instrumentation Matching | ⏳ Not started | — |
 | IL Manipulation | ⏳ Not started | — |
 
 ### Next Steps
 
-1. **Capture C++ IL reference data** — Enable `WRITE_BYTES_TO_DISK` in C++ profiler, run test app, collect `.bin` files for Layer 1 validation
-2. **Method resolution** — Use `ICorProfilerInfo4::GetFunctionInfo` to resolve method names from FunctionIDs received in JIT events
+1. **Instrumentation matching** — Check resolved method names against hardcoded target list, then XML-based configuration
+2. **RequestReJIT** — For matched methods, trigger re-compilation for IL injection
 3. **IL injection POC** — Start with simplest case (void, no args, tiny header)
+4. **Capture C++ IL reference data** — When IL injection work begins, capture reference outputs for validation
 
 ## End of Session 2 (2026-02-24)
