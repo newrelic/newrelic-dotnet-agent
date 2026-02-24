@@ -8,6 +8,7 @@
 //! handles vtable layout, reference counting, and QueryInterface automatically.
 
 use crate::ffi::*;
+use crate::instrumentation::InstrumentationMatcher;
 use crate::interfaces::*;
 use crate::method_resolver;
 use crate::profiler_info::{ICorProfilerInfo4, ICorProfilerInfo5};
@@ -51,6 +52,7 @@ class! {
         jit_event_count: AtomicU64,
         module_load_count: AtomicU64,
         profiler_info: RefCell<Option<ICorProfilerInfo4>>,
+        matcher: RefCell<Option<InstrumentationMatcher>>,
     }
 
     // ==================== ICorProfilerCallback ====================
@@ -139,6 +141,11 @@ class! {
                 // Store ICorProfilerInfo4 for use in JIT callbacks
                 self.profiler_info.replace(Some(profiler_info));
 
+                // Initialize instrumentation matcher with POC test targets
+                let matcher = InstrumentationMatcher::with_test_targets();
+                info!("Loaded {} instrumentation points", matcher.points().len());
+                self.matcher.replace(Some(matcher));
+
                 info!("Profiler initialized successfully");
             }
             S_OK
@@ -182,31 +189,33 @@ class! {
         pub fn JITCompilationStarted(&self, functionId: FunctionID, fIsSafeToBlock: BOOL) -> HRESULT {
             let count = self.jit_event_count.fetch_add(1, Ordering::Relaxed) + 1;
 
-            // Log first few events with method names, then periodically
-            if count <= 20 || count % 500 == 0 {
-                if let Some(ref profiler_info) = *self.profiler_info.borrow() {
-                    unsafe {
-                        match method_resolver::resolve_function_name(profiler_info, functionId) {
-                            Some(info) => {
+            if let Some(ref profiler_info) = *self.profiler_info.borrow() {
+                unsafe {
+                    if let Some(func_info) = method_resolver::resolve_function_name(profiler_info, functionId) {
+                        // Check instrumentation match
+                        let matcher_borrow = self.matcher.borrow();
+                        if let Some(ref matcher) = *matcher_borrow {
+                            if matcher.matches(&func_info.assembly_name, &func_info.type_name, &func_info.method_name) {
                                 info!(
-                                    "JIT #{}: [{}] {}.{}",
-                                    count, info.assembly_name, info.type_name, info.method_name
+                                    "MATCH: [{}] {}.{} (FunctionID=0x{:x})",
+                                    func_info.assembly_name, func_info.type_name,
+                                    func_info.method_name, functionId
                                 );
+                                // TODO: Request ReJIT for this method
                             }
-                            None => {
-                                if count <= 5 {
-                                    info!(
-                                        "JIT #{}: FunctionID=0x{:x} (resolution failed)",
-                                        count, functionId
-                                    );
-                                }
-                            }
+                        }
+
+                        // Periodic logging for visibility
+                        if count <= 10 || count % 500 == 0 {
+                            trace!(
+                                "JIT #{}: [{}] {}.{}",
+                                count, func_info.assembly_name, func_info.type_name, func_info.method_name
+                            );
                         }
                     }
                 }
             }
 
-            // TODO: Phase 2 - Check if method should be instrumented, request ReJIT
             S_OK
         }
 

@@ -17,6 +17,7 @@
 extern crate com;
 
 pub mod ffi;
+pub mod instrumentation;
 pub mod interfaces;
 pub mod metadata_import;
 pub mod method_resolver;

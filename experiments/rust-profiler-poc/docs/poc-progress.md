@@ -290,18 +290,18 @@ All POC files ready on branch `poc/tippmar-nr-rust-profiler` with comprehensive 
 | Event Reception (JIT/Module) | ✅ **Proven** | High |
 | Method Resolution | ✅ **Proven** | High |
 | Validation Framework | ✅ Complete | High |
-| Test Suite | ✅ 38 tests | High |
+| Test Suite | ✅ 45 tests | High |
 | Documentation | ✅ Complete | High |
+| Instrumentation Matching | ✅ **Proven** | High |
 | Logging (file-based) | ⏳ Not started | — |
 | Configuration Loading | ⏳ Not started | — |
-| Instrumentation Matching | ⏳ Not started | — |
+| RequestReJIT | ⏳ Not started | — |
 | IL Manipulation | ⏳ Not started | — |
 
 ### Next Steps
 
-1. **Instrumentation matching** — Check resolved method names against hardcoded target list, then XML-based configuration
-2. **RequestReJIT** — For matched methods, trigger re-compilation for IL injection
-3. **IL injection POC** — Start with simplest case (void, no args, tiny header)
-4. **Capture C++ IL reference data** — When IL injection work begins, capture reference outputs for validation
+1. **RequestReJIT** — For matched methods, call `ICorProfilerInfo4::RequestReJIT` to trigger re-compilation
+2. **IL injection POC** — In `GetReJITParameters`, modify method IL bytecode (simplest case first)
+3. **Capture C++ IL reference data** — When IL injection work begins, capture reference outputs for validation
 
 ## End of Session 2 (2026-02-24)
