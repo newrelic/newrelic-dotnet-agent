@@ -87,7 +87,7 @@ fn should_instrument_net_framework(process_path: &str) -> bool {
 ///   dotnet run
 ///   dotnet.exe publish -f net8.0
 ///   "C:\Program Files\dotnet\dotnet.exe" restore
-fn is_dotnet_cli_command(command_line: &str) -> bool {
+pub fn is_dotnet_cli_command(command_line: &str) -> bool {
     let tokens: Vec<&str> = command_line.split_whitespace().collect();
 
     for (i, token) in tokens.iter().enumerate() {
