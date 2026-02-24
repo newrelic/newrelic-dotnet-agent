@@ -9,13 +9,14 @@
 
 use crate::ffi::*;
 use crate::interfaces::*;
+use crate::method_resolver;
 use crate::profiler_info::{ICorProfilerInfo4, ICorProfilerInfo5};
 use com::{
     interfaces::iunknown::IUnknown,
     sys::{GUID, HRESULT},
-    Interface,
 };
 use log::{error, info, trace};
+use std::cell::RefCell;
 use std::ffi::c_void;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
@@ -49,6 +50,7 @@ class! {
         is_core_clr: AtomicBool,
         jit_event_count: AtomicU64,
         module_load_count: AtomicU64,
+        profiler_info: RefCell<Option<ICorProfilerInfo4>>,
     }
 
     // ==================== ICorProfilerCallback ====================
@@ -58,17 +60,14 @@ class! {
             info!("New Relic Rust Profiler: Initialize called");
 
             unsafe {
-                // Query for ICorProfilerInfo4
-                let mut profiler_info: Option<ICorProfilerInfo4> = None;
-                let hr = pICorProfilerInfoUnk.QueryInterface(
-                    &ICorProfilerInfo4::IID,
-                    &mut profiler_info as *mut _ as *mut *mut c_void,
-                );
-                if failed(hr) || profiler_info.is_none() {
-                    error!("Failed to get ICorProfilerInfo4: 0x{:08x}", hr);
-                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
-                }
-                let profiler_info = profiler_info.unwrap();
+                // Query for ICorProfilerInfo4 using the com crate's safe wrapper
+                let profiler_info = match pICorProfilerInfoUnk.query_interface::<ICorProfilerInfo4>() {
+                    Some(info) => info,
+                    None => {
+                        error!("Failed to get ICorProfilerInfo4");
+                        return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                    }
+                };
 
                 // Get runtime information to determine CLR type
                 let mut runtime_type: u32 = 0;
@@ -115,28 +114,20 @@ class! {
                     .bits();
 
                 // Try SetEventMask2 (ICorProfilerInfo5) to also disable tiered compilation
-                let mut profiler_info5: Option<ICorProfilerInfo5> = None;
-                let hr5 = pICorProfilerInfoUnk.QueryInterface(
-                    &ICorProfilerInfo5::IID,
-                    &mut profiler_info5 as *mut _ as *mut *mut c_void,
-                );
-                if !failed(hr5) {
-                    if let Some(info5) = profiler_info5 {
-                        // 0x8 = COR_PRF_HIGH_DISABLE_TIERED_COMPILATION
-                        let hr = info5.SetEventMask2(event_mask, 0x8);
-                        if failed(hr) {
-                            error!("SetEventMask2 failed: 0x{:08x}, falling back to SetEventMask", hr);
-                            let hr = profiler_info.SetEventMask(event_mask);
-                            if failed(hr) {
-                                error!("SetEventMask failed: 0x{:08x}", hr);
-                                return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
-                            }
-                        } else {
-                            info!("Event mask set via SetEventMask2 (tiered compilation disabled)");
-                        }
+                let mask_set = if let Some(info5) = pICorProfilerInfoUnk.query_interface::<ICorProfilerInfo5>() {
+                    // 0x8 = COR_PRF_HIGH_DISABLE_TIERED_COMPILATION
+                    let hr = info5.SetEventMask2(event_mask, 0x8);
+                    if !failed(hr) {
+                        info!("Event mask set via SetEventMask2 (tiered compilation disabled)");
+                        true
+                    } else {
+                        false
                     }
                 } else {
-                    // Fall back to SetEventMask (no tiered compilation control)
+                    false
+                };
+
+                if !mask_set {
                     let hr = profiler_info.SetEventMask(event_mask);
                     if failed(hr) {
                         error!("SetEventMask failed: 0x{:08x}", hr);
@@ -144,6 +135,9 @@ class! {
                     }
                     info!("Event mask set via SetEventMask");
                 }
+
+                // Store ICorProfilerInfo4 for use in JIT callbacks
+                self.profiler_info.replace(Some(profiler_info));
 
                 info!("Profiler initialized successfully");
             }
@@ -188,12 +182,28 @@ class! {
         pub fn JITCompilationStarted(&self, functionId: FunctionID, fIsSafeToBlock: BOOL) -> HRESULT {
             let count = self.jit_event_count.fetch_add(1, Ordering::Relaxed) + 1;
 
-            // Log first few events and then periodically to avoid log spam
-            if count <= 10 || count % 1000 == 0 {
-                trace!(
-                    "JITCompilationStarted: FunctionID=0x{:x}, SafeToBlock={}, Count={}",
-                    functionId, fIsSafeToBlock != 0, count
-                );
+            // Log first few events with method names, then periodically
+            if count <= 20 || count % 500 == 0 {
+                if let Some(ref profiler_info) = *self.profiler_info.borrow() {
+                    unsafe {
+                        match method_resolver::resolve_function_name(profiler_info, functionId) {
+                            Some(info) => {
+                                info!(
+                                    "JIT #{}: [{}] {}.{}",
+                                    count, info.assembly_name, info.type_name, info.method_name
+                                );
+                            }
+                            None => {
+                                if count <= 5 {
+                                    info!(
+                                        "JIT #{}: FunctionID=0x{:x} (resolution failed)",
+                                        count, functionId
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // TODO: Phase 2 - Check if method should be instrumented, request ReJIT

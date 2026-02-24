@@ -18,6 +18,8 @@ extern crate com;
 
 pub mod ffi;
 pub mod interfaces;
+pub mod metadata_import;
+pub mod method_resolver;
 pub mod process_filter;
 pub mod profiler_info;
 pub mod profiler_callback;

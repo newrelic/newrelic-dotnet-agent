@@ -89,3 +89,14 @@ fn icor_profiler_info_guids_match_corprof_h() {
     assert_eq!(iid.data1, 0x07602928);
     assert_eq!(iid.data2, 0xCE38);
 }
+
+#[test]
+fn imetadata_import_guid_matches_cor_h() {
+    use newrelic_profiler_poc::metadata_import::IMetaDataImport;
+
+    // IMetaDataImport: {7DAC8207-D3AE-4c75-9B67-92801A497D44}
+    let iid = IMetaDataImport::IID;
+    assert_eq!(iid.data1, 0x7DAC8207);
+    assert_eq!(iid.data2, 0xD3AE);
+    assert_eq!(iid.data3, 0x4C75);
+}

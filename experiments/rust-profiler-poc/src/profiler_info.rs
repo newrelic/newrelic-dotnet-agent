@@ -15,7 +15,7 @@
 use crate::ffi::*;
 use com::{
     interfaces::IUnknown,
-    sys::{GUID, HRESULT},
+    sys::HRESULT,
 };
 use std::ffi::c_void;
 
