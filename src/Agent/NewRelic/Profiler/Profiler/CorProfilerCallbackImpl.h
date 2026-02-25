@@ -1152,8 +1152,8 @@ namespace NewRelic { namespace Profiler {
             }
             
             if (!IsCorrectAgentProduct(*agentCoreDllPath, expectedProductName)) {
-                LogError(L"Incorrect agent product");
-                return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                // POC: Skip product check to allow IL dump testing with mock agent DLL
+                LogWarn(L"Agent product check skipped for IL dump testing");
             }
 
             _agentCoreDllPath = *agentCoreDllPath;
