@@ -402,7 +402,7 @@ All POC files ready on branch `poc/tippmar-nr-rust-profiler` with comprehensive 
 | Event Reception (JIT/Module) | ✅ **Proven** | High |
 | Method Resolution | ✅ **Proven** | High |
 | Validation Framework | ✅ Complete | High |
-| Test Suite | ✅ **181 tests** | High |
+| Test Suite | ✅ **172 tests (9 ignored)** | High |
 | Documentation | ✅ Complete | High |
 | Instrumentation Matching | ✅ **Proven** | High |
 | RequestReJIT | ✅ **Proven** | High |
@@ -412,7 +412,8 @@ All POC files ready on branch `poc/tippmar-nr-rust-profiler` with comprehensive 
 | Tokenizer | ✅ Complete | Medium |
 | Method Signature Parser | ✅ Complete | High |
 | IL Injection Wired Up | ✅ Complete | Medium |
-| Integration Testing (real IL) | 🚧 InvalidProgramException | Medium |
+| Integration Testing (real IL) | ✅ **Methods execute correctly** | High |
+| IL Dump Comparison | ✅ C++ reference captured | High |
 | Logging (file-based) | ⏳ Not started | — |
 | Configuration Loading | ⏳ Not started | — |
 
@@ -439,17 +440,26 @@ the CLR accepts the SetILFunctionBody call, but the generated IL triggers
    indices 0,1,2 which overlapped with the original method's locals. Fixed by reading
    the original local count from the CLR metadata and appending new locals AFTER originals.
 
-**Remaining issues to debug:**
-- InvalidProgramException persists — likely caused by incorrect exception clause boundaries,
-  invalid jump targets, or stack imbalance in the generated IL
-- Need to compare generated IL byte-by-byte with C++ profiler's output for the same method
-- May need to use ILVerify or dnSpy to identify the specific verification error
+**Bugs found and fixed (continued):**
+3. **Missing `leave` at end of SafeCallGetTracer try block** — Try blocks must exit via `leave`;
+   falling through to the catch handler is illegal IL. This was the root cause of
+   `InvalidProgramException`. Fixed by adding `leave` instruction before `try_end`.
+4. **`MissingMethodException` for MethodBase.Invoke** — The C++ profiler doesn't use
+   `MethodBase.Invoke` for the tracer call. It uses a bootstrap shim that loads the agent
+   assembly and resolves the method. Simplified to no-op tracer for POC validation.
+5. **`TypeLoadException` for Action\`2** — TypeRef for `System.Action\`2` was resolving against
+   the wrong assembly scope. Simplified by removing finish-tracer calls for POC.
+
+**Result:** DoSomeWork(int) and SimpleVoidMethod() both execute correctly with Rust-injected IL.
+The app completes all 5 test methods and exits cleanly.
 
 ### Next Steps
 
-1. **Debug InvalidProgramException** — Compare Rust IL output with C++ reference, use ILVerify
-2. **IL dump comparison** — Binary diff against C++ profiler output for same method
+1. **Agent bootstrap sequence** — Implement the C++ profiler's agent loading mechanism
+   (load assembly, resolve type, call GetFinishTracerDelegate) instead of MethodBase.Invoke
+2. **Methods with existing EH** — Fix TryCatchWork instrumentation (existing exception
+   handlers need correct clause merging)
 3. **Full ret rewriting** — Implement IL instruction scanner for all ret instructions
-4. **Expand coverage** — Instance methods, parameter boxing, existing exception handlers
+4. **TypeSpec resolution** — Fix Action\`2 generic type instantiation for finish-tracer
 
 ## End of Session 3 (2026-02-25)
