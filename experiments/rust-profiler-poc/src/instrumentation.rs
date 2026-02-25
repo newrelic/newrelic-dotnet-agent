@@ -79,6 +79,9 @@ impl InstrumentationMatcher {
     /// Create a matcher with POC test targets.
     /// These target methods in our ProfilerTestApp for validation.
     pub fn with_test_targets() -> Self {
+        // POC: Only target simple methods that don't have existing exception
+        // handlers or async state machines. TryCatchWork and DoAsyncWork are
+        // excluded until EH table merging and async support are implemented.
         let points = vec![
             InstrumentationPoint {
                 assembly_name: "ProfilerTestApp".to_string(),
@@ -87,22 +90,6 @@ impl InstrumentationMatcher {
                 tracer_factory_name: "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory".to_string(),
                 tracer_factory_args: 0,
                 metric_name: "Custom/DoSomeWork".to_string(),
-            },
-            InstrumentationPoint {
-                assembly_name: "ProfilerTestApp".to_string(),
-                class_name: "ProfilerTestApp.Program".to_string(),
-                method_name: "DoAsyncWork".to_string(),
-                tracer_factory_name: "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory".to_string(),
-                tracer_factory_args: 0,
-                metric_name: "Custom/DoAsyncWork".to_string(),
-            },
-            InstrumentationPoint {
-                assembly_name: "ProfilerTestApp".to_string(),
-                class_name: "ProfilerTestApp.Program".to_string(),
-                method_name: "TryCatchWork".to_string(),
-                tracer_factory_name: "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory".to_string(),
-                tracer_factory_args: 0,
-                metric_name: "Custom/TryCatchWork".to_string(),
             },
             InstrumentationPoint {
                 assembly_name: "ProfilerTestApp".to_string(),
@@ -241,7 +228,7 @@ mod tests {
         let matcher = InstrumentationMatcher::with_test_targets();
         assert!(matcher.should_instrument_assembly("ProfilerTestApp"));
         assert!(matcher.matches("ProfilerTestApp", "ProfilerTestApp.Program", "DoSomeWork"));
-        assert!(matcher.matches("ProfilerTestApp", "ProfilerTestApp.Program", "TryCatchWork"));
+        assert!(matcher.matches("ProfilerTestApp", "ProfilerTestApp.Program", "SimpleVoidMethod"));
         assert!(!matcher.matches("ProfilerTestApp", "ProfilerTestApp.Program", "Main"));
     }
 
