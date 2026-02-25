@@ -3,6 +3,8 @@ name: Performance Tests
 on:
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   performance-tests:
     runs-on: ubuntu-latest
