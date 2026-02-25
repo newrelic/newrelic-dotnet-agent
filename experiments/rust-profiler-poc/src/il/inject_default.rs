@@ -461,14 +461,17 @@ pub(crate) fn build_safe_call_get_tracer(
     // Store tracer result
     builder.append_store_local(tracer_local);
 
+    // Must exit try block via leave — falling through to catch is illegal
+    let try_leave = builder.append_jump_auto(CEE_LEAVE as u8);
     builder.append_try_end();
 
     // } catch { pop }
     builder.append_catch_start(tokens.exception_type_ref);
     builder.append_opcode(CEE_POP);
-    let leave_label = builder.append_jump_auto(CEE_LEAVE as u8);
+    let catch_leave = builder.append_jump_auto(CEE_LEAVE as u8);
     builder.append_catch_end();
-    builder.append_label(&leave_label);
+    builder.append_label(&try_leave);
+    builder.append_label(&catch_leave);
 }
 
 /// Build the SafeCallFinishTracer section.
