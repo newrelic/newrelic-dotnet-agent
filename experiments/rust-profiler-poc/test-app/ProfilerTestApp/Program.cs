@@ -32,6 +32,9 @@ class Program
         Console.WriteLine("4. Running exception handling...");
         TryCatchWork();
 
+        Console.WriteLine("5. Running simple void method...");
+        SimpleVoidMethod();
+
         Console.WriteLine();
         Console.WriteLine("=== Test complete. Check profiler logs for events. ===");
         Console.WriteLine("Press Enter to exit (gives profiler time to flush)...");
@@ -70,6 +73,12 @@ class Program
         // Generic method to test generic type handling
         var list = new System.Collections.Generic.List<T>(items);
         return list;
+    }
+
+    static void SimpleVoidMethod()
+    {
+        // Simplest possible instrumentation target: void, static, no params
+        Console.WriteLine("   SimpleVoidMethod called");
     }
 
     static void TryCatchWork()

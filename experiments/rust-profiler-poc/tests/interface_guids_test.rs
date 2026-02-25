@@ -111,3 +111,37 @@ fn icor_profiler_function_control_guid_matches_corprof_h() {
     assert_eq!(iid.data2, 0xE1EA);
     assert_eq!(iid.data3, 0x4732);
 }
+
+#[test]
+fn imetadata_emit_guids_match_cor_h() {
+    use newrelic_profiler_poc::metadata_emit::*;
+
+    // IMetaDataEmit: {BA3FEE4C-ECB9-4E41-83B7-183FA41CD859}
+    let iid = IMetaDataEmit::IID;
+    assert_eq!(iid.data1, 0xBA3FEE4C);
+    assert_eq!(iid.data2, 0xECB9);
+    assert_eq!(iid.data3, 0x4E41);
+
+    // IMetaDataEmit2: {F5DD9950-F693-42e6-830E-7B833E8146A9}
+    let iid = IMetaDataEmit2::IID;
+    assert_eq!(iid.data1, 0xF5DD9950);
+    assert_eq!(iid.data2, 0xF693);
+    assert_eq!(iid.data3, 0x42E6);
+}
+
+#[test]
+fn imetadata_assembly_guids_match_cor_h() {
+    use newrelic_profiler_poc::metadata_assembly::*;
+
+    // IMetaDataAssemblyEmit: {211EF15B-5317-4438-B196-DEC87B887693}
+    let iid = IMetaDataAssemblyEmit::IID;
+    assert_eq!(iid.data1, 0x211EF15B);
+    assert_eq!(iid.data2, 0x5317);
+    assert_eq!(iid.data3, 0x4438);
+
+    // IMetaDataAssemblyImport: {EE62470B-E94B-424E-9B7C-2F00C9249F93}
+    let iid = IMetaDataAssemblyImport::IID;
+    assert_eq!(iid.data1, 0xEE62470B);
+    assert_eq!(iid.data2, 0xE94B);
+    assert_eq!(iid.data3, 0x424E);
+}

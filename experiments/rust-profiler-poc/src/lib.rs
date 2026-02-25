@@ -18,13 +18,18 @@ extern crate com;
 
 pub mod ffi;
 pub mod function_control;
+pub mod il;
 pub mod instrumentation;
 pub mod interfaces;
+pub mod metadata_assembly;
+pub mod metadata_emit;
 pub mod metadata_import;
 pub mod method_resolver;
+pub mod method_signature;
 pub mod process_filter;
 pub mod profiler_info;
 pub mod profiler_callback;
+pub mod tokenizer;
 pub mod validation;
 
 use log::info;

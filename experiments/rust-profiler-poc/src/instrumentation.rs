@@ -19,6 +19,12 @@ pub struct InstrumentationPoint {
     pub assembly_name: String,
     pub class_name: String,
     pub method_name: String,
+    /// Tracer factory name (from instrumentation XML)
+    pub tracer_factory_name: String,
+    /// Tracer factory arguments
+    pub tracer_factory_args: u32,
+    /// Metric name pattern
+    pub metric_name: String,
 }
 
 /// Determines which methods should be instrumented based on assembly,
@@ -78,19 +84,50 @@ impl InstrumentationMatcher {
                 assembly_name: "ProfilerTestApp".to_string(),
                 class_name: "ProfilerTestApp.Program".to_string(),
                 method_name: "DoSomeWork".to_string(),
+                tracer_factory_name: "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory".to_string(),
+                tracer_factory_args: 0,
+                metric_name: "Custom/DoSomeWork".to_string(),
             },
             InstrumentationPoint {
                 assembly_name: "ProfilerTestApp".to_string(),
                 class_name: "ProfilerTestApp.Program".to_string(),
                 method_name: "DoAsyncWork".to_string(),
+                tracer_factory_name: "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory".to_string(),
+                tracer_factory_args: 0,
+                metric_name: "Custom/DoAsyncWork".to_string(),
             },
             InstrumentationPoint {
                 assembly_name: "ProfilerTestApp".to_string(),
                 class_name: "ProfilerTestApp.Program".to_string(),
                 method_name: "TryCatchWork".to_string(),
+                tracer_factory_name: "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory".to_string(),
+                tracer_factory_args: 0,
+                metric_name: "Custom/TryCatchWork".to_string(),
+            },
+            InstrumentationPoint {
+                assembly_name: "ProfilerTestApp".to_string(),
+                class_name: "ProfilerTestApp.Program".to_string(),
+                method_name: "SimpleVoidMethod".to_string(),
+                tracer_factory_name: "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory".to_string(),
+                tracer_factory_args: 0,
+                metric_name: "Custom/SimpleVoidMethod".to_string(),
             },
         ];
         Self::new(points)
+    }
+
+    /// Find the instrumentation point matching the given assembly/type/method.
+    pub fn find_point(
+        &self,
+        assembly_name: &str,
+        type_name: &str,
+        method_name: &str,
+    ) -> Option<&InstrumentationPoint> {
+        self.points.iter().find(|p| {
+            p.assembly_name == assembly_name
+                && p.class_name == type_name
+                && p.method_name == method_name
+        })
     }
 
     /// Check if an assembly should be considered for instrumentation.
@@ -141,11 +178,17 @@ mod tests {
                 assembly_name: "MyApp".to_string(),
                 class_name: "MyApp.Controllers.HomeController".to_string(),
                 method_name: "Index".to_string(),
+                tracer_factory_name: "TestFactory".to_string(),
+                tracer_factory_args: 0,
+                metric_name: "Custom/Index".to_string(),
             },
             InstrumentationPoint {
                 assembly_name: "MyApp".to_string(),
                 class_name: "MyApp.Services.DataService".to_string(),
                 method_name: "GetData".to_string(),
+                tracer_factory_name: "TestFactory".to_string(),
+                tracer_factory_args: 0,
+                metric_name: "Custom/GetData".to_string(),
             },
         ])
     }

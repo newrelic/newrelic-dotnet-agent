@@ -226,7 +226,7 @@ unsafe fn get_type_name(
 }
 
 /// Convert a null-terminated WCHAR (UTF-16) buffer to a Rust String.
-fn wchar_to_string(buf: &[u16]) -> String {
+pub fn wchar_to_string(buf: &[u16]) -> String {
     // Find the null terminator
     let len = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
     String::from_utf16_lossy(&buf[..len])

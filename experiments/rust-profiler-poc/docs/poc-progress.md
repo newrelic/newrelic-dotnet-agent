@@ -301,7 +301,155 @@ All POC files ready on branch `poc/tippmar-nr-rust-profiler` with comprehensive 
 
 ### Next Steps
 
-1. **Real IL injection** — Modify method bytecode to inject instrumentation (try-catch wrapper, AgentShim call)
+1. ~~**Real IL injection** — Modify method bytecode to inject instrumentation (try-catch wrapper, AgentShim call)~~
 2. **Capture C++ IL reference data** — Capture reference outputs for byte-level validation
+3. **Integration testing** — Run ProfilerTestApp with real IL injection, verify no crashes
+4. **IL dump comparison** — Binary compare Rust-generated IL with C++ reference
 
 ## End of Session 2 (2026-02-24)
+
+## Session 3: Real IL Injection Infrastructure (2026-02-25)
+
+### ✅ Completed Tasks
+
+#### Phase A: Pure IL Infrastructure (No CLR Dependency)
+
+**WI-1: Opcode Constants + ECMA-335 Signature Compression** (30 tests)
+- `il/opcodes.rs` — ~40 CIL opcode constants with encoding helpers
+- `il/sig_compression.rs` — ECMA-335 compressed integer and token encoding/decoding
+- `il/mod.rs` — IL module root with `IlError` error type
+
+**WI-2: IL Instruction Builder** (25 tests)
+- `il/instruction_builder.rs` — Bytecode builder with opcode encoding (1-byte and 2-byte),
+  little-endian operand encoding, jump label system with forward-reference patching,
+  optimized ldarg/ldloc/stloc/ldc.i4, exception clause boundary tracking
+
+**WI-3: IL Method Header Parser/Writer** (14 tests)
+- `il/method_header.rs` — Parse tiny (1 byte) and fat (12 byte) headers, tiny→fat
+  conversion, write/parse round-trip, build complete method bytes with 4-byte aligned
+  extra sections
+
+**WI-4: Exception Handler Manipulator** (12 tests)
+- `il/exception_handler.rs` — Parse fat (24-byte) and small (12-byte) exception clauses,
+  shift offsets by user code offset, build new extra section bytes combining shifted
+  originals with new clauses. Always outputs fat format.
+
+**WI-5: Local Variable Signature Builder** (9 tests)
+- `il/locals.rs` — Build/modify LOCAL_SIG blobs with compressed count management,
+  append class types with compressed token encoding, handle count boundary crossing
+  (1-byte to 2-byte compressed encoding)
+
+**WI-8: Method Signature Parser** (9 tests)
+- `method_signature.rs` — Minimal parser for method blob signatures: has_this, is_generic,
+  param_count, return_type_is_void. Sufficient for the injection template.
+
+#### Phase B: Metadata COM Interfaces and Tokenizer
+
+**WI-6: IMetaDataEmit2 + Assembly Emit/Import COM Interfaces** (2 GUID tests)
+- `metadata_emit.rs` — IMetaDataEmit (49 vtable methods) + IMetaDataEmit2 (8 methods).
+  Key methods: DefineTypeRefByName, DefineMemberRef, DefineUserString,
+  GetTokenFromTypeSpec, GetTokenFromSig, DefineMethodSpec.
+- `metadata_assembly.rs` — IMetaDataAssemblyEmit (9 methods) + IMetaDataAssemblyImport
+  (14 methods). Key methods: DefineAssemblyRef, EnumAssemblyRefs, GetAssemblyRefProps,
+  CloseEnum.
+- Vtable ordering verified against Elastic APM agent's Rust COM definitions.
+
+**WI-7: Tokenizer Module** (7 tests)
+- `tokenizer.rs` — Wraps metadata COM interfaces for token resolution. CoreCLR type→assembly
+  mapping (System.Object→System.Runtime, etc.), assembly ref caching, type ref caching.
+  Methods: get_assembly_ref_token, get_type_ref_token, get_member_ref_token,
+  get_string_token, get_type_spec_token, get_token_from_signature, get_method_spec_token.
+
+#### Phase C: IL Injection Integration
+
+**WI-9: Default Instrumentation Template** (28 tests)
+- `il/inject_default.rs` — The full IL injection template:
+  - Initialize locals (tracer=null, exception=null)
+  - SafeCallGetTracer: try-catch around 11-element object[] + MethodBase.Invoke
+  - User code wrapped in try-catch (catch stores exception, calls finish tracer, rethrows)
+  - After-catch: call finish tracer with return value
+  - Return (load result if non-void, ret)
+  - Resolves ~15 metadata tokens (type refs, member refs, string tokens)
+  - Builds complete method bytes with fat header + instructions + exception clauses
+
+**WI-10: Wire Into GetReJITParameters**
+- Updated `profiler_callback.rs` — GetReJITParameters now attempts real IL injection
+  with graceful fallback to identity rewrite on error.
+- Gets IMetaDataEmit2, IMetaDataAssemblyEmit, IMetaDataAssemblyImport via GetModuleMetaData
+- Resolves method signature, type name, assembly name from CLR metadata
+- Looks up InstrumentationPoint for tracer factory config
+- Calls `build_instrumented_method` to generate instrumented IL
+- Falls back to identity rewrite if any step fails
+- Updated `instrumentation.rs` — Added tracer_factory_name, tracer_factory_args, metric_name
+  to InstrumentationPoint. Added find_point() method. Added SimpleVoidMethod test target.
+- Updated `ffi.rs` — Added OF_READ, OF_WRITE, LPCWSTR, PCCOR_SIGNATURE, HCORENUM,
+  and additional metadata token types.
+
+### 📊 Updated Status
+
+| Component | Status | Confidence |
+|-----------|--------|------------|
+| Project Structure | ✅ Complete | High |
+| Build System | ✅ Complete | High |
+| Musl Compilation | ✅ Proven | High |
+| COM Interface (Callback) | ✅ Complete | High |
+| COM Interface (ProfilerInfo) | ✅ Complete | High |
+| COM Interface (MetaDataImport) | ✅ Complete | High |
+| COM Interface (MetaDataEmit) | ✅ Complete | High |
+| COM Interface (AssemblyEmit/Import) | ✅ Complete | High |
+| CLR Attachment | ✅ **Proven** | High |
+| Process Filtering (basic) | ✅ Complete | High |
+| Event Reception (JIT/Module) | ✅ **Proven** | High |
+| Method Resolution | ✅ **Proven** | High |
+| Validation Framework | ✅ Complete | High |
+| Test Suite | ✅ **181 tests** | High |
+| Documentation | ✅ Complete | High |
+| Instrumentation Matching | ✅ **Proven** | High |
+| RequestReJIT | ✅ **Proven** | High |
+| IL Identity Rewrite | ✅ **Proven** | High |
+| IL Infrastructure (pure) | ✅ **Complete** | High |
+| IL Injection Template | ✅ **Complete** | High |
+| Tokenizer | ✅ Complete | Medium |
+| Method Signature Parser | ✅ Complete | High |
+| IL Injection Wired Up | ✅ Complete | Medium |
+| Integration Testing (real IL) | 🚧 InvalidProgramException | Medium |
+| Logging (file-based) | ⏳ Not started | — |
+| Configuration Loading | ⏳ Not started | — |
+
+### 🎯 Key Achievements
+
+1. **Complete IL injection infrastructure** — 12 new source files, 112 new tests
+2. **Full injection template** — Matches C++ profiler's try-catch wrapper pattern
+3. **Metadata token resolution** — Type refs, member refs, string tokens, signatures
+4. **Graceful fallback** — If injection fails, identity rewrite preserves method behavior
+5. **CoreCLR support** — Type→assembly mapping for .NET Core/.NET 5+
+
+### Runtime Testing Results
+
+The full pipeline was tested: matching → ReJIT → GetReJITParameters → token resolution →
+IL generation → SetILFunctionBody. The IL is generated successfully (43 → 352 bytes) and
+the CLR accepts the SetILFunctionBody call, but the generated IL triggers
+`InvalidProgramException` at runtime.
+
+**Bugs found and fixed:**
+1. **`ret` in try block** — Original user code contains `ret` opcodes which are illegal
+   inside try blocks. Fixed by replacing the final `ret` with `nop`. Full implementation
+   needs an IL instruction scanner to find ALL ret instructions.
+2. **Local variable index collision** — New locals (tracer, exception, result) were at
+   indices 0,1,2 which overlapped with the original method's locals. Fixed by reading
+   the original local count from the CLR metadata and appending new locals AFTER originals.
+
+**Remaining issues to debug:**
+- InvalidProgramException persists — likely caused by incorrect exception clause boundaries,
+  invalid jump targets, or stack imbalance in the generated IL
+- Need to compare generated IL byte-by-byte with C++ profiler's output for the same method
+- May need to use ILVerify or dnSpy to identify the specific verification error
+
+### Next Steps
+
+1. **Debug InvalidProgramException** — Compare Rust IL output with C++ reference, use ILVerify
+2. **IL dump comparison** — Binary diff against C++ profiler output for same method
+3. **Full ret rewriting** — Implement IL instruction scanner for all ret instructions
+4. **Expand coverage** — Instance methods, parameter boxing, existing exception handlers
+
+## End of Session 3 (2026-02-25)

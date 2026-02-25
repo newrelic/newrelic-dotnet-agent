@@ -38,10 +38,20 @@ pub type ReJITID = usize;
 pub type mdToken = u32;
 pub type mdMethodDef = mdToken;
 pub type mdTypeDef = mdToken;
+pub type mdTypeRef = mdToken;
+pub type mdMemberRef = mdToken;
+pub type mdSignature = mdToken;
+pub type mdTypeSpec = mdToken;
+pub type mdString = mdToken;
+
+// String and signature pointer types
+pub type LPCWSTR = *const WCHAR;
+pub type PCCOR_SIGNATURE = *const u8;
 
 // Pointer/handle types
 pub type HANDLE = *mut std::ffi::c_void;
 pub type ULONG32 = u32;
+pub type HCORENUM = *mut std::ffi::c_void;
 
 // GUID reference types
 pub type REFGUID = *const GUID;
@@ -119,6 +129,10 @@ bitflags::bitflags! {
         const COR_PRF_DISABLE_ALL_NGEN_IMAGES         = 0x80000000;
     }
 }
+
+/// Metadata open flags for GetModuleMetaData
+pub const OF_READ: DWORD = 0x00000000;
+pub const OF_WRITE: DWORD = 0x00000001;
 
 /// HRESULT constants
 /// The `com` crate defines HRESULT as i32
