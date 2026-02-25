@@ -359,9 +359,10 @@ class! {
                                 instrumented_il.len()
                             );
 
-                            // Dump IL for debugging
+                            // Dump IL to files and log for debugging
                             dump_il_hex("ORIGINAL", original_il);
                             dump_il_hex("INJECTED", &instrumented_il);
+                            dump_il_to_files(profiler_info, moduleId, methodId, original_il, &instrumented_il);
 
                             let hr = function_control.SetILFunctionBody(
                                 instrumented_il.len() as ULONG,
@@ -416,6 +417,79 @@ fn dump_il_hex(label: &str, bytes: &[u8]) {
                 label, flags, size, max_stack, code_size, local_sig
             );
         }
+    }
+}
+
+/// Dump IL bytes to .bin files when NEW_RELIC_PROFILER_DUMP_IL=1 is set.
+///
+/// Files are written to the current working directory with the pattern:
+/// `TypeName.MethodName.original.bin` and `TypeName.MethodName.rust-instrumented.bin`
+///
+/// The ".rust-instrumented" suffix distinguishes from the C++ profiler's
+/// ".instrumented" suffix so both can be collected from the same directory.
+unsafe fn dump_il_to_files(
+    profiler_info: &ICorProfilerInfo4,
+    module_id: ModuleID,
+    method_id: mdMethodDef,
+    original_il: &[u8],
+    instrumented_il: &[u8],
+) {
+    use std::sync::Once;
+    static mut DUMP_ENABLED: bool = false;
+    static INIT: Once = Once::new();
+    INIT.call_once(|| {
+        if let Ok(val) = std::env::var("NEW_RELIC_PROFILER_DUMP_IL") {
+            unsafe { DUMP_ENABLED = val == "1"; }
+        }
+    });
+    if !DUMP_ENABLED {
+        return;
+    }
+
+    // Resolve type and method names for the file name
+    let iid_metadata_import: com::sys::GUID = com::sys::GUID {
+        data1: 0x7DAC8207, data2: 0xD3AE, data3: 0x4C75,
+        data4: [0x9B, 0x67, 0x92, 0x80, 0x1A, 0x49, 0x7D, 0x44],
+    };
+    let mut import_ptr: *mut IUnknown = std::ptr::null_mut();
+    let hr = profiler_info.GetModuleMetaData(module_id, OF_READ, &iid_metadata_import, &mut import_ptr);
+    if failed(hr) || import_ptr.is_null() {
+        return;
+    }
+    let metadata_import: crate::metadata_import::IMetaDataImport = std::mem::transmute(import_ptr);
+
+    let mut type_def: mdTypeDef = 0;
+    let mut method_name_buf = [0u16; 256];
+    let hr = metadata_import.GetMethodProps(
+        method_id, &mut type_def,
+        method_name_buf.as_mut_ptr(), 256, std::ptr::null_mut(),
+        std::ptr::null_mut(), std::ptr::null_mut(), std::ptr::null_mut(),
+        std::ptr::null_mut(), std::ptr::null_mut(),
+    );
+    if failed(hr) { return; }
+
+    let mut type_name_buf = [0u16; 256];
+    let _hr = metadata_import.GetTypeDefProps(
+        type_def, type_name_buf.as_mut_ptr(), 256, std::ptr::null_mut(),
+        std::ptr::null_mut(), std::ptr::null_mut(),
+    );
+
+    let type_name = crate::method_resolver::wchar_to_string(&type_name_buf);
+    let method_name = crate::method_resolver::wchar_to_string(&method_name_buf);
+    let base_name = format!("{}.{}", type_name, method_name);
+
+    // Write original IL
+    if let Ok(mut f) = std::fs::File::create(format!("{}.original.bin", base_name)) {
+        use std::io::Write;
+        let _ = f.write_all(original_il);
+        info!("  Dumped original IL to {}.original.bin", base_name);
+    }
+
+    // Write Rust-instrumented IL
+    if let Ok(mut f) = std::fs::File::create(format!("{}.rust-instrumented.bin", base_name)) {
+        use std::io::Write;
+        let _ = f.write_all(instrumented_il);
+        info!("  Dumped instrumented IL to {}.rust-instrumented.bin", base_name);
     }
 }
 

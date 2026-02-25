@@ -3,6 +3,8 @@
 
 #pragma once
 #include <string>
+#include <fstream>
+#include <cstdlib>
 #include "Exceptions.h"
 #include "../Logging/Logger.h"
 #include "Win32Helpers.h"
@@ -372,15 +374,40 @@ namespace NewRelic { namespace Profiler
             auto preprocessor = new NewRelic::Profiler::MethodRewriter::FunctionPreprocessor(_functionHeaderInfo, _method);
             auto newFunction = preprocessor->Process();
 
-#ifdef WRITE_BYTES_TO_DISK
-            if (newFunction != nullptr) {
-                ofstream myfile;
-                auto fileName = GetTypeName() + _X(".") + GetFunctionName() + _X(".bin");
-                myfile.open(fileName.c_str(), ios::out | ios::app | ios::binary);
-                myfile.write((const char *)newFunction->data(), newFunction->size());
-                myfile.close();
+            // Runtime IL dump: set NEW_RELIC_PROFILER_DUMP_IL=1 to write
+            // instrumented IL to .bin files for validation/debugging.
+            {
+                static int dumpIl = -1;
+                if (dumpIl == -1)
+                {
+                    char* dumpEnv = nullptr;
+                    size_t dumpEnvLen = 0;
+                    _dupenv_s(&dumpEnv, &dumpEnvLen, "NEW_RELIC_PROFILER_DUMP_IL");
+                    dumpIl = (dumpEnv != nullptr && std::string(dumpEnv) == "1") ? 1 : 0;
+                    free(dumpEnv);
+                }
+                if (dumpIl == 1 && newFunction != nullptr)
+                {
+                    // Build ASCII file names from wide type/function names
+                    auto typeName = GetTypeName();
+                    auto funcName = GetFunctionName();
+                    std::string baseNameA;
+                    baseNameA.reserve(typeName.size() + funcName.size() + 1);
+                    for (auto ch : typeName) baseNameA += static_cast<char>(ch);
+                    baseNameA += '.';
+                    for (auto ch : funcName) baseNameA += static_cast<char>(ch);
+                    // Dump original IL
+                    {
+                        std::ofstream origFile(baseNameA + ".original.bin", std::ios::binary);
+                        origFile.write((const char*)_method->data(), _method->size());
+                    }
+                    // Dump instrumented IL
+                    {
+                        std::ofstream instrFile(baseNameA + ".instrumented.bin", std::ios::binary);
+                        instrFile.write((const char*)newFunction->data(), newFunction->size());
+                    }
+                }
             }
-#endif // WRITE_BYTES_TO_DISK
             _valid = newFunction != nullptr;
             if (_valid)
             {
