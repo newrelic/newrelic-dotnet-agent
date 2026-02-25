@@ -1,0 +1,403 @@
+name: Performance Tests
+
+# Runs the .NET agent performance test suite.
+# Launches an ASP.NET Core WebAPI test app and a Locust traffic driver in
+# separate Docker containers, optionally with the agent attached.
+#
+# Required secrets (when attach_agent is true):
+#   NR_PERF_LICENSE_KEY  - New Relic staging license key (team sandbox account)
+#   NR_PERF_API_KEY      - New Relic staging User API key for NerdGraph verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      attach_agent:
+        description: 'Attach the New Relic .NET agent to the test app'
+        type: boolean
+        default: false
+        required: false
+      agent_source:
+        description: 'Source of the agent binaries (only used when attach_agent is true)'
+        type: choice
+        options:
+          - github_release
+          - build_artifact
+        default: github_release
+        required: false
+      agent_version:
+        description: 'Agent version to use, e.g. "10.49.0". Leave empty for latest. Only used with agent_source: github_release.'
+        type: string
+        default: ''
+        required: false
+      build_run_id:
+        description: 'Run ID of the all_solutions.yml workflow to pull agent homefolders from. Only used with agent_source: build_artifact.'
+        type: string
+        default: ''
+        required: false
+      test_duration:
+        description: 'How long to drive traffic (Locust --run-time format, e.g. "2m", "5m", "30s")'
+        type: string
+        default: '2m'
+        required: false
+      locust_users:
+        description: 'Number of concurrent Locust users'
+        type: number
+        default: 10
+        required: false
+      locust_spawn_rate:
+        description: 'Locust users to spawn per second'
+        type: number
+        default: 2
+        required: false
+      dotnet_version:
+        description: '.NET version for the test app container (e.g. "9.0", "8.0")'
+        type: string
+        default: '9.0'
+        required: false
+
+  schedule:
+    # Run nightly on weekdays against the latest published agent release
+    - cron: '0 6 * * 1-5'
+
+env:
+  DOTNET_NOLOGO: true
+  PERF_TEST_DIR: tests/Agent/PerformanceTests
+
+# Only allow one performance test run at a time to avoid resource contention
+concurrency:
+  group: performance-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  run-performance-tests:
+    name: Run Performance Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      # -----------------------------------------------------------------------
+      # Resolve workflow inputs (scheduled runs use sensible defaults)
+      # -----------------------------------------------------------------------
+      - name: Resolve inputs
+        id: inputs
+        run: |
+          # workflow_dispatch provides explicit values; scheduled runs get defaults
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "attach_agent=true"         >> $GITHUB_OUTPUT
+            echo "agent_source=github_release" >> $GITHUB_OUTPUT
+            echo "agent_version="            >> $GITHUB_OUTPUT
+            echo "build_run_id="             >> $GITHUB_OUTPUT
+            echo "test_duration=2m"          >> $GITHUB_OUTPUT
+            echo "locust_users=10"           >> $GITHUB_OUTPUT
+            echo "locust_spawn_rate=2"       >> $GITHUB_OUTPUT
+            echo "dotnet_version=9.0"        >> $GITHUB_OUTPUT
+          else
+            echo "attach_agent=${{ inputs.attach_agent }}"         >> $GITHUB_OUTPUT
+            echo "agent_source=${{ inputs.agent_source }}"         >> $GITHUB_OUTPUT
+            echo "agent_version=${{ inputs.agent_version }}"       >> $GITHUB_OUTPUT
+            echo "build_run_id=${{ inputs.build_run_id }}"         >> $GITHUB_OUTPUT
+            echo "test_duration=${{ inputs.test_duration }}"       >> $GITHUB_OUTPUT
+            echo "locust_users=${{ inputs.locust_users }}"         >> $GITHUB_OUTPUT
+            echo "locust_spawn_rate=${{ inputs.locust_spawn_rate }}" >> $GITHUB_OUTPUT
+            echo "dotnet_version=${{ inputs.dotnet_version }}"     >> $GITHUB_OUTPUT
+          fi
+
+      # -----------------------------------------------------------------------
+      # Prepare the agent home directory.
+      # When agent is not attached: create an empty dir (volume mount is inert
+      # because CORECLR_ENABLE_PROFILING remains 0 in the container).
+      # When agent is attached: populate the dir from the chosen source.
+      # -----------------------------------------------------------------------
+      - name: Create agent-home directory
+        run: mkdir -p "${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
+
+      - name: Download agent from GitHub release
+        if: steps.inputs.outputs.attach_agent == 'true' && steps.inputs.outputs.agent_source == 'github_release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          AGENT_HOME="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
+          DOWNLOAD_DIR="${{ github.workspace }}/agent-download"
+          mkdir -p "$DOWNLOAD_DIR"
+
+          VERSION="${{ steps.inputs.outputs.agent_version }}"
+          if [ -z "$VERSION" ]; then
+            echo "Downloading latest agent release..."
+            gh release download \
+              --repo "${{ github.repository }}" \
+              --pattern "newrelic-dotnet-agent_*_amd64.deb" \
+              --dir "$DOWNLOAD_DIR"
+          else
+            echo "Downloading agent release v${VERSION}..."
+            gh release download "v${VERSION}" \
+              --repo "${{ github.repository }}" \
+              --pattern "newrelic-dotnet-agent_*_amd64.deb" \
+              --dir "$DOWNLOAD_DIR"
+          fi
+
+          DEB_FILE=$(ls "$DOWNLOAD_DIR"/newrelic-dotnet-agent_*.deb | head -1)
+          echo "Extracting: $DEB_FILE"
+          dpkg-deb -x "$DEB_FILE" "$DOWNLOAD_DIR/extracted"
+          cp -r "$DOWNLOAD_DIR/extracted/usr/local/newrelic-dotnet-agent/." "$AGENT_HOME/"
+
+          echo "Agent home contents:"
+          ls "$AGENT_HOME"
+
+      - name: Download agent from build artifact
+        if: steps.inputs.outputs.attach_agent == 'true' && steps.inputs.outputs.agent_source == 'build_artifact'
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.inputs.outputs.build_run_id }}
+          name: homefolders
+          path: ${{ github.workspace }}/agent-download
+          repository: ${{ github.repository }}
+
+      - name: Locate agent home from build artifact
+        if: steps.inputs.outputs.attach_agent == 'true' && steps.inputs.outputs.agent_source == 'build_artifact'
+        run: |
+          AGENT_HOME="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
+          SOURCE=$(find "${{ github.workspace }}/agent-download" -name "newrelichome_x64_coreclr_linux" -type d | head -1)
+          if [ -z "$SOURCE" ]; then
+            echo "ERROR: Could not find newrelichome_x64_coreclr_linux in downloaded artifact"
+            find "${{ github.workspace }}/agent-download" -type d | head -20
+            exit 1
+          fi
+          echo "Copying agent from: $SOURCE"
+          cp -r "$SOURCE/." "$AGENT_HOME/"
+          echo "Agent home contents:"
+          ls "$AGENT_HOME"
+
+      # -----------------------------------------------------------------------
+      # Set environment for docker compose
+      # -----------------------------------------------------------------------
+      - name: Set performance test environment
+        id: perf-env
+        run: |
+          # Unique app name per run so we can find it in New Relic
+          APP_NAME="dotnet-agent-perf-test-${{ github.run_id }}"
+          echo "NR_APP_NAME=${APP_NAME}" >> $GITHUB_ENV
+
+          AGENT_HOME="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
+          echo "AGENT_PATH=${AGENT_HOME}" >> $GITHUB_ENV
+
+          # Enable the profiler only when we want the agent attached
+          if [ "${{ steps.inputs.outputs.attach_agent }}" = "true" ]; then
+            echo "CORECLR_ENABLE_PROFILING=1" >> $GITHUB_ENV
+          else
+            echo "CORECLR_ENABLE_PROFILING=0" >> $GITHUB_ENV
+          fi
+
+      # -----------------------------------------------------------------------
+      # Create output directories that are volume-mounted into containers
+      # -----------------------------------------------------------------------
+      - name: Create output directories
+        run: |
+          mkdir -p "${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/logs"
+          mkdir -p "${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/results"
+
+      # -----------------------------------------------------------------------
+      # Build images and start services in detached mode, then wait for the
+      # traffic driver to finish.
+      # -----------------------------------------------------------------------
+      - name: Build Docker images
+        working-directory: ${{ env.PERF_TEST_DIR }}
+        env:
+          DOTNET_VERSION: ${{ steps.inputs.outputs.dotnet_version }}
+        run: docker compose build
+
+      - name: Start test app and traffic driver
+        working-directory: ${{ env.PERF_TEST_DIR }}
+        env:
+          DOTNET_VERSION: ${{ steps.inputs.outputs.dotnet_version }}
+          TEST_DURATION: ${{ steps.inputs.outputs.test_duration }}
+          LOCUST_USERS: ${{ steps.inputs.outputs.locust_users }}
+          LOCUST_SPAWN_RATE: ${{ steps.inputs.outputs.locust_spawn_rate }}
+          NEW_RELIC_LICENSE_KEY: ${{ secrets.NR_PERF_LICENSE_KEY }}
+          NEW_RELIC_HOST: staging-collector.newrelic.com
+        run: |
+          docker compose up -d
+
+          echo "Waiting for test app to become healthy..."
+          timeout 60 bash -c 'until docker inspect perf-testapp --format="{{.State.Health.Status}}" 2>/dev/null | grep -q "healthy"; do sleep 2; done'
+          echo "Test app is healthy. Traffic driver is running."
+
+      - name: Wait for traffic driver to complete
+        id: wait-traffic
+        run: |
+          echo "Waiting for traffic driver to finish..."
+          TRAFFIC_EXIT_CODE=$(docker wait perf-traffic-driver)
+          echo "traffic_exit_code=${TRAFFIC_EXIT_CODE}" >> $GITHUB_OUTPUT
+          echo "Traffic driver exited with code: ${TRAFFIC_EXIT_CODE}"
+
+      # -----------------------------------------------------------------------
+      # Collect results and logs before stopping containers
+      # -----------------------------------------------------------------------
+      - name: Capture container logs
+        if: always()
+        working-directory: ${{ env.PERF_TEST_DIR }}
+        run: |
+          echo "=== Test app logs ==="
+          docker logs perf-testapp 2>&1 | tee logs/testapp-stdout.log || true
+          echo "=== Traffic driver logs ==="
+          docker logs perf-traffic-driver 2>&1 | tee results/traffic-driver.log || true
+
+      - name: Stop all services
+        if: always()
+        working-directory: ${{ env.PERF_TEST_DIR }}
+        run: docker compose down --volumes --remove-orphans || true
+
+      # -----------------------------------------------------------------------
+      # Evaluate test app health (check for agent errors in logs)
+      # -----------------------------------------------------------------------
+      - name: Check test app for errors
+        run: |
+          LOG_DIR="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/logs"
+          STDOUT_LOG="$LOG_DIR/testapp-stdout.log"
+          ERRORS=0
+
+          if [ -f "$STDOUT_LOG" ]; then
+            # Flag any unhandled exception output from the app itself
+            if grep -qi "unhandled exception\|application crashed\|fail to start" "$STDOUT_LOG"; then
+              echo "ERROR: Test app logged a critical error:"
+              grep -i "unhandled exception\|application crashed\|fail to start" "$STDOUT_LOG"
+              ERRORS=$((ERRORS + 1))
+            fi
+          fi
+
+          # Check agent log files for FATAL-level errors (only relevant when agent is attached)
+          if [ "${{ steps.inputs.outputs.attach_agent }}" = "true" ]; then
+            for LOG_FILE in "$LOG_DIR"/newrelic_agent*.log; do
+              if [ -f "$LOG_FILE" ] && grep -q "FATAL ERROR" "$LOG_FILE"; then
+                echo "ERROR: Agent log contains FATAL ERROR entries in $LOG_FILE:"
+                grep "FATAL ERROR" "$LOG_FILE"
+                ERRORS=$((ERRORS + 1))
+              fi
+            done
+          fi
+
+          if [ "$ERRORS" -gt 0 ]; then
+            exit 1
+          fi
+          echo "No critical errors found in test app or agent logs."
+
+      # -----------------------------------------------------------------------
+      # Verify Locust reported an acceptable error rate
+      # -----------------------------------------------------------------------
+      - name: Check traffic driver exit code
+        run: |
+          EXIT_CODE="${{ steps.wait-traffic.outputs.traffic_exit_code }}"
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "ERROR: Traffic driver exited with code $EXIT_CODE (error rate exceeded threshold)"
+            STATS_FILE="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/results/locust_stats.csv"
+            if [ -f "$STATS_FILE" ]; then
+              echo "--- Locust stats ---"
+              cat "$STATS_FILE"
+            fi
+            exit 1
+          fi
+          echo "Traffic driver completed successfully."
+
+      # -----------------------------------------------------------------------
+      # Verify the agent sent data to New Relic staging (agent runs only)
+      # -----------------------------------------------------------------------
+      - name: Verify agent sent data to New Relic staging
+        if: steps.inputs.outputs.attach_agent == 'true'
+        env:
+          NR_API_KEY: ${{ secrets.NR_PERF_API_KEY }}
+          NR_STAGING_GRAPHQL: https://staging-api.newrelic.com/graphql
+        run: |
+          APP_NAME="${{ env.NR_APP_NAME }}"
+          echo "Waiting for agent harvest cycle before querying New Relic..."
+          sleep 75
+
+          cat > /tmp/nr_query.json << EOF
+          {
+            "query": "{ actor { entitySearch(query: \"name = '${APP_NAME}' AND type = 'APPLICATION'\") { results { entities { guid name ... on ApmApplicationEntity { runningAgentVersions { minVersion maxVersion } } } } } } }"
+          }
+          EOF
+
+          echo "Querying NerdGraph for app: $APP_NAME"
+          RESPONSE=$(curl -s -X POST "$NR_STAGING_GRAPHQL" \
+            -H "API-Key: $NR_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d @/tmp/nr_query.json)
+
+          echo "NerdGraph response:"
+          echo "$RESPONSE" | python3 -m json.tool || echo "$RESPONSE"
+
+          ENTITY_COUNT=$(echo "$RESPONSE" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          entities = (data.get('data') or {}).get('actor', {}).get('entitySearch', {}).get('results', {}).get('entities', [])
+          print(len(entities))
+          " 2>/dev/null || echo "0")
+
+          if [ "$ENTITY_COUNT" -eq 0 ]; then
+            echo "ERROR: No application entity found in New Relic staging for app: $APP_NAME"
+            echo "The agent may not have connected or failed to send data."
+            exit 1
+          fi
+
+          echo "SUCCESS: Found $ENTITY_COUNT application entity in New Relic staging for: $APP_NAME"
+
+      # -----------------------------------------------------------------------
+      # Print a summary of Locust results
+      # -----------------------------------------------------------------------
+      - name: Print Locust results summary
+        if: always()
+        run: |
+          STATS_FILE="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/results/locust_stats.csv"
+          if [ -f "$STATS_FILE" ]; then
+            echo "### Locust Results Summary" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            cat "$STATS_FILE" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No Locust stats CSV found." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run configuration:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Agent attached: ${{ steps.inputs.outputs.attach_agent }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Test duration: ${{ steps.inputs.outputs.test_duration }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Locust users: ${{ steps.inputs.outputs.locust_users }}" >> $GITHUB_STEP_SUMMARY
+          echo "- .NET version: ${{ steps.inputs.outputs.dotnet_version }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.inputs.outputs.attach_agent }}" = "true" ]; then
+            echo "- NR App name: ${{ env.NR_APP_NAME }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Agent source: ${{ steps.inputs.outputs.agent_source }}" >> $GITHUB_STEP_SUMMARY
+            if [ -n "${{ steps.inputs.outputs.agent_version }}" ]; then
+              echo "- Agent version: ${{ steps.inputs.outputs.agent_version }}" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      # -----------------------------------------------------------------------
+      # Upload artifacts
+      # -----------------------------------------------------------------------
+      - name: Upload Locust results
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: locust-results
+          path: ${{ env.PERF_TEST_DIR }}/results/
+          if-no-files-found: warn
+
+      - name: Upload test app and agent logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: perf-test-logs
+          path: ${{ env.PERF_TEST_DIR }}/logs/
+          if-no-files-found: warn

@@ -1,0 +1,76 @@
+# Docker Compose for .NET agent performance tests.
+#
+# Required environment variables (set in shell or .env file):
+#
+#   DOTNET_VERSION          .NET version for the test app image (e.g. "9.0")
+#   TEST_DURATION           Locust --run-time value (e.g. "2m", "5m", "30s")
+#   LOCUST_USERS            Number of concurrent Locust users
+#   LOCUST_SPAWN_RATE       Users spawned per second
+#
+# Optional environment variables (agent mode only):
+#
+#   AGENT_PATH              Host path to the extracted Linux agent home folder.
+#                           When set, the agent volume mount is active and
+#                           CORECLR_ENABLE_PROFILING is set to 1 by the workflow.
+#   NEW_RELIC_LICENSE_KEY   License key for the target New Relic account
+#   NEW_RELIC_APP_NAME      Application name shown in New Relic
+#   NEW_RELIC_HOST          New Relic collector host (e.g. staging-collector.newrelic.com)
+
+services:
+  testapp:
+    container_name: perf-testapp
+    build:
+      context: ./PerformanceTestApp
+      dockerfile: Dockerfile
+      args:
+        DOTNET_VERSION: ${DOTNET_VERSION:-9.0}
+    image: perf-testapp
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      CORECLR_ENABLE_PROFILING: ${CORECLR_ENABLE_PROFILING:-0}
+      CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
+      CORECLR_NEWRELIC_HOME: /usr/local/newrelic-dotnet-agent
+      CORECLR_PROFILER_PATH: /usr/local/newrelic-dotnet-agent/libNewRelicProfiler.so
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
+      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-dotnet-agent-perf-test}
+      NEW_RELIC_HOST: ${NEW_RELIC_HOST:-}
+      NEW_RELIC_LOG_DIRECTORY: /app/logs
+    volumes:
+      - ${AGENT_PATH:-./agent-home}:/usr/local/newrelic-dotnet-agent:ro
+      - ./logs:/app/logs
+    ports:
+      - "8080:8080"
+    networks:
+      - perfnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+
+  traffic-driver:
+    container_name: perf-traffic-driver
+    build:
+      context: ./TrafficDriver
+      dockerfile: Dockerfile
+    image: perf-traffic-driver
+    depends_on:
+      testapp:
+        condition: service_healthy
+    command: >
+      --headless
+      --host http://testapp:8080
+      -u ${LOCUST_USERS:-10}
+      -r ${LOCUST_SPAWN_RATE:-2}
+      --run-time ${TEST_DURATION:-2m}
+      --csv /results/locust
+      --exit-code-on-error 0
+    volumes:
+      - ./results:/results
+    networks:
+      - perfnet
+
+networks:
+  perfnet:
+    driver: bridge
