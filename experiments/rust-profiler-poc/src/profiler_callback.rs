@@ -194,11 +194,23 @@ class! {
 
         pub fn JITCompilationStarted(&self, functionId: FunctionID, fIsSafeToBlock: BOOL) -> HRESULT {
             let count = self.jit_event_count.fetch_add(1, Ordering::Relaxed) + 1;
-            if let Some(ref profiler_info) = *self.profiler_info.borrow() {
+
+            // Use try_borrow() because CLR profiler callbacks can be reentrant
+            // (e.g., RequestReJIT triggers GetReJITParameters which may trigger
+            // another JITCompilationStarted on the same or different thread).
+            // RefCell is not thread-safe, so concurrent borrows will fail.
+            let pi_borrow = match self.profiler_info.try_borrow() {
+                Ok(b) => b,
+                Err(_) => return S_OK, // borrow conflict, skip this event
+            };
+            if let Some(ref profiler_info) = *pi_borrow {
                 unsafe {
                     if let Some(func_info) = method_resolver::resolve_function_name(profiler_info, functionId) {
                         // Check instrumentation match
-                        let matcher_borrow = self.matcher.borrow();
+                        let matcher_borrow = match self.matcher.try_borrow() {
+                            Ok(b) => b,
+                            Err(_) => return S_OK,
+                        };
                         if let Some(ref matcher) = *matcher_borrow {
                             if matcher.matches(&func_info.assembly_name, &func_info.type_name, &func_info.method_name) {
                                 info!(
@@ -244,15 +256,22 @@ class! {
             // Prevent inlining of instrumented methods. If the JIT inlines a
             // method, we never get a JIT compilation event and cannot instrument
             // it. The C++ profiler also prevents inlining of target methods.
+            //
+            // Note: JITInlining is called reentrantly from within JIT compilation
+            // (e.g., during ReJIT triggered by JITCompilationStarted). We use
+            // try_borrow() to avoid panicking if the RefCell is already borrowed.
             if !pfShouldInline.is_null() {
-                if let Some(ref profiler_info) = *self.profiler_info.borrow() {
-                    unsafe {
-                        if let Some(func_info) = method_resolver::resolve_function_name(profiler_info, calleeId) {
-                            let matcher_borrow = self.matcher.borrow();
-                            if let Some(ref matcher) = *matcher_borrow {
-                                if matcher.matches(&func_info.assembly_name, &func_info.type_name, &func_info.method_name) {
-                                    *pfShouldInline = 0; // FALSE — prevent inlining
-                                    return S_OK;
+                if let Ok(pi_borrow) = self.profiler_info.try_borrow() {
+                    if let Some(ref profiler_info) = *pi_borrow {
+                        unsafe {
+                            if let Some(func_info) = method_resolver::resolve_function_name(profiler_info, calleeId) {
+                                if let Ok(matcher_borrow) = self.matcher.try_borrow() {
+                                    if let Some(ref matcher) = *matcher_borrow {
+                                        if matcher.matches(&func_info.assembly_name, &func_info.type_name, &func_info.method_name) {
+                                            *pfShouldInline = 0; // FALSE — prevent inlining
+                                            return S_OK;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -349,7 +368,14 @@ class! {
                     std::mem::transmute(pFunctionControl);
 
                 // Get the original IL body
-                if let Some(ref profiler_info) = *self.profiler_info.borrow() {
+                let pi_borrow = match self.profiler_info.try_borrow() {
+                    Ok(b) => b,
+                    Err(_) => {
+                        warn!("GetReJITParameters: profiler_info borrow conflict, skipping");
+                        return S_OK;
+                    }
+                };
+                if let Some(ref profiler_info) = *pi_borrow {
                     let mut il_header: LPCBYTE = std::ptr::null();
                     let mut il_size: ULONG = 0;
 
@@ -369,7 +395,13 @@ class! {
 
                     // Try real IL injection; fall back to identity rewrite on error
                     let is_core_clr = self.is_core_clr.load(Ordering::Relaxed);
-                    let matcher_borrow = self.matcher.borrow();
+                    let matcher_borrow = match self.matcher.try_borrow() {
+                        Ok(b) => b,
+                        Err(_) => {
+                            warn!("GetReJITParameters: matcher borrow conflict, skipping");
+                            return S_OK;
+                        }
+                    };
                     match try_inject_il(profiler_info, moduleId, methodId, original_il, is_core_clr, matcher_borrow.as_ref()) {
                         Ok(instrumented_il) => {
                             info!(

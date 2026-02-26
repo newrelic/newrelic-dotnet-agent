@@ -523,12 +523,34 @@ The app completes all 5 test methods and exits cleanly.
 | SimpleVoidMethod() | 12 bytes | 104 bytes | 1 (single ret) | ✅ Correct |
 | ClassifyNumber(int) | 26 bytes | 128 bytes | 3 (multi-ret) | ✅ Correct |
 
+#### Methods with Existing Exception Handlers (continued from Session 4)
+
+**Bugs found and fixed:**
+
+1. **RefCell panic from reentrant CLR callbacks** — `JITInlining` is called reentrantly
+   from within `JITCompilationStarted` (and also from other threads). `RefCell::borrow()`
+   panics on reentrant/concurrent access. Fixed by using `try_borrow()` in all callback
+   methods that access shared state (`profiler_info`, `matcher`). This is a fundamental
+   limitation of `RefCell` (not thread-safe); a production implementation should use
+   `OnceLock` or `Mutex` instead.
+
+2. **EH clause ordering (ECMA-335 §II.19.4)** — Methods with existing exception handlers
+   (like TryCatchWork's FormatException catch) produced invalid IL because the original
+   inner catch clause was written AFTER our outer instrumentation catch clause. The ECMA-335
+   spec requires inner protected blocks to precede outer ones in the EH table. Fixed by
+   sorting all clauses by nesting depth (inner before outer) in `get_extra_section_bytes()`.
+
+**Result:** TryCatchWork now executes correctly with the original FormatException catch
+preserved and functional within our instrumentation wrapper.
+
+| TryCatchWork() | 56 bytes | 144 bytes | Existing try-catch | ✅ Correct |
+
+### Updated Test Count: 200 tests (9 ignored)
+
 ### Next Steps
 
 1. **Agent bootstrap sequence** — Implement the C++ profiler's agent loading mechanism
    (load assembly, resolve type, call GetFinishTracerDelegate) instead of MethodBase.Invoke
-2. **Methods with existing EH** — Fix TryCatchWork instrumentation (existing exception
-   handlers need correct clause merging)
-3. **TypeSpec resolution** — Fix Action\`2 generic type instantiation for finish-tracer
+2. **TypeSpec resolution** — Fix Action\`2 generic type instantiation for finish-tracer
 
 ## End of Session 4 (2026-02-26)

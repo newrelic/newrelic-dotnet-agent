@@ -149,7 +149,14 @@ impl ExceptionHandlerManipulator {
     /// Build the complete extra section bytes.
     ///
     /// Original clauses are shifted by `user_code_offset`, then all clauses
-    /// (new + shifted originals) are serialized in fat format.
+    /// are sorted by nesting order (inner before outer) and serialized in fat
+    /// format.
+    ///
+    /// ECMA-335 Partition II, Section 19.4 requires that exception entries
+    /// protecting an inner region precede entries protecting an enclosing
+    /// region. Without this sort, methods with existing exception handlers
+    /// (like TryCatchWork) produce invalid IL because the original inner
+    /// catch clause appears after our outer instrumentation catch clause.
     ///
     /// Reference: `ExceptionHandlerManipulator::GetExtraSectionBytes` at
     /// `ExceptionHandlerManipulator.h` lines 245-277.
@@ -159,28 +166,59 @@ impl ExceptionHandlerManipulator {
             return Vec::new();
         }
 
-        let extra_section_size = EXTRA_SECTION_HEADER_SIZE + total_clauses * FAT_CLAUSE_SIZE;
-        let mut bytes = Vec::with_capacity(extra_section_size);
+        // Build a single list of all clauses with shifted offsets
+        let mut all_clauses: Vec<ExceptionClause> = Vec::with_capacity(total_clauses);
 
-        // Extra section header: flags byte + 24-bit LE size
-        bytes.push(COR_ILEXCEPTION_SECT_EHTABLE | COR_ILEXCEPTION_SECT_FATFORMAT);
-        append_le_u24(&mut bytes, extra_section_size as u32);
-
-        // Write new clauses first (from the instrumentation template)
         for clause in &self.new_clauses {
-            write_fat_clause(&mut bytes, clause);
+            all_clauses.push(clause.clone());
         }
 
-        // Write original clauses with shifted offsets
         for clause in &self.original_clauses {
             let mut shifted = clause.clone();
             shifted.try_offset += user_code_offset;
             shifted.handler_offset += user_code_offset;
-            // For filter clauses, also shift the filter offset
             if shifted.flags == 0x0001 {
                 shifted.filter_offset += user_code_offset;
             }
-            write_fat_clause(&mut bytes, &shifted);
+            all_clauses.push(shifted);
+        }
+
+        // Sort by nesting order: inner (smaller try region) before outer.
+        // For clauses with the same try_offset, shorter try_length comes first.
+        // For non-overlapping clauses, sort by try_offset (earlier first).
+        all_clauses.sort_by(|a, b| {
+            // If one try region contains the other, the inner one comes first
+            let a_end = a.try_offset + a.try_length;
+            let b_end = b.try_offset + b.try_length;
+
+            // Check if a contains b (b is inner)
+            let a_contains_b = a.try_offset <= b.try_offset && a_end >= b_end
+                && (a.try_offset != b.try_offset || a.try_length != b.try_length);
+            // Check if b contains a (a is inner)
+            let b_contains_a = b.try_offset <= a.try_offset && b_end >= a_end
+                && (a.try_offset != b.try_offset || a.try_length != b.try_length);
+
+            if a_contains_b {
+                // a contains b → b (inner) comes first → a should be after b
+                std::cmp::Ordering::Greater
+            } else if b_contains_a {
+                // b contains a → a (inner) comes first → a should be before b
+                std::cmp::Ordering::Less
+            } else {
+                // Non-overlapping: sort by try_offset, then by try_length
+                a.try_offset.cmp(&b.try_offset)
+                    .then(a.try_length.cmp(&b.try_length))
+            }
+        });
+
+        let extra_section_size = EXTRA_SECTION_HEADER_SIZE + total_clauses * FAT_CLAUSE_SIZE;
+        let mut bytes = Vec::with_capacity(extra_section_size);
+
+        bytes.push(COR_ILEXCEPTION_SECT_EHTABLE | COR_ILEXCEPTION_SECT_FATFORMAT);
+        append_le_u24(&mut bytes, extra_section_size as u32);
+
+        for clause in &all_clauses {
+            write_fat_clause(&mut bytes, clause);
         }
 
         bytes
@@ -482,7 +520,7 @@ mod tests {
     // ==================== New clauses ====================
 
     #[test]
-    fn new_clauses_written_before_original() {
+    fn clauses_sorted_by_try_offset_for_non_overlapping() {
         let mut manip = ExceptionHandlerManipulator::new();
         manip.original_clauses.push(ExceptionClause {
             flags: 0,
@@ -507,12 +545,50 @@ mod tests {
         let result = ExceptionHandlerManipulator::from_extra_section(&bytes).unwrap();
 
         assert_eq!(result.original_clauses.len(), 2);
-        // New clause first (unshifted)
-        assert_eq!(result.original_clauses[0].try_offset, 100);
-        assert_eq!(result.original_clauses[0].class_token, 0x01000002);
-        // Original clause second (shifted by 50)
-        assert_eq!(result.original_clauses[1].try_offset, 50); // 0 + 50
-        assert_eq!(result.original_clauses[1].class_token, 0x01000001);
+        // Sorted by try_offset: shifted original (try@50) before new (try@100)
+        assert_eq!(result.original_clauses[0].try_offset, 50); // 0 + 50
+        assert_eq!(result.original_clauses[0].class_token, 0x01000001);
+        assert_eq!(result.original_clauses[1].try_offset, 100);
+        assert_eq!(result.original_clauses[1].class_token, 0x01000002);
+    }
+
+    #[test]
+    fn inner_clauses_sorted_before_outer() {
+        // Simulates TryCatchWork: original FormatException catch is nested
+        // inside our instrumentation Exception catch.
+        let mut manip = ExceptionHandlerManipulator::new();
+        // Original: try@0+10 handler@10+5 (FormatException)
+        manip.original_clauses.push(ExceptionClause {
+            flags: 0,
+            try_offset: 0,
+            try_length: 10,
+            handler_offset: 10,
+            handler_length: 5,
+            class_token: 0x01000001, // FormatException
+            filter_offset: 0,
+        });
+        // Our instrumentation outer catch: try@0+30 handler@30+5 (Exception)
+        // After shifting, original becomes try@20+10, our is try@20+30.
+        // Our catch wraps the entire user code region.
+        manip.add_clause(ExceptionClause {
+            flags: 0,
+            try_offset: 20,
+            try_length: 30,
+            handler_offset: 50,
+            handler_length: 5,
+            class_token: 0x01000002, // Exception (outer)
+            filter_offset: 0,
+        });
+
+        let bytes = manip.get_extra_section_bytes(20);
+        let result = ExceptionHandlerManipulator::from_extra_section(&bytes).unwrap();
+
+        assert_eq!(result.original_clauses.len(), 2);
+        // Inner (shifted original, try@20+10) must come before outer (try@20+30)
+        assert_eq!(result.original_clauses[0].try_length, 10);
+        assert_eq!(result.original_clauses[0].class_token, 0x01000001);
+        assert_eq!(result.original_clauses[1].try_length, 30);
+        assert_eq!(result.original_clauses[1].class_token, 0x01000002);
     }
 
     // ==================== Extra section header format ====================
