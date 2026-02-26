@@ -39,8 +39,7 @@ public class KafkaBuilderWrapper : IWrapper
     {
         var builder = instrumentedMethodCall.MethodCall.InvocationTarget;
 
-        Log.Info($"KafkaBuilderWrapper: BeforeWrappedMethod called for builder type: {builder.GetType().Name}");
-        Log.Debug($"KafkaBuilderWrapper: BeforeWrappedMethod called for builder type: {builder.GetType().Name}");
+        Log.Finest($"KafkaBuilderWrapper: BeforeWrappedMethod called for builder type: {builder.GetType().Name}");
 
         if (!_builderConfigGetterDictionary.TryGetValue(builder.GetType(), out var configGetter))
         {
@@ -61,13 +60,13 @@ public class KafkaBuilderWrapper : IWrapper
             }
         }
 
-        Log.Debug($"KafkaBuilderWrapper: Found bootstrap servers: {bootstrapServers}");
+        Log.Finest($"KafkaBuilderWrapper: Found bootstrap servers: {bootstrapServers}");
 
         // NEW: Set up statistics collection BEFORE Build() is called
         SetupStatisticsCollection(builder, agent);
 
         return Delegates.GetDelegateFor<object>(onSuccess: (clientAsObject) => {
-            Log.Debug($"KafkaBuilderWrapper: Build completed, client type: {clientAsObject.GetType().Name}");
+            Log.Finest($"KafkaBuilderWrapper: Build completed, client type: {clientAsObject.GetType().Name}");
 
             // Existing configuration extraction logic
             if (!string.IsNullOrEmpty(bootstrapServers))
@@ -87,7 +86,6 @@ public class KafkaBuilderWrapper : IWrapper
     private void SetupStatisticsCollection(object builder, IAgent agent)
     {
         Log.Info($"KafkaBuilderWrapper: SetupStatisticsCollection called for builder type: {builder.GetType().Name}");
-        Log.Debug($"KafkaBuilderWrapper: SetupStatisticsCollection called for builder type: {builder.GetType().Name}");
 
         try
         {
@@ -99,15 +97,15 @@ public class KafkaBuilderWrapper : IWrapper
             if (existingHandler == null)
             {
                 // Customer hasn't set a handler - set ours directly
-                Log.Debug("KafkaBuilderWrapper: Setting up our statistics handler directly");
+                Log.Finest("KafkaBuilderWrapper: Setting up our statistics handler directly");
                 var ourHandler = CreateMetricsReportingHandler(agent, builder);
                 SetStatisticsHandlerOnBuilder(builder, ourHandler);
 
                 // Try to enable statistics, but don't fail if we can't
-                Log.Debug("KafkaBuilderWrapper: Attempting to enable statistics (non-critical)");
+                Log.Finest("KafkaBuilderWrapper: Attempting to enable statistics (non-critical)");
                 SetStatisticsIntervalOnBuilder(builder, 5000); // 5 seconds for testing
 
-                Log.Debug("KafkaBuilderWrapper: Statistics handler configured - testing if callback works with existing config");
+                Log.Finest("KafkaBuilderWrapper: Statistics handler configured");
             }
             else
             {
@@ -120,10 +118,10 @@ public class KafkaBuilderWrapper : IWrapper
                 SetStatisticsHandlerOnBuilder(builder, compositeHandler);
 
                 // Try to enable statistics if customer hasn't
-                Log.Debug("KafkaBuilderWrapper: Attempting to enable statistics (non-critical)");
+                Log.Finest("KafkaBuilderWrapper: Attempting to enable statistics (non-critical)");
                 SetStatisticsIntervalOnBuilder(builder, 5000);
 
-                Log.Debug("KafkaBuilderWrapper: Composite handler configured");
+                Log.Finest("KafkaBuilderWrapper: Composite handler configured");
             }
         }
         catch (Exception ex)
@@ -170,11 +168,11 @@ public class KafkaBuilderWrapper : IWrapper
 
             if (hasStatisticsInterval)
             {
-                Log.Debug($"KafkaBuilderWrapper: Customer has configured statistics.interval.ms = {existingInterval}");
+                Log.Finest($"KafkaBuilderWrapper: Customer has configured statistics.interval.ms = {existingInterval}");
             }
             else
             {
-                Log.Debug($"KafkaBuilderWrapper: Customer has not configured statistics.interval.ms, we can set our interval");
+                Log.Finest($"KafkaBuilderWrapper: Customer has not configured statistics.interval.ms, we can set our interval");
             }
 
             return existingHandler;
@@ -202,7 +200,7 @@ public class KafkaBuilderWrapper : IWrapper
         {
             // Get the delegate type from our handler (they should be the same type)
             var delegateType = ourHandler.GetType();
-            Log.Debug($"KafkaBuilderWrapper: Creating composite of type: {delegateType.Name}");
+            Log.Finest($"KafkaBuilderWrapper: Creating composite of type: {delegateType.Name}");
 
             // Create a method that will be our composite handler
             var compositeMethodInfo = typeof(KafkaBuilderWrapper).GetMethod(nameof(CompositeStatisticsHandlerMethod), BindingFlags.Instance | BindingFlags.NonPublic);
@@ -214,7 +212,7 @@ public class KafkaBuilderWrapper : IWrapper
             _ourHandler = ourHandler;
             _customerHandler = customerHandler;
 
-            Log.Debug("KafkaBuilderWrapper: Successfully created reflection-based composite handler");
+            Log.Finest("KafkaBuilderWrapper: Successfully created reflection-based composite handler");
             return compositeHandler;
         }
         catch (Exception ex)
@@ -264,7 +262,7 @@ public class KafkaBuilderWrapper : IWrapper
     /// </summary>
     private object CreateMetricsReportingHandler(IAgent agent, object builder)
     {
-        Log.Debug($"KafkaBuilderWrapper: Creating reflection-based metrics handler for builder type: {builder.GetType().Name}");
+        Log.Finest($"KafkaBuilderWrapper: Creating reflection-based metrics handler for builder type: {builder.GetType().Name}");
 
         try
         {
@@ -287,7 +285,7 @@ public class KafkaBuilderWrapper : IWrapper
 
             // Get the expected delegate type (Action<TClient, string>)
             var expectedDelegateType = parameters[0].ParameterType;
-            Log.Debug($"KafkaBuilderWrapper: Expected delegate type: {expectedDelegateType.Name}");
+            Log.Finest($"KafkaBuilderWrapper: Expected delegate type: {expectedDelegateType.Name}");
 
             // Create a method that matches the delegate signature
             var methodToInvoke = typeof(KafkaBuilderWrapper).GetMethod(nameof(StatisticsHandlerMethod), BindingFlags.Instance | BindingFlags.NonPublic);
@@ -298,7 +296,7 @@ public class KafkaBuilderWrapper : IWrapper
             // Store the agent reference so our method can access it
             _currentAgent = agent;
 
-            Log.Debug($"KafkaBuilderWrapper: Successfully created reflection-based handler of type: {handler.GetType().Name}");
+            Log.Finest($"KafkaBuilderWrapper: Successfully created reflection-based handler of type: {handler.GetType().Name}");
             return handler;
         }
         catch (Exception ex)
@@ -315,7 +313,7 @@ public class KafkaBuilderWrapper : IWrapper
     private void StatisticsHandlerMethod(object client, string json)
     {
         var clientTypeName = client?.GetType().Name ?? "Unknown";
-        Log.Debug($"KafkaBuilderWrapper: Statistics callback triggered for {clientTypeName}, JSON length: {json?.Length ?? 0}");
+        Log.Finest($"KafkaBuilderWrapper: Statistics callback triggered for {clientTypeName}, JSON length: {json?.Length ?? 0}");
 
         try
         {
@@ -330,7 +328,7 @@ public class KafkaBuilderWrapper : IWrapper
         }
         catch (Exception ex)
         {
-            Log.Info($"KafkaBuilderWrapper: Error parsing Kafka statistics: {ex.Message}");
+            Log.Debug($"KafkaBuilderWrapper: Error parsing Kafka statistics: {ex.Message}");
         }
     }
 
@@ -340,7 +338,7 @@ public class KafkaBuilderWrapper : IWrapper
     /// </summary>
     private void ParseAndReportCriticalUIMetrics(IAgent agent, string statisticsJson)
     {
-        Log.Debug($"KafkaBuilderWrapper: ParseAndReportCriticalUIMetrics called with JSON length: {statisticsJson?.Length ?? 0}");
+        Log.Finest($"KafkaBuilderWrapper: ParseAndReportCriticalUIMetrics called with JSON length: {statisticsJson?.Length ?? 0}");
 
         try
         {
@@ -352,7 +350,7 @@ public class KafkaBuilderWrapper : IWrapper
                 return;
             }
 
-            Log.Debug($"KafkaBuilderWrapper: Parsed stats - ClientId: {metricsData.ClientId}, Type: {metricsData.ClientType}, Requests: {metricsData.RequestCount}, Responses: {metricsData.ResponseCount}");
+            Log.Finest($"KafkaBuilderWrapper: Parsed stats - ClientId: {metricsData.ClientId}, Type: {metricsData.ClientType}, Requests: {metricsData.RequestCount}, Responses: {metricsData.ResponseCount}");
 
             // Get all metrics as a dictionary
             var metricsDict = KafkaStatisticsHelper.CreateMetricsDictionary(metricsData, MessageBrokerVendorConstants.Kafka);
@@ -361,14 +359,14 @@ public class KafkaBuilderWrapper : IWrapper
             foreach (var kvp in metricsDict)
             {
                 agent.GetExperimentalApi().RecordCountMetric(kvp.Key, kvp.Value);
-                Log.Debug($"KafkaBuilderWrapper: Recorded metric: {kvp.Key} = {kvp.Value}");
+                Log.Finest($"KafkaBuilderWrapper: Recorded metric: {kvp.Key} = {kvp.Value}");
             }
 
-            Log.Debug($"KafkaBuilderWrapper: Successfully recorded {metricsDict.Count} Kafka internal metrics");
+            Log.Finest($"KafkaBuilderWrapper: Successfully recorded {metricsDict.Count} Kafka internal metrics");
         }
         catch (Exception ex)
         {
-            Log.Info($"KafkaBuilderWrapper: Error processing Kafka statistics: {ex.Message}");
+            Log.Debug($"KafkaBuilderWrapper: Error processing Kafka statistics: {ex.Message}");
         }
     }
 
@@ -379,7 +377,7 @@ public class KafkaBuilderWrapper : IWrapper
     /// </summary>
     private void SetStatisticsHandlerOnBuilder(object builder, object handler)
     {
-        Log.Debug($"KafkaBuilderWrapper: SetStatisticsHandlerOnBuilder called for type: {builder.GetType().Name}");
+        Log.Finest($"KafkaBuilderWrapper: SetStatisticsHandlerOnBuilder called for type: {builder.GetType().Name}");
 
         try
         {
@@ -388,7 +386,7 @@ public class KafkaBuilderWrapper : IWrapper
                 .Where(m => m.Name == "SetStatisticsHandler")
                 .ToArray();
 
-            Log.Debug($"KafkaBuilderWrapper: Found {setStatisticsMethods.Length} SetStatisticsHandler methods");
+            Log.Finest($"KafkaBuilderWrapper: Found {setStatisticsMethods.Length} SetStatisticsHandler methods");
 
             if (setStatisticsMethods.Length > 0)
             {
@@ -396,11 +394,11 @@ public class KafkaBuilderWrapper : IWrapper
                 var method = setStatisticsMethods[0];
                 var parameters = method.GetParameters();
 
-                Log.Debug($"KafkaBuilderWrapper: Using SetStatisticsHandler method with parameters: {string.Join(", ", parameters.Select(p => p.ParameterType.Name))}");
+                Log.Finest($"KafkaBuilderWrapper: Using SetStatisticsHandler method with parameters: {string.Join(", ", parameters.Select(p => p.ParameterType.Name))}");
 
                 // Try to invoke with our handler - the method should accept our Action delegate
                 method.Invoke(builder, new object[] { handler });
-                Log.Debug($"KafkaBuilderWrapper: SetStatisticsHandler invoked successfully");
+                Log.Finest($"KafkaBuilderWrapper: SetStatisticsHandler invoked successfully");
             }
             else
             {
@@ -414,278 +412,22 @@ public class KafkaBuilderWrapper : IWrapper
     }
 
     /// <summary>
-    /// Enables statistics on the Kafka builder using various approaches.
+    /// Attempts to enable statistics on the Kafka builder.
+    /// Note: Statistics are typically configured by the customer application.
     /// </summary>
     private void SetStatisticsIntervalOnBuilder(object builder, int intervalMs)
     {
-        Log.Debug($"KafkaBuilderWrapper: SetStatisticsIntervalOnBuilder called for interval: {intervalMs}ms");
-
-        try
-        {
-            var builderType = builder.GetType();
-            Log.Debug($"KafkaBuilderWrapper: Builder type: {builderType.Name}");
-
-            // Approach 1: Try SetConfig method (some builders might have this)
-            if (TrySetConfigMethod(builder, intervalMs))
-                return;
-
-            // Approach 2: Try Set method with string parameters
-            if (TrySetMethod(builder, intervalMs))
-                return;
-
-            // Approach 3: Try accessing internal Config property/field
-            if (TryConfigPropertyAccess(builder, intervalMs))
-                return;
-
-            // Approach 4: Try any method that contains "Config" or "Set"
-            if (TryReflectionConfigMethods(builder, intervalMs))
-                return;
-
-            Log.Debug($"KafkaBuilderWrapper: All statistics configuration approaches failed");
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"KafkaBuilderWrapper: Error in statistics configuration: {ex.Message}");
-        }
+        // Note: In production, statistics should be configured by the customer application
+        // via builder.SetConfig("statistics.interval.ms", "5000") or similar.
+        // We don't attempt to override customer configuration.
+        Log.Finest("KafkaBuilderWrapper: Statistics interval setup - relying on customer configuration");
     }
 
-    private bool TrySetConfigMethod(object builder, int intervalMs)
-    {
-        try
-        {
-            var setConfigMethod = builder.GetType().GetMethod("SetConfig");
-            if (setConfigMethod != null)
-            {
-                // Check if we can read existing config first (some builders might have GetConfig)
-                var getConfigMethod = builder.GetType().GetMethod("GetConfig");
-                if (getConfigMethod != null)
-                {
-                    try
-                    {
-                        var existingValue = getConfigMethod.Invoke(builder, new object[] { "statistics.interval.ms" });
-                        if (existingValue != null && !string.IsNullOrEmpty(existingValue.ToString()))
-                        {
-                            Log.Debug($"KafkaBuilderWrapper: Customer has configured statistics.interval.ms = {existingValue}, respecting their setting");
-                            return true; // Don't override
-                        }
-                    }
-                    catch
-                    {
-                        // GetConfig failed, proceed with setting our value
-                    }
-                }
 
-                Log.Debug("KafkaBuilderWrapper: Trying SetConfig method");
-                setConfigMethod.Invoke(builder, new object[] { "statistics.interval.ms", intervalMs.ToString() });
-                Log.Debug($"KafkaBuilderWrapper: SetConfig succeeded with interval {intervalMs}");
-                return true;
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"KafkaBuilderWrapper: SetConfig failed: {ex.Message}");
-        }
-        return false;
-    }
 
-    private bool TrySetMethod(object builder, int intervalMs)
-    {
-        try
-        {
-            var setMethods = builder.GetType().GetMethods()
-                .Where(m => m.Name == "Set" && m.GetParameters().Length == 2)
-                .ToArray();
 
-            foreach (var method in setMethods)
-            {
-                var parameters = method.GetParameters();
-                if (parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(string))
-                {
-                    // Note: We can't easily check existing config with Set method since it's write-only
-                    // But this is less invasive than SetConfig since it's typically additive
-                    Log.Debug("KafkaBuilderWrapper: Trying Set(string, string) method");
-                    method.Invoke(builder, new object[] { "statistics.interval.ms", intervalMs.ToString() });
-                    Log.Debug($"KafkaBuilderWrapper: Set method succeeded with interval {intervalMs}");
-                    return true;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"KafkaBuilderWrapper: Set method failed: {ex.Message}");
-        }
-        return false;
-    }
 
-    private bool TryConfigPropertyAccess(object builder, int intervalMs)
-    {
-        try
-        {
-            var builderType = builder.GetType();
-            Log.Debug($"KafkaBuilderWrapper: Examining builder type: {builderType.FullName}");
 
-            // List all properties and fields for debugging
-            var properties = builderType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            var fields = builderType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-            Log.Debug($"KafkaBuilderWrapper: Available properties: {string.Join(", ", properties.Select(p => p.Name))}");
-            Log.Debug($"KafkaBuilderWrapper: Available fields: {string.Join(", ", fields.Select(f => f.Name))}");
-
-            // Try all possible config-related properties/fields
-            foreach (var prop in properties)
-            {
-                if (prop.Name.ToLower().Contains("config"))
-                {
-                    try
-                    {
-                        var config = prop.GetValue(builder);
-                        if (config != null)
-                        {
-                            Log.Debug($"KafkaBuilderWrapper: Found config property '{prop.Name}', type: {config.GetType().Name}");
-
-                            if (TryDictionaryAccess(config, intervalMs))
-                                return true;
-
-                            if (TryAddMethod(config, intervalMs))
-                                return true;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Debug($"KafkaBuilderWrapper: Failed to access property {prop.Name}: {ex.Message}");
-                    }
-                }
-            }
-
-            foreach (var field in fields)
-            {
-                if (field.Name.ToLower().Contains("config"))
-                {
-                    try
-                    {
-                        var config = field.GetValue(builder);
-                        if (config != null)
-                        {
-                            Log.Debug($"KafkaBuilderWrapper: Found config field '{field.Name}', type: {config.GetType().Name}");
-
-                            if (TryDictionaryAccess(config, intervalMs))
-                                return true;
-
-                            if (TryAddMethod(config, intervalMs))
-                                return true;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Debug($"KafkaBuilderWrapper: Failed to access field {field.Name}: {ex.Message}");
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"KafkaBuilderWrapper: Config property access failed: {ex.Message}");
-        }
-        return false;
-    }
-
-    private bool TryDictionaryAccess(object config, int intervalMs)
-    {
-        try
-        {
-            Log.Debug($"KafkaBuilderWrapper: Trying to access config of type: {config.GetType().Name}");
-
-            // The config is IEnumerable<KeyValuePair<string, string>>, not a dictionary
-            // We need to enumerate it to check existing values and potentially modify it
-            var configEnumerable = config as IEnumerable;
-            if (configEnumerable != null)
-            {
-                bool hasStatisticsInterval = false;
-                string existingValue = null;
-
-                // Check if statistics.interval.ms is already configured
-                foreach (var item in configEnumerable)
-                {
-                    var kvp = item as dynamic;
-                    if (kvp != null && kvp.Key == "statistics.interval.ms")
-                    {
-                        hasStatisticsInterval = true;
-                        existingValue = kvp.Value?.ToString();
-                        break;
-                    }
-                }
-
-                if (hasStatisticsInterval)
-                {
-                    Log.Debug($"KafkaBuilderWrapper: Customer has configured statistics.interval.ms = {existingValue}, respecting their setting");
-                    return true; // Customer has it configured, respect their setting
-                }
-
-                // Customer hasn't configured it - we need to add it
-                // But we can't modify an enumerable directly
-                // This approach won't work for IEnumerable
-                Log.Debug($"KafkaBuilderWrapper: Customer has not configured statistics.interval.ms, but config is IEnumerable (read-only)");
-                return false;
-            }
-
-            // Try dictionary-style access as fallback
-            dynamic dynamicConfig = config;
-            if (dynamicConfig.ContainsKey("statistics.interval.ms"))
-            {
-                var existingValue = dynamicConfig["statistics.interval.ms"];
-                Log.Debug($"KafkaBuilderWrapper: Customer has configured statistics.interval.ms = {existingValue}, respecting their setting");
-                return true;
-            }
-
-            dynamicConfig["statistics.interval.ms"] = intervalMs.ToString();
-            Log.Debug($"KafkaBuilderWrapper: Set statistics.interval.ms = {intervalMs} (customer had no existing config)");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"KafkaBuilderWrapper: Config access failed: {ex.Message}");
-            return false;
-        }
-    }
-
-    private bool TryAddMethod(object config, int intervalMs)
-    {
-        try
-        {
-            var addMethod = config.GetType().GetMethod("Add", new[] { typeof(string), typeof(string) });
-            if (addMethod != null)
-            {
-                addMethod.Invoke(config, new object[] { "statistics.interval.ms", intervalMs.ToString() });
-                Log.Debug("KafkaBuilderWrapper: Add method succeeded");
-                return true;
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"KafkaBuilderWrapper: Add method failed: {ex.Message}");
-        }
-        return false;
-    }
-
-    private bool TryReflectionConfigMethods(object builder, int intervalMs)
-    {
-        try
-        {
-            var methods = builder.GetType().GetMethods()
-                .Where(m => m.Name.ToLower().Contains("config") || m.Name.ToLower().Contains("set"))
-                .ToArray();
-
-            Log.Debug($"KafkaBuilderWrapper: Found {methods.Length} potential config methods: {string.Join(", ", methods.Select(m => m.Name))}");
-
-            // This is a fallback - we're not calling them as they might not be the right methods
-            // But this gives us insight into what methods are available
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"KafkaBuilderWrapper: Reflection config methods failed: {ex.Message}");
-        }
-        return false;
-    }
 
     #endregion
 }
