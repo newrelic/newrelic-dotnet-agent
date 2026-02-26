@@ -99,10 +99,16 @@ pub struct InjectionTokens {
     pub method_base_type_ref: u32,
     /// MemberRef for MethodBase.Invoke(object, object[])
     pub method_base_invoke_ref: u32,
-    /// TypeRef for System.Action`2
+    /// TypeRef for System.Action`2 (open generic, used for MemberRef parent)
     pub action2_type_ref: u32,
-    /// MemberRef for Action<object,Exception>.Invoke(!0, !1)
+    /// MemberRef for Action`2.Invoke(!0, !1) on open generic (used internally)
     pub action2_invoke_ref: u32,
+    /// TypeSpec for Action<object, Exception> (closed generic instantiation)
+    /// Used by `castclass` in the finish-tracer call.
+    pub action2_type_spec: u32,
+    /// MemberRef for Invoke on the closed Action<object, Exception> TypeSpec.
+    /// Used by `callvirt` in the finish-tracer call.
+    pub action2_invoke_on_spec: u32,
     /// String tokens for the 11-element parameter array
     pub tracer_factory_name_token: u32,
     pub metric_name_token: u32,
@@ -247,14 +253,30 @@ pub fn build_instrumented_method_with_tokens(
     builder.append_catch_start(tokens.exception_type_ref);
     builder.append_store_local(exception_local);
 
-    // POC: Skip finish-tracer calls since tracer is always null.
-    // The full implementation would call Action<object,Exception>.Invoke here,
-    // but that requires correct TypeSpec resolution for the generic instantiation.
-    // For now, just rethrow the exception.
+    // Call finish tracer with exception (wrapped in try-catch for safety)
+    build_safe_call_finish_tracer(
+        &mut builder,
+        tracer_local,
+        exception_local,
+        result_local,
+        tokens,
+        true, // exception path
+    );
+
     builder.append_opcode(CEE_RETHROW);
     builder.append_catch_end();
 
     builder.append_label(&after_catch_label);
+
+    // Call finish tracer with return value (wrapped in try-catch for safety)
+    build_safe_call_finish_tracer(
+        &mut builder,
+        tracer_local,
+        exception_local,
+        result_local,
+        tokens,
+        false, // normal return path
+    );
 
     // --- Return ---
     if let Some(result_idx) = result_local {
@@ -329,10 +351,22 @@ fn resolve_injection_tokens(
     let method_base_invoke_ref =
         tokenizer.get_member_ref_token(method_base_type_ref, "Invoke", &invoke_sig)?;
 
-    // Action<object, Exception>.Invoke(!0, !1) — instance method on generic type
+    // Action<object, Exception>.Invoke(!0, !1) — instance method on open generic
     let action_invoke_sig = build_action2_invoke_sig();
     let action2_invoke_ref =
         tokenizer.get_member_ref_token(action2_type_ref, "Invoke", &action_invoke_sig)?;
+
+    // TypeSpec for closed generic Action<object, Exception>
+    // Used by castclass in the finish-tracer call.
+    let action2_typespec_sig =
+        build_action2_typespec_sig(action2_type_ref, object_type_ref, exception_type_ref);
+    let action2_type_spec = tokenizer.get_type_spec_token(&action2_typespec_sig)?;
+
+    // MemberRef for Invoke on the closed TypeSpec
+    // The parent is the TypeSpec (not the open TypeRef), which tells the CLR
+    // the exact generic instantiation for the callvirt target.
+    let action2_invoke_on_spec =
+        tokenizer.get_member_ref_token(action2_type_spec, "Invoke", &action_invoke_sig)?;
 
     // String tokens
     let tracer_factory_name_token = tokenizer.get_string_token(&ctx.tracer_factory_name)?;
@@ -353,6 +387,8 @@ fn resolve_injection_tokens(
         method_base_invoke_ref,
         action2_type_ref,
         action2_invoke_ref,
+        action2_type_spec,
+        action2_invoke_on_spec,
         tracer_factory_name_token,
         metric_name_token,
         assembly_name_token,
@@ -489,9 +525,9 @@ fn build_safe_call_finish_tracer(
     builder.append_load_local(tracer_local);
     let skip_label = builder.append_jump_auto(CEE_BRFALSE as u8);
 
-    // Cast tracer to Action<object, Exception>
+    // Cast tracer to Action<object, Exception> (closed generic TypeSpec)
     builder.append_load_local(tracer_local);
-    builder.append_opcode_u32(CEE_CASTCLASS, tokens.action2_type_ref);
+    builder.append_opcode_u32(CEE_CASTCLASS, tokens.action2_type_spec);
 
     if is_exception_path {
         // Pass: (null, exception)
@@ -507,8 +543,8 @@ fn build_safe_call_finish_tracer(
         builder.append_opcode(CEE_LDNULL); // no exception
     }
 
-    // Call Action<object, Exception>.Invoke(!0, !1)
-    builder.append_opcode_u32(CEE_CALLVIRT, tokens.action2_invoke_ref);
+    // Call Action<object, Exception>.Invoke(!0, !1) on the closed TypeSpec
+    builder.append_opcode_u32(CEE_CALLVIRT, tokens.action2_invoke_on_spec);
 
     builder.append_label(&skip_label);
 
@@ -590,6 +626,55 @@ pub fn build_action2_invoke_sig() -> Vec<u8> {
     ]
 }
 
+/// Build the TypeSpec signature for `Action<object, Exception>`.
+///
+/// This is a GENERICINST signature that instantiates the open generic
+/// `System.Action`2` with `System.Object` and `System.Exception`.
+///
+/// Format (ECMA-335 §II.23.2.14):
+/// ```text
+/// GENERICINST (CLASS | VALUETYPE) TypeDefOrRef GenArgCount Type+
+/// ```
+///
+/// For Action<object, Exception>:
+/// ```text
+/// 0x15          ELEMENT_TYPE_GENERICINST
+/// 0x12          ELEMENT_TYPE_CLASS
+/// compressed    Action`2 TypeRef token
+/// 0x02          2 generic arguments
+/// 0x12          ELEMENT_TYPE_CLASS (arg 0: object)
+/// compressed    System.Object TypeRef token
+/// 0x12          ELEMENT_TYPE_CLASS (arg 1: Exception)
+/// compressed    System.Exception TypeRef token
+/// ```
+pub fn build_action2_typespec_sig(
+    action2_type_ref: u32,
+    object_type_ref: u32,
+    exception_type_ref: u32,
+) -> Vec<u8> {
+    let mut sig = Vec::new();
+    sig.push(0x15); // ELEMENT_TYPE_GENERICINST
+    sig.push(0x12); // ELEMENT_TYPE_CLASS
+    sig.extend_from_slice(
+        &crate::il::sig_compression::compress_token(action2_type_ref).unwrap_or_default(),
+    );
+    sig.push(0x02); // 2 generic arguments
+
+    // Arg 0: System.Object
+    sig.push(0x12); // ELEMENT_TYPE_CLASS
+    sig.extend_from_slice(
+        &crate::il::sig_compression::compress_token(object_type_ref).unwrap_or_default(),
+    );
+
+    // Arg 1: System.Exception
+    sig.push(0x12); // ELEMENT_TYPE_CLASS
+    sig.extend_from_slice(
+        &crate::il::sig_compression::compress_token(exception_type_ref).unwrap_or_default(),
+    );
+
+    sig
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -608,6 +693,8 @@ mod tests {
             method_base_invoke_ref: 0x0A00_0002,
             action2_type_ref: 0x0100_0007,
             action2_invoke_ref: 0x0A00_0003,
+            action2_type_spec: 0x1B00_0001,
+            action2_invoke_on_spec: 0x0A00_0004,
             tracer_factory_name_token: 0x7000_0001,
             metric_name_token: 0x7000_0002,
             assembly_name_token: 0x7000_0003,
@@ -709,6 +796,25 @@ mod tests {
     fn action2_invoke_sig_format() {
         let sig = build_action2_invoke_sig();
         assert_eq!(sig, vec![0x20, 0x02, 0x01, 0x13, 0x00, 0x13, 0x01]);
+    }
+
+    #[test]
+    fn action2_typespec_sig_format() {
+        // Action`2 = TypeRef 0x01000007, Object = TypeRef 0x01000002, Exception = TypeRef 0x01000001
+        let sig = build_action2_typespec_sig(0x0100_0007, 0x0100_0002, 0x0100_0001);
+
+        assert_eq!(sig[0], 0x15); // ELEMENT_TYPE_GENERICINST
+        assert_eq!(sig[1], 0x12); // ELEMENT_TYPE_CLASS
+        // Action`2 compressed token: (7 << 2) | 1 = 29 → [0x1D]
+        assert_eq!(sig[2], 0x1D);
+        assert_eq!(sig[3], 0x02); // 2 generic arguments
+        // Arg 0: CLASS Object → (2 << 2) | 1 = 9 → [0x09]
+        assert_eq!(sig[4], 0x12);
+        assert_eq!(sig[5], 0x09);
+        // Arg 1: CLASS Exception → (1 << 2) | 1 = 5 → [0x05]
+        assert_eq!(sig[6], 0x12);
+        assert_eq!(sig[7], 0x05);
+        assert_eq!(sig.len(), 8);
     }
 
     // ==================== Helper tests ====================
@@ -898,7 +1004,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // POC: SafeCallGetTracer and FinishTracer are no-ops
     fn static_void_method_contains_callvirt_for_invoke() {
         let ctx = test_ctx_static_void();
         let tokens = test_tokens();
@@ -911,10 +1016,11 @@ mod tests {
         let code_size = u32::from_le_bytes([result[4], result[5], result[6], result[7]]) as usize;
         let code = &result[12..12 + code_size];
 
-        // Should contain CEE_CALLVIRT (0x6F) for MethodBase.Invoke and Action.Invoke
+        // Should contain CEE_CALLVIRT (0x6F) for Action<object,Exception>.Invoke
+        // in both the exception-path and return-path finish-tracer calls.
         let callvirt_count = code.iter().filter(|&&b| b == 0x6F).count();
         assert!(callvirt_count >= 2,
-            "Expected at least 2 callvirt (Invoke calls), got {}", callvirt_count);
+            "Expected at least 2 callvirt (finish-tracer Invoke calls), got {}", callvirt_count);
     }
 
     #[test]
@@ -1220,7 +1326,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // POC: FinishTracer is no-op, fewer clauses generated
     fn method_with_existing_try_catch_preserves_original_clause() {
         let ctx = test_ctx_static_void();
         let tokens = test_tokens();

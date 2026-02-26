@@ -195,52 +195,75 @@ class! {
         pub fn JITCompilationStarted(&self, functionId: FunctionID, fIsSafeToBlock: BOOL) -> HRESULT {
             let count = self.jit_event_count.fetch_add(1, Ordering::Relaxed) + 1;
 
-            // Use try_borrow() because CLR profiler callbacks can be reentrant
-            // (e.g., RequestReJIT triggers GetReJITParameters which may trigger
-            // another JITCompilationStarted on the same or different thread).
-            // RefCell is not thread-safe, so concurrent borrows will fail.
-            let pi_borrow = match self.profiler_info.try_borrow() {
-                Ok(b) => b,
-                Err(_) => return S_OK, // borrow conflict, skip this event
-            };
-            if let Some(ref profiler_info) = *pi_borrow {
-                unsafe {
-                    if let Some(func_info) = method_resolver::resolve_function_name(profiler_info, functionId) {
-                        // Check instrumentation match
-                        let matcher_borrow = match self.matcher.try_borrow() {
-                            Ok(b) => b,
-                            Err(_) => return S_OK,
-                        };
-                        if let Some(ref matcher) = *matcher_borrow {
-                            if matcher.matches(&func_info.assembly_name, &func_info.type_name, &func_info.method_name) {
+            // Phase 1: Resolve function name and check match while borrowing.
+            // Phase 2: Drop borrows, then call RequestReJIT (which triggers
+            // reentrant callbacks like GetReJITParameters and JITInlining).
+            //
+            // This two-phase approach avoids holding RefCell borrows across CLR
+            // calls that can cause reentrancy panics or try_borrow failures.
+            let rejit_request: Option<(ModuleID, mdMethodDef)> = {
+                let pi_borrow = match self.profiler_info.try_borrow() {
+                    Ok(b) => b,
+                    Err(_) => return S_OK,
+                };
+                if let Some(ref profiler_info) = *pi_borrow {
+                    unsafe {
+                        if let Some(func_info) = method_resolver::resolve_function_name(profiler_info, functionId) {
+                            let matcher_borrow = match self.matcher.try_borrow() {
+                                Ok(b) => b,
+                                Err(_) => return S_OK,
+                            };
+                            let matched = if let Some(ref matcher) = *matcher_borrow {
+                                matcher.matches(&func_info.assembly_name, &func_info.type_name, &func_info.method_name)
+                            } else {
+                                false
+                            };
+                            drop(matcher_borrow);
+
+                            if count <= 10 || count % 500 == 0 {
+                                trace!(
+                                    "JIT #{}: [{}] {}.{}",
+                                    count, func_info.assembly_name, func_info.type_name, func_info.method_name
+                                );
+                            }
+
+                            if matched {
                                 info!(
                                     "MATCH: [{}] {}.{} — requesting ReJIT",
                                     func_info.assembly_name, func_info.type_name,
                                     func_info.method_name
                                 );
-                                let mut module_ids = [func_info.module_id];
-                                let mut method_ids = [func_info.method_token];
-                                let hr = profiler_info.RequestReJIT(
-                                    1,
-                                    module_ids.as_mut_ptr(),
-                                    method_ids.as_mut_ptr(),
-                                );
-                                if failed(hr) {
-                                    error!(
-                                        "RequestReJIT failed: 0x{:08x} for {}.{}",
-                                        hr, func_info.type_name, func_info.method_name
-                                    );
-                                }
+                                Some((func_info.module_id, func_info.method_token))
+                            } else {
+                                None
                             }
+                        } else {
+                            None
                         }
+                    }
+                } else {
+                    None
+                }
+            }; // pi_borrow dropped here
 
-                        // Periodic logging for visibility
-                        if count <= 10 || count % 500 == 0 {
-                            trace!(
-                                "JIT #{}: [{}] {}.{}",
-                                count, func_info.assembly_name, func_info.type_name, func_info.method_name
-                            );
-                        }
+            // Phase 2: Call RequestReJIT with no active borrows
+            if let Some((module_id, method_token)) = rejit_request {
+                let pi_borrow = match self.profiler_info.try_borrow() {
+                    Ok(b) => b,
+                    Err(_) => return S_OK,
+                };
+                if let Some(ref profiler_info) = *pi_borrow {
+                    let mut module_ids = [module_id];
+                    let mut method_ids = [method_token];
+                    let hr = unsafe {
+                        profiler_info.RequestReJIT(
+                            1,
+                            module_ids.as_mut_ptr(),
+                            method_ids.as_mut_ptr(),
+                        )
+                    };
+                    if failed(hr) {
+                        error!("RequestReJIT failed: 0x{:08x}", hr);
                     }
                 }
             }

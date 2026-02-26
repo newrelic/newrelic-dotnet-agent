@@ -547,10 +547,31 @@ preserved and functional within our instrumentation wrapper.
 
 ### Updated Test Count: 200 tests (9 ignored)
 
+#### TypeSpec Resolution and Finish-Tracer Calls
+
+- Built `Action<object, Exception>` TypeSpec signature (GENERICINST encoding per ECMA-335
+  §II.23.2.14) using compressed token encoding for the type arguments.
+- Resolved TypeSpec token via `GetTokenFromTypeSpec` and MemberRef for `Invoke` on the
+  closed generic TypeSpec.
+- Enabled finish-tracer calls: `castclass` uses TypeSpec, `callvirt` uses MemberRef on
+  TypeSpec. Both exception-path and return-value-path calls are now emitted.
+- Restructured `JITCompilationStarted` to two-phase approach: Phase 1 resolves names and
+  checks matches (borrows RefCells), Phase 2 drops borrows then calls `RequestReJIT`
+  (which triggers reentrant callbacks). This eliminated the borrow conflict issue that
+  caused only 1 of 4 methods to be matched in Release mode.
+- Un-ignored 2 tests (`callvirt_for_invoke`, `method_with_existing_try_catch_preserves_original_clause`)
+
+### Updated Test Count: 203 tests (7 ignored)
+
+All 7 remaining ignored tests are for SafeCallGetTracer (agent bootstrap) which is still
+a no-op. The tracer is always null, so finish-tracer calls are gracefully skipped via
+`brfalse`. The TypeSpec tokens and IL structure are validated by the CLR JIT — if the
+tokens were wrong, we'd get `TypeLoadException` at JIT time.
+
 ### Next Steps
 
 1. **Agent bootstrap sequence** — Implement the C++ profiler's agent loading mechanism
-   (load assembly, resolve type, call GetFinishTracerDelegate) instead of MethodBase.Invoke
-2. **TypeSpec resolution** — Fix Action\`2 generic type instantiation for finish-tracer
+   (load assembly, resolve type, call GetFinishTracerDelegate) instead of MethodBase.Invoke.
+   This is the last remaining piece to have a fully functional instrumentation pipeline.
 
 ## End of Session 4 (2026-02-26)
