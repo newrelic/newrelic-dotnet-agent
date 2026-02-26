@@ -54,4 +54,24 @@ public class KafkaController : ControllerBase
         await _consumerSignal.RequestConsumeAsync(ConsumptionMode.CancellationToken);
         return "Complete";
     }
+
+    [HttpGet("producewithcustomstatistics")]
+    public async Task<string> ProduceWithCustomStatistics()
+    {
+        await _producer.ProduceWithCustomStatistics();
+        return $"Producer with custom statistics - callback count: {CustomerStatisticsCallbacks.ProducerCallbackCount}";
+    }
+
+    [HttpGet("consumewithcustomstatistics")]
+    public async Task<string> ConsumeWithCustomStatistics()
+    {
+        await _consumerSignal.RequestConsumeWithCustomStatisticsAsync();
+        return $"Consumer with custom statistics requested - callback count: {CustomerStatisticsCallbacks.ConsumerCallbackCount}";
+    }
+
+    [HttpGet("customstatisticsstatus")]
+    public string GetCustomStatisticsStatus()
+    {
+        return $"Producer callbacks: {CustomerStatisticsCallbacks.ProducerCallbackCount}, Consumer callbacks: {CustomerStatisticsCallbacks.ConsumerCallbackCount}";
+    }
 }

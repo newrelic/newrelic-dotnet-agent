@@ -38,7 +38,30 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
         GetAndAssertStatusCode(address + "consumewithcancellationtoken", System.Net.HttpStatusCode.OK);
         Delay(1); // wait a bit to ensure the consumer is started before we produce
         GetAndAssertStatusCode(address + "produceasync", System.Net.HttpStatusCode.OK); // produce after the consume is started so we know the consume will get a message
+
+        // Test custom statistics handlers (composite pattern) - integrated into main exercise
+        GetAndAssertStatusCode(address + "producewithcustomstatistics", System.Net.HttpStatusCode.OK);
+        var produceResult = GetString(address + "producewithcustomstatistics");
+        Delay(2); // Allow time for async completion
+
+        GetAndAssertStatusCode(address + "consumewithcustomstatistics", System.Net.HttpStatusCode.OK);
+        var consumeResult = GetString(address + "consumewithcustomstatistics");
+        Delay(2); // Allow time for async completion
+
+        // Wait for statistics callbacks to trigger (they fire every 5 seconds)
+        Delay(8); // Wait long enough for callbacks
+
+        // Check status of customer handlers
+        GetAndAssertStatusCode(address + "customstatisticsstatus", System.Net.HttpStatusCode.OK);
+        var statusResult = GetString(address + "customstatisticsstatus");
+
+        // Store results for later test validation
+        CustomStatisticsResults = (produceResult, consumeResult, statusResult);
+
+        Delay(3); // Final delay before shutdown
     }
+
+    public (string produceResult, string consumeResult, string statusResult)? CustomStatisticsResults { get; private set; }
 
     public string GetBootstrapServer()
     {
@@ -52,6 +75,7 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
     {
         Task.Delay(TimeSpan.FromSeconds(seconds)).GetAwaiter().GetResult();
     }
+
 }
 
 public class KafkaDotNet8TestFixture : KafkaTestFixtureBase

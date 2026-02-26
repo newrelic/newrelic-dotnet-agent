@@ -69,6 +69,9 @@ public class Consumer : BackgroundService, IConsumerSignalService
                             case ConsumptionMode.CancellationToken:
                                 await ConsumeOneWithCancellationTokenAsync();
                                 break;
+                            case ConsumptionMode.CustomStatistics:
+                                await ConsumeWithCustomStatisticsAsync();
+                                break;
                         }
                         _logger.LogInformation("Completed consume request ({Mode}).", req.Mode);
                     }
@@ -231,5 +234,95 @@ public class Consumer : BackgroundService, IConsumerSignalService
         {
             consumer.Close();
         }
+    }
+
+    /// <summary>
+    /// Test method to verify that customer statistics handlers work alongside our metrics collection.
+    /// This creates a consumer with a custom statistics handler to test our composite handler pattern.
+    /// </summary>
+    [Transaction]
+    private async Task ConsumeWithCustomStatisticsAsync()
+    {
+        // Track if the customer's statistics handler was called
+        CustomerStatisticsCallbacks.ResetCounters();
+
+        // Add statistics configuration to enable our metrics collection
+        var configDict = _configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        configDict["statistics.interval.ms"] = "5000"; // Enable statistics with 5 second interval
+        configDict["group.id"] = "test-consumer-group-custom"; // Use different group for custom test
+
+        // Create consumer builder with customer statistics handler
+        var builder = new ConsumerBuilder<string, string>(configDict);
+
+        // Set up customer's statistics handler BEFORE Build() - this tests our composite pattern
+        builder.SetStatisticsHandler(CustomerStatisticsCallbacks.ConsumerStatisticsHandler);
+
+        using var consumer = builder.Build();
+        consumer.Subscribe(_topic);
+
+        // Keep consumer alive for 15 seconds to allow multiple statistics callbacks (every 5 seconds)
+        var startTime = DateTime.UtcNow;
+        var maxDuration = TimeSpan.FromSeconds(15);
+        var messagesConsumed = 0;
+
+        try
+        {
+            _logger.LogInformation("ConsumeWithCustomStatisticsAsync: Starting long-lived consumer (15 seconds) with custom statistics handler");
+
+            while (DateTime.UtcNow - startTime < maxDuration)
+            {
+                try
+                {
+                    // Poll for messages with shorter timeout to keep consumer active
+                    var result = consumer.Consume(TimeSpan.FromSeconds(2));
+
+                    if (result != null)
+                    {
+                        messagesConsumed++;
+                        _logger.LogInformation("ConsumeWithCustomStatisticsAsync: Consumed message '{MessageValue}' at: '{ResultTopicPartitionOffset}' (#{Count})",
+                            result.Message.Value, result.TopicPartitionOffset, messagesConsumed);
+
+                        // Simulate processing time
+                        await Task.Delay(Random.Shared.Next(500, 1000));
+                    }
+                    else
+                    {
+                        // No message available, but keep consumer alive for statistics
+                        await Task.Delay(1000); // Wait 1 second before next poll
+                    }
+                }
+                catch (ConsumeException ex)
+                {
+                    _logger.LogWarning(ex, "ConsumeWithCustomStatisticsAsync: Consume exception (continuing)");
+                    await Task.Delay(1000);
+                }
+            }
+
+            _logger.LogInformation("ConsumeWithCustomStatisticsAsync: Completed long-lived consumer session. Messages consumed: {Count}, Customer callback count: {CallbackCount}",
+                messagesConsumed, CustomerStatisticsCallbacks.ConsumerCallbackCount);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ConsumeWithCustomStatisticsAsync: Consumer error");
+        }
+        finally
+        {
+            consumer.Close();
+        }
+    }
+
+    /// <summary>
+    /// Public method to request custom statistics consumption test
+    /// </summary>
+    public Task RequestConsumeWithCustomStatisticsAsync()
+    {
+        _logger.LogInformation("Queueing custom statistics consume request");
+        if (!_requests.Writer.TryWrite(new ConsumeRequest(ConsumptionMode.CustomStatistics)))
+        {
+            _logger.LogError("Unable to queue custom statistics consume request - channel is closed.");
+            return Task.FromException(new InvalidOperationException("Channel is closed."));
+        }
+
+        return Task.CompletedTask;
     }
 }
