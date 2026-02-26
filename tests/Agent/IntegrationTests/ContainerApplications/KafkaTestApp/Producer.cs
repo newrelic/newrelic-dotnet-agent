@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Confluent.Kafka;
@@ -19,7 +20,12 @@ public class Producer
     public Producer(IConfiguration configuration, string topic, ILogger logger)
     {
         _topic = topic;
-        _producer = new ProducerBuilder<string, string>(configuration.AsEnumerable()).Build();
+
+        // Add statistics configuration to enable our metrics collection
+        var configDict = configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        configDict["statistics.interval.ms"] = "5000"; // Enable statistics with 5 second interval
+
+        _producer = new ProducerBuilder<string, string>(configDict).Build();
         _logger = logger;
     }
 

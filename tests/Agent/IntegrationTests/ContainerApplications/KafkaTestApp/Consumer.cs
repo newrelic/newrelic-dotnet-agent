@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -94,20 +95,60 @@ public class Consumer : BackgroundService, IConsumerSignalService
     [Transaction]
     private async Task ConsumeOneWithTimeoutAsync()
     {
-        using var consumer = new ConsumerBuilder<string, string>(_configuration.AsEnumerable()).Build();
+        // Add statistics configuration to enable our metrics collection
+        var configDict = _configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        configDict["statistics.interval.ms"] = "5000"; // Enable statistics with 5 second interval
+        configDict["group.id"] = "test-consumer-group"; // Ensure group.id is set
+
+        using var consumer = new ConsumerBuilder<string, string>(configDict).Build();
         consumer.Subscribe(_topic);
+
+        // Keep consumer alive for 15 seconds to allow multiple statistics callbacks (every 5 seconds)
+        var startTime = DateTime.UtcNow;
+        var maxDuration = TimeSpan.FromSeconds(15);
+        var messagesConsumed = 0;
+        var targetMessages = 1; // Still consume at least one message for test logic
+
         try
         {
-            var result = consumer.Consume(120 * 1000);
-            // Simulate some processing time
-            int delay = Random.Shared.Next(500, 1000);
-            await Task.Delay(delay);
+            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Starting long-lived consumer (15 seconds) to collect statistics");
 
-            if (result != null)
+            while (DateTime.UtcNow - startTime < maxDuration)
             {
-                _logger.LogInformation("ConsumeOneWithTimeoutAsync: Consumed message '{MessageValue}' at: '{ResultTopicPartitionOffset}'.",
-                    result.Message.Value, result.TopicPartitionOffset);
+                try
+                {
+                    // Poll for messages with shorter timeout to keep consumer active
+                    var result = consumer.Consume(TimeSpan.FromSeconds(2));
+
+                    if (result != null)
+                    {
+                        messagesConsumed++;
+                        _logger.LogInformation("ConsumeOneWithTimeoutAsync: Consumed message '{MessageValue}' at: '{ResultTopicPartitionOffset}' (#{Count})",
+                            result.Message.Value, result.TopicPartitionOffset, messagesConsumed);
+
+                        // After consuming target messages, just keep polling to maintain connection
+                        if (messagesConsumed >= targetMessages)
+                        {
+                            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Target messages consumed, maintaining consumer for statistics collection...");
+                        }
+
+                        // Simulate processing time
+                        await Task.Delay(Random.Shared.Next(500, 1000));
+                    }
+                    else
+                    {
+                        // No message available, but keep consumer alive for statistics
+                        await Task.Delay(1000); // Wait 1 second before next poll
+                    }
+                }
+                catch (ConsumeException ex)
+                {
+                    _logger.LogWarning(ex, "ConsumeOneWithTimeoutAsync: Consume exception (continuing)");
+                    await Task.Delay(1000);
+                }
             }
+
+            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Completed long-lived consumer session. Messages consumed: {Count}", messagesConsumed);
         }
         catch (Exception ex)
         {
@@ -122,22 +163,65 @@ public class Consumer : BackgroundService, IConsumerSignalService
     [Transaction]
     private async Task ConsumeOneWithCancellationTokenAsync()
     {
-        var cts = new CancellationTokenSource();
-        using var consumer = new ConsumerBuilder<string, string>(_configuration.AsEnumerable()).Build();
+        // Add statistics configuration to enable our metrics collection
+        var configDict = _configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        configDict["statistics.interval.ms"] = "5000"; // Enable statistics with 5 second interval
+        configDict["group.id"] = "test-consumer-group"; // Ensure group.id is set
+
+        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15)); // 15 second timeout for long-lived consumer
+        using var consumer = new ConsumerBuilder<string, string>(configDict).Build();
         consumer.Subscribe(_topic);
+
+        // Keep consumer alive for 15 seconds to allow multiple statistics callbacks (every 5 seconds)
+        var startTime = DateTime.UtcNow;
+        var maxDuration = TimeSpan.FromSeconds(15);
+        var messagesConsumed = 0;
+        var targetMessages = 1; // Still consume at least one message for test logic
+
         try
         {
-            var result = consumer.Consume(cts.Token);
-            // Simulate some processing time - longer than the timeout version to ensure this transaction is sampled
-            int delay = Random.Shared.Next(1000, 2000);
-            await Task.Delay(delay, cts.Token);
+            _logger.LogInformation("ConsumeOneWithCancellationToken: Starting long-lived consumer (15 seconds) to collect statistics");
 
-            _logger.LogInformation("ConsumeOneWithCancellationToken: Consumed message '{MessageValue}' at: '{ResultTopicPartitionOffset}'.",
-                result.Message.Value, result.TopicPartitionOffset);
+            while (DateTime.UtcNow - startTime < maxDuration && !cts.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    // Poll for messages with shorter timeout to keep consumer active
+                    var result = consumer.Consume(TimeSpan.FromSeconds(2));
+
+                    if (result != null)
+                    {
+                        messagesConsumed++;
+                        _logger.LogInformation("ConsumeOneWithCancellationToken: Consumed message '{MessageValue}' at: '{ResultTopicPartitionOffset}' (#{Count})",
+                            result.Message.Value, result.TopicPartitionOffset, messagesConsumed);
+
+                        // After consuming target messages, just keep polling to maintain connection
+                        if (messagesConsumed >= targetMessages)
+                        {
+                            _logger.LogInformation("ConsumeOneWithCancellationToken: Target messages consumed, maintaining consumer for statistics collection...");
+                        }
+
+                        // Simulate processing time - longer than timeout version to ensure different transaction timing
+                        await Task.Delay(Random.Shared.Next(1000, 2000), cts.Token);
+                    }
+                    else
+                    {
+                        // No message available, but keep consumer alive for statistics
+                        await Task.Delay(1000, cts.Token); // Wait 1 second before next poll
+                    }
+                }
+                catch (ConsumeException ex) when (!cts.Token.IsCancellationRequested)
+                {
+                    _logger.LogWarning(ex, "ConsumeOneWithCancellationToken: Consume exception (continuing)");
+                    await Task.Delay(1000, cts.Token);
+                }
+            }
+
+            _logger.LogInformation("ConsumeOneWithCancellationToken: Completed long-lived consumer session. Messages consumed: {Count}", messagesConsumed);
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("ConsumeOneWithCancellationToken: Consume operation canceled.");
+            _logger.LogInformation("ConsumeOneWithCancellationToken: Consumer operation canceled after {Count} messages.", messagesConsumed);
         }
         catch (Exception ex)
         {
