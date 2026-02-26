@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.50.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.49.0...v10.50.0) (2026-02-24)
+
+
+### New features
+
+* Add array support for custom attributes in .NET Agent API ([#3456](https://github.com/newrelic/newrelic-dotnet-agent/issues/3456)) ([4fb9405](https://github.com/newrelic/newrelic-dotnet-agent/commit/4fb9405fff5c95ed32f7d067e199add79a686de4))
+
 ## [10.49.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.48.1...v10.49.0) (2026-02-10)
 
 
