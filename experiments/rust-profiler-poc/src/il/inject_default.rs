@@ -43,6 +43,7 @@
 
 use super::exception_handler::ExceptionHandlerManipulator;
 use super::instruction_builder::InstructionBuilder;
+use super::instruction_scanner;
 use super::locals::LocalVariableSignature;
 use super::method_header;
 use super::opcodes::*;
@@ -221,21 +222,16 @@ pub fn build_instrumented_method_with_tokens(
     );
 
     // --- User code wrapped in try-catch ---
-    // The original code ends with `ret` (0x2A) which is illegal inside a try
-    // block. Replace the final `ret` with `nop` so execution falls through to
-    // the stloc/leave sequence we append after the user code.
+    // Preprocess the user code to handle `ret` instructions. The CLR does not
+    // allow `ret` to bypass our finish-tracer code when user code is inside a
+    // try block. For single-ret methods this replaces the final `ret` with `nop`.
+    // For multi-ret methods, non-final `ret` instructions become `br` to the
+    // final instruction (now `nop`), and all branch offsets are recalculated.
     //
-    // A full implementation would use an IL instruction scanner to find and
-    // rewrite ALL ret instructions (the C++ profiler's
-    // FunctionManipulator::RewriteReturnInstructions does this). For the POC,
-    // we only handle the final ret — methods with early returns will need the
-    // full scanner.
-    let mut user_code = parsed.code.clone();
-    if let Some(last) = user_code.last_mut() {
-        if *last == 0x2A { // CEE_RET
-            *last = 0x00; // CEE_NOP
-        }
-    }
+    // This matches the C++ profiler's `FunctionPreprocessor::Process()` in
+    // `Profiler/FunctionPreprocessor.h`.
+    let preprocessed = instruction_scanner::preprocess_user_code(&parsed.code)?;
+    let user_code = preprocessed.code;
 
     builder.append_try_start();
     builder.append_user_code(&user_code);
@@ -268,7 +264,11 @@ pub fn build_instrumented_method_with_tokens(
 
     // 4. Build exception handler table
     let mut eh_manip = if let Some(extra_bytes) = &parsed.extra_sections {
-        ExceptionHandlerManipulator::from_extra_section(extra_bytes)?
+        let mut m = ExceptionHandlerManipulator::from_extra_section(extra_bytes)?;
+        // If user code was rewritten (multi-ret), remap original EH offsets
+        // before the uniform user_code_offset shift.
+        m.apply_offset_map(&preprocessed.offset_map);
+        m
     } else {
         ExceptionHandlerManipulator::new()
     };

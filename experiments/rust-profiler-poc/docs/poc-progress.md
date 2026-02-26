@@ -463,3 +463,72 @@ The app completes all 5 test methods and exits cleanly.
 4. **TypeSpec resolution** — Fix Action\`2 generic type instantiation for finish-tracer
 
 ## End of Session 3 (2026-02-25)
+
+## Session 4: Full Ret Rewriting & JIT Inlining Prevention (2026-02-26)
+
+### ✅ Completed Tasks
+
+#### IL Instruction Scanner (`il/instruction_scanner.rs`)
+- Complete CIL opcode operand size lookup tables (256 single-byte + 32 two-byte opcodes)
+- `scan_instructions()` — Walks bytecode, identifies instruction boundaries, handles
+  single-byte, two-byte (0xFE prefix), and variable-length (switch) opcodes
+- `IlInstruction` — Parsed instruction with offset, opcode, size, branch target calculation
+- `count_rets()` — Count ret instructions in scanned code
+- `preprocess_user_code()` — Full ret rewriting preprocessor:
+  - 0 rets: return unchanged
+  - 1 ret at end: replace with nop (simple case)
+  - Multiple rets: replace non-final with `br` to final (now nop), recalculate all
+    branch offsets, expand short branches to long form when needed
+- `PreprocessedCode` — Returns rewritten bytes + old→new offset mapping for EH fixup
+- 27 tests covering scanner, ret counting, single/multi-ret rewriting, branch
+  recalculation, and real method IL parsing
+
+#### Integration into IL Injection Pipeline
+- `inject_default.rs` now uses `instruction_scanner::preprocess_user_code()` instead
+  of the simple final-ret-to-nop approach
+- `exception_handler.rs` — Added `apply_offset_map()` method to remap original EH
+  clause offsets when user code is rewritten (for multi-ret methods with existing handlers)
+
+#### Multi-Return Test Method
+- Added `ClassifyNumber(int)` to ProfilerTestApp — method with 3 return paths
+  (`"negative"`, `"zero"`, `"positive"`)
+- Added to instrumentation targets
+- Verified correct execution with all 3 return paths under Rust profiler
+
+#### JIT Inlining Prevention
+- **Root cause found**: Release JIT compiler was inlining target methods, preventing
+  JIT events from firing. Methods like `DoSomeWork`, `SimpleVoidMethod`, and
+  `ClassifyNumber` disappeared from the JIT event stream in Release mode.
+- **Fix**: Implemented `JITInlining` callback to prevent inlining of instrumented methods.
+  When the callee matches an instrumentation target, sets `*pfShouldInline = FALSE`.
+- All 3 target methods now instrumented correctly in both Debug and Release modes.
+
+### 📊 Updated Status
+
+| Component | Status | Confidence |
+|-----------|--------|------------|
+| IL Infrastructure (pure) | ✅ Complete | High |
+| IL Injection Template | ✅ Complete | High |
+| IL Instruction Scanner | ✅ **Complete** | High |
+| Ret Rewriting (full) | ✅ **Complete** | High |
+| JIT Inlining Prevention | ✅ **Complete** | High |
+| Test Suite | ✅ **199 tests (9 ignored)** | High |
+| Integration Testing | ✅ **3 methods execute correctly** | High |
+
+### Runtime Testing Results
+
+| Method | Original IL | Instrumented IL | Return Paths | Status |
+|--------|------------|-----------------|--------------|--------|
+| DoSomeWork(int) | 32 bytes | 116 bytes | 1 (single ret) | ✅ Correct |
+| SimpleVoidMethod() | 12 bytes | 104 bytes | 1 (single ret) | ✅ Correct |
+| ClassifyNumber(int) | 26 bytes | 128 bytes | 3 (multi-ret) | ✅ Correct |
+
+### Next Steps
+
+1. **Agent bootstrap sequence** — Implement the C++ profiler's agent loading mechanism
+   (load assembly, resolve type, call GetFinishTracerDelegate) instead of MethodBase.Invoke
+2. **Methods with existing EH** — Fix TryCatchWork instrumentation (existing exception
+   handlers need correct clause merging)
+3. **TypeSpec resolution** — Fix Action\`2 generic type instantiation for finish-tracer
+
+## End of Session 4 (2026-02-26)

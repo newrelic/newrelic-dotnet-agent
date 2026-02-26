@@ -194,7 +194,6 @@ class! {
 
         pub fn JITCompilationStarted(&self, functionId: FunctionID, fIsSafeToBlock: BOOL) -> HRESULT {
             let count = self.jit_event_count.fetch_add(1, Ordering::Relaxed) + 1;
-
             if let Some(ref profiler_info) = *self.profiler_info.borrow() {
                 unsafe {
                     if let Some(func_info) = method_resolver::resolve_function_name(profiler_info, functionId) {
@@ -241,7 +240,27 @@ class! {
         pub fn JITCachedFunctionSearchStarted(&self, functionId: FunctionID, pbUseCachedFunction: *mut BOOL) -> HRESULT { S_OK }
         pub fn JITCachedFunctionSearchFinished(&self, functionId: FunctionID, result: COR_PRF_JIT_CACHE) -> HRESULT { S_OK }
         pub fn JITFunctionPitched(&self, functionId: FunctionID) -> HRESULT { S_OK }
-        pub fn JITInlining(&self, callerId: FunctionID, calleeId: FunctionID, pfShouldInline: *mut BOOL) -> HRESULT { S_OK }
+        pub fn JITInlining(&self, callerId: FunctionID, calleeId: FunctionID, pfShouldInline: *mut BOOL) -> HRESULT {
+            // Prevent inlining of instrumented methods. If the JIT inlines a
+            // method, we never get a JIT compilation event and cannot instrument
+            // it. The C++ profiler also prevents inlining of target methods.
+            if !pfShouldInline.is_null() {
+                if let Some(ref profiler_info) = *self.profiler_info.borrow() {
+                    unsafe {
+                        if let Some(func_info) = method_resolver::resolve_function_name(profiler_info, calleeId) {
+                            let matcher_borrow = self.matcher.borrow();
+                            if let Some(ref matcher) = *matcher_borrow {
+                                if matcher.matches(&func_info.assembly_name, &func_info.type_name, &func_info.method_name) {
+                                    *pfShouldInline = 0; // FALSE — prevent inlining
+                                    return S_OK;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            S_OK
+        }
         pub fn ThreadCreated(&self, threadId: ThreadID) -> HRESULT { S_OK }
         pub fn ThreadDestroyed(&self, threadId: ThreadID) -> HRESULT { S_OK }
         pub fn ThreadAssignedToOSThread(&self, managedThreadId: ThreadID, osThreadId: DWORD) -> HRESULT { S_OK }

@@ -13,6 +13,7 @@
 //! - `method_header` — IL method header parsing and writing (tiny/fat)
 //! - `exception_handler` — Exception clause parsing, offset shifting, serialization
 //! - `locals` — Local variable signature construction
+//! - `instruction_scanner` — CIL instruction scanning and ret rewriting
 
 pub mod opcodes;
 pub mod sig_compression;
@@ -20,6 +21,7 @@ pub mod instruction_builder;
 pub mod method_header;
 pub mod exception_handler;
 pub mod inject_default;
+pub mod instruction_scanner;
 pub mod locals;
 
 /// Error type for IL operations.

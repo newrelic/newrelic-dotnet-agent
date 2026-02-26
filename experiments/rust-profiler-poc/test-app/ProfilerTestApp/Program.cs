@@ -35,6 +35,14 @@ class Program
         Console.WriteLine("5. Running simple void method...");
         SimpleVoidMethod();
 
+        Console.WriteLine("6. Running multi-return method...");
+        var classified = ClassifyNumber(42);
+        Console.WriteLine($"   ClassifyNumber(42) = {classified}");
+        classified = ClassifyNumber(-5);
+        Console.WriteLine($"   ClassifyNumber(-5) = {classified}");
+        classified = ClassifyNumber(0);
+        Console.WriteLine($"   ClassifyNumber(0) = {classified}");
+
         Console.WriteLine();
         Console.WriteLine("=== Test complete. Check profiler logs for events. ===");
         Console.WriteLine("Press Enter to exit (gives profiler time to flush)...");
@@ -79,6 +87,23 @@ class Program
     {
         // Simplest possible instrumentation target: void, static, no params
         Console.WriteLine("   SimpleVoidMethod called");
+    }
+
+    /// <summary>
+    /// Method with multiple return statements — exercises the ret rewriter.
+    /// The C# compiler generates multiple ret instructions for early returns.
+    /// </summary>
+    static string ClassifyNumber(int n)
+    {
+        if (n < 0)
+        {
+            return "negative";
+        }
+        if (n == 0)
+        {
+            return "zero";
+        }
+        return "positive";
     }
 
     static void TryCatchWork()

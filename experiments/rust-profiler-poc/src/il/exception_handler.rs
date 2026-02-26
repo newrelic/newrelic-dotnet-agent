@@ -81,6 +81,71 @@ impl ExceptionHandlerManipulator {
         self.new_clauses.extend_from_slice(clauses);
     }
 
+    /// Remap original clause offsets using an old→new offset mapping.
+    ///
+    /// This is needed when the user code has been rewritten (e.g., ret→br
+    /// rewriting changes instruction positions). The offset map is a list of
+    /// `(old_offset, new_offset)` pairs, one per original instruction.
+    ///
+    /// Each clause's try_offset, handler_offset, and filter_offset are remapped.
+    /// Lengths (try_length, handler_length) are recalculated as the difference
+    /// between the remapped endpoint and start offset.
+    pub fn apply_offset_map(&mut self, offset_map: &[(usize, usize)]) {
+        if offset_map.is_empty() {
+            return;
+        }
+
+        // Build a lookup closure for old→new offset translation.
+        // For offsets that land exactly on an instruction, use the mapped value.
+        // For offsets that represent "end of range" (start + length), find the
+        // next instruction at or after that offset.
+        let map_offset = |old: u32| -> u32 {
+            let old = old as usize;
+            // Exact match first
+            for &(o, n) in offset_map {
+                if o == old {
+                    return n as u32;
+                }
+            }
+            // If not found, this might be a "past the end" offset.
+            // Find the smallest old offset >= old and use its new offset.
+            let mut best: Option<(usize, usize)> = None;
+            for &(o, n) in offset_map {
+                if o >= old {
+                    if best.is_none() || o < best.unwrap().0 {
+                        best = Some((o, n));
+                    }
+                }
+            }
+            if let Some((_, n)) = best {
+                return n as u32;
+            }
+            // Past all instructions — map to the new end
+            if let Some(&(_, last_new)) = offset_map.last() {
+                // The end of the last instruction in the new code
+                return last_new as u32 + 1;
+            }
+            old as u32
+        };
+
+        for clause in &mut self.original_clauses {
+            let new_try_start = map_offset(clause.try_offset);
+            let new_try_end = map_offset(clause.try_offset + clause.try_length);
+            let new_handler_start = map_offset(clause.handler_offset);
+            let new_handler_end = map_offset(clause.handler_offset + clause.handler_length);
+
+            clause.try_offset = new_try_start;
+            clause.try_length = new_try_end - new_try_start;
+            clause.handler_offset = new_handler_start;
+            clause.handler_length = new_handler_end - new_handler_start;
+
+            if clause.flags == 0x0001 {
+                // Filter clause
+                clause.filter_offset = map_offset(clause.filter_offset);
+            }
+        }
+    }
+
     /// Build the complete extra section bytes.
     ///
     /// Original clauses are shifted by `user_code_offset`, then all clauses

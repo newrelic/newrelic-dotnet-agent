@@ -99,6 +99,14 @@ impl InstrumentationMatcher {
                 tracer_factory_args: 0,
                 metric_name: "Custom/SimpleVoidMethod".to_string(),
             },
+            InstrumentationPoint {
+                assembly_name: "ProfilerTestApp".to_string(),
+                class_name: "ProfilerTestApp.Program".to_string(),
+                method_name: "ClassifyNumber".to_string(),
+                tracer_factory_name: "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory".to_string(),
+                tracer_factory_args: 0,
+                metric_name: "Custom/ClassifyNumber".to_string(),
+            },
         ];
         Self::new(points)
     }
