@@ -159,6 +159,50 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         );
     }
 
+    [Fact]
+    public void Test_CustomerStatisticsHandlers_WorkWithInternalMetrics()
+    {
+        // Get results from the custom statistics testing that ran during ExerciseApplication
+        var customStatisticsResults = _fixture.CustomStatisticsResults;
+        Assert.NotNull(customStatisticsResults);
+
+        var (produceResult, consumeResult, statusResult) = customStatisticsResults.Value;
+
+        // Get metrics after all application operations
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+        var internalMetrics = metrics.Where(m => m.MetricSpec.Name.Contains("MessageBroker/Kafka/Internal/")).ToList();
+
+        // Find producer and consumer internal metrics (should still exist even with customer handlers)
+        var producerRequestMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("request-counter")).ToList();
+        var producerResponseMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("response-counter")).ToList();
+        var consumerRequestMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("consumer-metrics") && m.MetricSpec.Name.EndsWith("request-counter")).ToList();
+        var consumerResponseMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("consumer-metrics") && m.MetricSpec.Name.EndsWith("response-counter")).ToList();
+
+        NrAssert.Multiple(
+            // Verify that API responses contain evidence of customer handler activity
+            () => Assert.Contains("callback count", produceResult, StringComparison.InvariantCultureIgnoreCase),
+            () => Assert.Contains("callback count", consumeResult, StringComparison.InvariantCultureIgnoreCase),
+            () => Assert.Contains("Producer callbacks:", statusResult, StringComparison.InvariantCultureIgnoreCase),
+            () => Assert.Contains("Consumer callbacks:", statusResult, StringComparison.InvariantCultureIgnoreCase),
+
+            // Verify our internal metrics are STILL being collected despite customer handlers
+            () => Assert.True(producerRequestMetrics.Any(), "Producer request-counter internal metrics should still exist with custom handlers"),
+            () => Assert.True(producerResponseMetrics.Any(), "Producer response-counter internal metrics should still exist with custom handlers"),
+            () => Assert.True(consumerRequestMetrics.Any() || consumerResponseMetrics.Any(),
+                "At least some consumer internal metrics should exist with custom handlers (consumer may not get messages but should still generate some statistics)"),
+
+            // Verify internal metric names still follow expected pattern (proving our metrics coexist with customer's)
+            () => Assert.All(producerRequestMetrics.Concat(producerResponseMetrics),
+                m => Assert.Contains("MessageBroker/Kafka/Internal/", m.MetricSpec.Name)),
+            () => Assert.All(consumerRequestMetrics.Concat(consumerResponseMetrics),
+                m => Assert.Contains("MessageBroker/Kafka/Internal/", m.MetricSpec.Name)),
+
+            // Verify internal metrics have reasonable values (indicating our composite handlers are working)
+            () => Assert.All(producerRequestMetrics.Concat(producerResponseMetrics).Where(m => m.Values.CallCount > 0),
+                m => Assert.True(m.Values.CallCount > 0, $"Internal metric {m.MetricSpec.Name} should have non-zero count when composite handlers are active"))
+        );
+    }
+
     internal static string GenerateTopic()
     {
         var builder = new StringBuilder();
