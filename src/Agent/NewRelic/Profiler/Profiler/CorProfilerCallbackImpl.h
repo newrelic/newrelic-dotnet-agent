@@ -1121,6 +1121,12 @@ namespace NewRelic { namespace Profiler {
             if (nrlog::StdLog.GetEnabled())
             {
                 LogInfo(L"<-- New logging level set: ", nrlog::GetLevelString(nrlog::StdLog.GetLevel()));
+                if (nrlog::StdLog.GetConsoleLoggingRestrictsLevel()) {
+                    LogWarn(L"Logging level has been clamped to ", nrlog::GetLevelString(nrlog::StdLog.GetLevel()), L". Console logging at DEBUG or TRACE level incurs a very large performance hit.");
+                }
+                if (nrlog::StdLog.GetAzureFunctionModeRestrictsLevel()) {
+                    LogWarn(L"Logging level has been clamped to ", nrlog::GetLevelString(nrlog::StdLog.GetLevel()), L". TRACE level logging in Azure Function mode can cause a crash.");
+                }
                 if (nrlog::StdLog.GetConsoleLogging())
                 {
                     LogInfo(L"Console logging enabled");
