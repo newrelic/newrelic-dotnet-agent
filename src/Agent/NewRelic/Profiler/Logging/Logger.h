@@ -136,6 +136,16 @@ namespace NewRelic {
                     return (_console || (_azureFunctionModeEnabled && !_azureFunctionLogLevelOverride));
                 }
 
+                bool GetConsoleLoggingRestrictsLevel() const
+                {
+                    return _console;
+                }
+
+                bool GetAzureFunctionModeRestrictsLevel() const
+                {
+                    return (_azureFunctionModeEnabled && !_azureFunctionLogLevelOverride);
+                }
+
                 _Mymut& mutex() const noexcept
                 {
                     return _mutex;
