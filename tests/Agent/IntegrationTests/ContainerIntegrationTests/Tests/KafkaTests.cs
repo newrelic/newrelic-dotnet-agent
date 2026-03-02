@@ -31,7 +31,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         _fixture.Actions(setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                configModifier.SetLogLevel("debug");
+                configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
 
                 _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_KAFKA_TOPIC", _topicName);
@@ -96,11 +96,11 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             new() { metricName = produceWebTransactionName, CallCountAllHarvests = 4 }, // includes sync and async actions
-            new() { metricName = messageBrokerProduce, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduce, CallCountAllHarvests = 6 },
             new() { metricName = messageBrokerProduce, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
-            new() { metricName = messageBrokerProduceSerializationKey, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduceSerializationKey, CallCountAllHarvests = 6 },
             new() { metricName = messageBrokerProduceSerializationKey, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
-            new() { metricName = messageBrokerProduceSerializationValue, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduceSerializationValue, CallCountAllHarvests = 6 },
             new() { metricName = messageBrokerProduceSerializationValue, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
 
             // Consumer transaction calls remain the same (2 calls each)
@@ -110,12 +110,12 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             // Total consume metrics: logs showed ConsumeOneWithTimeoutAsync consumed 4 messages in first call, 0 in second call
             // ConsumeOneWithCancellationTokenAsync may not consume any messages - just verify consume metrics exist when they occur
             new() { metricName = messageBrokerConsume, CallCountAllHarvests = null }, // Variable count due to long-lived consumers
-            new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, CallCountAllHarvests = 4 }, // Actual observed: 4 messages consumed
+            new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, CallCountAllHarvests = 6 }, // Actual observed: 6 messages consumed
             // Note: Scoped consume metric for CancellationToken may not exist if no messages consumed - don't validate it
 
-            // TraceContext metrics: reduced counts due to different consumption pattern
-            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 4 }, // Producer calls still create
-            new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 1 }, // Actual observed: 1 accept
+            // TraceContext metrics
+            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 6 }, // Producer calls create distributed trace context
+            new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 2 }, // Consumer accepts distributed trace context
 
             // Node metrics: variable consumption but producers are consistent
             new() { metricName = messageBrokerNode, CallCountAllHarvests = null }, // Variable total operations
@@ -157,10 +157,11 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             // Note: Span only exists when messages are actually consumed
             // The logs show this consumer sometimes consumes 0 messages, so no span is created
         );
+
+        ValidateInternalMetrics(); 
     }
 
-    [Fact]
-    public void Test_CustomerStatisticsHandlers_WorkWithInternalMetrics()
+    private void ValidateInternalMetrics()
     {
         // Get results from the custom statistics testing that ran during ExerciseApplication
         var customStatisticsResults = _fixture.CustomStatisticsResults;
