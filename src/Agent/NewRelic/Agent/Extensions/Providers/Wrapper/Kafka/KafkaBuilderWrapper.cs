@@ -239,6 +239,12 @@ public class KafkaBuilderWrapper : IWrapper
     /// </summary>
     private void SetStatisticsIntervalOnBuilder(object builder, int intervalMs)
     {
+        // First check if customer has already configured statistics interval
+        if (!ShouldSetStatisticsInterval(builder))
+        {
+            return; // Respect customer's existing configuration
+        }
+
         // Try to enable statistics via SetConfig method
         var setConfigMethod = builder.GetType().GetMethod("SetConfig", new[] { typeof(string), typeof(string) });
         if (setConfigMethod != null)
@@ -249,6 +255,49 @@ public class KafkaBuilderWrapper : IWrapper
         else
         {
             Log.Finest("KafkaBuilderWrapper: No SetConfig method found on builder");
+        }
+    }
+
+    private bool ShouldSetStatisticsInterval(object builder)
+    {
+        try
+        {
+            // Get the config accessor (reuse existing caching mechanism)
+            if (!_builderConfigGetterDictionary.TryGetValue(builder.GetType(), out var configGetter))
+            {
+                configGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<IEnumerable>(builder.GetType(), "Config");
+                _builderConfigGetterDictionary[builder.GetType()] = configGetter;
+            }
+
+            var config = configGetter(builder);
+            if (config == null)
+            {
+                Log.Finest("KafkaBuilderWrapper: Could not access builder config, allowing statistics interval setup");
+                return true;
+            }
+
+            // Check if statistics.interval.ms is already configured
+            foreach (dynamic kvp in config)
+            {
+                if (kvp.Key == "statistics.interval.ms")
+                {
+                    var value = kvp.Value?.ToString();
+                    if (!string.IsNullOrEmpty(value) && value != "0")
+                    {
+                        Log.Debug($"KafkaBuilderWrapper: Customer has already configured statistics interval to {value}ms");
+                        return false; // Don't override customer configuration
+                    }
+                }
+            }
+
+            // Not configured or set to 0 (disabled), we can set our default
+            Log.Finest("KafkaBuilderWrapper: No customer statistics interval found, setting default");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"KafkaBuilderWrapper: Could not check existing statistics interval: {ex.Message}. Not setting a specific interval");
+            return false; // Be conservative - don't override if we can't determine existing config
         }
     }
 
