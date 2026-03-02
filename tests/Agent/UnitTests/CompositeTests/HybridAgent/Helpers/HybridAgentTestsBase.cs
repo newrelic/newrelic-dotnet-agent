@@ -17,7 +17,7 @@ namespace CompositeTests.HybridAgent.Helpers;
 
 public abstract class HybridAgentTestsBase
 {
-    private static CompositeTestAgent _compositeTestAgent;
+    private CompositeTestAgent _compositeTestAgent;
     private IAgent _agent;
     private NewRelicAgentOperations _newRelicAgentOperations;
     private ActivityBridge _activityBridge;
@@ -63,6 +63,11 @@ public abstract class HybridAgentTestsBase
         _newRelicAgentOperations = null;
         _activityBridge.Dispose();
         _compositeTestAgent.Dispose();
+
+        // Reset static state to ensure clean slate for next test
+        ActivityBridge.ResetStaticState();
+        NewRelicActivitySourceProxy.ResetStaticState();
+        ActivityBridgeHelpers.Reset();
     }
 
     public abstract void Tests(HybridAgentTestCase test);

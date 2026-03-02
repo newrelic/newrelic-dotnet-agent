@@ -81,7 +81,7 @@ class SpanEventWireModelTests
         _attribDefs.Priority.TrySetValue(spanEventWireModel, priority);
         _attribDefs.Duration.TrySetValue(spanEventWireModel, duration);
         _attribDefs.DistributedTraceId.TrySetValue(spanEventWireModel, "ed5bbf27f28ebef3");
-        _attribDefs.HttpMethod.TrySetValue(spanEventWireModel, "GET");
+        _attribDefs.HttpRequestMethod.TrySetValue(spanEventWireModel, "GET");
 
         var serialized = JsonConvert.SerializeObject(spanEventWireModel);
         Assert.That(serialized, Is.Not.Null);
@@ -161,7 +161,7 @@ class SpanEventWireModelTests
         _attribDefs.Priority.TrySetValue(wireModel, priority);
         _attribDefs.Duration.TrySetValue(wireModel, duration);
         _attribDefs.DistributedTraceId.TrySetValue(wireModel, traceId);
-        _attribDefs.HttpMethod.TrySetValue(wireModel, httpMethod);
+        _attribDefs.HttpRequestMethod.TrySetValue(wireModel, httpMethod);
 
         return wireModel;
     }

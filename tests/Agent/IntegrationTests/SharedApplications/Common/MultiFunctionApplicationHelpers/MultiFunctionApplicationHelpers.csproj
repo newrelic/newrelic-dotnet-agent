@@ -326,6 +326,17 @@
     <PackageReference Include="CouchbaseNetClient" Version="3.5.1" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
+  <!-- gRPC - .NET Core only -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net10.0'">
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Grpc.AspNetCore.Server" Version="2.65.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.65.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.65.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <Protobuf Include="NetStandardLibraries\Grpc\greet.proto" GrpcServices="Both" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />

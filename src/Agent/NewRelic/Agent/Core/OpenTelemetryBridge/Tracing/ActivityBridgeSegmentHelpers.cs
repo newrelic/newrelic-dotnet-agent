@@ -29,7 +29,7 @@ public static class ActivityBridgeSegmentHelpers
         string activityId = activity.Id;
         string displayName = activity.DisplayName;
 
-        string activityLogPrefix = ActivityLogPrefixHelpers.ActivityLogPrefix(activityId, activityKind, displayName);
+        string activityLogPrefix = ActivityLogPrefixHelpers.ActivityLogPrefix(GetTransactionGuidFromSegment(segment), activityId, activityKind, displayName);
 
         Log.Debug($"{activityLogPrefix} has stopped.");
 
@@ -40,6 +40,12 @@ public static class ActivityBridgeSegmentHelpers
         {
             Log.Finest($"{activityLogPrefix} has no tags. Not adding tags to segment.");
             return;
+        }
+
+        //TESTING
+        foreach (var tag in tags)
+        {
+            Log.Finest($"{activityLogPrefix} has tag: {tag.Key} = {tag.Value}");
         }
 
         // based on activity kind, create the appropriate segment data
@@ -57,6 +63,10 @@ public static class ActivityBridgeSegmentHelpers
                 else if (tags.TryGetAndRemoveTag<string>(["rpc.system"], out var rpcSystem)) // it's an RPC client activity
                 {
                     ProcessRpcClientTags(segment, agent, errorService, tags, activityLogPrefix, rpcSystem);
+                }
+                else if (tags.TryGetTag<string>(["grpc.method"], out _)) // Its gRPC - likely grpc-dotnet
+                {
+                    ProcessRpcClientTags(segment, agent, errorService, tags, activityLogPrefix, "grpc");
                 }
                 else if (tags.TryGetAndRemoveTag<string>(["http.request.method", "http.method"], out var method)) // it's an HTTP call
                 {
@@ -111,6 +121,12 @@ public static class ActivityBridgeSegmentHelpers
         }
     }
 
+    private static string GetTransactionGuidFromSegment(ISegment segment)
+    {
+        var internalSegment = segment as IInternalSpan;
+        return internalSegment?.GetTransactionGuidFromSegment();
+    }
+
     private static void GetInstrumentationScopeAttributes(ISegment segment, dynamic activity)
     {
         dynamic activitySource = activity.Source;
@@ -136,21 +152,28 @@ public static class ActivityBridgeSegmentHelpers
 
     private static void ProcessRpcClientTags(ISegment segment, IAgent agent, IErrorService errorService, Dictionary<string, object> tags, string activityLogPrefix, string rpcSystem)
     {
-        tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code"], out var statusCode);
+        tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code", "grpc.status_code"], out var statusCode);
 
         tags.TryGetAndRemoveTag<string>(["rpc.method"], out var method);
-        tags.TryGetAndRemoveTag<string>(["rpc.service"], out var service);
+        tags.TryGetAndRemoveTag<string>(["rpc.service"], out var service); // deprecated attribute, rpc.method includes this information in the format /service/method, but some instrumentation may still use this tag so we'll look for it as a fallback
         tags.TryGetAndRemoveTag<string>(["grpc.method"], out var grpcMethod);
+        var cleanGrpcMethod = grpcMethod.TrimStart('/'); // per spec, we need to strip leading slashes.
 
         tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address"], out var host);
         tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
 
-        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
+        // Path is used for attributes, not metric or span names
+        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, cleanGrpcMethod);
         Uri uri = new Uri(path);
-        var externalSegmentData = new ExternalSegmentData(uri, method, componentOverride: rpcSystem);
 
+        // We need to provide either the rpc or grpc method name so that we get the right metric and span name.
+        var externalSegmentData = new ExternalGrpcSegmentData(uri: uri, method: method ?? cleanGrpcMethod, componentOverride: rpcSystem);
+
+        // This is the gRPC status code, not HTTP.  It is possible to translate the gRPC code to HTTP.
+        // gRPC codes: https://github.com/grpc/grpc/blob/v1.78.0/doc/statuscodes.md
+        // gRPC to HTTP translation: https://docs.cloud.google.com/dotnet/docs/reference/Google.Api.CommonProtos/latest/Google.Rpc.Code
         if (statusCode.HasValue)
-            externalSegmentData.SetHttpStatus(statusCode.Value);
+            externalSegmentData.SetGrpcStatus(statusCode.Value);
 
         Log.Finest($"Created ExternalSegmentData for {activityLogPrefix}.");
 
@@ -203,7 +226,7 @@ public static class ActivityBridgeSegmentHelpers
     {
         // construct the path according to gRPC spec
         // if service is missing, grpcMethod is the full path
-        return !string.IsNullOrEmpty(service) ? $"grpc://{host}:{port}/{service}/{method}" : $"grpc://{host}:{port}{grpcMethod}";
+        return !string.IsNullOrEmpty(service) ? $"grpc://{host}:{port}/{service}/{method}" : $"grpc://{host}:{port}/{grpcMethod}";
     }
 
     private static void RecordGrpcException(ISegment segment, IAgent agent, IErrorService errorService, int statusCode, string path, string activityLogPrefix)
@@ -700,9 +723,9 @@ public static class ActivityBridgeSegmentHelpers
 
 public static class ActivityLogPrefixHelpers
 {
-    public static string ActivityLogPrefix(string activityId, int activityKindInt, string activityDisplayName)
+    public static string ActivityLogPrefix(string transactionGuid, string activityId, int activityKindInt, string activityDisplayName)
     {
-        return $"Activity {activityId} (Kind: {(ActivityKind)activityKindInt}, DisplayName: {activityDisplayName})";
+        return $"Trx {transactionGuid}: Activity {activityId} (Kind: {(ActivityKind)activityKindInt}, DisplayName: {activityDisplayName})";
     }
 }
 

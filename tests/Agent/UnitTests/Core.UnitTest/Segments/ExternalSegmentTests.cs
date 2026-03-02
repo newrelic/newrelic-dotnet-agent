@@ -20,7 +20,7 @@ public class ExternalSegmentTests
     public void Build_IncludesCatParameter_IfCatResponseDataIsSet()
     {
         var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
-        segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3, "guid", false)));
+        segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method", crossApplicationResponseData: new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3, "guid", false)));
         segment.End();
 
         Assert.Multiple(() =>

@@ -62,6 +62,28 @@ public class ActivityBridge : IDisposable
         _activityListener = null;
     }
 
+    /// <summary>
+    /// FOR TESTING ONLY: Resets the static Activity infrastructure state that was set by this class.
+    /// This should be called in test TearDown to ensure clean state between tests.
+    /// </summary>
+    public static void ResetStaticState()
+    {
+        // Reset the TraceIdGenerator to null (default behavior)
+        var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "System.Diagnostics.DiagnosticSource");
+        if (assembly != null)
+        {
+            var activityType = assembly.GetType("System.Diagnostics.Activity", throwOnError: false);
+            if (activityType != null)
+            {
+                var traceIdGeneratorPropertyInfo = activityType.GetProperty("TraceIdGenerator", BindingFlags.Public | BindingFlags.Static);
+                traceIdGeneratorPropertyInfo?.SetValue(null, null);
+            }
+        }
+
+        // Reset the static setter
+        _activityTraceFlagsSetter = null;
+    }
+
     // Only .net 5 and newer libraries and applications will use the W3C id format by default.
     // We need to set the default id format to W3C to ensure that the activities we create are created
     // with the expected format.
@@ -387,6 +409,16 @@ public class ActivityBridge : IDisposable
         if (string.IsNullOrWhiteSpace(activitySourceName))
         {
             Log.Finest("ShouldListenToActivitySource: Activity source name is null or empty. Not listening.");
+            return false;
+        }
+
+        // Don't listen to the agent's own activity source to prevent recursion.
+        // When traditional agent instrumentation creates segments, they may create activities via
+        // NewRelicActivitySourceProxy. We must not listen to these to avoid infinite recursion
+        // where ActivityStarted tries to create a segment, which creates another activity.
+        if (activitySourceName == NewRelicActivitySourceProxy.ActivitySourceName)
+        {
+            Log.Finest($"ShouldListenToActivitySource: Not listening to agent's own activity source '{activitySourceName}'.");
             return false;
         }
 

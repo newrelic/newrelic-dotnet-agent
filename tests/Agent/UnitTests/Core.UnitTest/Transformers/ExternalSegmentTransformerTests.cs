@@ -375,7 +375,7 @@ public class ExternalSegmentTransformerTests
 
     private static Segment GetSegment(string uri, string method, CrossApplicationResponseData catResponseData = null)
     {
-        var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
+        var data = new ExternalSegmentData(new Uri(uri), method, crossApplicationResponseData: catResponseData);
         var builder = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
         builder.SetSegmentData(data);
         builder.End();
@@ -386,7 +386,7 @@ public class ExternalSegmentTransformerTests
     {
         var methodCallData = new MethodCallData("foo", "bar", 1);
 
-        var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
+        var data = new ExternalSegmentData(new Uri(uri), method, crossApplicationResponseData: catResponseData);
         var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);
         segment.SetSegmentData(data);
 
