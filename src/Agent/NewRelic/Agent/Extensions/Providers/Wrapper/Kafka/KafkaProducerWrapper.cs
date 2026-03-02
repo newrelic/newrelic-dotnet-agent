@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
 
@@ -25,6 +26,8 @@ public class KafkaProducerWrapper : IWrapper
     {
         var topicPartition = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<TopicPartition>(0);
         var messageMetadata = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<MessageMetadata>(1);
+
+        Log.Finest($"KafkaProducerWrapper: BeforeWrappedMethod called, topic: '{topicPartition.Topic}', partition: {topicPartition.Partition}");
 
         var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Produce, MessageBrokerVendorConstants.Kafka, topicPartition.Topic);
 
