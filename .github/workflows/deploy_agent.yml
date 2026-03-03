@@ -49,7 +49,7 @@ permissions:
   contents: read
   packages: read
   id-token: write
-  
+
 env:
   DOTNET_NOLOGO: true
 
@@ -62,7 +62,7 @@ jobs:
       workflow_run_id: ${{ steps.step2.outputs.workflow_run_id }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+        uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
         with:
           disable-sudo: true
           egress-policy: audit
@@ -72,16 +72,16 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      
+
       - name: Get Release Version and Run ID
         if: ${{ inputs.get-version-automatically }}
         id: step1
         run: |
           # Get the commit sha for the most recent release
           COMMIT_SHA=$(git rev-list -n 1 "$(gh release list --limit 1 | awk '{ print $1 }')")
-          if [[ -z "$COMMIT_SHA" ]]; then 
+          if [[ -z "$COMMIT_SHA" ]]; then
             echo "::error::Unable to find SHA of most recent release"
-            exit 1 
+            exit 1
           fi
           echo "Found commit sha: $COMMIT_SHA"
 
@@ -149,29 +149,29 @@ jobs:
           fi
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+
   get-external-artifacts:
     name: Get and Publish Deploy Artifacts Locally
     needs: get-release-info
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+        uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ needs.get-release-info.outputs.workflow_run_id }}
           name: deploy-artifacts
           path: ${{ github.workspace }}
           repository: ${{ github.repository }}
-      
+
       - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}
@@ -185,7 +185,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\staging_dir
@@ -266,18 +266,18 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir
-          
+
       # Get a short-lived NuGet API key
       - name: NuGet login (OIDC → temp API key)
         uses: NuGet/login@d22cc5f58ff5b88bf9bd452535b4335137e24544 # v1.1.0
         id: login
         with:
           user: ${{ secrets.NUGET_TRUSTED_PUBLISH_POLICY_USER }}
-        
+
       - name: Deploy Agent to Nuget
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgent\NewRelic.Agent.*.nupkg -Name
@@ -355,7 +355,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+        uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
         with:
           egress-policy: audit
 
@@ -371,7 +371,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
@@ -415,7 +415,7 @@ jobs:
           echo "AGENT_VERSION=$AGENT_VERSION" >> docker.env
           echo "ACTION=release" >> docker.env
           if [ "${{ inputs.linux-deploy-to-production }}" == "true" ] ; then
-            # We're actually deploying to production (apt.newrelic.com and yum.newrelic.com)           
+            # We're actually deploying to production (apt.newrelic.com and yum.newrelic.com)
             echo "S3_BUCKET=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
             echo "AWS_ACCESS_KEY_ID=${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}" >> docker.env
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}" >> docker.env
@@ -484,3 +484,13 @@ jobs:
       wait_for_apt_and_yum: true
     secrets: inherit
 
+  agent-metadata:
+      permissions:
+          contents: read
+      needs: [post-deploy]
+      if: ${{ inputs.post-deploy }}
+      name: Run Agent Metadata Workflow
+      uses: newrelic/newrelic-dotnet-agent/.github/workflows/agent_metadata.yml@main
+      with:
+          version: ${{ needs.get-release-info.outputs.release_version }}
+      secrets: inherit

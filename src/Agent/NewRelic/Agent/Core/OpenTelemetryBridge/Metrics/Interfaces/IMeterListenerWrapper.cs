@@ -43,4 +43,9 @@ public interface IMeterListenerWrapper : IDisposable
     /// Sets the measurement callback for the specified numeric type.
     /// </summary>
     void SetMeasurementCallback<T>(MeasurementCallbackDelegate<T> callback) where T : struct;
+
+    /// <summary>
+    /// Checks if an instrument originates from an ILRepacked NewRelic assembly.
+    /// </summary>
+    bool IsInstrumentFromILRepackedAssembly(object instrument);
 }

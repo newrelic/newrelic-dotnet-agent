@@ -362,8 +362,8 @@ public class AgentSettingsTests
                                         "opentelemetry.metrics.enabled": true,
                                         "opentelemetry.metrics.include": ["IncludedMeter1","IncludedMeter2"],
                                         "opentelemetry.metrics.exclude": ["ExcludedMeter1","ExcludedMeter2"],
-                                        "opentelemetry.otlp.timeout_seconds": 10,
-                                        "opentelemetry.otlp.export_interval_seconds": 5,
+                                        "opentelemetry.metrics.export_interval_ms": 60000,
+                                        "opentelemetry.metrics.export_timeout_ms": 10000,
                                         "hybrid_http_context_storage.enabled":false
                                     }
                                     """;

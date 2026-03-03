@@ -1083,11 +1083,98 @@ public static class Assertions
 
                 break;
             }
+            case string[] expectedStringArray:
+            {
+                ValidateArrayAttribute(expectedAttribute, rawActualValue, expectedStringArray.Cast<object>().ToArray(), builder, wireModelTypeName, ref succeeded);
+                break;
+            }
+            case int[] expectedIntArray:
+            {
+                ValidateArrayAttribute(expectedAttribute, rawActualValue, expectedIntArray.Cast<object>().ToArray(), builder, wireModelTypeName, ref succeeded);
+                break;
+            }
+            case bool[] expectedBoolArray:
+            {
+                ValidateArrayAttribute(expectedAttribute, rawActualValue, expectedBoolArray.Cast<object>().ToArray(), builder, wireModelTypeName, ref succeeded);
+                break;
+            }
+            case object[] expectedArray:
+            {
+                ValidateArrayAttribute(expectedAttribute, rawActualValue, expectedArray, builder, wireModelTypeName, ref succeeded);
+                break;
+            }
             default:
                 throw new NotImplementedException("Attribute handling for your type has not yet been implemented. The method only supports strings and bools. Update to add your type!");
         }
 
         return succeeded;
+    }
+
+    private static void ValidateArrayAttribute(KeyValuePair<string, object> expectedAttribute, object rawActualValue, object[] expectedArray, StringBuilder builder, string wireModelTypeName, ref bool succeeded)
+    {
+        // Handle different possible types of arrays from JSON deserialization
+        object[] actualArray = null;
+
+        if (rawActualValue is object[] directArray)
+        {
+            actualArray = directArray;
+        }
+        else if (rawActualValue is Newtonsoft.Json.Linq.JArray jArray)
+        {
+            actualArray = jArray.ToObject<object[]>();
+        }
+        else if (rawActualValue is System.Collections.IEnumerable enumerable)
+        {
+            actualArray = enumerable.Cast<object>().ToArray();
+        }
+
+        if (actualArray == null)
+        {
+            builder.AppendFormat("Attribute named {0} in the {3} had an unexpected type.  Expected: array [{1}], Actual type: {2}",
+                expectedAttribute.Key, string.Join(", ", expectedArray), rawActualValue?.GetType()?.Name ?? "null", wireModelTypeName);
+            builder.AppendLine();
+            succeeded = false;
+        }
+        else if (actualArray.Length != expectedArray.Length)
+        {
+            builder.AppendFormat("Attribute named {0} in the {3} had an unexpected array length.  Expected: {1}, Actual: {2}",
+                expectedAttribute.Key, expectedArray.Length, actualArray.Length, wireModelTypeName);
+            builder.AppendLine();
+            succeeded = false;
+        }
+        else
+        {
+            // Compare array elements
+            for (int i = 0; i < expectedArray.Length; i++)
+            {
+                var expectedElement = expectedArray[i];
+                var actualElement = actualArray[i];
+
+                // Handle different JSON number types (long vs int)
+                bool elementsEqual = false;
+                if (expectedElement is int expectedInt && actualElement is long actualLong)
+                {
+                    elementsEqual = expectedInt == actualLong;
+                }
+                else if (expectedElement is long expectedLong && actualElement is int actualInt)
+                {
+                    elementsEqual = expectedLong == actualInt;
+                }
+                else
+                {
+                    elementsEqual = Equals(expectedElement, actualElement);
+                }
+
+                if (!elementsEqual)
+                {
+                    builder.AppendFormat("Attribute named {0} in the {3} had an unexpected value at index {4}.  Expected: {1} ({5}), Actual: {2} ({6})",
+                        expectedAttribute.Key, expectedElement, actualElement, wireModelTypeName, i,
+                        expectedElement?.GetType()?.Name ?? "null", actualElement?.GetType()?.Name ?? "null");
+                    builder.AppendLine();
+                    succeeded = false;
+                }
+            }
+        }
     }
 
     private static bool IsNullOrEqual(string expectedValue, string actualValue)

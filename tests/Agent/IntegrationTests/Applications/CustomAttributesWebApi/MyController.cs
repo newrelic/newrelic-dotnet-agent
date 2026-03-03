@@ -61,4 +61,45 @@ public class MyController : ApiController
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("keywithnullvalue", null);
         return "success";
     }
+
+    [HttpGet]
+    [Route("api/CustomArrayAttributes")]
+    public string CustomArrayAttributes()
+    {
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("stringArray", new[] { "red", "green", "blue" });
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("intArray", new[] { 1, 2, 3, 4, 5 });
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("boolArray", new[] { true, false, true });
+
+        // Attempt to force this as the captured transaction trace.
+        Thread.Sleep(1000);
+
+        return "success";
+    }
+
+    [HttpGet]
+    [Route("api/CustomEmptyArrayAttributes")]
+    public string CustomEmptyArrayAttributes()
+    {
+        // Add a regular attribute to ensure transaction gets traced
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("test", "empty-arrays");
+
+        // These should be skipped by our array logic
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("emptyArray", new string[] { });
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("nullOnlyArray", new object[] { null, null });
+
+        return "success";
+    }
+
+    [HttpGet]
+    [Route("api/CustomArrayWithNulls")]
+    public string CustomArrayWithNulls()
+    {
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("arrayWithNulls", new object[] { "first", null, "third" });
+        NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("listAttribute", new List<string> { "list1", "list2", "list3" });
+
+        // Attempt to force this as the captured transaction trace.
+        Thread.Sleep(1000);
+
+        return "success";
+    }
 }
