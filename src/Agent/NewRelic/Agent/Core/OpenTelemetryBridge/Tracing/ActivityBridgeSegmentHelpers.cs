@@ -620,16 +620,16 @@ public static class ActivityBridgeSegmentHelpers
 
     private static LlmTagValues ExtractLlmTags(Dictionary<string, object> tags)
     {
-        tags.TryGetTag<string>(["gen_ai.provider.name"], out var providerName);
-        tags.TryGetTag<string>(["gen_ai.request.model"], out var requestModel);
-        tags.TryGetTag<string>(["gen_ai.response.model"], out var responseModel);
-        tags.TryGetTag<string>(["gen_ai.output.id"], out var responseId);
-        tags.TryGetTag<string>(["gen_ai.output.messages"], out var outputMessagesJson);
-        tags.TryGetTag<string>(["gen_ai.input.messages"], out var inputMessagesJson);
-        tags.TryGetTag<string>(["telemetry.sdk.version"], out var libraryVersion);
-        tags.TryGetTag<int>(["gen_ai.usage.input_tokens"], out var inputTokenCount);
-        tags.TryGetTag<int>(["gen_ai.usage.output_tokens"], out var outputTokenCount);
-        tags.TryGetTag<string>(["error.type"], out var errorType);
+        tags.TryGetAndRemoveTag<string>(["gen_ai.provider.name"], out var providerName);
+        tags.TryGetAndRemoveTag<string>(["gen_ai.request.model"], out var requestModel);
+        tags.TryGetAndRemoveTag<string>(["gen_ai.response.model"], out var responseModel);
+        tags.TryGetAndRemoveTag<string>(["gen_ai.output.id"], out var responseId);
+        tags.TryGetAndRemoveTag<string>(["gen_ai.output.messages"], out var outputMessagesJson);
+        tags.TryGetAndRemoveTag<string>(["gen_ai.input.messages"], out var inputMessagesJson);
+        tags.TryGetAndRemoveTag<string>(["telemetry.sdk.version"], out var libraryVersion);
+        tags.TryGetAndRemoveTag<int>(["gen_ai.usage.input_tokens"], out var inputTokenCount);
+        tags.TryGetAndRemoveTag<int>(["gen_ai.usage.output_tokens"], out var outputTokenCount);
+        tags.TryGetAndRemoveTag<string>(["error.type"], out var errorType);
 
         return new LlmTagValues
         {
