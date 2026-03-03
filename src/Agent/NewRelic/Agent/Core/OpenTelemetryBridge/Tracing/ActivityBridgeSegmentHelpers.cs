@@ -42,12 +42,6 @@ public static class ActivityBridgeSegmentHelpers
             return;
         }
 
-        //TESTING
-        foreach (var tag in tags)
-        {
-            Log.Finest($"{activityLogPrefix} has tag: {tag.Key} = {tag.Value}");
-        }
-
         // based on activity kind, create the appropriate segment data
         // remove all tags that are used in segment data creation
         switch (activityKind)
@@ -157,7 +151,7 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetAndRemoveTag<string>(["rpc.method"], out var method);
         tags.TryGetAndRemoveTag<string>(["rpc.service"], out var service); // deprecated attribute, rpc.method includes this information in the format /service/method, but some instrumentation may still use this tag so we'll look for it as a fallback
         tags.TryGetAndRemoveTag<string>(["grpc.method"], out var grpcMethod);
-        var cleanGrpcMethod = grpcMethod.TrimStart('/'); // per spec, we need to strip leading slashes.
+        var cleanGrpcMethod = grpcMethod?.TrimStart('/'); // per spec, we need to strip leading slashes.
 
         tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address"], out var host);
         tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);

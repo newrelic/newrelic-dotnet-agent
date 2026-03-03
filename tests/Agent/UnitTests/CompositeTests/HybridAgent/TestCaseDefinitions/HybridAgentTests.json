@@ -1967,15 +1967,15 @@
             ],
             "spans": [
                 {
-                    "name": "External/localhost/Stream/GetItem",
+                    "name": "External/localhost/gRPC/GetItem",
                     "parentName": "Foo",
                     "category": "http",
                     "attributes": {
                         "span.kind": "client",
                         "server.address": "localhost",
                         "server.port": 50051,
-                        "http.request.method": "GetItem",
-                        "http.statusCode": 0,
+                        "http.method": "GetItem",
+                        "grpc.statusCode": 0,
                         "http.url": "grpc://localhost:50051/my.test.Service/GetItem",
                         "component": "grpc"
                     }
@@ -2061,15 +2061,15 @@
             ],
             "spans": [
                 {
-                    "name": "External/localhost/Stream/GetItem",
+                    "name": "External/localhost/gRPC/GetItem",
                     "parentName": "Foo",
                     "category": "http",
                     "attributes": {
                         "span.kind": "client",
                         "server.address": "localhost",
                         "server.port": 50051,
-                        "http.request.method": "GetItem",
-                        "http.statusCode": 14,
+                        "http.method": "GetItem",
+                        "grpc.statusCode": 14,
                         "http.url": "grpc://localhost:50051/my.test.Service/GetItem",
                         "component": "grpc"
                     }
@@ -2142,14 +2142,14 @@
             ],
             "spans": [
                 {
-                    "name": "External/localhost/Stream/ListItems",
+                    "name": "External/localhost/gRPC/ListItems",
                     "parentName": "Foo",
                     "category": "http",
                     "attributes": {
                         "span.kind": "client",
                         "server.address": "localhost",
                         "server.port": 50052,
-                        "http.request.method": "ListItems",
+                        "http.method": "ListItems",
                         "http.url": "grpc://localhost:50052/my.test.Service/ListItems",
                         "component": "grpc"
                     }
@@ -2230,15 +2230,15 @@
             ],
             "spans": [
                 {
-                    "name": "External/grpc.example.com/Stream/UnaryCall",
+                    "name": "External/grpc.example.com/gRPC/UnaryCall",
                     "parentName": "Foo",
                     "category": "http",
                     "attributes": {
                         "span.kind": "client",
                         "server.address": "grpc.example.com",
                         "server.port": 6000,
-                        "http.request.method": "UnaryCall",
-                        "http.statusCode": 0,
+                        "http.method": "UnaryCall",
+                        "grpc.statusCode": 0,
                         "http.url": "grpc://grpc.example.com:6000/pkg.alt.Service/UnaryCall",
                         "component": "grpc"
                     }
