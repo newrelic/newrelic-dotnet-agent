@@ -66,7 +66,10 @@ public static class ActivityBridgeSegmentHelpers
                 }
                 else if (tags.TryGetAndRemoveTag<string>(["gen_ai.operation.name"], out var aiOp)) // it's Microsoft.Extensions.AI
                 {
-                    ProcessLLMChatClientTags(segment, agent, activity, activityLogPrefix, tags, aiOp);
+                    // TODO: If AI monitoring is disabled, we'll fall out of the switch statement and add all the tags as custom attributes on a
+                    //   SimpleSegmentData. But should we suppress the input and output tags if AIMonitoringRecordContentEnabled is false? 
+                    if (agent.Configuration.AiMonitoringEnabled) // only instrument if AI monitoring is enabled
+                        ProcessLLMChatClientTags(segment, agent, activity, activityLogPrefix, tags, aiOp);
                 }
                 else
                 {
@@ -741,6 +744,9 @@ public static class ActivityBridgeSegmentHelpers
                 return;
             }
 
+            // records the LlmChatCompletionSummary event.
+            // Essentially a NoOp if AiMonitoringEnabled is false in the agent configuration.
+            // Handles removing input/content if AiMonitoringContentEnabled is false in the agent configuration.
             var completionId = EventHelper.CreateChatCompletionEvent(
                 agent,
                 segment,
@@ -757,6 +763,9 @@ public static class ActivityBridgeSegmentHelpers
                 errorData: null);
 
             // Prompt - using the last user message with text content
+            // Records the LlmChatCompletionMessage event.
+            // Essentially a NoOp if AiMonitoringEnabled is false in the agent configuration.
+            // Handles removing input/content if AiMonitoringContentEnabled is false in the agent configuration.
             EventHelper.CreateChatMessageEvent(
                 agent,
                 segment,
@@ -790,6 +799,9 @@ public static class ActivityBridgeSegmentHelpers
 
                 if (!string.IsNullOrEmpty(responseContent))
                 {
+                    // Records the LlmChatCompletionMessage event.
+                    // Essentially a NoOp if AiMonitoringEnabled is false in the agent configuration.
+                    // Handles removing input/content if AiMonitoringContentEnabled is false in the agent configuration.
                     EventHelper.CreateChatMessageEvent(
                         agent,
                         segment,
