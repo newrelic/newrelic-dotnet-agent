@@ -171,7 +171,8 @@ public static class ActivityBridgeSegmentHelpers
 
         Log.Finest($"Created ExternalSegmentData for {activityLogPrefix}.");
 
-        segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
+        segment.GetExperimentalApi().SetSegmentData(externalSegmentData)
+            .MakeLeaf();
 
         // per spec, a non-zero status code must be recorded as an exception.
         // TODO: This behavior is supposed to be configurable by the customer but currently is not

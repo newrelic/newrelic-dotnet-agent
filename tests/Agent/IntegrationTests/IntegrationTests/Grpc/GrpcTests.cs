@@ -63,8 +63,8 @@ public abstract class GrpcTestsBase<TFixture> : NewRelicIntegrationTest<TFixture
         // The gRPC spec calls for host and port, but we don't include that in the metric name for any external so skipping that for now.
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = @"External/all", CallCountAllHarvests = 1 },
-            new() { metricName = @"External/allOther", CallCountAllHarvests = 1 },
+            new() { metricName = @"External/all", CallCountAllHarvests = 2 },
+            new() { metricName = @"External/allOther", CallCountAllHarvests = 2 },
             new() { metricName = @"External/unknown/all", CallCountAllHarvests = 1 },
             new() { metricName = @"External/unknown/gRPC/greet.Greeter/SayHello", CallCountAllHarvests = 1 },
             new() { metricName = @"External/unknown/gRPC/greet.Greeter/SayHello", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Grpc.GrpcExerciser/MakeGrpcClientCall", CallCountAllHarvests = 1 },

@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using GrpcGreet;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.Builder;
@@ -24,7 +25,7 @@ public class GrpcExerciser
 {
     [LibraryMethod]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public void SayHello(string port)
+    public async Task SayHello(string port)
     {
         var actualPort = port == "0" ? GetAvailablePort() : int.Parse(port);
 
@@ -41,21 +42,21 @@ public class GrpcExerciser
         var app = builder.Build();
         app.MapGrpcService<GreeterService>();
 
-        app.StartAsync().GetAwaiter().GetResult();
+        await app.StartAsync();
 
         try
         {
-            MakeGrpcClientCall(actualPort);
+            await MakeGrpcClientCall(actualPort);
         }
         finally
         {
-            app.StopAsync().GetAwaiter().GetResult();
+            await app.StopAsync();
         }
     }
 
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    private static void MakeGrpcClientCall(int port)
+    private static async Task MakeGrpcClientCall(int port)
     {
         using var channel = GrpcChannel.ForAddress($"http://localhost:{port}", new GrpcChannelOptions
         {
@@ -66,7 +67,7 @@ public class GrpcExerciser
         });
 
         var client = new Greeter.GreeterClient(channel);
-        var reply = client.SayHello(new HelloRequest { Name = "TestGrpc" });
+        var reply = await client.SayHelloAsync(new HelloRequest { Name = "TestGrpc" });
 
         Console.WriteLine($"[GrpcExerciser] Reply: {reply.Message}");
     }

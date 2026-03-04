@@ -32,14 +32,4 @@ public class NewRelicActivitySourceProxy
     }
 
     public INewRelicActivity TryCreateActivity(string activityName, ActivityKind kind) => _activitySource?.CreateActivity(activityName, kind);
-
-    /// <summary>
-    /// FOR TESTING ONLY: Resets the static state to allow re-initialization in tests.
-    /// </summary>
-    public static void ResetStaticState()
-    {
-        var oldSource = Interlocked.Exchange(ref _activitySource, null) as IDisposable;
-        oldSource?.Dispose();
-        Interlocked.Exchange(ref _usingRuntimeActivitySource, 0);
-    }
 }
