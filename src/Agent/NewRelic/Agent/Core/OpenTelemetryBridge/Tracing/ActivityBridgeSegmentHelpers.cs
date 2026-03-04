@@ -171,8 +171,9 @@ public static class ActivityBridgeSegmentHelpers
 
         Log.Finest($"Created ExternalSegmentData for {activityLogPrefix}.");
 
+        // Marking this as a leaf in an attempt to block the HttpClient span from be created.
         segment.GetExperimentalApi().SetSegmentData(externalSegmentData)
-            .MakeLeaf();
+            .MakeLeaf(); 
 
         // per spec, a non-zero status code must be recorded as an exception.
         // TODO: This behavior is supposed to be configurable by the customer but currently is not
