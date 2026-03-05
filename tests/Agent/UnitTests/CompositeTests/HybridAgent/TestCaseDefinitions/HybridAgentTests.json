@@ -2211,10 +2211,9 @@
                     "attributes": {
                         "span.kind": "client",
                         "server.address": "unknown",
-                        "server.port": 0,
                         "http.method": "GetItem",
                         "grpc.statusCode": 0,
-                        "http.url": "grpc://unknown:0/my.test.Service/GetItem",
+                        "http.url": "grpc://unknown/my.test.Service/GetItem",
                         "component": "grpc"
                     }
                 }
