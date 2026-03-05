@@ -91,5 +91,7 @@
     <PackageReference Include="StackExchange.Redis" Version="2.11.0" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="System.Data.Odbc" Version="10.0.3" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="System.Data.Odbc" Version="10.0.3" Condition="'$(TargetFramework)' == 'net10.0'" />
+
+    <Protobuf Include="..\MultiFunctionApplicationHelpers\NetStandardLibraries\Grpc\greet.proto" GrpcServices="Both" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
 </Project>

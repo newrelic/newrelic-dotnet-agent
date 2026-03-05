@@ -328,15 +328,10 @@
 
   <!-- gRPC - .NET Core only -->
   <ItemGroup>
-    <!--<FrameworkReference Include="Microsoft.AspNetCore.App" Condition="'$(TargetFramework)' == 'net8.0'" />-->
-    <!--<FrameworkReference Include="Microsoft.AspNetCore.App" Condition="'$(TargetFramework)' == 'net10.0'" />-->
     <PackageReference Include="Grpc.AspNetCore.Server" Version="2.65.0" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="Grpc.Net.Client" Version="2.65.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="Grpc.Tools" Version="2.65.0" Condition="'$(TargetFramework)' == 'net8.0'">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="Grpc.Tools" Version="2.65.0" Condition="'$(TargetFramework)' == 'net8.0'"><PrivateAssets>all</PrivateAssets></PackageReference>
     <Protobuf Include="NetStandardLibraries\Grpc\greet.proto" GrpcServices="Both" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <Protobuf Include="NetStandardLibraries\Grpc\greet.proto" GrpcServices="Both" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
 
 
