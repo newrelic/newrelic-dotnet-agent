@@ -66,10 +66,12 @@ public static class ActivityBridgeSegmentHelpers
                 }
                 else if (tags.TryGetAndRemoveTag<string>(["gen_ai.operation.name"], out var aiOp)) // it's Microsoft.Extensions.AI
                 {
-                    // TODO: If AI monitoring is disabled, we'll fall out of the switch statement and add all the tags as custom attributes on a
-                    //   SimpleSegmentData. But should we suppress the input and output tags if AIMonitoringRecordContentEnabled is false? 
+                    // If AI monitoring is disabled, we'll fall out of the switch statement and add all the tags as custom attributes on a SimpleSegmentData.
+                    // since the Experimental.Microsoft.Extensions.AI activity source is opt-in, we don't need to worry about checking AiMonitoringRecordContentEnabled if AI monitoring isn't enabled.
                     if (agent.Configuration.AiMonitoringEnabled) // only instrument if AI monitoring is enabled
+                    {
                         ProcessLLMChatClientTags(segment, agent, activity, activityLogPrefix, tags, aiOp);
+                    }
                 }
                 else
                 {
@@ -608,6 +610,11 @@ public static class ActivityBridgeSegmentHelpers
         Log.Finest($"{activityLogPrefix} for Microsoft.Extensions.AI");
 
         var llmTags = ExtractLlmTags(tags);
+
+        // TODO: this doesn't seem to be required - the AI Responses UI can still filter segments to "only AI" without naming a segment like this.
+        //// set the segment name to match the LLM spec requirements
+        //var spanName = $"Llm/completion/{llmTags.ProviderName}/{operation}";
+        //segment.SetName(spanName);
 
         RecordLlmMetrics(agent, llmTags.ProviderName, llmTags.LibraryVersion, llmTags.EffectiveModel);
 
