@@ -1,0 +1,44 @@
+@page "/"
+@using System.Runtime.CompilerServices
+@using NewRelic.Api.Agent
+@inject ILogger<Home> Logger
+@inject IJSRuntime JS
+
+<h1>Echo Test</h1>
+
+<div>
+    <label for="phraseInput">Enter a phrase:</label>
+    <input id="phraseInput" @bind="_phrase" @bind:event="oninput" />
+    <button id="sendButton" @onclick="SendPhrase" disabled="@string.IsNullOrWhiteSpace(_phrase)">Send</button>
+</div>
+
+@if (_echoedPhrase != null)
+{
+    <p id="echoResult">Echoed: @_echoedPhrase</p>
+}
+
+@code {
+    private string _phrase;
+    private string _echoedPhrase;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("eval", "window.__blazorCircuitReady = true");
+        }
+    }
+
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    private void SendPhrase()
+    {
+        if (!string.IsNullOrWhiteSpace(_phrase))
+        {
+            Console.WriteLine($"[EchoHub] Echo: {_phrase}");
+            Logger.LogInformation("[EchoHub] Echo: {Phrase}", _phrase);
+            _echoedPhrase = _phrase;
+            _phrase = string.Empty;
+        }
+    }
+}

@@ -45,15 +45,6 @@ internal class WrapPipelineMiddleware
             return;
         }
 
-        // Don't instrument the Blazor hub requests because they are long-running connections (SignalR) that skew transaction timings.
-        // we differentiate from generic websocket requests only to allow for explicit logging.
-        if (context.Request.Path.StartsWithSegments("/_blazor"))
-        {
-            _agent.Logger.Debug("Blazor hub request (_blazor) detected; not instrumenting this long-running request.");
-            await _next(context);
-            return;
-        }
-
         // if there's a "Sec-WebSocket-Key" header, this is a websocket handshake request and we should not create a transaction for it
         // as it is a long-running connection that would skew transaction timings.
         // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-WebSocket-Key for more information on this header.
