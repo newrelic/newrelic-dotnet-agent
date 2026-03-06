@@ -58,14 +58,18 @@ public class MicrosoftLoggingWrapper : IWrapper
             Func<object, string> getLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
             Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
             Func<object, Exception> getLogExceptionFunc = mc => ((MethodCall)mc).MethodArguments[3] as Exception; // using "as" since we want a null if missing
-            Func<object, Dictionary<string, object>> getContextDataFunc = _ => GetContextData(logger, agent);
+
+            // MethodArguments[2] is the TState state parameter, which for structured logging
+            // typically implements IReadOnlyList<KeyValuePair<string, object?>>
+            var state = methodCall.MethodArguments[2];
+            Func<object, Dictionary<string, object>> getContextDataFunc = _ => GetContextData(logger, agent, state);
 
             var xapi = agent.GetExperimentalApi();
             xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, getContextDataFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
     }
 
-    private static Dictionary<string, object> GetContextData(MEL.ILogger logger, IAgent agent)
+    private static Dictionary<string, object> GetContextData(MEL.ILogger logger, IAgent agent, object state = null)
     {
         if (_contextDataNotSupported) // short circuit if we previously got an exception trying to access context data
         {
@@ -105,6 +109,35 @@ public class MicrosoftLoggingWrapper : IWrapper
                 }
                 // Possibly handle case of IEnumerable<KeyValuePair<object, object>>, etc (not now though)
             }, harvestedKvps);
+
+            // Extract structured log message arguments from the TState state parameter.
+            // For structured logging (e.g., _logger.LogInformation("User {UserId} did {Action}", userId, action)),
+            // MEL's FormattedLogValues implements IReadOnlyList<KeyValuePair<string, object?>> containing
+            // the individual named parameters. We merge these into context data so they appear as
+            // separate log attributes in New Relic (e.g., context.UserId, context.Action).
+            try
+            {
+                if (state is IEnumerable<KeyValuePair<string, object>> stateKvps)
+                {
+                    foreach (var kvp in stateKvps)
+                    {
+                        // Skip the "{OriginalFormat}" key — it's the message template string, not a parameter
+                        if (kvp.Key == "{OriginalFormat}")
+                            continue;
+
+                        if (kvp.Value != null)
+                        {
+                            harvestedKvps[kvp.Key] = kvp.Value;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                // Log once and continue — state extraction is best-effort and should not
+                // prevent scope-based context data from being returned
+                agent.Logger.Log(Level.Finest, e, "Unable to extract structured log message arguments from state.");
+            }
 
             return harvestedKvps;
         }
