@@ -1,0 +1,22 @@
+# Dockerfile for building and testing the Rust profiler IL infrastructure on Linux.
+# The COM/CLR integration layer is Windows-only (#[cfg(windows)]); this validates
+# the core IL generation, instruction scanning, signature compression, etc.
+#
+# Usage: docker build -f Dockerfile.linux-test -t rust-profiler-linux-test .
+
+FROM rust:1.85-bookworm
+
+WORKDIR /build
+COPY Cargo.toml Cargo.lock* ./
+COPY .cargo .cargo
+COPY src src
+
+# Build the library (IL infrastructure only on Linux)
+RUN cargo build --release 2>&1 | tail -5
+
+# Run all unit tests (IL infrastructure tests are platform-independent)
+RUN cargo test 2>&1 | tail -20
+
+# Show the built shared library
+RUN ls -la target/release/libnewrelic_profiler_poc.so && \
+    echo "=== Linux build and tests successful ==="

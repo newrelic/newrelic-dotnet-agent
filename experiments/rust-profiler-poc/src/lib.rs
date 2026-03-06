@@ -13,26 +13,42 @@
 //! - Show cross-platform ARM support
 //! - Establish validation framework for perfect fidelity
 
+#[cfg(windows)]
 #[macro_use]
 extern crate com;
 
-pub mod ffi;
-pub mod function_control;
+// Platform-independent modules (IL infrastructure, signatures, configuration)
 pub mod il;
-pub mod instrumentation;
-pub mod interfaces;
-pub mod metadata_assembly;
-pub mod metadata_emit;
-pub mod metadata_import;
-pub mod method_resolver;
 pub mod method_signature;
+pub mod instrumentation;
 pub mod process_filter;
-pub mod profiler_info;
-pub mod profiler_callback;
-pub mod tokenizer;
 pub mod validation;
 
+// Windows-only modules (COM interfaces, CLR profiling API, metadata)
+#[cfg(windows)]
+pub mod ffi;
+#[cfg(windows)]
+pub mod function_control;
+#[cfg(windows)]
+pub mod interfaces;
+#[cfg(windows)]
+pub mod metadata_assembly;
+#[cfg(windows)]
+pub mod metadata_emit;
+#[cfg(windows)]
+pub mod metadata_import;
+#[cfg(windows)]
+pub mod method_resolver;
+#[cfg(windows)]
+pub mod profiler_info;
+#[cfg(windows)]
+pub mod profiler_callback;
+#[cfg(windows)]
+pub mod tokenizer;
+
 use log::info;
+
+#[cfg(windows)]
 use profiler_callback::{NewRelicProfiler, CLSID_PROFILER_CORECLR, CLSID_PROFILER_NETFX};
 
 /// Called by the CLR to get an instance of the profiler class factory.
@@ -40,6 +56,7 @@ use profiler_callback::{NewRelicProfiler, CLSID_PROFILER_CORECLR, CLSID_PROFILER
 /// The CLR calls this when it sees COR_PROFILER / CORECLR_PROFILER environment
 /// variables pointing to our CLSID. We create a class factory that can produce
 /// NewRelicProfiler instances.
+#[cfg(windows)]
 #[no_mangle]
 unsafe extern "system" fn DllGetClassObject(
     class_id: *const ::com::sys::CLSID,
@@ -64,6 +81,7 @@ unsafe extern "system" fn DllGetClassObject(
 }
 
 /// Called by the CLR to check if the DLL can be unloaded.
+#[cfg(windows)]
 #[no_mangle]
 extern "system" fn DllCanUnloadNow() -> ::com::sys::HRESULT {
     // Always return S_OK — we don't prevent unloading
@@ -159,9 +177,14 @@ pub extern "system" fn DllMain(
     }
 }
 
-// Unix shared library initialization
+// Unix shared library constructor — uses the GCC constructor attribute
+// instead of _init (which conflicts with the C runtime in test binaries).
 #[cfg(unix)]
-#[no_mangle]
-pub extern "C" fn _init() {
-    init_logging();
-}
+#[used]
+#[link_section = ".init_array"]
+static INIT_ARRAY: extern "C" fn() = {
+    extern "C" fn init() {
+        init_logging();
+    }
+    init
+};

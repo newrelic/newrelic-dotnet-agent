@@ -49,6 +49,7 @@ use super::method_header;
 use super::opcodes::*;
 use super::IlError;
 use crate::method_signature::MethodSignature;
+#[cfg(windows)]
 use crate::tokenizer::Tokenizer;
 
 /// Context for generating instrumented IL.
@@ -147,6 +148,7 @@ pub struct InjectionTokens {
 /// `InstrumentFunctionManipulator.h` lines 26-37.
 /// Additional context passed from the CLR callback with info that
 /// requires live metadata access.
+#[cfg(windows)]
 pub struct ClrMethodContext {
     /// The original method's local variable signature bytes (from GetSigFromToken).
     /// Empty if the method has no locals.
@@ -155,6 +157,7 @@ pub struct ClrMethodContext {
     pub original_local_count: u16,
 }
 
+#[cfg(windows)]
 pub fn build_instrumented_method(
     ctx: &InstrumentationContext,
     clr_ctx: &ClrMethodContext,
@@ -341,6 +344,7 @@ pub fn build_instrumented_method_with_tokens(
 }
 
 /// Resolve all metadata tokens needed for the injection template.
+#[cfg(windows)]
 fn resolve_injection_tokens(
     ctx: &InstrumentationContext,
     tokenizer: &mut Tokenizer,
