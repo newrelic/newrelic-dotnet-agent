@@ -288,6 +288,7 @@ jobs:
           AwsSdk,
           AzureFunction,
           BasicInstrumentation, 
+          Blazor,
           CatInbound, 
           CatOutbound, 
           CodeLevelMetrics, 
