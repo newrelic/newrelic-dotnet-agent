@@ -23,9 +23,9 @@ use com::{
     sys::{GUID, HRESULT},
 };
 use log::{error, info, trace, warn};
-use std::cell::RefCell;
 use std::ffi::c_void;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::Mutex;
 
 /// New Relic profiler CLSID for .NET Framework
 /// Must match C++ profiler: {71DA0A04-7777-4EC6-9643-7D28B46A8A41}
@@ -57,8 +57,8 @@ class! {
         is_core_clr: AtomicBool,
         jit_event_count: AtomicU64,
         module_load_count: AtomicU64,
-        profiler_info: RefCell<Option<ICorProfilerInfo4>>,
-        matcher: RefCell<Option<InstrumentationMatcher>>,
+        profiler_info: Mutex<Option<ICorProfilerInfo4>>,
+        matcher: Mutex<Option<InstrumentationMatcher>>,
     }
 
     // ==================== ICorProfilerCallback ====================
@@ -145,12 +145,12 @@ class! {
                 }
 
                 // Store ICorProfilerInfo4 for use in JIT callbacks
-                self.profiler_info.replace(Some(profiler_info));
+                *self.profiler_info.lock().unwrap() = Some(profiler_info);
 
                 // Initialize instrumentation matcher with POC test targets
                 let matcher = InstrumentationMatcher::with_test_targets();
                 info!("Loaded {} instrumentation points", matcher.points().len());
-                self.matcher.replace(Some(matcher));
+                *self.matcher.lock().unwrap() = Some(matcher);
 
                 info!("Profiler initialized successfully");
             }
@@ -202,14 +202,14 @@ class! {
             // This two-phase approach avoids holding RefCell borrows across CLR
             // calls that can cause reentrancy panics or try_borrow failures.
             let rejit_request: Option<(ModuleID, mdMethodDef)> = {
-                let pi_borrow = match self.profiler_info.try_borrow() {
+                let pi_borrow = match self.profiler_info.try_lock() {
                     Ok(b) => b,
                     Err(_) => return S_OK,
                 };
                 if let Some(ref profiler_info) = *pi_borrow {
                     unsafe {
                         if let Some(func_info) = method_resolver::resolve_function_name(profiler_info, functionId) {
-                            let matcher_borrow = match self.matcher.try_borrow() {
+                            let matcher_borrow = match self.matcher.try_lock() {
                                 Ok(b) => b,
                                 Err(_) => return S_OK,
                             };
@@ -248,7 +248,7 @@ class! {
 
             // Phase 2: Call RequestReJIT with no active borrows
             if let Some((module_id, method_token)) = rejit_request {
-                let pi_borrow = match self.profiler_info.try_borrow() {
+                let pi_borrow = match self.profiler_info.try_lock() {
                     Ok(b) => b,
                     Err(_) => return S_OK,
                 };
@@ -284,11 +284,11 @@ class! {
             // (e.g., during ReJIT triggered by JITCompilationStarted). We use
             // try_borrow() to avoid panicking if the RefCell is already borrowed.
             if !pfShouldInline.is_null() {
-                if let Ok(pi_borrow) = self.profiler_info.try_borrow() {
+                if let Ok(pi_borrow) = self.profiler_info.try_lock() {
                     if let Some(ref profiler_info) = *pi_borrow {
                         unsafe {
                             if let Some(func_info) = method_resolver::resolve_function_name(profiler_info, calleeId) {
-                                if let Ok(matcher_borrow) = self.matcher.try_borrow() {
+                                if let Ok(matcher_borrow) = self.matcher.try_lock() {
                                     if let Some(ref matcher) = *matcher_borrow {
                                         if matcher.matches(&func_info.assembly_name, &func_info.type_name, &func_info.method_name) {
                                             *pfShouldInline = 0; // FALSE — prevent inlining
@@ -390,14 +390,10 @@ class! {
                 let function_control: ICorProfilerFunctionControl =
                     std::mem::transmute(pFunctionControl);
 
-                // Get the original IL body
-                let pi_borrow = match self.profiler_info.try_borrow() {
-                    Ok(b) => b,
-                    Err(_) => {
-                        warn!("GetReJITParameters: profiler_info borrow conflict, skipping");
-                        return S_OK;
-                    }
-                };
+                // Get the original IL body.
+                // Use blocking lock() here — GetReJITParameters is called with
+                // fIsSafeToBlock=TRUE and it's fine to wait for concurrent callbacks.
+                let pi_borrow = self.profiler_info.lock().unwrap();
                 if let Some(ref profiler_info) = *pi_borrow {
                     let mut il_header: LPCBYTE = std::ptr::null();
                     let mut il_size: ULONG = 0;
@@ -418,10 +414,10 @@ class! {
 
                     // Try real IL injection; fall back to identity rewrite on error
                     let is_core_clr = self.is_core_clr.load(Ordering::Relaxed);
-                    let matcher_borrow = match self.matcher.try_borrow() {
+                    let matcher_borrow = match self.matcher.lock() {
                         Ok(b) => b,
                         Err(_) => {
-                            warn!("GetReJITParameters: matcher borrow conflict, skipping");
+                            warn!("GetReJITParameters: matcher lock poisoned, skipping");
                             return S_OK;
                         }
                     };
