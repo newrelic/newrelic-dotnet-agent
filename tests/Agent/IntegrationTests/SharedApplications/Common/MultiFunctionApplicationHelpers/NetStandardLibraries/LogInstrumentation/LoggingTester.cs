@@ -211,6 +211,20 @@ public class LoggingTester
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void CreateSingleLogMessageWithStructuredArgs(string name, string id)
+    {
+        _logs.Values.ToList().ForEach(l =>
+        {
+            if (l is MicrosoftLoggingLoggingAdapter melAdapter)
+            {
+                melAdapter.InfoWithStructuredArgs(name, int.Parse(id));
+            }
+        });
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public static void LogMessageInNestedScopes()
     {
         _logs.Values.ToList().ForEach(l => l.LogMessageInNestedScopes());
