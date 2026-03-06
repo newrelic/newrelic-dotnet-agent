@@ -29,7 +29,7 @@ public static class ActivityBridgeSegmentHelpers
         string activityId = activity.Id;
         string displayName = activity.DisplayName;
 
-        string activityLogPrefix = ActivityLogPrefixHelpers.ActivityLogPrefix(activityId, activityKind, displayName);
+        string activityLogPrefix = ActivityLogPrefixHelpers.ActivityLogPrefix(GetTransactionGuidFromSegment(segment), activityId, activityKind, displayName);
 
         Log.Debug($"{activityLogPrefix} has stopped.");
 
@@ -694,15 +694,20 @@ public static class ActivityBridgeSegmentHelpers
                 }
             }
         }
+    }
 
+    private static string GetTransactionGuidFromSegment(ISegment segment)
+    {
+        var internalSegment = segment as IInternalSpan;
+        return internalSegment?.GetTransactionGuidFromSegment();
     }
 }
 
 public static class ActivityLogPrefixHelpers
 {
-    public static string ActivityLogPrefix(string activityId, int activityKindInt, string activityDisplayName)
+    public static string ActivityLogPrefix(string transactionGuid, string activityId, int activityKindInt, string activityDisplayName)
     {
-        return $"Activity {activityId} (Kind: {(ActivityKind)activityKindInt}, DisplayName: {activityDisplayName})";
+        return $"Trx {transactionGuid}: Activity {activityId} (Kind: {(ActivityKind)activityKindInt}, DisplayName: {activityDisplayName})";
     }
 }
 

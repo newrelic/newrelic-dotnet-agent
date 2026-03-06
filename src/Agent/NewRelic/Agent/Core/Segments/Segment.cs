@@ -307,10 +307,10 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         }
         else
         {
-            Log.Finest("Segment.RemoveSegmentFromCallStack: NoOpSegment, setting Activity.Current to null");
+            Log.Finest($"Trx {GetTransactionGuidFromSegment()}: Segment.RemoveSegmentFromCallStack: NoOpSegment, setting Activity.Current to null");
             ActivityBridgeHelpers.SetCurrentActivity(null);
 
-            if (Log.IsFinestEnabled) Log.Finest($"Segment.RemoveSegmentFromCallStack: Activity.Current is now: {((dynamic)ActivityBridgeHelpers.GetCurrentActivity())?.Id ?? "null"}");
+            if (Log.IsFinestEnabled) Log.Finest($"Trx {GetTransactionGuidFromSegment()}: Segment.RemoveSegmentFromCallStack: Activity.Current is now: {((dynamic)ActivityBridgeHelpers.GetCurrentActivity())?.Id ?? "null"}");
         }
     }
 
@@ -337,15 +337,20 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         return _transactionSegmentState as ITransaction;
     }
 
+    public string GetTransactionGuidFromSegment()
+    {
+        return (_transactionSegmentState as IInternalTransaction)?.Guid ?? "empty";
+    }
+
     public bool ActivityStartedTransaction { get; set; } = false;
 
     public void MakeActivityCurrent()
     {
-        if (Log.IsFinestEnabled) Log.Finest($"Segment.MakeActivityCurrent: Setting Activity.Current to this segment's activity: {_activity?.Id ?? "null"}");
+        if (Log.IsFinestEnabled) Log.Finest($"Trx {{GetTransactionGuidFromSegment()}}: Segment.MakeActivityCurrent: Setting Activity.Current to this segment's activity: {_activity?.Id ?? "null"}");
 
         _activity?.MakeCurrent();
 
-        if (Log.IsFinestEnabled) Log.Finest($"Segment.MakeActivityCurrent: Activity.Current is now: {((dynamic)ActivityBridgeHelpers.GetCurrentActivity())?.Id ?? "null"}");
+        if (Log.IsFinestEnabled) Log.Finest($"Trx {{GetTransactionGuidFromSegment()}}: Segment.MakeActivityCurrent: Activity.Current is now: {((dynamic)ActivityBridgeHelpers.GetCurrentActivity())?.Id ?? "null"}");
     }
 
     // We start and end segments on different threads (sometimes) so we need _relativeEndTicks
