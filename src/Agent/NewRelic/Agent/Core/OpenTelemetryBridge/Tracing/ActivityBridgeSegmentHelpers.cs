@@ -699,7 +699,7 @@ public static class ActivityBridgeSegmentHelpers
     private static string GetTransactionGuidFromSegment(ISegment segment)
     {
         var internalSegment = segment as IInternalSpan;
-        return internalSegment?.GetTransactionGuidFromSegment();
+        return internalSegment?.GetTransactionGuid();
     }
 }
 

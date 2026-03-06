@@ -542,7 +542,7 @@ public class SegmentTests
     }
 
     [Test]
-    public void GetTransactionGuidFromSegment_ReturnsSuccessfully()
+    public void GetTransactionGuid_ReturnsSuccessfully()
     {
         var priority = 0.0f;
         var configuration = Mock.Create<IConfiguration>();
@@ -557,16 +557,16 @@ public class SegmentTests
             DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(),
             priority, databaseStatementParser, distributedTracePayloadHandler, Mock.Create<IErrorService>(), attribDefSvc.AttributeDefs, Mock.Create<ISamplerService>());
         var segment = new Segment(transaction.GetTransactionSegmentState(), new MethodCallData("Type", "Method", 1));
-        var transactionGuid = segment.GetTransactionGuidFromSegment();
+        var transactionGuid = segment.GetTransactionGuid();
         Assert.That(transactionGuid, Is.Not.Null);
         Assert.That(transactionGuid, Is.EqualTo(transaction.Guid));
     }
 
     [Test]
-    public void GetTransactionGuidFromSegment_ReturnsEmptyWhenNoGuid()
+    public void GetTransactionGuid_ReturnsEmptyWhenNoGuid()
     {
         var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1));
-        var transactionGuid = segment.GetTransactionGuidFromSegment();
+        var transactionGuid = segment.GetTransactionGuid();
         Assert.That(transactionGuid, Is.Not.Null);
         Assert.That(transactionGuid, Is.EqualTo("empty"));
     }

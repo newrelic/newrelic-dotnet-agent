@@ -13,5 +13,5 @@ public interface IInternalSpan : ISegment, ISegmentExperimental, ISpan
 
     string TryGetActivityTraceId();
 
-    string GetTransactionGuidFromSegment();
+    string GetTransactionGuid();
 }
