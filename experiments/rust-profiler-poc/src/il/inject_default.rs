@@ -76,6 +76,8 @@ pub struct InstrumentationContext {
     pub argument_signature: String,
     /// Parsed method signature
     pub method_signature: MethodSignature,
+    /// Full path to NewRelic.Agent.Core.dll (from CORECLR_NEWRELIC_HOME)
+    pub agent_core_path: String,
 }
 
 /// Resolved metadata tokens needed by the injection template.
@@ -109,6 +111,20 @@ pub struct InjectionTokens {
     /// MemberRef for Invoke on the closed Action<object, Exception> TypeSpec.
     /// Used by `callvirt` in the finish-tracer call.
     pub action2_invoke_on_spec: u32,
+    /// TypeRef for System.Reflection.Assembly (for LoadFrom and GetType)
+    pub assembly_type_ref: u32,
+    /// MemberRef for Assembly.LoadFrom(string) — static, returns Assembly
+    pub assembly_load_from_ref: u32,
+    /// MemberRef for Assembly.GetType(string) — instance, returns Type
+    pub assembly_get_type_ref: u32,
+    /// MemberRef for Type.GetMethod(string) — instance, returns MethodInfo
+    pub type_get_method_ref: u32,
+    /// String token for agent core DLL path
+    pub agent_core_path_token: u32,
+    /// String token for "NewRelic.Agent.Core.AgentShim"
+    pub agent_shim_class_token: u32,
+    /// String token for "GetFinishTracerDelegate"
+    pub get_finish_tracer_method_token: u32,
     /// String tokens for the 11-element parameter array
     pub tracer_factory_name_token: u32,
     pub metric_name_token: u32,
@@ -368,6 +384,31 @@ fn resolve_injection_tokens(
     let action2_invoke_on_spec =
         tokenizer.get_member_ref_token(action2_type_spec, "Invoke", &action_invoke_sig)?;
 
+    // Bootstrap: Assembly loading and method resolution
+    let assembly_type_ref =
+        tokenizer.get_type_ref_token("mscorlib", "System.Reflection.Assembly")?;
+    let method_info_type_ref =
+        tokenizer.get_type_ref_token("mscorlib", "System.Reflection.MethodInfo")?;
+
+    let load_from_sig = build_assembly_load_from_sig(assembly_type_ref);
+    let assembly_load_from_ref =
+        tokenizer.get_member_ref_token(assembly_type_ref, "LoadFrom", &load_from_sig)?;
+
+    let get_type_sig = build_assembly_get_type_sig(type_type_ref);
+    let assembly_get_type_ref =
+        tokenizer.get_member_ref_token(assembly_type_ref, "GetType", &get_type_sig)?;
+
+    let get_method_sig = build_type_get_method_sig(method_info_type_ref);
+    let type_get_method_ref =
+        tokenizer.get_member_ref_token(type_type_ref, "GetMethod", &get_method_sig)?;
+
+    // Bootstrap string tokens
+    let agent_core_path_token = tokenizer.get_string_token(&ctx.agent_core_path)?;
+    let agent_shim_class_token =
+        tokenizer.get_string_token("NewRelic.Agent.Core.AgentShim")?;
+    let get_finish_tracer_method_token =
+        tokenizer.get_string_token("GetFinishTracerDelegate")?;
+
     // String tokens
     let tracer_factory_name_token = tokenizer.get_string_token(&ctx.tracer_factory_name)?;
     let metric_name_token = tokenizer.get_string_token(&ctx.metric_name)?;
@@ -389,6 +430,13 @@ fn resolve_injection_tokens(
         action2_invoke_ref,
         action2_type_spec,
         action2_invoke_on_spec,
+        assembly_type_ref,
+        assembly_load_from_ref,
+        assembly_get_type_ref,
+        type_get_method_ref,
+        agent_core_path_token,
+        agent_shim_class_token,
+        get_finish_tracer_method_token,
         tracer_factory_name_token,
         metric_name_token,
         assembly_name_token,
@@ -414,19 +462,18 @@ pub(crate) fn build_safe_call_get_tracer(
     // try {
     builder.append_try_start();
 
-    // POC: The C++ profiler uses a bootstrap shim (not MethodBase.Invoke)
-    // to load the agent assembly and resolve GetFinishTracerDelegate.
-    // For the POC, we emit a no-op tracer lookup that leaves tracer=null.
-    // The finish-tracer code handles null tracer gracefully (skips the call).
-    // TODO: Replace with the actual agent bootstrap sequence.
-    builder.append_opcode(CEE_LDNULL);
-    builder.append_store_local(tracer_local);
+    // --- Bootstrap: load MethodInfo for GetFinishTracerDelegate via reflection ---
+    // CoreCLR path: Assembly.LoadFrom → Assembly.GetType → Type.GetMethod
+    // Reference: C++ profiler's FunctionManipulator::LoadType + LoadMethodInfoFromType
+    builder.append_opcode_u32(CEE_LDSTR, tokens.agent_core_path_token);
+    builder.append_opcode_u32(CEE_CALL, tokens.assembly_load_from_ref);
+    builder.append_opcode_u32(CEE_LDSTR, tokens.agent_shim_class_token);
+    builder.append_opcode_u32(CEE_CALLVIRT, tokens.assembly_get_type_ref);
+    builder.append_opcode_u32(CEE_LDSTR, tokens.get_finish_tracer_method_token);
+    builder.append_opcode_u32(CEE_CALLVIRT, tokens.type_get_method_ref);
 
-    // Full implementation would build the 11-element object array and call
-    // AgentShim.GetFinishTracerDelegate via the bootstrap mechanism.
-    // Keeping the scaffolding commented out for reference:
-    /*
-    builder.append_opcode(CEE_LDNULL); // null instance for Invoke
+    // --- Build 11-element object[] parameter array ---
+    builder.append_opcode(CEE_LDNULL); // null instance for Invoke (static method)
     builder.append_ldc_i4(11);
     builder.append_opcode_u32(CEE_NEWARR, tokens.object_type_ref);
 
@@ -472,7 +519,7 @@ pub(crate) fn build_safe_call_get_tracer(
     }
     builder.append_opcode(CEE_STELEM_REF);
 
-    // [9] parameters (object[] — POC: empty array for simplicity)
+    // [9] parameters (object[] — empty for POC, full impl would pass actual args)
     builder.append_opcode(CEE_DUP);
     builder.append_ldc_i4(9);
     builder.append_ldc_i4(0);
@@ -486,10 +533,9 @@ pub(crate) fn build_safe_call_get_tracer(
     builder.append_opcode_u32(CEE_BOX, tokens.uint64_type_ref);
     builder.append_opcode(CEE_STELEM_REF);
 
-    // Call MethodBase.Invoke(null, object[])
-    // builder.append_opcode_u32(CEE_CALLVIRT, tokens.method_base_invoke_ref);
-    // builder.append_store_local(tracer_local);
-    */
+    // --- Invoke: MethodBase.Invoke(null, object[]) → delegate ---
+    builder.append_opcode_u32(CEE_CALLVIRT, tokens.method_base_invoke_ref);
+    builder.append_store_local(tracer_local);
 
     // Must exit try block via leave — falling through to catch is illegal
     let try_leave = builder.append_jump_auto(CEE_LEAVE as u8);
@@ -593,24 +639,18 @@ pub fn build_get_type_from_handle_sig(type_token: u32, rth_token: u32) -> Vec<u8
 
 /// Build the signature for MethodBase.Invoke(object, object[]).
 ///
-/// Signature: HASTHIS, 2 params, returns CLASS object, params are CLASS object + SZARRAY CLASS object
-pub fn build_method_base_invoke_sig(object_token: u32) -> Vec<u8> {
-    let mut sig = Vec::new();
-    sig.push(0x20); // HASTHIS calling convention
-    sig.push(0x02); // 2 parameters
-    // Return type: CLASS System.Object
-    sig.push(0x12); // ELEMENT_TYPE_CLASS
-    let compressed =
-        crate::il::sig_compression::compress_token(object_token).unwrap_or_default();
-    sig.extend_from_slice(&compressed);
-    // Param 1: CLASS System.Object
-    sig.push(0x12);
-    sig.extend_from_slice(&compressed);
-    // Param 2: SZARRAY CLASS System.Object
-    sig.push(0x1D); // ELEMENT_TYPE_SZARRAY
-    sig.push(0x12);
-    sig.extend_from_slice(&compressed);
-    sig
+/// Signature: HASTHIS, 2 params, returns OBJECT, params are OBJECT + SZARRAY OBJECT.
+/// Uses ELEMENT_TYPE_OBJECT (0x1C) rather than CLASS + TypeRef token, as the CLR
+/// uses built-in type encodings when matching method signatures.
+pub fn build_method_base_invoke_sig(_object_token: u32) -> Vec<u8> {
+    vec![
+        0x20, // HASTHIS calling convention
+        0x02, // 2 parameters
+        0x1C, // Return type: ELEMENT_TYPE_OBJECT
+        0x1C, // Param 1: ELEMENT_TYPE_OBJECT
+        0x1D, // Param 2: ELEMENT_TYPE_SZARRAY
+        0x1C, // (of ELEMENT_TYPE_OBJECT)
+    ]
 }
 
 /// Build the signature for Action<object, Exception>.Invoke(!0, !1).
@@ -675,6 +715,57 @@ pub fn build_action2_typespec_sig(
     sig
 }
 
+/// Build the signature for `Assembly.LoadFrom(string)`.
+///
+/// Signature: DEFAULT (static), 1 param, returns CLASS Assembly, param is STRING.
+pub fn build_assembly_load_from_sig(assembly_type_ref: u32) -> Vec<u8> {
+    let mut sig = Vec::new();
+    sig.push(0x00); // DEFAULT calling convention (static)
+    sig.push(0x01); // 1 parameter
+    // Return type: CLASS System.Reflection.Assembly
+    sig.push(0x12); // ELEMENT_TYPE_CLASS
+    sig.extend_from_slice(
+        &crate::il::sig_compression::compress_token(assembly_type_ref).unwrap_or_default(),
+    );
+    // Param 1: STRING
+    sig.push(0x0E); // ELEMENT_TYPE_STRING
+    sig
+}
+
+/// Build the signature for `Assembly.GetType(string)`.
+///
+/// Signature: HASTHIS (instance), 1 param, returns CLASS Type, param is STRING.
+pub fn build_assembly_get_type_sig(type_type_ref: u32) -> Vec<u8> {
+    let mut sig = Vec::new();
+    sig.push(0x20); // HASTHIS calling convention
+    sig.push(0x01); // 1 parameter
+    // Return type: CLASS System.Type
+    sig.push(0x12); // ELEMENT_TYPE_CLASS
+    sig.extend_from_slice(
+        &crate::il::sig_compression::compress_token(type_type_ref).unwrap_or_default(),
+    );
+    // Param 1: STRING
+    sig.push(0x0E); // ELEMENT_TYPE_STRING
+    sig
+}
+
+/// Build the signature for `Type.GetMethod(string)`.
+///
+/// Signature: HASTHIS (instance), 1 param, returns CLASS MethodInfo, param is STRING.
+pub fn build_type_get_method_sig(method_info_type_ref: u32) -> Vec<u8> {
+    let mut sig = Vec::new();
+    sig.push(0x20); // HASTHIS calling convention
+    sig.push(0x01); // 1 parameter
+    // Return type: CLASS System.Reflection.MethodInfo
+    sig.push(0x12); // ELEMENT_TYPE_CLASS
+    sig.extend_from_slice(
+        &crate::il::sig_compression::compress_token(method_info_type_ref).unwrap_or_default(),
+    );
+    // Param 1: STRING
+    sig.push(0x0E); // ELEMENT_TYPE_STRING
+    sig
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -695,6 +786,13 @@ mod tests {
             action2_invoke_ref: 0x0A00_0003,
             action2_type_spec: 0x1B00_0001,
             action2_invoke_on_spec: 0x0A00_0004,
+            assembly_type_ref: 0x0100_0008,
+            assembly_load_from_ref: 0x0A00_0005,
+            assembly_get_type_ref: 0x0A00_0006,
+            type_get_method_ref: 0x0A00_0007,
+            agent_core_path_token: 0x7000_0007,
+            agent_shim_class_token: 0x7000_0008,
+            get_finish_tracer_method_token: 0x7000_0009,
             tracer_factory_name_token: 0x7000_0001,
             metric_name_token: 0x7000_0002,
             assembly_name_token: 0x7000_0003,
@@ -717,6 +815,7 @@ mod tests {
             metric_name: "Custom/Test".to_string(),
             argument_signature: "".to_string(),
             method_signature: parse_method_signature(&[0x00, 0x00, 0x01]).unwrap(),
+            agent_core_path: "/fake/path/NewRelic.Agent.Core.dll".to_string(),
         }
     }
 
@@ -733,6 +832,7 @@ mod tests {
             metric_name: "Custom/Compute".to_string(),
             argument_signature: "(int)".to_string(),
             method_signature: parse_method_signature(&[0x20, 0x01, 0x08, 0x08]).unwrap(),
+            agent_core_path: "/fake/path/NewRelic.Agent.Core.dll".to_string(),
         }
     }
 
@@ -782,20 +882,53 @@ mod tests {
 
         assert_eq!(sig[0], 0x20); // HASTHIS
         assert_eq!(sig[1], 0x02); // 2 params
-        assert_eq!(sig[2], 0x12); // CLASS (return: object)
-        assert_eq!(sig[3], 0x05); // compressed token for 0x01000001
-        assert_eq!(sig[4], 0x12); // CLASS (param1: object)
-        assert_eq!(sig[5], 0x05);
-        assert_eq!(sig[6], 0x1D); // SZARRAY (param2: object[])
-        assert_eq!(sig[7], 0x12); // CLASS
-        assert_eq!(sig[8], 0x05);
-        assert_eq!(sig.len(), 9);
+        assert_eq!(sig[2], 0x1C); // ELEMENT_TYPE_OBJECT (return)
+        assert_eq!(sig[3], 0x1C); // ELEMENT_TYPE_OBJECT (param1)
+        assert_eq!(sig[4], 0x1D); // SZARRAY (param2)
+        assert_eq!(sig[5], 0x1C); // ELEMENT_TYPE_OBJECT
+        assert_eq!(sig.len(), 6);
     }
 
     #[test]
     fn action2_invoke_sig_format() {
         let sig = build_action2_invoke_sig();
         assert_eq!(sig, vec![0x20, 0x02, 0x01, 0x13, 0x00, 0x13, 0x01]);
+    }
+
+    #[test]
+    fn assembly_load_from_sig_format() {
+        let sig = build_assembly_load_from_sig(0x0100_0008);
+        assert_eq!(sig[0], 0x00); // DEFAULT (static)
+        assert_eq!(sig[1], 0x01); // 1 param
+        assert_eq!(sig[2], 0x12); // ELEMENT_TYPE_CLASS (return: Assembly)
+        // TypeRef 0x01000008: (8 << 2) | 1 = 33 → [0x21]
+        assert_eq!(sig[3], 0x21);
+        assert_eq!(sig[4], 0x0E); // ELEMENT_TYPE_STRING (param)
+        assert_eq!(sig.len(), 5);
+    }
+
+    #[test]
+    fn assembly_get_type_sig_format() {
+        let sig = build_assembly_get_type_sig(0x0100_0005);
+        assert_eq!(sig[0], 0x20); // HASTHIS (instance)
+        assert_eq!(sig[1], 0x01); // 1 param
+        assert_eq!(sig[2], 0x12); // ELEMENT_TYPE_CLASS (return: Type)
+        // TypeRef 0x01000005: (5 << 2) | 1 = 21 → [0x15]
+        assert_eq!(sig[3], 0x15);
+        assert_eq!(sig[4], 0x0E); // ELEMENT_TYPE_STRING (param)
+        assert_eq!(sig.len(), 5);
+    }
+
+    #[test]
+    fn type_get_method_sig_format() {
+        let sig = build_type_get_method_sig(0x0100_0009);
+        assert_eq!(sig[0], 0x20); // HASTHIS (instance)
+        assert_eq!(sig[1], 0x01); // 1 param
+        assert_eq!(sig[2], 0x12); // ELEMENT_TYPE_CLASS (return: MethodInfo)
+        // TypeRef 0x01000009: (9 << 2) | 1 = 37 → [0x25]
+        assert_eq!(sig[3], 0x25);
+        assert_eq!(sig[4], 0x0E); // ELEMENT_TYPE_STRING (param)
+        assert_eq!(sig.len(), 5);
     }
 
     #[test]
@@ -815,6 +948,41 @@ mod tests {
         assert_eq!(sig[6], 0x12);
         assert_eq!(sig[7], 0x05);
         assert_eq!(sig.len(), 8);
+    }
+
+    // ==================== Bootstrap integration test ====================
+
+    #[test]
+    fn safe_call_get_tracer_contains_bootstrap_sequence() {
+        let ctx = test_ctx_static_void();
+        let tokens = test_tokens();
+        let mut builder = InstructionBuilder::new();
+
+        build_safe_call_get_tracer(&mut builder, &ctx, &tokens, 0);
+
+        let bytes = builder.get_bytes();
+
+        // Must contain 3 bootstrap ldstr + 6 param ldstr = 9 total
+        let ldstr_count = bytes.iter().filter(|&&b| b == 0x72).count();
+        assert_eq!(ldstr_count, 9, "Expected 9 ldstr (3 bootstrap + 6 params), got {}", ldstr_count);
+
+        // Must contain call (0x28) for Assembly.LoadFrom (static)
+        assert!(bytes.contains(&0x28), "Must contain call opcode for Assembly.LoadFrom");
+
+        // Must contain callvirt (0x6F) for Assembly.GetType, Type.GetMethod, MethodBase.Invoke
+        let callvirt_count = bytes.iter().filter(|&&b| b == 0x6F).count();
+        assert!(callvirt_count >= 3,
+            "Expected at least 3 callvirt (GetType, GetMethod, Invoke), got {}", callvirt_count);
+
+        // Must contain newarr (0x8D) for the 11-element object array
+        assert!(bytes.contains(&0x8D), "Must contain newarr for object[]");
+
+        // Must contain box (0x8C) for uint32 and uint64 boxing
+        let box_count = bytes.iter().filter(|&&b| b == 0x8C).count();
+        assert!(box_count >= 2, "Expected at least 2 box opcodes (uint32 + uint64), got {}", box_count);
+
+        // Must contain ldtoken (0xD0) for the type token
+        assert!(bytes.contains(&0xD0), "Must contain ldtoken for type");
     }
 
     // ==================== Helper tests ====================
@@ -980,7 +1148,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // POC: SafeCallGetTracer is no-op, no array built
     fn static_void_method_contains_newarr_for_param_array() {
         let ctx = test_ctx_static_void();
         let tokens = test_tokens();
@@ -1044,7 +1211,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // POC: SafeCallGetTracer is no-op, no strings emitted
     fn static_void_method_contains_ldstr_for_all_strings() {
         let ctx = test_ctx_static_void();
         let tokens = test_tokens();
@@ -1057,15 +1223,16 @@ mod tests {
         let code_size = u32::from_le_bytes([result[4], result[5], result[6], result[7]]) as usize;
         let code = &result[12..12 + code_size];
 
-        // Should contain 6 ldstr instructions (one for each string param)
+        // Should contain 9 ldstr instructions:
+        // 3 bootstrap (agent_core_path, AgentShim class, GetFinishTracerDelegate method)
+        // 6 parameter array (factory, metric, assembly, type, method, argsig)
         let ldstr_count = code.iter().filter(|&&b| b == 0x72).count();
-        assert_eq!(ldstr_count, 6,
-            "Expected 6 ldstr (factory, metric, assembly, type, method, argsig), got {}",
+        assert_eq!(ldstr_count, 9,
+            "Expected 9 ldstr (3 bootstrap + 6 params), got {}",
             ldstr_count);
     }
 
     #[test]
-    #[ignore] // POC: SafeCallGetTracer is no-op
     fn static_void_method_uses_ldnull_for_this_slot() {
         // For static methods, array element [8] (this) should use ldnull, not ldarg.0.
         // We verify this by checking the instruction builder output directly.
@@ -1088,7 +1255,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // POC: SafeCallGetTracer is no-op, no this loading
     fn instance_method_uses_ldarg_0_for_this() {
         let ctx = test_ctx_instance_nonvoid();
         let tokens = test_tokens();
@@ -1187,7 +1353,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // POC: SafeCallGetTracer is no-op, no function ID embedded
     fn function_id_is_embedded_as_i8() {
         let mut ctx = test_ctx_static_void();
         ctx.function_id = 0xDEAD_BEEF_CAFE_BABE;
@@ -1213,7 +1378,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // POC: SafeCallGetTracer is no-op, no ldtoken emitted
     fn type_token_is_embedded_via_ldtoken() {
         let ctx = test_ctx_static_void();
         let tokens = test_tokens();
@@ -1260,7 +1424,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // POC: SafeCallGetTracer is no-op, no boxing emitted
     fn tracer_factory_args_embedded_via_box() {
         let mut ctx = test_ctx_static_void();
         ctx.tracer_factory_args = 99;

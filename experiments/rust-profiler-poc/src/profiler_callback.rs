@@ -796,6 +796,17 @@ unsafe fn try_inject_il(
         original_local_count,
     };
 
+    // Compute agent core DLL path from environment
+    let agent_core_path = {
+        let home = std::env::var("CORECLR_NEWRELIC_HOME").unwrap_or_default();
+        if home.is_empty() {
+            "NewRelic.Agent.Core.dll".to_string()
+        } else {
+            let path = std::path::Path::new(&home).join("NewRelic.Agent.Core.dll");
+            path.to_string_lossy().to_string()
+        }
+    };
+
     // Build instrumentation context
     let ctx = InstrumentationContext {
         assembly_name: assembly_name.clone(),
@@ -808,6 +819,7 @@ unsafe fn try_inject_il(
         metric_name: instr_point.metric_name.clone(),
         argument_signature: String::new(), // TODO: build from method signature
         method_signature: method_sig,
+        agent_core_path,
     };
 
     // Generate instrumented IL
