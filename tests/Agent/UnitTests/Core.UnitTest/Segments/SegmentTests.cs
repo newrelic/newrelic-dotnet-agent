@@ -3,10 +3,18 @@
 
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Api.Experimental;
 using NUnit.Framework;
@@ -531,5 +539,35 @@ public class SegmentTests
             Assert.That(spanEvent.Timestamp, Is.EqualTo(timestamp));
             Assert.That(spanEvent.Attributes, Is.Not.Null);
         });
+    }
+
+    [Test]
+    public void GetTransactionGuid_ReturnsSuccessfully()
+    {
+        var priority = 0.0f;
+        var configuration = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => configuration.TransactionEventsEnabled).Returns(true);
+
+        // Initialize the Transaction with its dependencies
+        var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        var databaseStatementParser = Mock.Create<IDatabaseStatementParser>();
+        var distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
+
+        var transaction = new Transaction(configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(),
+            DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(),
+            priority, databaseStatementParser, distributedTracePayloadHandler, Mock.Create<IErrorService>(), attribDefSvc.AttributeDefs, Mock.Create<ISamplerService>());
+        var segment = new Segment(transaction.GetTransactionSegmentState(), new MethodCallData("Type", "Method", 1));
+        var transactionGuid = segment.GetTransactionGuid();
+        Assert.That(transactionGuid, Is.Not.Null);
+        Assert.That(transactionGuid, Is.EqualTo(transaction.Guid));
+    }
+
+    [Test]
+    public void GetTransactionGuid_ReturnsEmptyWhenNoGuid()
+    {
+        var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1));
+        var transactionGuid = segment.GetTransactionGuid();
+        Assert.That(transactionGuid, Is.Not.Null);
+        Assert.That(transactionGuid, Is.EqualTo("empty"));
     }
 }
