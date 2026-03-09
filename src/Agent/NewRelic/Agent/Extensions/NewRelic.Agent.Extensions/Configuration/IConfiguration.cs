@@ -191,6 +191,8 @@ public interface IConfiguration
     int DatabaseStatementCacheCapacity { get; }
     bool ForceSynchronousTimingCalculationHttpClient { get; }
     bool EnableAspNetCore6PlusBrowserInjection { get; }
+
+    bool InstrumentAspNetCore6PlusWebsockets { get; }
     bool ExcludeNewrelicHeader { get; }
 
     SamplerType RootSamplerType { get; }
