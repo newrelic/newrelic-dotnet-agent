@@ -659,7 +659,7 @@ public static class ActivityBridgeSegmentHelpers
     private static void HandleLlmError(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, LlmTagValues llmTags)
     {
         var errorMessage = activity.StatusDescription as string ?? "An error occurred during the LLM chat operation.";
-        Log.Info($"Error invoking OpenAI model {llmTags.RequestModel}: {errorMessage}");
+        Log.Info($"{activityLogPrefix} Error invoking OpenAI model {llmTags.RequestModel}: {errorMessage}");
         agent.CurrentTransaction.NoticeError(new Exception(errorMessage));
 
         var errorData = new LlmErrorData
@@ -673,7 +673,7 @@ public static class ActivityBridgeSegmentHelpers
         EventHelper.CreateChatCompletionEvent(
             agent,
             segment,
-            requestId: null,
+            requestId: null, // not available from openai otel tags
             temperature: null,
             maxTokens: null,
             requestModel: llmTags.RequestModel,
@@ -718,7 +718,6 @@ public static class ActivityBridgeSegmentHelpers
             // Find the last user message with text content
             string promptContent = null;
             string promptRole = null;
-            int sequenceNumber = 0;
 
             for (int i = inputMessages.Count - 1; i >= 0; i--)
             {
@@ -735,7 +734,6 @@ public static class ActivityBridgeSegmentHelpers
                         {
                             promptContent = textContent;
                             promptRole = message.Role;
-                            sequenceNumber = i; // TODO: figure out if this is actually right
                             break;
                         }
                     }
@@ -757,7 +755,7 @@ public static class ActivityBridgeSegmentHelpers
             var completionId = EventHelper.CreateChatCompletionEvent(
                 agent,
                 segment,
-                requestId: null,
+                requestId: null, // not available from openai otel tags
                 temperature: null,
                 maxTokens: null,
                 requestModel: llmTags.RequestModel,
@@ -781,7 +779,7 @@ public static class ActivityBridgeSegmentHelpers
                 responseModel: llmTags.ResponseModel,
                 content: promptContent,
                 role: promptRole,
-                sequence: sequenceNumber,
+                sequence: 0,
                 completionId: completionId,
                 isResponse: false,
                 vendor: llmTags.ProviderName,
@@ -817,7 +815,7 @@ public static class ActivityBridgeSegmentHelpers
                         responseModel: llmTags.ResponseModel,
                         content: responseContent,
                         role: responseRole,
-                        sequence: sequenceNumber + 1, // TODO: figure out if this is actually right
+                        sequence: 1,
                         completionId: completionId,
                         isResponse: true,
                         vendor: llmTags.ProviderName,
@@ -855,6 +853,7 @@ public static class ActivityBridgeSegmentHelpers
         public int OutputTokenCount { get; set; }
         public string ErrorType { get; set; }
 
+        // If the response model is not provided, fall back to the request model
         public string EffectiveModel => string.IsNullOrEmpty(ResponseModel) ? RequestModel : ResponseModel;
     }
 

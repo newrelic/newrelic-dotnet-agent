@@ -436,13 +436,6 @@ public class Agent : IAgent // any changes to api, update the interface in exten
             return;
         }
 
-        // TODO: Move this to AgentHealthReporter so it is only sent one time, not on every request
-        // Record metric if streaming has been disabled
-        if (!_configurationService.Configuration.AiMonitoringStreamingEnabled)
-        {
-            RecordSupportabilityMetric("Supportability/DotNet/ML/Streaming/Disabled");
-        }
-
         var transaction = _transactionService.GetCurrentInternalTransaction();
         transaction.SetLlmTransaction(true);
 
