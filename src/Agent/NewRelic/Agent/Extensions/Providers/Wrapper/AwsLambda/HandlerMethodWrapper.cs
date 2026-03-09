@@ -382,3 +382,53 @@ public class HandlerMethodWrapper : IWrapper
     }
 
 }
+
+public class EnsureTransformCompletesWrapper : IWrapper
+{
+    public bool IsTransactionRequired => false;
+
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        // The instrumented method is only called once in the lifetime of a lambda instance so we can just create a handler wrapper each time.
+        var bootstrapper = instrumentedMethodCall.MethodCall.InvocationTarget;
+        LambdaStatics.CreateAndSetWrappedHandlerMethod(agent, transaction, instrumentedMethodCall.MethodCall.InvocationTarget);
+
+        return Delegates.NoOp;
+    }
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+    {
+        return new CanWrapResponse("NewRelic.Providers.Wrapper.AwsLambda.EnsureTransformCompletesWrapper".Equals(methodInfo.RequestedWrapperName));
+    }
+}
+
+internal static class LambdaStatics
+{
+    public static void CreateAndSetWrappedHandlerMethod(IAgent agent, ITransaction transaction, object bootstrapper)
+    {
+        var bootstrapperType = bootstrapper.GetType();
+
+        var originalHandler = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(bootstrapperType, "_handler")(bootstrapper);
+
+        // Creates a _handler that will wait for the transaction to finish being transformed and harvested before allowing
+        // the lambda runtime to send a response back. This prevents a race condition where async continuations can run in different orders
+        // which sometimes causes the lambda runtime to return a response before the agent can generate a lambda payload.
+        Amazon.Lambda.RuntimeSupport.LambdaBootstrapHandler newHandler = async (request) =>
+        {
+            transaction = agent.CreateTransaction(
+            isWeb: false,
+            category: agent.Configuration.AwsLambdaApmModeEnabled ? "Function" : "Lambda",
+            transactionDisplayName: "TempLambdaName",
+            doNotTrackAsUnitOfWork: true);
+
+            var typedHandler = (Amazon.Lambda.RuntimeSupport.LambdaBootstrapHandler)originalHandler;
+            var result = await typedHandler(request);
+
+            transaction.End();
+
+            return result;
+        };
+
+        VisibilityBypasser.Instance.GenerateFieldWriteAccessor<Amazon.Lambda.RuntimeSupport.LambdaBootstrapHandler>(bootstrapperType, "_handler")(bootstrapper, newHandler);
+    }
+}
