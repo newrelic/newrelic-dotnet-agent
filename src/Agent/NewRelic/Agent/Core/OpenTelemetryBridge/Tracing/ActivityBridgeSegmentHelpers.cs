@@ -611,10 +611,7 @@ public static class ActivityBridgeSegmentHelpers
 
         var llmTags = ExtractLlmTags(tags);
 
-        // TODO: this doesn't seem to be required - the AI Responses UI can still filter segments to "only AI" without naming a segment like this.
-        //// set the segment name to match the LLM spec requirements
-        //var spanName = $"Llm/completion/{llmTags.ProviderName}/{operation}";
-        //segment.SetName(spanName);
+        // we do not force the segment naming as specified in the LLM spec - we let native otel segment names pass through
 
         RecordLlmMetrics(agent, llmTags.ProviderName, llmTags.LibraryVersion, llmTags.EffectiveModel);
 
