@@ -2132,6 +2132,11 @@ public class DefaultConfiguration : IConfiguration
     public bool EnableAspNetCore6PlusBrowserInjection =>
         _enableAspNetCore6PlusBrowserInjection ??= EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("EnableAspNetCore6PlusBrowserInjection", true), "NEW_RELIC_ENABLE_ASPNETCORE6PLUS_BROWSER_INJECTION");
 
+    private bool? _instrumentAspNetCore6PlusWebsockets;
+    public bool InstrumentAspNetCore6PlusWebsockets =>
+        _instrumentAspNetCore6PlusWebsockets ??= EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("InstrumentAspNetCore6PlusWebsockets", false), "NEW_RELIC_INSTRUMENT_ASPNETCORE6PLUS_WEBSOCKETS");
+
+
     private TimeSpan? _metricsHarvestCycleOverride = null;
     public TimeSpan MetricsHarvestCycle
     {
