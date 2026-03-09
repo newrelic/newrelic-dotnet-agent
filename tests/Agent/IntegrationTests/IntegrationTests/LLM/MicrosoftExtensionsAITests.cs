@@ -17,8 +17,6 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
 
     private readonly string _prompt = "In one sentence, what is a large-language model?";
 
-    private readonly string _actvitySourceName = "Experimental.Microsoft.Extensions.AI";
-
     // Attributes expected through the OTEL bridge path (ProcessLLMChatClientTags).
     // This is a subset of the OpenAI wrapper attributes because the OTEL path has no
     // access to response headers, organization, or request_id.
@@ -60,7 +58,6 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
                     .EnableAiMonitoring()
                     .EnableOpenTelemetry(true)
                     .EnableOpenTelemetryTracing(true)
-                    .IncludeActivitySource(_actvitySourceName)
                     .ConfigureFasterTransactionTracesHarvestCycle(10)
                     .ConfigureFasterMetricsHarvestCycle(12)
                     .SetLogLevel("finest");
