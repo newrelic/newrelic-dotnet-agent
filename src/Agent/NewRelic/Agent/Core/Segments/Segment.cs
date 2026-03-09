@@ -97,6 +97,9 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
 {
     private static ConfigurationSubscriber _configurationSubscriber = new ConfigurationSubscriber();
 
+    // Used to store _small_ amounts of data for use when creating segment data or other attributes.  This is not intended to be a general purpose storage mechanism and should not be used to store large objects or large amounts of data.
+    private Dictionary<string, object> _dataCache;
+
     public IAttributeDefinitions AttribDefs => _transactionSegmentState.AttribDefs;
     public string TypeName => MethodCallData.TypeName;
 
@@ -124,6 +127,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         Combinable = false;
         IsLeaf = false;
         IsAsync = methodCallData.IsAsync;
+        _dataCache = new Dictionary<string, object>();
     }
 
     /// <summary>
@@ -147,6 +151,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         Combinable = false;
         IsLeaf = true;
         IsAsync = methodCallData.IsAsync;
+        _dataCache = new Dictionary<string, object>();
     }
 
     /// <summary>
@@ -178,6 +183,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
 
         SpanId = segment.SpanId;
         IsAsync = segment.IsAsync;
+        _dataCache = new Dictionary<string, object>();
     }
 
     public bool IsDone
@@ -281,6 +287,11 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     public void SetActivity(INewRelicActivity activity)
     {
         _activity = activity;
+    }
+
+    public INewRelicActivity GetActivity()
+    {
+        return _activity;
     }
 
     public void MakeCombinable()
@@ -653,6 +664,31 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         return EnumNameCache<SpanCategory>.GetName(Data.SpanCategory);
     }
 
+    // See ISegmentExperimental for details on this method.
+    public void AddCacheItem(string key, object value)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return;
+        }
+
+        _dataCache[key] = value;
+    }
+
+    /// <summary>
+    /// Gets an item from the segment's cache with the specified key.  Returns null if the key is not found or if the key is null or whitespace.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    internal object GetCacheItem(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key) || !_dataCache.TryGetValue(key, out var item))
+        {
+            return null;
+        }
+
+        return item;
+    }
 }
 
 // TODO: Rename this experimental to something else, or find a better way to solve this problem.

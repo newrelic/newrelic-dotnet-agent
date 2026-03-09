@@ -58,6 +58,10 @@ public static class ActivityBridgeSegmentHelpers
                 {
                     ProcessRpcClientTags(segment, agent, errorService, tags, activityLogPrefix, rpcSystem);
                 }
+                else if (tags.TryGetTag<string>(["grpc.method"], out _)) // Its gRPC - likely grpc-dotnet
+                {
+                    ProcessRpcClientTags(segment, agent, errorService, tags, activityLogPrefix, "grpc");
+                }
                 else if (tags.TryGetAndRemoveTag<string>(["http.request.method", "http.method"], out var method)) // it's an HTTP call
                 {
                     ProcessClientExternalTags(segment, agent, tags, activityLogPrefix, method);
@@ -136,25 +140,34 @@ public static class ActivityBridgeSegmentHelpers
 
     private static void ProcessRpcClientTags(ISegment segment, IAgent agent, IErrorService errorService, Dictionary<string, object> tags, string activityLogPrefix, string rpcSystem)
     {
-        tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code"], out var statusCode);
+        tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code", "grpc.status_code"], out var statusCode);
 
         tags.TryGetAndRemoveTag<string>(["rpc.method"], out var method);
-        tags.TryGetAndRemoveTag<string>(["rpc.service"], out var service);
+        tags.TryGetAndRemoveTag<string>(["rpc.service"], out var service); // deprecated attribute, rpc.method includes this information in the format /service/method, but some instrumentation may still use this tag so we'll look for it as a fallback
         tags.TryGetAndRemoveTag<string>(["grpc.method"], out var grpcMethod);
+        var cleanGrpcMethod = grpcMethod?.TrimStart('/'); // per spec, we need to strip leading slashes.
 
         tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address"], out var host);
-        tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
 
-        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            host = ((Segment)segment).GetCacheItem("server.address") as string;
+        }
+
+        tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
+        port ??= ((Segment)segment).GetCacheItem("server.port") as int?;
+
+        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, cleanGrpcMethod);
         Uri uri = new Uri(path);
-        var externalSegmentData = new ExternalSegmentData(uri, method, componentOverride: rpcSystem);
+        var externalSegmentData = new ExternalGrpcSegmentData(uri: uri, method: method ?? cleanGrpcMethod, componentOverride: rpcSystem);
 
         if (statusCode.HasValue)
-            externalSegmentData.SetHttpStatus(statusCode.Value);
+            externalSegmentData.SetGrpcStatus(statusCode.Value);
 
-        Log.Finest($"Created ExternalSegmentData for {activityLogPrefix}.");
+        Log.Finest($"{activityLogPrefix} Created ExternalGrpcSegmentData.");
 
-        segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
+        segment.GetExperimentalApi().SetSegmentData(externalSegmentData)
+            .MakeLeaf();
 
         // per spec, a non-zero status code must be recorded as an exception.
         // TODO: This behavior is supposed to be configurable by the customer but currently is not
@@ -203,7 +216,7 @@ public static class ActivityBridgeSegmentHelpers
     {
         // construct the path according to gRPC spec
         // if service is missing, grpcMethod is the full path
-        return !string.IsNullOrEmpty(service) ? $"grpc://{host}:{port}/{service}/{method}" : $"grpc://{host}:{port}{grpcMethod}";
+        return !string.IsNullOrEmpty(service) ? $"grpc://{host}:{port}/{service}/{method}" : $"grpc://{host}:{port}/{grpcMethod}";
     }
 
     private static void RecordGrpcException(ISegment segment, IAgent agent, IErrorService errorService, int statusCode, string path, string activityLogPrefix)
