@@ -70,7 +70,7 @@ public static class ActivityBridgeSegmentHelpers
                     // since the Experimental.Microsoft.Extensions.AI activity source is opt-in, we don't need to worry about checking AiMonitoringRecordContentEnabled if AI monitoring isn't enabled.
                     if (agent.Configuration.AiMonitoringEnabled) // only instrument if AI monitoring is enabled
                     {
-                        ProcessLLMChatClientTags(segment, agent, activity, activityLogPrefix, tags, aiOp);
+                        ProcessLlmChatClientTags(segment, agent, activity, activityLogPrefix, tags, aiOp);
                     }
                 }
                 else
@@ -605,7 +605,7 @@ public static class ActivityBridgeSegmentHelpers
 
     #region LLM Chat
 
-    private static void ProcessLLMChatClientTags(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, string operation)
+    private static void ProcessLlmChatClientTags(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, string operation)
     {
         Log.Finest($"{activityLogPrefix} for Microsoft.Extensions.AI");
 
