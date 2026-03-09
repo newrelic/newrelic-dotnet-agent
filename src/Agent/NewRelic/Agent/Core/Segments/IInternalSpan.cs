@@ -12,4 +12,6 @@ public interface IInternalSpan : ISegment, ISegmentExperimental, ISpan
     ErrorData ErrorData { get; set; }
 
     string TryGetActivityTraceId();
+
+    string GetTransactionGuid();
 }
