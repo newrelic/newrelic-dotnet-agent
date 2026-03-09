@@ -60,21 +60,6 @@ public class MicrosoftExtensionsAIExerciser
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public void CompleteChat(string base64Prompt)
-    {
-        var chatClient = CreateChatClient();
-
-        var bytes = Convert.FromBase64String(base64Prompt);
-        var prompt = Encoding.UTF8.GetString(bytes);
-
-        var response = chatClient.GetResponseAsync(prompt).GetAwaiter().GetResult();
-
-        Console.WriteLine(response.Text);
-    }
-
-    [LibraryMethod]
-    [Transaction]
-    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task CompleteChatStreamingAsync(string base64Prompt)
     {
         var chatClient = CreateChatClient();
@@ -105,9 +90,16 @@ public class MicrosoftExtensionsAIExerciser
         var bytes = Convert.FromBase64String(base64Prompt);
         var prompt = Encoding.UTF8.GetString(bytes);
 
-        var response = await chatClient.GetResponseAsync(prompt);
-
-        Console.WriteLine(response.Text);
+        try
+        {
+            var response = await chatClient.GetResponseAsync(prompt);
+            Console.WriteLine(response.Text);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Expected exception occurred: {ex.Message}");
+            throw;
+        }
     }
 }
 

@@ -710,13 +710,29 @@ public static class ActivityBridgeSegmentHelpers
 
     private static void HandleLlmSuccess(ISegment segment, IAgent agent, string activityLogPrefix, LlmTagValues llmTags)
     {
+        List<InputMessage> inputMessages;
+        List<OutputMessage> outputMessages;
         try
         {
-            var inputMessages = JsonConvert.DeserializeObject<List<InputMessage>>(llmTags.InputMessagesJson);
-            var outputMessages = JsonConvert.DeserializeObject<List<OutputMessage>>(llmTags.OutputMessagesJson);
+            inputMessages = JsonConvert.DeserializeObject<List<InputMessage>>(llmTags.InputMessagesJson);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"{activityLogPrefix}: Failed to deserialize gen_ai.input.messages: {ex.Message}");
+            return;
+        }
+        try
+        {
+            outputMessages = JsonConvert.DeserializeObject<List<OutputMessage>>(llmTags.OutputMessagesJson);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"{activityLogPrefix}: Failed to deserialize gen_ai.output.messages: {ex.Message}");
+            return;
+        }
 
-            // Find the last user message with text content
-            string promptContent = null;
+        // Find the last user message with text content
+        string promptContent = null;
             string promptRole = null;
 
             for (int i = inputMessages.Count - 1; i >= 0; i--)
@@ -822,11 +838,6 @@ public static class ActivityBridgeSegmentHelpers
                         tokenCount: llmTags.OutputTokenCount);
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"Failed to deserialize JSON messages for {activityLogPrefix}: {ex.Message}");
-        }
     }
 
     private static void RecordLlmMetrics(IAgent agent, string vendorName, string version, string model)

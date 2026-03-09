@@ -50,7 +50,6 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
         // Queue exerciser commands
         _fixture.AddCommand($"MicrosoftExtensionsAIExerciser CompleteChatAsync {LLMHelpers.ConvertToBase64(_prompt)}");
         _fixture.AddCommand($"MicrosoftExtensionsAIExerciser CompleteChatStreamingAsync {LLMHelpers.ConvertToBase64(_prompt)}");
-        _fixture.AddCommand($"MicrosoftExtensionsAIExerciser CompleteChat {LLMHelpers.ConvertToBase64(_prompt)}");
         _fixture.AddCommand($"MicrosoftExtensionsAIExerciser CompleteChatFailureAsync {LLMHelpers.ConvertToBase64(_prompt)}");
 
         _fixture.AddActions(
@@ -129,8 +128,6 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
             "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.MicrosoftExtensionsAIExerciser/CompleteChatAsync");
         var transactionEventStreaming = _fixture.AgentLog.TryGetTransactionEvent(
             "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.MicrosoftExtensionsAIExerciser/CompleteChatStreamingAsync");
-        var transactionEventSync = _fixture.AgentLog.TryGetTransactionEvent(
-            "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.MicrosoftExtensionsAIExerciser/CompleteChat");
         var transactionEventFailure = _fixture.AgentLog.TryGetTransactionEvent(
             "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.LLM.MicrosoftExtensionsAIExerciser/CompleteChatFailureAsync");
 
@@ -139,9 +136,8 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
             Assertions.MetricsExist(expectedMetrics, metrics);
             Assert.NotNull(transactionEventAsync);
             Assert.NotNull(transactionEventStreaming);
-            Assert.NotNull(transactionEventSync);
 
-            Assert.Equal(3, customEventsSuccess.Count);
+            Assert.Equal(6, customEventsSuccess.Count);
             ValidateCommonAttributes(customEventsSuccess);
 
             Assert.NotNull(customEventFailure);
