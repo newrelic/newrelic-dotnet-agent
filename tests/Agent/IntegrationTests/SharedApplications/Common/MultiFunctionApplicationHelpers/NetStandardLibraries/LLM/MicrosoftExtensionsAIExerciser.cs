@@ -13,41 +13,63 @@ using Microsoft.Extensions.AI;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
+using OpenAI;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM;
 
 [Library]
 public class MicrosoftExtensionsAIExerciser
 {
-    private const string Model = "integration-test-gpt-4o-mini"; // the only model available for testing
+    private const string AzureModel = "integration-test-gpt-4o-mini"; // the only model available for Azure testing
+    private const string OpenAIModel = "gpt-4o";
     private const string ActivitySource = "Experimental.Microsoft.Extensions.AI";
 
-    private IChatClient CreateChatClient(bool useBogusKey = false)
+    private IChatClient CreateAzureChatClient(bool useBogusKey = false)
     {
         var endpoint = new Uri(AzureOpenAiConfiguration.Endpoint);
         var apiKey = useBogusKey ? AzureOpenAiConfiguration.ApiKey + "BOGUS" : AzureOpenAiConfiguration.ApiKey;
         var credentials = new ApiKeyCredential(apiKey);
 
         var azureClient = new AzureOpenAIClient(endpoint, credentials);
-        var openAIChatClient = azureClient.GetChatClient(Model);
+        var chatClient = azureClient.GetChatClient(AzureModel);
 
-        // Wrap the OpenAI ChatClient with MEAI and enable OpenTelemetry instrumentation
-        IChatClient chatClient = new ChatClientBuilder(openAIChatClient.AsIChatClient())
+        return WrapWithOpenTelemetry(chatClient);
+    }
+
+    private IChatClient CreateOpenAIChatClient(bool useBogusKey = false)
+    {
+        var apiKey = useBogusKey ? OpenAIConfiguration.ApiKey + "BOGUS" : OpenAIConfiguration.ApiKey;
+        var credentials = new ApiKeyCredential(apiKey);
+
+        var openAIClient = new OpenAIClient(credentials);
+        var chatClient = openAIClient.GetChatClient(OpenAIModel);
+
+        return WrapWithOpenTelemetry(chatClient);
+    }
+
+    private IChatClient WrapWithOpenTelemetry(OpenAI.Chat.ChatClient chatClient)
+    {
+        return new ChatClientBuilder(chatClient.AsIChatClient())
             .UseOpenTelemetry(sourceName: ActivitySource, configure: options =>
             {
                 options.EnableSensitiveData = true; // this is necessary to see all the data we need to build our LLM events
             })
             .Build();
+    }
 
-        return chatClient;
+    private IChatClient CreateChatClient(string provider, bool useBogusKey = false)
+    {
+        return provider.Equals("openai", StringComparison.OrdinalIgnoreCase)
+            ? CreateOpenAIChatClient(useBogusKey)
+            : CreateAzureChatClient(useBogusKey);
     }
 
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public async Task CompleteChatAsync(string base64Prompt)
+    public async Task CompleteChatAsync(string provider, string base64Prompt)
     {
-        var chatClient = CreateChatClient();
+        var chatClient = CreateChatClient(provider);
 
         var bytes = Convert.FromBase64String(base64Prompt);
         var prompt = Encoding.UTF8.GetString(bytes);
@@ -60,9 +82,9 @@ public class MicrosoftExtensionsAIExerciser
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public async Task CompleteChatStreamingAsync(string base64Prompt)
+    public async Task CompleteChatStreamingAsync(string provider, string base64Prompt)
     {
-        var chatClient = CreateChatClient();
+        var chatClient = CreateChatClient(provider);
 
         var bytes = Convert.FromBase64String(base64Prompt);
         var prompt = Encoding.UTF8.GetString(bytes);
@@ -83,9 +105,9 @@ public class MicrosoftExtensionsAIExerciser
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public async Task CompleteChatFailureAsync(string base64Prompt)
+    public async Task CompleteChatFailureAsync(string provider, string base64Prompt)
     {
-        var chatClient = CreateChatClient(useBogusKey: true);
+        var chatClient = CreateChatClient(provider, useBogusKey: true);
 
         var bytes = Convert.FromBase64String(base64Prompt);
         var prompt = Encoding.UTF8.GetString(bytes);

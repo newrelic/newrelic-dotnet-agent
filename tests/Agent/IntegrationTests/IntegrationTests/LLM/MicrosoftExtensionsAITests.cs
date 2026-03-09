@@ -17,6 +17,8 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
 
     private readonly string _prompt = "In one sentence, what is a large-language model?";
 
+    private readonly string _actvitySourceName = "Experimental.Microsoft.Extensions.AI";
+
     // Attributes expected through the OTEL bridge path (ProcessLLMChatClientTags).
     // This is a subset of the OpenAI wrapper attributes because the OTEL path has no
     // access to response headers, organization, or request_id.
@@ -39,16 +41,16 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
         {"token_count", LlmMessageTypes.LlmChatCompletionMessage},
     };
 
-    protected MicrosoftExtensionsAITestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected MicrosoftExtensionsAITestsBase(TFixture fixture, ITestOutputHelper output, string provider) : base(fixture)
     {
         _fixture = fixture;
         _fixture.SetTimeout(TimeSpan.FromMinutes(2));
         _fixture.TestLogger = output;
 
         // Queue exerciser commands
-        _fixture.AddCommand($"MicrosoftExtensionsAIExerciser CompleteChatAsync {LLMHelpers.ConvertToBase64(_prompt)}");
-        _fixture.AddCommand($"MicrosoftExtensionsAIExerciser CompleteChatStreamingAsync {LLMHelpers.ConvertToBase64(_prompt)}");
-        _fixture.AddCommand($"MicrosoftExtensionsAIExerciser CompleteChatFailureAsync {LLMHelpers.ConvertToBase64(_prompt)}");
+        _fixture.AddCommand($"MicrosoftExtensionsAIExerciser CompleteChatAsync {provider} {LLMHelpers.ConvertToBase64(_prompt)}");
+        _fixture.AddCommand($"MicrosoftExtensionsAIExerciser CompleteChatStreamingAsync {provider} {LLMHelpers.ConvertToBase64(_prompt)}");
+        _fixture.AddCommand($"MicrosoftExtensionsAIExerciser CompleteChatFailureAsync {provider} {LLMHelpers.ConvertToBase64(_prompt)}");
 
         _fixture.AddActions(
             setupConfiguration: () =>
@@ -58,6 +60,7 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
                     .EnableAiMonitoring()
                     .EnableOpenTelemetry(true)
                     .EnableOpenTelemetryTracing(true)
+                    .IncludeActivitySource(_actvitySourceName)
                     .ConfigureFasterTransactionTracesHarvestCycle(10)
                     .ConfigureFasterMetricsHarvestCycle(12)
                     .SetLogLevel("finest");
@@ -159,10 +162,18 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
 // CoreLatest only - MEAI packages require OpenAI >= 2.8.0 which is only
 // available in MFALatestPackages (net10.0). The net8.0 target has OpenAI 2.0.0
 // which is incompatible with Microsoft.Extensions.AI.OpenAI.
-public class MicrosoftExtensionsAITests_CoreLatest : MicrosoftExtensionsAITestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+public class MicrosoftExtensionsAI_AzureTests_CoreLatest : MicrosoftExtensionsAITestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
-    public MicrosoftExtensionsAITests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-        : base(fixture, output)
+    public MicrosoftExtensionsAI_AzureTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, "azure")
+    {
+    }
+}
+
+public class MicrosoftExtensionsAI_OpenAITests_CoreLatest : MicrosoftExtensionsAITestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public MicrosoftExtensionsAI_OpenAITests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, "openai")
     {
     }
 }
