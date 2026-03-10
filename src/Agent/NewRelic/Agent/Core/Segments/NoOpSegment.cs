@@ -5,7 +5,6 @@ using System;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Extensions.Api.Experimental;
 
 namespace NewRelic.Agent.Core.Segments;
 
@@ -84,15 +83,10 @@ public class NoOpSegment : ISegment, ISegmentExperimental, ISegmentDataState
         return string.Empty;
     }
 
-    public INewRelicActivity GetActivity()
-    {
-        return null;
-    }
-
-    public void AddCacheItem(string key, object value)
-    {
-        return;
-    }
-
     public TimeSpan DurationOrZero => TimeSpan.Zero;
+
+    public bool SetServerDetailsForGrpcActivity(Uri uri)
+    {
+        return false;
+    }
 }

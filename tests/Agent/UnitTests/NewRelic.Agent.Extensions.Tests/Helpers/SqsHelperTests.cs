@@ -8,7 +8,6 @@ using System.Linq;
 using Amazon.SQS.Model;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
-using NewRelic.Agent.Extensions.Api.Experimental;
 using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
@@ -288,17 +287,12 @@ namespace Agent.Extensions.Tests.Helpers
             throw new NotImplementedException();
         }
 
-        public INewRelicActivity GetActivity()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void AddCacheItem(string key, object value)
-        {
-            throw new NotImplementedException();
-        }
-
         public bool IsDone { get; }
+
+        public bool SetServerDetailsForGrpcActivity(Uri uri)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

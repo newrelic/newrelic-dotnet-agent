@@ -20,6 +20,8 @@ namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 public class ActivityBridge : IDisposable
 {
     public const string TemporarySegmentName = "temp segment name";
+    public const string NewRelicServerAddress = "nr.server.address";
+    public const string NewRelicServerPort = "nr.server.port";
 
     private IAgent _agent;
     private IErrorService _errorService;

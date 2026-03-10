@@ -59,21 +59,10 @@ public class SendAsync : IWrapper
 
         var transactionExperimental = transaction.GetExperimentalApi();
 
-        // Where we need to find the previous segment or activity and if it is a gRPC segment/activity, we need to set the server.address and server.port attributes on the segment/activity.
-        // After we do this, we need to no-op this so that we only create a single external segment.
-        // This is required for distributed tracing to work properly for gRPC requests.
-        // No segment has been created in this wrapper at this point, so this should be the parent.
-        var currentSegment = transaction.CurrentSegment as ISegmentExperimental;
-        if (currentSegment?.GetActivity()?.DisplayName == "Grpc.Net.Client.GrpcOut")
+        // grpc-dotnet currently doesn't provide the address and port values, so we pull them from here.
+        if (((ISegmentExperimental)transaction.CurrentSegment).SetServerDetailsForGrpcActivity(uri))
         {
-            // Using uri here since we ensure that it has both host and port information in TryGetAbsoluteUri;
-            currentSegment.AddCacheItem("server.address", uri.Host);
-            currentSegment.AddCacheItem("server.port", uri.Port);
-            if (agent.Logger.IsFinestEnabled)
-            {
-                agent.Logger.Finest("gRPC parent detected for HttpClient call, setting server address and port on parent segment and no-oping.");
-            }
-            
+            // We need to no-op this so that we only create a single external segment.
             return Delegates.NoOp;
         }
 

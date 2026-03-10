@@ -147,15 +147,8 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetAndRemoveTag<string>(["grpc.method"], out var grpcMethod);
         var cleanGrpcMethod = grpcMethod?.TrimStart('/'); // per spec, we need to strip leading slashes.
 
-        tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address"], out var host);
-
-        if (string.IsNullOrWhiteSpace(host))
-        {
-            host = ((Segment)segment).GetCacheItem("server.address") as string;
-        }
-
-        tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
-        port ??= ((Segment)segment).GetCacheItem("server.port") as int?;
+        tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address", ActivityBridge.NewRelicServerAddress], out var host);
+        tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port", ActivityBridge.NewRelicServerPort], out var port);
 
         var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, cleanGrpcMethod);
         Uri uri = new Uri(path);

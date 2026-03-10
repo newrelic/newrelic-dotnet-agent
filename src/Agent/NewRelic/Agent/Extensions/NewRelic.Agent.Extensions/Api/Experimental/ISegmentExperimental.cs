@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Extensions.Api.Experimental;
+using System;
 
 namespace NewRelic.Agent.Api.Experimental;
 
@@ -57,24 +57,5 @@ public interface ISegmentExperimental
     /// </summary>
     bool IsDone { get; }
 
-    /// <summary>
-    /// Returns the activity associated with the segment.
-    /// </summary>
-    /// <returns></returns>
-    INewRelicActivity GetActivity();
-
-    /// <summary>
-    /// Add object to the segment's data cache with the specified key.
-    /// This is intended for use in cases where you need to store some data during the execution of a segment that will be used when creating the segment data or attributes.
-    /// This should not be used as a general purpose storage mechanism and should not be used to store large objects or large amounts of data.
-    /// This will overwrite any existing value in the cache with the same key, so it should be used with unique keys to avoid collisions.
-    /// It is the caller's responsibility to manage the keys and ensure they are unique within the context of a segment.
-    ///
-    /// Notes:
-    /// Null keys are not allowed and will be ignored.  If a null key is passed to this method, the method will return without adding anything to the cache.
-    /// Null values are allowed and will be stored in the cache.  If a null value is added to the cache, it will overwrite any existing value with the same key, and a subsequent retrieval of that key from the cache will return null.
-    /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    void AddCacheItem(string key, object value);
+    bool SetServerDetailsForGrpcActivity(Uri uri);
 }
