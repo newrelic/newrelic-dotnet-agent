@@ -123,6 +123,8 @@ public class SegmentTests
         Assert.DoesNotThrow(() => segment.SetName("name"));
         Assert.That(segment.GetCategory(), Is.EqualTo(string.Empty));
         Assert.That(segment.DurationOrZero, Is.EqualTo(TimeSpan.Zero));
+        Assert.That(segment.TryGetTraceIdFromActivity(), Is.Null);
+        Assert.That(segment.SetServerDetailsForGrpcActivity(new Uri("http://localhost:5000")), Is.False);
     }
 
     [Test]
@@ -573,6 +575,7 @@ public class SegmentTests
         Assert.That(transactionGuid, Is.EqualTo("empty"));
     }
 
+    [TestCase(null, "localhost", 5000, false)]
     [TestCase("Not.Grpc.Nope", "localhost", 5000, false)]
     [TestCase("Grpc.Net.Client.GrpcOut", "localhost", 5000, true)]
     [TestCase("Grpc.Net.Client.GrpcOut", "localhost", null, true)]
@@ -582,8 +585,8 @@ public class SegmentTests
         // Arrange
         var uri = new Uri($"https://{host}:{port}");
         var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1));
-        var activity = new Activity("test");
-        activity.DisplayName = displayName;
+        Activity activity = string.IsNullOrWhiteSpace(displayName) ? null : new Activity("test");
+        activity?.DisplayName = displayName;
         var nrActivity = new RuntimeNewRelicActivity(activity);
         segment.SetActivity(nrActivity);
 

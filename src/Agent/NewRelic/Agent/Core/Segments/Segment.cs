@@ -665,9 +665,9 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
             return false;
         }
 
-        _activity?.AddTag(ActivityBridge.NewRelicServerAddress, uri.Host);
-        _activity?.AddTag(ActivityBridge.NewRelicServerPort, uri.Port);
-        if (Log.IsFinestEnabled) Log.Finest("gRPC parent detected for HttpClient call, setting server address and port on parent activity and no-oping.");
+        _activity.AddTag(ActivityBridge.NewRelicServerAddress, uri.Host);
+        _activity.AddTag(ActivityBridge.NewRelicServerPort, uri.Port);
+        if (Log.IsFinestEnabled) Log.Finest($"Trx {GetTransactionGuid()}: gRPC parent detected for HttpClient call, setting server address and port on parent activity and no-oping.");
 
         return true;
     }

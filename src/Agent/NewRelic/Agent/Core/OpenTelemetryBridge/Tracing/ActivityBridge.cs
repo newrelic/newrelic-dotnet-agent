@@ -217,8 +217,13 @@ public class ActivityBridge : IDisposable
 
         var logFinestMethod = typeof(Log).GetMethod("Finest", new[] { typeof(string), typeof(object[]) });
 
-        var messageFormat = Expression.Constant("Using current traceId {0}");
-        var messageArgs = Expression.NewArrayInit(typeof(object), Expression.Convert(currentTraceIdVariable, typeof(object)));
+        var callGetCurrentTransactionGuidMethod = typeof(ActivityBridge).GetMethod(nameof(GetCurrentTransactionGuid), BindingFlags.NonPublic | BindingFlags.Instance);
+        var transactionGuidExpression = Expression.Call(Expression.Constant(this), callGetCurrentTransactionGuidMethod);
+
+        var messageFormat = Expression.Constant("Trx {0}: Using current traceId {1}");
+        var messageArgs = Expression.NewArrayInit(typeof(object),
+            Expression.Convert(transactionGuidExpression, typeof(object)),
+            Expression.Convert(currentTraceIdVariable, typeof(object)));
         var callLogFinestExpression = Expression.Call(logFinestMethod, messageFormat, messageArgs);
 
         var ifBlockExpression = Expression.Block(
@@ -231,8 +236,10 @@ public class ActivityBridge : IDisposable
         var toStringMethod = activityTraceIdType.GetMethod("ToString", Type.EmptyTypes);
         var newTraceIdAsString = Expression.Call(newTraceIdVariable, toStringMethod);
 
-        var message2Format = Expression.Constant("Generated new traceId {0}");
-        var message2Args = Expression.NewArrayInit(typeof(object), Expression.Convert(newTraceIdAsString, typeof(object)));
+        var message2Format = Expression.Constant("Trx {0}: Generated new traceId {1}");
+        var message2Args = Expression.NewArrayInit(typeof(object),
+            Expression.Convert(transactionGuidExpression, typeof(object)),
+            Expression.Convert(newTraceIdAsString, typeof(object)));
         var callLogFinestExpression2 = Expression.Call(logFinestMethod, message2Format, message2Args);
 
         var elseBlockExpression = Expression.Block(
@@ -379,6 +386,16 @@ public class ActivityBridge : IDisposable
             return hybridAgentTransaction.TraceId;
         }
         return null;
+    }
+
+    private string GetCurrentTransactionGuid()
+    {
+        var transaction = _agent.CurrentTransaction;
+        if (transaction is IInternalTransaction internalTransaction)
+        {
+            return internalTransaction.Guid;
+        }
+        return "empty";
     }
 
     private bool ShouldListenToActivitySource(object activitySource)
