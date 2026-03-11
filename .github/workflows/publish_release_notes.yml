@@ -44,13 +44,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Save for future .NET preview builds
-      # - name: Setup .NET 10 Preview
-      #   uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
-      #   with:
-      #     dotnet-version: '10.0.x'
-      #     dotnet-quality: 'ga'
-            
+      - name: Install latest .NET 10 SDK
+        uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+
       - name: Download Deploy Artifacts
         uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
