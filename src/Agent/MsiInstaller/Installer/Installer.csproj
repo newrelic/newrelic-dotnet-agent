@@ -31,7 +31,7 @@
     <PropertyGroup>
       <SignToolPath>%(SignToolCandidates.Identity)</SignToolPath>
     </PropertyGroup>
-    <Exec Command="&quot;$(SignToolPath)&quot; sign /d &quot;New Relic .NET Agent&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;" StandardOutputImportance="high" />
+    <Exec Command="&quot;$(SignToolPath)&quot; sign /fd SHA256 /d &quot;New Relic .NET Agent&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;" StandardOutputImportance="high" />
     <ReadFileVersionFromDll FilePath="$(SolutionDir)..\..\_build\AnyCPU-$(Configuration)\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll">
       <Output PropertyName="FileVersionString" TaskParameter="FileVersionString" />
     </ReadFileVersionFromDll>
