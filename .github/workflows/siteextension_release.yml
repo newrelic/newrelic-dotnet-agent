@@ -34,6 +34,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Cache NuGet packages
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
       - name: Install latest .NET 10 SDK
         uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
         with:
@@ -60,5 +67,5 @@ jobs:
         with:
           name: deploy-artifacts
           path: |
-            ${{ github.workspace }}
+            ${{ github.workspace }}\build\BuildArtifacts\AzureSiteExtension\
           if-no-files-found: error
