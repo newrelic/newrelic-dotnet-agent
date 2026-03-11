@@ -620,6 +620,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("agent.enable_asp_net_core_6plus_browser_injection")]
     public bool EnableAspNetCore6PlusBrowserInjection => _configuration.EnableAspNetCore6PlusBrowserInjection;
 
+    [JsonProperty("agent.instrument_asp_net_core_6plus_websockets")]
+    public bool InstrumentAspNetCore6PlusWebsockets => _configuration.InstrumentAspNetCore6PlusWebsockets;
+
     [JsonProperty("agent.exclude_new_relic_header")]
     public bool ExcludeNewrelicHeader => _configuration.ExcludeNewrelicHeader;
 
