@@ -66,7 +66,7 @@ jobs:
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
-    runs-on: windows-2022
+    runs-on: windows-2025
     needs:
       - check-modified-files
       - shellcheck
@@ -173,7 +173,7 @@ jobs:
   build-integration-tests:
     needs: build-fullagent-msi
     name: Build IntegrationTests
-    runs-on: windows-2022
+    runs-on: windows-2025
 
     env:
       integration_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
@@ -222,7 +222,7 @@ jobs:
   build-unbounded-tests:
     needs: build-fullagent-msi
     name: Build UnboundedIntegrationTests
-    runs-on: windows-2022
+    runs-on: windows-2025
 
     env:
       unbounded_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\UnboundedIntegrationTests.sln
@@ -267,7 +267,7 @@ jobs:
   run-integration-tests:
     needs: [build-integration-tests]
     name: Run IntegrationTests
-    runs-on: windows-2022
+    runs-on: windows-2025
     strategy:
       matrix:
         namespace: [ 
@@ -525,7 +525,7 @@ jobs:
   run-unbounded-tests:
     needs: [build-unbounded-tests]
     name: Run Unbounded Tests
-    runs-on: windows-2022
+    runs-on: windows-2025
     strategy:
       matrix:
         namespace:
@@ -841,7 +841,7 @@ jobs:
   run-artifactbuilder:
     needs: [create-package-rpm, create-package-deb]
     name: Run ArtifactBuilder
-    runs-on: windows-2022
+    runs-on: windows-2025
 
     steps:
       # Save for future .NET preview builds
