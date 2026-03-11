@@ -48,11 +48,12 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Setup .NET 10 Preview
-      uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
-      with:
-        dotnet-version: '10.0.x'
-        dotnet-quality: 'ga'
+    # Save for future .NET preview builds
+    # - name: Setup .NET 10 Preview
+    #   uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
+    #   with:
+    #     dotnet-version: '10.0.x'
+    #     dotnet-quality: 'ga'
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
