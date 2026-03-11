@@ -265,7 +265,7 @@ jobs:
       ]
     if: ${{ inputs.deploy }}
     name: Package and Deploy Profiler NuGet
-    runs-on: windows-2025
+    runs-on: windows-2022
 
     env:
       nuget_source: https://www.nuget.org
