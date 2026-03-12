@@ -44,14 +44,33 @@ Look for any failing jobs, especially in:
 - **Unbounded integration test** jobs (`Run UnboundedIntegrationTests (*)`)
 - **Container test** jobs (`Run Linux Container Tests (*)`)
 
-If there are **any failing CI jobs**, report them prominently BEFORE proceeding:
+If there are **any failing CI jobs**, report them prominently:
 
 > **CI FAILURES:** The following jobs are failing on the Dotty PR:
 > - {job name} — [link]
 >
-> An all-passing CI run is required to confirm the updated libraries don't break tests. Investigate whether the failures are related to the package updates before updating documentation.
+> An all-passing CI run is required to confirm the updated libraries don't break tests.
 
-Ask the user whether to proceed despite the failures or wait for a green build.
+Then offer to diagnose the failures:
+
+> Would you like me to analyze the test failures to determine if they're caused by the Dotty package updates?
+
+**If the user declines:** Ask whether to proceed with docs updates (excluding packages related to the failing tests) or wait for a green build.
+
+**If the user accepts:** Perform a detailed diagnosis:
+
+1. Fetch the failing job's logs:
+   ```
+   gh api repos/newrelic/newrelic-dotnet-agent/actions/jobs/<job_id>/logs
+   ```
+2. Search the logs for error messages, exceptions, and stack traces.
+3. Correlate failures with specific package updates from Step 2 — check whether the error references types, assemblies, or versions from updated packages.
+4. Check for **transitive dependency conflicts** — a common pattern is Package A being updated to a version that's incompatible with Package B (e.g., `OpenAI` 2.9.0 removing a type that `Azure.AI.OpenAI` depends on). Compare the dependency chains of updated packages against their co-dependencies in `MFALatestPackages.csproj`.
+5. Present findings:
+   - Which test(s) failed and the specific error
+   - Whether the failure is caused by a Dotty package update (and which one)
+   - Recommended remediation (e.g., revert the specific package, pin a version, or wait for an upstream fix)
+   - Which docs updates are safe to proceed with and which should be held
 
 ## Step 4: Flag major version bumps
 
