@@ -51,17 +51,19 @@ If there are **any failing CI jobs**, report them prominently:
 >
 > An all-passing CI run is required to confirm the updated libraries don't break tests.
 
-Then ask the user how to proceed using `AskUserQuestion` with three options:
+Then loop through **each failing job individually**, asking the user how to proceed using `AskUserQuestion` with three options:
 
-1. **Analyze failures** — Diagnose whether the failures are caused by the Dotty package updates
-2. **Skip analysis** — Proceed with docs updates, excluding packages related to the failing tests
+> **Failing job: {job name}** — [link]
+
+1. **Analyze** — Diagnose whether this failure is caused by the Dotty package updates
+2. **Skip** — Skip this failure and move on to the next one
 3. **Stop** — Stop the skill and wait for a green build before retrying
 
-**If the user chooses "Stop":** End the skill run.
+**If the user chooses "Stop":** End the skill run immediately.
 
-**If the user chooses "Skip analysis":** Continue to Step 4, excluding any packages that could be related to the failing test jobs from the docs updates.
+**If the user chooses "Skip":** Record this job as unanalyzed, exclude any packages that could be related to it from docs updates, and move to the next failing job.
 
-**If the user chooses "Analyze failures":** Perform a detailed diagnosis:
+**If the user chooses "Analyze":** Perform a detailed diagnosis of that job:
 
 1. Fetch the failing job's logs:
    ```
@@ -75,6 +77,10 @@ Then ask the user how to proceed using `AskUserQuestion` with three options:
    - Whether the failure is caused by a Dotty package update (and which one)
    - Recommended remediation (e.g., revert the specific package, pin a version, or wait for an upstream fix)
    - Which docs updates are safe to proceed with and which should be held
+
+Then move to the next failing job.
+
+After processing all failing jobs, summarize which packages are safe to update in docs and which should be excluded, then continue to Step 4.
 
 ## Step 4: Flag major version bumps
 
