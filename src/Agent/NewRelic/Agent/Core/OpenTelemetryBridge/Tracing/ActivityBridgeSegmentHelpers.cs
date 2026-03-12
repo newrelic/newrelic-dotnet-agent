@@ -607,7 +607,8 @@ public static class ActivityBridgeSegmentHelpers
 
     private static void ProcessLlmChatClientTags(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, string operation)
     {
-        Log.Finest($"{activityLogPrefix} for Microsoft.Extensions.AI");
+        string scopeName = (string)activity.Source?.Name ?? "unknown";
+        Log.Finest($"{activityLogPrefix} LLM chat client activity from {scopeName}");
 
         var llmTags = ExtractLlmTags(tags);
 
@@ -707,11 +708,11 @@ public static class ActivityBridgeSegmentHelpers
 
     private static void HandleLlmSuccess(ISegment segment, IAgent agent, string activityLogPrefix, LlmTagValues llmTags)
     {
-        List<InputMessage> inputMessages;
-        List<OutputMessage> outputMessages;
+        List<LlmInputMessage> inputMessages;
+        List<LlmOutputMessage> outputMessages;
         try
         {
-            inputMessages = JsonConvert.DeserializeObject<List<InputMessage>>(llmTags.InputMessagesJson);
+            inputMessages = JsonConvert.DeserializeObject<List<LlmInputMessage>>(llmTags.InputMessagesJson);
         }
         catch (Exception ex)
         {
@@ -720,7 +721,7 @@ public static class ActivityBridgeSegmentHelpers
         }
         try
         {
-            outputMessages = JsonConvert.DeserializeObject<List<OutputMessage>>(llmTags.OutputMessagesJson);
+            outputMessages = JsonConvert.DeserializeObject<List<LlmOutputMessage>>(llmTags.OutputMessagesJson);
         }
         catch (Exception ex)
         {
@@ -1025,21 +1026,22 @@ public enum GrpcStatusCodes
 }
 
 
-public class OutputMessage
+public class LlmOutputMessage
 {
     public string Role { get; set; }
-    public Part[] Parts { get; set; }
+    public LlmMessagePart[] Parts { get; set; }
 
     [JsonProperty("finish_reason")]
     public string FinishReason { get; set; }
 }
-public class InputMessage
+
+public class LlmInputMessage
 {
     public string Role { get; set; }
-    public Part[] Parts { get; set; }
+    public LlmMessagePart[] Parts { get; set; }
 }
 
-public class Part
+public class LlmMessagePart
 {
     public string Type { get; set; }
     public object Content { get; set; }
