@@ -219,3 +219,10 @@ Add a comment on the original Dotty PR in the .NET agent repo linking to the new
 ```
 gh pr comment <dotty-pr-number> --repo newrelic/newrelic-dotnet-agent --body "Compatibility docs update PR created: <docs-pr-url>"
 ```
+
+## Step 10: Clean up
+
+Remove the temporary docs repo clone:
+```
+rm -rf "$DOCS_REPO"
+```
