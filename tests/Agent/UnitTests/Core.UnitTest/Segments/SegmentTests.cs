@@ -577,9 +577,9 @@ public class SegmentTests
 
     [TestCase(null, "localhost", 5000, false)]
     [TestCase("Not.Grpc.Nope", "localhost", 5000, false)]
-    [TestCase("Grpc.Net.Client.GrpcOut", "localhost", 5000, true)]
-    [TestCase("Grpc.Net.Client.GrpcOut", "localhost", null, true)]
-    [TestCase("Grpc.Net.Client.GrpcOut", "localhost", 0, true)]
+    [TestCase(ActivityBridge.GrpcDotnetActivitySourceName, "localhost", 5000, true)]
+    [TestCase(ActivityBridge.GrpcDotnetActivitySourceName, "localhost", null, true)]
+    [TestCase(ActivityBridge.GrpcDotnetActivitySourceName, "localhost", 0, true)]
     public void SetServerDetailsForGrpcActivity_Tests(string displayName, string host, int? port, bool expectedResult)
     {
         // Arrange

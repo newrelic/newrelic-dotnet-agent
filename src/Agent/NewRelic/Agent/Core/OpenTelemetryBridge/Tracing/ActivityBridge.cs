@@ -23,6 +23,9 @@ public class ActivityBridge : IDisposable
     public const string NewRelicServerAddress = "nr.server.address";
     public const string NewRelicServerPort = "nr.server.port";
 
+    // grpc-dotnet uses the "Grpc.Net.Client.GrpcOut" activity source name for outgoing gRPC client calls.
+    public const string GrpcDotnetActivitySourceName = "Grpc.Net.Client.GrpcOut";
+
     private IAgent _agent;
     private IErrorService _errorService;
 

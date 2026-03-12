@@ -28,8 +28,6 @@ public abstract class GrpcTestsBase<TFixture> : NewRelicIntegrationTest<TFixture
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
-        
-        _fixture.KeepWorkingDirectory = true;
 
         _fixture.AddActions(
             setupConfiguration: () =>

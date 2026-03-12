@@ -449,7 +449,6 @@ public class AttributeDefinitions : IAttributeDefinitions
             .AppliesTo(AttributeDestinations.ErrorTrace)
             .AppliesTo(AttributeDestinations.TransactionEvent)
             .AppliesTo(AttributeDestinations.SpanEvent)
-            .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.TransactionTrace)
             .WithConvert(x => x.ToString())
             .Build(_attribFilter));
@@ -460,7 +459,6 @@ public class AttributeDefinitions : IAttributeDefinitions
             .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.ErrorTrace)
             .AppliesTo(AttributeDestinations.TransactionEvent)
-            .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.SpanEvent)
             .AppliesTo(AttributeDestinations.TransactionTrace)
             .WithConvert(x => x.GetValueOrDefault())                //This is ok b/c we check for null input earlier
@@ -472,7 +470,6 @@ public class AttributeDefinitions : IAttributeDefinitions
             .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.ErrorTrace)
             .AppliesTo(AttributeDestinations.TransactionEvent)
-            .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.SpanEvent)
             .AppliesTo(AttributeDestinations.TransactionTrace)
             .Build(_attribFilter);
@@ -483,7 +480,6 @@ public class AttributeDefinitions : IAttributeDefinitions
             .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.ErrorTrace)
             .AppliesTo(AttributeDestinations.TransactionEvent)
-            .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.SpanEvent)
             .AppliesTo(AttributeDestinations.TransactionTrace)
             .WithConvert(x => x.GetValueOrDefault())                //This is ok b/c we check for null input earlier

@@ -23,8 +23,6 @@ public class ExternalSegmentData(Uri uri, string method, string library = "Strea
     private string _httpStatusText;
     private readonly string _componentOverride = componentOverride;
 
-    public override SpanCategory SpanCategory => SpanCategory.Http;
-
     public Uri Uri { get; } = uri;
     public string Method { get; } = method;
     

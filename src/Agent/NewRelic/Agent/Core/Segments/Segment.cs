@@ -660,7 +660,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     /// <returns>True if the server details were set successfully, false otherwise.</returns>
     public bool SetServerDetailsForGrpcActivity(Uri uri)
     {
-        if (_activity?.DisplayName != "Grpc.Net.Client.GrpcOut")
+        if (_activity?.DisplayName != ActivityBridge.GrpcDotnetActivitySourceName)
         {
             return false;
         }

@@ -58,7 +58,7 @@ public static class ActivityBridgeSegmentHelpers
                 {
                     ProcessRpcClientTags(segment, agent, errorService, tags, activityLogPrefix, rpcSystem);
                 }
-                else if (tags.TryGetTag<string>(["grpc.method"], out _)) // Its gRPC - likely grpc-dotnet
+                else if (tags.TryGetTag<string>(["grpc.method"], out _)) // It's gRPC - likely grpc-dotnet
                 {
                     ProcessRpcClientTags(segment, agent, errorService, tags, activityLogPrefix, "grpc");
                 }
