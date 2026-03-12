@@ -12,15 +12,18 @@
       "Bash(tail *)",
       "Bash(find *)",
       "Bash(echo *)",
-      "Bash(pwd)",
-      "Bash(python *)",
-      "Bash(python3 *)",
-      "Bash(powershell.exe *)"
+      "Bash(pwd)"
     ],
     "deny": [
       "Bash(rm -rf *)",
       "Bash(git push --force *)",
-      "Bash(git reset --hard *)"
+      "Bash(git reset --hard *)",
+      "Bash(git release *)",
+      "Bash(git tag *)",
+      "Bash(gh release *)",
+      "Bash(gh tag *)",
+      "Bash(gh push --force *)",
+      "Bash(gh reset --hard *)"
     ]
   }
 }
