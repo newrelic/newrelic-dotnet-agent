@@ -91,17 +91,33 @@ If any package has a **major version change** (e.g., 3.x to 4.x), report it prom
 
 ## Step 5: Prepare the docs repo
 
-The docs repo is a fork at `C:\Source\repos\docs-website`.
+Clone the user's fork of `newrelic/docs-website` to a temporary directory and set up remotes.
 
-1. Ensure an `upstream` remote exists pointing to `newrelic/docs-website`. Add it if missing.
-2. Fetch upstream and sync the `develop` branch:
+1. **Find the user's fork** by querying the GitHub API:
    ```
-   git fetch upstream
-   git checkout develop
+   gh api user
+   gh api repos/<github-username>/docs-website --jq '.full_name'
+   ```
+   If the user does not have a fork of `newrelic/docs-website`, inform them and stop. Do not attempt to create one.
+
+2. **Clone to a temp directory:**
+   ```
+   DOCS_REPO=$(mktemp -d)/docs-website
+   git clone --depth 1 --branch develop https://github.com/<github-username>/docs-website.git "$DOCS_REPO"
+   cd "$DOCS_REPO"
+   ```
+
+3. **Add upstream remote and sync:**
+   ```
+   git remote add upstream https://github.com/newrelic/docs-website.git
+   git fetch upstream develop
    git merge upstream/develop
    git push origin develop
    ```
-3. Create a feature branch from `develop` (e.g., `dotnet/dotty-updates-YYYY-MM-DD`).
+
+4. **Create a feature branch** from `develop` (e.g., `dotnet/dotty-updates-YYYY-MM-DD`).
+
+All subsequent steps operate inside `$DOCS_REPO`.
 
 ## Step 6: Update the docs file
 
@@ -179,9 +195,9 @@ After user approval:
 
 1. Commit with message: `chore(.net agent): Update compatibility docs for latest Dotty package versions`
 2. Push the branch to origin (the fork).
-3. Create a PR against **upstream** `newrelic/docs-website` on the `develop` branch:
+3. Create a PR against **upstream** `newrelic/docs-website` on the `develop` branch, using the GitHub username discovered in Step 5:
    ```
-   gh pr create --repo newrelic/docs-website --base develop --head tippmar-nr:<branch-name> --title "<title>" --body "<body>"
+   gh pr create --repo newrelic/docs-website --base develop --head <github-username>:<branch-name> --title "<title>" --body "<body>"
    ```
    Keep the title and body concise, e.g.:
    - Title: `chore(.net agent): Updating latest supported framework versions`
