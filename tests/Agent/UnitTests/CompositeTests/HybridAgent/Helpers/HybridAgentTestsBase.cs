@@ -23,6 +23,7 @@ public abstract class HybridAgentTestsBase
     private ActivityBridge _activityBridge;
 
     protected bool _enableAwsLambda = false;
+    protected bool _enableAiMonitoring = false;
 
     [SetUp]
     public virtual void Setup()
@@ -38,6 +39,12 @@ public abstract class HybridAgentTestsBase
         if (_enableAwsLambda)
         {
             _compositeTestAgent.LocalConfiguration.cloud.aws.accountId = "123456";
+        }
+
+        // enable AI monitoring (used in LLM tests)
+        if (_enableAiMonitoring)
+        {
+            _compositeTestAgent.LocalConfiguration.aiMonitoring.enabled = true;
         }
 
         // enable the OTel bridge and include our test activity source
@@ -299,6 +306,11 @@ public abstract class HybridAgentTestsBase
         {
             ValidateSpans(telemetry.Spans);
         }
+
+        if (telemetry.CustomEvents != null)
+        {
+            ValidateCustomEvents(telemetry.CustomEvents);
+        }
     }
 
     private void ValidateTransactions(IEnumerable<Transaction> transactionsToCheck)
@@ -492,5 +504,42 @@ public abstract class HybridAgentTestsBase
     private IEnumerable<ISpanEventWireModel> GetSpanEventsFromHarvest()
     {
         return _compositeTestAgent.SpanEvents;
+    }
+
+    private IEnumerable<CustomEventWireModel> GetCustomEventsFromHarvest()
+    {
+        return _compositeTestAgent.CustomEvents;
+    }
+
+    private void ValidateCustomEvents(IEnumerable<CustomEvent> customEventsToCheck)
+    {
+        var actualCustomEvents = GetCustomEventsFromHarvest().ToList();
+
+        foreach (var expectedEvent in customEventsToCheck)
+        {
+            var matchingEvents = actualCustomEvents.Where(e =>
+            {
+                var allAttribs = e.AttributeValues.GetAllAttributeValuesDic();
+                return allAttribs.TryGetValue("type", out var typeValue) && (string)typeValue == expectedEvent.Type;
+            }).ToList();
+
+            Assert.That(matchingEvents, Is.Not.Empty,
+                $"Expected custom event of type '{expectedEvent.Type}' not found. Actual types: {string.Join(", ", actualCustomEvents.Select(e => e.AttributeValues.GetAllAttributeValuesDic().TryGetValue("type", out var t) ? t : "unknown"))}");
+
+            if (expectedEvent.Attributes != null && expectedEvent.Attributes.Any())
+            {
+                // Find at least one matching event that has all expected attributes
+                var matched = matchingEvents.FirstOrDefault(e =>
+                {
+                    var allAttribs = e.AttributeValues.GetAllAttributeValuesDic();
+                    return expectedEvent.Attributes.All(expected =>
+                        allAttribs.ContainsKey(expected.Key) &&
+                        allAttribs[expected.Key]?.ToString() == expected.Value?.ToString());
+                });
+
+                Assert.That(matched, Is.Not.Null,
+                    $"Custom event of type '{expectedEvent.Type}' found but missing expected attributes. Expected: {string.Join(", ", expectedEvent.Attributes.Select(a => $"{a.Key}={a.Value}"))}");
+            }
+        }
     }
 }

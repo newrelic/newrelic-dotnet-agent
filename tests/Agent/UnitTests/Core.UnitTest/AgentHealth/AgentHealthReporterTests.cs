@@ -568,6 +568,63 @@ public class AgentHealthReporterTests
         Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/Dotnet/AspNetCore6PlusBrowserInjection/disabled"), Is.True);
     }
 
+    [Test]
+    public void AiMonitoringStreamingDisabledMetricPresent_WhenAiMonitoringEnabledAndStreamingDisabled()
+    {
+        var configuration = GetDefaultConfiguration();
+        Mock.Arrange(() => configuration.AiMonitoringEnabled).Returns(true);
+        Mock.Arrange(() => configuration.AiMonitoringStreamingEnabled).Returns(false);
+
+        _configurationAutoResponder.Dispose();
+        _agentHealthReporter.Dispose();
+        _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+        var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
+        _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
+        _publishedMetrics = new List<MetricWireModel>();
+        _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
+
+        _agentHealthReporter.CollectMetrics();
+        Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/DotNet/ML/Streaming/Disabled"), Is.True);
+    }
+
+    [Test]
+    public void AiMonitoringStreamingDisabledMetricMissing_WhenStreamingEnabled()
+    {
+        var configuration = GetDefaultConfiguration();
+        Mock.Arrange(() => configuration.AiMonitoringEnabled).Returns(true);
+        Mock.Arrange(() => configuration.AiMonitoringStreamingEnabled).Returns(true);
+
+        _configurationAutoResponder.Dispose();
+        _agentHealthReporter.Dispose();
+        _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+        var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
+        _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
+        _publishedMetrics = new List<MetricWireModel>();
+        _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
+
+        _agentHealthReporter.CollectMetrics();
+        Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/DotNet/ML/Streaming/Disabled"), Is.False);
+    }
+
+    [Test]
+    public void AiMonitoringStreamingDisabledMetricMissing_WhenAiMonitoringDisabled()
+    {
+        var configuration = GetDefaultConfiguration();
+        Mock.Arrange(() => configuration.AiMonitoringEnabled).Returns(false);
+        Mock.Arrange(() => configuration.AiMonitoringStreamingEnabled).Returns(false);
+
+        _configurationAutoResponder.Dispose();
+        _agentHealthReporter.Dispose();
+        _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+        var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
+        _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IFileWrapper>(), Mock.Create<IDirectoryWrapper>());
+        _publishedMetrics = new List<MetricWireModel>();
+        _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
+
+        _agentHealthReporter.CollectMetrics();
+        Assert.That(_publishedMetrics.Any(x => x.MetricNameModel.Name == "Supportability/DotNet/ML/Streaming/Disabled"), Is.False);
+    }
+
     [TestCase(true, true)]
     [TestCase(true, false)]
     [TestCase(false, true)]
