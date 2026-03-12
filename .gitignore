@@ -78,7 +78,8 @@ build/Linux/keys
 /build/BuildArtifacts
 /build/_staging
 
-# Claude AI settings (keep skills/ tracked for team sharing)
+# Claude AI settings (keep skills/ and project settings tracked for team sharing)
 .claude/*
 !.claude/skills/
+!.claude/settings.json
 **/.claude/settings.local.json
