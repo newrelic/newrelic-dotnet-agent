@@ -43,6 +43,11 @@ class MicrosoftLoggingLoggingAdapter : ILoggingAdapter
         logger.LogInformation(message, param);
     }
 
+    public void InfoWithStructuredArgs(string name, int id)
+    {
+        logger.LogInformation("Person {Name} has id {Id}", name, id);
+    }
+
     public void Warn(string message)
     {
         logger.LogWarning(message);
