@@ -186,3 +186,10 @@ After user approval:
    Keep the title and body concise, e.g.:
    - Title: `chore(.net agent): Updating latest supported framework versions`
    - Body: Brief list of packages updated with new versions.
+
+## Step 9: Comment on the Dotty PR
+
+Add a comment on the original Dotty PR in the .NET agent repo linking to the newly created docs PR:
+```
+gh pr comment <dotty-pr-number> --repo newrelic/newrelic-dotnet-agent --body "Compatibility docs update PR created: <docs-pr-url>"
+```

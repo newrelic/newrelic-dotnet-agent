@@ -41,6 +41,7 @@ jobs:
                 source-files-changed:
                   - '**'
                   - '!.github/**'
+                  - '!.claude/**'
                   - '!tests/Agent/IntegrationTests/UnboundedServices/**'
               list-files: 'csv'
 
