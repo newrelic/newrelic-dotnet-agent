@@ -51,13 +51,17 @@ If there are **any failing CI jobs**, report them prominently:
 >
 > An all-passing CI run is required to confirm the updated libraries don't break tests.
 
-Then offer to diagnose the failures:
+Then ask the user how to proceed using `AskUserQuestion` with three options:
 
-> Would you like me to analyze the test failures to determine if they're caused by the Dotty package updates?
+1. **Analyze failures** — Diagnose whether the failures are caused by the Dotty package updates
+2. **Skip analysis** — Proceed with docs updates, excluding packages related to the failing tests
+3. **Stop** — Stop the skill and wait for a green build before retrying
 
-**If the user declines:** Ask whether to proceed with docs updates (excluding packages related to the failing tests) or wait for a green build.
+**If the user chooses "Stop":** End the skill run.
 
-**If the user accepts:** Perform a detailed diagnosis:
+**If the user chooses "Skip analysis":** Continue to Step 4, excluding any packages that could be related to the failing test jobs from the docs updates.
+
+**If the user chooses "Analyze failures":** Perform a detailed diagnosis:
 
 1. Fetch the failing job's logs:
    ```
