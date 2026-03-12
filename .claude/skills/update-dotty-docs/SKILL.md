@@ -8,6 +8,16 @@ disable-model-invocation: true
 
 Update the "compatibility and requirements" documentation in the docs-website repo based on package updates from the current open Dotty PR.
 
+## Step 0: Check prerequisites
+
+Verify that all required tools are available before proceeding. Run each check and **stop with a clear error message** if any are missing:
+
+1. **GitHub CLI (`gh`)**: Run `gh --version`. If not found, stop with: "GitHub CLI (`gh`) is required but not installed. Install it from https://cli.github.com/"
+2. **GitHub CLI auth**: Run `gh auth status`. If not authenticated, stop with: "GitHub CLI is not authenticated. Run `gh auth login` first."
+3. **Git**: Run `git --version`. If not found, stop with: "Git is required but not installed."
+
+If all checks pass, continue silently — do not list the results.
+
 ## Step 1: Find the open Dotty PR
 
 Search for the open Dotty PR:
