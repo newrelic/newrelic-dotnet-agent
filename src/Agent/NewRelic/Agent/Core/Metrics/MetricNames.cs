@@ -931,6 +931,8 @@ public static class MetricNames
     public const string SupportabilityGCSamplerV2Enabled = SupportabilityDotnetPsObsolete + "GCSamplerV2/Enabled";
     public const string SupportabilityAwsAccountIdProvided = SupportabilityDotnetPsObsolete + "AwsAccountId/Config";
 
+    public const string SupportabilityAiMonitoringStreamingDisabled = "Supportability/DotNet/ML/Streaming/Disabled";
+
     public static string SupportabilityAzureFunctionMode(bool enabled)
     {
         return SupportabilityDotnetPsObsolete + "AzureFunctionMode" + PathSeparator + (enabled ? Enabled : Disabled);

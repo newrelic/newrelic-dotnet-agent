@@ -95,8 +95,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
 
       - name: Download Agent Home Folders (Call)
         if: ${{ inputs.external_call }}
@@ -121,12 +119,12 @@ jobs:
         run: |
           echo $INTEGRATION_TEST_SECRETS | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
 
-      - name: Install .NET 10 Preview
+      - name: Install latest .NET 10 SDK
         uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
-    
+
       - name: Build & Run Linux Container Integration Tests
         env:
           BUILD_ARCH: ${{ matrix.arch }}

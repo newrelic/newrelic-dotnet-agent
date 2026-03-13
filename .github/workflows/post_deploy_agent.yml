@@ -120,7 +120,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0
+          sparse-checkout: deploy/validation/validate-yum
 
       - name: Wait for YUM to update
         if: ${{ inputs.wait_for_apt_and_yum }} # only wait if requested
@@ -161,7 +161,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0
+          sparse-checkout: deploy/validation/validate-debian-latest
 
       - name: Wait for APT to update
         if: ${{ inputs.wait_for_apt_and_yum }} # only wait if requested
@@ -202,7 +202,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0
+          sparse-checkout: deploy/validation/validate-debian-oldest
 
       - name: Wait for APT to update
         if: ${{ inputs.wait_for_apt_and_yum }} # only wait if requested
@@ -240,16 +240,16 @@ jobs:
           disable-sudo: true
           egress-policy: audit
 
-      - name: Setup .NET 10 Preview
+      - name: Install latest .NET 10 SDK
         uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
-            
+
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0
+          sparse-checkout: build/S3Validator
 
       - name: Build and Run S3Validator
         run: |
@@ -270,7 +270,7 @@ jobs:
           disable-sudo: true
           egress-policy: audit
 
-      - name: Setup .NET 10 Preview
+      - name: Install latest .NET 10 SDK
         uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
         with:
           dotnet-version: '10.0.x'
@@ -279,7 +279,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0
+          sparse-checkout: build/NugetValidator
 
       - name: Build and Run NugetValidator
         run: |
@@ -304,16 +304,16 @@ jobs:
           disable-sudo: true
           egress-policy: audit
 
-      - name: Setup .NET 10 Preview
+      - name: Install latest .NET 10 SDK
         uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
-            
+
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0
+          sparse-checkout: build/NugetVersionDeprecator
 
       - name: Build and Run NugetDeprecator
         run: |
