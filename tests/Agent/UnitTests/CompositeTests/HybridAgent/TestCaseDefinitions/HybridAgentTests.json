@@ -2825,5 +2825,91 @@
                 }
             ]
         }
+    },
+    {
+        "testDescription": "Client LLM gen_ai tags with AI monitoring disabled are added as custom attributes",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "LlmDisabled"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "chat gpt-4o ai-off",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.operation.name",
+                                    "value": "chat"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.provider.name",
+                                    "value": "openai"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.request.model",
+                                    "value": "gpt-4o"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.response.model",
+                                    "value": "gpt-4o-2024-08-06"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.usage.input_tokens",
+                                    "value": 25,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "custom.tag",
+                                    "value": "value"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "LlmDisabled"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "chat gpt-4o ai-off",
+                    "parentName": "LlmDisabled",
+                    "category": "generic",
+                    "attributes": {
+                        "gen_ai.provider.name": "openai",
+                        "gen_ai.request.model": "gpt-4o",
+                        "gen_ai.response.model": "gpt-4o-2024-08-06",
+                        "gen_ai.usage.input_tokens": 25,
+                        "custom.tag": "value"
+                    }
+                }
+            ]
+        }
     }
 ]

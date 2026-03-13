@@ -1,0 +1,13 @@
+name: Performance Tests
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  performance-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder
+        run: echo "Performance tests not yet implemented."
