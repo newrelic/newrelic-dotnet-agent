@@ -58,6 +58,9 @@ public class AgentOutput
 
     [JsonProperty("spans")]
     public IEnumerable<Span> Spans { get; set; }
+
+    [JsonProperty("customEvents")]
+    public IEnumerable<CustomEvent> CustomEvents { get; set; }
 }
 
 public class Transaction
@@ -109,6 +112,15 @@ public class SpanEvent
 {
     [JsonProperty("name")]
     public string Name { get; set; }
+
+    [JsonProperty("attributes")]
+    public IDictionary<string, object> Attributes { get; set; }
+}
+
+public class CustomEvent
+{
+    [JsonProperty("type")]
+    public string Type { get; set; }
 
     [JsonProperty("attributes")]
     public IDictionary<string, object> Attributes { get; set; }
