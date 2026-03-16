@@ -1967,16 +1967,253 @@
             ],
             "spans": [
                 {
-                    "name": "External/localhost/Stream/GetItem",
+                    "name": "External/localhost/gRPC/GetItem",
                     "parentName": "Foo",
                     "category": "http",
                     "attributes": {
                         "span.kind": "client",
                         "server.address": "localhost",
                         "server.port": 50051,
-                        "http.request.method": "GetItem",
-                        "http.statusCode": 0,
+                        "http.method": "GetItem",
+                        "grpc.statusCode": 0,
                         "http.url": "grpc://localhost:50051/my.test.Service/GetItem",
+                        "component": "grpc"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "RPC Client gRPC No rpc.system success creates external span with status 0",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "GrpcClientCall1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "grpc.method",
+                                    "value": "GetItem"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.service",
+                                    "value": "my.test.Service"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.method",
+                                    "value": "GetItem"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.grpc.status_code",
+                                    "value": 0,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 50051,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "External/localhost/gRPC/GetItem",
+                    "parentName": "Foo",
+                    "category": "http",
+                    "attributes": {
+                        "span.kind": "client",
+                        "server.address": "localhost",
+                        "server.port": 50051,
+                        "http.method": "GetItem",
+                        "grpc.statusCode": 0,
+                        "http.url": "grpc://localhost:50051/my.test.Service/GetItem",
+                        "component": "grpc"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "RPC Client gRPC No rpc.system or rpc.service using grpc.method success creates external span with status 0",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "GrpcClientCall1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "grpc.method",
+                                    "value": "/my.test.Service/GetItem"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.grpc.status_code",
+                                    "value": 0,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 50051,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "External/localhost/gRPC/my.test.Service/GetItem",
+                    "parentName": "Foo",
+                    "category": "http",
+                    "attributes": {
+                        "span.kind": "client",
+                        "server.address": "localhost",
+                        "server.port": 50051,
+                        "http.method": "my.test.Service/GetItem",
+                        "grpc.statusCode": 0,
+                        "http.url": "grpc://localhost:50051/my.test.Service/GetItem",
+                        "component": "grpc"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "RPC Client gRPC No rpc.system, server.address, or server.port success creates external span with status 0",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "Foo"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "GrpcClientCall1",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "grpc.method",
+                                    "value": "GetItem"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.service",
+                                    "value": "my.test.Service"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.method",
+                                    "value": "GetItem"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.grpc.status_code",
+                                    "value": 0,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "Foo"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "External/unknown/gRPC/GetItem",
+                    "parentName": "Foo",
+                    "category": "http",
+                    "attributes": {
+                        "span.kind": "client",
+                        "server.address": "unknown",
+                        "http.method": "GetItem",
+                        "grpc.statusCode": 0,
+                        //"http.url": "grpc://unknown:0/my.test.Service/GetItem", This differs between Framework and Modern when the value for port is the default.
                         "component": "grpc"
                     }
                 }
@@ -2061,15 +2298,15 @@
             ],
             "spans": [
                 {
-                    "name": "External/localhost/Stream/GetItem",
+                    "name": "External/localhost/gRPC/GetItem",
                     "parentName": "Foo",
                     "category": "http",
                     "attributes": {
                         "span.kind": "client",
                         "server.address": "localhost",
                         "server.port": 50051,
-                        "http.request.method": "GetItem",
-                        "http.statusCode": 14,
+                        "http.method": "GetItem",
+                        "grpc.statusCode": 14,
                         "http.url": "grpc://localhost:50051/my.test.Service/GetItem",
                         "component": "grpc"
                     }
@@ -2142,14 +2379,14 @@
             ],
             "spans": [
                 {
-                    "name": "External/localhost/Stream/ListItems",
+                    "name": "External/localhost/gRPC/ListItems",
                     "parentName": "Foo",
                     "category": "http",
                     "attributes": {
                         "span.kind": "client",
                         "server.address": "localhost",
                         "server.port": 50052,
-                        "http.request.method": "ListItems",
+                        "http.method": "ListItems",
                         "http.url": "grpc://localhost:50052/my.test.Service/ListItems",
                         "component": "grpc"
                     }
@@ -2230,15 +2467,15 @@
             ],
             "spans": [
                 {
-                    "name": "External/grpc.example.com/Stream/UnaryCall",
+                    "name": "External/grpc.example.com/gRPC/UnaryCall",
                     "parentName": "Foo",
                     "category": "http",
                     "attributes": {
                         "span.kind": "client",
                         "server.address": "grpc.example.com",
                         "server.port": 6000,
-                        "http.request.method": "UnaryCall",
-                        "http.statusCode": 0,
+                        "http.method": "UnaryCall",
+                        "grpc.statusCode": 0,
                         "http.url": "grpc://grpc.example.com:6000/pkg.alt.Service/UnaryCall",
                         "component": "grpc"
                     }
@@ -2255,14 +2492,55 @@
                 "childOperations": [
                     {
                         "command": "DoWorkInSpan",
-                        "parameters": { "spanName": "Grpc Server Success", "spanKind": "Server" },
+                        "parameters": {
+                            "spanName": "Grpc Server Success",
+                            "spanKind": "Server"
+                        },
                         "childOperations": [
-                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.system", "value": "grpc" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.service", "value": "my.test.Service" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.method", "value": "GetItem" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.grpc.status_code", "value": 0, "type": "int" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "server.address", "value": "localhost" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "server.port", "value": 50051, "type": "int" } }
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.system",
+                                    "value": "grpc"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.service",
+                                    "value": "my.test.Service"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.method",
+                                    "value": "GetItem"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.grpc.status_code",
+                                    "value": 0,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 50051,
+                                    "type": "int"
+                                }
+                            }
                         ]
                     }
                 ]
@@ -2286,7 +2564,7 @@
                     "parentName": "RpcServerTxnSuccess",
                     "category": "generic",
                     "attributes": {
-                    //"component": "grpc" -- doesn't work currently
+                        //"component": "grpc" -- doesn't work currently
                     }
                 }
             ]
@@ -2301,14 +2579,55 @@
                 "childOperations": [
                     {
                         "command": "DoWorkInSpan",
-                        "parameters": { "spanName": "Grpc Server Error", "spanKind": "Server" },
+                        "parameters": {
+                            "spanName": "Grpc Server Error",
+                            "spanKind": "Server"
+                        },
                         "childOperations": [
-                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.system", "value": "grpc" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.service", "value": "my.test.Service" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.method", "value": "GetItem" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "rpc.grpc.status_code", "value": 14, "type": "int" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "server.address", "value": "localhost" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "server.port", "value": 50051, "type": "int" } }
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.system",
+                                    "value": "grpc"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.service",
+                                    "value": "my.test.Service"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.method",
+                                    "value": "GetItem"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rpc.grpc.status_code",
+                                    "value": 14,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "localhost"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 50051,
+                                    "type": "int"
+                                }
+                            }
                         ]
                     }
                 ]
@@ -2335,7 +2654,7 @@
                     "parentName": "RpcServerTxnError",
                     "category": "generic",
                     "attributes": {
-                    //"component": "grpc" -- doesn't work currently
+                        //"component": "grpc" -- doesn't work currently
                     }
                 }
             ]
@@ -2350,11 +2669,33 @@
                 "childOperations": [
                     {
                         "command": "DoWorkInSpan",
-                        "parameters": { "spanName": "Grpc Server GrpcMethodOnly", "spanKind": "Server" },
+                        "parameters": {
+                            "spanName": "Grpc Server GrpcMethodOnly",
+                            "spanKind": "Server"
+                        },
                         "childOperations": [
-                            { "command": "AddOTelAttribute", "parameters": { "name": "grpc.method", "value": "/pkg.alt.Service/UnaryCall" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "server.address", "value": "grpc.example.com" } },
-                            { "command": "AddOTelAttribute", "parameters": { "name": "server.port", "value": 6000, "type": "int" } }
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "grpc.method",
+                                    "value": "/pkg.alt.Service/UnaryCall"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "grpc.example.com"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 6000,
+                                    "type": "int"
+                                }
+                            }
                         ]
                     }
                 ]
@@ -2376,7 +2717,7 @@
                     "parentName": "RpcServerTxnGrpcMethodOnly",
                     "category": "generic",
                     "attributes": {
-                     //"component": "grpc" -- doesn't work currently
+                        //"component": "grpc" -- doesn't work currently
                     }
                 }
             ]
@@ -2452,7 +2793,7 @@
                     "parentName": "RpcServerTxnMinimal",
                     "category": "generic",
                     "attributes": {
-                    //"component": "grpc" -- doesn't work currently
+                        //"component": "grpc" -- doesn't work currently
                     }
                 }
             ]

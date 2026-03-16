@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
@@ -11,6 +12,7 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
@@ -121,6 +123,8 @@ public class SegmentTests
         Assert.DoesNotThrow(() => segment.SetName("name"));
         Assert.That(segment.GetCategory(), Is.EqualTo(string.Empty));
         Assert.That(segment.DurationOrZero, Is.EqualTo(TimeSpan.Zero));
+        Assert.That(segment.TryGetTraceIdFromActivity(), Is.Null);
+        Assert.That(segment.SetServerDetailsForGrpcActivity(new Uri("http://localhost:5000")), Is.False);
     }
 
     [Test]
@@ -569,5 +573,37 @@ public class SegmentTests
         var transactionGuid = segment.GetTransactionGuid();
         Assert.That(transactionGuid, Is.Not.Null);
         Assert.That(transactionGuid, Is.EqualTo("empty"));
+    }
+
+    [TestCase(null, "localhost", 5000, false)]
+    [TestCase("Not.Grpc.Nope", "localhost", 5000, false)]
+    [TestCase(ActivityBridge.GrpcDotnetActivitySourceName, "localhost", 5000, true)]
+    [TestCase(ActivityBridge.GrpcDotnetActivitySourceName, "localhost", null, true)]
+    [TestCase(ActivityBridge.GrpcDotnetActivitySourceName, "localhost", 0, true)]
+    public void SetServerDetailsForGrpcActivity_Tests(string displayName, string host, int? port, bool expectedResult)
+    {
+        // Arrange
+        var uri = new Uri($"https://{host}:{port}");
+        var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1));
+        Activity activity = string.IsNullOrWhiteSpace(displayName) ? null : new Activity("test");
+        activity?.DisplayName = displayName;
+        var nrActivity = new RuntimeNewRelicActivity(activity);
+        segment.SetActivity(nrActivity);
+
+        // Act
+        var result = segment.SetServerDetailsForGrpcActivity(uri);
+
+        // Assert
+        Assert.That(result, Is.EqualTo(expectedResult));
+        if (result)
+        {
+            Assert.That(nrActivity.GetTag(ActivityBridge.NewRelicServerAddress).ToString(), Is.EqualTo(host));
+            Assert.That((int)nrActivity.GetTag(ActivityBridge.NewRelicServerPort), Is.EqualTo(port ?? 443)); // Default to 443 if port is null since the scheme is https
+        }
+        else
+        {
+            Assert.That(nrActivity.GetTag(ActivityBridge.NewRelicServerAddress), Is.Null);
+            Assert.That(nrActivity.GetTag(ActivityBridge.NewRelicServerPort), Is.Null);
+        }
     }
 }

@@ -361,10 +361,10 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
             txStats.MergeUnscopedStats(proposedName, data);
         }
 
-        public static void TryBuildExternalSegmentMetric(string host, string method, TimeSpan totalTime,
+        public static void TryBuildExternalSegmentMetric(string host, string method, string library, TimeSpan totalTime,
             TimeSpan totalExclusiveTime, TransactionMetricStatsCollection txStats, bool unscopedOnly)
         {
-            var proposedName = MetricNames.GetExternalHost(host, "Stream", method);
+            var proposedName = MetricNames.GetExternalHost(host, library, method);
             var data = MetricDataWireModel.BuildTimingData(totalTime, totalExclusiveTime);
             txStats.MergeUnscopedStats(proposedName, data);
             if (!unscopedOnly)

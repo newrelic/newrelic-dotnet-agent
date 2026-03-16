@@ -577,15 +577,17 @@ public class NewRelicConfigModifier
         return this;
     }
 
-    public NewRelicConfigModifier IncludeActivitySource(string activitySourceName)
+    public NewRelicConfigModifier IncludeActivitySource(string activitySourceNames)
     {
-        CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.ActivitySource.Include", activitySourceName, "urn:newrelic-config");
+        CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry" }, "traces", string.Empty);
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry", "traces" }, "include", activitySourceNames);
         return this;
     }
 
-    public NewRelicConfigModifier ExcludeActivitySource(string activitySourceName)
+    public NewRelicConfigModifier ExcludeActivitySource(string activitySourceNames)
     {
-        CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetry.ActivitySource.Exclude", activitySourceName, "urn:newrelic-config");
+        CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry" }, "traces", string.Empty);
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "openTelemetry", "traces" }, "exclude", activitySourceNames);
         return this;
     }
 
