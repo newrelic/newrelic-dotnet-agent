@@ -427,6 +427,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
 
     public bool EnableAspNetCore6PlusBrowserInjection => true;
 
+    public bool InstrumentAspNetCore6PlusWebsockets => false;
+
     public bool ExcludeNewrelicHeader => true;
 
     public bool ApplicationLoggingEnabled => true;

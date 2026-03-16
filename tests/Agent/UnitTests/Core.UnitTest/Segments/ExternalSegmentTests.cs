@@ -20,7 +20,7 @@ public class ExternalSegmentTests
     public void Build_IncludesCatParameter_IfCatResponseDataIsSet()
     {
         var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
-        segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3, "guid", false)));
+        segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method", crossApplicationResponseData: new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3, "guid", false)));
         segment.End();
 
         Assert.Multiple(() =>
@@ -37,5 +37,18 @@ public class ExternalSegmentTests
         segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
 
         Assert.That(segment.Parameters.ToDictionary().ContainsKey(TransactionGuidSegmentParameterKey), Is.False);
+    }
+
+    [TestCase("overrode")]
+    [TestCase(null)]
+    public void ExternalGrpcSegmentData_Success(string componentOverride)
+    {
+        var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
+        segment.SetSegmentData(new ExternalGrpcSegmentData(new Uri("http://www.google.com"), "method", componentOverride: componentOverride));
+
+        var grpcSegmentData = segment.SegmentData as ExternalGrpcSegmentData;
+        Assert.That(grpcSegmentData, Is.Not.Null);
+        Assert.That(grpcSegmentData.Uri, Is.EqualTo(new Uri("http://www.google.com")));
+        Assert.That(grpcSegmentData.Method, Is.EqualTo("method"));
     }
 }

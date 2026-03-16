@@ -22,4 +22,5 @@ public interface INewRelicActivity : IDisposable
 
     void Stop();
     void MakeCurrent();
+    void AddTag(string key, object value);
 }

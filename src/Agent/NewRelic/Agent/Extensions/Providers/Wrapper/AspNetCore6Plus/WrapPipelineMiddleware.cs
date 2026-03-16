@@ -45,6 +45,21 @@ internal class WrapPipelineMiddleware
             return;
         }
 
+        // undocumented switch to restore previous behavior of instrumenting websocket handshake requests.
+        if (!_agent.Configuration.InstrumentAspNetCore6PlusWebsockets)
+        {
+            // if there's a "Sec-WebSocket-Key" header, this is a websocket handshake request and we should not create a transaction for it
+            // as it is a long-running connection that would skew transaction timings.
+            // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-WebSocket-Key for more information on this header.
+            if (context.Request.Headers.ContainsKey("Sec-WebSocket-Key"))
+            {
+                _agent.Logger.Debug(
+                    "WebSocket handshake request detected; not instrumenting this long-running request.");
+                await _next(context);
+                return;
+            }
+        }
+
         ITransaction transaction = null;
         ISegment segment = null;
 

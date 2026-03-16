@@ -923,6 +923,7 @@ public class AgentHealthReporter : ConfigurationBasedService, IAgentHealthReport
         ReportIfOpenTelemetryIsEnabled();
         ReportIfOpenTelemetryTracingIsEnabled();
         ReportIfOpenTelemetryMetricsEnabled();
+        ReportIfAiMonitoringStreamingDisabled();
     }
 
     public void CollectMetrics()
@@ -1129,6 +1130,14 @@ public class AgentHealthReporter : ConfigurationBasedService, IAgentHealthReport
     private void ReportIfOpenTelemetryMetricsEnabled()
     {
         ReportSupportabilityCountMetric(MetricNames.SupportabilityOpenTelemetryMetrics(_configuration.OpenTelemetryMetricsEnabled));
+    }
+
+    private void ReportIfAiMonitoringStreamingDisabled()
+    {
+        if (_configuration.AiMonitoringEnabled && !_configuration.AiMonitoringStreamingEnabled)
+        {
+            ReportSupportabilityCountMetric(MetricNames.SupportabilityAiMonitoringStreamingDisabled);
+        }
     }
 
     /// <summary>

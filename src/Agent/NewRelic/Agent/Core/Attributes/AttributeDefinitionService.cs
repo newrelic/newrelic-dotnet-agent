@@ -62,9 +62,11 @@ public interface IAttributeDefinitions
     AttributeDefinition<string, string> Guid { get; }
     AttributeDefinition<string, string> HostDisplayName { get; }
     AttributeDefinition<string, string> HttpMethod { get; }
+    AttributeDefinition<string, string> HttpRequestMethod { get; }
     AttributeDefinition<long?, long> HttpStatusCode { get; }
     AttributeDefinition<string, string> HttpStatusText { get; }
     AttributeDefinition<Uri, string> HttpUrl { get; }
+    AttributeDefinition<long?, long> GrpcStatusCode { get; }
     AttributeDefinition<bool, bool> IsError { get; }
     AttributeDefinition<string, string> NameForSpan { get; }
     AttributeDefinition<bool, bool> NrEntryPoint { get; }
@@ -447,7 +449,6 @@ public class AttributeDefinitions : IAttributeDefinitions
             .AppliesTo(AttributeDestinations.ErrorTrace)
             .AppliesTo(AttributeDestinations.TransactionEvent)
             .AppliesTo(AttributeDestinations.SpanEvent)
-            .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.TransactionTrace)
             .WithConvert(x => x.ToString())
             .Build(_attribFilter));
@@ -458,7 +459,6 @@ public class AttributeDefinitions : IAttributeDefinitions
             .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.ErrorTrace)
             .AppliesTo(AttributeDestinations.TransactionEvent)
-            .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.SpanEvent)
             .AppliesTo(AttributeDestinations.TransactionTrace)
             .WithConvert(x => x.GetValueOrDefault())                //This is ok b/c we check for null input earlier
@@ -470,10 +470,20 @@ public class AttributeDefinitions : IAttributeDefinitions
             .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.ErrorTrace)
             .AppliesTo(AttributeDestinations.TransactionEvent)
-            .AppliesTo(AttributeDestinations.ErrorEvent)
             .AppliesTo(AttributeDestinations.SpanEvent)
             .AppliesTo(AttributeDestinations.TransactionTrace)
             .Build(_attribFilter);
+
+    private AttributeDefinition<long?, long> _grpcStatusCode;
+    public AttributeDefinition<long?, long> GrpcStatusCode => _grpcStatusCode ?? (_grpcStatusCode =
+        AttributeDefinitionBuilder.CreateLong<long?>("grpc.statusCode", AttributeClassification.AgentAttributes)
+            .AppliesTo(AttributeDestinations.ErrorEvent)
+            .AppliesTo(AttributeDestinations.ErrorTrace)
+            .AppliesTo(AttributeDestinations.TransactionEvent)
+            .AppliesTo(AttributeDestinations.SpanEvent)
+            .AppliesTo(AttributeDestinations.TransactionTrace)
+            .WithConvert(x => x.GetValueOrDefault())                //This is ok b/c we check for null input earlier
+            .Build(_attribFilter));
 
     private AttributeDefinition<string, string> _clientCrossProcessId;
     public AttributeDefinition<string, string> ClientCrossProcessId => _clientCrossProcessId ?? (_clientCrossProcessId =
@@ -669,6 +679,12 @@ public class AttributeDefinitions : IAttributeDefinitions
 
     private AttributeDefinition<string, string> _httpMethod;
     public AttributeDefinition<string, string> HttpMethod => _httpMethod ?? (_httpMethod =
+        AttributeDefinitionBuilder.CreateString("http.method", AttributeClassification.AgentAttributes)
+            .AppliesTo(AttributeDestinations.SpanEvent)
+            .Build(_attribFilter));
+
+    private AttributeDefinition<string, string> _httpRequestMethod;
+    public AttributeDefinition<string, string> HttpRequestMethod => _httpRequestMethod ?? (_httpRequestMethod =
         AttributeDefinitionBuilder.CreateString("http.request.method", AttributeClassification.AgentAttributes)
             .AppliesTo(AttributeDestinations.SpanEvent)
             .Build(_attribFilter));

@@ -5,7 +5,7 @@
     <OutputPath>$(SolutionDir)..\..\_build\$(Platform)-$(Configuration)\$(OutputName)\</OutputPath>
     <DebugType>full</DebugType>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\InstallerActions\InstallerActions.csproj">
       <Name>InstallerActions</Name>
@@ -16,29 +16,29 @@
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="WixToolset.NetFx.wixext" Version="5.0.2" />
     <PackageReference Include="WixToolset.Iis.wixext" Version="5.0.2" />
     <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
     <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
   </ItemGroup>
-  
-  <PropertyGroup>
-    <WindowsSdkPathBin>$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSDKLocation('Windows', '10.0'))bin</WindowsSdkPathBin>
-    <WindowsSdkPath>$(WindowsSdkPathBin)\10.0.19041.0</WindowsSdkPath>
-    <SignToolPath>$(WindowsSdkPath)\x64\signtool.exe</SignToolPath>
-  </PropertyGroup>
-  
+
   <Target Name="SignInstaller" BeforeTargets="AfterBuild">
-    <Exec Command="&quot;$(SignToolPath)&quot; sign /d &quot;New Relic .NET Agent&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;" StandardOutputImportance="high" />
+    <ItemGroup>
+      <SignToolCandidates Include="$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSDKLocation('Windows', '10.0'))bin\*\x64\signtool.exe" />
+    </ItemGroup>
+    <PropertyGroup>
+      <SignToolPath>%(SignToolCandidates.Identity)</SignToolPath>
+    </PropertyGroup>
+    <Exec Command="&quot;$(SignToolPath)&quot; sign /fd SHA256 /d &quot;New Relic .NET Agent&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;" StandardOutputImportance="high" />
     <ReadFileVersionFromDll FilePath="$(SolutionDir)..\..\_build\AnyCPU-$(Configuration)\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll">
       <Output PropertyName="FileVersionString" TaskParameter="FileVersionString" />
     </ReadFileVersionFromDll>
     <Copy SourceFiles="$(OutputPath)\$(OutputName).msi" DestinationFiles="$(OutputPath)\NewRelicAgent_$(Platform)_$(FileVersionString).msi" />
     <Delete Files="$(OutputPath)\$(OutputName).msi" />
   </Target>
-  
+
   <UsingTask TaskName="ReadFileVersionFromDll" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <FilePath ParameterType="System.String" Required="true" />

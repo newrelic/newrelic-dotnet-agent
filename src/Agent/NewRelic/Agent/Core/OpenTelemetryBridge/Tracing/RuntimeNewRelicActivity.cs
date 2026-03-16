@@ -65,4 +65,14 @@ public class RuntimeNewRelicActivity : INewRelicActivity
     {
         return ((dynamic)activity)?.GetCustomProperty(NewRelicActivitySourceProxy.SegmentCustomPropertyName) as ISegment;
     }
+
+    public void AddTag(string key, object value)
+    {
+        _dynamicActivity?.AddTag(key, value);
+    }
+
+    public object GetTag(string key)
+    {
+        return _dynamicActivity?.GetTagItem(key);
+    }
 }
