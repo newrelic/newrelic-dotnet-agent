@@ -335,7 +335,7 @@ jobs:
           echo "Traffic driver completed successfully."
 
       # -----------------------------------------------------------------------
-      # Verify the agent sent data to New Relic staging (agent runs only)
+      # Verify the agent sent data to New Relic (agent runs only)
       # -----------------------------------------------------------------------
       - name: Verify agent sent data to New Relic
         if: steps.inputs.outputs.attach_agent == 'true'
