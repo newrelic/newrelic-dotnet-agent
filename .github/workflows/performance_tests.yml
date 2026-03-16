@@ -5,8 +5,8 @@ name: Performance Tests
 # separate Docker containers, optionally with the agent attached.
 #
 # Required secrets (when attach_agent is true):
-#   NR_PERF_LICENSE_KEY  - New Relic staging license key (team sandbox account)
-#   NR_PERF_API_KEY      - New Relic staging User API key for NerdGraph verification
+#   STAGING_LICENSE_KEY  - New Relic staging license key (team sandbox account)
+#   NEW_RELIC_API_KEY_STAGING      - New Relic staging User API key for NerdGraph verification
 
 on:
   workflow_dispatch:
@@ -225,7 +225,7 @@ jobs:
           TEST_DURATION: ${{ steps.inputs.outputs.test_duration }}
           LOCUST_USERS: ${{ steps.inputs.outputs.locust_users }}
           LOCUST_SPAWN_RATE: ${{ steps.inputs.outputs.locust_spawn_rate }}
-          NEW_RELIC_LICENSE_KEY: ${{ secrets.NR_PERF_LICENSE_KEY }}
+          NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
           NEW_RELIC_HOST: staging-collector.newrelic.com
         run: |
           docker compose up -d
@@ -316,7 +316,7 @@ jobs:
       - name: Verify agent sent data to New Relic staging
         if: steps.inputs.outputs.attach_agent == 'true'
         env:
-          NR_API_KEY: ${{ secrets.NR_PERF_API_KEY }}
+          NR_API_KEY: ${{ secrets.NEW_RELIC_API_KEY_STAGING }}
           NR_STAGING_GRAPHQL: https://staging-api.newrelic.com/graphql
         run: |
           APP_NAME="${{ env.NR_APP_NAME }}"
