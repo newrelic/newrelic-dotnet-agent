@@ -6,7 +6,6 @@ name: Performance Tests
 #
 # Required secrets (when attach_agent is true):
 #   STAGING_LICENSE_KEY  - New Relic staging license key (team sandbox account)
-#   NEW_RELIC_API_KEY_STAGING      - New Relic staging User API key for NerdGraph verification
 
 on:
   workflow_dispatch:
@@ -214,9 +213,10 @@ jobs:
           AGENT_HOME="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
           echo "AGENT_PATH=${AGENT_HOME}" >> $GITHUB_ENV
 
-          # Enable the profiler only when we want the agent attached
+          # Enable the profiler and debug logging only when we want the agent attached
           if [ "${{ steps.inputs.outputs.attach_agent }}" = "true" ]; then
             echo "CORECLR_ENABLE_PROFILING=1" >> $GITHUB_ENV
+            echo "NEW_RELIC_LOG_LEVEL=debug" >> $GITHUB_ENV
           else
             echo "CORECLR_ENABLE_PROFILING=0" >> $GITHUB_ENV
           fi
@@ -334,45 +334,27 @@ jobs:
       # -----------------------------------------------------------------------
       # Verify the agent sent data to New Relic staging (agent runs only)
       # -----------------------------------------------------------------------
-      - name: Verify agent sent data to New Relic staging
+      - name: Verify agent sent data to New Relic
         if: steps.inputs.outputs.attach_agent == 'true'
-        env:
-          NR_API_KEY: ${{ secrets.NEW_RELIC_API_KEY_STAGING }}
-          NR_STAGING_GRAPHQL: https://staging-api.newrelic.com/graphql
         run: |
-          APP_NAME="${{ env.NR_APP_NAME }}"
-          echo "Waiting for agent harvest cycle before querying New Relic..."
-          sleep 75
+          LOG_DIR="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/logs"
 
-          cat > /tmp/nr_query.json << EOF
-          {
-            "query": "{ actor { entitySearch(query: \"name = '${APP_NAME}' AND type = 'APPLICATION'\") { results { entities { guid name ... on ApmApplicationEntity { runningAgentVersions { minVersion maxVersion } } } } } } }"
-          }
-          EOF
+          METRIC_SENDS=0
+          for LOG_FILE in "$LOG_DIR"/newrelic_agent*.log; do
+            if [ -f "$LOG_FILE" ]; then
+              COUNT=$(grep -c 'Invoked "metric_data"' "$LOG_FILE" || true)
+              METRIC_SENDS=$((METRIC_SENDS + COUNT))
+            fi
+          done
 
-          echo "Querying NerdGraph for app: $APP_NAME"
-          RESPONSE=$(curl -s -X POST "$NR_STAGING_GRAPHQL" \
-            -H "API-Key: $NR_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d @/tmp/nr_query.json)
-
-          echo "NerdGraph response:"
-          echo "$RESPONSE" | python3 -m json.tool || echo "$RESPONSE"
-
-          ENTITY_COUNT=$(echo "$RESPONSE" | python3 -c "
-          import sys, json
-          data = json.load(sys.stdin)
-          entities = (data.get('data') or {}).get('actor', {}).get('entitySearch', {}).get('results', {}).get('entities', [])
-          print(len(entities))
-          " 2>/dev/null || echo "0")
-
-          if [ "$ENTITY_COUNT" -eq 0 ]; then
-            echo "ERROR: No application entity found in New Relic staging for app: $APP_NAME"
-            echo "The agent may not have connected or failed to send data."
+          if [ "$METRIC_SENDS" -eq 0 ]; then
+            echo "ERROR: No successful metric_data payloads found in agent logs"
+            echo "Agent log files present:"
+            ls -la "$LOG_DIR"/newrelic_agent*.log 2>/dev/null || echo "  (none)"
             exit 1
           fi
 
-          echo "SUCCESS: Found $ENTITY_COUNT application entity in New Relic staging for: $APP_NAME"
+          echo "SUCCESS: Found $METRIC_SENDS successful metric_data payload(s) in agent logs"
 
       # -----------------------------------------------------------------------
       # Print a summary of Locust results

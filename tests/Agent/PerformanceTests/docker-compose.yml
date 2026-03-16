@@ -34,6 +34,7 @@ services:
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
       NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-dotnet-agent-perf-test}
       NEW_RELIC_HOST: ${NEW_RELIC_HOST:-}
+      NEW_RELIC_LOG_LEVEL: ${NEW_RELIC_LOG_LEVEL:-info}
       NEW_RELIC_LOG_DIRECTORY: /app/logs
     volumes:
       - ${AGENT_PATH:-./agent-home}:/usr/local/newrelic-dotnet-agent:ro
