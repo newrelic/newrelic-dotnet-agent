@@ -123,35 +123,56 @@ jobs:
       - name: Create agent-home directory
         run: mkdir -p "${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
 
-      - name: Download agent from GitHub release
+      - name: Get agent release run ID
         if: steps.inputs.outputs.attach_agent == 'true' && steps.inputs.outputs.agent_source == 'github_release'
+        id: get-release-run-id
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          AGENT_HOME="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
-          DOWNLOAD_DIR="${{ github.workspace }}/agent-download"
-          mkdir -p "$DOWNLOAD_DIR"
-
           VERSION="${{ steps.inputs.outputs.agent_version }}"
           if [ -z "$VERSION" ]; then
-            echo "Downloading latest agent release..."
-            gh release download \
-              --repo "${{ github.repository }}" \
-              --pattern "newrelic-dotnet-agent_*_amd64.deb" \
-              --dir "$DOWNLOAD_DIR"
+            echo "Looking up latest release commit SHA..."
+            COMMIT_SHA=$(git rev-list -n 1 "$(gh release list --limit 1 | awk '{ print $1 }')")
           else
-            echo "Downloading agent release v${VERSION}..."
-            gh release download "v${VERSION}" \
-              --repo "${{ github.repository }}" \
-              --pattern "newrelic-dotnet-agent_*_amd64.deb" \
-              --dir "$DOWNLOAD_DIR"
+            echo "Looking up release v${VERSION} commit SHA..."
+            COMMIT_SHA=$(git rev-list -n 1 "v${VERSION}")
           fi
+          if [ -z "$COMMIT_SHA" ]; then
+            echo "ERROR: Could not find commit SHA for release"
+            exit 1
+          fi
+          echo "Found commit SHA: $COMMIT_SHA"
 
-          DEB_FILE=$(ls "$DOWNLOAD_DIR"/newrelic-dotnet-agent_*.deb | head -1)
-          echo "Extracting: $DEB_FILE"
-          dpkg-deb -x "$DEB_FILE" "$DOWNLOAD_DIR/extracted"
-          cp -r "$DOWNLOAD_DIR/extracted/usr/local/newrelic-dotnet-agent/." "$AGENT_HOME/"
+          WORKFLOW_RUN_ID=$(gh run list --commit "$COMMIT_SHA" --workflow all_solutions.yml --event release --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [ -z "$WORKFLOW_RUN_ID" ]; then
+            echo "ERROR: Could not find a successful all_solutions.yml run for commit $COMMIT_SHA"
+            exit 1
+          fi
+          echo "Found workflow run ID: $WORKFLOW_RUN_ID"
+          echo "run_id=$WORKFLOW_RUN_ID" >> $GITHUB_OUTPUT
 
+      - name: Download agent homefolders from release build
+        if: steps.inputs.outputs.attach_agent == 'true' && steps.inputs.outputs.agent_source == 'github_release'
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.get-release-run-id.outputs.run_id }}
+          name: homefolders
+          path: ${{ github.workspace }}/agent-download
+          repository: ${{ github.repository }}
+
+      - name: Locate agent home from release build
+        if: steps.inputs.outputs.attach_agent == 'true' && steps.inputs.outputs.agent_source == 'github_release'
+        run: |
+          AGENT_HOME="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
+          SOURCE=$(find "${{ github.workspace }}/agent-download" -name "newrelichome_x64_coreclr_linux" -type d | head -1)
+          if [ -z "$SOURCE" ]; then
+            echo "ERROR: Could not find newrelichome_x64_coreclr_linux in downloaded artifact"
+            find "${{ github.workspace }}/agent-download" -type d | head -20
+            exit 1
+          fi
+          echo "Copying agent from: $SOURCE"
+          cp -r "$SOURCE/." "$AGENT_HOME/"
           echo "Agent home contents:"
           ls "$AGENT_HOME"
 
