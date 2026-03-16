@@ -33,7 +33,7 @@ services:
       CORECLR_PROFILER_PATH: /usr/local/newrelic-dotnet-agent/libNewRelicProfiler.so
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
       NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-dotnet-agent-perf-test}
-      NEW_RELIC_HOST: ${NEW_RELIC_HOST:collector.newrelic.com}
+      NEW_RELIC_HOST: ${NEW_RELIC_HOST:-collector.newrelic.com}
       NEW_RELIC_LOG_LEVEL: ${NEW_RELIC_LOG_LEVEL:-info}
       NEW_RELIC_LOG_DIRECTORY: /app/logs
     volumes:

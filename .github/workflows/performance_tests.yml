@@ -5,7 +5,7 @@ name: Performance Tests
 # separate Docker containers, optionally with the agent attached.
 #
 # Required secrets (when attach_agent is true):
-#   DOTNET_PERF_TEST_ACCOUNT  - A string consisting of a New Relic license key and the appropriate collector hostname for that license key, separated by a comma.  Example: XXXXXXXXXXXX,collector.newrelic.com
+#   PERF_TEST_ACCOUNT  - A string consisting of a New Relic license key and the appropriate collector hostname for that license key, separated by a comma.  Example: XXXXXXXXXXXX,collector.newrelic.com
 
 on:
   workflow_dispatch:
