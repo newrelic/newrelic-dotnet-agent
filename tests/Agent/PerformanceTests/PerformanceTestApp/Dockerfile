@@ -1,4 +1,4 @@
-ARG DOTNET_VERSION=9.0
+ARG DOTNET_VERSION=10.0
 
 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build
 WORKDIR /src

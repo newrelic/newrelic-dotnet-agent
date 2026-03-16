@@ -23,7 +23,7 @@ services:
       context: ./PerformanceTestApp
       dockerfile: Dockerfile
       args:
-        DOTNET_VERSION: ${DOTNET_VERSION:-9.0}
+        DOTNET_VERSION: ${DOTNET_VERSION:-10.0}
     image: perf-testapp
     environment:
       ASPNETCORE_ENVIRONMENT: Production
