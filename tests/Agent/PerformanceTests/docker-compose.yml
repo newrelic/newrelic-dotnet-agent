@@ -14,7 +14,7 @@
 #                           CORECLR_ENABLE_PROFILING is set to 1 by the workflow.
 #   NEW_RELIC_LICENSE_KEY   License key for the target New Relic account
 #   NEW_RELIC_APP_NAME      Application name shown in New Relic
-#   NEW_RELIC_HOST          New Relic collector host (e.g. staging-collector.newrelic.com)
+#   NEW_RELIC_HOST          New Relic collector host (e.g. collector.newrelic.com)
 
 services:
   testapp:
@@ -33,7 +33,7 @@ services:
       CORECLR_PROFILER_PATH: /usr/local/newrelic-dotnet-agent/libNewRelicProfiler.so
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
       NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-dotnet-agent-perf-test}
-      NEW_RELIC_HOST: ${NEW_RELIC_HOST:-}
+      NEW_RELIC_HOST: ${NEW_RELIC_HOST:collector.newrelic.com}
       NEW_RELIC_LOG_LEVEL: ${NEW_RELIC_LOG_LEVEL:-info}
       NEW_RELIC_LOG_DIRECTORY: /app/logs
     volumes:

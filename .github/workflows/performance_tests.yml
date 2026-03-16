@@ -5,7 +5,7 @@ name: Performance Tests
 # separate Docker containers, optionally with the agent attached.
 #
 # Required secrets (when attach_agent is true):
-#   STAGING_LICENSE_KEY  - New Relic staging license key (team sandbox account)
+#   DOTNET_PERF_TEST_ACCOUNT  - A string consisting of a New Relic license key and the appropriate collector hostname for that license key, separated by a comma.  Example: XXXXXXXXXXXX,collector.newrelic.com
 
 on:
   workflow_dispatch:
@@ -246,9 +246,12 @@ jobs:
           TEST_DURATION: ${{ steps.inputs.outputs.test_duration }}
           LOCUST_USERS: ${{ steps.inputs.outputs.locust_users }}
           LOCUST_SPAWN_RATE: ${{ steps.inputs.outputs.locust_spawn_rate }}
-          NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
-          NEW_RELIC_HOST: staging-collector.newrelic.com
+          PERF_TEST_ACCOUNT: ${{ secrets.PERF_TEST_ACCOUNT }}
         run: |
+          NEW_RELIC_LICENSE_KEY="${PERF_TEST_ACCOUNT%%,*}"
+          NEW_RELIC_HOST="${PERF_TEST_ACCOUNT##*,}"
+          export NEW_RELIC_LICENSE_KEY NEW_RELIC_HOST
+
           docker compose up -d
 
           echo "Waiting for test app to become healthy..."
