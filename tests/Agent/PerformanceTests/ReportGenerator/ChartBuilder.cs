@@ -12,6 +12,10 @@ public static class ChartBuilder
     private const double BarWidth = 0.25;
     private const double GroupSpacing = 1.0;
 
+    // Manually-constructed Bar objects don't inherit palette colors from the
+    // plot — FillColor must be set explicitly or every bar renders as gray.
+    private static readonly ScottPlot.IPalette Palette = new ScottPlot.Palettes.Category10();
+
     public static void GenerateResponseTimeChart(IList<RunMetrics> runs, string outputPath)
     {
         var plot = new Plot();
@@ -20,12 +24,16 @@ public static class ChartBuilder
         var p95Bars = new List<Bar>();
         var p99Bars = new List<Bar>();
 
+        var colorP50 = Palette.GetColor(0);
+        var colorP95 = Palette.GetColor(1);
+        var colorP99 = Palette.GetColor(2);
+
         for (var i = 0; i < runs.Count; i++)
         {
             var center = i * GroupSpacing;
-            p50Bars.Add(new Bar { Position = center - BarWidth, Value = runs[i].P50Ms, Size = BarWidth });
-            p95Bars.Add(new Bar { Position = center, Value = runs[i].P95Ms, Size = BarWidth });
-            p99Bars.Add(new Bar { Position = center + BarWidth, Value = runs[i].P99Ms, Size = BarWidth });
+            p50Bars.Add(new Bar { Position = center - BarWidth, Value = runs[i].P50Ms, Size = BarWidth, FillColor = colorP50 });
+            p95Bars.Add(new Bar { Position = center, Value = runs[i].P95Ms, Size = BarWidth, FillColor = colorP95 });
+            p99Bars.Add(new Bar { Position = center + BarWidth, Value = runs[i].P99Ms, Size = BarWidth, FillColor = colorP99 });
         }
 
         var bp50 = plot.Add.Bars(p50Bars);
@@ -48,7 +56,7 @@ public static class ChartBuilder
     {
         var plot = new Plot();
 
-        var bars = runs.Select((r, i) => new Bar { Position = i * GroupSpacing, Value = r.RequestsPerSec, Size = 0.6 }).ToList();
+        var bars = runs.Select((r, i) => new Bar { Position = i * GroupSpacing, Value = r.RequestsPerSec, Size = 0.6, FillColor = Palette.GetColor(i) }).ToList();
 
         plot.Add.Bars(bars);
 
@@ -65,11 +73,14 @@ public static class ChartBuilder
         var avgBars = new List<Bar>();
         var maxBars = new List<Bar>();
 
+        var colorAvg = Palette.GetColor(0);
+        var colorMax = Palette.GetColor(1);
+
         for (var i = 0; i < runs.Count; i++)
         {
             var center = i * GroupSpacing;
-            avgBars.Add(new Bar { Position = center - BarWidth / 2, Value = runs[i].AvgCpuPct, Size = BarWidth });
-            maxBars.Add(new Bar { Position = center + BarWidth / 2, Value = runs[i].MaxCpuPct, Size = BarWidth });
+            avgBars.Add(new Bar { Position = center - BarWidth / 2, Value = runs[i].AvgCpuPct, Size = BarWidth, FillColor = colorAvg });
+            maxBars.Add(new Bar { Position = center + BarWidth / 2, Value = runs[i].MaxCpuPct, Size = BarWidth, FillColor = colorMax });
         }
 
         var bpAvg = plot.Add.Bars(avgBars);
