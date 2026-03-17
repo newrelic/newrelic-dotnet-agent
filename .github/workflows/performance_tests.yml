@@ -258,6 +258,24 @@ jobs:
           timeout 60 bash -c 'until docker inspect perf-testapp --format="{{.State.Health.Status}}" 2>/dev/null | grep -q "healthy"; do sleep 2; done'
           echo "Test app is healthy. Traffic driver is running."
 
+      - name: Start Docker stats monitoring
+        working-directory: ${{ env.PERF_TEST_DIR }}
+        run: |
+          STATS_FILE="results/docker-stats.csv"
+          echo "timestamp,cpu_pct,mem_pct,mem_usage,net_io,block_io,pids" > "$STATS_FILE"
+
+          while true; do
+            TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            LINE=$(docker stats perf-testapp --no-stream \
+              --format "{{.CPUPerc}},{{.MemPerc}},{{.MemUsage}},{{.NetIO}},{{.BlockIO}},{{.PIDs}}" \
+              2>/dev/null || true)
+            [ -n "$LINE" ] && echo "${TS},${LINE}" >> "$STATS_FILE"
+            sleep 5
+          done &
+
+          echo "DOCKER_STATS_PID=$!" >> $GITHUB_ENV
+          echo "Docker stats monitoring started (PID $!)"
+
       - name: Wait for traffic driver to complete
         id: wait-traffic
         run: |
@@ -265,6 +283,19 @@ jobs:
           TRAFFIC_EXIT_CODE=$(docker wait perf-traffic-driver)
           echo "traffic_exit_code=${TRAFFIC_EXIT_CODE}" >> $GITHUB_OUTPUT
           echo "Traffic driver exited with code: ${TRAFFIC_EXIT_CODE}"
+
+      - name: Stop Docker stats monitoring
+        if: always()
+        run: |
+          if [ -n "${DOCKER_STATS_PID}" ]; then
+            kill "${DOCKER_STATS_PID}" 2>/dev/null || true
+            echo "Docker stats monitoring stopped (PID ${DOCKER_STATS_PID})."
+          fi
+          STATS_FILE="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/results/docker-stats.csv"
+          if [ -f "$STATS_FILE" ]; then
+            SAMPLES=$(( $(wc -l < "$STATS_FILE") - 1 ))
+            echo "Collected ${SAMPLES} Docker stats sample(s)."
+          fi
 
       # -----------------------------------------------------------------------
       # Collect results and logs before stopping containers
@@ -373,6 +404,17 @@ jobs:
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           else
             echo "No Locust stats CSV found." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          DOCKER_STATS_FILE="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/results/docker-stats.csv"
+          if [ -f "$DOCKER_STATS_FILE" ]; then
+            SAMPLES=$(( $(wc -l < "$DOCKER_STATS_FILE") - 1 ))
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Docker Stats (${SAMPLES} samples, last 5 shown)" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            head -1 "$DOCKER_STATS_FILE" >> $GITHUB_STEP_SUMMARY
+            tail -5 "$DOCKER_STATS_FILE" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
