@@ -252,21 +252,56 @@ fi
 # ---------------------------------------------------------------------------
 {
   if [ -f "results/locust_stats.csv" ]; then
-    echo "### Locust Results Summary"
-    echo '```'
-    cat "results/locust_stats.csv"
-    echo '```'
+    echo "### Locust Results"
+    echo ""
+    python - << 'PYEOF'
+import csv, sys
+
+# Columns: Name(1), Avg RT(5), Req/s(9), 50%(11), 75%(13), 95%(16), 99%(18), 100%(21)
+COLS = [1, 5, 9, 11, 13, 16, 18, 21]
+
+try:
+    with open("results/locust_stats.csv", newline="") as f:
+        rows = list(csv.reader(f))
+except FileNotFoundError:
+    sys.exit(0)
+
+if len(rows) < 2:
+    sys.exit(0)
+
+header = [rows[0][i] for i in COLS]
+print("| " + " | ".join(header) + " |")
+print("| " + " | ".join(["---"] * len(COLS)) + " |")
+for row in rows[1:]:
+    if len(row) > max(COLS):
+        print("| " + " | ".join(row[i] for i in COLS) + " |")
+PYEOF
   else
     echo "No Locust stats CSV found."
   fi
 
   if [ "$STATS_SAMPLES" -gt 0 ]; then
     echo ""
-    echo "### Docker Stats ($STATS_SAMPLES samples, last 5 shown)"
-    echo '```'
-    head -1 "$STATS_FILE"
-    tail -5 "$STATS_FILE"
-    echo '```'
+    echo "### Docker Stats ($STATS_SAMPLES samples)"
+    echo ""
+    python - << 'PYEOF'
+import csv, sys
+
+try:
+    with open("results/docker-stats.csv", newline="") as f:
+        rows = list(csv.reader(f))
+except FileNotFoundError:
+    sys.exit(0)
+
+if len(rows) < 2:
+    sys.exit(0)
+
+header = rows[0]
+print("| " + " | ".join(header) + " |")
+print("| " + " | ".join(["---"] * len(header)) + " |")
+for row in rows[1:]:
+    print("| " + " | ".join(row) + " |")
+PYEOF
   fi
 
   echo ""
