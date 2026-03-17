@@ -289,7 +289,8 @@ public class TracingState : ITracingState
         _priority = samplingResult.Priority;
         _sampled = samplingResult.Sampled;
 
-        Log.Finest("ApplyRemoteParentSampledBehavior:  _traceContext?.Traceparent?.Sampled={TraceParentSampled}, _newRelicPayload?.Sampled={NewRelicSampled}, Sampler: {Sampler} ==> Sampled: {Sampled}, Priority: {Priority}",
+        Log.Finest("Trx {TransactionId}: ApplyRemoteParentSampledBehavior:  _traceContext?.Traceparent?.Sampled={TraceParentSampled}, _newRelicPayload?.Sampled={NewRelicSampled}, Sampler: {Sampler} ==> Sampled: {Sampled}, Priority: {Priority}",
+            TransactionId,
             _traceContext?.Traceparent?.Sampled,
             _newRelicPayload?.Sampled,
             sampler.GetType().Name,
