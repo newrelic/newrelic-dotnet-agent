@@ -91,4 +91,14 @@
     <PackageReference Include="System.Data.Odbc" Version="10.0.5" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="System.Data.Odbc" Version="10.0.5" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
+
+  <!-- gRPC references for .NET 10.0, easier to understand what's going on when they're in a separate group -->
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore.Server" Version="2.76.0" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.76.0" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Grpc.Tools" Version="2.76.0" Condition="'$(TargetFramework)' == 'net10.0'">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <Protobuf Include="..\MultiFunctionApplicationHelpers\NetStandardLibraries\Grpc\greet.proto" Condition="'$(TargetFramework)' == 'net10.0'" />
+  </ItemGroup>
 </Project>
