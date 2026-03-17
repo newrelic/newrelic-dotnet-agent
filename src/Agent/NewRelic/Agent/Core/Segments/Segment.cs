@@ -653,6 +653,24 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         return EnumNameCache<SpanCategory>.GetName(Data.SpanCategory);
     }
 
+    /// <summary>
+    /// Set alternative server details for grpc-dotnet that can be used when the activity does not have server.address or server.port set.
+    /// </summary>
+    /// <param name="uri"></param>
+    /// <returns>True if the server details were set successfully, false otherwise.</returns>
+    public bool SetServerDetailsForGrpcActivity(Uri uri)
+    {
+        if (_activity?.DisplayName != ActivityBridge.GrpcDotnetActivitySourceName)
+        {
+            return false;
+        }
+
+        _activity.AddTag(ActivityBridge.NewRelicServerAddress, uri.Host);
+        _activity.AddTag(ActivityBridge.NewRelicServerPort, uri.Port);
+        if (Log.IsFinestEnabled) Log.Finest($"Trx {GetTransactionGuid()}: gRPC parent detected for HttpClient call, setting server address and port on parent activity and no-oping.");
+
+        return true;
+    }
 }
 
 // TODO: Rename this experimental to something else, or find a better way to solve this problem.

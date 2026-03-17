@@ -436,12 +436,6 @@ public class Agent : IAgent // any changes to api, update the interface in exten
             return;
         }
 
-        // Record metric is streaming has been disabled
-        if (!_configurationService.Configuration.AiMonitoringStreamingEnabled)
-        {
-            RecordSupportabilityMetric("Supportability/DotNet/ML/Streaming/Disabled");
-        }
-
         var transaction = _transactionService.GetCurrentInternalTransaction();
         transaction.SetLlmTransaction(true);
 

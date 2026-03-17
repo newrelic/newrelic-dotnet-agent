@@ -13,10 +13,12 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Extensions.Llm;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
+using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 
@@ -58,9 +60,22 @@ public static class ActivityBridgeSegmentHelpers
                 {
                     ProcessRpcClientTags(segment, agent, errorService, tags, activityLogPrefix, rpcSystem);
                 }
+                else if (tags.TryGetTag<string>(["grpc.method"], out _)) // It's gRPC - likely grpc-dotnet
+                {
+                    ProcessRpcClientTags(segment, agent, errorService, tags, activityLogPrefix, "grpc");
+                }
                 else if (tags.TryGetAndRemoveTag<string>(["http.request.method", "http.method"], out var method)) // it's an HTTP call
                 {
                     ProcessClientExternalTags(segment, agent, tags, activityLogPrefix, method);
+                }
+                else if (tags.TryGetAndRemoveTag<string>(["gen_ai.operation.name"], out var aiOp)) // it's Microsoft.Extensions.AI
+                {
+                    // If AI monitoring is disabled, we'll fall out of the switch statement and add all the tags as custom attributes on a SimpleSegmentData.
+                    // since the Experimental.Microsoft.Extensions.AI activity source is opt-in, we don't need to worry about checking AiMonitoringRecordContentEnabled if AI monitoring isn't enabled.
+                    if (agent.Configuration.AiMonitoringEnabled) // only instrument if AI monitoring is enabled
+                    {
+                        ProcessLlmChatClientTags(segment, agent, activity, activityLogPrefix, tags, aiOp);
+                    }
                 }
                 else
                 {
@@ -134,27 +149,30 @@ public static class ActivityBridgeSegmentHelpers
         }
     }
 
+    #region RPC
     private static void ProcessRpcClientTags(ISegment segment, IAgent agent, IErrorService errorService, Dictionary<string, object> tags, string activityLogPrefix, string rpcSystem)
     {
-        tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code"], out var statusCode);
+        tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code", "grpc.status_code"], out var statusCode);
 
         tags.TryGetAndRemoveTag<string>(["rpc.method"], out var method);
-        tags.TryGetAndRemoveTag<string>(["rpc.service"], out var service);
+        tags.TryGetAndRemoveTag<string>(["rpc.service"], out var service); // deprecated attribute, rpc.method includes this information in the format /service/method, but some instrumentation may still use this tag so we'll look for it as a fallback
         tags.TryGetAndRemoveTag<string>(["grpc.method"], out var grpcMethod);
+        var cleanGrpcMethod = grpcMethod?.TrimStart('/'); // per spec, we need to strip leading slashes.
 
-        tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address"], out var host);
-        tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
+        tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address", ActivityBridge.NewRelicServerAddress], out var host);
+        tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port", ActivityBridge.NewRelicServerPort], out var port);
 
-        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
+        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, cleanGrpcMethod);
         Uri uri = new Uri(path);
-        var externalSegmentData = new ExternalSegmentData(uri, method, componentOverride: rpcSystem);
+        var externalSegmentData = new ExternalGrpcSegmentData(uri: uri, method: method ?? cleanGrpcMethod, componentOverride: rpcSystem);
 
         if (statusCode.HasValue)
-            externalSegmentData.SetHttpStatus(statusCode.Value);
+            externalSegmentData.SetGrpcStatus(statusCode.Value);
 
-        Log.Finest($"Created ExternalSegmentData for {activityLogPrefix}.");
+        Log.Finest($"{activityLogPrefix} Created ExternalGrpcSegmentData.");
 
-        segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
+        segment.GetExperimentalApi().SetSegmentData(externalSegmentData)
+            .MakeLeaf();
 
         // per spec, a non-zero status code must be recorded as an exception.
         // TODO: This behavior is supposed to be configurable by the customer but currently is not
@@ -203,7 +221,7 @@ public static class ActivityBridgeSegmentHelpers
     {
         // construct the path according to gRPC spec
         // if service is missing, grpcMethod is the full path
-        return !string.IsNullOrEmpty(service) ? $"grpc://{host}:{port}/{service}/{method}" : $"grpc://{host}:{port}{grpcMethod}";
+        return !string.IsNullOrEmpty(service) ? $"grpc://{host}:{port}/{service}/{method}" : $"grpc://{host}:{port}/{grpcMethod}";
     }
 
     private static void RecordGrpcException(ISegment segment, IAgent agent, IErrorService errorService, int statusCode, string path, string activityLogPrefix)
@@ -218,6 +236,9 @@ public static class ActivityBridgeSegmentHelpers
             Log.Debug($"{activityLogPrefix} recorded gRPC exception: {errorMessage}");
         }
     }
+    #endregion
+
+    #region HTTP
 
     private static void ProcessHttpServerTags(ISegment segment, IAgent agent, Dictionary<string, object> tags, string activityLogPrefix, string requestMethod)
     {
@@ -286,6 +307,10 @@ public static class ActivityBridgeSegmentHelpers
             }
         }
     }
+
+    #endregion
+
+    #region MessageBrokers
 
     /// <summary>
     /// Processes messaging system tags for producer and consumer activities, creating and configuring a <see
@@ -393,6 +418,9 @@ public static class ActivityBridgeSegmentHelpers
             : queueNameOrRoutingKey;
     }
 
+    #endregion
+
+    #region Externals
     private static void ProcessClientExternalTags(ISegment segment, IAgent agent, Dictionary<string, object> tags, string activityLogPrefix, string method)
     {
         if (!tags.TryGetAndRemoveTag<string>(["url.full", "http.url"], out var url))
@@ -427,6 +455,10 @@ public static class ActivityBridgeSegmentHelpers
 
         segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
     }
+
+    #endregion
+
+    #region Datastores
 
     private static void ProcessClientDatabaseTags(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, string dbSystemName)
     {
@@ -574,6 +606,273 @@ public static class ActivityBridgeSegmentHelpers
         Log.Finest($"Created DatastoreSegmentData for DynamoDB {activityLogPrefix}");
         return new DatastoreSegmentData(agent.GetExperimentalApi().DatabaseService, parsedSqlStatement, string.Empty, null);
     }
+
+    #endregion
+
+    #region LLM Chat
+
+    private static void ProcessLlmChatClientTags(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, Dictionary<string, object> tags, string operation)
+    {
+        string scopeName = (string)activity.Source?.Name ?? "unknown";
+        Log.Finest($"{activityLogPrefix} LLM chat client activity from {scopeName}");
+
+        var llmTags = ExtractLlmTags(tags);
+
+        // we do not force the segment naming as specified in the LLM spec - we let native otel segment names pass through
+
+        RecordLlmMetrics(agent, llmTags.ProviderName, llmTags.LibraryVersion, llmTags.EffectiveModel);
+
+        if (!string.IsNullOrEmpty(llmTags.ErrorType))
+        {
+            HandleLlmError(segment, agent, activity, activityLogPrefix, llmTags);
+        }
+        else
+        {
+            HandleLlmSuccess(segment, agent, activityLogPrefix, llmTags);
+        }
+    }
+
+    private static LlmTagValues ExtractLlmTags(Dictionary<string, object> tags)
+    {
+        tags.TryGetAndRemoveTag<string>(["gen_ai.provider.name"], out var providerName);
+        tags.TryGetAndRemoveTag<string>(["gen_ai.request.model"], out var requestModel);
+        tags.TryGetAndRemoveTag<string>(["gen_ai.response.model"], out var responseModel);
+        tags.TryGetAndRemoveTag<string>(["gen_ai.output.id"], out var responseId);
+        tags.TryGetAndRemoveTag<string>(["gen_ai.output.messages"], out var outputMessagesJson);
+        tags.TryGetAndRemoveTag<string>(["gen_ai.input.messages"], out var inputMessagesJson);
+        tags.TryGetAndRemoveTag<string>(["telemetry.sdk.version"], out var libraryVersion);
+        tags.TryGetAndRemoveTag<int>(["gen_ai.usage.input_tokens"], out var inputTokenCount);
+        tags.TryGetAndRemoveTag<int>(["gen_ai.usage.output_tokens"], out var outputTokenCount);
+        tags.TryGetAndRemoveTag<string>(["error.type"], out var errorType);
+
+        return new LlmTagValues
+        {
+            ProviderName = providerName,
+            RequestModel = requestModel,
+            ResponseModel = responseModel,
+            ResponseId = responseId,
+            OutputMessagesJson = outputMessagesJson,
+            InputMessagesJson = inputMessagesJson,
+            LibraryVersion = libraryVersion,
+            InputTokenCount = inputTokenCount,
+            OutputTokenCount = outputTokenCount,
+            ErrorType = errorType
+        };
+    }
+
+    private static void HandleLlmError(ISegment segment, IAgent agent, dynamic activity, string activityLogPrefix, LlmTagValues llmTags)
+    {
+        var errorMessage = activity.StatusDescription as string ?? "An error occurred during the LLM chat operation.";
+        Log.Info($"{activityLogPrefix} Error invoking OpenAI model {llmTags.RequestModel}: {errorMessage}");
+        agent.CurrentTransaction.NoticeError(new Exception(errorMessage));
+
+        var errorData = new LlmErrorData
+        {
+            HttpStatusCode = ExtractHttpStatusCodeFromDescription(errorMessage),
+            ErrorCode = null,
+            ErrorParam = null,
+            ErrorMessage = errorMessage,
+        };
+
+        EventHelper.CreateChatCompletionEvent(
+            agent,
+            segment,
+            requestId: null, // not available from openai otel tags
+            temperature: null,
+            maxTokens: null,
+            requestModel: llmTags.RequestModel,
+            responseModel: null,
+            numMessages: 0,
+            finishReason: null,
+            vendor: llmTags.ProviderName,
+            isError: true,
+            headers: null,
+            errorData: errorData);
+    }
+
+    /// <summary>
+    /// Extracts the HTTP status code from a status description string in the format "HTTP XXX (...)".
+    /// Returns null if the description does not match the expected format.
+    /// </summary>
+    private static string ExtractHttpStatusCodeFromDescription(string statusDescription)
+    {
+        if (string.IsNullOrEmpty(statusDescription))
+            return null;
+
+        // Expected format: "HTTP 401 (Unauthorized)" or similar
+        if (!statusDescription.StartsWith("HTTP ", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var spaceIndex = statusDescription.IndexOf(' ', 5); // find space after the status code digits
+        var codeStr = spaceIndex > 5
+            ? statusDescription.Substring(5, spaceIndex - 5)
+            : statusDescription.Substring(5); // no trailing text, take the rest
+
+        // Validate it's actually a numeric status code
+        return int.TryParse(codeStr, out _) ? codeStr : null;
+    }
+
+    private static void HandleLlmSuccess(ISegment segment, IAgent agent, string activityLogPrefix, LlmTagValues llmTags)
+    {
+        List<LlmInputMessage> inputMessages;
+        List<LlmOutputMessage> outputMessages;
+        try
+        {
+            inputMessages = JsonConvert.DeserializeObject<List<LlmInputMessage>>(llmTags.InputMessagesJson);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"{activityLogPrefix}: Failed to deserialize gen_ai.input.messages: {ex.Message}");
+            return;
+        }
+        try
+        {
+            outputMessages = JsonConvert.DeserializeObject<List<LlmOutputMessage>>(llmTags.OutputMessagesJson);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"{activityLogPrefix}: Failed to deserialize gen_ai.output.messages: {ex.Message}");
+            return;
+        }
+
+        // Find the last user message with text content
+        string promptContent = null;
+            string promptRole = null;
+
+            for (int i = inputMessages.Count - 1; i >= 0; i--)
+            {
+                var message = inputMessages[i];
+                if (message.Role?.Equals("user", StringComparison.OrdinalIgnoreCase) == true && 
+                    message.Parts != null)
+                {
+                    // Find the first text part in this message
+                    foreach (var part in message.Parts)
+                    {
+                        if (part.Type?.Equals("text", StringComparison.OrdinalIgnoreCase) == true && 
+                            part.Content is string textContent && 
+                            !string.IsNullOrEmpty(textContent))
+                        {
+                            promptContent = textContent;
+                            promptRole = message.Role;
+                            break;
+                        }
+                    }
+
+                    if (promptContent != null)
+                        break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(promptContent))
+            {
+                Log.Debug($"{activityLogPrefix} could not find a user message with text content. Skipping LLM event creation.");
+                return;
+            }
+
+            // records the LlmChatCompletionSummary event.
+            // Essentially a NoOp if AiMonitoringEnabled is false in the agent configuration.
+            // Handles removing input/content if AiMonitoringContentEnabled is false in the agent configuration.
+            var completionId = EventHelper.CreateChatCompletionEvent(
+                agent,
+                segment,
+                requestId: null, // not available from openai otel tags
+                temperature: null,
+                maxTokens: null,
+                requestModel: llmTags.RequestModel,
+                responseModel: llmTags.EffectiveModel,
+                numMessages: outputMessages.Count,
+                finishReason: outputMessages[0].FinishReason,
+                vendor: llmTags.ProviderName,
+                isError: false,
+                headers: null,
+                errorData: null);
+
+            // Prompt - using the last user message with text content
+            // Records the LlmChatCompletionMessage event.
+            // Essentially a NoOp if AiMonitoringEnabled is false in the agent configuration.
+            // Handles removing input/content if AiMonitoringContentEnabled is false in the agent configuration.
+            EventHelper.CreateChatMessageEvent(
+                agent,
+                segment,
+                requestId: null,
+                responseId: llmTags.ResponseId,
+                responseModel: llmTags.ResponseModel,
+                content: promptContent,
+                role: promptRole,
+                sequence: 0,
+                completionId: completionId,
+                isResponse: false,
+                vendor: llmTags.ProviderName,
+                tokenCount: llmTags.InputTokenCount);
+
+            // Response - find first text part in output
+            string responseContent = null;
+            string responseRole = null;
+            if (outputMessages[0].FinishReason == "stop" && outputMessages[0].Parts != null)
+            {
+                foreach (var part in outputMessages[0].Parts)
+                {
+                    if (part.Type?.Equals("text", StringComparison.OrdinalIgnoreCase) == true && 
+                        part.Content is string textContent && 
+                        !string.IsNullOrEmpty(textContent))
+                    {
+                        responseContent = textContent;
+                        responseRole = outputMessages[0].Role;
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(responseContent))
+                {
+                    // Records the LlmChatCompletionMessage event.
+                    // Essentially a NoOp if AiMonitoringEnabled is false in the agent configuration.
+                    // Handles removing input/content if AiMonitoringContentEnabled is false in the agent configuration.
+                    EventHelper.CreateChatMessageEvent(
+                        agent,
+                        segment,
+                        requestId: null,
+                        responseId: llmTags.ResponseId,
+                        responseModel: llmTags.ResponseModel,
+                        content: responseContent,
+                        role: responseRole,
+                        sequence: 1,
+                        completionId: completionId,
+                        isResponse: true,
+                        vendor: llmTags.ProviderName,
+                        tokenCount: llmTags.OutputTokenCount);
+                }
+            }
+    }
+
+    private static void RecordLlmMetrics(IAgent agent, string vendorName, string version, string model)
+    {
+        // required per spec
+        agent.RecordSupportabilityMetric($"DotNet/ML/{vendorName}/{version}");
+
+        SupportabilityHelpers.CreateModelIdSupportabilityMetricsForOpenAi(model, agent); // prepend vendor name to model id
+
+        // useful for tracking LLM usage by vendor
+        agent.RecordSupportabilityMetric($"DotNet/LLM/{vendorName}-Chat");
+    }
+
+    private class LlmTagValues
+    {
+        public string ProviderName { get; set; }
+        public string RequestModel { get; set; }
+        public string ResponseModel { get; set; }
+        public string ResponseId { get; set; }
+        public string OutputMessagesJson { get; set; }
+        public string InputMessagesJson { get; set; }
+        public string LibraryVersion { get; set; }
+        public int InputTokenCount { get; set; }
+        public int OutputTokenCount { get; set; }
+        public string ErrorType { get; set; }
+
+        // If the response model is not provided, fall back to the request model
+        public string EffectiveModel => string.IsNullOrEmpty(ResponseModel) ? RequestModel : ResponseModel;
+    }
+
+    #endregion
 
     public static void CaptureEventsOnSpan(this ISegment segment, object originalActivity)
     {
@@ -730,4 +1029,26 @@ public enum GrpcStatusCodes
     Unavailable = 14,
     DataLoss = 15,
     Unauthenticated = 16
+}
+
+
+public class LlmOutputMessage
+{
+    public string Role { get; set; }
+    public LlmMessagePart[] Parts { get; set; }
+
+    [JsonProperty("finish_reason")]
+    public string FinishReason { get; set; }
+}
+
+public class LlmInputMessage
+{
+    public string Role { get; set; }
+    public LlmMessagePart[] Parts { get; set; }
+}
+
+public class LlmMessagePart
+{
+    public string Type { get; set; }
+    public object Content { get; set; }
 }

@@ -1,0 +1,969 @@
+[
+    {
+        "testDescription": "LLM Chat Completion Success - creates LLM events and consumes gen_ai tags",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "LlmChatSuccess"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "chat gpt-4o",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.operation.name",
+                                    "value": "chat"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.provider.name",
+                                    "value": "openai"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.request.model",
+                                    "value": "gpt-4o"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.response.model",
+                                    "value": "gpt-4o-2024-08-06"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.id",
+                                    "value": "chatcmpl-abc123"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.input.messages",
+                                    "value": "[{\"role\":\"system\",\"parts\":[{\"type\":\"text\",\"content\":\"You are a helpful assistant.\"}]},{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"What is the capital of France?\"}]}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.messages",
+                                    "value": "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"The capital of France is Paris.\"}],\"finish_reason\":\"stop\"}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "telemetry.sdk.version",
+                                    "value": "1.0.0"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.usage.input_tokens",
+                                    "value": 25,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.usage.output_tokens",
+                                    "value": 10,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "custom.llm.tag",
+                                    "value": "should-remain"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "LlmChatSuccess"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "chat gpt-4o",
+                    "parentName": "LlmChatSuccess",
+                    "category": "generic",
+                    "attributes": {
+                        "custom.llm.tag": "should-remain"
+                    }
+                }
+            ],
+            "customEvents": [
+                {
+                    "type": "LlmChatCompletionSummary",
+                    "attributes": {
+                        "request.model": "gpt-4o",
+                        "response.model": "gpt-4o-2024-08-06",
+                        "vendor": "openai",
+                        "ingest_source": "DotNet",
+                        "response.choices.finish_reason": "stop"
+                    }
+                },
+                {
+                    "type": "LlmChatCompletionMessage",
+                    "attributes": {
+                        "role": "user",
+                        "content": "What is the capital of France?",
+                        "vendor": "openai",
+                        "ingest_source": "DotNet"
+                    }
+                },
+                {
+                    "type": "LlmChatCompletionMessage",
+                    "attributes": {
+                        "role": "assistant",
+                        "content": "The capital of France is Paris.",
+                        "is_response": "True",
+                        "vendor": "openai",
+                        "ingest_source": "DotNet"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "LLM Chat Completion Success - request model used when response model is absent",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "LlmChatFallbackModel"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "chat gpt-4o-mini",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.operation.name",
+                                    "value": "chat"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.provider.name",
+                                    "value": "openai"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.request.model",
+                                    "value": "gpt-4o-mini"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.id",
+                                    "value": "chatcmpl-fallback"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.input.messages",
+                                    "value": "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"Hello\"}]}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.messages",
+                                    "value": "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"Hi there!\"}],\"finish_reason\":\"stop\"}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "telemetry.sdk.version",
+                                    "value": "1.0.0"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.usage.input_tokens",
+                                    "value": 5,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.usage.output_tokens",
+                                    "value": 3,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "LlmChatFallbackModel"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "chat gpt-4o-mini",
+                    "parentName": "LlmChatFallbackModel",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "LLM Chat Error - error.type present triggers error handling path",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "LlmChatError"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "chat gpt-4o error",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.operation.name",
+                                    "value": "chat"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.provider.name",
+                                    "value": "openai"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.request.model",
+                                    "value": "gpt-4o"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "error.type",
+                                    "value": "ClientError"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "telemetry.sdk.version",
+                                    "value": "1.0.0"
+                                }
+                            },
+                            {
+                                "command": "SetErrorStatusOnSpan",
+                                "parameters": {
+                                    "statusDescription": "HTTP 401 (Unauthorized)"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "LlmChatError",
+                    "attributes": {
+                        "error": true,
+                        "errorType": "System.Exception",
+                        "errorMessage": "HTTP 401 (Unauthorized)"
+                    }
+                }
+            ],
+            "spans": [
+                {
+                    "name": "chat gpt-4o error",
+                    "parentName": "LlmChatError",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "LLM Chat Error - default error message when StatusDescription is null",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "LlmChatErrorDefault"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "chat gpt-4o error default",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.operation.name",
+                                    "value": "chat"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.provider.name",
+                                    "value": "openai"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.request.model",
+                                    "value": "gpt-4o"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "error.type",
+                                    "value": "ServerError"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "telemetry.sdk.version",
+                                    "value": "1.0.0"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "LlmChatErrorDefault",
+                    "attributes": {
+                        "error": true,
+                        "errorType": "System.Exception",
+                        "errorMessage": "An error occurred during the LLM chat operation."
+                    }
+                }
+            ],
+            "spans": [
+                {
+                    "name": "chat gpt-4o error default",
+                    "parentName": "LlmChatErrorDefault",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "LLM Chat - invalid input messages JSON gracefully handled",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "LlmChatInvalidInput"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "chat gpt-4o invalid input",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.operation.name",
+                                    "value": "chat"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.provider.name",
+                                    "value": "openai"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.request.model",
+                                    "value": "gpt-4o"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.input.messages",
+                                    "value": "not valid json!!!"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.messages",
+                                    "value": "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"Hello\"}],\"finish_reason\":\"stop\"}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "telemetry.sdk.version",
+                                    "value": "1.0.0"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "LlmChatInvalidInput"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "chat gpt-4o invalid input",
+                    "parentName": "LlmChatInvalidInput",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "LLM Chat - invalid output messages JSON gracefully handled",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "LlmChatInvalidOutput"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "chat gpt-4o invalid output",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.operation.name",
+                                    "value": "chat"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.provider.name",
+                                    "value": "openai"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.request.model",
+                                    "value": "gpt-4o"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.input.messages",
+                                    "value": "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"Hello\"}]}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.messages",
+                                    "value": "{broken json"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "telemetry.sdk.version",
+                                    "value": "1.0.0"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "LlmChatInvalidOutput"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "chat gpt-4o invalid output",
+                    "parentName": "LlmChatInvalidOutput",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "LLM Chat - no user message in input skips event creation",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "LlmChatNoUserMsg"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "chat gpt-4o no user",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.operation.name",
+                                    "value": "chat"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.provider.name",
+                                    "value": "openai"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.request.model",
+                                    "value": "gpt-4o"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.input.messages",
+                                    "value": "[{\"role\":\"system\",\"parts\":[{\"type\":\"text\",\"content\":\"You are a bot.\"}]}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.messages",
+                                    "value": "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"Hello!\"}],\"finish_reason\":\"stop\"}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "telemetry.sdk.version",
+                                    "value": "1.0.0"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "LlmChatNoUserMsg"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "chat gpt-4o no user",
+                    "parentName": "LlmChatNoUserMsg",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "LLM Chat - response with non-stop finish_reason skips response message event",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "LlmChatNonStop"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "chat gpt-4o non-stop",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.operation.name",
+                                    "value": "chat"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.provider.name",
+                                    "value": "openai"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.request.model",
+                                    "value": "gpt-4o"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.response.model",
+                                    "value": "gpt-4o-2024-08-06"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.id",
+                                    "value": "chatcmpl-truncated"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.input.messages",
+                                    "value": "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"Write a very long essay.\"}]}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.messages",
+                                    "value": "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"Here is a truncated response...\"}],\"finish_reason\":\"length\"}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "telemetry.sdk.version",
+                                    "value": "1.0.0"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.usage.input_tokens",
+                                    "value": 15,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.usage.output_tokens",
+                                    "value": 4096,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "LlmChatNonStop"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "chat gpt-4o non-stop",
+                    "parentName": "LlmChatNonStop",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "LLM Chat - user message with no text parts skips event creation",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "LlmChatNoTextParts"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "chat gpt-4o no text parts",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.operation.name",
+                                    "value": "chat"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.provider.name",
+                                    "value": "openai"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.request.model",
+                                    "value": "gpt-4o"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.input.messages",
+                                    "value": "[{\"role\":\"user\",\"parts\":[{\"type\":\"image\",\"content\":\"base64data\"}]}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.messages",
+                                    "value": "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"I see an image.\"}],\"finish_reason\":\"stop\"}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "telemetry.sdk.version",
+                                    "value": "1.0.0"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "LlmChatNoTextParts"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "chat gpt-4o no text parts",
+                    "parentName": "LlmChatNoTextParts",
+                    "category": "generic"
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "LLM Chat Success - multiple input messages picks last user message",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "LlmChatMultiInput"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "chat gpt-4o multi-turn",
+                            "spanKind": "Client"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.operation.name",
+                                    "value": "chat"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.provider.name",
+                                    "value": "openai"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.request.model",
+                                    "value": "gpt-4o"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.response.model",
+                                    "value": "gpt-4o-2024-08-06"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.id",
+                                    "value": "chatcmpl-multi"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.input.messages",
+                                    "value": "[{\"role\":\"system\",\"parts\":[{\"type\":\"text\",\"content\":\"You are helpful.\"}]},{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"First question.\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"First answer.\"}]},{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"Follow-up question.\"}]}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.output.messages",
+                                    "value": "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"Follow-up answer.\"}],\"finish_reason\":\"stop\"}]"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "telemetry.sdk.version",
+                                    "value": "1.0.0"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.usage.input_tokens",
+                                    "value": 50,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "gen_ai.usage.output_tokens",
+                                    "value": 20,
+                                    "type": "int"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "LlmChatMultiInput"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "chat gpt-4o multi-turn",
+                    "parentName": "LlmChatMultiInput",
+                    "category": "generic"
+                }
+            ],
+            "customEvents": [
+                {
+                    "type": "LlmChatCompletionSummary",
+                    "attributes": {
+                        "request.model": "gpt-4o",
+                        "response.model": "gpt-4o-2024-08-06",
+                        "vendor": "openai",
+                        "ingest_source": "DotNet",
+                        "response.choices.finish_reason": "stop"
+                    }
+                },
+                {
+                    "type": "LlmChatCompletionMessage",
+                    "attributes": {
+                        "role": "user",
+                        "content": "Follow-up question.",
+                        "vendor": "openai",
+                        "ingest_source": "DotNet"
+                    }
+                },
+                {
+                    "type": "LlmChatCompletionMessage",
+                    "attributes": {
+                        "role": "assistant",
+                        "content": "Follow-up answer.",
+                        "is_response": "True",
+                        "vendor": "openai",
+                        "ingest_source": "DotNet"
+                    }
+                }
+            ]
+        }
+    }
+]

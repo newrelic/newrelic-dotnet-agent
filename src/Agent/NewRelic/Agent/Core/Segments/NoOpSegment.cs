@@ -84,4 +84,9 @@ public class NoOpSegment : ISegment, ISegmentExperimental, ISegmentDataState
     }
 
     public TimeSpan DurationOrZero => TimeSpan.Zero;
+
+    public bool SetServerDetailsForGrpcActivity(Uri uri)
+    {
+        return false;
+    }
 }
