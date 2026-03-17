@@ -222,13 +222,13 @@ jobs:
             --collector-host  "$NEW_RELIC_HOST"
 
       # -----------------------------------------------------------------------
-      # Upload artifacts
+      # Upload performance artifacts
       # -----------------------------------------------------------------------
-      - name: Upload Locust results
+      - name: Upload performance results
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: locust-results
+          name: perf-results
           path: ${{ env.PERF_TEST_DIR }}/results/
           if-no-files-found: warn
 
