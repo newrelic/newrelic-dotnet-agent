@@ -1,0 +1,36 @@
+name: Run Performance Test
+description: Placeholder — real implementation is in ci/performance-test-visualization.
+
+inputs:
+  run-label:
+    description: 'Short label for this run'
+    required: true
+  attach-agent:
+    default: 'false'
+  agent-source:
+    default: 'github_release'
+  agent-version:
+    default: ''
+  build-run-id:
+    default: ''
+  test-duration:
+    default: '2m'
+  locust-users:
+    default: '10'
+  locust-spawn-rate:
+    default: '2'
+  dotnet-version:
+    default: '10.0'
+  license-key:
+    default: ''
+  collector-host:
+    default: ''
+  github-token:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: No-op placeholder
+      shell: bash
+      run: echo "Placeholder run-perf-test action — no work performed."
