@@ -76,6 +76,7 @@ build/Linux/keys
 
 # Performance tests
 /tests/Agent/PerformanceTests/results
+/tests/Agent/PerformanceTests/logs
 
 # Build artifacts
 /build/BuildArtifacts
