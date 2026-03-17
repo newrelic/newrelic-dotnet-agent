@@ -1,0 +1,462 @@
+name: Compare Performance
+
+# Runs up to 4 parallel performance test configurations and generates a
+# comparative report with ScottPlot charts and a markdown summary table.
+#
+# Required secrets (when any run has attach_agent: true):
+#   PERF_TEST_ACCOUNT  - New Relic license key and collector host separated by a
+#                        comma.  Example: XXXXXXXXXXXX,collector.newrelic.com
+
+on:
+  workflow_dispatch:
+    inputs:
+      # --- Run 1 (always runs) ---
+      run1_label:
+        description: 'Label for run 1 (used in artifact name and report)'
+        type: string
+        default: 'no-agent'
+        required: false
+      run1_attach_agent:
+        description: 'Run 1: Attach the New Relic .NET agent'
+        type: boolean
+        default: false
+        required: false
+      run1_agent_source:
+        description: 'Run 1: Agent source (github_release or build_artifact)'
+        type: choice
+        options:
+          - github_release
+          - build_artifact
+        default: github_release
+        required: false
+      run1_agent_version:
+        description: 'Run 1: Agent version (e.g. "10.49.0"). Leave empty for latest.'
+        type: string
+        default: ''
+        required: false
+      run1_build_run_id:
+        description: 'Run 1: all_solutions.yml run ID (only used with build_artifact)'
+        type: string
+        default: ''
+        required: false
+
+      # --- Run 2 (always runs) ---
+      run2_label:
+        description: 'Label for run 2'
+        type: string
+        default: 'latest-release'
+        required: false
+      run2_attach_agent:
+        description: 'Run 2: Attach the New Relic .NET agent'
+        type: boolean
+        default: true
+        required: false
+      run2_agent_source:
+        description: 'Run 2: Agent source'
+        type: choice
+        options:
+          - github_release
+          - build_artifact
+        default: github_release
+        required: false
+      run2_agent_version:
+        description: 'Run 2: Agent version. Leave empty for latest.'
+        type: string
+        default: ''
+        required: false
+      run2_build_run_id:
+        description: 'Run 2: all_solutions.yml run ID (only used with build_artifact)'
+        type: string
+        default: ''
+        required: false
+
+      # --- Run 3 (optional) ---
+      include_run3:
+        description: 'Include run 3'
+        type: boolean
+        default: false
+        required: false
+      run3_label:
+        description: 'Label for run 3'
+        type: string
+        default: 'run3'
+        required: false
+      run3_attach_agent:
+        description: 'Run 3: Attach the New Relic .NET agent'
+        type: boolean
+        default: true
+        required: false
+      run3_agent_source:
+        description: 'Run 3: Agent source'
+        type: choice
+        options:
+          - github_release
+          - build_artifact
+        default: build_artifact
+        required: false
+      run3_agent_version:
+        description: 'Run 3: Agent version. Leave empty for latest.'
+        type: string
+        default: ''
+        required: false
+      run3_build_run_id:
+        description: 'Run 3: all_solutions.yml run ID (only used with build_artifact)'
+        type: string
+        default: ''
+        required: false
+
+      # --- Run 4 (optional) ---
+      include_run4:
+        description: 'Include run 4'
+        type: boolean
+        default: false
+        required: false
+      run4_label:
+        description: 'Label for run 4'
+        type: string
+        default: 'run4'
+        required: false
+      run4_attach_agent:
+        description: 'Run 4: Attach the New Relic .NET agent'
+        type: boolean
+        default: true
+        required: false
+      run4_agent_source:
+        description: 'Run 4: Agent source'
+        type: choice
+        options:
+          - github_release
+          - build_artifact
+        default: build_artifact
+        required: false
+      run4_agent_version:
+        description: 'Run 4: Agent version. Leave empty for latest.'
+        type: string
+        default: ''
+        required: false
+      run4_build_run_id:
+        description: 'Run 4: all_solutions.yml run ID (only used with build_artifact)'
+        type: string
+        default: ''
+        required: false
+
+      # --- Shared test parameters ---
+      test_duration:
+        description: 'Traffic duration (Locust --run-time, e.g. "2m", "5m")'
+        type: string
+        default: '2m'
+        required: false
+      locust_users:
+        description: 'Number of concurrent Locust users'
+        type: number
+        default: 10
+        required: false
+      locust_spawn_rate:
+        description: 'Locust users to spawn per second'
+        type: number
+        default: 2
+        required: false
+      dotnet_version:
+        description: '.NET version for the test app container (e.g. "10.0", "8.0")'
+        type: string
+        default: '10.0'
+        required: false
+
+  schedule:
+    # Run nightly on weekdays: no-agent baseline vs. latest published release
+    - cron: '0 6 * * 1-5'
+
+env:
+  DOTNET_NOLOGO: true
+  PERF_TEST_DIR: tests/Agent/PerformanceTests
+
+# Only allow one compare run at a time
+concurrency:
+  group: compare-performance-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Resolve inputs — provides unified values for both triggers
+  # ---------------------------------------------------------------------------
+  resolve-inputs:
+    name: Resolve Inputs
+    runs-on: ubuntu-latest
+    outputs:
+      run1_label:          ${{ steps.inputs.outputs.run1_label }}
+      run1_attach_agent:   ${{ steps.inputs.outputs.run1_attach_agent }}
+      run1_agent_source:   ${{ steps.inputs.outputs.run1_agent_source }}
+      run1_agent_version:  ${{ steps.inputs.outputs.run1_agent_version }}
+      run1_build_run_id:   ${{ steps.inputs.outputs.run1_build_run_id }}
+      run2_label:          ${{ steps.inputs.outputs.run2_label }}
+      run2_attach_agent:   ${{ steps.inputs.outputs.run2_attach_agent }}
+      run2_agent_source:   ${{ steps.inputs.outputs.run2_agent_source }}
+      run2_agent_version:  ${{ steps.inputs.outputs.run2_agent_version }}
+      run2_build_run_id:   ${{ steps.inputs.outputs.run2_build_run_id }}
+      include_run3:        ${{ steps.inputs.outputs.include_run3 }}
+      run3_label:          ${{ steps.inputs.outputs.run3_label }}
+      run3_attach_agent:   ${{ steps.inputs.outputs.run3_attach_agent }}
+      run3_agent_source:   ${{ steps.inputs.outputs.run3_agent_source }}
+      run3_agent_version:  ${{ steps.inputs.outputs.run3_agent_version }}
+      run3_build_run_id:   ${{ steps.inputs.outputs.run3_build_run_id }}
+      include_run4:        ${{ steps.inputs.outputs.include_run4 }}
+      run4_label:          ${{ steps.inputs.outputs.run4_label }}
+      run4_attach_agent:   ${{ steps.inputs.outputs.run4_attach_agent }}
+      run4_agent_source:   ${{ steps.inputs.outputs.run4_agent_source }}
+      run4_agent_version:  ${{ steps.inputs.outputs.run4_agent_version }}
+      run4_build_run_id:   ${{ steps.inputs.outputs.run4_build_run_id }}
+      test_duration:       ${{ steps.inputs.outputs.test_duration }}
+      locust_users:        ${{ steps.inputs.outputs.locust_users }}
+      locust_spawn_rate:   ${{ steps.inputs.outputs.locust_spawn_rate }}
+      dotnet_version:      ${{ steps.inputs.outputs.dotnet_version }}
+      license_key:         ${{ steps.inputs.outputs.license_key }}
+      collector_host:      ${{ steps.inputs.outputs.collector_host }}
+    steps:
+      - name: Resolve inputs
+        id: inputs
+        env:
+          PERF_TEST_ACCOUNT: ${{ secrets.PERF_TEST_ACCOUNT }}
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "run1_label=no-agent"           >> $GITHUB_OUTPUT
+            echo "run1_attach_agent=false"        >> $GITHUB_OUTPUT
+            echo "run1_agent_source=github_release" >> $GITHUB_OUTPUT
+            echo "run1_agent_version="            >> $GITHUB_OUTPUT
+            echo "run1_build_run_id="             >> $GITHUB_OUTPUT
+            echo "run2_label=latest-release"      >> $GITHUB_OUTPUT
+            echo "run2_attach_agent=true"         >> $GITHUB_OUTPUT
+            echo "run2_agent_source=github_release" >> $GITHUB_OUTPUT
+            echo "run2_agent_version="            >> $GITHUB_OUTPUT
+            echo "run2_build_run_id="             >> $GITHUB_OUTPUT
+            echo "include_run3=false"             >> $GITHUB_OUTPUT
+            echo "run3_label="                    >> $GITHUB_OUTPUT
+            echo "run3_attach_agent=false"        >> $GITHUB_OUTPUT
+            echo "run3_agent_source=github_release" >> $GITHUB_OUTPUT
+            echo "run3_agent_version="            >> $GITHUB_OUTPUT
+            echo "run3_build_run_id="             >> $GITHUB_OUTPUT
+            echo "include_run4=false"             >> $GITHUB_OUTPUT
+            echo "run4_label="                    >> $GITHUB_OUTPUT
+            echo "run4_attach_agent=false"        >> $GITHUB_OUTPUT
+            echo "run4_agent_source=github_release" >> $GITHUB_OUTPUT
+            echo "run4_agent_version="            >> $GITHUB_OUTPUT
+            echo "run4_build_run_id="             >> $GITHUB_OUTPUT
+            echo "test_duration=2m"               >> $GITHUB_OUTPUT
+            echo "locust_users=10"                >> $GITHUB_OUTPUT
+            echo "locust_spawn_rate=2"            >> $GITHUB_OUTPUT
+            echo "dotnet_version=10.0"            >> $GITHUB_OUTPUT
+          else
+            echo "run1_label=${{ inputs.run1_label }}"                   >> $GITHUB_OUTPUT
+            echo "run1_attach_agent=${{ inputs.run1_attach_agent }}"     >> $GITHUB_OUTPUT
+            echo "run1_agent_source=${{ inputs.run1_agent_source }}"     >> $GITHUB_OUTPUT
+            echo "run1_agent_version=${{ inputs.run1_agent_version }}"   >> $GITHUB_OUTPUT
+            echo "run1_build_run_id=${{ inputs.run1_build_run_id }}"     >> $GITHUB_OUTPUT
+            echo "run2_label=${{ inputs.run2_label }}"                   >> $GITHUB_OUTPUT
+            echo "run2_attach_agent=${{ inputs.run2_attach_agent }}"     >> $GITHUB_OUTPUT
+            echo "run2_agent_source=${{ inputs.run2_agent_source }}"     >> $GITHUB_OUTPUT
+            echo "run2_agent_version=${{ inputs.run2_agent_version }}"   >> $GITHUB_OUTPUT
+            echo "run2_build_run_id=${{ inputs.run2_build_run_id }}"     >> $GITHUB_OUTPUT
+            echo "include_run3=${{ inputs.include_run3 }}"               >> $GITHUB_OUTPUT
+            echo "run3_label=${{ inputs.run3_label }}"                   >> $GITHUB_OUTPUT
+            echo "run3_attach_agent=${{ inputs.run3_attach_agent }}"     >> $GITHUB_OUTPUT
+            echo "run3_agent_source=${{ inputs.run3_agent_source }}"     >> $GITHUB_OUTPUT
+            echo "run3_agent_version=${{ inputs.run3_agent_version }}"   >> $GITHUB_OUTPUT
+            echo "run3_build_run_id=${{ inputs.run3_build_run_id }}"     >> $GITHUB_OUTPUT
+            echo "include_run4=${{ inputs.include_run4 }}"               >> $GITHUB_OUTPUT
+            echo "run4_label=${{ inputs.run4_label }}"                   >> $GITHUB_OUTPUT
+            echo "run4_attach_agent=${{ inputs.run4_attach_agent }}"     >> $GITHUB_OUTPUT
+            echo "run4_agent_source=${{ inputs.run4_agent_source }}"     >> $GITHUB_OUTPUT
+            echo "run4_agent_version=${{ inputs.run4_agent_version }}"   >> $GITHUB_OUTPUT
+            echo "run4_build_run_id=${{ inputs.run4_build_run_id }}"     >> $GITHUB_OUTPUT
+            echo "test_duration=${{ inputs.test_duration }}"             >> $GITHUB_OUTPUT
+            echo "locust_users=${{ inputs.locust_users }}"               >> $GITHUB_OUTPUT
+            echo "locust_spawn_rate=${{ inputs.locust_spawn_rate }}"     >> $GITHUB_OUTPUT
+            echo "dotnet_version=${{ inputs.dotnet_version }}"           >> $GITHUB_OUTPUT
+          fi
+          echo "license_key=${PERF_TEST_ACCOUNT%%,*}"   >> $GITHUB_OUTPUT
+          echo "collector_host=${PERF_TEST_ACCOUNT##*,}" >> $GITHUB_OUTPUT
+
+  # ---------------------------------------------------------------------------
+  # Parallel test runs
+  # ---------------------------------------------------------------------------
+  run-1:
+    name: 'Perf Run: ${{ needs.resolve-inputs.outputs.run1_label }}'
+    needs: resolve-inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Run perf test
+        uses: ./.github/actions/run-perf-test
+        with:
+          run-label:        ${{ needs.resolve-inputs.outputs.run1_label }}
+          attach-agent:     ${{ needs.resolve-inputs.outputs.run1_attach_agent }}
+          agent-source:     ${{ needs.resolve-inputs.outputs.run1_agent_source }}
+          agent-version:    ${{ needs.resolve-inputs.outputs.run1_agent_version }}
+          build-run-id:     ${{ needs.resolve-inputs.outputs.run1_build_run_id }}
+          test-duration:    ${{ needs.resolve-inputs.outputs.test_duration }}
+          locust-users:     ${{ needs.resolve-inputs.outputs.locust_users }}
+          locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
+          dotnet-version:   ${{ needs.resolve-inputs.outputs.dotnet_version }}
+          license-key:      ${{ needs.resolve-inputs.outputs.license_key }}
+          collector-host:   ${{ needs.resolve-inputs.outputs.collector_host }}
+          github-token:     ${{ secrets.GITHUB_TOKEN }}
+
+  run-2:
+    name: 'Perf Run: ${{ needs.resolve-inputs.outputs.run2_label }}'
+    needs: resolve-inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Run perf test
+        uses: ./.github/actions/run-perf-test
+        with:
+          run-label:        ${{ needs.resolve-inputs.outputs.run2_label }}
+          attach-agent:     ${{ needs.resolve-inputs.outputs.run2_attach_agent }}
+          agent-source:     ${{ needs.resolve-inputs.outputs.run2_agent_source }}
+          agent-version:    ${{ needs.resolve-inputs.outputs.run2_agent_version }}
+          build-run-id:     ${{ needs.resolve-inputs.outputs.run2_build_run_id }}
+          test-duration:    ${{ needs.resolve-inputs.outputs.test_duration }}
+          locust-users:     ${{ needs.resolve-inputs.outputs.locust_users }}
+          locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
+          dotnet-version:   ${{ needs.resolve-inputs.outputs.dotnet_version }}
+          license-key:      ${{ needs.resolve-inputs.outputs.license_key }}
+          collector-host:   ${{ needs.resolve-inputs.outputs.collector_host }}
+          github-token:     ${{ secrets.GITHUB_TOKEN }}
+
+  run-3:
+    name: 'Perf Run: ${{ needs.resolve-inputs.outputs.run3_label }}'
+    needs: resolve-inputs
+    if: needs.resolve-inputs.outputs.include_run3 == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Run perf test
+        uses: ./.github/actions/run-perf-test
+        with:
+          run-label:        ${{ needs.resolve-inputs.outputs.run3_label }}
+          attach-agent:     ${{ needs.resolve-inputs.outputs.run3_attach_agent }}
+          agent-source:     ${{ needs.resolve-inputs.outputs.run3_agent_source }}
+          agent-version:    ${{ needs.resolve-inputs.outputs.run3_agent_version }}
+          build-run-id:     ${{ needs.resolve-inputs.outputs.run3_build_run_id }}
+          test-duration:    ${{ needs.resolve-inputs.outputs.test_duration }}
+          locust-users:     ${{ needs.resolve-inputs.outputs.locust_users }}
+          locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
+          dotnet-version:   ${{ needs.resolve-inputs.outputs.dotnet_version }}
+          license-key:      ${{ needs.resolve-inputs.outputs.license_key }}
+          collector-host:   ${{ needs.resolve-inputs.outputs.collector_host }}
+          github-token:     ${{ secrets.GITHUB_TOKEN }}
+
+  run-4:
+    name: 'Perf Run: ${{ needs.resolve-inputs.outputs.run4_label }}'
+    needs: resolve-inputs
+    if: needs.resolve-inputs.outputs.include_run4 == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Run perf test
+        uses: ./.github/actions/run-perf-test
+        with:
+          run-label:        ${{ needs.resolve-inputs.outputs.run4_label }}
+          attach-agent:     ${{ needs.resolve-inputs.outputs.run4_attach_agent }}
+          agent-source:     ${{ needs.resolve-inputs.outputs.run4_agent_source }}
+          agent-version:    ${{ needs.resolve-inputs.outputs.run4_agent_version }}
+          build-run-id:     ${{ needs.resolve-inputs.outputs.run4_build_run_id }}
+          test-duration:    ${{ needs.resolve-inputs.outputs.test_duration }}
+          locust-users:     ${{ needs.resolve-inputs.outputs.locust_users }}
+          locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
+          dotnet-version:   ${{ needs.resolve-inputs.outputs.dotnet_version }}
+          license-key:      ${{ needs.resolve-inputs.outputs.license_key }}
+          collector-host:   ${{ needs.resolve-inputs.outputs.collector_host }}
+          github-token:     ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # Report generation
+  # ---------------------------------------------------------------------------
+  generate-report:
+    name: Generate Report
+    needs: [run-1, run-2, run-3, run-4]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Download all perf result artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: perf-results-*
+          path: downloaded-results
+          merge-multiple: false
+
+      - name: Build report generator image
+        run: docker build -t perf-report-generator ${{ env.PERF_TEST_DIR }}/ReportGenerator
+
+      - name: Generate report
+        run: |
+          mkdir -p report-output
+          docker run --rm \
+            -v "${{ github.workspace }}/downloaded-results:/input:ro" \
+            -v "${{ github.workspace }}/report-output:/output" \
+            perf-report-generator \
+            --input-dir /input \
+            --output-dir /output
+
+      - name: Append summary to GitHub Step Summary
+        if: always()
+        run: |
+          if [ -f report-output/summary.md ]; then
+            cat report-output/summary.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No summary.md generated." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload report artifacts
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: perf-report
+          path: report-output/
+          if-no-files-found: warn
