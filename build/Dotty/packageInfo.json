@@ -141,7 +141,10 @@
         "ignoreReason": "net481 doesn't support v9.x"
     },
     {
-        "packageName": "openai"
+        "packageName": "openai",
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreReason": "OpenAI 2.9.x removed CodeGenTypeAttribute which Azure.AI.OpenAI still references. Pin to 2.8.x until Azure.AI.OpenAI is updated to be compatible."
     },
     {
         "packageName": "opensearch.client"
