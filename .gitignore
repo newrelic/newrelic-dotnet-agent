@@ -74,6 +74,10 @@ build/Linux/keys
 /tests/Agent/IntegrationTests/LocalStack/volume
 /tests/Agent/IntegrationTests/ContainerApplications/volume/cache
 
+# Performance tests
+/tests/Agent/PerformanceTests/results
+/tests/Agent/PerformanceTests/logs
+
 # Build artifacts
 /build/BuildArtifacts
 /build/_staging
