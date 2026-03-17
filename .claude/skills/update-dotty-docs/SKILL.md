@@ -1,0 +1,228 @@
+---
+name: update-dotty-docs
+description: Update .NET agent compatibility docs based on a Dotty PR. Use when the user mentions a Dotty PR, dotty updates, or updating compatibility docs.
+disable-model-invocation: true
+---
+
+# Update .NET Agent Compatibility Docs from Dotty PR
+
+Update the "compatibility and requirements" documentation in the docs-website repo based on package updates from the current open Dotty PR.
+
+## Step 0: Check prerequisites
+
+Verify that all required tools are available before proceeding. Run each check and **stop with a clear error message** if any are missing:
+
+1. **GitHub CLI (`gh`)**: Run `gh --version`. If not found, stop with: "GitHub CLI (`gh`) is required but not installed. Install it from https://cli.github.com/"
+2. **GitHub CLI auth**: Run `gh auth status`. If not authenticated, stop with: "GitHub CLI is not authenticated. Run `gh auth login` first."
+3. **Git**: Run `git --version`. If not found, stop with: "Git is required but not installed."
+
+If all checks pass, continue silently — do not list the results.
+
+## Step 1: Find the open Dotty PR
+
+Search for the open Dotty PR:
+```
+gh pr list --repo newrelic/newrelic-dotnet-agent --search "dotty" --state open --limit 1 --json number,title,body,url
+```
+
+If no open Dotty PR is found, inform the user and stop.
+
+## Step 2: Parse the package updates
+
+Fetch the PR diff:
+```
+gh pr diff <number> --repo newrelic/newrelic-dotnet-agent
+```
+
+From each `<PackageReference>` change, extract:
+- **Package name** (`Include` attribute)
+- **Old version** and **new version**
+- **Target framework** from `Condition` attribute:
+  - `net4xx` (e.g., `net481`) = .NET Framework section
+  - `net8.0`, `net10.0`, etc. = .NET Core section
+  - No condition = both sections
+
+## Step 3: Check CI status
+
+Check the all_solutions workflow status for the Dotty PR:
+```
+gh pr checks <number> --repo newrelic/newrelic-dotnet-agent
+```
+
+Look for any failing jobs, especially in:
+- **Integration test** jobs (`Run IntegrationTests (*)`)
+- **Unbounded integration test** jobs (`Run UnboundedIntegrationTests (*)`)
+- **Container test** jobs (`Run Linux Container Tests (*)`)
+
+If there are **any failing CI jobs**, report them prominently:
+
+> **CI FAILURES:** The following jobs are failing on the Dotty PR:
+> - {job name} — [link]
+>
+> An all-passing CI run is required to confirm the updated libraries don't break tests.
+
+Then loop through **each failing job individually**, asking the user how to proceed using `AskUserQuestion` with three options:
+
+> **Failing job: {job name}** — [link]
+
+1. **Analyze** — Diagnose whether this failure is caused by the Dotty package updates
+2. **Skip** — Skip this failure and move on to the next one
+3. **Stop** — Stop the skill and wait for a green build before retrying
+
+**If the user chooses "Stop":** End the skill run immediately.
+
+**If the user chooses "Skip":** Record this job as unanalyzed, exclude any packages that could be related to it from docs updates, and move to the next failing job.
+
+**If the user chooses "Analyze":** Perform a detailed diagnosis of that job:
+
+1. Fetch the failing job's logs:
+   ```
+   gh api repos/newrelic/newrelic-dotnet-agent/actions/jobs/<job_id>/logs
+   ```
+2. Search the logs for error messages, exceptions, and stack traces.
+3. Correlate failures with specific package updates from Step 2 — check whether the error references types, assemblies, or versions from updated packages.
+4. Check for **transitive dependency conflicts** — a common pattern is Package A being updated to a version that's incompatible with Package B (e.g., `OpenAI` 2.9.0 removing a type that `Azure.AI.OpenAI` depends on). Compare the dependency chains of updated packages against their co-dependencies in `MFALatestPackages.csproj`.
+5. Present findings:
+   - Which test(s) failed and the specific error
+   - Whether the failure is caused by a Dotty package update (and which one)
+   - Recommended remediation (e.g., revert the specific package, pin a version, or wait for an upstream fix)
+   - Which docs updates are safe to proceed with and which should be held
+
+Then move to the next failing job.
+
+After processing all failing jobs, summarize which packages are safe to update in docs and which should be excluded, then continue to Step 4.
+
+## Step 4: Flag major version bumps
+
+If any package has a **major version change** (e.g., 3.x to 4.x), report it prominently BEFORE proceeding:
+
+> **MAJOR VERSION BUMP:** {Package} {old} -> {new}
+> Major version updates require deeper compatibility evaluation and may block merging the Dotty PR.
+
+## Step 5: Prepare the docs repo
+
+Clone the user's fork of `newrelic/docs-website` to a temporary directory and set up remotes.
+
+1. **Find the user's fork** by querying the GitHub API:
+   ```
+   gh api user
+   gh api repos/<github-username>/docs-website --jq '.full_name'
+   ```
+   If the user does not have a fork of `newrelic/docs-website`, inform them and stop. Do not attempt to create one.
+
+2. **Clone to a temp directory:**
+   ```
+   DOCS_REPO=$(mktemp -d)/docs-website
+   git clone --depth 1 --branch develop https://github.com/<github-username>/docs-website.git "$DOCS_REPO"
+   cd "$DOCS_REPO"
+   ```
+
+3. **Add upstream remote and sync:**
+   ```
+   git remote add upstream https://github.com/newrelic/docs-website.git
+   git fetch upstream develop
+   git merge upstream/develop
+   git push origin develop
+   ```
+
+4. **Create a feature branch** from `develop` (e.g., `dotnet/dotty-updates-YYYY-MM-DD`).
+
+All subsequent steps operate inside `$DOCS_REPO`.
+
+## Step 6: Update the docs file
+
+The file to edit is:
+```
+src/content/docs/apm/agents/net-agent/getting-started/net-agent-compatibility-requirements.mdx
+```
+
+This MDX file has two tabbed sections: `.NET Core` (`id="core"`) and `.NET Framework` (`id="framework"`). Update the correct section based on the target framework from Step 2. Only update entries for packages where CI tests are passing.
+
+### Package-to-docs mapping
+
+Not every Dotty package has a docs entry. Some are supporting dependencies (e.g., `AWSSDK.SecurityToken`) that aren't directly instrumented. Skip packages that don't have a matching entry — do not mention skipped packages in the output.
+
+Search the docs file to find matching entries. Common mappings include:
+
+| NuGet Package | Docs Entry |
+|---|---|
+| `Microsoft.Azure.Cosmos` | Cosmos DB |
+| `CouchbaseNetClient` | Couchbase |
+| `StackExchange.Redis` | StackExchange.Redis |
+| `EnyimMemcachedCore` | Memcached |
+| `AWSSDK.DynamoDBv2` | DynamoDB |
+| `Confluent.Kafka` | Confluent.Kafka |
+| `AWSSDK.SQS` | AWSSDK.SQS |
+| `AWSSDK.Kinesis` | AWSSDK.Kinesis |
+| `AWSSDK.KinesisFirehose` | AWSSDK.KinesisFirehose |
+| `AWSSDK.BedrockRuntime` | AWS Bedrock |
+| `OpenAI` | OpenAI |
+| `Azure.AI.OpenAI` | Azure.AI.OpenAI |
+| `log4net` | Log4Net |
+| `NLog` | NLog |
+| `Serilog` | Serilog |
+| `Microsoft.Extensions.Logging` | Microsoft.Extensions.Logging |
+| `NServiceBus` | NServiceBus |
+| `RabbitMQ.Client` | RabbitMQ.Client |
+| `MassTransit` | MassTransit |
+| `Elastic.Clients.Elasticsearch` | Elasticsearch |
+| `MySql.Data` | MySQL |
+| `Npgsql` | PostgreSQL |
+| `MongoDB.Driver` | MongoDB |
+
+This table is not exhaustive. Always search the docs file for the package name to find the correct entry.
+
+### Version formats in the docs
+
+The "latest verified compatible version" appears in two formats:
+
+**Bullet list** (Datastores, Messaging sections):
+```
+* Latest verified compatible version: 3.57.0
+```
+
+**Table column** (LLM, Logging sections — last `<td>` in the row):
+```html
+<td>
+    2.8.0
+</td>
+```
+
+Update only the version number. Do not change any surrounding text or structure.
+
+## Step 7: Present changes for review
+
+Show the user:
+1. A summary table of docs updates (package, old version, new version, section)
+2. Any major version bumps flagged in Step 3
+3. The full diff of the docs file
+
+**Do NOT commit or push until the user explicitly approves.**
+
+## Step 8: Commit, push, and create PR
+
+After user approval:
+
+1. Commit with message: `chore(.net agent): Update compatibility docs for latest Dotty package versions`
+2. Push the branch to origin (the fork).
+3. Create a PR against **upstream** `newrelic/docs-website` on the `develop` branch, using the GitHub username discovered in Step 5:
+   ```
+   gh pr create --repo newrelic/docs-website --base develop --head <github-username>:<branch-name> --title "<title>" --body "<body>"
+   ```
+   Keep the title and body concise, e.g.:
+   - Title: `chore(.net agent): Updating latest supported framework versions`
+   - Body: Brief list of packages updated with new versions.
+
+## Step 9: Comment on the Dotty PR
+
+Add a comment on the original Dotty PR in the .NET agent repo linking to the newly created docs PR:
+```
+gh pr comment <dotty-pr-number> --repo newrelic/newrelic-dotnet-agent --body "Compatibility docs update PR created: <docs-pr-url>"
+```
+
+## Step 10: Clean up
+
+Remove the temporary docs repo clone:
+```
+rm -rf "$DOCS_REPO"
+```
