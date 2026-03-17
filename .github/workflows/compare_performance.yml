@@ -1,0 +1,17 @@
+name: Compare Performance
+
+# Placeholder workflow — real implementation is in ci/performance-test-visualization.
+# This file exists on main so that the real workflow can be tested in a PR before merging.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1-5'
+
+jobs:
+  placeholder:
+    name: Placeholder
+    runs-on: ubuntu-latest
+    steps:
+      - name: No-op
+        run: echo "Placeholder compare_performance workflow — no work performed."
