@@ -28,6 +28,7 @@ public class KafkaBuilderWrapper : IWrapper
     private IAgent _currentAgent;
     private readonly ConcurrentDictionary<object, string> _latestStatisticsPerClient = new();
     private readonly ConcurrentDictionary<object, Dictionary<string, long>> _previousValuesPerClient = new();
+    private readonly ConcurrentDictionary<object, Dictionary<string, KafkaMetricValue>> _metricsPerClient = new();
     private int _drainStarted;
 
     public bool IsTransactionRequired => false;
@@ -171,16 +172,17 @@ public class KafkaBuilderWrapper : IWrapper
                 if (!_latestStatisticsPerClient.TryRemove(clientEntry.Key, out var json))
                     continue;
 
-                var metricsData = KafkaStatisticsHelper.ParseStatistics(json);
-                if (metricsData?.IsValid != true)
+                var stats = KafkaStatisticsHelper.ParseStatistics(json);
+                if (!KafkaStatisticsHelper.IsValid(stats))
                 {
                     Log.Debug("KafkaBuilderWrapper: Failed to parse Kafka statistics or data is invalid");
                     continue;
                 }
 
-                Log.Debug($"KafkaBuilderWrapper: Draining stats - ClientId: {metricsData.ClientId}, Type: {metricsData.ClientType}");
+                Log.Debug($"KafkaBuilderWrapper: Draining stats - ClientId: {KafkaStatisticsHelper.GetClientId(stats)}, Type: {stats.Type}");
 
-                var metricsDict = KafkaStatisticsHelper.CreateMetricsDictionary(metricsData, MessageBrokerVendorConstants.Kafka);
+                var metricsDict = _metricsPerClient.GetOrAdd(clientEntry.Key, _ => new Dictionary<string, KafkaMetricValue>());
+                KafkaStatisticsHelper.PopulateMetricsDictionary(metricsDict, stats, MessageBrokerVendorConstants.Kafka);
                 var previousValues = _previousValuesPerClient.GetOrAdd(clientEntry.Key, _ => new Dictionary<string, long>(metricsDict.Count));
 
                 foreach (var kvp in metricsDict)
