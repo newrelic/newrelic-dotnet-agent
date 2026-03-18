@@ -42,14 +42,14 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
         // Test custom statistics handlers (composite pattern) - integrated into main exercise
         GetAndAssertStatusCode(address + "producewithcustomstatistics", System.Net.HttpStatusCode.OK);
         var produceResult = GetString(address + "producewithcustomstatistics");
-        Delay(2); // Allow time for async completion
+        Delay(1); // Allow time for async completion
 
         GetAndAssertStatusCode(address + "consumewithcustomstatistics", System.Net.HttpStatusCode.OK);
         var consumeResult = GetString(address + "consumewithcustomstatistics");
-        Delay(2); // Allow time for async completion
+        Delay(1); // Allow time for async completion
 
         // Wait for statistics callbacks to trigger (they fire every 5 seconds)
-        Delay(8); // Wait long enough for callbacks
+        Delay(3);
 
         // Check status of customer handlers
         GetAndAssertStatusCode(address + "customstatisticsstatus", System.Net.HttpStatusCode.OK);
@@ -57,8 +57,6 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
 
         // Store results for later test validation
         CustomStatisticsResults = (produceResult, consumeResult, statusResult);
-
-        Delay(3); // Final delay before shutdown
     }
 
     public (string produceResult, string consumeResult, string statusResult)? CustomStatisticsResults { get; private set; }

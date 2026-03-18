@@ -106,15 +106,15 @@ public class Consumer : BackgroundService, IConsumerSignalService
         using var consumer = new ConsumerBuilder<string, string>(configDict).Build();
         consumer.Subscribe(_topic);
 
-        // Keep consumer alive for 15 seconds to allow multiple statistics callbacks (every 5 seconds)
+        // Keep consumer alive long enough for at least one statistics callback (every 5 seconds)
         var startTime = DateTime.UtcNow;
-        var maxDuration = TimeSpan.FromSeconds(15);
+        var maxDuration = TimeSpan.FromSeconds(5);
         var messagesConsumed = 0;
         var targetMessages = 1; // Still consume at least one message for test logic
 
         try
         {
-            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Starting long-lived consumer (15 seconds) to collect statistics");
+            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Starting consumer ({Duration}s) to collect statistics", maxDuration.TotalSeconds);
 
             while (DateTime.UtcNow - startTime < maxDuration)
             {
@@ -151,7 +151,7 @@ public class Consumer : BackgroundService, IConsumerSignalService
                 }
             }
 
-            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Completed long-lived consumer session. Messages consumed: {Count}", messagesConsumed);
+            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Completed consumer session. Messages consumed: {Count}", messagesConsumed);
         }
         catch (Exception ex)
         {
@@ -171,19 +171,19 @@ public class Consumer : BackgroundService, IConsumerSignalService
         configDict["statistics.interval.ms"] = "5000"; // Enable statistics with 5 second interval
         configDict["group.id"] = "test-consumer-group"; // Ensure group.id is set
 
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15)); // 15 second timeout for long-lived consumer
+        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         using var consumer = new ConsumerBuilder<string, string>(configDict).Build();
         consumer.Subscribe(_topic);
 
-        // Keep consumer alive for 15 seconds to allow multiple statistics callbacks (every 5 seconds)
+        // Keep consumer alive long enough for at least one statistics callback (every 5 seconds)
         var startTime = DateTime.UtcNow;
-        var maxDuration = TimeSpan.FromSeconds(15);
+        var maxDuration = TimeSpan.FromSeconds(5);
         var messagesConsumed = 0;
         var targetMessages = 1; // Still consume at least one message for test logic
 
         try
         {
-            _logger.LogInformation("ConsumeOneWithCancellationToken: Starting long-lived consumer (15 seconds) to collect statistics");
+            _logger.LogInformation("ConsumeOneWithCancellationToken: Starting consumer ({Duration}s) to collect statistics", maxDuration.TotalSeconds);
 
             while (DateTime.UtcNow - startTime < maxDuration && !cts.Token.IsCancellationRequested)
             {
@@ -220,7 +220,7 @@ public class Consumer : BackgroundService, IConsumerSignalService
                 }
             }
 
-            _logger.LogInformation("ConsumeOneWithCancellationToken: Completed long-lived consumer session. Messages consumed: {Count}", messagesConsumed);
+            _logger.LogInformation("ConsumeOneWithCancellationToken: Completed consumer session. Messages consumed: {Count}", messagesConsumed);
         }
         catch (OperationCanceledException)
         {
@@ -260,14 +260,14 @@ public class Consumer : BackgroundService, IConsumerSignalService
         using var consumer = builder.Build();
         consumer.Subscribe(_topic);
 
-        // Keep consumer alive for 15 seconds to allow multiple statistics callbacks (every 5 seconds)
+        // Keep consumer alive long enough for at least one statistics callback (every 5 seconds)
         var startTime = DateTime.UtcNow;
-        var maxDuration = TimeSpan.FromSeconds(15);
+        var maxDuration = TimeSpan.FromSeconds(5);
         var messagesConsumed = 0;
 
         try
         {
-            _logger.LogInformation("ConsumeWithCustomStatisticsAsync: Starting long-lived consumer (15 seconds) with custom statistics handler");
+            _logger.LogInformation("ConsumeWithCustomStatisticsAsync: Starting consumer ({Duration}s) with custom statistics handler", maxDuration.TotalSeconds);
 
             while (DateTime.UtcNow - startTime < maxDuration)
             {
@@ -298,7 +298,7 @@ public class Consumer : BackgroundService, IConsumerSignalService
                 }
             }
 
-            _logger.LogInformation("ConsumeWithCustomStatisticsAsync: Completed long-lived consumer session. Messages consumed: {Count}, Customer callback count: {CallbackCount}",
+            _logger.LogInformation("ConsumeWithCustomStatisticsAsync: Completed consumer session. Messages consumed: {Count}, Customer callback count: {CallbackCount}",
                 messagesConsumed, CustomerStatisticsCallbacks.ConsumerCallbackCount);
         }
         catch (Exception ex)

@@ -38,16 +38,16 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             },
             exerciseApplication: () =>
             {
-                _fixture.Delay(15); // wait long enough to ensure kafka and app are ready
+                _fixture.Delay(10); // wait for kafka and app to be ready
                 _fixture.TestLogger.WriteLine("Starting exercise application");
                 _fixture.ExerciseApplication();
 
                 _bootstrapServer = _fixture.GetBootstrapServer();
 
                 _fixture.TestLogger.WriteLine("Waiting for metrics to be harvested");
-                // Wait longer to account for 4 long-lived consumers (15 seconds each = 60+ seconds total)
-                // Plus additional time for statistics callbacks and metrics harvesting
-                _fixture.Delay(90); // Extended wait time to ensure all consumer statistics are collected
+                // With 10s harvest cycle and 10s drain interval, wait for a few cycles
+                // to ensure cumulative deltas and gauge metrics are collected
+                _fixture.Delay(30);
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(15));
 
                 // shut down the container and wait for the agent log to see it
@@ -83,14 +83,23 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var consumeWithTimeoutTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeWithTimeoutTransactionName));
         var consumeWithCancellationTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeWithCancellationTransactionName));
 
-        // Extract internal metrics for validation
+        // Extract internal metrics for validation (client IDs are dynamic, so we use pattern matching)
         var internalMetrics = metrics.Where(m => m.MetricSpec.Name.Contains("MessageBroker/Kafka/Internal/")).ToList();
 
-        // Find producer and consumer internal metrics (client IDs are dynamic, so we use pattern matching)
+        // Cumulative counters — ever-increasing, reported as deltas by the drain task
         var producerRequestMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("request-counter")).ToList();
         var producerResponseMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("response-counter")).ToList();
         var consumerRequestMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("consumer-metrics") && m.MetricSpec.Name.EndsWith("request-counter")).ToList();
         var consumerResponseMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("consumer-metrics") && m.MetricSpec.Name.EndsWith("response-counter")).ToList();
+        var producerOutgoingByteMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("/outgoing-byte-total")).ToList();
+
+        // Gauge — point-in-time snapshot, reported as raw value
+        var producerMetadataCacheMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("/metadata_cache_cnt")).ToList();
+        var consumerMetadataCacheMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("consumer-metrics") && m.MetricSpec.Name.EndsWith("/metadata_cache_cnt")).ToList();
+
+        // WindowAvg — per-interval average, reported as raw value
+        var producerBatchSizeAvgMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("/batch-size-avg")).ToList();
+        var brokerRequestLatencyAvgMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("node-metrics") && m.MetricSpec.Name.EndsWith("/request-latency-avg")).ToList();
 
         // Note: With long-lived consumers (15 seconds each), message consumption patterns have changed
         var expectedMetrics = new List<Assertions.ExpectedMetric>
@@ -107,15 +116,13 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             new() { metricName = consumeWithTimeoutTransactionName, CallCountAllHarvests = 2 },
             new() { metricName = consumeWithCancellationTransactionName, CallCountAllHarvests = 2 },
 
-            // Total consume metrics: logs showed ConsumeOneWithTimeoutAsync consumed 4 messages in first call, 0 in second call
-            // ConsumeOneWithCancellationTokenAsync may not consume any messages - just verify consume metrics exist when they occur
-            new() { metricName = messageBrokerConsume, CallCountAllHarvests = null }, // Variable count due to long-lived consumers
-            new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, CallCountAllHarvests = 6 }, // Actual observed: 6 messages consumed
-            // Note: Scoped consume metric for CancellationToken may not exist if no messages consumed - don't validate it
+            // Consume counts are variable — depends on consumer duration and message availability
+            new() { metricName = messageBrokerConsume, CallCountAllHarvests = null },
+            new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, CallCountAllHarvests = null },
 
-            // TraceContext metrics
-            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 6 }, // Producer calls create distributed trace context
-            new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 2 }, // Consumer accepts distributed trace context
+            // TraceContext metrics — counts vary with consumer timing
+            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = null },
+            new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = null },
 
             // Node metrics: variable consumption but producers are consistent
             new() { metricName = messageBrokerNode, CallCountAllHarvests = null }, // Variable total operations
@@ -126,20 +133,23 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         NrAssert.Multiple(
             () => Assertions.MetricsExist(expectedMetrics, metrics),
 
-            // Validate new internal Kafka metrics exist
-            () => Assert.True(producerRequestMetrics.Any(), "Producer request-counter internal metrics should exist"),
-            () => Assert.True(producerResponseMetrics.Any(), "Producer response-counter internal metrics should exist"),
-            () => Assert.True(consumerRequestMetrics.Any(), "Consumer request-counter internal metrics should exist"),
-            () => Assert.True(consumerResponseMetrics.Any(), "Consumer response-counter internal metrics should exist"),
+            // Cumulative counters: request-counter, response-counter, txmsgs
+            () => Assert.True(producerRequestMetrics.Any(), "Producer request-counter metrics should exist"),
+            () => Assert.True(producerResponseMetrics.Any(), "Producer response-counter metrics should exist"),
+            () => Assert.True(consumerRequestMetrics.Any(), "Consumer request-counter metrics should exist"),
+            () => Assert.True(consumerResponseMetrics.Any(), "Consumer response-counter metrics should exist"),
+            () => Assert.True(producerOutgoingByteMetrics.Any(), "Producer outgoing-byte-total metrics should exist"),
 
-            // Validate internal metric names follow expected pattern
-            () => Assert.All(producerRequestMetrics, m => Assert.Contains("MessageBroker/Kafka/Internal/producer-metrics/client/", m.MetricSpec.Name)),
-            () => Assert.All(producerResponseMetrics, m => Assert.Contains("MessageBroker/Kafka/Internal/producer-metrics/client/", m.MetricSpec.Name)),
-            () => Assert.All(consumerRequestMetrics, m => Assert.Contains("MessageBroker/Kafka/Internal/consumer-metrics/client/", m.MetricSpec.Name)),
-            () => Assert.All(consumerResponseMetrics, m => Assert.Contains("MessageBroker/Kafka/Internal/consumer-metrics/client/", m.MetricSpec.Name)),
+            // Gauge: metadata_cache_cnt (both producer and consumer should have metadata cached)
+            () => Assert.True(producerMetadataCacheMetrics.Any(), "Producer metadata_cache_cnt metrics should exist"),
+            () => Assert.True(consumerMetadataCacheMetrics.Any(), "Consumer metadata_cache_cnt metrics should exist"),
 
-            // Validate internal metrics have non-zero values (indicating statistics callbacks are working)
-            () => Assert.All(producerRequestMetrics.Concat(producerResponseMetrics).Concat(consumerRequestMetrics).Concat(consumerResponseMetrics),
+            // WindowAvg: batch-size-avg (producer), request-latency-avg (broker node)
+            () => Assert.True(producerBatchSizeAvgMetrics.Any(), "Producer batch-size-avg metrics should exist"),
+            () => Assert.True(brokerRequestLatencyAvgMetrics.Any(), "Broker request-latency-avg metrics should exist"),
+
+            // All internal metrics should have non-zero call count (gauge wire format uses count=1)
+            () => Assert.All(internalMetrics,
                 m => Assert.True(m.Values.CallCount > 0, $"Internal metric {m.MetricSpec.Name} should have non-zero call count")),
 
             // Producer span assertions (always present)

@@ -23,12 +23,12 @@ public class KafkaBuilderWrapper : IWrapper
 
     private const string WrapperName = "KafkaBuilderWrapper";
     private const string BootstrapServersKey = "bootstrap.servers";
-    private static readonly TimeSpan DrainInterval = TimeSpan.FromSeconds(60);
-    private static readonly TimeSpan DrainInitialDelay = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan DrainInitialDelay = TimeSpan.FromSeconds(5);
 
     private IAgent _currentAgent;
-    private volatile string _latestStatisticsJson;
-    private Dictionary<string, long> _previousValues;
+    private readonly ConcurrentDictionary<object, string> _latestStatisticsPerClient = new();
+    private readonly ConcurrentDictionary<object, Dictionary<string, long>> _previousValuesPerClient = new();
+    private int _drainStarted;
 
     public bool IsTransactionRequired => false;
     public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
@@ -80,8 +80,8 @@ public class KafkaBuilderWrapper : IWrapper
 
     /// <summary>
     /// Sets up non-invasive statistics collection for Kafka metrics.
-    /// Registers a lightweight callback that caches the latest JSON, and starts a
-    /// scheduled drain task that parses and reports metrics once per harvest interval.
+    /// Registers a lightweight callback that caches the latest JSON per client, and starts a
+    /// single scheduled drain task that parses and reports metrics once per harvest interval.
     /// </summary>
     private void SetupStatisticsCollection(object builder, IAgent agent)
     {
@@ -97,11 +97,17 @@ public class KafkaBuilderWrapper : IWrapper
         SetStatisticsHandlerOnBuilder(builder, ourHandler);
         SetStatisticsIntervalOnBuilder(builder);
 
-        // Start the scheduled drain that will parse and report metrics once per interval
-        agent.GetExperimentalApi().SimpleSchedulingService
-            .StartExecuteEvery(DrainAndReportMetrics, DrainInterval, DrainInitialDelay);
+        // Start the drain exactly once — subsequent builders just register their callbacks
+        if (Interlocked.CompareExchange(ref _drainStarted, 1, 0) == 0)
+        {
+            var drainInterval = agent.Configuration.MetricsHarvestCycle;
+            agent.GetExperimentalApi().SimpleSchedulingService
+                .StartExecuteEvery(DrainAndReportMetrics, drainInterval, DrainInitialDelay);
 
-        Log.Debug("KafkaBuilderWrapper: Statistics handler and scheduled drain configured successfully");
+            Log.Debug($"KafkaBuilderWrapper: Scheduled drain started (interval: {drainInterval.TotalSeconds}s)");
+        }
+
+        Log.Debug("KafkaBuilderWrapper: Statistics handler configured successfully");
     }
 
     /// <summary>
@@ -137,76 +143,82 @@ public class KafkaBuilderWrapper : IWrapper
     }
 
     /// <summary>
-    /// Called by librdkafka on every statistics interval. Must be fast — just caches the JSON.
+    /// Called by librdkafka on every statistics interval. Must be fast — just caches the JSON per client.
     /// </summary>
     private void StatisticsHandlerMethod(object client, string json)
     {
         Log.Finest($"KafkaBuilderWrapper: Statistics callback, JSON length: {json?.Length ?? 0}");
-        Interlocked.Exchange(ref _latestStatisticsJson, json);
+        _latestStatisticsPerClient[client] = json;
     }
 
     /// <summary>
     /// Scheduled drain task. Runs once per interval on the agent scheduler thread.
-    /// Parses the latest cached JSON, computes deltas for cumulative counters,
-    /// and reports all metrics as gauges.
+    /// Iterates all tracked clients, parses the latest cached JSON for each,
+    /// computes deltas for cumulative counters, and reports all metrics as gauges.
     /// </summary>
     private void DrainAndReportMetrics()
     {
         try
         {
-            var json = Interlocked.Exchange(ref _latestStatisticsJson, null);
-            if (json == null || _currentAgent == null)
+            if (_currentAgent == null)
                 return;
-
-            var metricsData = KafkaStatisticsHelper.ParseStatistics(json);
-            if (metricsData?.IsValid != true)
-            {
-                Log.Debug("KafkaBuilderWrapper: Failed to parse Kafka statistics or data is invalid");
-                return;
-            }
-
-            Log.Debug($"KafkaBuilderWrapper: Draining stats - ClientId: {metricsData.ClientId}, Type: {metricsData.ClientType}");
-
-            var metricsDict = KafkaStatisticsHelper.CreateMetricsDictionary(metricsData, MessageBrokerVendorConstants.Kafka);
-            _previousValues ??= new Dictionary<string, long>(metricsDict.Count);
 
             var experimentalApi = _currentAgent.GetExperimentalApi();
             var reportedCount = 0;
 
-            foreach (var kvp in metricsDict)
+            foreach (var clientEntry in _latestStatisticsPerClient)
             {
-                float valueToReport;
+                if (!_latestStatisticsPerClient.TryRemove(clientEntry.Key, out var json))
+                    continue;
 
-                if (kvp.Value.MetricType == KafkaMetricType.Cumulative)
+                var metricsData = KafkaStatisticsHelper.ParseStatistics(json);
+                if (metricsData?.IsValid != true)
                 {
-                    if (_previousValues.TryGetValue(kvp.Key, out var prev))
+                    Log.Debug("KafkaBuilderWrapper: Failed to parse Kafka statistics or data is invalid");
+                    continue;
+                }
+
+                Log.Debug($"KafkaBuilderWrapper: Draining stats - ClientId: {metricsData.ClientId}, Type: {metricsData.ClientType}");
+
+                var metricsDict = KafkaStatisticsHelper.CreateMetricsDictionary(metricsData, MessageBrokerVendorConstants.Kafka);
+                var previousValues = _previousValuesPerClient.GetOrAdd(clientEntry.Key, _ => new Dictionary<string, long>(metricsDict.Count));
+
+                foreach (var kvp in metricsDict)
+                {
+                    float valueToReport;
+
+                    if (kvp.Value.MetricType == KafkaMetricType.Cumulative)
                     {
-                        var delta = kvp.Value.Value - prev;
-                        // Handle counter reset: if delta is negative, report the raw value
-                        valueToReport = delta >= 0 ? delta : kvp.Value.Value;
+                        if (previousValues.TryGetValue(kvp.Key, out var prev))
+                        {
+                            var delta = kvp.Value.Value - prev;
+                            // Handle counter reset: if delta is negative, report the raw value
+                            valueToReport = delta >= 0 ? delta : kvp.Value.Value;
+                        }
+                        else
+                        {
+                            // First observation — report raw value (counters start at 0, so raw == delta from 0)
+                            valueToReport = kvp.Value.Value;
+                        }
+
+                        previousValues[kvp.Key] = kvp.Value.Value;
                     }
                     else
                     {
-                        // First observation — no previous value to diff against
-                        valueToReport = 0;
+                        // Gauge and WindowAvg: report raw value
+                        valueToReport = kvp.Value.Value;
                     }
 
-                    _previousValues[kvp.Key] = kvp.Value.Value;
-                }
-                else
-                {
-                    // Gauge and WindowAvg: report raw value
-                    valueToReport = kvp.Value.Value;
-                }
-
-                if (valueToReport > 0)
-                {
-                    experimentalApi.RecordGaugeMetric(kvp.Key, valueToReport);
-                    reportedCount++;
+                    if (valueToReport > 0)
+                    {
+                        experimentalApi.RecordGaugeMetric(kvp.Key, valueToReport);
+                        reportedCount++;
+                    }
                 }
             }
 
-            Log.Finest($"KafkaBuilderWrapper: Reported {reportedCount} Kafka metrics");
+            if (reportedCount > 0)
+                Log.Finest($"KafkaBuilderWrapper: Reported {reportedCount} Kafka metrics");
         }
         catch (Exception ex)
         {
