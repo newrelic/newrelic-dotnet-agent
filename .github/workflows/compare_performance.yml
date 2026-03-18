@@ -427,7 +427,11 @@ jobs:
         if: always()
         run: |
           if [ -f report-output/summary.md ]; then
-            cat report-output/summary.md >> $GITHUB_STEP_SUMMARY
+            # Strip markdown image lines — charts are not directly linkable from
+            # step summaries; download the perf-report artifact to view them.
+            grep -v '^!\[' report-output/summary.md >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "_Charts are available in the **perf-report** artifact._" >> $GITHUB_STEP_SUMMARY
           else
             echo "No summary.md generated." >> $GITHUB_STEP_SUMMARY
           fi
