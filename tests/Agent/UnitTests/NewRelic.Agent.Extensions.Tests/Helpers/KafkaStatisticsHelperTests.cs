@@ -448,9 +448,9 @@ namespace Agent.Extensions.Tests.Helpers;
             Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/record-send-total"));
 
             // Verify values
-            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/request-counter"], Is.EqualTo(15));
-            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/response-counter"], Is.EqualTo(12));
-            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/txmsgs"], Is.EqualTo(100));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/request-counter"].Value, Is.EqualTo(15));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/response-counter"].Value, Is.EqualTo(12));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/txmsgs"].Value, Is.EqualTo(100));
         }
 
         [Test]
@@ -473,9 +473,9 @@ namespace Agent.Extensions.Tests.Helpers;
             Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/client/consumer-test/records-lag-max"));
 
             // Verify values
-            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/consumer-test/rebalance-total"], Is.EqualTo(2));
-            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/consumer-test/assigned-partitions"], Is.EqualTo(2));
-            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/client/consumer-test/records-consumed-total"], Is.EqualTo(150));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/consumer-test/rebalance-total"].Value, Is.EqualTo(2));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/consumer-test/assigned-partitions"].Value, Is.EqualTo(2));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/client/consumer-test/records-consumed-total"].Value, Is.EqualTo(150));
         }
 
         [Test]
@@ -494,8 +494,8 @@ namespace Agent.Extensions.Tests.Helpers;
             Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-node-metrics/node/1/client/producer-test/connection-count"));
 
             // Verify values
-            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-node-metrics/node/1/client/producer-test/request-total"], Is.EqualTo(10));
-            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-node-metrics/node/1/client/producer-test/outgoing-byte-total"], Is.EqualTo(4000));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-node-metrics/node/1/client/producer-test/request-total"].Value, Is.EqualTo(10));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-node-metrics/node/1/client/producer-test/outgoing-byte-total"].Value, Is.EqualTo(4000));
         }
 
         [Test]
@@ -509,7 +509,7 @@ namespace Agent.Extensions.Tests.Helpers;
 
             // Assert
             Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-topic-metrics/topic/test-topic/client/producer-test/record-send-total"));
-            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-topic-metrics/topic/test-topic/client/producer-test/record-send-total"], Is.EqualTo(50));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-topic-metrics/topic/test-topic/client/producer-test/record-send-total"].Value, Is.EqualTo(50));
         }
 
         [Test]
@@ -525,8 +525,8 @@ namespace Agent.Extensions.Tests.Helpers;
             Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/topic/test-topic/partition/0/client/producer-test/record-send-total"));
             Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/topic/test-topic/partition/0/client/producer-test/byte-total"));
 
-            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/topic/test-topic/partition/0/client/producer-test/record-send-total"], Is.EqualTo(50));
-            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/topic/test-topic/partition/0/client/producer-test/byte-total"], Is.EqualTo(2500));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/topic/test-topic/partition/0/client/producer-test/record-send-total"].Value, Is.EqualTo(50));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/topic/test-topic/partition/0/client/producer-test/byte-total"].Value, Is.EqualTo(2500));
         }
 
         [Test]
@@ -542,8 +542,8 @@ namespace Agent.Extensions.Tests.Helpers;
             Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-metrics/topic/test-topic/partition/0/client/consumer-test/records-lag"));
             Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-metrics/topic/test-topic/partition/1/client/consumer-test/records-lag"));
 
-            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-metrics/topic/test-topic/partition/0/client/consumer-test/records-lag"], Is.EqualTo(10));
-            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-metrics/topic/test-topic/partition/1/client/consumer-test/records-lag"], Is.EqualTo(15));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-metrics/topic/test-topic/partition/0/client/consumer-test/records-lag"].Value, Is.EqualTo(10));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-metrics/topic/test-topic/partition/1/client/consumer-test/records-lag"].Value, Is.EqualTo(15));
         }
 
         [Test]
@@ -573,8 +573,8 @@ namespace Agent.Extensions.Tests.Helpers;
             Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/txmsgs"));
             Assert.That(metrics, Does.Not.ContainKey("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/rxmsgs"));
 
-            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/request-counter"], Is.EqualTo(5));
-            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/txmsgs"], Is.EqualTo(10));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/request-counter"].Value, Is.EqualTo(5));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/txmsgs"].Value, Is.EqualTo(10));
         }
 
         [Test]
@@ -739,6 +739,99 @@ namespace Agent.Extensions.Tests.Helpers;
             Assert.That(result.ProducerMetrics.BatchSizeAvg, Is.EqualTo(0));
             Assert.That(result.ProducerMetrics.BatchCountAvg, Is.EqualTo(0));
             Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/producer-no-batch/request-counter"));
+        }
+
+        #endregion
+
+        #region Metric Type Classification Tests
+
+        [Test]
+        public void CreateMetricsDictionary_CumulativeCounters_AreTaggedAsCumulative()
+        {
+            // Arrange
+            var metricsData = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
+
+            // Act
+            var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(metricsData, "Kafka");
+
+            // Assert — client-level cumulative counters
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/request-counter"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/response-counter"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/txmsgs"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/outgoing-byte-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
+
+            // Assert — broker-level cumulative counters
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-node-metrics/node/1/client/producer-test/request-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-node-metrics/node/1/client/producer-test/outgoing-byte-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
+
+            // Assert — partition-level cumulative counters
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/topic/test-topic/partition/0/client/producer-test/record-send-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/topic/test-topic/partition/0/client/producer-test/byte-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
+        }
+
+        [Test]
+        public void CreateMetricsDictionary_GaugeValues_AreTaggedAsGauge()
+        {
+            // Arrange
+            var metricsData = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
+
+            // Act
+            var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(metricsData, "Kafka");
+
+            // Assert — client-level gauges
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/metadata_cache_cnt"].MetricType, Is.EqualTo(KafkaMetricType.Gauge));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/record-queue-time-avg"].MetricType, Is.EqualTo(KafkaMetricType.Gauge));
+        }
+
+        [Test]
+        public void CreateMetricsDictionary_ConsumerGaugeValues_AreTaggedAsGauge()
+        {
+            // Arrange
+            var metricsData = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
+
+            // Act
+            var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(metricsData, "Kafka");
+
+            // Assert — consumer coordinator gauges
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/consumer-test/assigned-partitions"].MetricType, Is.EqualTo(KafkaMetricType.Gauge));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/consumer-test/rebalance-latency-avg"].MetricType, Is.EqualTo(KafkaMetricType.Gauge));
+
+            // Assert — consumer lag gauges
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/client/consumer-test/records-lag-max"].MetricType, Is.EqualTo(KafkaMetricType.Gauge));
+
+            // Assert — partition-level lag gauges
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-metrics/topic/test-topic/partition/0/client/consumer-test/records-lag"].MetricType, Is.EqualTo(KafkaMetricType.Gauge));
+        }
+
+        [Test]
+        public void CreateMetricsDictionary_WindowAverages_AreTaggedAsWindowAvg()
+        {
+            // Arrange
+            var metricsData = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
+
+            // Act
+            var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(metricsData, "Kafka");
+
+            // Assert — producer window averages
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/batch-size-avg"].MetricType, Is.EqualTo(KafkaMetricType.WindowAvg));
+
+            // Assert — broker RTT window average
+            Assert.That(metrics["MessageBroker/Kafka/Internal/producer-node-metrics/node/1/client/producer-test/request-latency-avg"].MetricType, Is.EqualTo(KafkaMetricType.WindowAvg));
+        }
+
+        [Test]
+        public void CreateMetricsDictionary_ConsumerCumulativeCounters_AreTaggedAsCumulative()
+        {
+            // Arrange
+            var metricsData = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
+
+            // Act
+            var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(metricsData, "Kafka");
+
+            // Assert — consumer cumulative counters
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/consumer-test/rebalance-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/client/consumer-test/records-consumed-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
+            Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/client/consumer-test/bytes-consumed-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
         }
 
         #endregion

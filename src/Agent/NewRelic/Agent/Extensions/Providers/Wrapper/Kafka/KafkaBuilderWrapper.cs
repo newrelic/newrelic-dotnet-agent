@@ -4,8 +4,10 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -21,9 +23,12 @@ public class KafkaBuilderWrapper : IWrapper
 
     private const string WrapperName = "KafkaBuilderWrapper";
     private const string BootstrapServersKey = "bootstrap.servers";
+    private static readonly TimeSpan DrainInterval = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan DrainInitialDelay = TimeSpan.FromSeconds(15);
 
-    // Store current agent for use in statistics callback
     private IAgent _currentAgent;
+    private volatile string _latestStatisticsJson;
+    private Dictionary<string, long> _previousValues;
 
     public bool IsTransactionRequired => false;
     public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
@@ -71,45 +76,40 @@ public class KafkaBuilderWrapper : IWrapper
         });
     }
 
-    #region Statistics Collection - Phase 1: Critical UI Metrics
+    #region Statistics Collection
 
     /// <summary>
     /// Sets up non-invasive statistics collection for Kafka metrics.
-    /// Preserves any existing customer statistics handlers while adding our metrics collection.
+    /// Registers a lightweight callback that caches the latest JSON, and starts a
+    /// scheduled drain task that parses and reports metrics once per harvest interval.
     /// </summary>
     private void SetupStatisticsCollection(object builder, IAgent agent)
     {
         Log.Finest($"KafkaBuilderWrapper: SetupStatisticsCollection called for builder type: {builder?.GetType().Name}");
 
-        // Create and set our statistics handler
         var ourHandler = CreateMetricsReportingHandler(agent, builder);
-        if (ourHandler != null)
-        {
-            Log.Finest("KafkaBuilderWrapper: Setting up statistics handler");
-            SetStatisticsHandlerOnBuilder(builder, ourHandler);
-
-            // For testing, set a statistics interval (normally customer should set this)
-            SetStatisticsIntervalOnBuilder(builder, 5000); // 5 seconds for testing
-
-            Log.Debug("KafkaBuilderWrapper: Statistics handler configured successfully");
-        }
-        else
+        if (ourHandler == null)
         {
             Log.Debug("KafkaBuilderWrapper: Could not create statistics handler");
+            return;
         }
+
+        SetStatisticsHandlerOnBuilder(builder, ourHandler);
+        SetStatisticsIntervalOnBuilder(builder);
+
+        // Start the scheduled drain that will parse and report metrics once per interval
+        agent.GetExperimentalApi().SimpleSchedulingService
+            .StartExecuteEvery(DrainAndReportMetrics, DrainInterval, DrainInitialDelay);
+
+        Log.Debug("KafkaBuilderWrapper: Statistics handler and scheduled drain configured successfully");
     }
 
-
     /// <summary>
-    /// Creates our metrics reporting handler that extracts and reports Kafka internal metrics.
-    /// Uses reflection to create proper delegate types compatible with old Kafka package (1.4.0).
-    /// Phase 1: Focus on critical UI metrics only.
+    /// Creates a reflection-based delegate compatible with Kafka's SetStatisticsHandler.
+    /// The delegate simply caches the latest JSON string — no parsing on the callback thread.
     /// </summary>
     private object CreateMetricsReportingHandler(IAgent agent, object builder)
     {
-        Log.Finest($"KafkaBuilderWrapper: Creating reflection-based metrics handler for builder type: {builder.GetType().Name}");
-
-        // Use reflection to find the exact method signature expected by SetStatisticsHandler
         var builderType = builder.GetType();
         var setStatisticsMethod = builderType.GetMethod("SetStatisticsHandler");
 
@@ -126,106 +126,108 @@ public class KafkaBuilderWrapper : IWrapper
             return null;
         }
 
-        // Get the expected delegate type (Action<TClient, string>)
         var expectedDelegateType = parameters[0].ParameterType;
-        Log.Finest($"KafkaBuilderWrapper: Expected delegate type: {expectedDelegateType.Name}");
-
-        // Create a method that matches the delegate signature
         var methodToInvoke = typeof(KafkaBuilderWrapper).GetMethod(nameof(StatisticsHandlerMethod), BindingFlags.Instance | BindingFlags.NonPublic);
-
-        // Create a delegate of the expected type that calls our method
         var handler = Delegate.CreateDelegate(expectedDelegateType, this, methodToInvoke);
 
-        // Store the agent reference so our method can access it
         _currentAgent = agent;
 
-        Log.Finest($"KafkaBuilderWrapper: Successfully created reflection-based handler of type: {handler.GetType().Name}");
+        Log.Finest($"KafkaBuilderWrapper: Created statistics handler of type: {handler.GetType().Name}");
         return handler;
     }
 
     /// <summary>
-    /// The actual method that will be called by the statistics callback.
-    /// This method signature works with both producer and consumer delegates.
+    /// Called by librdkafka on every statistics interval. Must be fast — just caches the JSON.
     /// </summary>
     private void StatisticsHandlerMethod(object client, string json)
     {
-        var clientTypeName = client?.GetType().Name ?? "Unknown";
-        Log.Debug($"KafkaBuilderWrapper: Statistics callback triggered for {clientTypeName}, JSON length: {json?.Length ?? 0}");
-
-        if (_currentAgent != null)
-        {
-            ParseAndReportCriticalUIMetrics(_currentAgent, json);
-        }
-        else
-        {
-            Log.Finest("KafkaBuilderWrapper: No agent available for statistics processing");
-        }
+        Log.Finest($"KafkaBuilderWrapper: Statistics callback, JSON length: {json?.Length ?? 0}");
+        Interlocked.Exchange(ref _latestStatisticsJson, json);
     }
 
     /// <summary>
-    /// Parses statistics JSON and reports the critical metrics that light up New Relic's Kafka UI.
-    /// Uses KafkaStatisticsHelper from Extensions project to handle JSON parsing.
+    /// Scheduled drain task. Runs once per interval on the agent scheduler thread.
+    /// Parses the latest cached JSON, computes deltas for cumulative counters,
+    /// and reports all metrics as gauges.
     /// </summary>
-    private void ParseAndReportCriticalUIMetrics(IAgent agent, string statisticsJson)
+    private void DrainAndReportMetrics()
     {
-        Log.Finest($"KafkaBuilderWrapper: ParseAndReportCriticalUIMetrics called with JSON length: {statisticsJson?.Length ?? 0}");
-
-        if (string.IsNullOrEmpty(statisticsJson))
+        try
         {
-            Log.Debug("KafkaBuilderWrapper: Statistics JSON is null or empty");
-            return;
-        }
+            var json = Interlocked.Exchange(ref _latestStatisticsJson, null);
+            if (json == null || _currentAgent == null)
+                return;
 
-        // Use the helper from Extensions project to parse the JSON
-        var metricsData = KafkaStatisticsHelper.ParseStatistics(statisticsJson);
-        if (metricsData?.IsValid != true)
+            var metricsData = KafkaStatisticsHelper.ParseStatistics(json);
+            if (metricsData?.IsValid != true)
+            {
+                Log.Debug("KafkaBuilderWrapper: Failed to parse Kafka statistics or data is invalid");
+                return;
+            }
+
+            Log.Debug($"KafkaBuilderWrapper: Draining stats - ClientId: {metricsData.ClientId}, Type: {metricsData.ClientType}");
+
+            var metricsDict = KafkaStatisticsHelper.CreateMetricsDictionary(metricsData, MessageBrokerVendorConstants.Kafka);
+            _previousValues ??= new Dictionary<string, long>(metricsDict.Count);
+
+            var experimentalApi = _currentAgent.GetExperimentalApi();
+            var reportedCount = 0;
+
+            foreach (var kvp in metricsDict)
+            {
+                float valueToReport;
+
+                if (kvp.Value.MetricType == KafkaMetricType.Cumulative)
+                {
+                    if (_previousValues.TryGetValue(kvp.Key, out var prev))
+                    {
+                        var delta = kvp.Value.Value - prev;
+                        // Handle counter reset: if delta is negative, report the raw value
+                        valueToReport = delta >= 0 ? delta : kvp.Value.Value;
+                    }
+                    else
+                    {
+                        // First observation — no previous value to diff against
+                        valueToReport = 0;
+                    }
+
+                    _previousValues[kvp.Key] = kvp.Value.Value;
+                }
+                else
+                {
+                    // Gauge and WindowAvg: report raw value
+                    valueToReport = kvp.Value.Value;
+                }
+
+                if (valueToReport > 0)
+                {
+                    experimentalApi.RecordGaugeMetric(kvp.Key, valueToReport);
+                    reportedCount++;
+                }
+            }
+
+            Log.Finest($"KafkaBuilderWrapper: Reported {reportedCount} Kafka metrics");
+        }
+        catch (Exception ex)
         {
-            Log.Debug("KafkaBuilderWrapper: Failed to parse Kafka statistics or data is invalid");
-            return;
+            Log.Debug($"KafkaBuilderWrapper: Error draining Kafka metrics: {ex.Message}");
         }
-
-        Log.Debug($"KafkaBuilderWrapper: Parsed stats - ClientId: {metricsData.ClientId}, Type: {metricsData.ClientType}, Requests: {metricsData.RequestCount}, Responses: {metricsData.ResponseCount}");
-
-        // Get all metrics as a dictionary
-        var metricsDict = KafkaStatisticsHelper.CreateMetricsDictionary(metricsData, MessageBrokerVendorConstants.Kafka);
-
-        // Record all metrics using the experimental API
-        foreach (var kvp in metricsDict)
-        {
-            agent.GetExperimentalApi().RecordCountMetric(kvp.Key, kvp.Value);
-            Log.Finest($"KafkaBuilderWrapper: Recorded metric: {kvp.Key} = {kvp.Value}");
-        }
-
-        Log.Finest($"KafkaBuilderWrapper: Successfully recorded {metricsDict.Count} Kafka internal metrics");
     }
-
 
     /// <summary>
     /// Sets statistics handler on the Kafka builder using reflection.
-    /// Handles both properly typed and generic handlers.
     /// </summary>
     private void SetStatisticsHandlerOnBuilder(object builder, object handler)
     {
-        Log.Finest($"KafkaBuilderWrapper: SetStatisticsHandlerOnBuilder called for type: {builder.GetType().Name}");
-
-        // Find SetStatisticsHandler method with any signature since the exact signature may vary
         var setStatisticsMethods = builder.GetType().GetMethods()
             .Where(m => m.Name == "SetStatisticsHandler")
             .ToArray();
 
-        Log.Finest($"KafkaBuilderWrapper: Found {setStatisticsMethods.Length} SetStatisticsHandler methods");
-
         if (setStatisticsMethods.Length > 0)
         {
-            // Use the first SetStatisticsHandler method found
             var method = setStatisticsMethods[0];
-            var parameters = method.GetParameters();
-
-            Log.Finest($"KafkaBuilderWrapper: Using SetStatisticsHandler method with parameters: {string.Join(", ", parameters.Select(p => p.ParameterType.Name))}");
-
-            // Try to invoke with our handler - the method should accept our Action delegate
             method.Invoke(builder, new object[] { handler });
-            Log.Finest($"KafkaBuilderWrapper: SetStatisticsHandler invoked successfully");
+            Log.Finest("KafkaBuilderWrapper: SetStatisticsHandler invoked successfully");
         }
         else
         {
@@ -234,27 +236,18 @@ public class KafkaBuilderWrapper : IWrapper
     }
 
     /// <summary>
-    /// Attempts to enable statistics on the Kafka builder.
-    /// Note: Statistics are typically configured by the customer application.
+    /// Enables statistics on the Kafka builder if not already configured by the customer.
     /// </summary>
-    private void SetStatisticsIntervalOnBuilder(object builder, int intervalMs)
+    private void SetStatisticsIntervalOnBuilder(object builder)
     {
-        // First check if customer has already configured statistics interval
         if (!ShouldSetStatisticsInterval(builder))
-        {
-            return; // Respect customer's existing configuration
-        }
+            return;
 
-        // Try to enable statistics via SetConfig method
         var setConfigMethod = builder.GetType().GetMethod("SetConfig", new[] { typeof(string), typeof(string) });
         if (setConfigMethod != null)
         {
-            setConfigMethod.Invoke(builder, new object[] { "statistics.interval.ms", intervalMs.ToString() });
-            Log.Finest($"KafkaBuilderWrapper: Set statistics interval to {intervalMs}ms");
-        }
-        else
-        {
-            Log.Finest("KafkaBuilderWrapper: No SetConfig method found on builder");
+            setConfigMethod.Invoke(builder, new object[] { "statistics.interval.ms", "5000" });
+            Log.Finest("KafkaBuilderWrapper: Set statistics interval to 5000ms");
         }
     }
 
@@ -262,7 +255,6 @@ public class KafkaBuilderWrapper : IWrapper
     {
         try
         {
-            // Get the config accessor (reuse existing caching mechanism)
             if (!_builderConfigGetterDictionary.TryGetValue(builder.GetType(), out var configGetter))
             {
                 configGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<IEnumerable>(builder.GetType(), "Config");
@@ -271,12 +263,8 @@ public class KafkaBuilderWrapper : IWrapper
 
             var config = configGetter(builder);
             if (config == null)
-            {
-                Log.Finest("KafkaBuilderWrapper: Could not access builder config, allowing statistics interval setup");
                 return true;
-            }
 
-            // Check if statistics.interval.ms is already configured
             foreach (dynamic kvp in config)
             {
                 if (kvp.Key == "statistics.interval.ms")
@@ -285,24 +273,19 @@ public class KafkaBuilderWrapper : IWrapper
                     if (!string.IsNullOrEmpty(value) && value != "0")
                     {
                         Log.Debug($"KafkaBuilderWrapper: Customer has already configured statistics interval to {value}ms");
-                        return false; // Don't override customer configuration
+                        return false;
                     }
                 }
             }
 
-            // Not configured or set to 0 (disabled), we can set our default
-            Log.Finest("KafkaBuilderWrapper: No customer statistics interval found, setting default");
             return true;
         }
         catch (Exception ex)
         {
-            Log.Debug($"KafkaBuilderWrapper: Could not check existing statistics interval: {ex.Message}. Not setting a specific interval");
-            return false; // Be conservative - don't override if we can't determine existing config
+            Log.Debug($"KafkaBuilderWrapper: Could not check existing statistics interval: {ex.Message}");
+            return false;
         }
     }
-
-
-
 
 
 

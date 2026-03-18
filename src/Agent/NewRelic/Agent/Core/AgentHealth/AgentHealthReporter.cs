@@ -162,6 +162,12 @@ public class AgentHealthReporter : ConfigurationBasedService, IAgentHealthReport
         TrySend(metric);
     }
 
+    public void ReportGaugeMetric(string metricName, float value)
+    {
+        var metric = _metricBuilder.TryBuildGaugeMetric(metricName, value);
+        TrySend(metric);
+    }
+
 
 
     public void ReportDotnetVersion()

@@ -119,6 +119,18 @@ public class MetricBuilderTests
     }
 
     [Test]
+    public void BuildGaugeMetric()
+    {
+        const string MetricName = "Custom/MyApp/GaugeMetric";
+        const float RawValue = 31872f;
+        var actualMetric = _metricBuilder.TryBuildGaugeMetric(MetricName, RawValue);
+        NrAssert.Multiple(
+            () => Assert.That(actualMetric.MetricNameModel.Name, Is.EqualTo(MetricName)),
+            () => Assert.That(actualMetric.DataModel, Is.EqualTo(MetricDataWireModel.BuildGaugeValue(RawValue)))
+        );
+    }
+
+    [Test]
     public void BuildSupportabilityCountMetric_DefuaultCount()
     {
         const string MetricName = "WCFClient/BindingType/BasicHttpBinding";

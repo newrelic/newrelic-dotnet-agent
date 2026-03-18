@@ -25,6 +25,14 @@ public interface IAgentExperimental
     /// <param name="metricName"></param>
     /// <param name="count"></param>
     void RecordCountMetric(string metricName, long count = 1);
+
+    /// <summary>
+    /// Records a gauge metric with the given name, representing a point-in-time value
+    /// </summary>
+    /// <param name="metricName"></param>
+    /// <param name="value"></param>
+    void RecordGaugeMetric(string metricName, float value);
+
     /// <summary>
     /// Records a byte count metric with the given name
     /// </summary>

@@ -9,6 +9,38 @@ using Newtonsoft.Json;
 namespace NewRelic.Agent.Extensions.Helpers;
 
 /// <summary>
+/// Classifies Kafka metrics by their librdkafka statistics type.
+/// Determines whether delta computation is needed at drain time.
+/// </summary>
+public enum KafkaMetricType
+{
+    /// <summary>Ever-increasing counter from librdkafka ("int" type). Needs delta computation.</summary>
+    Cumulative,
+
+    /// <summary>Point-in-time snapshot from librdkafka ("int gauge" type). Use raw value.</summary>
+    Gauge,
+
+    /// <summary>Window average from librdkafka (rtt.avg, batchsize.avg). Use raw value.</summary>
+    WindowAvg
+}
+
+/// <summary>
+/// A metric value paired with its type, used to determine how to report the metric.
+/// Struct to avoid heap allocation per metric entry.
+/// </summary>
+public struct KafkaMetricValue
+{
+    public long Value;
+    public KafkaMetricType MetricType;
+
+    public KafkaMetricValue(long value, KafkaMetricType metricType)
+    {
+        Value = value;
+        MetricType = metricType;
+    }
+}
+
+/// <summary>
 /// Helper for parsing and extracting metrics from Kafka statistics JSON.
 /// This helper is in the Extensions project so it has access to Newtonsoft.Json.
 /// </summary>
@@ -591,9 +623,9 @@ public static class KafkaStatisticsHelper
     /// <param name="metricsData">Parsed Kafka metrics data</param>
     /// <param name="vendorName">Kafka vendor name (should use MessageBrokerVendorConstants.Kafka)</param>
     /// <returns>Dictionary of metric names to values</returns>
-    public static Dictionary<string, long> CreateMetricsDictionary(KafkaMetricsData metricsData, string vendorName = "Kafka")
+    public static Dictionary<string, KafkaMetricValue> CreateMetricsDictionary(KafkaMetricsData metricsData, string vendorName = "Kafka")
     {
-        var metrics = new Dictionary<string, long>();
+        var metrics = new Dictionary<string, KafkaMetricValue>();
 
         if (metricsData?.IsValid != true)
             return metrics;
@@ -619,28 +651,31 @@ public static class KafkaStatisticsHelper
         return metrics;
     }
 
-    private static void AddClientLevelMetrics(Dictionary<string, long> metrics, KafkaMetricsData data, string vendorName)
+    private static void AddClientLevelMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaMetricsData data, string vendorName)
     {
         var clientType = data.ClientType;
         var clientId = data.ClientId;
         var basePrefix = $"MessageBroker/{vendorName}/Internal/{clientType}-metrics/client/{clientId}";
 
-        AddMetricIfPositive(metrics, $"{basePrefix}/request-counter", data.RequestCount);
-        AddMetricIfPositive(metrics, $"{basePrefix}/response-counter", data.ResponseCount);
-        AddMetricIfPositive(metrics, $"{basePrefix}/txmsgs", data.TxMessages);
-        AddMetricIfPositive(metrics, $"{basePrefix}/rxmsgs", data.RxMessages);
-        AddMetricIfPositive(metrics, $"{basePrefix}/txmsg_bytes", data.TxBytes);
-        AddMetricIfPositive(metrics, $"{basePrefix}/rxmsg_bytes", data.RxBytes);
-        AddMetricIfPositive(metrics, $"{basePrefix}/metadata_cache_cnt", data.MetadataCacheCount);
-        AddMetricIfPositive(metrics, $"{basePrefix}/record-queue-time-avg", data.MessageQueueCount);
-        AddMetricIfPositive(metrics, $"{basePrefix}/record-size-avg", data.MessageQueueCount > 0 ? data.MessageQueueSize / data.MessageQueueCount : 0);
-        AddMetricIfPositive(metrics, $"{basePrefix}/outgoing-byte-total", data.TotalTxBytes);
-        AddMetricIfPositive(metrics, $"{basePrefix}/incoming-byte-total", data.TotalRxBytes);
-        AddMetricIfPositive(metrics, $"{basePrefix}/request-total", data.RequestCount);
-        AddMetricIfPositive(metrics, $"{basePrefix}/response-total", data.ResponseCount);
+        // Cumulative counters (librdkafka "int" type — ever-increasing)
+        AddMetricIfPositive(metrics, $"{basePrefix}/request-counter", data.RequestCount, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{basePrefix}/response-counter", data.ResponseCount, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{basePrefix}/txmsgs", data.TxMessages, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{basePrefix}/rxmsgs", data.RxMessages, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{basePrefix}/txmsg_bytes", data.TxBytes, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{basePrefix}/rxmsg_bytes", data.RxBytes, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{basePrefix}/outgoing-byte-total", data.TotalTxBytes, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{basePrefix}/incoming-byte-total", data.TotalRxBytes, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{basePrefix}/request-total", data.RequestCount, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{basePrefix}/response-total", data.ResponseCount, KafkaMetricType.Cumulative);
+
+        // Gauges (librdkafka "int gauge" type — point-in-time snapshot)
+        AddMetricIfPositive(metrics, $"{basePrefix}/metadata_cache_cnt", data.MetadataCacheCount, KafkaMetricType.Gauge);
+        AddMetricIfPositive(metrics, $"{basePrefix}/record-queue-time-avg", data.MessageQueueCount, KafkaMetricType.Gauge);
+        AddMetricIfPositive(metrics, $"{basePrefix}/record-size-avg", data.MessageQueueCount > 0 ? data.MessageQueueSize / data.MessageQueueCount : 0, KafkaMetricType.Gauge);
     }
 
-    private static void AddConsumerMetrics(Dictionary<string, long> metrics, KafkaMetricsData data, string vendorName)
+    private static void AddConsumerMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaMetricsData data, string vendorName)
     {
         if (data.ClientType != "consumer" || data.ConsumerMetrics == null) return;
 
@@ -649,20 +684,20 @@ public static class KafkaStatisticsHelper
 
         // Consumer coordinator metrics (matches Java agent pattern)
         var coordinatorPrefix = $"MessageBroker/{vendorName}/Internal/consumer-coordinator-metrics/client/{clientId}";
-        AddMetricIfPositive(metrics, $"{coordinatorPrefix}/rebalance-total", consumerMetrics.RebalanceCount);
-        AddMetricIfPositive(metrics, $"{coordinatorPrefix}/rebalance-latency-avg", consumerMetrics.RebalanceAge);
-        AddMetricIfPositive(metrics, $"{coordinatorPrefix}/assigned-partitions", consumerMetrics.AssignedPartitions);
+        AddMetricIfPositive(metrics, $"{coordinatorPrefix}/rebalance-total", consumerMetrics.RebalanceCount, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{coordinatorPrefix}/rebalance-latency-avg", consumerMetrics.RebalanceAge, KafkaMetricType.Gauge);
+        AddMetricIfPositive(metrics, $"{coordinatorPrefix}/assigned-partitions", consumerMetrics.AssignedPartitions, KafkaMetricType.Gauge);
 
         // Consumer fetch manager metrics
         var fetchPrefix = $"MessageBroker/{vendorName}/Internal/consumer-fetch-manager-metrics/client/{clientId}";
-        AddMetricIfPositive(metrics, $"{fetchPrefix}/records-consumed-total", data.RxMessages);
-        AddMetricIfPositive(metrics, $"{fetchPrefix}/bytes-consumed-total", data.RxBytes);
+        AddMetricIfPositive(metrics, $"{fetchPrefix}/records-consumed-total", data.RxMessages, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{fetchPrefix}/bytes-consumed-total", data.RxBytes, KafkaMetricType.Cumulative);
         AddMetricIfPositive(metrics, $"{fetchPrefix}/records-lag-avg", consumerMetrics.TotalConsumerLag > 0 && consumerMetrics.AssignedPartitions > 0
-            ? consumerMetrics.TotalConsumerLag / consumerMetrics.AssignedPartitions : 0);
-        AddMetricIfPositive(metrics, $"{fetchPrefix}/records-lag-max", consumerMetrics.TotalConsumerLag);
+            ? consumerMetrics.TotalConsumerLag / consumerMetrics.AssignedPartitions : 0, KafkaMetricType.Gauge);
+        AddMetricIfPositive(metrics, $"{fetchPrefix}/records-lag-max", consumerMetrics.TotalConsumerLag, KafkaMetricType.Gauge);
     }
 
-    private static void AddProducerMetrics(Dictionary<string, long> metrics, KafkaMetricsData data, string vendorName)
+    private static void AddProducerMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaMetricsData data, string vendorName)
     {
         if (data.ClientType != "producer" || data.ProducerMetrics == null) return;
 
@@ -671,19 +706,19 @@ public static class KafkaStatisticsHelper
 
         // Producer metrics (matches Java agent pattern)
         var producerPrefix = $"MessageBroker/{vendorName}/Internal/producer-metrics/client/{clientId}";
-        AddMetricIfPositive(metrics, $"{producerPrefix}/batch-size-avg", producerMetrics.BatchSizeAvg);
-        AddMetricIfPositive(metrics, $"{producerPrefix}/records-per-request-avg", producerMetrics.RecordsPerRequestAvg);
-        AddMetricIfPositive(metrics, $"{producerPrefix}/record-send-total", data.TxMessages);
-        AddMetricIfPositive(metrics, $"{producerPrefix}/record-error-total", 0); // librdkafka doesn't provide this directly
+        AddMetricIfPositive(metrics, $"{producerPrefix}/batch-size-avg", producerMetrics.BatchSizeAvg, KafkaMetricType.WindowAvg);
+        AddMetricIfPositive(metrics, $"{producerPrefix}/records-per-request-avg", producerMetrics.RecordsPerRequestAvg, KafkaMetricType.WindowAvg);
+        AddMetricIfPositive(metrics, $"{producerPrefix}/record-send-total", data.TxMessages, KafkaMetricType.Cumulative);
+        AddMetricIfPositive(metrics, $"{producerPrefix}/record-error-total", 0, KafkaMetricType.Cumulative); // librdkafka doesn't provide this directly
 
         // Idempotent producer metrics
         if (!string.IsNullOrEmpty(producerMetrics.IdempotentState))
         {
-            AddMetricIfPositive(metrics, $"{producerPrefix}/producer-id-changes", producerMetrics.EpochCount);
+            AddMetricIfPositive(metrics, $"{producerPrefix}/producer-id-changes", producerMetrics.EpochCount, KafkaMetricType.Cumulative);
         }
     }
 
-    private static void AddBrokerMetrics(Dictionary<string, long> metrics, KafkaMetricsData data, string vendorName)
+    private static void AddBrokerMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaMetricsData data, string vendorName)
     {
         if (data.BrokerMetrics == null) return;
 
@@ -693,16 +728,16 @@ public static class KafkaStatisticsHelper
             var normalizedNodeId = NormalizeNodeId(broker.NodeId.ToString());
             var nodePrefix = $"MessageBroker/{vendorName}/Internal/{data.ClientType}-node-metrics/node/{normalizedNodeId}/client/{data.ClientId}";
 
-            AddMetricIfPositive(metrics, $"{nodePrefix}/request-total", broker.Requests);
-            AddMetricIfPositive(metrics, $"{nodePrefix}/response-total", broker.Responses);
-            AddMetricIfPositive(metrics, $"{nodePrefix}/outgoing-byte-total", broker.OutgoingBytes);
-            AddMetricIfPositive(metrics, $"{nodePrefix}/incoming-byte-total", broker.IncomingBytes);
-            AddMetricIfPositive(metrics, $"{nodePrefix}/request-latency-avg", broker.RoundTripTimeAvg);
-            AddMetricIfPositive(metrics, $"{nodePrefix}/connection-count", broker.ConnectionCount);
+            AddMetricIfPositive(metrics, $"{nodePrefix}/request-total", broker.Requests, KafkaMetricType.Cumulative);
+            AddMetricIfPositive(metrics, $"{nodePrefix}/response-total", broker.Responses, KafkaMetricType.Cumulative);
+            AddMetricIfPositive(metrics, $"{nodePrefix}/outgoing-byte-total", broker.OutgoingBytes, KafkaMetricType.Cumulative);
+            AddMetricIfPositive(metrics, $"{nodePrefix}/incoming-byte-total", broker.IncomingBytes, KafkaMetricType.Cumulative);
+            AddMetricIfPositive(metrics, $"{nodePrefix}/request-latency-avg", broker.RoundTripTimeAvg, KafkaMetricType.WindowAvg);
+            AddMetricIfPositive(metrics, $"{nodePrefix}/connection-count", broker.ConnectionCount, KafkaMetricType.Cumulative);
         }
     }
 
-    private static void AddTopicMetrics(Dictionary<string, long> metrics, KafkaMetricsData data, string vendorName)
+    private static void AddTopicMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaMetricsData data, string vendorName)
     {
         if (data.TopicMetrics == null) return;
 
@@ -712,21 +747,21 @@ public static class KafkaStatisticsHelper
 
             if (data.ClientType == "producer")
             {
-                AddMetricIfPositive(metrics, $"{topicPrefix}/record-send-total", topic.TotalTxMessages);
-                AddMetricIfPositive(metrics, $"{topicPrefix}/byte-total", topic.TotalTxMessages * topic.BatchSizeAvg);
-                AddMetricIfPositive(metrics, $"{topicPrefix}/record-error-total", 0); // Not directly available
+                AddMetricIfPositive(metrics, $"{topicPrefix}/record-send-total", topic.TotalTxMessages, KafkaMetricType.Cumulative);
+                AddMetricIfPositive(metrics, $"{topicPrefix}/byte-total", topic.TotalTxMessages * topic.BatchSizeAvg, KafkaMetricType.Cumulative);
+                AddMetricIfPositive(metrics, $"{topicPrefix}/record-error-total", 0, KafkaMetricType.Cumulative); // Not directly available
             }
             else if (data.ClientType == "consumer")
             {
-                AddMetricIfPositive(metrics, $"{topicPrefix}/records-consumed-total", topic.TotalRxMessages);
-                AddMetricIfPositive(metrics, $"{topicPrefix}/bytes-consumed-total", topic.TotalRxMessages * 1000); // Estimate
+                AddMetricIfPositive(metrics, $"{topicPrefix}/records-consumed-total", topic.TotalRxMessages, KafkaMetricType.Cumulative);
+                AddMetricIfPositive(metrics, $"{topicPrefix}/bytes-consumed-total", topic.TotalRxMessages * 1000, KafkaMetricType.Cumulative); // Estimate
                 AddMetricIfPositive(metrics, $"{topicPrefix}/records-lag-avg", topic.TotalConsumerLag > 0 && topic.PartitionCount > 0
-                    ? topic.TotalConsumerLag / topic.PartitionCount : 0);
+                    ? topic.TotalConsumerLag / topic.PartitionCount : 0, KafkaMetricType.Gauge);
             }
         }
     }
 
-    private static void AddPartitionMetrics(Dictionary<string, long> metrics, KafkaMetricsData data, string vendorName)
+    private static void AddPartitionMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaMetricsData data, string vendorName)
     {
         if (data.PartitionMetrics == null) return;
 
@@ -737,25 +772,25 @@ public static class KafkaStatisticsHelper
 
             if (data.ClientType == "consumer")
             {
-                AddMetricIfPositive(metrics, $"{partitionPrefix}/records-consumed-total", partition.RxMessages);
-                AddMetricIfPositive(metrics, $"{partitionPrefix}/bytes-consumed-total", partition.RxBytes);
-                AddMetricIfPositive(metrics, $"{partitionPrefix}/records-lag", partition.ConsumerLag);
-                AddMetricIfPositive(metrics, $"{partitionPrefix}/committed-offset", partition.CommittedOffset);
-                AddMetricIfPositive(metrics, $"{partitionPrefix}/position", partition.HighWatermark);
+                AddMetricIfPositive(metrics, $"{partitionPrefix}/records-consumed-total", partition.RxMessages, KafkaMetricType.Cumulative);
+                AddMetricIfPositive(metrics, $"{partitionPrefix}/bytes-consumed-total", partition.RxBytes, KafkaMetricType.Cumulative);
+                AddMetricIfPositive(metrics, $"{partitionPrefix}/records-lag", partition.ConsumerLag, KafkaMetricType.Gauge);
+                AddMetricIfPositive(metrics, $"{partitionPrefix}/committed-offset", partition.CommittedOffset, KafkaMetricType.Gauge);
+                AddMetricIfPositive(metrics, $"{partitionPrefix}/position", partition.HighWatermark, KafkaMetricType.Gauge);
             }
             else if (data.ClientType == "producer")
             {
-                AddMetricIfPositive(metrics, $"{partitionPrefix}/record-send-total", partition.TxMessages);
-                AddMetricIfPositive(metrics, $"{partitionPrefix}/byte-total", partition.TxBytes);
+                AddMetricIfPositive(metrics, $"{partitionPrefix}/record-send-total", partition.TxMessages, KafkaMetricType.Cumulative);
+                AddMetricIfPositive(metrics, $"{partitionPrefix}/byte-total", partition.TxBytes, KafkaMetricType.Cumulative);
             }
         }
     }
 
-    private static void AddMetricIfPositive(Dictionary<string, long> metrics, string name, long value)
+    private static void AddMetricIfPositive(Dictionary<string, KafkaMetricValue> metrics, string name, long value, KafkaMetricType metricType)
     {
         if (value > 0)
         {
-            metrics[name] = value;
+            metrics[name] = new KafkaMetricValue(value, metricType);
         }
     }
 
