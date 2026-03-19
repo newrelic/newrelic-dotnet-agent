@@ -89,6 +89,33 @@ on:
         default: ''
         required: false
 
+      # --- Extra environment variables per run ---
+      no_agent_env:
+        description: 'Extra env vars for the no-agent run, one NAME=VALUE per line'
+        type: string
+        default: ''
+        required: false
+      run1_agent_env:
+        description: 'Extra env vars for agent run 1, one NAME=VALUE per line'
+        type: string
+        default: ''
+        required: false
+      run2_agent_env:
+        description: 'Extra env vars for agent run 2, one NAME=VALUE per line'
+        type: string
+        default: ''
+        required: false
+      run3_agent_env:
+        description: 'Extra env vars for agent run 3, one NAME=VALUE per line'
+        type: string
+        default: ''
+        required: false
+      run4_agent_env:
+        description: 'Extra env vars for agent run 4, one NAME=VALUE per line'
+        type: string
+        default: ''
+        required: false
+
       # --- Shared test parameters ---
       test_duration:
         description: 'Traffic duration (Locust --run-time, e.g. "2m", "5m")'
@@ -163,6 +190,11 @@ jobs:
       run4_agent_source:   ${{ steps.inputs.outputs.run4_agent_source }}
       run4_agent_version:  ${{ steps.inputs.outputs.run4_agent_version }}
       run4_build_run_id:   ${{ steps.inputs.outputs.run4_build_run_id }}
+      no_agent_env:        ${{ steps.inputs.outputs.no_agent_env }}
+      run1_agent_env:      ${{ steps.inputs.outputs.run1_agent_env }}
+      run2_agent_env:      ${{ steps.inputs.outputs.run2_agent_env }}
+      run3_agent_env:      ${{ steps.inputs.outputs.run3_agent_env }}
+      run4_agent_env:      ${{ steps.inputs.outputs.run4_agent_env }}
       test_duration:       ${{ steps.inputs.outputs.test_duration }}
       locust_users:        ${{ steps.inputs.outputs.locust_users }}
       locust_spawn_rate:   ${{ steps.inputs.outputs.locust_spawn_rate }}
@@ -225,6 +257,11 @@ jobs:
             echo "include_run4=false"              >> $GITHUB_OUTPUT
             echo "run4_label="                     >> $GITHUB_OUTPUT
             parse_agent "run4" ""
+            echo "no_agent_env="   >> $GITHUB_OUTPUT
+            echo "run1_agent_env=" >> $GITHUB_OUTPUT
+            echo "run2_agent_env=" >> $GITHUB_OUTPUT
+            echo "run3_agent_env=" >> $GITHUB_OUTPUT
+            echo "run4_agent_env=" >> $GITHUB_OUTPUT
             echo "test_duration=2m"                >> $GITHUB_OUTPUT
             echo "locust_users=10"                 >> $GITHUB_OUTPUT
             echo "locust_spawn_rate=2"             >> $GITHUB_OUTPUT
@@ -242,6 +279,11 @@ jobs:
             echo "include_run4=${{ inputs.include_run4 }}"         >> $GITHUB_OUTPUT
             echo "run4_label=${{ inputs.run4_label }}"             >> $GITHUB_OUTPUT
             parse_agent "run4" "${{ inputs.run4_agent }}"
+            echo "no_agent_env=${{ inputs.no_agent_env }}"     >> $GITHUB_OUTPUT
+            echo "run1_agent_env=${{ inputs.run1_agent_env }}" >> $GITHUB_OUTPUT
+            echo "run2_agent_env=${{ inputs.run2_agent_env }}" >> $GITHUB_OUTPUT
+            echo "run3_agent_env=${{ inputs.run3_agent_env }}" >> $GITHUB_OUTPUT
+            echo "run4_agent_env=${{ inputs.run4_agent_env }}" >> $GITHUB_OUTPUT
             echo "test_duration=${{ inputs.test_duration }}"       >> $GITHUB_OUTPUT
             echo "locust_users=${{ inputs.locust_users }}"         >> $GITHUB_OUTPUT
             echo "locust_spawn_rate=${{ inputs.locust_spawn_rate }}" >> $GITHUB_OUTPUT
@@ -272,6 +314,7 @@ jobs:
         with:
           run-label:         no-agent
           attach-agent:      'false'
+          agent-env:         ${{ needs.resolve-inputs.outputs.no_agent_env }}
           test-duration:     ${{ needs.resolve-inputs.outputs.test_duration }}
           locust-users:      ${{ needs.resolve-inputs.outputs.locust_users }}
           locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
@@ -301,6 +344,7 @@ jobs:
           agent-source:      ${{ needs.resolve-inputs.outputs.run1_agent_source }}
           agent-version:     ${{ needs.resolve-inputs.outputs.run1_agent_version }}
           build-run-id:      ${{ needs.resolve-inputs.outputs.run1_build_run_id }}
+          agent-env:         ${{ needs.resolve-inputs.outputs.run1_agent_env }}
           test-duration:     ${{ needs.resolve-inputs.outputs.test_duration }}
           locust-users:      ${{ needs.resolve-inputs.outputs.locust_users }}
           locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
@@ -333,6 +377,7 @@ jobs:
           agent-source:      ${{ needs.resolve-inputs.outputs.run2_agent_source }}
           agent-version:     ${{ needs.resolve-inputs.outputs.run2_agent_version }}
           build-run-id:      ${{ needs.resolve-inputs.outputs.run2_build_run_id }}
+          agent-env:         ${{ needs.resolve-inputs.outputs.run2_agent_env }}
           test-duration:     ${{ needs.resolve-inputs.outputs.test_duration }}
           locust-users:      ${{ needs.resolve-inputs.outputs.locust_users }}
           locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
@@ -365,6 +410,7 @@ jobs:
           agent-source:      ${{ needs.resolve-inputs.outputs.run3_agent_source }}
           agent-version:     ${{ needs.resolve-inputs.outputs.run3_agent_version }}
           build-run-id:      ${{ needs.resolve-inputs.outputs.run3_build_run_id }}
+          agent-env:         ${{ needs.resolve-inputs.outputs.run3_agent_env }}
           test-duration:     ${{ needs.resolve-inputs.outputs.test_duration }}
           locust-users:      ${{ needs.resolve-inputs.outputs.locust_users }}
           locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
@@ -397,6 +443,7 @@ jobs:
           agent-source:      ${{ needs.resolve-inputs.outputs.run4_agent_source }}
           agent-version:     ${{ needs.resolve-inputs.outputs.run4_agent_version }}
           build-run-id:      ${{ needs.resolve-inputs.outputs.run4_build_run_id }}
+          agent-env:         ${{ needs.resolve-inputs.outputs.run4_agent_env }}
           test-duration:     ${{ needs.resolve-inputs.outputs.test_duration }}
           locust-users:      ${{ needs.resolve-inputs.outputs.locust_users }}
           locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}

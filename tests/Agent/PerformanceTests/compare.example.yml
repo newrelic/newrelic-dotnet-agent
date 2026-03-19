@@ -25,6 +25,10 @@ runs:
   # Accepts absolute or relative paths (relative to this script's directory).
   - label: local-build
     attach_agent: true
+    # Optional additional environment variables to set in the container for this run.
+    agent_env:
+      NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: "false"
+      # NEW_RELIC_FEATURE_FLAG_EXAMPLE: "1"
     agent_source:
       type: local
       path: /path/to/newrelichome_x64_coreclr_linux

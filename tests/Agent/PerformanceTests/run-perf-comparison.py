@@ -269,6 +269,10 @@ def run_perf_test(run_cfg, test_cfg, label):
     if collector_host:
         cmd += ["--collector-host", collector_host]
 
+    agent_env = run_cfg.get("agent_env", {})
+    for name, value in agent_env.items():
+        cmd += ["--env", f"{name}={value}"]
+
     print(f"  Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=SCRIPT_DIR, env=make_subprocess_env())
     return result.returncode

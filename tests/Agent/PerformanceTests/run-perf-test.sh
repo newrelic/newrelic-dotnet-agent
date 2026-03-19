@@ -18,6 +18,8 @@
 #   --dotnet-version VER        .NET version for the test app container (default: 10.0)
 #   --license-key KEY           New Relic license key (default: $NEW_RELIC_LICENSE_KEY)
 #   --collector-host HOST       New Relic collector host (default: $NEW_RELIC_HOST)
+#   --env NAME=VALUE            Extra environment variable to forward into the test app container.
+#                               Repeatable; each --env adds one NAME=VALUE pair to extra.env.
 #   --verbose true|false        Verbose output including test app and traffic driver output from container (default: false)
 
 set -euo pipefail
@@ -38,6 +40,7 @@ DOTNET_VERSION="10.0"
 LICENSE_KEY="${NEW_RELIC_LICENSE_KEY:-}"
 COLLECTOR_HOST="${NEW_RELIC_HOST:-}"
 VERBOSE="false"
+EXTRA_ENVS=()
 
 # ---------------------------------------------------------------------------
 # Parse arguments
@@ -53,6 +56,7 @@ while [[ $# -gt 0 ]]; do
     --dotnet-version)    DOTNET_VERSION="$2";     shift 2 ;;
     --license-key)       LICENSE_KEY="$2";        shift 2 ;;
     --collector-host)    COLLECTOR_HOST="$2";     shift 2 ;;
+    --env)               EXTRA_ENVS+=("$2");      shift 2 ;;
     --verbose)           VERBOSE="$2";     shift 2 ;;
     *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
@@ -128,6 +132,11 @@ cleanup() {
   docker compose down --volumes --remove-orphans 2>/dev/null || true
 }
 trap cleanup EXIT
+
+# ---------------------------------------------------------------------------
+# Write extra env vars for Docker Compose env_file injection into the testapp container
+# ---------------------------------------------------------------------------
+printf '%s\n' "${EXTRA_ENVS[@]}" > extra.env
 
 # ---------------------------------------------------------------------------
 # Build and start containers
