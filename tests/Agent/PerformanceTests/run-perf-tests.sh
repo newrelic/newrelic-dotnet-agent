@@ -178,18 +178,20 @@ echo "Docker stats monitoring stopped. Collected $STATS_SAMPLES sample(s)."
 # ---------------------------------------------------------------------------
 # Capture container logs
 # ---------------------------------------------------------------------------
-docker logs perf-testapp 2>&1 >logs/testapp-stdout.log || true
-docker logs perf-traffic-driver 2>&1 >results/traffic-driver.log || true
+docker logs perf-testapp >logs/testapp-stdout.log 2>&1 || true
+docker logs perf-traffic-driver >logs/traffic-driver.log 2>&1 || true
 if [ "$VERBOSE" == "true" ]; then
   echo "=== Test app logs ==="
   cat logs/testapp-stdout.log
   echo "=== Traffic driver logs ==="
-  cat results/traffic-driver.log
+  cat logs/traffic-driver.log
 fi
 
 # Bring down containers now; cleanup trap will also run on EXIT but explicit
 # teardown here ensures containers are stopped before log analysis.
+echo "Stopping containers..."
 docker compose down --volumes --remove-orphans || true
+echo "Containers stopped."
 
 # ---------------------------------------------------------------------------
 # Check test app for errors
@@ -225,7 +227,7 @@ echo "No critical errors found in test app or agent logs."
 # ---------------------------------------------------------------------------
 if [ "$TRAFFIC_EXIT_CODE" != "0" ]; then
   echo "ERROR: Traffic driver exited with code $TRAFFIC_EXIT_CODE (error rate exceeded threshold)"
-  if [ -f "results/locust_stats.csv" ]; then
+  if [ -f "results/locust_stats.csv" ] && [ "$VERBOSE" == "true" ]; then
     echo "--- Locust stats ---"
     cat "results/locust_stats.csv"
   fi
@@ -262,7 +264,7 @@ fi
   if [ -f "results/locust_stats.csv" ]; then
     echo "### Locust Results"
     echo ""
-    "${PYTHON:-python}" - << 'PYEOF'
+    "${PYTHON:-python3}" - << 'PYEOF'
 import csv, sys
 
 # Columns: Name(1), Avg RT(5), Req/s(9), 50%(11), 75%(13), 95%(16), 99%(18), 100%(21)
@@ -292,7 +294,7 @@ PYEOF
     echo ""
     echo "### Docker Stats ($STATS_SAMPLES samples)"
     echo ""
-    "${PYTHON:-python}" - << 'PYEOF'
+    "${PYTHON:-python3}" - << 'PYEOF'
 import csv, sys
 
 try:

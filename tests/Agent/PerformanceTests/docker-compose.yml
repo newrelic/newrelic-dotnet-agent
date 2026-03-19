@@ -68,9 +68,11 @@ services:
       -r ${LOCUST_SPAWN_RATE:-2}
       --run-time ${TEST_DURATION:-2m}
       --csv /results/locust
+      --logfile /logs/locust.log
       --exit-code-on-error 0
     volumes:
       - ./results:/results
+      - ./logs:/logs
     networks:
       - perfnet
 

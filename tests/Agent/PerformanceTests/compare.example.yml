@@ -1,0 +1,52 @@
+# compare.example.yml — copy to compare.yml and edit for your run.
+#
+# Run with: python compare-perf-runs.py
+#   or:     python compare-perf-runs.py --config my-comparison.yml
+#   or:     python compare-perf-runs.py --results-dir /tmp/my-results
+#
+# Results are written to comparison-results/<timestamp>/ by default.
+# Each run gets its own perf-results-<label>/ and logs-<label>/ subdirectory.
+# A combined report is generated in comparison-results/<timestamp>/report/.
+
+test:
+  duration: 2m          # Locust --run-time (e.g. "2m", "5m", "30s")
+  locust_users: 10      # Concurrent Locust users
+  locust_spawn_rate: 2  # Users to spawn per second
+  dotnet_version: "10.0"
+
+runs:
+  # --- Baseline: no agent ---
+  # Omit agent_source entirely when attach_agent is false.
+  - label: no-agent
+    attach_agent: false
+
+  # --- Local agent home folder ---
+  # Point path at a newrelichome_x64_coreclr_linux directory.
+  # Accepts absolute or relative paths (relative to this script's directory).
+  - label: local-build
+    attach_agent: true
+    agent_source:
+      type: local
+      path: /path/to/newrelichome_x64_coreclr_linux
+
+  # --- Downloaded tarball or zip ---
+  # Supports .zip, .tar.gz, .tgz.
+  # After extraction the script looks for a subdirectory named
+  # 'newrelic-dotnet-agent' or 'newrelichome_x64_coreclr_linux'.
+  - label: released
+    attach_agent: true
+    agent_source:
+      type: url
+      url: https://download.newrelic.com/dot_net_agent/latest_release/newrelic-dotnet-agent_10.49.0_amd64.tar.gz
+
+  # --- GitHub Actions build artifact ---
+  # Requires the 'gh' CLI (https://cli.github.com/) authenticated to GitHub.
+  # Provide either run_id (the numeric ID) or run_url (paste from the browser).
+  # The artifact must be named 'homefolders' and contain the agent home folder.
+  - label: pr-build
+    attach_agent: true
+    agent_source:
+      type: github_artifact
+      # Either run_id (number) or run_url — not both.
+      run_id: 12345678
+      # run_url: https://github.com/newrelic/newrelic-dotnet-agent/actions/runs/12345678
