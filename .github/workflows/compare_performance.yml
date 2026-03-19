@@ -4,6 +4,9 @@ name: Compare Performance
 # baseline plus up to 4 agent runs) and generates a comparative report with
 # ScottPlot charts and a markdown summary table.
 #
+# Nightly scheduled run compares the latest published release against the most
+# recent successful scheduled all_solutions.yml build (today's nightly build).
+#
 # Required secrets (when any agent run is included):
 #   PERF_TEST_ACCOUNT  - New Relic license key and collector host separated by a
 #                        comma.  Example: XXXXXXXXXXXX,collector.newrelic.com
@@ -109,8 +112,9 @@ on:
         required: false
 
   schedule:
-    # Run nightly on weekdays: no-agent baseline vs. latest published release
-    - cron: '0 6 * * 1-5'
+    # Run nightly on weekdays: latest published release vs. latest scheduled nightly build
+    # all_solutions.yml runs at 9:00 UTC and may take more than an hour, so start at 11:00 UTC
+    - cron: '0 11 * * 1-5'
 
 env:
   DOTNET_NOLOGO: true
@@ -123,6 +127,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -169,6 +174,7 @@ jobs:
         id: inputs
         env:
           PERF_TEST_ACCOUNT: ${{ secrets.PERF_TEST_ACCOUNT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Parse an agent string into agent_source / agent_version / build_run_id
           # and write the three outputs prefixed with $1.
@@ -194,22 +200,35 @@ jobs:
           }
 
           if [ "${{ github.event_name }}" = "schedule" ]; then
-            echo "include_no_agent=true"       >> $GITHUB_OUTPUT
-            echo "run1_label=latest-release"   >> $GITHUB_OUTPUT
+            # Find the most recent successful all_solutions.yml run triggered by schedule
+            NIGHTLY_RUN_ID=$(gh run list \
+              --workflow all_solutions.yml \
+              --event schedule \
+              --status success \
+              --limit 1 \
+              --json databaseId \
+              --jq '.[0].databaseId')
+            if [ -z "$NIGHTLY_RUN_ID" ]; then
+              echo "ERROR: Could not find a recent successful scheduled all_solutions.yml run" >&2
+              exit 1
+            fi
+            echo "Found nightly build run ID: $NIGHTLY_RUN_ID"
+            echo "include_no_agent=true"           >> $GITHUB_OUTPUT
+            echo "run1_label=latest-release"       >> $GITHUB_OUTPUT
             parse_agent "run1" ""
-            echo "include_run2=false"          >> $GITHUB_OUTPUT
-            echo "run2_label="                 >> $GITHUB_OUTPUT
-            parse_agent "run2" ""
-            echo "include_run3=false"          >> $GITHUB_OUTPUT
-            echo "run3_label="                 >> $GITHUB_OUTPUT
+            echo "include_run2=true"               >> $GITHUB_OUTPUT
+            echo "run2_label=nightly-build"        >> $GITHUB_OUTPUT
+            parse_agent "run2" "$NIGHTLY_RUN_ID"
+            echo "include_run3=false"              >> $GITHUB_OUTPUT
+            echo "run3_label="                     >> $GITHUB_OUTPUT
             parse_agent "run3" ""
-            echo "include_run4=false"          >> $GITHUB_OUTPUT
-            echo "run4_label="                 >> $GITHUB_OUTPUT
+            echo "include_run4=false"              >> $GITHUB_OUTPUT
+            echo "run4_label="                     >> $GITHUB_OUTPUT
             parse_agent "run4" ""
-            echo "test_duration=2m"            >> $GITHUB_OUTPUT
-            echo "locust_users=10"             >> $GITHUB_OUTPUT
-            echo "locust_spawn_rate=2"         >> $GITHUB_OUTPUT
-            echo "dotnet_version=10.0"         >> $GITHUB_OUTPUT
+            echo "test_duration=2m"                >> $GITHUB_OUTPUT
+            echo "locust_users=10"                 >> $GITHUB_OUTPUT
+            echo "locust_spawn_rate=2"             >> $GITHUB_OUTPUT
+            echo "dotnet_version=10.0"             >> $GITHUB_OUTPUT
           else
             echo "include_no_agent=${{ inputs.include_no_agent }}" >> $GITHUB_OUTPUT
             echo "run1_label=${{ inputs.run1_label }}"             >> $GITHUB_OUTPUT
