@@ -486,8 +486,7 @@ jobs:
   agent-metadata:
       permissions:
           contents: read
-      needs: [post-deploy]
-      if: ${{ inputs.post-deploy }}
+      needs: [get-release-info, post-deploy]
       name: Run Agent Metadata Workflow
       uses: newrelic/newrelic-dotnet-agent/.github/workflows/agent_metadata.yml@main
       with:
