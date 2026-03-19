@@ -38,7 +38,7 @@ inputs:
     description: 'New Relic collector host (only used when attach-agent is true)'
     default: ''
   agent-env:
-    description: 'Extra environment variables for the test app/agent, one NAME=VALUE per line'
+    description: 'Extra environment variables for the test app/agent, semicolon-separated NAME=VALUE pairs (e.g. VAR1=val1;VAR2=val2)'
     default: ''
   github-token:
     description: 'GitHub token for downloading artifacts'
@@ -146,10 +146,11 @@ runs:
       working-directory: ${{ env.PERF_TEST_DIR }}
       run: |
         EXTRA_ENV_ARGS=()
-        while IFS= read -r line; do
-          [[ -z "$line" || "$line" == \#* ]] && continue
-          EXTRA_ENV_ARGS+=("--env" "$line")
-        done <<< "${{ inputs.agent-env }}"
+        IFS=';' read -ra ENV_PAIRS <<< "${{ inputs.agent-env }}"
+        for pair in "${ENV_PAIRS[@]}"; do
+          [[ -z "$pair" ]] && continue
+          EXTRA_ENV_ARGS+=("--env" "$pair")
+        done
 
         bash run-perf-test.sh \
           --attach-agent    "${{ inputs.attach-agent }}" \
