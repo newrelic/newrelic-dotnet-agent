@@ -27,7 +27,7 @@ on:
         required: false
       no_agent_env:
         description: 'Extra env vars for the no-agent run, one NAME=VALUE per line'
-        type: textarea
+        type: string
         default: ''
         required: false
 
@@ -44,7 +44,7 @@ on:
         required: false
       run1_agent_env:
         description: 'Extra env vars for agent run 1, one NAME=VALUE per line'
-        type: textarea
+        type: string
         default: ''
         required: false
 
@@ -66,7 +66,7 @@ on:
         required: false
       run2_agent_env:
         description: 'Extra env vars for agent run 2, one NAME=VALUE per line'
-        type: textarea
+        type: string
         default: ''
         required: false
 
@@ -88,7 +88,7 @@ on:
         required: false
       run3_agent_env:
         description: 'Extra env vars for agent run 3, one NAME=VALUE per line'
-        type: textarea
+        type: string
         default: ''
         required: false
 
@@ -110,7 +110,7 @@ on:
         required: false
       run4_agent_env:
         description: 'Extra env vars for agent run 4, one NAME=VALUE per line'
-        type: textarea
+        type: string
         default: ''
         required: false
 
