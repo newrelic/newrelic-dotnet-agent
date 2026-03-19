@@ -333,6 +333,13 @@ PYEOF
     echo "- NR App name: $APP_NAME"
     [ -n "$COLLECTOR_HOST" ] && echo "- Collector host: $COLLECTOR_HOST"
   fi
+  # if EXTRA_ENVS is not empty, print them
+  if [ "${#EXTRA_ENVS[@]}" -gt 0 ]; then
+    echo "- Extra environment variables:"
+    for env in "${EXTRA_ENVS[@]}"; do
+      echo "  - $env"
+    done
+  fi
 } | to_summary
 
 echo "Performance test run complete."

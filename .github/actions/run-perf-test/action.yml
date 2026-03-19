@@ -43,6 +43,9 @@ inputs:
   github-token:
     description: 'GitHub token for downloading artifacts'
     required: true
+  agent-app-name:
+    description: 'New Relic application name to use in the test (only used when attach-agent is true)'
+    default: 'dotnet-agent-perf-test'
 
 runs:
   using: composite
@@ -149,13 +152,14 @@ runs:
         IFS=';' read -ra ENV_PAIRS <<< "${{ inputs.agent-env }}"
         for pair in "${ENV_PAIRS[@]}"; do
           [[ -z "$pair" ]] && continue
+          echo "Adding extra environment variable: $pair"
           EXTRA_ENV_ARGS+=("--env" "$pair")
         done
 
         bash run-perf-test.sh \
           --attach-agent    "${{ inputs.attach-agent }}" \
           --agent-home      "${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home" \
-          --app-name        "dotnet-agent-perf-test-${{ github.run_id }}-${{ inputs.run-label }}" \
+          --app-name        "${{ inputs.agent-app-name }}" \
           --test-duration   "${{ inputs.test-duration }}" \
           --locust-users    "${{ inputs.locust-users }}" \
           --locust-spawn-rate "${{ inputs.locust-spawn-rate }}" \
