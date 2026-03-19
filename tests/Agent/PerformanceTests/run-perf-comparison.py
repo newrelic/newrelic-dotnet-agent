@@ -2,7 +2,7 @@
 """
 run-perf-comparison.py
 
-Run sequential performance test comparisons locally using run-perf-test.sh.
+Run sequential performance test comparisons locally using run-perf-test.py.
 Results are organized under a timestamped directory and optionally combined
 into a report using the ReportGenerator Docker image.
 
@@ -254,7 +254,7 @@ def run_perf_test(run_cfg, test_cfg, label, agent_app_name, add_label_to_app_nam
     # Docker Compose's path resolution and reach the WSL2 daemon unparsed,
     # causing "invalid volume specification" errors.
     cmd = [
-        "bash", "run-perf-test.sh",
+        sys.executable, "run-perf-test.py",
         "--attach-agent", "true" if attach else "false",
         "--agent-home", "./agent-home",
         "--app-name", agent_app_name,
@@ -264,8 +264,6 @@ def run_perf_test(run_cfg, test_cfg, label, agent_app_name, add_label_to_app_nam
         "--dotnet-version", str(test_cfg.get("dotnet_version", "10.0")),
     ]
 
-    # Pass credentials explicitly so run-perf-test.sh doesn't rely on bash
-    # picking them up from the environment (non-interactive shells may not).
     license_key = os.environ.get("NEW_RELIC_LICENSE_KEY", "")
     collector_host = os.environ.get("NEW_RELIC_HOST", "")
     if license_key:
@@ -278,7 +276,7 @@ def run_perf_test(run_cfg, test_cfg, label, agent_app_name, add_label_to_app_nam
         cmd += ["--env", f"{name}={value}"]
 
     print(f"  Running: {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=SCRIPT_DIR, env=make_subprocess_env())
+    result = subprocess.run(cmd, cwd=SCRIPT_DIR)
     return result.returncode
 
 
@@ -385,12 +383,12 @@ def main():
             failures.append((label, str(e)))
             continue
 
-        exit_code = run_perf_test(run_cfg, test_cfg, label)
+        exit_code = run_perf_test(run_cfg, test_cfg, label, args.agent_app_name, args.add_label_to_app_name)
 
         move_run_outputs(label, timestamp_dir)
 
         if exit_code != 0:
-            msg = f"run-perf-test.sh exited with code {exit_code}"
+            msg = f"run-perf-test.py exited with code {exit_code}"
             print(f"  FAIL: {msg}", file=sys.stderr)
             failures.append((label, msg))
         else:
