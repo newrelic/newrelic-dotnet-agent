@@ -2,7 +2,7 @@
 """
 compare-perf-runs.py
 
-Run sequential performance test comparisons locally using run-perf-tests.sh.
+Run sequential performance test comparisons locally using run-perf-test.sh.
 Results are organized under a timestamped directory and optionally combined
 into a report using the ReportGenerator Docker image.
 
@@ -250,7 +250,7 @@ def run_perf_test(run_cfg, test_cfg, label):
     # Docker Compose's path resolution and reach the WSL2 daemon unparsed,
     # causing "invalid volume specification" errors.
     cmd = [
-        "bash", "run-perf-tests.sh",
+        "bash", "run-perf-test.sh",
         "--attach-agent", "true" if attach else "false",
         "--agent-home", "./agent-home",
         "--app-name", app_name,
@@ -260,7 +260,7 @@ def run_perf_test(run_cfg, test_cfg, label):
         "--dotnet-version", str(test_cfg.get("dotnet_version", "10.0")),
     ]
 
-    # Pass credentials explicitly so run-perf-tests.sh doesn't rely on bash
+    # Pass credentials explicitly so run-perf-test.sh doesn't rely on bash
     # picking them up from the environment (non-interactive shells may not).
     license_key = os.environ.get("NEW_RELIC_LICENSE_KEY", "")
     collector_host = os.environ.get("NEW_RELIC_HOST", "")
@@ -382,7 +382,7 @@ def main():
         move_run_outputs(label, timestamp_dir)
 
         if exit_code != 0:
-            msg = f"run-perf-tests.sh exited with code {exit_code}"
+            msg = f"run-perf-test.sh exited with code {exit_code}"
             print(f"  FAIL: {msg}", file=sys.stderr)
             failures.append((label, msg))
         else:

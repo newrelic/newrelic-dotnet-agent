@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# run-perf-tests.sh
+# run-perf-test.sh
 #
 # Runs the .NET agent performance test suite locally or from CI.
 # Must be run from the directory containing docker-compose.yml, or invoked
 # from anywhere — the script always cd's to its own directory first.
 #
-# Usage: ./run-perf-tests.sh [options]
+# Usage: ./run-perf-test.sh [options]
 #
 # Options:
 #   --attach-agent true|false   Attach the New Relic agent (default: false)
