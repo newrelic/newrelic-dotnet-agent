@@ -887,6 +887,45 @@ public class KafkaStatisticsHelperTests
     }
 
     [Test]
+    public void CreateMetricsDictionary_MaxValueNodeId_UsesRawNodeId()
+    {
+        // nodeId == int.MaxValue → coordinatorId = 0, fails coordinatorId > 0 check
+        var maxNodeId = int.MaxValue;
+        var jsonWithMaxNodeId = @"{
+            ""name"": ""rdkafka"",
+            ""client_id"": ""test-client"",
+            ""type"": ""producer"",
+            ""tx"": 1,
+            ""rx"": 1,
+            ""txmsgs"": 1,
+            ""rxmsgs"": 1,
+            ""txmsg_bytes"": 100,
+            ""rxmsg_bytes"": 100,
+            ""metadata_cache_cnt"": 1,
+            ""brokers"": {
+                ""maxnode"": {
+                    ""name"": ""max-node"",
+                    ""nodeid"": " + maxNodeId + @",
+                    ""state"": ""UP"",
+                    ""tx"": 2,
+                    ""rx"": 1,
+                    ""txbytes"": 300,
+                    ""rxbytes"": 150,
+                    ""txerrs"": 0,
+                    ""rxerrs"": 0,
+                    ""connects"": 1,
+                    ""disconnects"": 0
+                }
+            }
+        }";
+
+        var stats = KafkaStatisticsHelper.ParseStatistics(jsonWithMaxNodeId);
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-node-metrics/node/" + maxNodeId + "/client/test-client/request-total"));
+    }
+
+    [Test]
     public void CreateMetricsDictionary_LargeNodeIdNotCoordinator_UsesRawNodeId()
     {
         // A large node ID that doesn't map to a valid coordinator (coordinatorId >= 1000)
