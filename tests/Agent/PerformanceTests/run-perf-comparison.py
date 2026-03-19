@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
-compare-perf-runs.py
+run-perf-comparison.py
 
 Run sequential performance test comparisons locally using run-perf-test.sh.
 Results are organized under a timestamped directory and optionally combined
 into a report using the ReportGenerator Docker image.
 
 Usage:
-    python compare-perf-runs.py [--config FILE] [--results-dir DIR] [--no-report]
+    python run-perf-comparison.py [--config FILE] [--results-dir DIR] [--no-report]
 
 Requirements:
     pip install pyyaml

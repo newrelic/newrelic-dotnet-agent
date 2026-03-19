@@ -1,8 +1,8 @@
 # compare.example.yml — copy to compare.yml and edit for your run.
 #
-# Run with: python compare-perf-runs.py
-#   or:     python compare-perf-runs.py --config my-comparison.yml
-#   or:     python compare-perf-runs.py --results-dir /tmp/my-results
+# Run with: python run-perf-comparison.py
+#   or:     python run-perf-comparison.py --config my-comparison.yml
+#   or:     python run-perf-comparison.py --results-dir /tmp/my-results
 #
 # Results are written to comparison-results/<timestamp>/ by default.
 # Each run gets its own perf-results-<label>/ and logs-<label>/ subdirectory.
