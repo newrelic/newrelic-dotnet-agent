@@ -75,8 +75,11 @@ build/Linux/keys
 /tests/Agent/IntegrationTests/ContainerApplications/volume/cache
 
 # Performance tests
+/tests/Agent/PerformanceTests/agent-home
 /tests/Agent/PerformanceTests/results
 /tests/Agent/PerformanceTests/logs
+/tests/Agent/PerformanceTests/comparison-results
+/tests/Agent/PerformanceTests/compare.yml
 
 # Build artifacts
 /build/BuildArtifacts
