@@ -805,4 +805,155 @@ public class KafkaStatisticsHelperTests
     }
 
     #endregion
+
+    #region NormalizeNodeId Tests (via broker metrics)
+
+    [Test]
+    public void CreateMetricsDictionary_NegativeNodeId_NormalizesToSeed()
+    {
+        var jsonWithNegativeNodeId = @"{
+            ""name"": ""rdkafka"",
+            ""client_id"": ""test-client"",
+            ""type"": ""producer"",
+            ""tx"": 1,
+            ""rx"": 1,
+            ""txmsgs"": 1,
+            ""rxmsgs"": 1,
+            ""txmsg_bytes"": 100,
+            ""rxmsg_bytes"": 100,
+            ""metadata_cache_cnt"": 1,
+            ""brokers"": {
+                ""bootstrap"": {
+                    ""name"": ""bootstrap"",
+                    ""nodeid"": -1,
+                    ""state"": ""UP"",
+                    ""tx"": 5,
+                    ""rx"": 3,
+                    ""txbytes"": 1000,
+                    ""rxbytes"": 500,
+                    ""txerrs"": 0,
+                    ""rxerrs"": 0,
+                    ""connects"": 1,
+                    ""disconnects"": 0
+                }
+            }
+        }";
+
+        var stats = KafkaStatisticsHelper.ParseStatistics(jsonWithNegativeNodeId);
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-node-metrics/node/seed/client/test-client/request-total"));
+        Assert.That(metrics["MessageBroker/Kafka/Internal/producer-node-metrics/node/seed/client/test-client/request-total"].Value, Is.EqualTo(5));
+    }
+
+    [Test]
+    public void CreateMetricsDictionary_CoordinatorNodeId_NormalizesToCoordinator()
+    {
+        // Coordinator node IDs are int.MaxValue - coordinatorId, where coordinatorId is in (0, 1000)
+        var coordinatorNodeId = int.MaxValue - 5; // coordinator-5
+        var jsonWithCoordinatorNodeId = @"{
+            ""name"": ""rdkafka"",
+            ""client_id"": ""test-client"",
+            ""type"": ""consumer"",
+            ""tx"": 1,
+            ""rx"": 1,
+            ""txmsgs"": 1,
+            ""rxmsgs"": 1,
+            ""txmsg_bytes"": 100,
+            ""rxmsg_bytes"": 100,
+            ""metadata_cache_cnt"": 1,
+            ""brokers"": {
+                ""coordinator"": {
+                    ""name"": ""coordinator"",
+                    ""nodeid"": " + coordinatorNodeId + @",
+                    ""state"": ""UP"",
+                    ""tx"": 7,
+                    ""rx"": 4,
+                    ""txbytes"": 2000,
+                    ""rxbytes"": 1000,
+                    ""txerrs"": 0,
+                    ""rxerrs"": 0,
+                    ""connects"": 2,
+                    ""disconnects"": 0
+                }
+            }
+        }";
+
+        var stats = KafkaStatisticsHelper.ParseStatistics(jsonWithCoordinatorNodeId);
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator-5/client/test-client/request-total"));
+        Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator-5/client/test-client/request-total"].Value, Is.EqualTo(7));
+    }
+
+    [Test]
+    public void CreateMetricsDictionary_LargeNodeIdNotCoordinator_UsesRawNodeId()
+    {
+        // A large node ID that doesn't map to a valid coordinator (coordinatorId >= 1000)
+        var largeNodeId = int.MaxValue - 5000; // coordinatorId = 5000, not in (0, 1000)
+        var jsonWithLargeNodeId = @"{
+            ""name"": ""rdkafka"",
+            ""client_id"": ""test-client"",
+            ""type"": ""producer"",
+            ""tx"": 1,
+            ""rx"": 1,
+            ""txmsgs"": 1,
+            ""rxmsgs"": 1,
+            ""txmsg_bytes"": 100,
+            ""rxmsg_bytes"": 100,
+            ""metadata_cache_cnt"": 1,
+            ""brokers"": {
+                ""large"": {
+                    ""name"": ""large-node"",
+                    ""nodeid"": " + largeNodeId + @",
+                    ""state"": ""UP"",
+                    ""tx"": 3,
+                    ""rx"": 2,
+                    ""txbytes"": 500,
+                    ""rxbytes"": 250,
+                    ""txerrs"": 0,
+                    ""rxerrs"": 0,
+                    ""connects"": 1,
+                    ""disconnects"": 0
+                }
+            }
+        }";
+
+        var stats = KafkaStatisticsHelper.ParseStatistics(jsonWithLargeNodeId);
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-node-metrics/node/" + largeNodeId + "/client/test-client/request-total"));
+    }
+
+    #endregion
+
+    #region Topic-Level Consumer Lag Average Tests
+
+    [Test]
+    public void CreateMetricsDictionary_ConsumerTopicLevel_ReportsRecordsLagAvg()
+    {
+        var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+
+        // totalConsumerLag = 10 + 15 = 25, partitionCount = 2, avg = 25 / 2 = 12
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-topic-metrics/topic/test-topic/client/consumer-test/records-lag-avg"));
+        Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-topic-metrics/topic/test-topic/client/consumer-test/records-lag-avg"].Value, Is.EqualTo(12));
+        Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-topic-metrics/topic/test-topic/client/consumer-test/records-lag-avg"].MetricType, Is.EqualTo(KafkaMetricType.Gauge));
+    }
+
+    [Test]
+    public void CreateMetricsDictionary_ConsumerTopicLevel_ReportsConsumedTotals()
+    {
+        var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+
+        // totalRxMessages = 75 + 75 = 150, totalRxBytes = 3750 + 3750 = 7500
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-topic-metrics/topic/test-topic/client/consumer-test/records-consumed-total"));
+        Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-topic-metrics/topic/test-topic/client/consumer-test/records-consumed-total"].Value, Is.EqualTo(150));
+
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-topic-metrics/topic/test-topic/client/consumer-test/bytes-consumed-total"));
+        Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-topic-metrics/topic/test-topic/client/consumer-test/bytes-consumed-total"].Value, Is.EqualTo(7500));
+    }
+
+    #endregion
 }
