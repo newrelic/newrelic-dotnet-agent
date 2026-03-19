@@ -7,7 +7,7 @@ Results are organized under a timestamped directory and optionally combined
 into a report using the ReportGenerator Docker image.
 
 Usage:
-    python run-perf-comparison.py [--config FILE] [--results-dir DIR] [--no-report]
+    python run-perf-comparison.py [--config FILE] [--results-dir DIR] [--no-report] [--agent-app-name NAME] [--add-label-to-app-name]
 
 Requirements:
     pip install pyyaml
@@ -82,6 +82,8 @@ def parse_args():
     parser.add_argument("--config", default="compare.yml", help="YAML config file (default: compare.yml)")
     parser.add_argument("--results-dir", default=None, help="Where to store per-run results (default: comparison-results/<timestamp>)")
     parser.add_argument("--no-report", action="store_true", help="Skip ReportGenerator step")
+    parser.add_argument("--agent-app-name", default="dotnet-agent-perf-test", help="Application name shown in New Relic (default: dotnet-agent-perf-test)")
+    parser.add_argument("--add-label-to-app-name", action="store_true", help="Append run label to app name (e.g. 'dotnet-agent-perf-test-local-foo'). Useful for distinguishing runs in New Relic, but may create many app names if labels are unique.")    
     return parser.parse_args()
 
 
@@ -240,9 +242,11 @@ def make_subprocess_env():
     return env
 
 
-def run_perf_test(run_cfg, test_cfg, label):
+def run_perf_test(run_cfg, test_cfg, label, agent_app_name, add_label_to_app_name):
     attach = run_cfg.get("attach_agent", False)
-    app_name = f"dotnet-agent-perf-test-local-{label}"
+
+    if add_label_to_app_name:
+        agent_app_name = f"{agent_app_name}-{label}"
 
     # Always use the relative path ./agent-home so Docker Compose resolves it
     # against its own project directory — the same way ./results and ./logs are
@@ -253,7 +257,7 @@ def run_perf_test(run_cfg, test_cfg, label):
         "bash", "run-perf-test.sh",
         "--attach-agent", "true" if attach else "false",
         "--agent-home", "./agent-home",
-        "--app-name", app_name,
+        "--app-name", agent_app_name,
         "--test-duration", str(test_cfg.get("duration", "2m")),
         "--locust-users", str(test_cfg.get("locust_users", 10)),
         "--locust-spawn-rate", str(test_cfg.get("locust_spawn_rate", 2)),

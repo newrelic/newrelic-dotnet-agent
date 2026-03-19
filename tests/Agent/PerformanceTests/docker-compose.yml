@@ -42,7 +42,6 @@ services:
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
       NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-dotnet-agent-perf-test}
       NEW_RELIC_HOST: ${NEW_RELIC_HOST:-collector.newrelic.com}
-      NEW_RELIC_LOG_LEVEL: ${NEW_RELIC_LOG_LEVEL:-info}
       NEW_RELIC_LOG_DIRECTORY: /app/logs
     volumes:
       # The ":ro" at the end of the volume mapping makes the mount read-only inside the container.
