@@ -35,30 +35,6 @@ except ImportError:
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 GH_REPO = "newrelic/newrelic-dotnet-agent"  # for 'gh' CLI context when downloading artifacts
 
-_BASH_IS_WSL2 = None
-
-
-def _bash_type_is_wsl2():
-    """Return True if 'bash' resolves to WSL2 bash rather than Git Bash (MINGW).
-
-    From PowerShell (and cmd.exe), 'bash' typically resolves to the WSL2 launcher
-    rather than Git Bash.  The two environments need different treatment:
-    - WSL2 bash cannot execute Windows paths like C:/Python/python.exe.
-    - Git Bash (MINGW) cannot use WSL2-internal paths like /mnt/c/...
-    """
-    global _BASH_IS_WSL2  # pylint: disable=global-statement
-    if _BASH_IS_WSL2 is None:
-        try:
-            result = subprocess.run(
-                ["bash", "-c", "uname -r"],
-                capture_output=True, text=True, timeout=5, check=False
-            )
-            _BASH_IS_WSL2 = "microsoft" in result.stdout.lower()
-        except Exception:  # pylint: disable=broad-exception-caught
-            _BASH_IS_WSL2 = False
-    return _BASH_IS_WSL2
-
-
 def to_bash_path(path):
     """Normalise a path for use as a Docker volume mount source on Windows.
 
@@ -76,6 +52,19 @@ def to_bash_path(path):
     for filesystem operations.
     """
     return os.path.abspath(path).replace("\\", "/")
+
+
+def _find_agent_subdir(root, candidates):
+    """Walk root looking for the first matching candidate directory name.
+
+    Returns the full path to the first candidate found, or root itself if none match.
+    Candidates are tried in order, so earlier entries take priority.
+    """
+    for candidate in candidates:
+        for dirpath, dirs, _ in os.walk(root):
+            if candidate in dirs:
+                return os.path.join(dirpath, candidate)
+    return root
 
 
 def parse_args():
@@ -127,14 +116,7 @@ def prepare_agent_home_url(source, agent_home_dir):
     if not url:
         raise ValueError("agent_source.url is required for type 'url'")
 
-    suffix = ""
-    lower_url = url.lower()
-    if lower_url.endswith(".zip"):
-        suffix = ".zip"
-    elif lower_url.endswith(".tar.gz") or lower_url.endswith(".tgz"):
-        suffix = ".tar.gz"
-    else:
-        suffix = ".tar.gz"
+    suffix = ".zip" if url.lower().endswith(".zip") else ".tar.gz"
 
     with tempfile.TemporaryDirectory() as tmp:
         archive_path = os.path.join(tmp, f"agent-download{suffix}")
@@ -151,19 +133,9 @@ def prepare_agent_home_url(source, agent_home_dir):
             with tarfile.open(archive_path) as tf:
                 tf.extractall(extract_dir)
 
-        # Find the agent directory: prefer 'newrelic-dotnet-agent', then 'newrelichome_x64_coreclr_linux'
-        agent_subdir = None
-        for candidate in ["newrelic-dotnet-agent", "newrelichome_x64_coreclr_linux"]:
-            for root, dirs, _ in os.walk(extract_dir):
-                if candidate in dirs:
-                    agent_subdir = os.path.join(root, candidate)
-                    break
-            if agent_subdir:
-                break
-
-        if agent_subdir is None:
-            agent_subdir = extract_dir
-
+        agent_subdir = _find_agent_subdir(
+            extract_dir, ["newrelic-dotnet-agent", "newrelichome_x64_coreclr_linux"]
+        )
         shutil.copytree(agent_subdir, agent_home_dir, dirs_exist_ok=True)
 
 
@@ -199,18 +171,9 @@ def prepare_agent_home_github_artifact(source, agent_home_dir):
         if result.returncode != 0:
             raise RuntimeError(f"gh run download failed:\n{result.stderr}")
 
-        agent_subdir = None
-        for candidate in ["newrelichome_x64_coreclr_linux", "newrelic-dotnet-agent"]:
-            for root, dirs, _ in os.walk(tmp):
-                if candidate in dirs:
-                    agent_subdir = os.path.join(root, candidate)
-                    break
-            if agent_subdir:
-                break
-
-        if agent_subdir is None:
-            agent_subdir = tmp
-
+        agent_subdir = _find_agent_subdir(
+            tmp, ["newrelichome_x64_coreclr_linux", "newrelic-dotnet-agent"]
+        )
         shutil.copytree(agent_subdir, agent_home_dir, dirs_exist_ok=True)
 
 
@@ -236,30 +199,6 @@ def prepare_agent_home(run_cfg, agent_home_dir):
         prepare_agent_home_github_artifact(source, agent_home_dir)
     else:
         raise ValueError(f"Unknown agent_source.type: {source_type}")
-
-
-def make_subprocess_env():
-    """
-    Build an environment for bash subprocesses that ensures PYTHON points to a
-    usable Python interpreter.  The right value depends on which bash is being used:
-
-    - Git Bash (MINGW, typical when invoking from Git Bash terminal): set PYTHON to
-      the Windows Python path in forward-slash format (C:/Python/python.exe).  Git
-      Bash can execute Windows binaries directly; subprocess-spawned non-interactive
-      shells may not inherit the interactive PATH, so we pass the explicit path.
-
-    - WSL2 bash (typical when invoking from PowerShell or cmd.exe): the Windows
-      Python path is unusable inside WSL2.  Use 'python3' instead, which is
-      available in standard WSL2 Ubuntu distributions.
-    """
-    env = os.environ.copy()
-
-    if _bash_type_is_wsl2():
-        env["PYTHON"] = "python3"
-    else:
-        env["PYTHON"] = sys.executable.replace("\\", "/")
-
-    return env
 
 
 def run_perf_test(run_cfg, test_cfg, label, agent_app_name, add_label_to_app_name):
@@ -389,16 +328,15 @@ def main():
     print(f"Results directory: {timestamp_dir}\n")
 
     failures = []
+    # agent-home/ lives next to docker-compose.yml so Docker Compose can
+    # resolve it as a relative path, avoiding Windows absolute-path issues.
+    agent_home_dir = os.path.join(SCRIPT_DIR, "agent-home")
 
     for run_cfg in runs:
         label = run_cfg.get("label", "unnamed")
         print(f"{'=' * 60}")
         print(f"Run: {label}")
         print(f"{'=' * 60}")
-
-        # agent-home/ lives next to docker-compose.yml so Docker Compose can
-        # resolve it as a relative path, avoiding Windows absolute-path issues.
-        agent_home_dir = os.path.join(SCRIPT_DIR, "agent-home")
 
         try:
             print("  Preparing agent home...")
@@ -424,7 +362,8 @@ def main():
     print(f"{'=' * 60}")
     print("Summary")
     print(f"{'=' * 60}")
-    passed = [r.get("label") for r in runs if r.get("label") not in {f[0] for f in failures}]
+    failed_labels = {label for label, _ in failures}
+    passed = [r.get("label") for r in runs if r.get("label") not in failed_labels]
     for label in passed:
         print(f"  PASS  {label}")
     for label, reason in failures:

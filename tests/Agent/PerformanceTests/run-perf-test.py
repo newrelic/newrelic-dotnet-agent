@@ -152,37 +152,31 @@ def check_agent_logs():
     assert len(agent_logs) == 1, f"Expected exactly one agent log file, but found: {agent_logs}"
 
     errors = 0
+    log_file = agent_logs[0]
+
+    with open(log_file, encoding="utf-8") as f:
+        content = f.read()
 
     # Make sure the agent connected
-    connected = False
-    for log_file in agent_logs:
-        with open(log_file, encoding="utf-8") as f:
-            if "Agent fully connected." in f.read():
-                connected = True
-                break
-    if not connected:
+    if "Agent fully connected." not in content:
         print("ERROR: Agent did not fully connect (no 'Agent fully connected.' line found in agent logs)")
         errors += 1
 
     # Make sure there are no error lines
-    for log_file in agent_logs:
-        error_lines = get_agent_log_error_lines(log_file)
-        if error_lines:
-            print(f"ERROR: Agent log contains ERROR entries in {log_file}:")
-            print("\n".join(error_lines))
-            errors += 1
+    error_lines = get_agent_log_error_lines(content)
+    if error_lines:
+        print(f"ERROR: Agent log contains ERROR entries in {log_file}:")
+        print("\n".join(error_lines))
+        errors += 1
 
     # Make sure agent shut down gracefully
     shutdown_pattern = re.compile(
         r"The New Relic \.NET Agent v[\d\.]+ has shutdown \(pid \d+\) on app domain '[^']+'",
         re.IGNORECASE
     )
-    for log_file in agent_logs:
-        with open(log_file, encoding="utf-8") as f:
-            content = f.read()
-        if not shutdown_pattern.search(content):
-            print(f"ERROR: Agent did not shut down gracefully (no shutdown line found in {log_file})")
-            errors += 1
+    if not shutdown_pattern.search(content):
+        print(f"ERROR: Agent did not shut down gracefully (no shutdown line found in {log_file})")
+        errors += 1
 
     if errors > 0:
         sys.exit(1)
@@ -190,25 +184,14 @@ def check_agent_logs():
     print("SUCCESS: Agent ran, connected, and completed without errors.")
 
 
-def get_agent_log_error_lines(log_file: str) -> list[str]:
-    """
-    Examine a New Relic agent log file for lines logged at the ERROR level.
+def get_agent_log_error_lines(content: str) -> list[str]:
+    """Return lines logged at ERROR level from agent log content.
 
     New Relic agent log lines follow the pattern:
         YYYY-MM-DD HH:MM:SS,mmm NewRelic ERROR: <message>
-
-    Args:
-        log_file: Path to the agent log file.
-
-    Returns:
-        A list of lines logged at the ERROR level, or an empty list if none found.
     """
     error_pattern = re.compile(r"\bNewRelic\s+ERROR\b", re.IGNORECASE)
-    try:
-        with open(log_file, encoding="utf-8") as f:
-            return [line.rstrip() for line in f if error_pattern.search(line)]
-    except OSError:
-        return []
+    return [line.rstrip() for line in content.splitlines() if error_pattern.search(line)]
 
 
 # ---------------------------------------------------------------------------
