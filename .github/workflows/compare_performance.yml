@@ -154,18 +154,6 @@ permissions:
   contents: read
   actions: read
 
-env:
-  DOTNET_NOLOGO: true
-  PERF_TEST_DIR: tests/Agent/PerformanceTests
-
-# Only allow one compare run at a time
-concurrency:
-  group: compare-performance-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
-
 jobs:
   # ---------------------------------------------------------------------------
   # Resolve inputs — normalises both triggers to a common set of outputs and
