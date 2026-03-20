@@ -7,7 +7,8 @@ Results are organized under a timestamped directory and optionally combined
 into a report using the ReportGenerator Docker image.
 
 Usage:
-    python run-perf-comparison.py [--config FILE] [--results-dir DIR] [--no-report] [--agent-app-name NAME] [--add-label-to-app-name]
+    python run-perf-comparison.py [--config FILE] [--results-dir DIR] [--no-report]
+                                   [--agent-app-name NAME] [--add-label-to-app-name]
 
 Requirements:
     pip install pyyaml
@@ -34,7 +35,7 @@ except ImportError:
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 GH_REPO = "newrelic/newrelic-dotnet-agent"  # for 'gh' CLI context when downloading artifacts
 
-_bash_is_wsl2 = None
+_BASH_IS_WSL2 = None
 
 
 def _bash_type_is_wsl2():
@@ -45,17 +46,17 @@ def _bash_type_is_wsl2():
     - WSL2 bash cannot execute Windows paths like C:/Python/python.exe.
     - Git Bash (MINGW) cannot use WSL2-internal paths like /mnt/c/...
     """
-    global _bash_is_wsl2
-    if _bash_is_wsl2 is None:
+    global _BASH_IS_WSL2  # pylint: disable=global-statement
+    if _BASH_IS_WSL2 is None:
         try:
             result = subprocess.run(
                 ["bash", "-c", "uname -r"],
-                capture_output=True, text=True, timeout=5
+                capture_output=True, text=True, timeout=5, check=False
             )
-            _bash_is_wsl2 = "microsoft" in result.stdout.lower()
-        except Exception:
-            _bash_is_wsl2 = False
-    return _bash_is_wsl2
+            _BASH_IS_WSL2 = "microsoft" in result.stdout.lower()
+        except Exception:  # pylint: disable=broad-exception-caught
+            _BASH_IS_WSL2 = False
+    return _BASH_IS_WSL2
 
 
 def to_bash_path(path):
@@ -78,26 +79,39 @@ def to_bash_path(path):
 
 
 def parse_args():
+    """Parse and return command-line arguments."""
     parser = argparse.ArgumentParser(description="Run sequential performance test comparisons.")
-    parser.add_argument("--config", default="compare.yml", help="YAML config file (default: compare.yml)")
-    parser.add_argument("--results-dir", default=None, help="Where to store per-run results (default: comparison-results/<timestamp>)")
-    parser.add_argument("--no-report", action="store_true", help="Skip ReportGenerator step")
-    parser.add_argument("--agent-app-name", default="dotnet-agent-perf-test", help="Application name shown in New Relic (default: dotnet-agent-perf-test)")
-    parser.add_argument("--add-label-to-app-name", action="store_true", help="Append run label to app name (e.g. 'dotnet-agent-perf-test-local-foo'). Useful for distinguishing runs in New Relic, but may create many app names if labels are unique.")    
+    parser.add_argument("--config", default="compare.yml",
+                        help="YAML config file (default: compare.yml)")
+    parser.add_argument("--results-dir", default=None,
+                        help="Where to store per-run results (default: comparison-results/<timestamp>)")
+    parser.add_argument("--no-report", action="store_true",
+                        help="Skip ReportGenerator step")
+    parser.add_argument("--agent-app-name", default="dotnet-agent-perf-test",
+                        help="Application name shown in New Relic (default: dotnet-agent-perf-test)")
+    parser.add_argument("--add-label-to-app-name", action="store_true",
+                        help=(
+                            "Append run label to app name "
+                            "(e.g. 'dotnet-agent-perf-test-local-foo'). "
+                            "Useful for distinguishing runs in New Relic, "
+                            "but may create many app names if labels are unique."
+                        ))
     return parser.parse_args()
 
 
 def load_config(config_path):
+    """Load and return the YAML comparison config file."""
     if not os.path.isabs(config_path):
         config_path = os.path.join(SCRIPT_DIR, config_path)
     if not os.path.exists(config_path):
         print(f"ERROR: Config file not found: {config_path}", file=sys.stderr)
         sys.exit(1)
-    with open(config_path) as f:
+    with open(config_path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
 def prepare_agent_home_local(source, agent_home_dir):
+    """Copy a local agent home directory into agent_home_dir."""
     path = source.get("path", "")
     if not os.path.isabs(path):
         path = os.path.join(SCRIPT_DIR, path)
@@ -108,6 +122,7 @@ def prepare_agent_home_local(source, agent_home_dir):
 
 
 def prepare_agent_home_url(source, agent_home_dir):
+    """Download an agent archive from a URL and extract it into agent_home_dir."""
     url = source.get("url", "")
     if not url:
         raise ValueError("agent_source.url is required for type 'url'")
@@ -153,8 +168,12 @@ def prepare_agent_home_url(source, agent_home_dir):
 
 
 def prepare_agent_home_github_artifact(source, agent_home_dir):
+    """Download an agent artifact from a GitHub Actions run and extract it into agent_home_dir."""
     if shutil.which("gh") is None:
-        print("ERROR: 'gh' CLI not found. Install it and authenticate before using github_artifact source.", file=sys.stderr)
+        print(
+            "ERROR: 'gh' CLI not found. Install it and authenticate before using github_artifact source.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     run_id = source.get("run_id")
@@ -175,7 +194,7 @@ def prepare_agent_home_github_artifact(source, agent_home_dir):
         print(f"  Downloading artifact from GitHub Actions run {run_id} ...")
         result = subprocess.run(
             ["gh", "-R", GH_REPO, "run", "download", run_id, "--name", "homefolders", "--dir", tmp],
-            capture_output=True, text=True
+            capture_output=True, text=True, check=False,
         )
         if result.returncode != 0:
             raise RuntimeError(f"gh run download failed:\n{result.stderr}")
@@ -196,6 +215,7 @@ def prepare_agent_home_github_artifact(source, agent_home_dir):
 
 
 def prepare_agent_home(run_cfg, agent_home_dir):
+    """Prepare the agent home directory for a single run based on run config."""
     # Always start clean so files from a previous run's agent don't linger.
     if os.path.isdir(agent_home_dir):
         shutil.rmtree(agent_home_dir)
@@ -243,6 +263,7 @@ def make_subprocess_env():
 
 
 def run_perf_test(run_cfg, test_cfg, label, agent_app_name, add_label_to_app_name):
+    """Invoke run-perf-test.py for a single run configuration and return its exit code."""
     attach = run_cfg.get("attach_agent", False)
 
     if add_label_to_app_name:
@@ -276,11 +297,12 @@ def run_perf_test(run_cfg, test_cfg, label, agent_app_name, add_label_to_app_nam
         cmd += ["--env", f"{name}={value}"]
 
     print(f"  Running: {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=SCRIPT_DIR)
+    result = subprocess.run(cmd, cwd=SCRIPT_DIR, check=False)
     return result.returncode
 
 
 def move_run_outputs(label, timestamp_dir):
+    """Move results/ and logs/ from the script dir into a labeled subdirectory of timestamp_dir."""
     results_src = os.path.join(SCRIPT_DIR, "results")
     logs_src = os.path.join(SCRIPT_DIR, "logs")
 
@@ -295,10 +317,11 @@ def move_run_outputs(label, timestamp_dir):
 
 
 def docker_available():
+    """Return True if Docker is available and responsive."""
     try:
         result = subprocess.run(
             ["docker", "info"],
-            capture_output=True, timeout=10
+            capture_output=True, timeout=10, check=False,
         )
         return result.returncode == 0
     except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -306,6 +329,7 @@ def docker_available():
 
 
 def generate_report(timestamp_dir):
+    """Build the ReportGenerator Docker image and run it against timestamp_dir."""
     if not docker_available():
         print("WARNING: Docker is not available. Skipping report generation.")
         return
@@ -313,7 +337,7 @@ def generate_report(timestamp_dir):
     print("\nBuilding ReportGenerator Docker image...")
     build_result = subprocess.run(
         ["docker", "build", "-t", "perf-report-generator", "ReportGenerator/"],
-        cwd=SCRIPT_DIR
+        cwd=SCRIPT_DIR, check=False,
     )
     if build_result.returncode != 0:
         print("ERROR: Failed to build ReportGenerator image.", file=sys.stderr)
@@ -330,7 +354,7 @@ def generate_report(timestamp_dir):
         "perf-report-generator",
         "--input-dir", "/input",
         "--output-dir", "/output",
-    ])
+    ], check=False)
 
     if run_result.returncode != 0:
         print("ERROR: ReportGenerator failed.", file=sys.stderr)
@@ -340,10 +364,11 @@ def generate_report(timestamp_dir):
     if os.path.exists(summary_path):
         print(f"\nReport generated: {summary_path}")
     else:
-        print(f"WARNING: Report directory created but summary.md not found.")
+        print("WARNING: Report directory created but summary.md not found.")
 
 
 def main():
+    """Entry point: load config, run all comparison runs, and optionally generate a report."""
     args = parse_args()
     config = load_config(args.config)
 
@@ -378,7 +403,7 @@ def main():
         try:
             print("  Preparing agent home...")
             prepare_agent_home(run_cfg, agent_home_dir)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             print(f"  ERROR: Failed to prepare agent home for '{label}': {e}", file=sys.stderr)
             failures.append((label, str(e)))
             continue

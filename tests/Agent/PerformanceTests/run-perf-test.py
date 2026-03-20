@@ -26,6 +26,7 @@ Options:
 """
 
 import argparse
+import atexit
 import csv
 import glob
 import os
@@ -44,6 +45,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # ---------------------------------------------------------------------------
 
 def parse_args():
+    """Parse and return command-line arguments."""
     parser = argparse.ArgumentParser(description="Run the .NET agent performance test suite.")
     parser.add_argument("--attach-agent",      default="false")
     parser.add_argument("--agent-home",         default="")
@@ -63,11 +65,6 @@ def parse_args():
 # Helpers
 # ---------------------------------------------------------------------------
 
-def run(cmd, **kwargs):
-    """Run a command, raising CalledProcessError on failure."""
-    return subprocess.run(cmd, check=True, **kwargs)
-
-
 def run_output(cmd, **kwargs):
     """Run a command and return (stdout_stripped, returncode)."""
     result = subprocess.run(cmd, capture_output=True, text=True, **kwargs)
@@ -79,14 +76,14 @@ def to_summary(text):
     print(text)
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY", "")
     if summary_path:
-        with open(summary_path, "a") as f:
+        with open(summary_path, "a", encoding="utf-8") as f:
             f.write(text + "\n")
 
 
 def format_csv_as_markdown(csv_path, cols=None):
     """Return a markdown table from a CSV file, or empty string if unavailable."""
     try:
-        with open(csv_path, newline="") as f:
+        with open(csv_path, newline="", encoding="utf-8") as f:
             rows = list(csv.reader(f))
     except FileNotFoundError:
         return ""
@@ -114,23 +111,123 @@ def format_csv_as_markdown(csv_path, cols=None):
     return "\n".join(lines)
 
 
+def check_traffic_driver(traffic_exit_code, verbose):
+    """Exit with an error if the traffic driver reported failures."""
+    if traffic_exit_code != "0":
+        print(f"ERROR: Traffic driver exited with code {traffic_exit_code} (error rate exceeded threshold)")
+        if verbose and os.path.isfile("results/locust_stats.csv"):
+            print("--- Locust stats ---")
+            with open("results/locust_stats.csv", encoding="utf-8") as f:
+                print(f.read(), end="")
+        sys.exit(1)
+    print("Traffic driver completed successfully.")
+
+
+def check_test_app():
+    """Exit with an error if the test app logged any critical errors."""
+    critical_pattern = re.compile(
+        r"unhandled exception|application crashed|fail to start", re.IGNORECASE
+    )
+
+    if os.path.isfile("logs/testapp-stdout.log"):
+        with open("logs/testapp-stdout.log", encoding="utf-8") as f:
+            content = f.read()
+        bad_lines = [line for line in content.splitlines() if critical_pattern.search(line)]
+        if bad_lines:
+            print("ERROR: Test app logged a critical error:")
+            print("\n".join(bad_lines))
+            sys.exit(1)
+        print("No critical errors found in test app logs.")
+
+
+def check_agent_logs():
+    """Exit with an error if the agent log indicates a connection or runtime failure."""
+    agent_logs = glob.glob("logs/newrelic_agent*.log")
+
+    if not agent_logs:
+        print("ERROR: no agent log files found")
+        sys.exit(1)
+
+    # There should only be one agent log since there is only one test app for now
+    assert len(agent_logs) == 1, f"Expected exactly one agent log file, but found: {agent_logs}"
+
+    errors = 0
+
+    # Make sure the agent connected
+    connected = False
+    for log_file in agent_logs:
+        with open(log_file, encoding="utf-8") as f:
+            if "Agent fully connected." in f.read():
+                connected = True
+                break
+    if not connected:
+        print("ERROR: Agent did not fully connect (no 'Agent fully connected.' line found in agent logs)")
+        errors += 1
+
+    # Make sure there are no error lines
+    for log_file in agent_logs:
+        error_lines = get_agent_log_error_lines(log_file)
+        if error_lines:
+            print(f"ERROR: Agent log contains ERROR entries in {log_file}:")
+            print("\n".join(error_lines))
+            errors += 1
+
+    # Make sure agent shut down gracefully
+    shutdown_pattern = re.compile(
+        r"The New Relic \.NET Agent v[\d\.]+ has shutdown \(pid \d+\) on app domain '[^']+'",
+        re.IGNORECASE
+    )
+    for log_file in agent_logs:
+        with open(log_file, encoding="utf-8") as f:
+            content = f.read()
+        if not shutdown_pattern.search(content):
+            print(f"ERROR: Agent did not shut down gracefully (no shutdown line found in {log_file})")
+            errors += 1
+
+    if errors > 0:
+        sys.exit(1)
+
+    print("SUCCESS: Agent ran, connected, and completed without errors.")
+
+
+def get_agent_log_error_lines(log_file: str) -> list[str]:
+    """
+    Examine a New Relic agent log file for lines logged at the ERROR level.
+
+    New Relic agent log lines follow the pattern:
+        YYYY-MM-DD HH:MM:SS,mmm NewRelic ERROR: <message>
+
+    Args:
+        log_file: Path to the agent log file.
+
+    Returns:
+        A list of lines logged at the ERROR level, or an empty list if none found.
+    """
+    error_pattern = re.compile(r"\bNewRelic\s+ERROR\b", re.IGNORECASE)
+    try:
+        with open(log_file, encoding="utf-8") as f:
+            return [line.rstrip() for line in f if error_pattern.search(line)]
+    except OSError:
+        return []
+
+
 # ---------------------------------------------------------------------------
 # Docker stats background thread
 # ---------------------------------------------------------------------------
 
 def _collect_docker_stats(stats_file, stop_event):
+    """Poll docker stats every 5 seconds, appending rows to stats_file until stop_event is set."""
     while not stop_event.is_set():
         ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        result = subprocess.run(
+        stdout, returncode = run_output(
             [
                 "docker", "stats", "perf-testapp", "--no-stream",
                 "--format", "{{.CPUPerc}},{{.MemPerc}},{{.MemUsage}},{{.NetIO}},{{.BlockIO}},{{.PIDs}}",
-            ],
-            capture_output=True, text=True,
+            ]
         )
-        if result.returncode == 0 and result.stdout.strip():
-            with open(stats_file, "a") as f:
-                f.write(f"{ts},{result.stdout.strip()}\n")
+        if returncode == 0 and stdout:
+            with open(stats_file, "a", encoding="utf-8") as f:
+                f.write(f"{ts},{stdout}\n")
         stop_event.wait(5)
 
 
@@ -139,6 +236,7 @@ def _collect_docker_stats(stats_file, stop_event):
 # ---------------------------------------------------------------------------
 
 def main():
+    """Entry point: parse args, run the test suite, and print a summary."""
     os.chdir(SCRIPT_DIR)
     args = parse_args()
 
@@ -192,7 +290,7 @@ def main():
         compose_env["CORECLR_ENABLE_PROFILING"] = "0"
 
     # --- Write extra.env for Docker Compose env_file injection ---
-    with open("extra.env", "w") as f:
+    with open("extra.env", "w", encoding="utf-8") as f:
         for pair in args.extra_envs:
             f.write(pair + "\n")
 
@@ -204,20 +302,20 @@ def main():
         subprocess.run(
             ["docker", "compose", "down", "--volumes", "--remove-orphans"],
             capture_output=True,
+            check=False,
             env=compose_env,
         )
 
-    import atexit
     atexit.register(cleanup)
 
     # --- Build and start containers ---
     print("Building Docker images...")
-    run(["docker", "compose", "build"], env=compose_env)
+    subprocess.run(["docker", "compose", "build"], check=True, env=compose_env)
 
     print("Starting test app and traffic driver...")
-    run(["docker", "compose", "up", "-d"], env=compose_env)
+    subprocess.run(["docker", "compose", "up", "-d"], check=True, env=compose_env)
 
-    # --- Wait for testapp to become healthy ---
+    # --- Wait for test app to become healthy ---
     print("Waiting for test app to become healthy...")
     deadline = time.monotonic() + 60
     while True:
@@ -234,7 +332,7 @@ def main():
 
     # --- Docker stats monitoring ---
     stats_file = "results/docker-stats.csv"
-    with open(stats_file, "w") as f:
+    with open(stats_file, "w", encoding="utf-8") as f:
         f.write("timestamp,cpu_pct,mem_pct,mem_usage,net_io,block_io,pids\n")
 
     stats_thread = threading.Thread(
@@ -251,92 +349,42 @@ def main():
     # --- Stop stats monitoring ---
     stats_stop.set()
     stats_thread.join(timeout=10)
-    with open(stats_file) as f:
+    with open(stats_file, encoding="utf-8") as f:
         stats_samples = max(0, sum(1 for _ in f) - 1)
     print(f"Docker stats monitoring stopped. Collected {stats_samples} sample(s).")
 
     # --- Capture container logs ---
     for container, log_path in [
-        ("perf-testapp",      "logs/testapp-stdout.log"),
+        ("perf-testapp",        "logs/testapp-stdout.log"),
         ("perf-traffic-driver", "logs/traffic-driver.log"),
     ]:
-        result = subprocess.run(["docker", "logs", container], capture_output=True, text=True)
-        with open(log_path, "w") as f:
+        result = subprocess.run(["docker", "logs", container], capture_output=True, text=True, check=False)
+        with open(log_path, "w", encoding="utf-8") as f:
             f.write(result.stdout)
             f.write(result.stderr)
 
     if verbose:
         print("=== Test app logs ===")
-        with open("logs/testapp-stdout.log") as f:
+        with open("logs/testapp-stdout.log", encoding="utf-8") as f:
             print(f.read(), end="")
         print("=== Traffic driver logs ===")
-        with open("logs/traffic-driver.log") as f:
+        with open("logs/traffic-driver.log", encoding="utf-8") as f:
             print(f.read(), end="")
 
     # --- Stop containers ---
     print("Stopping containers...")
     subprocess.run(
         ["docker", "compose", "down", "--volumes", "--remove-orphans"],
+        check=False,
         env=compose_env,
     )
     print("Containers stopped.")
 
-    # --- Check test app and agent logs for critical errors ---
-    errors = 0
-    critical_pattern = re.compile(
-        r"unhandled exception|application crashed|fail to start", re.IGNORECASE
-    )
-
-    if os.path.isfile("logs/testapp-stdout.log"):
-        with open("logs/testapp-stdout.log") as f:
-            content = f.read()
-        bad_lines = [line for line in content.splitlines() if critical_pattern.search(line)]
-        if bad_lines:
-            print("ERROR: Test app logged a critical error:")
-            print("\n".join(bad_lines))
-            errors += 1
-
+    # --- Check traffic driver, test app, and agent log (if attached) for errors ---
+    check_traffic_driver(traffic_exit_code, verbose)
+    check_test_app()
     if attach_agent:
-        for log_file in glob.glob("logs/newrelic_agent*.log"):
-            with open(log_file) as f:
-                content = f.read()
-            fatal_lines = [line for line in content.splitlines() if "FATAL ERROR" in line]
-            if fatal_lines:
-                print(f"ERROR: Agent log contains FATAL ERROR entries in {log_file}:")
-                print("\n".join(fatal_lines))
-                errors += 1
-
-    if errors > 0:
-        print("FAIL: Critical errors found in test app or agent logs.")
-        sys.exit(1)
-    print("No critical errors found in test app or agent logs.")
-
-    # --- Check traffic driver exit code ---
-    if traffic_exit_code != "0":
-        print(f"ERROR: Traffic driver exited with code {traffic_exit_code} (error rate exceeded threshold)")
-        if verbose and os.path.isfile("results/locust_stats.csv"):
-            print("--- Locust stats ---")
-            with open("results/locust_stats.csv") as f:
-                print(f.read(), end="")
-        sys.exit(1)
-    print("Traffic driver completed successfully.")
-
-    # --- Verify agent connected to New Relic (agent runs only) ---
-    if attach_agent:
-        connected = any(
-            "Agent fully connected." in open(log_file).read()
-            for log_file in glob.glob("logs/newrelic_agent*.log")
-        )
-        if not connected:
-            print("ERROR: Agent did not fully connect (no 'Agent fully connected.' line found in agent logs)")
-            agent_logs = glob.glob("logs/newrelic_agent*.log")
-            if agent_logs:
-                for p in agent_logs:
-                    print(f"  {p}")
-            else:
-                print("  (no agent log files found)")
-            sys.exit(1)
-        print("SUCCESS: Agent fully connected to New Relic")
+        check_agent_logs()
 
     # --- Print summary ---
     summary_lines = []

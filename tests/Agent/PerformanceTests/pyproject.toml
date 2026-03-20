@@ -1,0 +1,6 @@
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.basic]
+# Allow hyphenated module names (run-perf-test, run-perf-comparison)
+module-rgx = "[a-z][a-z0-9_-]*"
