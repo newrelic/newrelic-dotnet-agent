@@ -1,7 +1,7 @@
 name: Run Performance Test
 description: >
   Downloads the New Relic .NET agent (when requested) and runs the performance
-  test suite via run-perf-test.sh, then uploads the results and log artifacts.
+  test suite via run-perf-test.py, then uploads the results and log artifacts.
 
 inputs:
   run-label:
