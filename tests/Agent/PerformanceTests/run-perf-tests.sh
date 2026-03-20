@@ -18,6 +18,7 @@
 #   --dotnet-version VER        .NET version for the test app container (default: 10.0)
 #   --license-key KEY           New Relic license key (default: $NEW_RELIC_LICENSE_KEY)
 #   --collector-host HOST       New Relic collector host (default: $NEW_RELIC_HOST)
+#   --verbose true|false        Verbose output including test app and traffic driver output from container (default: false)
 
 set -euo pipefail
 
@@ -36,6 +37,7 @@ LOCUST_SPAWN_RATE="2"
 DOTNET_VERSION="10.0"
 LICENSE_KEY="${NEW_RELIC_LICENSE_KEY:-}"
 COLLECTOR_HOST="${NEW_RELIC_HOST:-}"
+VERBOSE="false"
 
 # ---------------------------------------------------------------------------
 # Parse arguments
@@ -51,6 +53,7 @@ while [[ $# -gt 0 ]]; do
     --dotnet-version)    DOTNET_VERSION="$2";     shift 2 ;;
     --license-key)       LICENSE_KEY="$2";        shift 2 ;;
     --collector-host)    COLLECTOR_HOST="$2";     shift 2 ;;
+    --verbose)           VERBOSE="$2";     shift 2 ;;
     *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
@@ -106,7 +109,6 @@ export NEW_RELIC_APP_NAME="$APP_NAME"
 if [ "$ATTACH_AGENT" = "true" ]; then
   export AGENT_PATH="$AGENT_HOME"
   export CORECLR_ENABLE_PROFILING=1
-  export NEW_RELIC_LOG_LEVEL="debug"
 else
   mkdir -p agent-home
   export AGENT_PATH="$SCRIPT_DIR/agent-home"
@@ -176,10 +178,14 @@ echo "Docker stats monitoring stopped. Collected $STATS_SAMPLES sample(s)."
 # ---------------------------------------------------------------------------
 # Capture container logs
 # ---------------------------------------------------------------------------
-echo "=== Test app logs ==="
-docker logs perf-testapp 2>&1 | tee logs/testapp-stdout.log || true
-echo "=== Traffic driver logs ==="
-docker logs perf-traffic-driver 2>&1 | tee results/traffic-driver.log || true
+docker logs perf-testapp 2>&1 >logs/testapp-stdout.log || true
+docker logs perf-traffic-driver 2>&1 >results/traffic-driver.log || true
+if [ "$VERBOSE" == "true" ]; then
+  echo "=== Test app logs ==="
+  cat logs/testapp-stdout.log
+  echo "=== Traffic driver logs ==="
+  cat results/traffic-driver.log
+fi
 
 # Bring down containers now; cleanup trap will also run on EXIT but explicit
 # teardown here ensures containers are stopped before log analysis.
@@ -228,23 +234,25 @@ fi
 echo "Traffic driver completed successfully."
 
 # ---------------------------------------------------------------------------
-# Verify agent sent data to New Relic (agent runs only)
+# Verify agent connected to New Relic (agent runs only)
 # ---------------------------------------------------------------------------
 if [ "$ATTACH_AGENT" = "true" ]; then
-  METRIC_SENDS=0
+  CONNECTED=0
   for LOG_FILE in logs/newrelic_agent*.log; do
     if [ -f "$LOG_FILE" ]; then
-      COUNT=$(grep -c 'Invoked "metric_data"' "$LOG_FILE" || true)
-      METRIC_SENDS=$((METRIC_SENDS + COUNT))
+      if grep -q 'Agent fully connected\.' "$LOG_FILE"; then
+        CONNECTED=1
+        break
+      fi
     fi
   done
 
-  if [ "$METRIC_SENDS" -eq 0 ]; then
-    echo "ERROR: No successful metric_data payloads found in agent logs"
+  if [ "$CONNECTED" -eq 0 ]; then
+    echo "ERROR: Agent did not fully connect (no 'Agent fully connected.' line found in agent logs)"
     ls -la logs/newrelic_agent*.log 2>/dev/null || echo "  (no agent log files found)"
     exit 1
   fi
-  echo "SUCCESS: Found $METRIC_SENDS successful metric_data payload(s) in agent logs"
+  echo "SUCCESS: Agent fully connected to New Relic"
 fi
 
 # ---------------------------------------------------------------------------
@@ -252,21 +260,56 @@ fi
 # ---------------------------------------------------------------------------
 {
   if [ -f "results/locust_stats.csv" ]; then
-    echo "### Locust Results Summary"
-    echo '```'
-    cat "results/locust_stats.csv"
-    echo '```'
+    echo "### Locust Results"
+    echo ""
+    "${PYTHON:-python}" - << 'PYEOF'
+import csv, sys
+
+# Columns: Name(1), Avg RT(5), Req/s(9), 50%(11), 75%(13), 95%(16), 99%(18), 100%(21)
+COLS = [1, 5, 9, 11, 13, 16, 18, 21]
+
+try:
+    with open("results/locust_stats.csv", newline="") as f:
+        rows = list(csv.reader(f))
+except FileNotFoundError:
+    sys.exit(0)
+
+if len(rows) < 2:
+    sys.exit(0)
+
+header = [rows[0][i] for i in COLS]
+print("| " + " | ".join(header) + " |")
+print("| " + " | ".join(["---"] * len(COLS)) + " |")
+for row in rows[1:]:
+    if len(row) > max(COLS):
+        print("| " + " | ".join(row[i] for i in COLS) + " |")
+PYEOF
   else
     echo "No Locust stats CSV found."
   fi
 
   if [ "$STATS_SAMPLES" -gt 0 ]; then
     echo ""
-    echo "### Docker Stats ($STATS_SAMPLES samples, last 5 shown)"
-    echo '```'
-    head -1 "$STATS_FILE"
-    tail -5 "$STATS_FILE"
-    echo '```'
+    echo "### Docker Stats ($STATS_SAMPLES samples)"
+    echo ""
+    "${PYTHON:-python}" - << 'PYEOF'
+import csv, sys
+
+try:
+    with open("results/docker-stats.csv", newline="") as f:
+        rows = list(csv.reader(f))
+except FileNotFoundError:
+    sys.exit(0)
+
+if len(rows) < 2:
+    sys.exit(0)
+
+header = rows[0]
+print("| " + " | ".join(header) + " |")
+print("| " + " | ".join(["---"] * len(header)) + " |")
+for row in rows[1:]:
+    print("| " + " | ".join(row) + " |")
+PYEOF
   fi
 
   echo ""

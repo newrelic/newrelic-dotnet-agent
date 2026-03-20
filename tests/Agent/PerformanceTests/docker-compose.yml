@@ -2,7 +2,7 @@
 #
 # Required environment variables (set in shell or .env file):
 #
-#   DOTNET_VERSION          .NET version for the test app image (e.g. "9.0")
+#   DOTNET_VERSION          .NET version for the test app image (e.g. "10.0")
 #   TEST_DURATION           Locust --run-time value (e.g. "2m", "5m", "30s")
 #   LOCUST_USERS            Number of concurrent Locust users
 #   LOCUST_SPAWN_RATE       Users spawned per second
@@ -37,6 +37,8 @@ services:
       NEW_RELIC_LOG_LEVEL: ${NEW_RELIC_LOG_LEVEL:-info}
       NEW_RELIC_LOG_DIRECTORY: /app/logs
     volumes:
+      # The ":ro" at the end of the volume mapping makes the mount read-only inside the container.
+      # This means the container can read files from /usr/local/newrelic-dotnet-agent, but cannot modify them.
       - ${AGENT_PATH:-./agent-home}:/usr/local/newrelic-dotnet-agent:ro
       - ./logs:/app/logs
     ports:
