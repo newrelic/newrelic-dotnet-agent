@@ -84,7 +84,7 @@ runs:
           exit 1
         fi
         echo "Found workflow run ID: $WORKFLOW_RUN_ID"
-        echo "run_id=$WORKFLOW_RUN_ID" >> $GITHUB_OUTPUT
+        echo "run_id=$WORKFLOW_RUN_ID" >> "$GITHUB_OUTPUT"
 
     - name: Download agent homefolders from release build
       if: inputs.attach-agent == 'true' && inputs.agent-source == 'github_release'

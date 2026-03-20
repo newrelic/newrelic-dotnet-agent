@@ -213,19 +213,19 @@ jobs:
             local AGENT="$2"
             if echo "$AGENT" | grep -qE '^[0-9]+\.[0-9]'; then
               # Version string (e.g. "10.49.0") → github_release
-              echo "${PREFIX}_agent_source=github_release" >> $GITHUB_OUTPUT
-              echo "${PREFIX}_agent_version=$AGENT"        >> $GITHUB_OUTPUT
-              echo "${PREFIX}_build_run_id="               >> $GITHUB_OUTPUT
+              echo "${PREFIX}_agent_source=github_release" >> "$GITHUB_OUTPUT"
+              echo "${PREFIX}_agent_version=$AGENT"        >> "$GITHUB_OUTPUT"
+              echo "${PREFIX}_build_run_id="               >> "$GITHUB_OUTPUT"
             elif [ -n "$AGENT" ]; then
               # Pure digits → build_artifact run ID
-              echo "${PREFIX}_agent_source=build_artifact" >> $GITHUB_OUTPUT
-              echo "${PREFIX}_agent_version="              >> $GITHUB_OUTPUT
-              echo "${PREFIX}_build_run_id=$AGENT"         >> $GITHUB_OUTPUT
+              echo "${PREFIX}_agent_source=build_artifact" >> "$GITHUB_OUTPUT"
+              echo "${PREFIX}_agent_version="              >> "$GITHUB_OUTPUT"
+              echo "${PREFIX}_build_run_id=$AGENT"         >> "$GITHUB_OUTPUT"
             else
               # Empty → latest release
-              echo "${PREFIX}_agent_source=github_release" >> $GITHUB_OUTPUT
-              echo "${PREFIX}_agent_version="              >> $GITHUB_OUTPUT
-              echo "${PREFIX}_build_run_id="               >> $GITHUB_OUTPUT
+              echo "${PREFIX}_agent_source=github_release" >> "$GITHUB_OUTPUT"
+              echo "${PREFIX}_agent_version="              >> "$GITHUB_OUTPUT"
+              echo "${PREFIX}_build_run_id="               >> "$GITHUB_OUTPUT"
             fi
           }
 
@@ -243,52 +243,52 @@ jobs:
               exit 1
             fi
             echo "Found nightly build run ID: $NIGHTLY_RUN_ID"
-            echo "include_no_agent=true"           >> $GITHUB_OUTPUT
-            echo "run1_label=latest-release"       >> $GITHUB_OUTPUT
+            echo "include_no_agent=true"           >> "$GITHUB_OUTPUT"
+            echo "run1_label=latest-release"       >> "$GITHUB_OUTPUT"
             parse_agent "run1" ""
-            echo "include_run2=true"               >> $GITHUB_OUTPUT
-            echo "run2_label=nightly-build"        >> $GITHUB_OUTPUT
+            echo "include_run2=true"               >> "$GITHUB_OUTPUT"
+            echo "run2_label=nightly-build"        >> "$GITHUB_OUTPUT"
             parse_agent "run2" "$NIGHTLY_RUN_ID"
-            echo "include_run3=false"              >> $GITHUB_OUTPUT
-            echo "run3_label="                     >> $GITHUB_OUTPUT
+            echo "include_run3=false"              >> "$GITHUB_OUTPUT"
+            echo "run3_label="                     >> "$GITHUB_OUTPUT"
             parse_agent "run3" ""
-            echo "include_run4=false"              >> $GITHUB_OUTPUT
-            echo "run4_label="                     >> $GITHUB_OUTPUT
+            echo "include_run4=false"              >> "$GITHUB_OUTPUT"
+            echo "run4_label="                     >> "$GITHUB_OUTPUT"
             parse_agent "run4" ""
-            echo "no_agent_env="   >> $GITHUB_OUTPUT
-            echo "run1_agent_env=" >> $GITHUB_OUTPUT
-            echo "run2_agent_env=" >> $GITHUB_OUTPUT
-            echo "run3_agent_env=" >> $GITHUB_OUTPUT
-            echo "run4_agent_env=" >> $GITHUB_OUTPUT
-            echo "test_duration=2m"                >> $GITHUB_OUTPUT
-            echo "locust_users=10"                 >> $GITHUB_OUTPUT
-            echo "locust_spawn_rate=2"             >> $GITHUB_OUTPUT
-            echo "dotnet_version=10.0"             >> $GITHUB_OUTPUT
+            echo "no_agent_env="   >> "$GITHUB_OUTPUT"
+            echo "run1_agent_env=" >> "$GITHUB_OUTPUT"
+            echo "run2_agent_env=" >> "$GITHUB_OUTPUT"
+            echo "run3_agent_env=" >> "$GITHUB_OUTPUT"
+            echo "run4_agent_env=" >> "$GITHUB_OUTPUT"
+            echo "test_duration=2m"                >> "$GITHUB_OUTPUT"
+            echo "locust_users=10"                 >> "$GITHUB_OUTPUT"
+            echo "locust_spawn_rate=2"             >> "$GITHUB_OUTPUT"
+            echo "dotnet_version=10.0"             >> "$GITHUB_OUTPUT"
           else
-            echo "include_no_agent=${{ inputs.include_no_agent }}" >> $GITHUB_OUTPUT
-            echo "run1_label=${{ inputs.run1_label }}"             >> $GITHUB_OUTPUT
+            echo "include_no_agent=${{ inputs.include_no_agent }}" >> "$GITHUB_OUTPUT"
+            echo "run1_label=${{ inputs.run1_label }}"             >> "$GITHUB_OUTPUT"
             parse_agent "run1" "${{ inputs.run1_agent }}"
-            echo "include_run2=${{ inputs.include_run2 }}"         >> $GITHUB_OUTPUT
-            echo "run2_label=${{ inputs.run2_label }}"             >> $GITHUB_OUTPUT
+            echo "include_run2=${{ inputs.include_run2 }}"         >> "$GITHUB_OUTPUT"
+            echo "run2_label=${{ inputs.run2_label }}"             >> "$GITHUB_OUTPUT"
             parse_agent "run2" "${{ inputs.run2_agent }}"
-            echo "include_run3=${{ inputs.include_run3 }}"         >> $GITHUB_OUTPUT
-            echo "run3_label=${{ inputs.run3_label }}"             >> $GITHUB_OUTPUT
+            echo "include_run3=${{ inputs.include_run3 }}"         >> "$GITHUB_OUTPUT"
+            echo "run3_label=${{ inputs.run3_label }}"             >> "$GITHUB_OUTPUT"
             parse_agent "run3" "${{ inputs.run3_agent }}"
-            echo "include_run4=${{ inputs.include_run4 }}"         >> $GITHUB_OUTPUT
-            echo "run4_label=${{ inputs.run4_label }}"             >> $GITHUB_OUTPUT
+            echo "include_run4=${{ inputs.include_run4 }}"         >> "$GITHUB_OUTPUT"
+            echo "run4_label=${{ inputs.run4_label }}"             >> "$GITHUB_OUTPUT"
             parse_agent "run4" "${{ inputs.run4_agent }}"
-            echo "no_agent_env=${{ inputs.no_agent_env }}"     >> $GITHUB_OUTPUT
-            echo "run1_agent_env=${{ inputs.run1_agent_env }}" >> $GITHUB_OUTPUT
-            echo "run2_agent_env=${{ inputs.run2_agent_env }}" >> $GITHUB_OUTPUT
-            echo "run3_agent_env=${{ inputs.run3_agent_env }}" >> $GITHUB_OUTPUT
-            echo "run4_agent_env=${{ inputs.run4_agent_env }}" >> $GITHUB_OUTPUT
-            echo "test_duration=${{ inputs.test_duration }}"       >> $GITHUB_OUTPUT
-            echo "locust_users=${{ inputs.locust_users }}"         >> $GITHUB_OUTPUT
-            echo "locust_spawn_rate=${{ inputs.locust_spawn_rate }}" >> $GITHUB_OUTPUT
-            echo "dotnet_version=${{ inputs.dotnet_version }}"     >> $GITHUB_OUTPUT
+            echo "no_agent_env=${{ inputs.no_agent_env }}"     >> "$GITHUB_OUTPUT"
+            echo "run1_agent_env=${{ inputs.run1_agent_env }}" >> "$GITHUB_OUTPUT"
+            echo "run2_agent_env=${{ inputs.run2_agent_env }}" >> "$GITHUB_OUTPUT"
+            echo "run3_agent_env=${{ inputs.run3_agent_env }}" >> "$GITHUB_OUTPUT"
+            echo "run4_agent_env=${{ inputs.run4_agent_env }}" >> "$GITHUB_OUTPUT"
+            echo "test_duration=${{ inputs.test_duration }}"       >> "$GITHUB_OUTPUT"
+            echo "locust_users=${{ inputs.locust_users }}"         >> "$GITHUB_OUTPUT"
+            echo "locust_spawn_rate=${{ inputs.locust_spawn_rate }}" >> "$GITHUB_OUTPUT"
+            echo "dotnet_version=${{ inputs.dotnet_version }}"     >> "$GITHUB_OUTPUT"
           fi
-          echo "license_key=${PERF_TEST_ACCOUNT%%,*}"   >> $GITHUB_OUTPUT
-          echo "collector_host=${PERF_TEST_ACCOUNT##*,}" >> $GITHUB_OUTPUT
+          echo "license_key=${PERF_TEST_ACCOUNT%%,*}"   >> "$GITHUB_OUTPUT"
+          echo "collector_host=${PERF_TEST_ACCOUNT##*,}" >> "$GITHUB_OUTPUT"
 
   # ---------------------------------------------------------------------------
   # Parallel test runs
