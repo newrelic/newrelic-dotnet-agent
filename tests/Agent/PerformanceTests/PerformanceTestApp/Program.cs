@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Net;
-using Microsoft.Data.Sqlite;
 using MongoDB.Driver;
 using RabbitMQ.Client;
 using Serilog;
@@ -27,14 +26,6 @@ builder.Services.AddSingleton<IConnection>(rabbitConnection);
 builder.WebHost.UseUrls($"http://{IPAddress.Any}:8080");
 
 var app = builder.Build();
-
-using (var conn = new SqliteConnection("Data Source=/tmp/perftest.db"))
-{
-    conn.Open();
-    using var cmd = conn.CreateCommand();
-    cmd.CommandText = "CREATE TABLE IF NOT EXISTS perf (id INTEGER PRIMARY KEY AUTOINCREMENT, value TEXT NOT NULL)";
-    cmd.ExecuteNonQuery();
-}
 
 app.UseAuthorization();
 app.MapControllers();
