@@ -23,7 +23,7 @@
 
 services:
   localstack:
-    image: localstack/localstack:stable
+    image: localstack/localstack:4.14.0@sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a
     expose: # ports are only available internal to the service, not external so there's no chance for conflicts
       - "4566"       # LocalStack Gateway
       - "4559"  # external services port range
