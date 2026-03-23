@@ -165,12 +165,15 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
     }
 }
 
+[Collection("AwsSdkTests")]
 public class AwsSdkSQSTestInitializedCollections : AwsSdkSQSTestBase
 {
     public AwsSdkSQSTestInitializedCollections(AwsSdkContainerSQSTestFixture fixture, ITestOutputHelper output) : base(fixture, output, true)
     {
     }
 }
+
+[Collection("AwsSdkTests")]
 public class AwsSdkSQSTestNullCollections : AwsSdkSQSTestBase
 {
     public AwsSdkSQSTestNullCollections(AwsSdkContainerSQSTestFixture fixture, ITestOutputHelper output) : base(fixture, output, false)
