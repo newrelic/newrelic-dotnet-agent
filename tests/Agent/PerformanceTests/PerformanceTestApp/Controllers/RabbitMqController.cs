@@ -48,16 +48,16 @@ public class RabbitMqController : ControllerBase
         consumer.Received += (_, args) =>
         {
             var msg = Encoding.UTF8.GetString(args.Body.ToArray());
-            channel.BasicCancel(consumerTag);
             tcs.TrySetResult(msg);
         };
 
         consumerTag = channel.BasicConsume(QueueName, autoAck: true, consumer: consumer);
 
         var completed = await Task.WhenAny(tcs.Task, Task.Delay(1000));
+        channel.BasicCancel(consumerTag);
+
         if (completed != tcs.Task)
         {
-            channel.BasicCancel(consumerTag);
             _logger.LogInformation("No messages available in queue {Queue}", QueueName);
             return Ok(new { message = (string?)null });
         }
