@@ -9,7 +9,7 @@ resulting throughput, response-time percentiles, CPU usage, and memory usage.
 ```mermaid
 flowchart TD
     subgraph Docker["Docker Compose (perf network)"]
-        TA["PerformanceTestApp\n(ASP.NET Core, :8080)\n─────────────────\n/simple  /nested  /health\n/mongo/crud\n/rabbitmq/publish  /rabbitmq/consume"]
+        TA["PerformanceTestApp\n(ASP.NET Core, :8080)\n─────────────────\n/simple  /nested  /health\n/mongo/crud  /redis/crud\n/rabbitmq/publish  /rabbitmq/consume"]
         TD["TrafficDriver\n(Locust)\n─────────────────\nWeighted endpoint mix\nError-rate threshold"]
         TD -- "HTTP requests" --> TA
     end
@@ -31,7 +31,7 @@ flowchart TD
 
 | Component | Technology | Purpose |
 |---|---|---|
-| **PerformanceTestApp** | ASP.NET Core (.NET 10) | Synthetic workload server — endpoints exercising simple JSON, nested async, MongoDB CRUD, RabbitMQ publish/consume, and health; uses Serilog for structured log forwarding |
+| **PerformanceTestApp** | ASP.NET Core (.NET 10) | Synthetic workload server — endpoints exercising simple JSON, nested async, MongoDB CRUD, Redis CRUD, RabbitMQ publish/consume, and health; uses Serilog for structured log forwarding |
 | **TrafficDriver** | Python / Locust | Generates a weighted mix of requests, enforces a <1 % error-rate threshold, writes Locust CSV result files |
 | **ReportGenerator** | .NET 10 console app | Post-run analysis: reads Locust and Docker stats CSVs, generates ScottPlot PNG charts and a `summary.md` |
 | **run-perf-test.py** | Python | Orchestrates a single test run: writes `extra.env`, builds and starts Docker Compose, polls health, collects Docker stats, captures logs, validates results, prints a Markdown summary |

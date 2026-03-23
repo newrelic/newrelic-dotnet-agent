@@ -23,6 +23,18 @@
 #                           'environment' block below if the same name appears there.
 
 services:
+  redis:
+    image: redis:8
+    container_name: perf-redis
+    networks:
+      - perfnet
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   rabbitmq:
     image: rabbitmq:4
     container_name: perf-rabbitmq
@@ -56,6 +68,8 @@ services:
         DOTNET_VERSION: ${DOTNET_VERSION:-10.0}
     image: perf-testapp
     depends_on:
+      redis:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       mongodb:
@@ -73,6 +87,7 @@ services:
       NEW_RELIC_HOST: ${NEW_RELIC_HOST:-collector.newrelic.com}
       NEW_RELIC_LOG_DIRECTORY: /app/logs
       MONGODB_CONNECTION_STRING: mongodb://mongodb:27017
+      REDIS_CONNECTION_STRING: redis:6379
       RABBITMQ_HOST: rabbitmq
     volumes:
       # The ":ro" at the end of the volume mapping makes the mount read-only inside the container.

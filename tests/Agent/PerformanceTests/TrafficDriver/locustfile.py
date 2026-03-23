@@ -49,7 +49,14 @@ class PerformanceTasks(TaskSet):
             if response.status_code != 200:
                 response.failure(f"Expected 200, got {response.status_code}")
 
-@task(2)
+    @task(2)
+    def redis_crud(self):
+        """Redis CRUD - exercises StackExchange.Redis datastore instrumentation."""
+        with self.client.get("/redis/crud", catch_response=True) as response:
+            if response.status_code != 200:
+                response.failure(f"Expected 200, got {response.status_code}")
+
+    @task(2)
     def mongo_crud(self):
         """MongoDB CRUD - exercises MongoDb26 datastore instrumentation wrapper."""
         with self.client.get("/mongo/crud", catch_response=True) as response:
