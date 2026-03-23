@@ -35,6 +35,12 @@ services:
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   dynamodb:
     command: "-jar DynamoDBLocal.jar -inMemory"
@@ -42,11 +48,13 @@ services:
     expose: # ports are only available internal to the service, not external so there's no chance for conflicts
       - "8000"
     working_dir: /home/dynamodblocal
- 
+
   awssdktestapp:
     depends_on:
-        - localstack
-        - dynamodb
+      localstack:
+        condition: service_healthy
+      dynamodb:
+        condition: service_started
     container_name: ${CONTAINER_NAME}
     image: ${CONTAINER_NAME}
     platform: ${PLATFORM}
