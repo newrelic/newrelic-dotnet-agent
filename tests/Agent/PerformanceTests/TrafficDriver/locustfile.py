@@ -28,13 +28,6 @@ class PerformanceTasks(TaskSet):
             if response.status_code != 200:
                 response.failure(f"Expected 200, got {response.status_code}")
 
-    @task(3)
-    def io_simulation(self):
-        """Async I/O simulation - exercises async context propagation."""
-        with self.client.get("/home/io?delayMs=10", catch_response=True) as response:
-            if response.status_code != 200:
-                response.failure(f"Expected 200, got {response.status_code}")
-
     @task(2)
     def nested_async(self):
         """Nested async calls - exercises multi-segment transactions."""
@@ -42,17 +35,31 @@ class PerformanceTasks(TaskSet):
             if response.status_code != 200:
                 response.failure(f"Expected 200, got {response.status_code}")
 
-    @task(2)
-    def cpu_work(self):
-        """CPU-bound work - measures agent overhead under computation."""
-        with self.client.get("/home/cpu?iterations=500", catch_response=True) as response:
+    @task(3)
+    def rabbitmq_publish(self):
+        """RabbitMQ publish - exercises message broker instrumentation (producer side)."""
+        with self.client.post("/rabbitmq/publish", catch_response=True) as response:
             if response.status_code != 200:
                 response.failure(f"Expected 200, got {response.status_code}")
 
-    @task(1)
-    def collection(self):
-        """Collection serialization - exercises response processing path."""
-        with self.client.get("/home/collection?count=20", catch_response=True) as response:
+    @task(2)
+    def rabbitmq_consume(self):
+        """RabbitMQ consume - exercises message broker instrumentation (consumer side)."""
+        with self.client.get("/rabbitmq/consume", catch_response=True) as response:
+            if response.status_code != 200:
+                response.failure(f"Expected 200, got {response.status_code}")
+
+    @task(2)
+    def sqlite_crud(self):
+        """SQLite CRUD - exercises System.Data ADO.NET datastore instrumentation."""
+        with self.client.get("/sqlite/crud", catch_response=True) as response:
+            if response.status_code != 200:
+                response.failure(f"Expected 200, got {response.status_code}")
+
+    @task(2)
+    def mongo_crud(self):
+        """MongoDB CRUD - exercises MongoDb26 datastore instrumentation wrapper."""
+        with self.client.get("/mongo/crud", catch_response=True) as response:
             if response.status_code != 200:
                 response.failure(f"Expected 200, got {response.status_code}")
 

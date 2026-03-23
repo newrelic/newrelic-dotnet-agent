@@ -9,5 +9,10 @@
 
   <ItemGroup>
     <None Include="Dockerfile" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.*" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.*" />
+    <PackageReference Include="MongoDB.Driver" Version="3.*" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.*" />
+    <PackageReference Include="NewRelic.Agent.Api" Version="10.50.0" />
   </ItemGroup>
 </Project>
