@@ -35,8 +35,9 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
             {
                 _fixture.AgentLog.WaitForLogLine(AgentLogFile.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
 
-                // otlp metrics export will be complete before the first analytics event harvest
-                _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+                // Wait for actual OTLP metrics export (every 5s) rather than the analytics event
+                // harvest (every 60s), which can race with the WaitForLogLine timeout on slow CI.
+                _fixture.AgentLog.WaitForLogLine(AgentLogFile.OtlpMetricsExportedLogLineRegex, TimeSpan.FromMinutes(1));
 
                 _otlpSummaries = _fixture.GetCollectedOTLPMetrics();
             }
