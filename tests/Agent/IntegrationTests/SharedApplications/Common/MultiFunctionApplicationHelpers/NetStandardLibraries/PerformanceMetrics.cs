@@ -35,6 +35,13 @@ public static class PerformanceMetrics
         // We need atleast one known GC invocation to verify our GC metrics.
         GC.Collect();
 
+        // Gen0-only collections ensure the GCSamplerV2's per-generation counting
+        // (which subtracts higher-gen counts from lower-gen counts) reports non-zero
+        // Gen0 collections. Without these, a full GC.Collect() increments all generation
+        // counters equally, and the subtraction can yield zero on fast-starting processes.
+        GC.Collect(0);
+        GC.Collect(0);
+
         // Get everything started up and time for initial Sample().
         Thread.Sleep(TimeSpan.FromSeconds(10));
     }
