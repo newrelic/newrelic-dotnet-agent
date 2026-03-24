@@ -134,6 +134,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
     }
 }
 
+[Collection("KafkaTests")]
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Ubuntu")]
 public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
@@ -143,6 +144,7 @@ public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
     }
 }
 
+[Collection("KafkaTests")]
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Ubuntu")]
 public class KafkaDotNet10Test : LinuxKafkaTest<KafkaDotNet10TestFixture>

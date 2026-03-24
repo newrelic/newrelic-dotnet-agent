@@ -59,6 +59,13 @@ public class SendAsync : IWrapper
 
         var transactionExperimental = transaction.GetExperimentalApi();
 
+        // grpc-dotnet currently doesn't provide the address and port values, so we pull them from here.
+        if (((ISegmentExperimental)transaction.CurrentSegment).SetServerDetailsForGrpcActivity(uri))
+        {
+            // We need to no-op this so that we only create a single external segment.
+            return Delegates.NoOp;
+        }
+
         var externalSegmentData = transactionExperimental.CreateExternalSegmentData(uri, method);
         var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
         segment.GetExperimentalApi()

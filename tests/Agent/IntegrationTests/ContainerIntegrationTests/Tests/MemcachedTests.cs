@@ -127,6 +127,7 @@ public abstract class LinuxMemcachedTest<T> : NewRelicIntegrationTest<T> where T
     }
 }
 
+[Collection("MemcachedTests")]
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Ubuntu")]
 public class MemcachedDotNet8Test : LinuxMemcachedTest<MemcachedDotNet8TestFixture>
@@ -136,6 +137,7 @@ public class MemcachedDotNet8Test : LinuxMemcachedTest<MemcachedDotNet8TestFixtu
     }
 }
 
+[Collection("MemcachedTests")]
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Ubuntu")]
 public class MemcachedDotNet10Test : LinuxMemcachedTest<MemcachedDotNet10TestFixture>

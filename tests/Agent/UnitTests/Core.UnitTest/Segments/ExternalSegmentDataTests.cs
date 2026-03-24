@@ -19,7 +19,7 @@ public class ExternalSegmentDataTests
 
     private static Segment createExternalSegmentBuilder(TimeSpan relativeStart, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> parameters, Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData, bool combinable)
     {
-        var data = new ExternalSegmentData(uri, method, crossApplicationResponseData);
+        var data = new ExternalSegmentData(uri, method, crossApplicationResponseData: crossApplicationResponseData);
         var segment = new Segment(SimpleSegmentDataTestHelpers.CreateTransactionSegmentState(uniqueId, parentId), methodCallData);
         segment.SetSegmentData(data);
         segment.Combinable = combinable;

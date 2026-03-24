@@ -72,6 +72,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
+          filter: blob:none
 
       - name: Get Release Version and Run ID
         if: ${{ inputs.get-version-automatically }}
@@ -367,8 +368,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
 
       - name: Download Deploy Artifacts
         uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
@@ -487,8 +486,7 @@ jobs:
   agent-metadata:
       permissions:
           contents: read
-      needs: [post-deploy]
-      if: ${{ inputs.post-deploy }}
+      needs: [get-release-info, post-deploy]
       name: Run Agent Metadata Workflow
       uses: newrelic/newrelic-dotnet-agent/.github/workflows/agent_metadata.yml@main
       with:

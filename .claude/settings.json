@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd *)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(dotnet *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(find *)",
+      "Bash(echo *)",
+      "Bash(pwd)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force *)",
+      "Bash(git reset --hard *)",
+      "Bash(git release *)",
+      "Bash(git tag *)",
+      "Bash(gh release *)",
+      "Bash(gh tag *)",
+      "Bash(gh push --force *)",
+      "Bash(gh reset --hard *)"
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net10.0;net462;net471;net48;net481</TargetFrameworks>
@@ -6,6 +6,10 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="NetStandardLibraries\Grpc\greet.proto" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="LibGit2Sharp" Version="0.24.1" Condition="'$(TargetFramework)' == 'net462'" />
@@ -324,6 +328,14 @@
     <PackageReference Include="CouchbaseNetClient" Version="3.2.0" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="CouchbaseNetClient" Version="3.4.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="CouchbaseNetClient" Version="3.5.1" Condition="'$(TargetFramework)' == 'net8.0'" />
+  </ItemGroup>
+
+  <!-- gRPC - .NET Core only -->
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore.Server" Version="2.65.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.65.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Grpc.Tools" Version="2.65.0" Condition="'$(TargetFramework)' == 'net8.0'"><PrivateAssets>all</PrivateAssets></PackageReference>
+    <Protobuf Include="NetStandardLibraries\Grpc\greet.proto" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
 

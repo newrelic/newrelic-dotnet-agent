@@ -127,3 +127,4 @@ This repository contains the New Relic .NET Agent, which monitors .NET applicati
   - Bug fixes: `fix/**`
   - Features: `feature/**`
   - Other changes: Use appropriate prefixes like `test/**`, `chore/**`, etc.
+- When referencing other contributors as co-authors, always use their GitHub noreply email (xxx@users.noreply.github.com), never their private/work email address.

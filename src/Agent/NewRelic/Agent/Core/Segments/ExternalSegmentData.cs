@@ -15,29 +15,20 @@ using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Segments;
 
-public class ExternalSegmentData : AbstractSegmentData, IExternalSegmentData
+public class ExternalSegmentData(Uri uri, string method, string library = "Stream", CrossApplicationResponseData crossApplicationResponseData = null, string componentOverride = null) : AbstractSegmentData, IExternalSegmentData
 {
     private const string TransactionGuidSegmentParameterKey = "transaction_guid";
 
     private int? _httpStatusCode;
     private string _httpStatusText;
-    private readonly string _componentOverride;
+    private readonly string _componentOverride = componentOverride;
 
     public override SpanCategory SpanCategory => SpanCategory.Http;
 
-    public Uri Uri { get; }
-    public string Method { get; }
-    public string Type { get; }
-
-    public ExternalSegmentData(Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData = null, string componentOverride = null)
-    {
-        Uri = uri;
-        Method = method;
-        CrossApplicationResponseData = crossApplicationResponseData;
-        _componentOverride = componentOverride;
-    }
-
-    public CrossApplicationResponseData CrossApplicationResponseData { get; set; }
+    public Uri Uri { get; } = uri;
+    public string Method { get; } = method;
+    
+    public CrossApplicationResponseData CrossApplicationResponseData { get; set; } = crossApplicationResponseData;
 
     public void SetHttpStatus(int httpStatusCode, string httpStatusText = null)
     {
@@ -71,12 +62,12 @@ public class ExternalSegmentData : AbstractSegmentData, IExternalSegmentData
         if (CrossApplicationResponseData == null)
         {
             // Generate scoped and unscoped external metrics as CAT not present.
-            MetricBuilder.TryBuildExternalSegmentMetric(Uri.Host, Method, duration, exclusiveDuration, txStats, false);
+            MetricBuilder.TryBuildExternalSegmentMetric(Uri.Host, Method, library, duration, exclusiveDuration, txStats, false);
         }
         else
         {
             // Only generate unscoped metric for response with CAT headers because segments should only produce a single scoped metric and the CAT metric is more interesting than the external segment metric.
-            MetricBuilder.TryBuildExternalSegmentMetric(Uri.Host, Method, duration, exclusiveDuration, txStats, true);
+            MetricBuilder.TryBuildExternalSegmentMetric(Uri.Host, Method, library, duration, exclusiveDuration, txStats, true);
 
             var externalCrossProcessId = CrossApplicationResponseData.CrossProcessId;
             var externalTransactionName = CrossApplicationResponseData.TransactionName;
@@ -92,7 +83,7 @@ public class ExternalSegmentData : AbstractSegmentData, IExternalSegmentData
     {
         AttribDefs.SpanCategory.TrySetValue(attribVals, SpanCategory.Http);
         AttribDefs.HttpUrl.TrySetValue(attribVals, Uri);
-        AttribDefs.HttpMethod.TrySetValue(attribVals, Method);
+        AttribDefs.HttpRequestMethod.TrySetValue(attribVals, Method);
         AttribDefs.Component.TrySetValue(attribVals, _componentOverride ?? _segmentState.TypeName);
         AttribDefs.SpanKind.TrySetDefault(attribVals);
         AttribDefs.HttpStatusCode.TrySetValue(attribVals, _httpStatusCode);   //Attrib handles null
@@ -105,7 +96,7 @@ public class ExternalSegmentData : AbstractSegmentData, IExternalSegmentData
     {
         // APM expects metric names to be used for external segment trace names
         var name = CrossApplicationResponseData == null
-            ? MetricNames.GetExternalHost(Uri.Host, "Stream", Method)
+            ? MetricNames.GetExternalHost(Uri.Host, library, Method)
             : MetricNames.GetExternalTransaction(Uri.Host, CrossApplicationResponseData.CrossProcessId, CrossApplicationResponseData.TransactionName);
         return name.ToString();
     }
@@ -123,5 +114,29 @@ public class ExternalSegmentData : AbstractSegmentData, IExternalSegmentData
             return false;
 
         return true;
+    }
+}
+
+public class ExternalGrpcSegmentData(Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData = null, string componentOverride = null)
+    : ExternalSegmentData(uri, method, "gRPC", crossApplicationResponseData)
+{
+    private int? _grpcStatusCode;
+
+    public void SetGrpcStatus(int grpcStatusCode)
+    {
+        _grpcStatusCode = grpcStatusCode;
+    }
+
+    public override void SetSpanTypeSpecificAttributes(SpanAttributeValueCollection attribVals)
+    {
+        AttribDefs.SpanCategory.TrySetValue(attribVals, SpanCategory.Http);
+        AttribDefs.HttpUrl.TrySetValue(attribVals, Uri);
+        AttribDefs.HttpMethod.TrySetValue(attribVals, Method); //TODO gRPC spec says this is the correct "method" attribute
+        AttribDefs.HttpRequestMethod.TrySetValue(attribVals, Method); //TODO Otel spec says this should be "procedure", but externals use this
+        AttribDefs.Component.TrySetValue(attribVals, componentOverride ?? _segmentState.TypeName);
+        AttribDefs.SpanKind.TrySetDefault(attribVals);
+        AttribDefs.ServerAddress.TrySetValue(attribVals, Uri.Host);
+        AttribDefs.ServerPort.TrySetValue(attribVals, Uri.Port);
+        AttribDefs.GrpcStatusCode.TrySetValue(attribVals, _grpcStatusCode);
     }
 }

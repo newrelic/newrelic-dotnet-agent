@@ -1,0 +1,136 @@
+# Docker Compose for .NET agent performance tests.
+#
+# Required environment variables (set in shell or .env file):
+#
+#   DOTNET_VERSION          .NET version for the test app image (e.g. "10.0")
+#   TEST_DURATION           Locust --run-time value (e.g. "2m", "5m", "30s")
+#   LOCUST_USERS            Number of concurrent Locust users
+#   LOCUST_SPAWN_RATE       Users spawned per second
+#
+# Optional environment variables (agent mode only):
+#
+#   AGENT_PATH              Host path to the extracted Linux agent home folder.
+#                           When set, the agent volume mount is active and
+#                           CORECLR_ENABLE_PROFILING is set to 1 by the workflow.
+#   NEW_RELIC_LICENSE_KEY   License key for the target New Relic account
+#   NEW_RELIC_APP_NAME      Application name shown in New Relic
+#   NEW_RELIC_HOST          New Relic collector host (e.g. collector.newrelic.com)
+#
+# Optional extra environment variables (injected via env_file):
+#
+#   extra.env               Written by run-perf-test.sh from --env NAME=VALUE args.
+#                           Keys in this file are overridden by the explicit
+#                           'environment' block below if the same name appears there.
+
+services:
+  redis:
+    image: redis:8
+    container_name: perf-redis
+    networks:
+      - perfnet
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:4
+    container_name: perf-rabbitmq
+    networks:
+      - perfnet
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  mongodb:
+    image: mongo:8
+    container_name: perf-mongodb
+    networks:
+      - perfnet
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  testapp:
+    container_name: perf-testapp
+    build:
+      context: ./PerformanceTestApp
+      dockerfile: Dockerfile
+      args:
+        DOTNET_VERSION: ${DOTNET_VERSION:-10.0}
+    image: perf-testapp
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    env_file:
+      - ./extra.env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      CORECLR_ENABLE_PROFILING: ${CORECLR_ENABLE_PROFILING:-0}
+      CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
+      CORECLR_NEWRELIC_HOME: /usr/local/newrelic-dotnet-agent
+      CORECLR_PROFILER_PATH: /usr/local/newrelic-dotnet-agent/libNewRelicProfiler.so
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
+      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-dotnet-agent-perf-test}
+      NEW_RELIC_HOST: ${NEW_RELIC_HOST:-collector.newrelic.com}
+      NEW_RELIC_LOG_DIRECTORY: /app/logs
+      MONGODB_CONNECTION_STRING: mongodb://mongodb:27017
+      REDIS_CONNECTION_STRING: redis:6379
+      RABBITMQ_HOST: rabbitmq
+    volumes:
+      # The ":ro" at the end of the volume mapping makes the mount read-only inside the container.
+      # This means the container can read files from /usr/local/newrelic-dotnet-agent, but cannot modify them.
+      - ${AGENT_PATH:-./agent-home}:/usr/local/newrelic-dotnet-agent:ro
+      - ./logs:/app/logs
+    ports:
+      - "8080:8080"
+    networks:
+      - perfnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+
+  traffic-driver:
+    container_name: perf-traffic-driver
+    build:
+      context: ./TrafficDriver
+      dockerfile: Dockerfile
+    image: perf-traffic-driver
+    depends_on:
+      testapp:
+        condition: service_healthy
+    command: >
+      --headless
+      --host http://testapp:8080
+      -u ${LOCUST_USERS:-10}
+      -r ${LOCUST_SPAWN_RATE:-2}
+      --run-time ${TEST_DURATION:-2m}
+      --csv /results/locust
+      --logfile /logs/locust.log
+      --logfile /logs/locust.log
+      --exit-code-on-error 0
+    volumes:
+      - ./results:/results
+      - ./logs:/logs
+      - ./logs:/logs
+    networks:
+      - perfnet
+
+networks:
+  perfnet:
+    driver: bridge

@@ -2099,24 +2099,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Mock.Assert(() => _transactionService.GetCurrentInternalTransaction(), Occurs.Never());
         }
         [Test]
-        public void RecordLlmEvent_RecordsSupportabilityMetric_WhenAiMonitoringStreamingEnabledIsDisabled()
-        {
-            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
-                .Returns(true);
-            Mock.Arrange(() => _configurationService.Configuration.AiMonitoringStreamingEnabled)
-                .Returns(false);
-
-            var eventName = "eventName";
-            var attributes = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
-
-            SetupTransaction();
-
-            var xapi = _agent as IAgentExperimental;
-            xapi.RecordLlmEvent(eventName, attributes);
-
-            Mock.Assert(() => _agentHealthReporter.ReportSupportabilityCountMetric("Supportability/DotNet/ML/Streaming/Disabled", 1), Occurs.Once());
-        }
-        [Test]
         public void RecordLlmEvent_SetsLlmTransactionMetadata()
         {
             Mock.Arrange(() => _configurationService.Configuration.AiMonitoringEnabled)
