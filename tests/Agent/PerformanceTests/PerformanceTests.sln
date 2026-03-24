@@ -1,0 +1,43 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerformanceTestApp", "PerformanceTestApp\PerformanceTestApp.csproj", "{7A76F686-A695-4C6A-A778-7248433B347F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportGenerator", "ReportGenerator\ReportGenerator.csproj", "{7271358E-5B4B-473B-999C-3B896CB8C1F5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TrafficDriver", "TrafficDriver", "{EAF94DE7-2342-46C6-B82B-ABA97D773926}"
+	ProjectSection(SolutionItems) = preProject
+		TrafficDriver\Dockerfile = TrafficDriver\Dockerfile
+		TrafficDriver\locustfile.py = TrafficDriver\locustfile.py
+		TrafficDriver\requirements.txt = TrafficDriver\requirements.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{57237139-C663-4162-9527-985618E30C1C}"
+	ProjectSection(SolutionItems) = preProject
+		compare.example.yml = compare.example.yml
+		docker-compose.yml = docker-compose.yml
+		run-perf-comparison.py = run-perf-comparison.py
+		run-perf-test.py = run-perf-test.py
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7A76F686-A695-4C6A-A778-7248433B347F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A76F686-A695-4C6A-A778-7248433B347F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A76F686-A695-4C6A-A778-7248433B347F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A76F686-A695-4C6A-A778-7248433B347F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7271358E-5B4B-473B-999C-3B896CB8C1F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7271358E-5B4B-473B-999C-3B896CB8C1F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7271358E-5B4B-473B-999C-3B896CB8C1F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7271358E-5B4B-473B-999C-3B896CB8C1F5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

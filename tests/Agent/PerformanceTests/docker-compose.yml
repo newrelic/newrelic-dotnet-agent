@@ -15,6 +15,12 @@
 #   NEW_RELIC_LICENSE_KEY   License key for the target New Relic account
 #   NEW_RELIC_APP_NAME      Application name shown in New Relic
 #   NEW_RELIC_HOST          New Relic collector host (e.g. collector.newrelic.com)
+#
+# Optional extra environment variables (injected via env_file):
+#
+#   extra.env               Written by run-perf-test.sh from --env NAME=VALUE args.
+#                           Keys in this file are overridden by the explicit
+#                           'environment' block below if the same name appears there.
 
 services:
   testapp:
@@ -25,6 +31,8 @@ services:
       args:
         DOTNET_VERSION: ${DOTNET_VERSION:-10.0}
     image: perf-testapp
+    env_file:
+      - ./extra.env
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       CORECLR_ENABLE_PROFILING: ${CORECLR_ENABLE_PROFILING:-0}
@@ -34,7 +42,6 @@ services:
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
       NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-dotnet-agent-perf-test}
       NEW_RELIC_HOST: ${NEW_RELIC_HOST:-collector.newrelic.com}
-      NEW_RELIC_LOG_LEVEL: ${NEW_RELIC_LOG_LEVEL:-info}
       NEW_RELIC_LOG_DIRECTORY: /app/logs
     volumes:
       # The ":ro" at the end of the volume mapping makes the mount read-only inside the container.
@@ -68,9 +75,11 @@ services:
       -r ${LOCUST_SPAWN_RATE:-2}
       --run-time ${TEST_DURATION:-2m}
       --csv /results/locust
+      --logfile /logs/locust.log
       --exit-code-on-error 0
     volumes:
       - ./results:/results
+      - ./logs:/logs
     networks:
       - perfnet
 
