@@ -232,6 +232,7 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ]; then
             # Find the most recent successful all_solutions.yml run triggered by schedule
             NIGHTLY_RUN_ID=$(gh run list \
+              --repo "${{ github.repository }}" \
               --workflow all_solutions.yml \
               --event schedule \
               --status success \
