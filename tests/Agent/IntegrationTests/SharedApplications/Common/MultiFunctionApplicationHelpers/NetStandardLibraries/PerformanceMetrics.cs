@@ -35,10 +35,12 @@ public static class PerformanceMetrics
         // We need atleast one known GC invocation to verify our GC metrics.
         GC.Collect();
 
-        // Gen0-only collections ensure the GCSamplerV2's per-generation counting
-        // (which subtracts higher-gen counts from lower-gen counts) reports non-zero
-        // Gen0 collections. Without these, a full GC.Collect() increments all generation
-        // counters equally, and the subtraction can yield zero on fast-starting processes.
+        // GCSamplerV2 computes Gen0-only collections as: raw Gen0 count - raw Gen1 count
+        // (see ImmutableGCSample). The full GC.Collect() above increments both Gen0 and
+        // Gen1 raw counters by 1, so the Gen0-only count is 1 - 1 = 0. These two
+        // Gen0-only collections each increment the raw Gen0 counter without affecting
+        // Gen1, bringing it to (1+2) - 1 = 2 and ensuring the test sees a non-zero
+        // Gen0 metric.
         GC.Collect(0);
         GC.Collect(0);
 
