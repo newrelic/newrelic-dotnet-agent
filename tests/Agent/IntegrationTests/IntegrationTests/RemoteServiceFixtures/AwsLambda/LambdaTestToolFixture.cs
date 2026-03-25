@@ -78,8 +78,12 @@ public class LambdaTestToolFixture : RemoteApplicationFixture
 
     private void WarmUpTestTool()
     {
+        const int maxAttempts = 5;
 
-        for (var attempt = 1; attempt <= 3; attempt++)
+        // Give the tool a moment to start listening before the first probe
+        Thread.Sleep(TimeSpan.FromSeconds(5));
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
             try
             {
@@ -93,7 +97,7 @@ public class LambdaTestToolFixture : RemoteApplicationFixture
             catch (Exception e)
             {
                 TestLogger?.WriteLine($"Unable to warm up lambda test tool during attempt {attempt}. Exception: {e}");
-                if (attempt == 3)
+                if (attempt == maxAttempts)
                 {
                     // Halt the test because the test tool was unable to start
                     throw;

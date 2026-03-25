@@ -74,7 +74,7 @@ public class HighSecurityModeDisabled : NewRelicIntegrationTest<RemoteServiceFix
 
         var displayHost = _fixture.AgentLog.GetConnectData().DisplayHost;
         var getDataTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/Query");
-        var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
+        var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/Query");
         var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
         var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
         var firstErrorEvent = errorEvents.FirstOrDefault();

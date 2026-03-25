@@ -3,7 +3,6 @@
 
 
 using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -84,7 +83,7 @@ public class AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTests : NewRelicInt
         };
 
 
-        var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
+        var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/Home/Query/{data}");
         var getDataTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/Home/Query/{data}");
         var getExceptionTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/Home/ThrowException");
 
