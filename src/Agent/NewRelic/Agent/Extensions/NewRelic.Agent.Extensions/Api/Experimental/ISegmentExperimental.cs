@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+
 namespace NewRelic.Agent.Api.Experimental;
 
 /// <summary>
@@ -54,4 +56,6 @@ public interface ISegmentExperimental
     /// Will be true if a relative end time has been set on the segment.  In most situations, this is only set when a segment is ended.
     /// </summary>
     bool IsDone { get; }
+
+    bool SetServerDetailsForGrpcActivity(Uri uri);
 }

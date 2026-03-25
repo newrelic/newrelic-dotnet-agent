@@ -40,12 +40,10 @@ public abstract class OpenTelemetryStressTestsBase<TFixture> : NewRelicIntegrati
                 _fixture.TestLogger.WriteLine($"Agent Log Path: {_fixture.AgentLog?.FilePath}");
                 _fixture.AgentLog.WaitForLogLine(AgentLogFile.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(2));
 
-                // Wait for workload to complete - give more time for all metrics to be collected
-                _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(5));
-
-                // Add extra delay to ensure all metrics are exported
-                // Increased from 30 to 45 seconds for slower CI environments
-                System.Threading.Thread.Sleep(TimeSpan.FromSeconds(45));
+                // Wait for at least 3 OTLP exports (every 5s) to ensure sufficient metric data.
+                // This replaces a 60s analytic_event_data wait + 45s Thread.Sleep that added
+                // ~105s of unnecessary delay.
+                _fixture.AgentLog.WaitForLogLines(AgentLogFile.OtlpMetricsExportedLogLineRegex, TimeSpan.FromMinutes(2), 3);
 
                 // Don't specify exact count - just get what's available with a reasonable max
                 _otlpSummaries = _fixture.GetCollectedOTLPMetrics(count: 1000);

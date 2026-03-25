@@ -211,6 +211,26 @@ public class RuntimeNewRelicActivityTests
         Assert.That(result, Is.Null);
     }
 
+    [Test]
+    public void GetTag_Tests()
+    {
+        // Arrange
+        Mock.Arrange(() => _mockActivity.GetTagItem("keyA")).Returns("valueA");
+        Mock.Arrange(() => _mockActivity.GetTagItem("keyB")).Returns((object)null);
+        var runtimeActivity = new RuntimeNewRelicActivity(_mockActivity);
+        var nullRuntimeActivity = new RuntimeNewRelicActivity(null);
+
+        // Act
+        var resultA = runtimeActivity.GetTag("keyA");
+        var resultB = runtimeActivity.GetTag("keyB");
+        var nullResult = nullRuntimeActivity.GetTag("keyA");
+
+        // Assert
+        Assert.That(resultA, Is.EqualTo("valueA"));
+        Assert.That(resultB, Is.Null);
+        Assert.That(nullResult, Is.Null);
+    }
+
     // Mock classes to replace dynamic
     public class ActivityMock
     {
@@ -224,6 +244,8 @@ public class RuntimeNewRelicActivityTests
         public virtual void Start() { }
         public virtual void Stop() { }
         public virtual void Dispose() { }
+        public virtual ActivityMock AddTag(string key, object value) { return this; }
+        public virtual object GetTagItem(string key) { return null; }
     }
 
     public class SpanIdMock

@@ -45,7 +45,6 @@ Install first:
 Install second:
 
 * IIS-ApplicationDevelopment
-* IIS-ASPNET45
 * IIS-CommonHttpFeatures
 * IIS-DefaultDocument
 * IIS-DirectoryBrowsing
@@ -63,6 +62,7 @@ Install second:
 * IIS-StaticContent
 * IIS-WebServerManagementTools
 * IIS-WebServerRole
+* IIS-ASPNET45
 * MSMQ-Container
 * MSMQ-Multicast
 * MSMQ-Server
@@ -77,7 +77,6 @@ Full Powershell Script for convenience:
 Enable-WindowsOptionalFeature -Online -FeatureName  IIS-WebServer
 Enable-WindowsOptionalFeature -Online -FeatureName  IIS-NetFxExtensibility45
 Enable-WindowsOptionalFeature -Online -FeatureName  IIS-ApplicationDevelopment
-Enable-WindowsOptionalFeature -Online -FeatureName  IIS-ASPNET45
 Enable-WindowsOptionalFeature -Online -FeatureName  IIS-CommonHttpFeatures
 Enable-WindowsOptionalFeature -Online -FeatureName  IIS-DefaultDocument
 Enable-WindowsOptionalFeature -Online -FeatureName  IIS-DirectoryBrowsing
@@ -102,6 +101,7 @@ Enable-WindowsOptionalFeature -Online -FeatureName  MSMQ-Triggers
 Enable-WindowsOptionalFeature -Online -FeatureName  MSRDC-Infrastructure
 Enable-WindowsOptionalFeature -Online -FeatureName  WCF-Services45
 Enable-WindowsOptionalFeature -Online -FeatureName  WCF-TCP-PortSharing45
+Enable-WindowsOptionalFeature -Online -FeatureName  IIS-ASPNET45
 ```
 
 #### Trusting the .NET SDK Development SSL Certificate

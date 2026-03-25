@@ -288,6 +288,11 @@ namespace Agent.Extensions.Tests.Helpers
         }
 
         public bool IsDone { get; }
+
+        public bool SetServerDetailsForGrpcActivity(Uri uri)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 
