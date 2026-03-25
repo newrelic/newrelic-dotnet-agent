@@ -31,7 +31,7 @@ class NLogExtensionsLoggingAdapter : ILoggingAdapter
         logger.LogInformation(message);
     }
 
-    public void Info(string message, Dictionary<string, object> context)
+    public void InfoWithContext(string message, Dictionary<string, object> context)
     {
         using (logger.BeginScope(context))
         {
@@ -42,6 +42,11 @@ class NLogExtensionsLoggingAdapter : ILoggingAdapter
     public void InfoWithParam(string message, object param)
     {
         logger.LogInformation(message, param);
+    }
+
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        logger.LogInformation(messageTemplate, args);
     }
 
     public void Warn(string message)

@@ -37,7 +37,7 @@ class SerilogLoggingWebAdapter : ILoggingAdapter
     {
         _ = _client.GetStringAsync(_uriBase + "test?logLevel=INFO&message=" + message).Result;
     }
-    public void Info(string message, Dictionary<string, object> context)
+    public void InfoWithContext(string message, Dictionary<string, object> context)
     {
         var contextString = string.Join(", ", context.Select(c => c.Key + "=" + c.Value));
 
@@ -45,6 +45,10 @@ class SerilogLoggingWebAdapter : ILoggingAdapter
     }
 
     public void InfoWithParam(string message, object param)
+    {
+        throw new NotImplementedException();
+    }
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
     {
         throw new NotImplementedException();
     }

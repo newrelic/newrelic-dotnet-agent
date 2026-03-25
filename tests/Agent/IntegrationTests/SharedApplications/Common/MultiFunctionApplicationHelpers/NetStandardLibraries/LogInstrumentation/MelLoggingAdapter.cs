@@ -12,11 +12,11 @@ using Serilog.Formatting.Json;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation;
 
-class MicrosoftLoggingLoggingAdapter : ILoggingAdapter
+class MelLoggingAdapter : ILoggingAdapter
 {
     private static Microsoft.Extensions.Logging.ILogger logger;
 
-    public MicrosoftLoggingLoggingAdapter()
+    public MelLoggingAdapter()
     {
     }
 
@@ -30,7 +30,7 @@ class MicrosoftLoggingLoggingAdapter : ILoggingAdapter
         logger.LogInformation(message);
     }
 
-    public void Info(string message, Dictionary<string, object> context)
+    public void InfoWithContext(string message, Dictionary<string, object> context)
     {
         using (logger.BeginScope(context))
         {
@@ -43,9 +43,9 @@ class MicrosoftLoggingLoggingAdapter : ILoggingAdapter
         logger.LogInformation(message, param);
     }
 
-    public void InfoWithStructuredArgs(string name, int id)
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
     {
-        logger.LogInformation("Person {Name} has id {Id}", name, id);
+        logger.LogInformation(messageTemplate, args);
     }
 
     public void Warn(string message)

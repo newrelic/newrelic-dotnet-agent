@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
+using Newtonsoft.Json;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation;
 
@@ -36,7 +37,7 @@ public class LoggingTester
                 break;
             case "MICROSOFTLOGGING":
 #if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
-                    logger = new MicrosoftLoggingLoggingAdapter();
+                    logger = new MelLoggingAdapter();
 #endif
                 break;
             case "DUMMYMEL":
@@ -133,7 +134,7 @@ public class LoggingTester
                 _logs[key].Debug(message);
                 break;
             case "INFO":
-                _logs[key].Info(message, contextDict);
+                _logs[key].InfoWithContext(message, contextDict);
                 break;
             case "WARN":
             case "WARNING":
@@ -208,19 +209,23 @@ public class LoggingTester
         CreateSingleLogMessageWithParam(message);
     }
 
+# if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public static void CreateSingleLogMessageWithStructuredArgs(string name, string id)
+    public static void CreateSingleLogMessageWithStructuredArgs(string messageTemplate, string argString)
     {
+        // Args is a string of comma separated values that will be parsed into an object array to be passed as structured args.
+        // This is done to work around the fact that we can only pass strings from the integration test methods
+
+        var args = argString.Split(',').Select(a => (object)a).ToArray();
+
         _logs.Values.ToList().ForEach(l =>
         {
-            if (l is MicrosoftLoggingLoggingAdapter melAdapter)
-            {
-                melAdapter.InfoWithStructuredArgs(name, int.Parse(id));
-            }
+            l.InfoWithStructuredArgs(messageTemplate, args);
         });
     }
+#endif
 
     [LibraryMethod]
     [Transaction]
@@ -230,4 +235,13 @@ public class LoggingTester
         _logs.Values.ToList().ForEach(l => l.LogMessageInNestedScopes());
     }
 
+}
+
+public class Person
+{
+    [JsonProperty("name", NullValueHandling = NullValueHandling.Include)]
+    public string Name { get; set; }
+
+    [JsonProperty("id", NullValueHandling = NullValueHandling.Include)]
+    public int? Id { get; set; }
 }

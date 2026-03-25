@@ -29,7 +29,7 @@ class Log4NetLoggingAdapter : ILoggingAdapter
         _log.Info(message);
     }
 
-    public void Info(string message, Dictionary<string, object> context)
+    public void InfoWithContext(string message, Dictionary<string, object> context)
     {
         var logEventData = new LoggingEventData()
         {
@@ -59,6 +59,11 @@ class Log4NetLoggingAdapter : ILoggingAdapter
     public void InfoWithParam(string message, object param)
     {
         _log.InfoFormat(message, param);
+    }
+
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        _log.InfoFormat(messageTemplate, args);
     }
 
     public void Warn(string message)

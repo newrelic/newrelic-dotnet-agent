@@ -31,7 +31,7 @@ class SerilogExtensionsLoggingAdapter : ILoggingAdapter
         _logger.LogInformation(message);
     }
 
-    public void Info(string message, Dictionary<string, object> context)
+    public void InfoWithContext(string message, Dictionary<string, object> context)
     {
         using (_logger.BeginScope(context))
         {
@@ -42,6 +42,11 @@ class SerilogExtensionsLoggingAdapter : ILoggingAdapter
     public void InfoWithParam(string message, object param)
     {
         _logger.LogInformation(message, param);
+    }
+
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        _logger.LogInformation(messageTemplate, args);
     }
 
     public void Warn(string message)

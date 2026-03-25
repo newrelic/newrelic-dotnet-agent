@@ -33,7 +33,7 @@ class SitecoreLoggingAdapter : ILoggingAdapter
         _log.Info(message);
     }
 
-    public void Info(string message, Dictionary<string, object> context)
+    public void InfoWithContext(string message, Dictionary<string, object> context)
     {
         var logEventData = new LoggingEventData()
         {
@@ -64,6 +64,12 @@ class SitecoreLoggingAdapter : ILoggingAdapter
         //_log.InfoFormat(message, param);
         throw new System.NotImplementedException();
     }
+
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        throw new System.NotImplementedException();
+    }
+
 
     public void Warn(string message)
     {

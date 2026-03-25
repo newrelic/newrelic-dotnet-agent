@@ -30,7 +30,7 @@ public class DummyMELAdapter : ILoggingAdapter
 
     public void Info(string message) => _logger.LogInformation(message);
 
-    public void Info(string message, Dictionary<string, object> context)
+    public void InfoWithContext(string message, Dictionary<string, object> context)
     {
         using (_logger.BeginScope(context))
         {
@@ -40,6 +40,11 @@ public class DummyMELAdapter : ILoggingAdapter
     public void InfoWithParam(string message, object param)
     {
         _logger.LogInformation(message, param);
+    }
+
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        _logger.LogInformation(messageTemplate, args);
     }
 
     public void Warn(string message) => _logger.LogWarning(message);

@@ -27,7 +27,7 @@ class NLogLoggingAdapter : ILoggingAdapter
         _log.Info(message);
     }
 
-    public void Info(string message, Dictionary<string, object> context)
+    public void InfoWithContext(string message, Dictionary<string, object> context)
     {
         LogEventInfo logEvent = new LogEventInfo(LogLevel.Info, null, message);
         foreach (var kvp in context)
@@ -40,6 +40,11 @@ class NLogLoggingAdapter : ILoggingAdapter
     public void InfoWithParam(string message, object param)
     {
         _log.Info(message, param);
+    }
+
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        _log.Info(messageTemplate, args);
     }
 
     public void Warn(string message)

@@ -30,7 +30,7 @@ class SerilogLoggingAdapter : ILoggingAdapter
         _log.Information(message);
     }
 
-    public void Info(string message, Dictionary<string, object> context)
+    public void InfoWithContext(string message, Dictionary<string, object> context)
     {
         var loggerConfig = new LoggerConfiguration();
 
@@ -47,6 +47,10 @@ class SerilogLoggingAdapter : ILoggingAdapter
     public void InfoWithParam(string message, object param)
     {
         _log.Information(message, param);
+    }
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        _log.Information(messageTemplate, args);
     }
 
     public void Warn(string message)

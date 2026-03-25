@@ -10,8 +10,9 @@ interface ILoggingAdapter
 {
     public void Debug (string message);
     public void Info(string message);
-    public void Info(string message, Dictionary<string, object> context);
+    public void InfoWithContext(string message, Dictionary<string, object> context);
     public void InfoWithParam(string message, object param);
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args);
 
     public void Warn(string message);
     public void Error(Exception exception);
