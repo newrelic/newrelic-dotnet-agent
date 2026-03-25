@@ -778,7 +778,7 @@ jobs:
           # with hard-coded object names (e.g., MsSql tests all query NewRelic.dbo.TeamMembers
           # with constant values, NServiceBus5 tests share MSMQ queues). To parallelize these,
           # each test fixture would need isolated resources (per-test databases/tables/queues).
-          $noParallelNamespaces = @("MsSql", "NServiceBus5")
+          $noParallelNamespaces = @("MsSql", "NServiceBus", "NServiceBus5")
           $parallelize = $noParallelNamespaces -notcontains "${{ matrix.namespace }}"
           $json = Get-Content "${{ env.unbounded_tests_path }}/xunit.runner.json" | ConvertFrom-Json
           $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty
