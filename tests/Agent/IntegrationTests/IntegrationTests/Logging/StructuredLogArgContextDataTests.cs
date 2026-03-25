@@ -21,7 +21,8 @@ public abstract class StructuredLogArgContextDataTestsBase<TFixture> : NewRelicI
 
     private const string ExpectedName = "TestUser";
     private const string ExpectedId = "12345";
-    private const string ExpectedMessage = "Person TestUser has id 12345";
+    private const string MessageTemplate = "Person{Name}HasId={Id}";
+    private const string ExpectedMessage = "PersonTestUserHasId=12345";
 
     public StructuredLogArgContextDataTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
@@ -31,7 +32,7 @@ public abstract class StructuredLogArgContextDataTestsBase<TFixture> : NewRelicI
 
         _fixture.AddCommand($"LoggingTester SetFramework MicrosoftLogging {RandomPortGenerator.NextPort()}");
         _fixture.AddCommand($"LoggingTester Configure");
-        _fixture.AddCommand($"LoggingTester CreateSingleLogMessageWithStructuredArgs {ExpectedName} {ExpectedId}");
+        _fixture.AddCommand($"LoggingTester CreateSingleLogMessageWithStructuredArgs {MessageTemplate} {string.Join(",", ExpectedName, ExpectedId)}");
 
         _fixture.AddActions
         (
@@ -59,12 +60,12 @@ public abstract class StructuredLogArgContextDataTestsBase<TFixture> : NewRelicI
         {
             new Assertions.ExpectedLogLine
             {
-                Level = "INFO",
+                Level = LogUtils.GetLevelName(LoggingFramework.MicrosoftLogging, "INFO"),
                 LogMessage = ExpectedMessage,
                 Attributes = new Dictionary<string, string>
                 {
-                    { "Name", ExpectedName },
-                    { "Id", ExpectedId },
+                    { "context.Name", ExpectedName },
+                    { "context.Id", ExpectedId },
                 }
             }
         };
