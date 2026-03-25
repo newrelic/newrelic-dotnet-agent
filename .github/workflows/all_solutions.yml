@@ -737,11 +737,13 @@ jobs:
             netstat -no
           }
 
-          # Parallelization is controlled by workflow input (default: enabled).
-          # Pre-built test apps (NR_DOTNET_TEST_PREBUILT_APPS=1) eliminate the concurrent
-          # dotnet publish file-lock collisions that previously required disabling parallelization.
-          $parallelize = "${{ inputs.parallelize_integration_tests }}"
-          if ($parallelize -eq "" -or $parallelize -eq "true") { $parallelize = $true } else { $parallelize = $false }
+          # Most unbounded tests can run in parallel with pre-built test apps.
+          # Some namespaces must remain serial because they use shared external infrastructure
+          # with hard-coded object names (e.g., MsSql tests all query NewRelic.dbo.TeamMembers
+          # with constant values, NServiceBus5 tests share MSMQ queues). To parallelize these,
+          # each test fixture would need isolated resources (per-test databases/tables/queues).
+          $noParallelNamespaces = @("MsSql", "NServiceBus5")
+          $parallelize = $noParallelNamespaces -notcontains "${{ matrix.namespace }}"
           $json = Get-Content "${{ env.unbounded_tests_path }}/xunit.runner.json" | ConvertFrom-Json
           $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty
           $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
