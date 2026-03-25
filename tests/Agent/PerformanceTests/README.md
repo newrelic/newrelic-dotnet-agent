@@ -9,7 +9,7 @@ resulting throughput, response-time percentiles, CPU usage, and memory usage.
 ```mermaid
 flowchart TD
     subgraph Docker["Docker Compose (perf network)"]
-        TA["PerformanceTestApp\n(ASP.NET Core, :8080)\n─────────────────\n/simple  /cpu  /io\n/nested  /collection\n/health"]
+        TA["PerformanceTestApp\n(ASP.NET Core, :8080)\n─────────────────\n/simple  /nested  /health\n/mongo/crud  /redis/crud\n/rabbitmq/publish  /rabbitmq/consume"]
         TD["TrafficDriver\n(Locust)\n─────────────────\nWeighted endpoint mix\nError-rate threshold"]
         TD -- "HTTP requests" --> TA
     end
@@ -31,7 +31,7 @@ flowchart TD
 
 | Component | Technology | Purpose |
 |---|---|---|
-| **PerformanceTestApp** | ASP.NET Core (.NET 10) | Synthetic workload server — 6 endpoints exercising simple JSON, CPU work, async I/O, nested async, collection serialisation, and health |
+| **PerformanceTestApp** | ASP.NET Core (.NET 10) | Synthetic workload server — endpoints exercising simple JSON, nested async, MongoDB CRUD, Redis CRUD, RabbitMQ publish/consume, and health; uses Serilog for structured log forwarding |
 | **TrafficDriver** | Python / Locust | Generates a weighted mix of requests, enforces a <1 % error-rate threshold, writes Locust CSV result files |
 | **ReportGenerator** | .NET 10 console app | Post-run analysis: reads Locust and Docker stats CSVs, generates ScottPlot PNG charts and a `summary.md` |
 | **run-perf-test.py** | Python | Orchestrates a single test run: writes `extra.env`, builds and starts Docker Compose, polls health, collects Docker stats, captures logs, validates results, prints a Markdown summary |
@@ -203,6 +203,14 @@ Example: `XXXXXXXXXXXX,collector.newrelic.com`
 
 The pattern of running performance tests in Docker and collecting performance metrics at the container level was initially established by the PHP agent team's [Soak Tests](https://github.com/newrelic/php-agent-testing/tree/main/soak-tests) and continued by the Ruby agent team's [PerfVerse](https://github.com/newrelic/newrelic-ruby-agent/tree/dev/test/perfverse).  Those teams determined that container-level metrics were the most stable and repeatable option.
 
+### Why the particular mix of services and clients?  For that matter, why test .NET Core on Linux as opposed to .NET Framework on Windows?
+
+* As of March 2026, our information (from BMDS) about what our customers are using shows that:
+  * `.NET Core on Linux` is the most popular combination of CLR type and platform.
+  * `StackExchange.Redis` and `MongoDB.Client` are the top two datastore clients (but our instrumentation for `StackExchange.Redis` works fundamentally quite differently from the other datastore client wrappers, so it felt appropriate to include both)
+  * `RabbitMQ` is the most popular message broker - also, this exercises the distributed tracing code
+  * `Serilog` in combination with `Microsoft.Extensions.Logging` is the most popular logging framework
+
 ### Why Python?
 
-`bash` was initially used for the initial workflow to run a single performance test, which worked perfectly well in GitHub Actions, but caused complications for .NET agent team members with Windows development systems.  Some of us have `git-bash` installed and use it daily, some do not.  There are particular problems caused by how string that represent paths (e.g. `C:\workspace\newrelic-dotnet-agent`) are interpreted by either `git-bash` or the `bash` that runs in WSL2, and further problems caused by how Docker interprets those paths when mapping host paths into containers. Using python, which both readily available in GitHub Actions runners *and* a requirement of one of our integration tests (as well as being Claude Code's favorite tool for data analysis) bypasses those issues.  Also, we wanted to use a YAML config file for the local comparison-and-report tool, and `bash` doesn't have a standard way to parse YAML.  Finally, writing all of these scripts in .NET itself would have been overkill.  
+`bash` was initially used for the initial workflow to run a single performance test, which worked perfectly well in GitHub Actions, but caused complications for .NET agent team members with Windows development systems.  Some of us have `git-bash` installed and use it daily, some do not.  There are particular problems caused by how strings that represent paths (e.g. `C:\workspace\newrelic-dotnet-agent`) are interpreted by either `git-bash` or the `bash` that runs in WSL2, and further problems caused by how Docker interprets those paths when mapping host paths into containers. Using python, which is both readily available in GitHub Actions runners *and* a requirement of one of our integration tests (as well as being Claude Code's favorite tool for data analysis) bypasses those issues.  Also, we wanted to use a YAML config file for the local comparison-and-report tool, and `bash` doesn't have a standard way to parse YAML.  Finally, writing all of these scripts in .NET itself would have been overkill.  
