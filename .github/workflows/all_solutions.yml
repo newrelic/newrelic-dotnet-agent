@@ -231,10 +231,14 @@ jobs:
           # Pre-publish .NET Core test apps so test fixtures can copy pre-built output
           # instead of invoking dotnet publish at runtime. This eliminates file-lock
           # collisions on shared dependency obj/ directories during parallel test execution.
-          # We skip class libraries (OutputType=Library or netstandard-only targets).
+          # We skip class libraries and Azure Function apps (func.exe requires the original
+          # build output structure, not RID-specific publish output).
           $runtime = "win-x64"
           $searchPaths = @("Applications", "SharedApplications")
           $basePath = "${{ github.workspace }}\tests\Agent\IntegrationTests"
+          # Azure Function apps are incompatible with pre-publish: func.exe start --no-build
+          # expects framework-dependent build output, not RID-specific publish output
+          $skipProjects = @("AzureFunctionApplication", "AzureFunctionInProcApplication")
           $published = 0; $skipped = 0; $failed = 0
           foreach ($searchPath in $searchPaths) {
             $fullPath = Join-Path $basePath $searchPath
@@ -242,8 +246,9 @@ jobs:
             $projects = Get-ChildItem -Path $fullPath -Filter "*.csproj" -Recurse
             foreach ($project in $projects) {
               $content = Get-Content $project.FullName -Raw
-              # Skip explicit class libraries
+              # Skip explicit class libraries and excluded projects
               if ($content -match '<OutputType>\s*Library\s*</OutputType>') { $skipped++; continue }
+              if ($skipProjects -contains $project.BaseName) { $skipped++; continue }
               if ($content -match '<TargetFrameworks?>(.*?)</TargetFrameworks?>') {
                 $tfms = $Matches[1] -split ';'
                 foreach ($tfm in $tfms) {
