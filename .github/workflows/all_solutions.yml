@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      parallelize_integration_tests:
+        description: 'Enable parallel integration test execution (requires pre-built test apps)'
+        required: false
+        type: boolean
+        default: true
 
   schedule:
     - cron: "0 9 * * 1-5"
@@ -221,6 +226,36 @@ jobs:
           MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
         shell: powershell
 
+      - name: Pre-publish .NET Core test apps
+        run: |
+          # Pre-publish .NET Core test apps so test fixtures can copy pre-built output
+          # instead of invoking dotnet publish at runtime. This eliminates file-lock
+          # collisions on shared dependency obj/ directories during parallel test execution.
+          $runtime = "win-x64"
+          $searchPaths = @("Applications", "SharedApplications")
+          $basePath = "${{ github.workspace }}\tests\Agent\IntegrationTests"
+          foreach ($searchPath in $searchPaths) {
+            $fullPath = Join-Path $basePath $searchPath
+            if (-not (Test-Path $fullPath)) { continue }
+            $projects = Get-ChildItem -Path $fullPath -Filter "*.csproj" -Recurse
+            foreach ($project in $projects) {
+              $content = Get-Content $project.FullName -Raw
+              if ($content -match '<TargetFrameworks?>(.*?)</TargetFrameworks?>') {
+                $tfms = $Matches[1] -split ';'
+                foreach ($tfm in $tfms) {
+                  if ($tfm -match '^net\d+\.\d+$') {
+                    Write-Host "Pre-publishing $($project.Name) for $tfm/$runtime"
+                    dotnet publish --no-restore --configuration Release --runtime $runtime --framework $tfm $project.FullName
+                    if ($LASTEXITCODE -ne 0) {
+                      Write-Warning "Failed to pre-publish $($project.Name) for $tfm/$runtime (exit code $LASTEXITCODE). Tests will fall back to runtime publish."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        shell: powershell
+
       - name: Archive Artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
@@ -272,6 +307,36 @@ jobs:
           dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
+        shell: powershell
+
+      - name: Pre-publish .NET Core test apps
+        run: |
+          # Pre-publish .NET Core test apps so test fixtures can copy pre-built output
+          # instead of invoking dotnet publish at runtime. This eliminates file-lock
+          # collisions on shared dependency obj/ directories during parallel test execution.
+          $runtime = "win-x64"
+          $searchPaths = @("UnboundedApplications", "SharedApplications")
+          $basePath = "${{ github.workspace }}\tests\Agent\IntegrationTests"
+          foreach ($searchPath in $searchPaths) {
+            $fullPath = Join-Path $basePath $searchPath
+            if (-not (Test-Path $fullPath)) { continue }
+            $projects = Get-ChildItem -Path $fullPath -Filter "*.csproj" -Recurse
+            foreach ($project in $projects) {
+              $content = Get-Content $project.FullName -Raw
+              if ($content -match '<TargetFrameworks?>(.*?)</TargetFrameworks?>') {
+                $tfms = $Matches[1] -split ';'
+                foreach ($tfm in $tfms) {
+                  if ($tfm -match '^net\d+\.\d+$') {
+                    Write-Host "Pre-publishing $($project.Name) for $tfm/$runtime"
+                    dotnet publish --no-restore --configuration Release --runtime $runtime --framework $tfm $project.FullName
+                    if ($LASTEXITCODE -ne 0) {
+                      Write-Warning "Failed to pre-publish $($project.Name) for $tfm/$runtime (exit code $LASTEXITCODE). Tests will fall back to runtime publish."
+                    }
+                  }
+                }
+              }
+            }
+          }
         shell: powershell
 
       - name: Archive Artifacts
@@ -361,6 +426,7 @@ jobs:
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      NR_DOTNET_TEST_PREBUILT_APPS: 1 # use pre-published test app output instead of dotnet publish at runtime
       azure_func_exe_path: C:\ProgramData\chocolatey\lib\azure-functions-core-tools\tools\func.exe
       NEW_RELIC_AZURE_FUNCTION_LOG_LEVEL_OVERRIDE: 1 # enables profiler debug logs when testing an azure function
       # Set an environment variable that the tests will use to set the application name.
@@ -452,14 +518,14 @@ jobs:
 
           Write-Host "Run tests"
 
-          # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
+          # Parallelization is controlled by workflow input (default: enabled).
+          # Pre-built test apps (NR_DOTNET_TEST_PREBUILT_APPS=1) eliminate the concurrent
+          # dotnet publish file-lock collisions that previously required disabling parallelization.
+          $parallelize = "${{ inputs.parallelize_integration_tests }}"
+          if ($parallelize -eq "" -or $parallelize -eq "true") { $parallelize = $true } else { $parallelize = $false }
           $json = Get-Content "${{ env.integration_tests_path }}/xunit.runner.json" | ConvertFrom-Json
-          $json | Add-Member -Name "parallelizeAssembly" -Value $false -MemberType NoteProperty
-          $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
-          # if ("${{ matrix.namespace }}" -like "Logging.*" ) {
-          #   $json.parallelizeAssembly = $true
-          #   $json.parallelizeTestCollections = $true
-          # }
+          $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty
+          $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
           $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
           ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
@@ -565,6 +631,7 @@ jobs:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
       unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net10.0
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      NR_DOTNET_TEST_PREBUILT_APPS: 1 # use pre-published test app output instead of dotnet publish at runtime
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
       # Set an environment variable that the tests will use to set the application name.
@@ -652,10 +719,14 @@ jobs:
             netstat -no
           }
 
-          # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
+          # Parallelization is controlled by workflow input (default: enabled).
+          # Pre-built test apps (NR_DOTNET_TEST_PREBUILT_APPS=1) eliminate the concurrent
+          # dotnet publish file-lock collisions that previously required disabling parallelization.
+          $parallelize = "${{ inputs.parallelize_integration_tests }}"
+          if ($parallelize -eq "" -or $parallelize -eq "true") { $parallelize = $true } else { $parallelize = $false }
           $json = Get-Content "${{ env.unbounded_tests_path }}/xunit.runner.json" | ConvertFrom-Json
-          $json | Add-Member -Name "parallelizeAssembly" -Value $false -MemberType NoteProperty
-          $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
+          $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty
+          $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
           $json | ConvertTo-Json | Out-File "${{ env.unbounded_tests_path }}/xunit.runner.json"
 
           ${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
