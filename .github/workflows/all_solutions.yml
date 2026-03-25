@@ -263,6 +263,20 @@ jobs:
             }
           }
           Write-Host "Pre-publish complete: $published succeeded, $skipped skipped (libraries), $failed failed"
+
+          # Clean up intermediate RID-specific build artifacts to reduce artifact size.
+          # dotnet publish --runtime creates large intermediate files alongside the publish/
+          # subdirectory (including self-contained runtime copies). Only publish/ is needed.
+          $cleaned = 0
+          foreach ($searchPath in $searchPaths) {
+            $fullPath = Join-Path $basePath $searchPath
+            if (-not (Test-Path $fullPath)) { continue }
+            Get-ChildItem -Path $fullPath -Directory -Recurse -Filter $runtime | ForEach-Object {
+              Get-ChildItem -Path $_.FullName -Exclude "publish" | Remove-Item -Recurse -Force
+              $cleaned++
+            }
+          }
+          Write-Host "Cleaned intermediate build artifacts from $cleaned RID directories"
         shell: powershell
 
       - name: Archive Artifacts
@@ -355,6 +369,18 @@ jobs:
             }
           }
           Write-Host "Pre-publish complete: $published succeeded, $skipped skipped (libraries), $failed failed"
+
+          # Clean up intermediate RID-specific build artifacts to reduce artifact size.
+          $cleaned = 0
+          foreach ($searchPath in $searchPaths) {
+            $fullPath = Join-Path $basePath $searchPath
+            if (-not (Test-Path $fullPath)) { continue }
+            Get-ChildItem -Path $fullPath -Directory -Recurse -Filter $runtime | ForEach-Object {
+              Get-ChildItem -Path $_.FullName -Exclude "publish" | Remove-Item -Recurse -Force
+              $cleaned++
+            }
+          }
+          Write-Host "Cleaned intermediate build artifacts from $cleaned RID directories"
         shell: powershell
 
       - name: Archive Artifacts
