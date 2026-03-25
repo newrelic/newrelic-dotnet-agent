@@ -228,29 +228,31 @@ jobs:
 
       - name: Pre-publish .NET Core test apps
         run: |
-          # Pre-publish .NET Core executable test apps so test fixtures can copy pre-built
-          # output instead of invoking dotnet publish at runtime. This eliminates file-lock
+          # Pre-publish .NET Core test apps so test fixtures can copy pre-built output
+          # instead of invoking dotnet publish at runtime. This eliminates file-lock
           # collisions on shared dependency obj/ directories during parallel test execution.
+          # We skip class libraries (OutputType=Library or netstandard-only targets).
           $runtime = "win-x64"
           $searchPaths = @("Applications", "SharedApplications")
           $basePath = "${{ github.workspace }}\tests\Agent\IntegrationTests"
-          $published = 0; $failed = 0
+          $published = 0; $skipped = 0; $failed = 0
           foreach ($searchPath in $searchPaths) {
             $fullPath = Join-Path $basePath $searchPath
             if (-not (Test-Path $fullPath)) { continue }
             $projects = Get-ChildItem -Path $fullPath -Filter "*.csproj" -Recurse
             foreach ($project in $projects) {
               $content = Get-Content $project.FullName -Raw
-              # Only publish executable projects (not class libraries)
-              if ($content -notmatch '<OutputType>\s*(Exe|WinExe)\s*</OutputType>') { continue }
+              # Skip explicit class libraries
+              if ($content -match '<OutputType>\s*Library\s*</OutputType>') { $skipped++; continue }
               if ($content -match '<TargetFrameworks?>(.*?)</TargetFrameworks?>') {
                 $tfms = $Matches[1] -split ';'
                 foreach ($tfm in $tfms) {
                   if ($tfm -match '^net\d+\.\d+$') {
                     Write-Host "Pre-publishing $($project.Name) for $tfm/$runtime"
-                    dotnet publish --configuration Release --runtime $runtime --framework $tfm $project.FullName 2>&1 | Out-Null
+                    $output = dotnet publish --configuration Release --runtime $runtime --framework $tfm $project.FullName 2>&1
                     if ($LASTEXITCODE -ne 0) {
                       Write-Warning "Failed to pre-publish $($project.Name) for $tfm/$runtime"
+                      $output | Where-Object { $_ -match "error" } | ForEach-Object { Write-Host "  $_" }
                       $failed++
                     } else {
                       $published++
@@ -260,7 +262,7 @@ jobs:
               }
             }
           }
-          Write-Host "Pre-publish complete: $published succeeded, $failed failed (failures will fall back to runtime publish)"
+          Write-Host "Pre-publish complete: $published succeeded, $skipped skipped (libraries), $failed failed"
         shell: powershell
 
       - name: Archive Artifacts
@@ -318,29 +320,31 @@ jobs:
 
       - name: Pre-publish .NET Core test apps
         run: |
-          # Pre-publish .NET Core executable test apps so test fixtures can copy pre-built
-          # output instead of invoking dotnet publish at runtime. This eliminates file-lock
+          # Pre-publish .NET Core test apps so test fixtures can copy pre-built output
+          # instead of invoking dotnet publish at runtime. This eliminates file-lock
           # collisions on shared dependency obj/ directories during parallel test execution.
+          # We skip class libraries (OutputType=Library or netstandard-only targets).
           $runtime = "win-x64"
           $searchPaths = @("UnboundedApplications", "SharedApplications")
           $basePath = "${{ github.workspace }}\tests\Agent\IntegrationTests"
-          $published = 0; $failed = 0
+          $published = 0; $skipped = 0; $failed = 0
           foreach ($searchPath in $searchPaths) {
             $fullPath = Join-Path $basePath $searchPath
             if (-not (Test-Path $fullPath)) { continue }
             $projects = Get-ChildItem -Path $fullPath -Filter "*.csproj" -Recurse
             foreach ($project in $projects) {
               $content = Get-Content $project.FullName -Raw
-              # Only publish executable projects (not class libraries)
-              if ($content -notmatch '<OutputType>\s*(Exe|WinExe)\s*</OutputType>') { continue }
+              # Skip explicit class libraries
+              if ($content -match '<OutputType>\s*Library\s*</OutputType>') { $skipped++; continue }
               if ($content -match '<TargetFrameworks?>(.*?)</TargetFrameworks?>') {
                 $tfms = $Matches[1] -split ';'
                 foreach ($tfm in $tfms) {
                   if ($tfm -match '^net\d+\.\d+$') {
                     Write-Host "Pre-publishing $($project.Name) for $tfm/$runtime"
-                    dotnet publish --configuration Release --runtime $runtime --framework $tfm $project.FullName 2>&1 | Out-Null
+                    $output = dotnet publish --configuration Release --runtime $runtime --framework $tfm $project.FullName 2>&1
                     if ($LASTEXITCODE -ne 0) {
                       Write-Warning "Failed to pre-publish $($project.Name) for $tfm/$runtime"
+                      $output | Where-Object { $_ -match "error" } | ForEach-Object { Write-Host "  $_" }
                       $failed++
                     } else {
                       $published++
@@ -350,7 +354,7 @@ jobs:
               }
             }
           }
-          Write-Host "Pre-publish complete: $published succeeded, $failed failed (failures will fall back to runtime publish)"
+          Write-Host "Pre-publish complete: $published succeeded, $skipped skipped (libraries), $failed failed"
         shell: powershell
 
       - name: Archive Artifacts
