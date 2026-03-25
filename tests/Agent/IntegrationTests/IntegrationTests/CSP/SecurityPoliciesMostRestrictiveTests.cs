@@ -91,7 +91,7 @@ public class SecurityPoliciesMostRestrictiveTests : NewRelicIntegrationTest<Remo
 
         const string originalErrorMessage = "!Exception~Message!";
 
-        var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
+        var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/Query");
         var getDataTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/Query");
         var getExceptionTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/ThrowException");
 
