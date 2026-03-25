@@ -536,11 +536,16 @@ jobs:
 
           Write-Host "Run tests"
 
-          # Parallelization is controlled by workflow input (default: enabled).
-          # Pre-built test apps (NR_DOTNET_TEST_PREBUILT_APPS=1) eliminate the concurrent
-          # dotnet publish file-lock collisions that previously required disabling parallelization.
+          # Most integration tests can run in parallel with pre-built test apps.
+          # Some namespaces must remain serial because they use shared external tools
+          # that don't support concurrent instances (e.g., Azure Functions Core Tools
+          # func.exe crashes when multiple instances launch simultaneously due to shared
+          # state in storage emulator/lock files). To parallelize these, the shared tool
+          # contention would need to be resolved.
+          $noParallelNamespaces = @("AzureFunction")
           $parallelize = "${{ inputs.parallelize_integration_tests }}"
           if ($parallelize -eq "" -or $parallelize -eq "true") { $parallelize = $true } else { $parallelize = $false }
+          if ($noParallelNamespaces -contains "${{ matrix.namespace }}") { $parallelize = $false }
           $json = Get-Content "${{ env.integration_tests_path }}/xunit.runner.json" | ConvertFrom-Json
           $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty
           $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
