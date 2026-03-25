@@ -254,7 +254,7 @@ jobs:
                 foreach ($tfm in $tfms) {
                   if ($tfm -match '^net\d+\.\d+$') {
                     Write-Host "Pre-publishing $($project.Name) for $tfm/$runtime"
-                    $output = dotnet publish --configuration Release --runtime $runtime --framework $tfm --no-self-contained $project.FullName 2>&1
+                    $output = dotnet publish --configuration Release --runtime $runtime --framework $tfm $project.FullName 2>&1
                     if ($LASTEXITCODE -ne 0) {
                       Write-Warning "Failed to pre-publish $($project.Name) for $tfm/$runtime"
                       $output | Where-Object { $_ -match "error" } | ForEach-Object { Write-Host "  $_" }
@@ -360,7 +360,7 @@ jobs:
                 foreach ($tfm in $tfms) {
                   if ($tfm -match '^net\d+\.\d+$') {
                     Write-Host "Pre-publishing $($project.Name) for $tfm/$runtime"
-                    $output = dotnet publish --configuration Release --runtime $runtime --framework $tfm --no-self-contained $project.FullName 2>&1
+                    $output = dotnet publish --configuration Release --runtime $runtime --framework $tfm $project.FullName 2>&1
                     if ($LASTEXITCODE -ne 0) {
                       Write-Warning "Failed to pre-publish $($project.Name) for $tfm/$runtime"
                       $output | Where-Object { $_ -match "error" } | ForEach-Object { Write-Host "  $_" }
