@@ -1,6 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+// Microsoft.Extensions.Logging is only supported in .NET Core 2.1+ and .NET Framework 4.8+
+#if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
+#define MEL
+#endif
+
+#if NET10_0 || NET481_OR_GREATER
+#define MFALATEST
+#endif
 
 using System.Collections.Generic;
 using System.Linq;
@@ -24,46 +32,44 @@ public class LoggingTester
         ILoggingAdapter logger = null;
         switch (loggingFramework.ToUpper())
         {
+            // Logging frameworks available in all TFMs we build the ConsoleMF system for
             case "LOG4NET":
                 logger = new Log4NetLoggingAdapter();
-                break;
-            case "SERILOG":
-                logger = new SerilogLoggingAdapter();
-                break;
-            case "SERILOGWEB": // .NET 8.0+ ONLY
-#if NET10_0    
-                    logger = new SerilogLoggingWebAdapter(loggingPort);
-#endif
-                break;
-            case "MICROSOFTLOGGING":
-#if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
-                    logger = new MelLoggingAdapter();
-#endif
-                break;
-            case "DUMMYMEL":
-#if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
-                    logger = new DummyMELAdapter();
-#endif
                 break;
             case "NLOG":
                 logger = new NLogLoggingAdapter();
                 break;
-            case "SITECORE":
-#if NET48_OR_GREATER
-                    logger = new SitecoreLoggingAdapter();
-#endif
+            case "SERILOG":
+                logger = new SerilogLoggingAdapter();
+                break;
+            // Logging frameworks involving Microsoft.Extensions.Logging which is only supported in .NET Core 2.1+ and .NET Framework 4.8+
+#if MEL
+            case "MICROSOFTLOGGING":
+                logger = new MelLoggingAdapter();
+                break;
+            case "DUMMYMEL":
+                logger = new DummyMELAdapter();
                 break;
             case "SERILOGEL":
-#if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
-                    logger = new SerilogExtensionsLoggingAdapter();
-#endif
+                logger = new SerilogExtensionsLoggingAdapter();
                 break;
+#if MFALATEST // NLog.Extensions.Logging is only included in the MFALatestPackages project
             case "NLOGEL":
-#if NET10_0 || NET481_OR_GREATER
-                    logger = new NLogExtensionsLoggingAdapter();
-#endif
+                logger = new NLogExtensionsLoggingAdapter();
                 break;
-
+#endif
+#endif
+            // Logging frameworks only available in certain TFMs due to package dependencies
+#if MFALATEST && NET
+            case "SERILOGWEB": // Requires Serilog.AspNetCore which is only included in the MFALatestPackages project
+                logger = new SerilogLoggingWebAdapter(loggingPort);
+                break;
+#endif
+#if NET48_OR_GREATER
+            case "SITECORE":
+                    logger = new SitecoreLoggingAdapter();
+                break;
+#endif
             default:
                 throw new System.ArgumentNullException(nameof(loggingFramework));
         }
