@@ -25,6 +25,7 @@ public class LoggingTester
 {
     private static Dictionary<string, ILoggingAdapter> _logs;
 
+#region configuration
     [LibraryMethod]
     public static void SetFramework(string loggingFramework, string loggingPort)
     {
@@ -101,71 +102,26 @@ public class LoggingTester
         _logs.Values.ToList().ForEach(l => l.ConfigureJsonLayoutAppenderForDecoration());
     }
 
+#endregion
+
+
     [LibraryMethod]
     public static void CreateSingleLogMessage(string message, string level)
     {
-        CreateSingleLogMessage(message, level, null);
+        _logs.Keys.ToList().ForEach(logger => LogMessageAtLevel(logger, message, level));
     }
 
     [LibraryMethod]
-    public static void CreateSingleLogMessage(string message, string level, string context = null)
+    public static async Task CreateSingleLogMessageAsync(string message, string level)
     {
-        _logs.Keys.ToList().ForEach(k => CreateSingleLogMessage(k, message, level, context));
-    }
-    [LibraryMethod]
-    public static void CreateSingleLogMessage(string logger, string message, string level, string context = null)
-    {
-        var contextDict = new Dictionary<string, object>();
-
-        if (!string.IsNullOrEmpty(context))
-        {
-            var array = context.Split(',');
-
-            foreach (var item in array)
-            {
-                var pairs = item.Split('=');
-
-                if (!contextDict.ContainsKey(pairs[0]))
-                {
-                    contextDict.Add(pairs[0], pairs[1]);
-                }
-            }
-        }
-
-        string key = logger.ToUpper();
-
-        switch (level.ToUpper())
-        {
-            case "DEBUG":
-                _logs[key].Debug(message);
-                break;
-            case "INFO":
-                _logs[key].InfoWithContextDictionary(message, contextDict);
-                break;
-            case "WARN":
-            case "WARNING":
-                _logs[key].Warn(message);
-                break;
-            case "ERROR":
-                _logs[key].Error(ExceptionBuilder.BuildException(message));
-                break;
-            case "FATAL":
-                _logs[key].Fatal(message);
-                break;
-            case "NOMESSAGE":
-                _logs[key].ErrorNoMessage(ExceptionBuilder.BuildException(message));
-                break;
-            default:
-                _logs[key].Info(message);
-                break;
-        }
+        await Task.Run(() => CreateSingleLogMessage(message, level));
     }
 
     [LibraryMethod]
     public static void CreateSingleLogMessageWithObjectParameter(string message)
     {
         var param = new Person() { Id = 12345, Name = "John Smith" };
-        _logs.Values.ToList().ForEach(l => l.InfoWithObjectParameter(message, param));
+        _logs.Values.ToList().ForEach(logger => logger.InfoWithObjectParameter(message, param));
     }
 
     [LibraryMethod]
@@ -174,12 +130,6 @@ public class LoggingTester
     public static void CreateSingleLogMessageInTransaction(string message, string level)
     {
         CreateSingleLogMessage(message, level);
-    }
-
-    [LibraryMethod]
-    public static async Task CreateSingleLogMessageAsync(string message, string level)
-    {
-        await Task.Run(() => CreateSingleLogMessage(message, level));
     }
 
     [LibraryMethod]
@@ -215,6 +165,31 @@ public class LoggingTester
         CreateSingleLogMessageWithObjectParameter(message);
     }
 
+    // The reason this method takes a logger as a parameter, rather than performing the same action for all configured loggers
+    // like the other methods, is that the test code in ContextDataTests that uses it configures different context data for
+    // different loggers
+    [LibraryMethod]
+    public static void CreateSingleLogMessageWithContext(string logger, string message, string context = null)
+    {
+        var contextDict = new Dictionary<string, object>();
+
+        if (!string.IsNullOrEmpty(context))
+        {
+            var array = context.Split(',');
+
+            foreach (var item in array)
+            {
+                var pairs = item.Split('=');
+
+                if (!contextDict.ContainsKey(pairs[0]))
+                {
+                    contextDict.Add(pairs[0], pairs[1]);
+                }
+            }
+        }
+        _logs[logger.ToUpper()].InfoWithContextDictionary(message, contextDict);
+    }
+
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -239,6 +214,36 @@ public class LoggingTester
         _logs.Values.ToList().ForEach(l => l.LogMessageInNestedScopes());
     }
 
+    private static void LogMessageAtLevel(string logger, string message, string level)
+    {
+        string key = logger.ToUpper();
+
+        switch (level.ToUpper())
+        {
+            case "DEBUG":
+                _logs[key].Debug(message);
+                break;
+            case "INFO":
+                _logs[key].Info(message);
+                break;
+            case "WARN":
+            case "WARNING":
+                _logs[key].Warn(message);
+                break;
+            case "ERROR":
+                _logs[key].Error(ExceptionBuilder.BuildException(message));
+                break;
+            case "FATAL":
+                _logs[key].Fatal(message);
+                break;
+            case "NOMESSAGE":
+                _logs[key].ErrorNoMessage(ExceptionBuilder.BuildException(message));
+                break;
+            default:
+                _logs[key].Info(message);
+                break;
+        }
+    }
 }
 
 public class Person

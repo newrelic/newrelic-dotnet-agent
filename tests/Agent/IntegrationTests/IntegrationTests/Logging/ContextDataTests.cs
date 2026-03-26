@@ -43,7 +43,7 @@ public abstract class ContextDataTestsBase<TFixture> : NewRelicIntegrationTest<T
         _loggingFrameworks.ForEach(x => _fixture.AddCommand($"LoggingTester SetFramework {x} {RandomPortGenerator.NextPort()}"));
         _fixture.AddCommand($"LoggingTester Configure");
 
-        _loggingFrameworks.ForEach(x => _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {x} {InfoMessage} INFO {FlattenExpectedAttributes(GetExpectedAttributes(x))}"));
+        _loggingFrameworks.ForEach(x => _fixture.AddCommand($"LoggingTester CreateSingleLogMessageWithContext {x} {InfoMessage} {FlattenExpectedAttributes(GetExpectedAttributes(x))}"));
 
         if (_testNestedContexts) // on supported frameworks, ensure that we don't blow up when accumulating the context key/value pairs
             _fixture.AddCommand($"LoggingTester LogMessageInNestedScopes");
