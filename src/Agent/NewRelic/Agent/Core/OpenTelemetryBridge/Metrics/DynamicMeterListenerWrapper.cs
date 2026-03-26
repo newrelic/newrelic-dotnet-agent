@@ -39,7 +39,6 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
     public DynamicMeterListenerWrapper(IAssemblyProvider assemblyProvider)
     {
         _assemblyProvider = assemblyProvider;
-        TryInitialize();
     }
 
     private void TryInitialize()
@@ -235,7 +234,7 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
 
     public void SetMeasurementCallback<T>(MeasurementCallbackDelegate<T> callback) where T : struct
     {
-        if (CheckDisposed() || !_isAvailable || _setMeasurementEventCallbackMethod == null) return;
+        if (CheckDisposed() || !EnsureInitialized() || _setMeasurementEventCallbackMethod == null) return;
             
         var setCallbackGeneric = _setMeasurementEventCallbackMethod.MakeGenericMethod(typeof(T));
         var callbackDelegateType = setCallbackGeneric.GetParameters()[0].ParameterType;
