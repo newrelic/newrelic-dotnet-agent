@@ -12,28 +12,39 @@ namespace NewRelic.Agent.IntegrationTests.Logging.StructuredLogArgContextData;
 
 /// <summary>
 /// Verifies that structured log message arguments (e.g., logger.LogInformation("Person {Name} has id {Id}", name, id))
-/// are extracted as context data attributes when using Microsoft.Extensions.Logging.
+/// are extracted as context data attributes when using supported logging frameworks.
 /// </summary>
 public abstract class StructuredLogArgContextDataTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
     where TFixture : ConsoleDynamicMethodFixture
 {
     private readonly TFixture _fixture;
+    private readonly LoggingFramework _loggingFramework;
 
-    private const string ExpectedName = "TestUser";
-    private const string ExpectedId = "12345";
-    private const string MessageTemplate = "Person{Name}HasId={Id}";
-    private const string ExpectedMessage = "PersonTestUserHasId=12345";
+    private string _expectedName = "TestUser";
+    private string _expectedId = "12345";
+    private string _messageTemplate = "Person{Name}HasId={Id}";
+    private string _expectedMessage  = "PersonTestUserHasId=12345";
 
-    public StructuredLogArgContextDataTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+    public StructuredLogArgContextDataTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework) : base(fixture)
     {
         _fixture = fixture;
+        _loggingFramework = loggingFramework;
         _fixture.SetTimeout(TimeSpan.FromMinutes(2));
         _fixture.TestLogger = output;
 
-        _fixture.AddCommand($"LoggingTester SetFramework MicrosoftLogging {RandomPortGenerator.NextPort()}");
-        _fixture.AddCommand($"LoggingTester Configure");
-        _fixture.AddCommand($"LoggingTester CreateSingleLogMessageWithStructuredArgs {MessageTemplate} {string.Join(",", ExpectedName, ExpectedId)}");
+        // Some logging frameworks (Serilog and older versions of NLog) add quotes around structured arguments
+        // This can be disabled by tweaking the template
+        if (new[] { LoggingFramework.Serilog,
+                     LoggingFramework.NLog,
+                     LoggingFramework.SerilogEL,
+                     LoggingFramework.NLogEL }.Contains(_loggingFramework))
+        {
+            _messageTemplate = "Person{Name:l}HasId={Id:l}";
+        }
 
+        _fixture.AddCommand($"LoggingTester SetFramework {loggingFramework} {RandomPortGenerator.NextPort()}");
+        _fixture.AddCommand($"LoggingTester Configure");
+        _fixture.AddCommand($"LoggingTester CreateSingleLogMessageWithStructuredArgs {_messageTemplate} {string.Join(",", _expectedName, _expectedId)}");
         _fixture.AddActions
         (
             setupConfiguration: () =>
@@ -60,17 +71,20 @@ public abstract class StructuredLogArgContextDataTestsBase<TFixture> : NewRelicI
         {
             new Assertions.ExpectedLogLine
             {
-                Level = LogUtils.GetLevelName(LoggingFramework.MicrosoftLogging, "INFO"),
-                LogMessage = ExpectedMessage,
+                Level = LogUtils.GetLevelName(_loggingFramework, "INFO"),
+                LogMessage = _expectedMessage,
                 Attributes = new Dictionary<string, string>
                 {
-                    { "context.Name", ExpectedName },
-                    { "context.Id", ExpectedId },
+                    { "context.Name", _expectedName },
+                    { "context.Id", _expectedId },
                 }
             }
         };
 
         var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
+
+        // There should be only one log line
+        Assert.True(logLines.Length == 1, $"Expected exactly one log line, but found {logLines.Length}.");
 
         Assertions.LogLinesExist(expectedLogLines, logLines, ignoreAttributeCount: true);
     }
@@ -81,7 +95,7 @@ public abstract class StructuredLogArgContextDataTestsBase<TFixture> : NewRelicI
 public class MELStructuredLogArgContextDataNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MELStructuredLogArgContextDataNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-        : base(fixture, output)
+        : base(fixture, output, LoggingFramework.MicrosoftLogging)
     {
     }
 }
@@ -89,7 +103,119 @@ public class MELStructuredLogArgContextDataNetCoreLatestTests : StructuredLogArg
 public class MELStructuredLogArgContextDataNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MELStructuredLogArgContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-        : base(fixture, output)
+        : base(fixture, output, LoggingFramework.MicrosoftLogging)
+    {
+    }
+}
+
+#endregion
+
+#region Serilog
+
+public class SerilogStructuredLogArgContextDataFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public SerilogStructuredLogArgContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.Serilog)
+    {
+    }
+}
+
+public class SerilogStructuredLogArgContextDataNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public SerilogStructuredLogArgContextDataNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.Serilog)
+    {
+    }
+}
+
+public class SerilogStructuredLogArgContextDataNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public SerilogStructuredLogArgContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.Serilog)
+    {
+    }
+}
+
+#endregion
+
+#region NLog
+
+public class NLogStructuredLogArgContextDataFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public NLogStructuredLogArgContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.NLog)
+    {
+    }
+}
+
+public class NLogStructuredLogArgContextDataNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public NLogStructuredLogArgContextDataNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.NLog)
+    {
+    }
+}
+
+public class NLogStructuredLogArgContextDataNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public NLogStructuredLogArgContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.NLog)
+    {
+    }
+}
+
+#endregion
+
+#region MelWithSerilog
+
+public class SerilogELStructuredLogArgContextDataFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public SerilogELStructuredLogArgContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.SerilogEL)
+    {
+    }
+}
+
+public class SerilogELStructuredLogArgContextDataFW48Tests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
+{
+    public SerilogELStructuredLogArgContextDataFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.SerilogEL)
+    {
+    }
+}
+
+public class SerilogELStructuredLogArgContextDataNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public SerilogELStructuredLogArgContextDataNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.SerilogEL)
+    {
+    }
+}
+
+public class SerilogELStructuredLogArgContextDataNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public SerilogELStructuredLogArgContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.SerilogEL)
+    {
+    }
+}
+
+#endregion
+
+#region MelWithNLog
+
+public class NLogELStructuredLogArgContextDataFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public NLogELStructuredLogArgContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.NLogEL)
+    {
+    }
+}
+
+public class NLogELStructuredLogArgContextDataNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public NLogELStructuredLogArgContextDataNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.NLogEL)
     {
     }
 }
