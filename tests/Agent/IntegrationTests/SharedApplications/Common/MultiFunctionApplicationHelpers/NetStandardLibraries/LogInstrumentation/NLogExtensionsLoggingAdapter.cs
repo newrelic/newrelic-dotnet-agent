@@ -31,24 +31,6 @@ class NLogExtensionsLoggingAdapter : ILoggingAdapter
         logger.LogInformation(message);
     }
 
-    public void InfoWithContext(string message, Dictionary<string, object> context)
-    {
-        using (logger.BeginScope(context))
-        {
-            logger.LogInformation(message, context);
-        }
-    }
-
-    public void InfoWithParam(string message, object param)
-    {
-        logger.LogInformation(message, param);
-    }
-
-    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
-    {
-        logger.LogInformation(messageTemplate, args);
-    }
-
     public void Warn(string message)
     {
         logger.LogWarning(message);
@@ -74,25 +56,22 @@ class NLogExtensionsLoggingAdapter : ILoggingAdapter
         logger.LogTrace(string.Empty);
     }
 
-    public void Configure()
+    public void InfoWithContextDictionary(string message, Dictionary<string, object> context)
     {
-        CreateMelLogger(LogLevel.Debug);
+        using (logger.BeginScope(context))
+        {
+            logger.LogInformation(message, context);
+        }
     }
 
-    public void ConfigureWithInfoLevelEnabled()
+    public void InfoWithObjectParameter(string message, object param)
     {
-        CreateMelLogger(LogLevel.Information);
+        logger.LogInformation(message, param);
     }
 
-
-    public void ConfigurePatternLayoutAppenderForDecoration()
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
     {
-
-    }
-
-    public void ConfigureJsonLayoutAppenderForDecoration()
-    {
-
+        logger.LogInformation(messageTemplate, args);
     }
 
     public void LogMessageInNestedScopes()
@@ -106,6 +85,26 @@ class NLogExtensionsLoggingAdapter : ILoggingAdapter
                 logger.LogInformation("Inner Scope");
             }
         }
+    }
+
+    public void Configure()
+    {
+        CreateMelLogger(LogLevel.Debug);
+    }
+
+    public void ConfigureWithInfoLevelEnabled()
+    {
+        CreateMelLogger(LogLevel.Information);
+    }
+
+    public void ConfigurePatternLayoutAppenderForDecoration()
+    {
+
+    }
+
+    public void ConfigureJsonLayoutAppenderForDecoration()
+    {
+
     }
 
     private void CreateMelLogger(LogLevel minimumLogLevel)

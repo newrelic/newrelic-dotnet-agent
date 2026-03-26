@@ -41,7 +41,7 @@ public abstract class LocalDecorationTestsBase<TFixture> : NewRelicIntegrationTe
         _fixture.AddCommand($"LoggingTester Configure{layoutType}LayoutAppenderForDecoration");
         if (logWithParam)
         {
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionWithParam {_testMessage}{"{@param}"}");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionWithObjectParameter {_testMessage}{"{@param}"}");
         }
         else
         {

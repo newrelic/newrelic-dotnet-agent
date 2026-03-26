@@ -31,24 +31,6 @@ class SerilogExtensionsLoggingAdapter : ILoggingAdapter
         _logger.LogInformation(message);
     }
 
-    public void InfoWithContext(string message, Dictionary<string, object> context)
-    {
-        using (_logger.BeginScope(context))
-        {
-            _logger.LogInformation(message);
-        }
-    }
-
-    public void InfoWithParam(string message, object param)
-    {
-        _logger.LogInformation(message, param);
-    }
-
-    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
-    {
-        _logger.LogInformation(messageTemplate, args);
-    }
-
     public void Warn(string message)
     {
         _logger.LogWarning(message);
@@ -74,25 +56,22 @@ class SerilogExtensionsLoggingAdapter : ILoggingAdapter
         _logger.LogTrace(string.Empty);
     }
 
-    public void Configure()
+    public void InfoWithContextDictionary(string message, Dictionary<string, object> context)
     {
-        CreateMelLogger(LogLevel.Information);
+        using (_logger.BeginScope(context))
+        {
+            _logger.LogInformation(message);
+        }
     }
 
-    public void ConfigureWithInfoLevelEnabled()
+    public void InfoWithObjectParameter(string message, object param)
     {
-        CreateMelLogger(LogLevel.Information);
+        _logger.LogInformation(message, param);
     }
 
-
-    public void ConfigurePatternLayoutAppenderForDecoration()
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
     {
-        CreateMelLogger(LogLevel.Debug, "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {Scope} {NewLine}{Exception}");
-    }
-
-    public void ConfigureJsonLayoutAppenderForDecoration()
-    {
-        CreateMelLogger(LogLevel.Debug, new JsonFormatter());
+        _logger.LogInformation(messageTemplate, args);
     }
 
     public void LogMessageInNestedScopes()
@@ -106,6 +85,26 @@ class SerilogExtensionsLoggingAdapter : ILoggingAdapter
                 _logger.LogInformation("Inner Scope");
             }
         }
+    }
+
+    public void Configure()
+    {
+        CreateMelLogger(LogLevel.Information);
+    }
+
+    public void ConfigureWithInfoLevelEnabled()
+    {
+        CreateMelLogger(LogLevel.Information);
+    }
+
+    public void ConfigurePatternLayoutAppenderForDecoration()
+    {
+        CreateMelLogger(LogLevel.Debug, "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {Scope} {NewLine}{Exception}");
+    }
+
+    public void ConfigureJsonLayoutAppenderForDecoration()
+    {
+        CreateMelLogger(LogLevel.Debug, new JsonFormatter());
     }
 
     private void CreateMelLogger(LogLevel minimumLogLevel) => CreateMelLogger(minimumLogLevel, null, null);

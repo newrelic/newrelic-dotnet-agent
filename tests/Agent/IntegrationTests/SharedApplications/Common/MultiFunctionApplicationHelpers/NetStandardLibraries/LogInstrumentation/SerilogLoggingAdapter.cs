@@ -30,29 +30,6 @@ class SerilogLoggingAdapter : ILoggingAdapter
         _log.Information(message);
     }
 
-    public void InfoWithContext(string message, Dictionary<string, object> context)
-    {
-        var loggerConfig = new LoggerConfiguration();
-
-        loggerConfig
-            .MinimumLevel.Information()
-            .Enrich.With(new ContextDataEnricher(context))
-            .WriteTo.Console();
-
-        var logger = loggerConfig.CreateLogger();
-
-        logger.Information(message);
-    }
-
-    public void InfoWithParam(string message, object param)
-    {
-        _log.Information(message, param);
-    }
-    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
-    {
-        _log.Information(messageTemplate, args);
-    }
-
     public void Warn(string message)
     {
         _log.Warning(message);
@@ -76,6 +53,35 @@ class SerilogLoggingAdapter : ILoggingAdapter
     public void NoMessage()
     {
         _log.Verbose(string.Empty);
+    }
+
+    public void InfoWithContextDictionary(string message, Dictionary<string, object> context)
+    {
+        var loggerConfig = new LoggerConfiguration();
+
+        loggerConfig
+            .MinimumLevel.Information()
+            .Enrich.With(new ContextDataEnricher(context))
+            .WriteTo.Console();
+
+        var logger = loggerConfig.CreateLogger();
+
+        logger.Information(message);
+    }
+
+    public void InfoWithObjectParameter(string message, object param)
+    {
+        _log.Information(message, param);
+    }
+
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        _log.Information(messageTemplate, args);
+    }
+
+    public void LogMessageInNestedScopes()
+    {
+        throw new NotImplementedException();
     }
 
     public void Configure()
@@ -125,11 +131,6 @@ class SerilogLoggingAdapter : ILoggingAdapter
 
         _log = loggerConfig.CreateLogger();
 #endif
-    }
-
-    public void LogMessageInNestedScopes()
-    {
-        throw new NotImplementedException();
     }
 }
 

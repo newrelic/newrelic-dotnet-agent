@@ -30,24 +30,6 @@ class MelLoggingAdapter : ILoggingAdapter
         logger.LogInformation(message);
     }
 
-    public void InfoWithContext(string message, Dictionary<string, object> context)
-    {
-        using (logger.BeginScope(context))
-        {
-            logger.LogInformation(message);
-        }
-    }
-
-    public void InfoWithParam(string message, object param)
-    {
-        logger.LogInformation(message, param);
-    }
-
-    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
-    {
-        logger.LogInformation(messageTemplate, args);
-    }
-
     public void Warn(string message)
     {
         logger.LogWarning(message);
@@ -73,6 +55,37 @@ class MelLoggingAdapter : ILoggingAdapter
         logger.LogTrace(string.Empty);
     }
 
+    public void InfoWithContextDictionary(string message, Dictionary<string, object> context)
+    {
+        using (logger.BeginScope(context))
+        {
+            logger.LogInformation(message);
+        }
+    }
+
+    public void InfoWithObjectParameter(string message, object param)
+    {
+        logger.LogInformation(message, param);
+    }
+
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        logger.LogInformation(messageTemplate, args);
+    }
+
+    public void LogMessageInNestedScopes()
+    {
+        using (var _ = logger.BeginScope("{ScopeKey1}", "scopeValue1"))
+        {
+            logger.LogInformation("Outer Scope");
+
+            using (var __ = logger.BeginScope("{ScopeKey1}", "scopeValue2"))
+            {
+                logger.LogInformation("Inner Scope");
+            }
+        }
+    }
+
     public void Configure()
     {
         CreateMelLogger(LogLevel.Debug);
@@ -82,7 +95,6 @@ class MelLoggingAdapter : ILoggingAdapter
     {
         CreateMelLogger(LogLevel.Information);
     }
-
 
     public void ConfigurePatternLayoutAppenderForDecoration()
     {
@@ -108,19 +120,6 @@ class MelLoggingAdapter : ILoggingAdapter
             .CreateLogger();
 
         CreateMelLogger(LogLevel.Debug, serilogLogger);
-    }
-
-    public void LogMessageInNestedScopes()
-    {
-        using (var _ = logger.BeginScope("{ScopeKey1}", "scopeValue1"))
-        {
-            logger.LogInformation("Outer Scope");
-
-            using (var __ = logger.BeginScope("{ScopeKey1}", "scopeValue2"))
-            {
-                logger.LogInformation("Inner Scope");
-            }
-        }
     }
 
     private void CreateMelLogger(LogLevel minimumLogLevel, Serilog.ILogger serilogLoggerImpl = null)

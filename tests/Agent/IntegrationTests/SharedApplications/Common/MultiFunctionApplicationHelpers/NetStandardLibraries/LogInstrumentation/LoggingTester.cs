@@ -140,7 +140,7 @@ public class LoggingTester
                 _logs[key].Debug(message);
                 break;
             case "INFO":
-                _logs[key].InfoWithContext(message, contextDict);
+                _logs[key].InfoWithContextDictionary(message, contextDict);
                 break;
             case "WARN":
             case "WARNING":
@@ -162,10 +162,10 @@ public class LoggingTester
     }
 
     [LibraryMethod]
-    public static void CreateSingleLogMessageWithParam(string message)
+    public static void CreateSingleLogMessageWithObjectParameter(string message)
     {
         var param = new Person() { Id = 12345, Name = "John Smith" };
-        _logs.Values.ToList().ForEach(l => l.InfoWithParam(message, param));
+        _logs.Values.ToList().ForEach(l => l.InfoWithObjectParameter(message, param));
     }
 
     [LibraryMethod]
@@ -210,12 +210,11 @@ public class LoggingTester
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-    public static void CreateSingleLogMessageInTransactionWithParam(string message)
+    public static void CreateSingleLogMessageInTransactionWithObjectParameter(string message)
     {
-        CreateSingleLogMessageWithParam(message);
+        CreateSingleLogMessageWithObjectParameter(message);
     }
 
-# if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -231,7 +230,6 @@ public class LoggingTester
             l.InfoWithStructuredArgs(messageTemplate, args);
         });
     }
-#endif
 
     [LibraryMethod]
     [Transaction]

@@ -37,21 +37,6 @@ class SerilogLoggingWebAdapter : ILoggingAdapter
     {
         _ = _client.GetStringAsync(_uriBase + "test?logLevel=INFO&message=" + message).Result;
     }
-    public void InfoWithContext(string message, Dictionary<string, object> context)
-    {
-        var contextString = string.Join(", ", context.Select(c => c.Key + "=" + c.Value));
-
-        _ = _client.GetStringAsync(_uriBase + "testContext?message=" + message + "&contextData=" + contextString).Result;
-    }
-
-    public void InfoWithParam(string message, object param)
-    {
-        throw new NotImplementedException();
-    }
-    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
-    {
-        throw new NotImplementedException();
-    }
 
     public void Warn(string message)
     {
@@ -84,6 +69,28 @@ class SerilogLoggingWebAdapter : ILoggingAdapter
         _ = _client.GetStringAsync(_uriBase + "test?logLevel=FATAL&message=EMPTY").Result;
     }
 
+    public void InfoWithContextDictionary(string message, Dictionary<string, object> context)
+    {
+        var contextString = string.Join(", ", context.Select(c => c.Key + "=" + c.Value));
+
+        _ = _client.GetStringAsync(_uriBase + "testContext?message=" + message + "&contextData=" + contextString).Result;
+    }
+
+    public void InfoWithObjectParameter(string message, object param)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void LogMessageInNestedScopes()
+    {
+        throw new NotImplementedException();
+    }
+
     public void Configure()
     {
 
@@ -107,6 +114,23 @@ class SerilogLoggingWebAdapter : ILoggingAdapter
         RunApplication(loggerConfig);
     }
 
+    public void ConfigurePatternLayoutAppenderForDecoration()
+    {
+        var loggerConfig = new LoggerConfiguration()
+        .Enrich.FromLogContext()
+        .MinimumLevel.Information()
+        .WriteTo.Console(
+            outputTemplate: "ThisIsAWebLog {Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {NR_LINKING} {NewLine}{Exception}"
+        );
+
+        RunApplication(loggerConfig);
+    }
+
+    public void ConfigureJsonLayoutAppenderForDecoration()
+    {
+        throw new NotImplementedException();
+    }
+
     private void RunApplication(LoggerConfiguration loggerConfig)
     {
         var logger = loggerConfig.CreateLogger();
@@ -127,28 +151,6 @@ class SerilogLoggingWebAdapter : ILoggingAdapter
                 webBuilder.UseUrls(uriBase);
             });
         }
-    }
-
-    public void ConfigurePatternLayoutAppenderForDecoration()
-    {
-        var loggerConfig = new LoggerConfiguration()
-        .Enrich.FromLogContext()
-        .MinimumLevel.Information()
-        .WriteTo.Console(
-            outputTemplate: "ThisIsAWebLog {Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {NR_LINKING} {NewLine}{Exception}"
-        );
-
-        RunApplication(loggerConfig);
-    }
-
-    public void ConfigureJsonLayoutAppenderForDecoration()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void LogMessageInNestedScopes()
-    {
-        throw new NotImplementedException();
     }
 }
 
