@@ -7,6 +7,9 @@
     <AWSProjectType>Lambda</AWSProjectType>
     <!-- This property makes the build directory similar to a publish directory and helps the AWS .NET Lambda Mock Test Tool find project dependencies. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- Multi-TFM Web SDK projects fail MSBuild solution-level DeployOnBuild (NETSDK1129).
+         The CI pre-publish step handles per-TFM publishing instead. -->
+    <DeployOnBuild>false</DeployOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <!-- 1.7.0 is from Feb 2022 -->
