@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 public class DotnetTool : RemoteApplication
 {
+    private static readonly ConcurrentDictionary<string, object> ToolInstallLocks = new();
+
     private readonly string _packageName;
     private readonly string _toolName;
     private readonly string _workingDirectory;
@@ -56,44 +59,46 @@ public class DotnetTool : RemoteApplication
         TestLogger?.WriteLine($"[DotnetTool]: executing 'dotnet {startInfo.Arguments}'");
         process.StartInfo = startInfo;
 
-        process.Start();
-
-        var processOutput = new ProcessOutput(TestLogger, process, true);
-
-        // Publishes take longer in CI currently, regularly taking longer than 3 minutes.
-        // 10 minutes may or may not be extreme but stabilizes these failures.
-        const int timeoutInMilliseconds = 10 * 60 * 1000;
-        if (!process.WaitForExit(timeoutInMilliseconds))
+        // Serialize dotnet tool installs for the same package to avoid concurrent access
+        // to the shared NuGet package cache (e.g., ~/.nuget/packages/*.nupkg file locks).
+        var lockObj = ToolInstallLocks.GetOrAdd(_packageName, _ => new object());
+        lock (lockObj)
         {
-            TestLogger?.WriteLine($"[DotetTool]: installing dotnet tool timed out while waiting for {_packageName} to install after {timeoutInMilliseconds} milliseconds.");
-            try
+            process.Start();
+
+            var processOutput = new ProcessOutput(TestLogger, process, true);
+
+            // Publishes take longer in CI currently, regularly taking longer than 3 minutes.
+            // 10 minutes may or may not be extreme but stabilizes these failures.
+            const int timeoutInMilliseconds = 10 * 60 * 1000;
+            if (!process.WaitForExit(timeoutInMilliseconds))
             {
-                //This usually happens because another publishing job has a lock on the file(s) being copied.
-                //We send a termination request because we no longer want dotnet tool install to continue to copy files
-                //when there's a good chance that at least some of the files are missing.
-                //We can only use "kill" to request termination here, because there isn't a "close" option for non-GUI apps.
-                process.Kill();
+                TestLogger?.WriteLine($"[DotnetTool]: installing dotnet tool timed out while waiting for {_packageName} to install after {timeoutInMilliseconds} milliseconds.");
+                try
+                {
+                    process.Kill();
+                }
+                catch (Exception e)
+                {
+                    TestLogger?.WriteLine($"======[DotnetTool]: installing dotnet tool failed to kill process that installs {_packageName} with exception =====");
+                    TestLogger?.WriteLine(e.ToString());
+                    TestLogger?.WriteLine($"-----[DotnetTool]: installing dotnet tool failed to kill process that installs {_packageName} end of exception -----");
+                }
             }
-            catch (Exception e)
+            else
             {
-                TestLogger?.WriteLine($"======[DotnetTool]: installing dotnet tool failed to kill process that installs {_packageName} with exception =====");
-                TestLogger?.WriteLine(e.ToString());
-                TestLogger?.WriteLine($"-----[DotnetTool]: installing dotnet tool failed to kill process that installs {_packageName} end of exception -----");
+                Console.WriteLine($"[DotnetTool]: [{DateTime.Now}] dotnet.exe exits with code {process.ExitCode}");
             }
-        }
-        else
-        {
-            Console.WriteLine($"[DotnetTool]: [{DateTime.Now}] dotnet.exe exits with code {process.ExitCode}");
-        }
 
-        processOutput.WriteProcessOutputToLog("[DotnetTool]: installing dotnet tool");
+            processOutput.WriteProcessOutputToLog("[DotnetTool]: installing dotnet tool");
 
-        if (!process.HasExited || process.ExitCode != 0)
-        {
-            var failedToPublishMessage = "Failed to install dotnet tool";
+            if (!process.HasExited || process.ExitCode != 0)
+            {
+                var failedToPublishMessage = "Failed to install dotnet tool";
 
-            TestLogger?.WriteLine($"[DotnetTool]: {failedToPublishMessage}");
-            throw new Exception(failedToPublishMessage);
+                TestLogger?.WriteLine($"[DotnetTool]: {failedToPublishMessage}");
+                throw new Exception(failedToPublishMessage);
+            }
         }
 
         sw.Stop();
