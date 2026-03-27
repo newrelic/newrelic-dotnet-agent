@@ -9,7 +9,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <!-- Multi-TFM Web SDK projects fail MSBuild solution-level DeployOnBuild (NETSDK1129).
          The CI pre-publish step handles per-TFM publishing instead. -->
-    <DeployOnBuild>false</DeployOnBuild>
+    <IsPublishable>false</IsPublishable>
   </PropertyGroup>
   <ItemGroup>
     <!-- 1.7.0 is from Feb 2022 -->
