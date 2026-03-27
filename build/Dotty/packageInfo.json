@@ -20,6 +20,9 @@
         "packageName": "amazon.lambda.kinesisfirehoseevents"
     },
     {
+        "packageName": "amazon.lambda.runtimesupport"
+    },
+    {
         "packageName": "amazon.lambda.s3events"
     },
     {
