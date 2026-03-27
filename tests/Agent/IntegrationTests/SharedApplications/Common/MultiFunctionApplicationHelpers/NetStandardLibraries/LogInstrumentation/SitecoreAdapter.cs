@@ -33,7 +33,32 @@ class SitecoreLoggingAdapter : ILoggingAdapter
         _log.Info(message);
     }
 
-    public void Info(string message, Dictionary<string, object> context)
+    public void Warn(string message)
+    {
+        _log.Warn(message);
+    }
+
+    public void Error(Exception exception)
+    {
+        _log.Error(exception.Message, exception);
+    }
+
+    public void ErrorNoMessage(Exception exception)
+    {
+        _log.Error(string.Empty, exception);
+    }
+
+    public void Fatal(string message)
+    {
+        _log.Fatal(message);
+    }
+
+    public void NoMessage()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void InfoWithContextDictionary(string message, Dictionary<string, object> context)
     {
         var logEventData = new LoggingEventData()
         {
@@ -58,31 +83,21 @@ class SitecoreLoggingAdapter : ILoggingAdapter
         _log.Logger.Log(logEvent);
     }
 
-    public void InfoWithParam(string message, object param)
+    public void InfoWithObjectParameter(string message, object param)
     {
         // TODO: Not sure what the equivalent would be (or if there is one)
         //_log.InfoFormat(message, param);
         throw new System.NotImplementedException();
     }
 
-    public void Warn(string message)
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
     {
-        _log.Warn(message);
+        throw new System.NotImplementedException();
     }
 
-    public void Error(Exception exception)
+    public void LogMessageInNestedScopes()
     {
-        _log.Error(exception.Message, exception);
-    }
-
-    public void ErrorNoMessage(Exception exception)
-    {
-        _log.Error(string.Empty, exception);
-    }
-
-    public void Fatal(string message)
-    {
-        _log.Fatal(message);
+        throw new NotImplementedException();
     }
 
     public void Configure()
@@ -114,16 +129,6 @@ class SitecoreLoggingAdapter : ILoggingAdapter
     {
         // TODO: Not supported?
         throw new System.NotImplementedException();
-    }
-
-    public void LogMessageInNestedScopes()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void NoMessage()
-    {
-        throw new NotImplementedException();
     }
 }
 #endif

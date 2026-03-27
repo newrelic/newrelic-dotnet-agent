@@ -12,11 +12,11 @@ using Serilog.Formatting.Json;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation;
 
-class MicrosoftLoggingLoggingAdapter : ILoggingAdapter
+class MelLoggingAdapter : ILoggingAdapter
 {
     private static Microsoft.Extensions.Logging.ILogger logger;
 
-    public MicrosoftLoggingLoggingAdapter()
+    public MelLoggingAdapter()
     {
     }
 
@@ -28,19 +28,6 @@ class MicrosoftLoggingLoggingAdapter : ILoggingAdapter
     public void Info(string message)
     {
         logger.LogInformation(message);
-    }
-
-    public void Info(string message, Dictionary<string, object> context)
-    {
-        using (logger.BeginScope(context))
-        {
-            logger.LogInformation(message);
-        }
-    }
-
-    public void InfoWithParam(string message, object param)
-    {
-        logger.LogInformation(message, param);
     }
 
     public void Warn(string message)
@@ -68,6 +55,37 @@ class MicrosoftLoggingLoggingAdapter : ILoggingAdapter
         logger.LogTrace(string.Empty);
     }
 
+    public void InfoWithContextDictionary(string message, Dictionary<string, object> context)
+    {
+        using (logger.BeginScope(context))
+        {
+            logger.LogInformation(message);
+        }
+    }
+
+    public void InfoWithObjectParameter(string message, object param)
+    {
+        logger.LogInformation(message, param);
+    }
+
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        logger.LogInformation(messageTemplate, args);
+    }
+
+    public void LogMessageInNestedScopes()
+    {
+        using (var _ = logger.BeginScope("{ScopeKey1}", "scopeValue1"))
+        {
+            logger.LogInformation("Outer Scope");
+
+            using (var __ = logger.BeginScope("{ScopeKey1}", "scopeValue2"))
+            {
+                logger.LogInformation("Inner Scope");
+            }
+        }
+    }
+
     public void Configure()
     {
         CreateMelLogger(LogLevel.Debug);
@@ -77,7 +95,6 @@ class MicrosoftLoggingLoggingAdapter : ILoggingAdapter
     {
         CreateMelLogger(LogLevel.Information);
     }
-
 
     public void ConfigurePatternLayoutAppenderForDecoration()
     {
@@ -103,19 +120,6 @@ class MicrosoftLoggingLoggingAdapter : ILoggingAdapter
             .CreateLogger();
 
         CreateMelLogger(LogLevel.Debug, serilogLogger);
-    }
-
-    public void LogMessageInNestedScopes()
-    {
-        using (var _ = logger.BeginScope("{ScopeKey1}", "scopeValue1"))
-        {
-            logger.LogInformation("Outer Scope");
-
-            using (var __ = logger.BeginScope("{ScopeKey1}", "scopeValue2"))
-            {
-                logger.LogInformation("Inner Scope");
-            }
-        }
     }
 
     private void CreateMelLogger(LogLevel minimumLogLevel, Serilog.ILogger serilogLoggerImpl = null)
