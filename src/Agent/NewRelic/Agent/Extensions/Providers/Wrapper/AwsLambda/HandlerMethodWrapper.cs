@@ -123,23 +123,23 @@ public class HandlerMethodWrapper : IWrapper
                 switch (EventType)
                 {
                     case AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest:
-                    {
-                        if (input.RequestContext != null)
                         {
-                            dynamic requestContext = input.RequestContext;
+                            if (input.RequestContext != null)
+                            {
+                                dynamic requestContext = input.RequestContext;
 
-                            if (requestContext.Http != null)
-                                return !string.IsNullOrEmpty(requestContext.Http.Method) && !string.IsNullOrEmpty(requestContext.Http.Path);
+                                if (requestContext.Http != null)
+                                    return !string.IsNullOrEmpty(requestContext.Http.Method) && !string.IsNullOrEmpty(requestContext.Http.Path);
+                            }
+
+                            return false;
                         }
-
-                        return false;
-                    }
                     case AwsLambdaEventType.APIGatewayProxyRequest:
                     case AwsLambdaEventType.ApplicationLoadBalancerRequest:
-                    {
-                        dynamic webReq = input;
-                        return !string.IsNullOrEmpty(webReq.HttpMethod) && !string.IsNullOrEmpty(webReq.Path);
-                    }
+                        {
+                            dynamic webReq = input;
+                            return !string.IsNullOrEmpty(webReq.HttpMethod) && !string.IsNullOrEmpty(webReq.Path);
+                        }
                     default:
                         return true;
                 }
@@ -156,7 +156,7 @@ public class HandlerMethodWrapper : IWrapper
     private static object _initLock = new object();
     private static FunctionDetails _functionDetails = null;
 
-    public bool IsTransactionRequired => false;
+    public bool IsTransactionRequired => true;
 
     private static bool _coldStart = true;
     private ConcurrentHashSet<string> _unexpectedResponseTypes = new();
@@ -246,13 +246,18 @@ public class HandlerMethodWrapper : IWrapper
 
         // create a transaction for the function invocation if AwsLambdaApmModeEnabled is enabled then based on spec WebTransaction/Function/APIGATEWAY myFunction
         // else WebTransaction/Function/myFunction
-        transaction = agent.CreateTransaction(
-            isWeb: _functionDetails.EventType.IsWebEvent(),
-            category: agent.Configuration.AwsLambdaApmModeEnabled ? "Function" : "Lambda",
-            transactionDisplayName: agent.Configuration.AwsLambdaApmModeEnabled
-                ? _functionDetails.EventType.ToEventTypeString().ToUpper() + " " + _functionDetails.FunctionName
-                : _functionDetails.FunctionName,
-            doNotTrackAsUnitOfWork: true);
+        var transactionName  = agent.Configuration.AwsLambdaApmModeEnabled
+            ? _functionDetails.EventType.ToEventTypeString().ToUpper() + " " + _functionDetails.FunctionName
+            : _functionDetails.FunctionName;
+
+        if (_functionDetails.IsWebRequest)
+        {
+            transaction.SetWebTransactionName("Lambda", transactionName, TransactionNamePriority.Uri);  // low priority to allow the pipeline to override 
+        }
+        else
+        {
+            transaction.SetOtherTransactionName(AwsLambdaWrapperExtensions.GetTransactionCategory(agent.Configuration), transactionName);
+        }
 
         if (isAsync)
         {
@@ -311,7 +316,6 @@ public class HandlerMethodWrapper : IWrapper
                 finally
                 {
                     segment?.End();
-                    transaction.End();
                 }
             }
         }
@@ -329,7 +333,6 @@ public class HandlerMethodWrapper : IWrapper
                 onFailure: exception =>
                 {
                     segment.End(exception);
-                    transaction.End();
                 });
         }
     }

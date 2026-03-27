@@ -82,3 +82,11 @@ public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestCore
     {
     }
 }
+
+public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestCoreLatest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTest<LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreLatest>
+{
+    public AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestCoreLatest(LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, "WebTransaction/MVC/Values/Get")
+    {
+    }
+}
