@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
@@ -7,10 +7,12 @@
     <AWSProjectType>Lambda</AWSProjectType>
     <!-- This property makes the build directory similar to a publish directory and helps the AWS .NET Lambda Mock Test Tool find project dependencies. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <!-- Multi-TFM Web SDK projects fail MSBuild solution-level DeployOnBuild (NETSDK1129).
-         The CI pre-publish step handles per-TFM publishing instead. -->
-    <IsPublishable>false</IsPublishable>
   </PropertyGroup>
+  <!-- Use Microsoft.NET.Sdk (not .Web) to avoid DeployOnBuild/Publish conflicts with
+       multi-TFM builds (NETSDK1129). FrameworkReference provides ASP.NET Core APIs. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
   <ItemGroup>
     <!-- 1.7.0 is from Feb 2022 -->
     <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.7.0" Condition="'$(TargetFramework)' == 'net8.0'" />
