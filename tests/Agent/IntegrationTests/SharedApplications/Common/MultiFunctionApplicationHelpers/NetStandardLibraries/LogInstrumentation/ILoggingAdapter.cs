@@ -21,6 +21,7 @@ interface ILoggingAdapter
     public void InfoWithContextDictionary(string message, Dictionary<string, object> context);
     public void InfoWithObjectParameter(string message, object param);
     public void InfoWithStructuredArgs(string messageTemplate, object[] args);
+    public void InfoWithStructuredArgsAndContextDictionary(string messageTemplate, object[] args, Dictionary<string, object> context);
     public void LogMessageInNestedScopes();
 
 

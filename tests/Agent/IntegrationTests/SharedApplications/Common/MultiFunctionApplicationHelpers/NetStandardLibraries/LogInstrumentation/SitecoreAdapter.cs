@@ -95,6 +95,11 @@ class SitecoreLoggingAdapter : ILoggingAdapter
         throw new System.NotImplementedException();
     }
 
+    public void InfoWithStructuredArgsAndContextDictionary(string messageTemplate, object[] args, Dictionary<string, object> context)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public void LogMessageInNestedScopes()
     {
         throw new NotImplementedException();

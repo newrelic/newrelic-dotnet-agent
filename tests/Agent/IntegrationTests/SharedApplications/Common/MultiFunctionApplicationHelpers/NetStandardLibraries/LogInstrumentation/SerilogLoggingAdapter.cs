@@ -79,6 +79,20 @@ class SerilogLoggingAdapter : ILoggingAdapter
         _log.Information(messageTemplate, args);
     }
 
+    public void InfoWithStructuredArgsAndContextDictionary(string messageTemplate, object[] args, Dictionary<string, object> context)
+    {
+        var loggerConfig = new LoggerConfiguration();
+
+        loggerConfig
+            .MinimumLevel.Information()
+            .Enrich.With(new ContextDataEnricher(context))
+            .WriteTo.Console();
+
+        var logger = loggerConfig.CreateLogger();
+
+        logger.Information(messageTemplate, args);
+    }
+
     public void LogMessageInNestedScopes()
     {
         throw new NotImplementedException();

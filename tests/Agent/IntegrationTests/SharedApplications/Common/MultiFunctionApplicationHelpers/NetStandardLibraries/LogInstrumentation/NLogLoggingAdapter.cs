@@ -72,6 +72,17 @@ class NLogLoggingAdapter : ILoggingAdapter
         _log.Info(messageTemplate, args);
     }
 
+    public void InfoWithStructuredArgsAndContextDictionary(string messageTemplate, object[] args, Dictionary<string, object> context)
+    {
+        var logEvent = new LogEventInfo(LogLevel.Info, null, messageTemplate);
+        logEvent.Parameters = args;
+        foreach (var kvp in context)
+        {
+            logEvent.Properties[kvp.Key] = kvp.Value;
+        }
+        _log.Log(logEvent);
+    }
+
     public void LogMessageInNestedScopes()
     {
         throw new NotImplementedException();

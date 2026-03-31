@@ -86,6 +86,11 @@ class SerilogLoggingWebAdapter : ILoggingAdapter
         throw new NotImplementedException();
     }
 
+    public void InfoWithStructuredArgsAndContextDictionary(string messageTemplate, object[] args, Dictionary<string, object> context)
+    {
+        throw new NotImplementedException();
+    }
+
     public void LogMessageInNestedScopes()
     {
         throw new NotImplementedException();

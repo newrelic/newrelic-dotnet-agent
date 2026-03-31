@@ -209,6 +209,36 @@ public class LoggingTester
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void CreateSingleLogMessageWithStructuredArgsAndContext(string messageTemplate, string argString, string context = null)
+    {
+        var args = argString.Split(',').Select(a => (object)a).ToArray();
+
+        var contextDict = new Dictionary<string, object>();
+
+        if (!string.IsNullOrEmpty(context))
+        {
+            var array = context.Split(',');
+
+            foreach (var item in array)
+            {
+                var pairs = item.Split('=');
+
+                if (!contextDict.ContainsKey(pairs[0]))
+                {
+                    contextDict.Add(pairs[0], pairs[1]);
+                }
+            }
+        }
+        _logs.Values.ToList().ForEach(l =>
+        {
+            l.InfoWithStructuredArgsAndContextDictionary(messageTemplate, args, contextDict);
+        });
+
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public static void LogMessageInNestedScopes()
     {
         _logs.Values.ToList().ForEach(l => l.LogMessageInNestedScopes());

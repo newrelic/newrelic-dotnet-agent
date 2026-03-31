@@ -72,6 +72,13 @@ class MelLoggingAdapter : ILoggingAdapter
     {
         logger.LogInformation(messageTemplate, args);
     }
+    public void InfoWithStructuredArgsAndContextDictionary(string messageTemplate, object[] args, Dictionary<string, object> context)
+    {
+        using (logger.BeginScope(context))
+        {
+            logger.LogInformation(messageTemplate, args);
+        }
+    }
 
     public void LogMessageInNestedScopes()
     {

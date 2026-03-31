@@ -74,6 +74,14 @@ class SerilogExtensionsLoggingAdapter : ILoggingAdapter
         _logger.LogInformation(messageTemplate, args);
     }
 
+    public void InfoWithStructuredArgsAndContextDictionary(string messageTemplate, object[] args, Dictionary<string, object> context)
+    {
+        using (_logger.BeginScope(context))
+        {
+            _logger.LogInformation(messageTemplate, args);
+        }
+    }
+
     public void LogMessageInNestedScopes()
     {
         using (var _ = _logger.BeginScope("{ScopeKey1}", "scopeValue1"))

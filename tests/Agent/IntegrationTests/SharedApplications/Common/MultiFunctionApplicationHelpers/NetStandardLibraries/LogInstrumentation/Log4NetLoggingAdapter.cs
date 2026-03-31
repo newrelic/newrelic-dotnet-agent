@@ -91,6 +91,29 @@ class Log4NetLoggingAdapter : ILoggingAdapter
         _log.InfoFormat(messageTemplate, args);
     }
 
+    public void InfoWithStructuredArgsAndContextDictionary(string messageTemplate, object[] args, Dictionary<string, object> context)
+    {
+        var logEventData = new LoggingEventData()
+        {
+            Message = string.Format(messageTemplate, args),
+            Level = Level.Info
+        };
+
+        var logEvent = new LoggingEvent(logEventData);
+        if (context.Count > 0)
+        {
+            var keys = new List<string>(context.Keys);
+
+            logEvent.Properties[keys[0]] = context[keys[0]];
+            logEvent.Properties[keys[1]] = context[keys[1]];
+
+            log4net.GlobalContext.Properties[keys[2]] = context[keys[2]];
+            log4net.ThreadContext.Properties[keys[3]] = context[keys[3]];
+        }
+
+        _log.Logger.Log(logEvent);
+    }
+
     public void LogMessageInNestedScopes()
     {
         throw new NotImplementedException();
