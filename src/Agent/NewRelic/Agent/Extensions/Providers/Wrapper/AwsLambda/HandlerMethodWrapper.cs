@@ -252,7 +252,7 @@ public class HandlerMethodWrapper : IWrapper
 
         if (_functionDetails.IsWebRequest)
         {
-            transaction.SetWebTransactionName("Lambda", transactionName, TransactionNamePriority.Uri);  // low priority to allow the pipeline to override 
+            transaction.SetWebTransactionName("Lambda", transactionName, TransactionNamePriority.Handler);  // low priority to allow the pipeline to override 
         }
         else
         {
