@@ -26,6 +26,9 @@ public class MicrosoftLoggingWrapper : IWrapper
 
     private const string WrapperName = "MicrosoftLogging";
 
+    // This is defined here: https://github.com/dotnet/runtime/blob/54e4456b01060f54e5bb7d715e77e5f41bac558f/src/libraries/Microsoft.Extensions.Logging.Abstractions/src/LogValuesFormatter.cs#L233
+    private const string OriginalFormatKey = "{OriginalFormat}";
+
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
         return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
@@ -122,7 +125,7 @@ public class MicrosoftLoggingWrapper : IWrapper
                     foreach (var kvp in stateKvps)
                     {
                         // Skip the "{OriginalFormat}" key — it's the message template string, not a parameter
-                        if (kvp.Key == "{OriginalFormat}")
+                        if (kvp.Key == OriginalFormatKey)
                             continue;
 
                         if (kvp.Value != null)
