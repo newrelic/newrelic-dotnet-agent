@@ -22,6 +22,10 @@ public abstract class StructuredLogArgContextDataTestsBase<TFixture> : NewRelicI
 
     private string _expectedName = "TestUser";
     private string _expectedId = "12345";
+    // This unrealistic message format (no whitespace) is intentional since it is passed to the ConsoleMultiFunctionApplication as a
+    // command line argument and we want to avoid any issues with argument parsing. The test is focused on verifying that the
+    // structured arguments are extracted as context data, so the exact message template is not important as long as it is
+    // consistent between the log message creation and the expected log line.
     private string _messageTemplate = "Person{Name}HasId={Id}";
     private string _expectedMessage  = "PersonTestUserHasId=12345";
 
