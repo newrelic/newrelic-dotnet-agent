@@ -213,8 +213,9 @@ newrelic-dotnet-agent_VERSION/
 - Signs packages with GPG
 
 **Build Scripts:**
-- [Linux/build/build_scripts.py](Linux/build/build_scripts.py) - Main build script
-- [Linux/yum/newrelic-dotnet-agent.spec](Linux/yum/newrelic-dotnet-agent.spec) - RPM spec
+- [Linux/build/docker-compose.yml](Linux/build/docker-compose.yml) - Docker compose file for building and testing the .deb and .rpm packages
+- [Linux/build/linux_packaging.md](Linux/build/linux_packaging.md) - Documents how to use the Docker compose file
+- [Linux/build/rpm/newrelic-dotnet-agent.spec](Linux/build/rpm/newrelic-dotnet-agent.spec) - RPM spec
 - [Linux/build/deb/](Linux/build/deb/) - Debian package scripts
 
 #### 5. Azure Site Extension (`Packaging/AzureSiteExtension/`)
