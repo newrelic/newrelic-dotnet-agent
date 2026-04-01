@@ -30,18 +30,6 @@ public class DummyMELAdapter : ILoggingAdapter
 
     public void Info(string message) => _logger.LogInformation(message);
 
-    public void Info(string message, Dictionary<string, object> context)
-    {
-        using (_logger.BeginScope(context))
-        {
-            _logger.LogInformation(message);
-        }
-    }
-    public void InfoWithParam(string message, object param)
-    {
-        _logger.LogInformation(message, param);
-    }
-
     public void Warn(string message) => _logger.LogWarning(message);
 
     public void Error(Exception exception) => _logger.LogError(exception, exception.Message);
@@ -55,13 +43,32 @@ public class DummyMELAdapter : ILoggingAdapter
         _logger.LogTrace(string.Empty);
     }
 
-    public void Configure() => CreateMelLogger();
+    public void InfoWithContextDictionary(string message, Dictionary<string, object> context)
+    {
+        using (_logger.BeginScope(context))
+        {
+            _logger.LogInformation(message);
+        }
+    }
 
-    public void ConfigureWithInfoLevelEnabled() => CreateMelLogger();
+    public void InfoWithObjectParameter(string message, object param)
+    {
+        _logger.LogInformation(message, param);
+    }
 
-    public void ConfigurePatternLayoutAppenderForDecoration() => CreateMelLogger();
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        _logger.LogInformation(messageTemplate, args);
+    }
 
-    public void ConfigureJsonLayoutAppenderForDecoration() => CreateMelLogger();
+    public void InfoWithStructuredArgsAndContextDictionary(string messageTemplate, object[] args, Dictionary<string, object> context)
+    {
+        using (_logger.BeginScope(context))
+        {
+            _logger.LogInformation(messageTemplate, args);
+        }
+    }
+
     public void LogMessageInNestedScopes()
     {
         using (var _ = _logger.BeginScope("{ScopeKey1}", "scopeValue1"))
@@ -74,6 +81,14 @@ public class DummyMELAdapter : ILoggingAdapter
             }
         }
     }
+
+    public void Configure() => CreateMelLogger();
+
+    public void ConfigureWithInfoLevelEnabled() => CreateMelLogger();
+
+    public void ConfigurePatternLayoutAppenderForDecoration() => CreateMelLogger();
+
+    public void ConfigureJsonLayoutAppenderForDecoration() => CreateMelLogger();
 
     private void CreateMelLogger()
     {

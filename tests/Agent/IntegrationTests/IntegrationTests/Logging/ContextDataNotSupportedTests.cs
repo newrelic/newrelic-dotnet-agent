@@ -42,9 +42,9 @@ public abstract class ContextDataNotSupportedTestsBase<TFixture> : NewRelicInteg
         string context = string.Join(",", _expectedAttributes.Select(x => x.Key + "=" + x.Value).ToArray());
 
         // should generate an exception message in the log since the dummy ILogger doesn't have the right properties
-        _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {InfoMessage} INFO {context}");
+        _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {InfoMessage} {context}");
         // do it again - this time, context data should be marked as unsupported and not generate an exception in the log
-        _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {InfoMessage} INFO {context}");
+        _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {InfoMessage} {context}");
 
         _fixture.AddActions
         (
