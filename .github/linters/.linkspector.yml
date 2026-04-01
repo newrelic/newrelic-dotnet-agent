@@ -1,0 +1,23 @@
+dirs:
+  - .
+ignorePatterns:
+  - '^http://example.net'
+  - '^http://localhost'
+replacementPatterns:
+    - pattern: '^/'
+      replacement: '{{BASEURL}}/'
+aliveStatusCodes: [200, 206, 403]
+
+
+  # "replacementPatterns": [
+  #     {
+  #       "pattern": "^/",
+  #       "replacement": "{{BASEURL}}/"
+  #     }
+  #   ],
+  #   "timeout": "20s",
+  #   "retryOn429": true,
+  #   "retryCount": 5,
+  #   "fallbackRetryDelay": "30s",
+  #   "aliveStatusCodes": [200, 206, 403]
+  # }
