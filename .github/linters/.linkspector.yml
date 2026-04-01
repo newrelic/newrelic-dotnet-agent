@@ -1,8 +1,8 @@
 dirs:
   - .
 ignorePatterns:
-  - '^http://example.net'
-  - '^http://localhost'
+  - pattern: '^http://example.net'
+  - pattern: '^http://localhost'
 replacementPatterns:
     - pattern: '^/'
       replacement: '{{BASEURL}}/'
