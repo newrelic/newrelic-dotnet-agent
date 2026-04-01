@@ -1,5 +1,7 @@
 dirs:
   - .
+excludedFiles:
+  - ./src/Agent/CHANGELOG.md # This file is huge and takes too long to check
 ignorePatterns:
   - pattern: '^http://example.net'
   - pattern: '^http://localhost'
