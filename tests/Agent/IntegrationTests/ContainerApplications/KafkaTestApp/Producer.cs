@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
@@ -65,5 +66,26 @@ public class Producer
         var item = "asyncTestItem";
 
         await _producer.ProduceAsync(_topic, new Message<string, string> { Key = user, Value = item });
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public async Task ProduceAsyncWithExistingHeaders()
+    {
+        var user = "asyncExistingHeadersUser";
+        var item = "asyncExistingHeadersItem";
+
+        var message = new Message<string, string>
+        {
+            Key = user,
+            Value = item,
+            Headers = new Headers
+            {
+                { "traceparent", Encoding.ASCII.GetBytes("00-stale0000000000000000000000000-stale000000000-01") },
+                { "tracestate", Encoding.ASCII.GetBytes("stale=value") },
+                { "newrelic", Encoding.ASCII.GetBytes("stale-newrelic-payload") }
+            }
+        };
+
+        await _producer.ProduceAsync(_topic, message);
     }
 }

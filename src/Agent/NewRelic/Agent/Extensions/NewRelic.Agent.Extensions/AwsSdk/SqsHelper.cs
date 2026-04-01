@@ -78,10 +78,6 @@ public static class SqsHelper
             var getMessageAttributes = _getMessageAttributes.GetOrAdd(smr.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(t, "MessageAttributes"));
             var messageAttributes = getMessageAttributes(smr);
 
-            // if we can't add all DT headers, don't add any
-            if ((messageAttributes.Count + dtHeaderCount - headersInserted) > MaxSQSMessageAttributes)
-                return;
-
             // create a new MessageAttributeValue instance
             var messageAttributeValueTypeFactory = _messageAttributeValueTypeFactory ??= VisibilityBypasser.Instance.GenerateTypeFactory(smr.GetType().Assembly.FullName, "Amazon.SQS.Model.MessageAttributeValue");
             object newMessageAttributeValue = messageAttributeValueTypeFactory.Invoke();
@@ -92,7 +88,19 @@ public static class SqsHelper
             var stringValuePropertySetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(newMessageAttributeValue, "StringValue");
             stringValuePropertySetter(value);
 
-            messageAttributes.Add(key, newMessageAttributeValue);
+            if (messageAttributes.Contains(key))
+            {
+                // Replace existing header in place — no count change, no limit check needed
+                messageAttributes[key] = newMessageAttributeValue;
+            }
+            else
+            {
+                // New header — check that adding all remaining DT headers won't exceed the SQS limit
+                if ((messageAttributes.Count + dtHeaderCount - headersInserted) > MaxSQSMessageAttributes)
+                    return;
+
+                messageAttributes.Add(key, newMessageAttributeValue);
+            }
 
             ++headersInserted;
         });
