@@ -119,7 +119,13 @@ public class NewRelicClientMessageInspector : IClientMessageInspector
 
     private void SetHeaders(Message carrier, string key, string value)
     {
-        // 'Set' will replace an existing value
+        // Remove existing header if present, then add the new one
+        var headerIndex = carrier.Headers.FindHeader(key, string.Empty);
+        if (headerIndex >= 0)
+        {
+            carrier.Headers.RemoveAt(headerIndex);
+        }
+
         carrier.Headers.Add(MessageHeader.CreateHeader(key, string.Empty, value));
     }
 

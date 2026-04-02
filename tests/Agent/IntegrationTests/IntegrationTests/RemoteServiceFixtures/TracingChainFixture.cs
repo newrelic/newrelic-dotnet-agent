@@ -142,6 +142,44 @@ public class TracingChainFixture : RemoteApplicationFixture
         GetStringAndAssertContains(senderUrl, "Worked", headers);
     }
 
+    public void ExecuteTraceRequestChainHttpClientWithExistingHeaders(IEnumerable<KeyValuePair<string, string>> headers = null)
+    {
+        // Same as ExecuteTraceRequestChainHttpClient but calls the endpoint that pre-populates stale DT headers
+        var senderBaseUrl = $"http://{DestinationServerName}:{RemoteApplication.Port}";
+        var receiverBaseUrl = $"http://{DestinationServerName}:{ReceiverApplication.Port}";
+
+        var receiverUrl = $"{receiverBaseUrl}/api/CallEnd";
+        var senderUrl = $"{senderBaseUrl}/api/CallNextWithExistingHeaders?nextUrl={receiverUrl}";
+
+        TestLogger?.WriteLine($"[{nameof(TracingChainFixture)}]: Starting A -> B request chain (with existing DT headers) with URL: {senderUrl}");
+
+        GetStringAndAssertContains(senderUrl, "Worked", headers);
+    }
+
+    public HttpResponseHeaders ExecuteTraceRequestChainHttpWebRequestWithExistingHeaders()
+    {
+        const string action = "Index";
+        var queryString = $"?chainedServerName={DestinationServerName}&chainedPortNumber={ReceiverApplication.Port}&chainedAction={action}";
+
+        var address = $"http://{DestinationServerName}:{Port}/Default/ChainedWebRequestWithExistingHeaders{queryString}";
+
+        using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, address))
+        {
+            using (var httpResponseMessage = _httpClient.SendAsync(httpRequestMessage).Result)
+            {
+                return httpResponseMessage.Headers;
+            }
+        }
+    }
+
+    public void ExecuteTraceRequestChainRestSharpWithExistingHeaders()
+    {
+        var secondCallUrl = $"http://{DestinationServerName}:{ReceiverApplication.Port}/api/RestAPI";
+        var firstCallUrl = $"http://{DestinationServerName}:{SenderApplication.Port}/DistributedTracing/MakeExternalCallUsingRestClientWithExistingHeaders?externalCallUrl={secondCallUrl}";
+
+        GetStringAndAssertEqual(firstCallUrl, "Worked");
+    }
+
     public void ExecuteTraceRequestChainRestSharp(IEnumerable<KeyValuePair<string, string>> headers)
     {
         var secondCallUrl = $"http://{DestinationServerName}:{ReceiverApplication.Port}/api/RestAPI";

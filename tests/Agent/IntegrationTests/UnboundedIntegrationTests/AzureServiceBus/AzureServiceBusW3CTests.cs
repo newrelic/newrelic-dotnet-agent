@@ -42,10 +42,9 @@ public abstract class AzureServiceBusW3CTestsBase<TFixture> : NewRelicIntegratio
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
                 configModifier
+                    .SetLogLevel("finest")
                     .EnableDistributedTrace()
                     .ForceTransactionTraces()
-                    .SetOrDeleteDistributedTraceEnabled(true)
-                    .SetOrDeleteSpanEventsEnabled(true)
                     .ConfigureFasterMetricsHarvestCycle(20)
                     .ConfigureFasterSpanEventsHarvestCycle(20)
                     .ConfigureFasterTransactionTracesHarvestCycle(25);
@@ -216,3 +215,87 @@ public class
 }
 
 #endregion Topic Tests
+
+#region DT Header Replacement Tests
+
+/// <summary>
+/// Verifies that when a ServiceBusMessage already has DT headers in ApplicationProperties,
+/// the agent replaces them rather than duplicating or erroring.
+/// </summary>
+public abstract class AzureServiceBusW3CDTHeaderReplacementTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : ConsoleDynamicMethodFixture
+{
+    private readonly TFixture _fixture;
+    private readonly string _queueName;
+
+    protected AzureServiceBusW3CDTHeaderReplacementTestsBase(TFixture fixture, ITestOutputHelper output) :
+        base(fixture)
+    {
+        _fixture = fixture;
+        _fixture.SetTimeout(TimeSpan.FromMinutes(1));
+        _fixture.TestLogger = output;
+
+        _queueName = $"test-dtheader-{Guid.NewGuid()}";
+
+        _fixture.AddCommand($"AzureServiceBusExerciser InitializeQueue {_queueName}");
+        _fixture.AddCommand($"AzureServiceBusExerciser SendAndReceiveWithExistingDTHeadersForQueue {_queueName}");
+        _fixture.AddCommand($"AzureServiceBusExerciser ReceiveAMessageForQueue {_queueName}");
+        _fixture.AddCommand($"AzureServiceBusExerciser DeleteQueue {_queueName}");
+
+        _fixture.AddActions
+        (
+            setupConfiguration: () =>
+            {
+                var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+
+                configModifier
+                    .SetLogLevel("finest")
+                    .EnableDistributedTrace()
+                    .ForceTransactionTraces()
+                    .ConfigureFasterMetricsHarvestCycle(20)
+                    .ConfigureFasterSpanEventsHarvestCycle(20)
+                    .ConfigureFasterTransactionTracesHarvestCycle(25);
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(1));
+            }
+        );
+
+        _fixture.Initialize();
+    }
+
+    [Fact]
+    public void AgentReplacesExistingDTHeaders()
+    {
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+        var expectedMetrics = new List<Assertions.ExpectedMetric>
+        {
+            new() { metricName = "Supportability/TraceContext/Create/Success", callCount = 1 },
+            new() { metricName = "Supportability/TraceContext/Accept/Success", callCount = 1 },
+        };
+
+        Assertions.MetricsExist(expectedMetrics, metrics);
+
+        // Verify DT propagation — stale headers should have been replaced
+        var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
+        foreach (var span in spanEvents)
+        {
+            if (span.IntrinsicAttributes.TryGetValue("traceId", out var traceId))
+            {
+                Assert.NotEqual("stale0000000000000000000000000", traceId.ToString());
+            }
+        }
+    }
+}
+
+public class AzureServiceBusW3CDTHeaderReplacementTestsCoreLatest : AzureServiceBusW3CDTHeaderReplacementTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public AzureServiceBusW3CDTHeaderReplacementTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture,
+        ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+#endregion DT Header Replacement Tests

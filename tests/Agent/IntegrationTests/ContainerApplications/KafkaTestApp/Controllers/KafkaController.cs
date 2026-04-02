@@ -38,6 +38,13 @@ public class KafkaController : ControllerBase
         return "Complete";
     }
 
+    [HttpGet("produceasyncwithexistingheaders")]
+    public async Task<string> ProduceAsyncWithExistingHeaders()
+    {
+        await _producer.ProduceAsyncWithExistingHeaders();
+        return "Complete";
+    }
+
     [HttpGet("bootstrap_server")]
     public string GetBootstrapServer() => Program.GetBootstrapServer();
 
