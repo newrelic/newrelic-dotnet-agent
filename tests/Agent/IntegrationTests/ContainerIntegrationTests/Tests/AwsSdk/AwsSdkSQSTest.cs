@@ -161,21 +161,24 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
         }
 
         // Verify DT propagation works for queue 4 (pre-existing DT headers should have been replaced by agent)
+        // Uses transaction events instead of spans since adaptive sampling may not sample later transactions
         if (_initCollections)
         {
-            var queueProduceDT = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName4}";
-            var produceSpanDT = spans.LastOrDefault(s => s.IntrinsicAttributes["name"].Equals(queueProduceDT));
-            var processRequestSpanDT = spans.LastOrDefault(s =>
-                s.IntrinsicAttributes["name"].Equals("OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync")
-                && s.IntrinsicAttributes.ContainsKey("parentId")
-                && s.IntrinsicAttributes["parentId"].Equals(produceSpanDT?.IntrinsicAttributes["guid"]));
+            var sendDTTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_metricScope4);
+            var receiveDTTransactionEvents = _fixture.AgentLog.GetTransactionEvents()
+                .Where(e => e.IntrinsicAttributes["name"].Equals("OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync")
+                    && e.IntrinsicAttributes.ContainsKey("parentId")
+                    && e.IntrinsicAttributes.ContainsKey("traceId"));
+            // Find the receive event that shares the same traceId as the send event
+            var receiveDTTransactionEvent = sendDTTransactionEvent != null
+                ? receiveDTTransactionEvents.FirstOrDefault(e => e.IntrinsicAttributes["traceId"].Equals(sendDTTransactionEvent.IntrinsicAttributes["traceId"]))
+                : null;
 
             NrAssert.Multiple(
-                () => Assert.True(produceSpanDT != null, "produceSpanDT should not be null"),
-                () => Assert.True(processRequestSpanDT != null, "processRequestSpanDT (with existing DT headers) should not be null — agent should have replaced stale headers"),
-                () => Assert.Equal(produceSpanDT!.IntrinsicAttributes["traceId"], processRequestSpanDT!.IntrinsicAttributes["traceId"]),
+                () => Assert.True(sendDTTransactionEvent != null, "sendDTTransactionEvent should not be null"),
+                () => Assert.True(receiveDTTransactionEvent != null, "receiveDTTransactionEvent (with existing DT headers) should not be null — agent should have replaced stale headers"),
                 // Verify the stale traceId was NOT propagated
-                () => Assert.NotEqual("stale0000000000000000000000000", processRequestSpanDT!.IntrinsicAttributes["traceId"].ToString())
+                () => Assert.NotEqual("stale0000000000000000000000000", receiveDTTransactionEvent!.IntrinsicAttributes["traceId"].ToString())
             );
         }
 
