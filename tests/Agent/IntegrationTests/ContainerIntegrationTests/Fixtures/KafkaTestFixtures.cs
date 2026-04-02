@@ -31,12 +31,12 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
         GetAndAssertStatusCode(address + "consumewithtimeout", System.Net.HttpStatusCode.OK);
         GetAndAssertStatusCode(address + "consumewithtimeout", System.Net.HttpStatusCode.OK);
 
-        GetAndAssertStatusCode(address + "produce", System.Net.HttpStatusCode.OK);
-        GetAndAssertStatusCode(address + "consumewithcancellationtoken", System.Net.HttpStatusCode.OK);
-
         // produce with pre-existing DT headers to verify agent replaces them
         GetAndAssertStatusCode(address + "produceasyncwithexistingheaders", System.Net.HttpStatusCode.OK);
         GetAndAssertStatusCode(address + "consumewithtimeout", System.Net.HttpStatusCode.OK);
+
+        GetAndAssertStatusCode(address + "produce", System.Net.HttpStatusCode.OK);
+        GetAndAssertStatusCode(address + "consumewithcancellationtoken", System.Net.HttpStatusCode.OK);
 
         // start a consume on an empty queue so we can verify that the Consume(CancellationToken) overload is correctly suppressing the Consume(int) overload calls
         GetAndAssertStatusCode(address + "consumewithcancellationtoken", System.Net.HttpStatusCode.OK);
