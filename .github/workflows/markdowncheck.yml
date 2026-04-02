@@ -28,9 +28,10 @@ jobs:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       
-      - uses: gaurav-nelson/github-action-markdown-link-check@5c5dfc0ac2e225883c0e5f03a85311ec2830d368 # v1
+      - name: Run linkspector
+        uses: umbrelladocs/action-linkspector@37c85bcde51b30bf929936502bac6bfb7e8f0a4d # v1.4.1
         with:
-          #use-quiet-mode: 'yes'
-          use-verbose-mode: 'yes'
-          config-file: '.github/workflows/markdowncheck.config.json'
-          #max-depth: 2
+          github_token: ${{ secrets.GITHUB_TOKEN  }}
+          config_file: .github/linters/linkspector.yml
+          fail_on_error: true
+          filter_mode: nofilter

@@ -725,8 +725,8 @@ dotnet test --settings test.runsettings
 
 ## Related Documentation
 
-- @../claude.md - Main repository guide
-- @../src/claude-source.md - Source code architecture
-- @../build/claude-build.md - Build system
+- [Main repository guide](../claude.md) 
+- [Source code architecture](../src/claude-source.md)
+- [Build system]()../build/claude-build.md)
 - [Integration tests documentation](../docs/integration-tests.md)
 - [Development guide](../docs/development.md)
