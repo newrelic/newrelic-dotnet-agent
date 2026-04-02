@@ -3,6 +3,9 @@
         "projectFile": "tests/Agent/IntegrationTests/SharedApplications/Common/MFALatestPackages/MFALatestPackages.csproj"
     },
     {
+        "projectFile": "tests/Agent/IntegrationTests/Applications/AspNetCoreWebApiLambdaApplication/AspNetCoreWebApiLambdaApplication.csproj"
+    },
+    {
         "projectFile": "tests/Agent/IntegrationTests/Applications/AzureFunctionApplication/AzureFunctionApplication.csproj"
     },
     {

@@ -89,9 +89,17 @@ public abstract class AwsLambdaAPIGatewayRequestAutoInstrumentationTest<T> : New
     }
 }
 
-public class AwsLambdaAPIGatewayRequestAutoInstrumentationTestTestCoreOldest : AwsLambdaAPIGatewayRequestAutoInstrumentationTest<LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreOldest>
+public class AwsLambdaAPIGatewayRequestAutoInstrumentationTestCoreOldest : AwsLambdaAPIGatewayRequestAutoInstrumentationTest<LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreOldest>
 {
-    public AwsLambdaAPIGatewayRequestAutoInstrumentationTestTestCoreOldest(LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+    public AwsLambdaAPIGatewayRequestAutoInstrumentationTestCoreOldest(LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, "WebTransaction/MVC/Values/Get")
+    {
+    }
+}
+
+public class AwsLambdaAPIGatewayRequestAutoInstrumentationTestCoreLatest : AwsLambdaAPIGatewayRequestAutoInstrumentationTest<LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreLatest>
+{
+    public AwsLambdaAPIGatewayRequestAutoInstrumentationTestCoreLatest(LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output, "WebTransaction/MVC/Values/Get")
     {
     }

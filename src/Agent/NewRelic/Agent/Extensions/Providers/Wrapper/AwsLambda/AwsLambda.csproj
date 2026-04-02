@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>NewRelic.Providers.Wrapper.AwsLambda</AssemblyName>
@@ -11,6 +11,7 @@
 		</Content>
 	</ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.7.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
   <ItemGroup>

@@ -78,9 +78,17 @@ public abstract class AwsLambdaApplicationLoadBalancerRequestAutoInstrumentation
     }
 }
 
-public class AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTestTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTest<LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreOldest>
+public class AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTest<LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreOldest>
 {
-    public AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTestTestCoreOldest(LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+    public AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTestCoreOldest(LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, "WebTransaction/MVC/Values/Get")
+    {
+    }
+}
+
+public class AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTest<LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreLatest>
+{
+    public AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTestCoreLatest(LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output, "WebTransaction/MVC/Values/Get")
     {
     }
