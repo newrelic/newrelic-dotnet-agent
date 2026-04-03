@@ -422,7 +422,7 @@ SPDX-License-Identifier: Apache-2.0
         <File Id="AzureServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll" />
       </Component>
       <Component Id="HangfireWrapperComponent" Guid="{4E086BCC-4FC0-46B7-9E31-8EA5E42BCA78}">
-        <File Id="HangfireWrapperFile" Name="NewRelic.Providers.Wrapper.Hangfire.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Hangfiredll" />
+        <File Id="HangfireWrapperFile" Name="NewRelic.Providers.Wrapper.Hangfire.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Hangfire.dll" />
       </Component>
     </ComponentGroup>
 
