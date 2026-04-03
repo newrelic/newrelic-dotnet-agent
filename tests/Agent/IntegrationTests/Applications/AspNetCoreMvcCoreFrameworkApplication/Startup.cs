@@ -25,6 +25,10 @@ public class Startup
         services
             .AddMvcCore()
             .AddJsonFormatters()
+            // Despite this application now using a 2.3 version of ASP.NET Core,
+            // 2.1 is still an appropriate compatibility version to use for this application,
+            // since 2.3 is just a reshipping of 2.1.  See Microsoft's announcement of
+            // ASP.NET Core 2.3 for more details: https://github.com/dotnet/announcements/issues/331
             .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
     }
 
