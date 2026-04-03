@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Concurrent;
+using System.Reflection;
 using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.Hangfire;
@@ -13,18 +13,13 @@ namespace NewRelic.Providers.Wrapper.Hangfire;
 /// </summary>
 internal static class HangfireHelper
 {
-    // Cache reflection accessors for performance
-    private static readonly ConcurrentDictionary<Type, Func<object, string>> JobIdAccessors
-        = new ConcurrentDictionary<Type, Func<object, string>>();
-
-    private static readonly ConcurrentDictionary<Type, Func<object, object>> JobAccessors
-        = new ConcurrentDictionary<Type, Func<object, object>>();
-
-    private static readonly ConcurrentDictionary<Type, Func<object, string>> QueueAccessors
-        = new ConcurrentDictionary<Type, Func<object, string>>();
-
-    private static readonly ConcurrentDictionary<Type, Func<object, string>> ServerIdAccessors
-        = new ConcurrentDictionary<Type, Func<object, string>>();
+    private static Func<object, string> _jobIdAccessor;
+    private static Func<object, object> _jobAccessor;
+    private static Func<object, string> _queueAccessor;
+    private static Func<object, string> _serverIdAccessor;
+    private static Func<object, object> _backgroundJobAccessor;
+    private static Func<object, Type> _jobTypeAccessor;
+    private static Func<object, MethodInfo> _jobMethodAccessor;
 
     /// <summary>
     /// Extracts job ID from BackgroundJob object.
@@ -38,10 +33,8 @@ internal static class HangfireHelper
 
         try
         {
-            var type = backgroundJob.GetType();
-            var accessor = JobIdAccessors.GetOrAdd(type, t =>
-                VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(t, "Id"));
-            return accessor(backgroundJob);
+            _jobIdAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(backgroundJob.GetType(), "Id");
+            return _jobIdAccessor(backgroundJob);
         }
         catch
         {
@@ -61,10 +54,8 @@ internal static class HangfireHelper
 
         try
         {
-            var type = backgroundJob.GetType();
-            var accessor = JobAccessors.GetOrAdd(type, t =>
-                VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Job"));
-            return accessor(backgroundJob);
+            _jobAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(backgroundJob.GetType(), "Job");
+            return _jobAccessor(backgroundJob);
         }
         catch
         {
@@ -84,10 +75,8 @@ internal static class HangfireHelper
 
         try
         {
-            var type = job.GetType();
-            var accessor = QueueAccessors.GetOrAdd(type, t =>
-                VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(t, "Queue"));
-            return accessor(job);
+            _queueAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(job.GetType(), "Queue");
+            return _queueAccessor(job);
         }
         catch
         {
@@ -107,10 +96,8 @@ internal static class HangfireHelper
 
         try
         {
-            var type = performContext.GetType();
-            var accessor = ServerIdAccessors.GetOrAdd(type, t =>
-                VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(t, "ServerId"));
-            return accessor(performContext);
+            _serverIdAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(performContext.GetType(), "ServerId");
+            return _serverIdAccessor(performContext);
         }
         catch
         {
@@ -130,21 +117,14 @@ internal static class HangfireHelper
 
         try
         {
-            // Extract Type property
-            var typeProperty = job.GetType().GetProperty("Type",
-                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-
-            if (typeProperty != null)
-            {
-                var jobType = typeProperty.GetValue(job) as Type;
-                return jobType?.FullName;
-            }
+            _jobTypeAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Type>(job.GetType(), "Type");
+            var jobType = _jobTypeAccessor(job);
+            return jobType?.FullName;
         }
         catch
         {
+            return null;
         }
-
-        return null;
     }
 
     /// <summary>
@@ -159,21 +139,14 @@ internal static class HangfireHelper
 
         try
         {
-            // Extract Method property
-            var methodProperty = job.GetType().GetProperty("Method",
-                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-
-            if (methodProperty != null)
-            {
-                var method = methodProperty.GetValue(job) as System.Reflection.MethodInfo;
-                return method?.Name;
-            }
+            _jobMethodAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<MethodInfo>(job.GetType(), "Method");
+            var method = _jobMethodAccessor(job);
+            return method?.Name;
         }
         catch
         {
+            return null;
         }
-
-        return null;
     }
 
     /// <summary>
@@ -188,17 +161,12 @@ internal static class HangfireHelper
 
         try
         {
-            var type = performContext.GetType();
-            var property = type.GetProperty("BackgroundJob",
-                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-
-            if (property != null)
-                return property.GetValue(performContext);
+            _backgroundJobAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(performContext.GetType(), "BackgroundJob");
+            return _backgroundJobAccessor(performContext);
         }
         catch
         {
+            return null;
         }
-
-        return null;
     }
 }
