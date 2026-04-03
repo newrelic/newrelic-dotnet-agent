@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11205.157 d18.0
+VisualStudioVersion = 18.0.11205.157
 MinimumVisualStudioVersion = 15.0.26228.04
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "src\Agent\NewRelic\Agent\Core\Core.csproj", "{D6E22195-EE69-4320-B08B-E68229FB69AB}"
 EndProject
@@ -150,6 +150,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Home", "src\Agent\NewRelic\
 		{4078E594-E738-48F7-A7ED-B208ADD04900} = {4078E594-E738-48F7-A7ED-B208ADD04900}
 		{44434B8F-EE14-49B0-855D-6EA0B48048BF} = {44434B8F-EE14-49B0-855D-6EA0B48048BF}
 		{4F5D77F3-B41A-44A7-AF10-2D5462CE0162} = {4F5D77F3-B41A-44A7-AF10-2D5462CE0162}
+		{5011E41D-F7CB-454B-A7D0-0C3C3E655030} = {5011E41D-F7CB-454B-A7D0-0C3C3E655030}
 		{570429FD-C785-4673-82DF-643D06B6DC53} = {570429FD-C785-4673-82DF-643D06B6DC53}
 		{5BBEEC11-B753-4631-BCDD-43BE73B5CCAC} = {5BBEEC11-B753-4631-BCDD-43BE73B5CCAC}
 		{5D74E5C5-9BA3-423B-86F7-14C2D1A14661} = {5D74E5C5-9BA3-423B-86F7-14C2D1A14661}
@@ -230,6 +231,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureServiceBus", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\AzureServiceBus\AzureServiceBus.csproj", "{4078E594-E738-48F7-A7ED-B208ADD04900}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HybridHttpContext", "src\Agent\NewRelic\Agent\Extensions\Providers\Storage\HybridHttpContext\HybridHttpContext.csproj", "{CE9B992B-A2A7-20F9-9EEB-AE699C6D77CC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hangfire", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Hangfire\Hangfire.csproj", "{5011E41D-F7CB-454B-A7D0-0C3C3E655030}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -485,6 +488,10 @@ Global
 		{CE9B992B-A2A7-20F9-9EEB-AE699C6D77CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE9B992B-A2A7-20F9-9EEB-AE699C6D77CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE9B992B-A2A7-20F9-9EEB-AE699C6D77CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5011E41D-F7CB-454B-A7D0-0C3C3E655030}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5011E41D-F7CB-454B-A7D0-0C3C3E655030}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5011E41D-F7CB-454B-A7D0-0C3C3E655030}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5011E41D-F7CB-454B-A7D0-0C3C3E655030}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -558,10 +565,11 @@ Global
 		{A0F784BB-D66D-47E0-80F4-66CF8DAF697C} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{4078E594-E738-48F7-A7ED-B208ADD04900} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{CE9B992B-A2A7-20F9-9EEB-AE699C6D77CC} = {2D194040-0192-4A87-A076-2B640C7FA82F}
+		{5011E41D-F7CB-454B-A7D0-0C3C3E655030} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
 		SolutionGuid = {D8B98070-6B8E-403C-A07F-A3F2E4A3A3D0}
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = FullAgent.vsmdi
