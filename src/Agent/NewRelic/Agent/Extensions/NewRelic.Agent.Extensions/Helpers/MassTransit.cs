@@ -15,7 +15,21 @@ public class MassTransitQueueData
 
 public class MassTransitHelpers
 {
-    public static MassTransitQueueData GetQueueData(Uri sourceAddress)
+    public static MassTransitQueueData GetQueueData(Uri sourceAddress, Uri fallbackAddress = null)
+    {
+        var data = GetQueueDataFromUri(sourceAddress);
+
+        // If the primary address didn't yield a meaningful name, try the fallback.
+        // This handles transports like Kafka Rider where SourceAddress may be the
+        // bus endpoint (e.g. loopback://localhost/) while DestinationAddress contains
+        // the actual topic/queue information.
+        if (data.QueueName == "Unknown" && fallbackAddress != null)
+            data = GetQueueDataFromUri(fallbackAddress);
+
+        return data;
+    }
+
+    private static MassTransitQueueData GetQueueDataFromUri(Uri sourceAddress)
     {
         var data = new MassTransitQueueData();
 
@@ -40,6 +54,11 @@ public class MassTransitHelpers
                 data.DestinationType = MessageBrokerDestinationType.Queue;
                 return data;
         }
+
+        // MassTransit Rider embeds path prefixes (e.g. /kafka/, /event-hub/) regardless
+        // of the bus transport scheme. Check for these before scheme-specific parsing.
+        if (TryParseRiderPrefix(sourceAddress, data))
+            return data;
 
         // Transport-specific parsing by URI scheme
         switch (scheme)
@@ -84,6 +103,30 @@ public class MassTransitHelpers
         }
 
         return data;
+    }
+
+    private static bool TryParseRiderPrefix(Uri sourceAddress, MassTransitQueueData data)
+    {
+        // MassTransit Rider transports (Kafka, Event Hubs) embed a path prefix
+        // in the URI regardless of the underlying bus transport scheme.
+        // e.g. loopback://localhost/kafka/{topic}, rabbitmq://host/kafka/{topic}
+        var path = sourceAddress.AbsolutePath.TrimStart('/');
+
+        if (path.StartsWith("kafka/", StringComparison.OrdinalIgnoreCase))
+        {
+            data.QueueName = path.Substring("kafka/".Length).TrimEnd('/');
+            data.DestinationType = MessageBrokerDestinationType.Topic;
+            return true;
+        }
+
+        if (path.StartsWith("event-hub/", StringComparison.OrdinalIgnoreCase))
+        {
+            data.QueueName = path.Substring("event-hub/".Length).TrimEnd('/');
+            data.DestinationType = MessageBrokerDestinationType.Topic;
+            return true;
+        }
+
+        return false;
     }
 
     private static void ParseRabbitMqUri(Uri sourceAddress, MassTransitQueueData data)

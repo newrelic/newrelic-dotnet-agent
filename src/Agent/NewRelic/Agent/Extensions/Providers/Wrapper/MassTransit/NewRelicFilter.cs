@@ -40,7 +40,7 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
 
         var mc = new MethodCall(_consumeMethod, context, default(string[]), true);
 
-        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress);
+        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress, context.DestinationAddress);
 
         var transaction = _agent.CreateTransaction(
             destinationType: queueData.DestinationType,
@@ -86,7 +86,7 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
 
         var mc = new MethodCall(_publishMethod, context, default(string[]), true);
 
-        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress);
+        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress, context.DestinationAddress);
 
         var transaction = _agent.CurrentTransaction;
         InsertDistributedTraceHeaders(context.Headers, transaction);
@@ -103,7 +103,7 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
 
         var mc = new MethodCall(_sendMethod, context, default(string[]), true);
 
-        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress);
+        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress, context.DestinationAddress);
 
         var transaction = _agent.CurrentTransaction;
         InsertDistributedTraceHeaders(context.Headers, transaction);
