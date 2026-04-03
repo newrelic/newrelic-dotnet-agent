@@ -19,6 +19,15 @@ public static class PerformanceMetrics
 
         ThreadPool.SetMaxThreads(countMaxWorkerThreads, countMaxCompletionThreads);
 
+        // Induce Gen0-only collections BEFORE the agent starts. GCSamplerV2 reads
+        // cumulative GC.CollectionCount() values, so these pre-agent collections
+        // guarantee that CollectionCount(0) > CollectionCount(1) by the time the
+        // first sample runs — regardless of when the sampler fires relative to
+        // StartAgent(). V1 (EventListener-based) is unaffected since it only
+        // captures events after the listener registers inside StartAgent().
+        GC.Collect(0);
+        GC.Collect(0);
+
         StartAgent();
     }
 
