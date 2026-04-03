@@ -1,4 +1,5 @@
-FROM fedora:latest AS base
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE} AS base
 
 # configure dnf and upgrade all packages
 RUN echo "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
