@@ -32,6 +32,12 @@ public class MassTransitHelperTests
     [TestCase("amqp://broker/vhost/my-queue", "my-queue")]
     // In-Memory / Loopback
     [TestCase("loopback://localhost/my-queue", "my-queue")]
+    // Rider prefix with loopback bus
+    [TestCase("loopback://localhost/kafka/my-topic", "my-topic")]
+    [TestCase("loopback://localhost/event-hub/my-hub", "my-hub")]
+    // Rider prefix with RabbitMQ bus
+    [TestCase("rabbitmq://rabbitmq/kafka/my-topic", "my-topic")]
+    [TestCase("rabbitmq://rabbitmq/event-hub/my-hub", "my-hub")]
     // Short-form addressing schemes
     [TestCase("queue:my-queue", "my-queue")]
     [TestCase("topic:my-topic", "my-topic")]
@@ -74,6 +80,12 @@ public class MassTransitHelperTests
     [TestCase("amqp://broker/my-queue", MessageBrokerDestinationType.Queue)]
     // In-Memory / Loopback (always Queue)
     [TestCase("loopback://localhost/my-queue", MessageBrokerDestinationType.Queue)]
+    // Rider prefix with loopback bus (Topic)
+    [TestCase("loopback://localhost/kafka/my-topic", MessageBrokerDestinationType.Topic)]
+    [TestCase("loopback://localhost/event-hub/my-hub", MessageBrokerDestinationType.Topic)]
+    // Rider prefix with RabbitMQ bus (Topic)
+    [TestCase("rabbitmq://rabbitmq/kafka/my-topic", MessageBrokerDestinationType.Topic)]
+    [TestCase("rabbitmq://rabbitmq/event-hub/my-hub", MessageBrokerDestinationType.Topic)]
     // Short-form addressing schemes
     [TestCase("topic:my-topic", MessageBrokerDestinationType.Topic)]
     [TestCase("queue:my-queue", MessageBrokerDestinationType.Queue)]
@@ -86,5 +98,24 @@ public class MassTransitHelperTests
 
         // Assert
         Assert.That(destType, Is.EqualTo(expectedDestType), "Did not get expected queue type");
+    }
+
+    [Test]
+    // Primary yields Unknown, fallback has the real destination
+    [TestCase(null, "loopback://localhost/kafka/my-topic", "my-topic", MessageBrokerDestinationType.Topic)]
+    [TestCase("loopback://localhost/", "loopback://localhost/kafka/my-topic", "my-topic", MessageBrokerDestinationType.Topic)]
+    // Primary has valid data — fallback is ignored
+    [TestCase("kafka://broker:9092/kafka/my-topic", "loopback://localhost/something-else", "my-topic", MessageBrokerDestinationType.Topic)]
+    // Both null
+    [TestCase(null, null, "Unknown", MessageBrokerDestinationType.Queue)]
+    public void GetQueueData_FallbackAddress(Uri primary, Uri fallback, string expectedQueueName, MessageBrokerDestinationType expectedDestType)
+    {
+        var data = MassTransitHelpers.GetQueueData(primary, fallback);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(data.QueueName, Is.EqualTo(expectedQueueName));
+            Assert.That(data.DestinationType, Is.EqualTo(expectedDestType));
+        });
     }
 }

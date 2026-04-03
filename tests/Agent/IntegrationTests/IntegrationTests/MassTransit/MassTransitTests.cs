@@ -65,7 +65,7 @@ public abstract class MassTransitTestsBase<TFixture> : NewRelicIntegrationTest<T
     {
 
         var massTransitMetricNameRegexBase = @"MessageBroker\/MassTransit\/Queue\/";
-        var queueNameRegex = @"Named\/(.{26})"; // The auto-generated in-memory queue names have 26 chars
+        var queueNameRegex = @"Named\/([^\/]+)"; // Match the auto-generated in-memory queue name (last path segment of the loopback:// URI)
         var massTransitProduceMetricNameRegex = massTransitMetricNameRegexBase + @"Produce\/" + queueNameRegex;
         var massTransitConsumeMetricNameRegex = massTransitMetricNameRegexBase + @"Consume\/" + queueNameRegex;
 
