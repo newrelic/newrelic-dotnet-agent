@@ -52,7 +52,7 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
 
         transaction.AcceptDistributedTraceHeaders(context.Headers, GetHeaderValue, TransportType.AMQP);
 
-        var segment = transaction.StartMessageBrokerSegment(mc, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, MessageBrokerVendorName, queueData.QueueName);
+        var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Consume, MessageBrokerVendorName, queueData.QueueName);
 
         await next.Send(context);
         segment.End();
