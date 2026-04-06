@@ -54,6 +54,7 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
+            // We expect 3 calls to the simple jobs (parent, child, and standalone) and 1 call to the failing job. The async variants should have the same counts.
             new Assertions.ExpectedMetric {metricName = metricPrefix + ".SimpleJob", CallCountAllHarvests = 3},
             new Assertions.ExpectedMetric {metricName = metricPrefix + ".FailingJob", CallCountAllHarvests = 1},
             new Assertions.ExpectedMetric {metricName = metricPrefix + ".SimpleAsyncJob", CallCountAllHarvests = 3},
@@ -69,7 +70,7 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             Assert.Equal("hangfire", span.AgentAttributes["workflow.platform.name"]);
             Assert.NotNull(span.AgentAttributes["workflow.task.name"]);
             Assert.NotNull(span.AgentAttributes["workflow.task.id"]);
-            if (_version.Minor >= 8) // 1.7 does not have pass the server into the PerformContext.
+            if (_version.Minor >= 8) // 1.7 does not pass the server into the PerformContext.
             {
                 Assert.NotNull(span.AgentAttributes["workflow.task.server"]);
             }
