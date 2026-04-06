@@ -180,6 +180,143 @@ jobs:
       actions: write
       contents: read
         
+  # ---------------------------------------------------------------------------
+  # Compute the set of test namespaces to run, after applying exclusions from
+  # GitHub repo variables.  To skip a namespace, add it to the JSON-array
+  # variable in Settings > Secrets and variables > Actions > Variables:
+  #   INTEGRATION_EXCLUDE_NAMESPACES  (e.g. ["LLM","OpenTelemetry"])
+  #   UNBOUNDED_EXCLUDE_NAMESPACES    (e.g. ["Couchbase"])
+  # ---------------------------------------------------------------------------
+  get-test-namespaces:
+    name: Get Test Namespaces
+    needs: check-modified-files
+    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    runs-on: ubuntu-latest
+    outputs:
+      integration-namespaces: ${{ steps.compute.outputs.integration }}
+      unbounded-namespaces: ${{ steps.compute.outputs.unbounded }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Compute namespace lists
+        id: compute
+        env:
+          INTEGRATION_EXCLUDE: ${{ vars.INTEGRATION_EXCLUDE_NAMESPACES }}
+          UNBOUNDED_EXCLUDE: ${{ vars.UNBOUNDED_EXCLUDE_NAMESPACES }}
+        run: |
+          # ── Canonical namespace lists ──────────────────────────────────
+          # maintain alphabetical order, please!
+          integration_all='[
+            "AgentFeatures",
+            "AgentLogs",
+            "AgentMetrics",
+            "Api",
+            "AppDomainCaching",
+            "AspNetCore",
+            "AwsLambda.AutoInstrumentation",
+            "AwsLambda.CloudWatch",
+            "AwsLambda.Custom",
+            "AwsLambda.DynamoDb",
+            "AwsLambda.General",
+            "AwsLambda.Kinesis",
+            "AwsLambda.S3",
+            "AwsLambda.Ses",
+            "AwsLambda.Sns",
+            "AwsLambda.Sqs",
+            "AwsLambda.WebRequest",
+            "AwsSdk",
+            "AzureFunction",
+            "BasicInstrumentation",
+            "Blazor",
+            "CatInbound",
+            "CatOutbound",
+            "CodeLevelMetrics",
+            "Configuration",
+            "CSP",
+            "CustomAttributes",
+            "CustomInstrumentation",
+            "DataTransmission",
+            "DistributedTracing",
+            "Errors",
+            "HttpClientInstrumentation",
+            "HybridHttpContextStorage",
+            "InfiniteTracing",
+            "LLM",
+            "Logging.AuditLog",
+            "Logging.ContextData",
+            "Logging.HsmAndCsp",
+            "Logging.LocalDecoration",
+            "Logging.LogLevelDetection",
+            "Logging.MaxSamplesStored",
+            "Logging.MetricsAndForwarding",
+            "Logging.ZeroMaxSamplesStored",
+            "MassTransit",
+            "OpenTelemetry",
+            "Owin",
+            "ReJit.NetCore",
+            "ReJit.NetFramework",
+            "RequestHandling",
+            "RequestHeadersCapture.AspNet",
+            "RequestHeadersCapture.AspNetCore",
+            "RequestHeadersCapture.EnvironmentVariables",
+            "RequestHeadersCapture.Owin",
+            "RequestHeadersCapture.WCF",
+            "RestSharp",
+            "WCF.Client.IIS.ASPDisabled",
+            "WCF.Client.IIS.ASPEnabled",
+            "WCF.Client.Self",
+            "WCF.Service.IIS.ASPDisabled",
+            "WCF.Service.IIS.ASPEnabled",
+            "WCF.Service.Self"
+          ]'
+
+          unbounded_all='[
+            "AzureServiceBus",
+            "CosmosDB",
+            "Couchbase",
+            "Elasticsearch",
+            "MongoDB",
+            "Msmq",
+            "MsSql",
+            "MySql",
+            "NServiceBus",
+            "NServiceBus5",
+            "Oracle",
+            "Postgres",
+            "RabbitMq",
+            "Redis"
+          ]'
+
+          # ── Read exclusion variables (default to empty array) ─────────
+          integration_exclude="${INTEGRATION_EXCLUDE:-[]}"
+          unbounded_exclude="${UNBOUNDED_EXCLUDE:-[]}"
+
+          # ── Apply exclusions ──────────────────────────────────────────
+          integration=$(jq -c '. - $ex' --argjson ex "$integration_exclude" <<< "$integration_all")
+          unbounded=$(jq -c '. - $ex' --argjson ex "$unbounded_exclude" <<< "$unbounded_all")
+
+          # ── Log what was excluded ─────────────────────────────────────
+          int_removed=$(jq -c '. as $all | $all - ($all - $ex)' --argjson ex "$integration_exclude" <<< "$integration_all")
+          unb_removed=$(jq -c '. as $all | $all - ($all - $ex)' --argjson ex "$unbounded_exclude" <<< "$unbounded_all")
+
+          echo "::group::Integration test namespaces"
+          echo "Excluded: $int_removed"
+          echo "Running:  $integration"
+          echo "::endgroup::"
+
+          echo "::group::Unbounded test namespaces"
+          echo "Excluded: $unb_removed"
+          echo "Running:  $unbounded"
+          echo "::endgroup::"
+
+          echo "integration=$integration" >> "$GITHUB_OUTPUT"
+          echo "unbounded=$unbounded" >> "$GITHUB_OUTPUT"
+        shell: bash
+
   build-integration-tests:
     needs: build-fullagent-msi
     name: Build IntegrationTests
@@ -400,73 +537,12 @@ jobs:
           if-no-files-found: error
 
   run-integration-tests:
-    needs: [build-integration-tests]
+    needs: [build-integration-tests, get-test-namespaces]
     name: Run IntegrationTests
     runs-on: windows-2025-vs2026
     strategy:
       matrix:
-        namespace: [ 
-          AgentFeatures,
-          AgentLogs, 
-          AgentMetrics, 
-          Api, 
-          AppDomainCaching, 
-          AspNetCore, 
-          AwsLambda.AutoInstrumentation,
-          AwsLambda.CloudWatch,
-          AwsLambda.Custom,
-          AwsLambda.DynamoDb,
-          AwsLambda.General,
-          AwsLambda.Kinesis,
-          AwsLambda.S3,
-          AwsLambda.Ses,
-          AwsLambda.Sns,
-          AwsLambda.Sqs,
-          AwsLambda.WebRequest,
-          AwsSdk,
-          AzureFunction,
-          BasicInstrumentation, 
-          Blazor,
-          CatInbound, 
-          CatOutbound, 
-          CodeLevelMetrics, 
-          Configuration, 
-          CSP, 
-          CustomAttributes, 
-          CustomInstrumentation, 
-          DataTransmission, 
-          DistributedTracing, 
-          Errors, 
-          HttpClientInstrumentation, 
-          HybridHttpContextStorage,
-          InfiniteTracing,
-          LLM,
-          Logging.AuditLog,
-          Logging.ContextData, 
-          Logging.HsmAndCsp, 
-          Logging.LocalDecoration, 
-          Logging.LogLevelDetection, 
-          Logging.MaxSamplesStored, 
-          Logging.MetricsAndForwarding, 
-          Logging.ZeroMaxSamplesStored,
-          OpenTelemetry,
-          Owin,
-          MassTransit, 
-          ReJit.NetCore, 
-          ReJit.NetFramework, 
-          RequestHandling, 
-          RequestHeadersCapture.AspNet, 
-          RequestHeadersCapture.AspNetCore, 
-          RequestHeadersCapture.EnvironmentVariables, 
-          RequestHeadersCapture.Owin, 
-          RequestHeadersCapture.WCF, 
-          RestSharp, 
-          WCF.Client.IIS.ASPDisabled, 
-          WCF.Client.IIS.ASPEnabled, 
-          WCF.Client.Self, 
-          WCF.Service.IIS.ASPDisabled, 
-          WCF.Service.IIS.ASPEnabled, 
-          WCF.Service.Self] # maintain alphabetical order, please!
+        namespace: ${{ fromJson(needs.get-test-namespaces.outputs.integration-namespaces) }}
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -657,28 +733,12 @@ jobs:
           if-no-files-found: error
 
   run-unbounded-tests:
-    needs: [build-unbounded-tests]
+    needs: [build-unbounded-tests, get-test-namespaces]
     name: Run Unbounded Tests
     runs-on: windows-2025-vs2026
     strategy:
       matrix:
-        namespace:
-          [
-            AzureServiceBus,
-            CosmosDB,
-            Couchbase,
-            Elasticsearch,
-            MongoDB,
-            Msmq,
-            MsSql,
-            MySql,
-            NServiceBus,
-            NServiceBus5,
-            Oracle,
-            Postgres,
-            RabbitMq,
-            Redis,
-          ]
+        namespace: ${{ fromJson(needs.get-test-namespaces.outputs.unbounded-namespaces) }}
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
