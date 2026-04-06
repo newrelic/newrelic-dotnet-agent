@@ -14,9 +14,3 @@ services:
         container_name: ${CONTAINER_NAME}
         image: ${CONTAINER_NAME}
         platform: ${PLATFORM}
-
-networks:
-    default:
-        driver: bridge
-        driver_opts:
-          com.docker.network.bridge.enable_icc: "true"
