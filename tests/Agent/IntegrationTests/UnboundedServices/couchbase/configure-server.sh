@@ -1,27 +1,30 @@
 #!/bin/sh
-set -e 
+set -e
 /entrypoint.sh couchbase-server &
 
+# wait for the server to be up and running
+# when the file /opt/couchbase/var/lib/couchbase/container-configured exists, the server is ready
+while [ ! -f /opt/couchbase/var/lib/couchbase/container-configured ]; do
+  sleep 1
+done
+
+echo "Waiting a bit longer for the server to be ready..."
+sleep 15s
+
+# Always reset the administrator password on startup to ensure it matches
+# the expected value, even after container restarts where the sandbox image
+# may have re-initialized with its default password.
+echo "Resetting administrator password"
+/opt/couchbase/bin/couchbase-cli reset-admin-password --new-password ${COUCHBASE_ADMINISTRATOR_PASSWORD} || { echo "Error: Failed to reset administrator password"; exit 1; }
+
+# Only create the FTS index on first run (idempotent but avoids noisy errors on restart)
 if [ ! -f /nr-container-configured ]; then
-
-  # wait for the server to be up and running
-  # when the file /opt/couchbase/var/lib/couchbase/container-configured exists, the server is ready
-  while [ ! -f /opt/couchbase/var/lib/couchbase/container-configured ]; do
-    sleep 1
-  done
-
-  echo "Waiting a bit longer for the server to be ready..."
-  sleep 15s
-
-  # use the couchbase cli to change the administrator password
-  echo "Changing administrator password"
-  /opt/couchbase/bin/couchbase-cli reset-admin-password --new-password ${COUCHBASE_ADMINISTRATOR_PASSWORD} || { echo "Error: Failed to reset administrator password"; exit 1; }
 
   # Get UUID of travel-sample bucket
   uuid=$(curl -u Administrator:${COUCHBASE_ADMINISTRATOR_PASSWORD} http://127.0.0.1:8091/pools/default/buckets/travel-sample | jq '. | .uuid') || { echo "Error: Failed to retrieve UUID"; exit 1; }
 
   echo "Creating a full text search index on the hotel collection in the inventory scope"
-                      
+
   curl -XPUT -H "Content-Type: application/json" -u Administrator:${COUCHBASE_ADMINISTRATOR_PASSWORD} \
   http://localhost:8094/api/bucket/travel-sample/scope/inventory/index/index-hotel-description \
   -d '{
