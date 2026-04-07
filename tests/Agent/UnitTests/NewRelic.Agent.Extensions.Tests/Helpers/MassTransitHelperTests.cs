@@ -17,6 +17,9 @@ public class MassTransitHelperTests
     [TestCase("rabbitmq://localhost/SomeHostname_MassTransitTest_bus_myqueuename?temporary=true", "myqueuename")]
     [TestCase("rabbitmq://localhost/SomeHostname_MassTransitTest_bus_myqueuename", "myqueuename")]
     [TestCase("rabbitmq://localhost/bogus", "bogus")]
+    // RabbitMQ SSL
+    [TestCase("rabbitmqs://host/vhost/Hostname_App_bus_myqueue?temporary=true", "myqueue")]
+    [TestCase("rabbitmqs://host/my-queue", "my-queue")]
     // Kafka
     [TestCase("kafka://broker:9092/kafka/my-topic", "my-topic")]
     [TestCase("kafka://broker/kafka/orders.events.v1", "orders.events.v1")]
@@ -60,6 +63,10 @@ public class MassTransitHelperTests
     [TestCase("rabbitmq://localhost/NRHXPSQL3_MassTransitTest_bus_myqueuename", MessageBrokerDestinationType.Queue)]
     // RabbitMQ without underscores + temporary
     [TestCase("rabbitmq://localhost/myqueue?temporary=true", MessageBrokerDestinationType.TempQueue)]
+    // RabbitMQ SSL
+    [TestCase("rabbitmqs://host/vhost/Hostname_App_bus_myqueue?temporary=true", MessageBrokerDestinationType.TempQueue)]
+    [TestCase("rabbitmqs://host/vhost/Hostname_App_bus_myqueue", MessageBrokerDestinationType.Queue)]
+    [TestCase("rabbitmqs://host/my-queue", MessageBrokerDestinationType.Queue)]
     // Kafka (always Topic)
     [TestCase("kafka://broker:9092/kafka/my-topic", MessageBrokerDestinationType.Topic)]
     [TestCase("kafka://broker/kafka/orders.events.v1", MessageBrokerDestinationType.Topic)]

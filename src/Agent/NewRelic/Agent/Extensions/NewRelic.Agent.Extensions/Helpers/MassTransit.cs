@@ -89,6 +89,7 @@ public class MassTransitHelpers
                 break;
 
             case "rabbitmq":
+            case "rabbitmqs":
                 ParseRabbitMqUri(sourceAddress, data);
                 break;
 
