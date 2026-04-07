@@ -265,13 +265,19 @@ public class ContainerApplication : RemoteApplication
 
         Console.WriteLine($"[{AppName} {DateTime.Now}] Did not find PID file matching {pidFilePath}. {(RemoteProcess.HasExited ? "Process exited" : "Wait timed out")}.");
 
-        // Retry once if compose exited quickly (often due to transient network creation issues)
-        if (RemoteProcess.HasExited && _startupAttempts == 0)
+        // Retry if compose exited quickly (often due to transient Docker network issues
+        // where the daemon hasn't fully released resources from a prior compose project).
+        const int maxRetries = 2;
+        if (RemoteProcess.HasExited && _startupAttempts < maxRetries)
         {
             _startupAttempts++;
-            Console.WriteLine($"[{AppName} {DateTime.Now}] Early compose exit detected. Retrying docker compose up (attempt {_startupAttempts}).");
+            Console.WriteLine($"[{AppName} {DateTime.Now}] Early compose exit detected. Retrying docker compose up (attempt {_startupAttempts} of {maxRetries}).");
             TestLogger?.WriteLine($"[{AppName}] Retrying docker compose up.");
             CleanupContainer();
+
+            // Give Docker time to fully release network resources before retrying
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+
             try
             {
                 var startInfo = new ProcessStartInfo

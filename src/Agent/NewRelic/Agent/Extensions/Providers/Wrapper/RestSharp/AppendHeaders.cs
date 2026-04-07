@@ -26,14 +26,17 @@ public class AppendHeaders : IWrapper
     {
         var httpWebRequest = (HttpWebRequest)instrumentedMethodCall.MethodCall.MethodArguments[0];
 
-        var setHeaders = new Action<HttpWebRequest, string, string>((carrier, key, value) =>
+        // Insert DT headers after AppendHeaders completes, so they overwrite any
+        // pre-existing DT headers that RestSharp copied from the RestRequest.
+        return Delegates.GetDelegateFor(onComplete: () =>
         {
-            // 'Set' will replace an existing value
-            httpWebRequest.Headers?.Set(key, value);
+            var setHeaders = new Action<HttpWebRequest, string, string>((carrier, key, value) =>
+            {
+                // 'Set' will replace an existing value
+                carrier.Headers?.Set(key, value);
+            });
+
+            agent.CurrentTransaction.InsertDistributedTraceHeaders(httpWebRequest, setHeaders);
         });
-
-        agent.CurrentTransaction.InsertDistributedTraceHeaders(httpWebRequest, setHeaders);
-
-        return Delegates.NoOp;
     }
 }

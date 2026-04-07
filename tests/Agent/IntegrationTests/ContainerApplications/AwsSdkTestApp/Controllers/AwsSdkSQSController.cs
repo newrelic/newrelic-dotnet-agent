@@ -82,6 +82,18 @@ public class AwsSdkSQSController : ControllerBase
         _logger.LogInformation("Message {Message} sent to {Queue}", message, messageQueueUrl);
     }
 
+    // GET: /AwsSdk/SQS_SendMessageWithExistingDTHeadersToQueue?message=Hello&messageQueueUrl=MyQueue
+    [HttpGet("SQS_SendMessageWithExistingDTHeadersToQueue")]
+    public async Task SQS_SendMessageWithExistingDTHeadersToQueueAsync([Required]string message, [Required]string messageQueueUrl)
+    {
+        _logger.LogInformation("Sending message with existing DT headers {Message} to {Queue}", message, messageQueueUrl);
+        using var awsSdkSQSExerciser = new AwsSdkSQSExerciser();
+        awsSdkSQSExerciser.SQS_SetQueueUrl(messageQueueUrl);
+
+        await awsSdkSQSExerciser.SQS_SendMessageWithExistingDTHeadersAsync(message);
+        _logger.LogInformation("Message with existing DT headers {Message} sent to {Queue}", message, messageQueueUrl);
+    }
+
     // GET: /AwsSdk/SQS_SendMessageBatchToQueue?messageQueueUrl=MyQueue
     [HttpGet("SQS_ReceiveMessageFromQueue")]
     public async Task<IEnumerable<Message>> SQS_ReceiveMessageFromQueueAsync([Required]string messageQueueUrl)

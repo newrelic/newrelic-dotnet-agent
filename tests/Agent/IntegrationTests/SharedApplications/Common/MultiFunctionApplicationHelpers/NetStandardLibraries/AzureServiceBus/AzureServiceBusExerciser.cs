@@ -69,6 +69,15 @@ internal class AzureServiceBusExerciser
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static async Task SendAndReceiveWithExistingDTHeadersForQueue(string queueName)
+    {
+        await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
+        await SendAMessageWithExistingDTHeaders(client, queueName, "Hello with existing DT headers!");
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public static async Task ExerciseMultipleReceiveOperationsOnAMessageForQueue(string queueName)
     {
         await using var client = new ServiceBusClient(AzureServiceBusConfiguration.ConnectionString);
@@ -415,6 +424,17 @@ internal class AzureServiceBusExerciser
     {
         await using var sender = client.CreateSender(queueOrTopicName);
         var message = new ServiceBusMessage(messageBody);
+        await sender.SendMessageAsync(message);
+    }
+
+    private static async Task SendAMessageWithExistingDTHeaders(ServiceBusClient client, string queueOrTopicName, string messageBody)
+    {
+        await using var sender = client.CreateSender(queueOrTopicName);
+        var message = new ServiceBusMessage(messageBody);
+        // Pre-populate with stale DT headers — agent should replace them
+        message.ApplicationProperties["traceparent"] = "00-stale0000000000000000000000000-stale000000000-01";
+        message.ApplicationProperties["tracestate"] = "stale=value";
+        message.ApplicationProperties["newrelic"] = "stale-newrelic-payload";
         await sender.SendMessageAsync(message);
     }
 

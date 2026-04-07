@@ -68,6 +68,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var consumeWithTimeoutTransactionName = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithTimeoutAsync";
         var consumeWithCancellationTransactionName = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithCancellationTokenAsync";
         var produceWebTransactionName = @"WebTransaction/MVC/Kafka/Produce";
+        var produceWithExistingHeadersWebTransactionName = @"WebTransaction/MVC/Kafka/ProduceAsyncWithExistingHeaders";
 
         var messageBrokerNode = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}";
         var messageBrokerNodeProduceTopic = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}/Produce/{_topicName}";
@@ -84,24 +85,26 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             new() { metricName = produceWebTransactionName, CallCountAllHarvests = 4 }, // includes sync and async actions
-            new() { metricName = messageBrokerProduce, CallCountAllHarvests = 4 },
+            new() { metricName = produceWithExistingHeadersWebTransactionName, CallCountAllHarvests = 1 }, // produce with pre-existing DT headers
+            new() { metricName = messageBrokerProduce, CallCountAllHarvests = 5 }, // 4 normal + 1 with existing headers
             new() { metricName = messageBrokerProduce, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
-            new() { metricName = messageBrokerProduceSerializationKey, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduce, metricScope = produceWithExistingHeadersWebTransactionName, CallCountAllHarvests = 1 },
+            new() { metricName = messageBrokerProduceSerializationKey, CallCountAllHarvests = 5 },
             new() { metricName = messageBrokerProduceSerializationKey, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
-            new() { metricName = messageBrokerProduceSerializationValue, CallCountAllHarvests = 4 },
+            new() { metricName = messageBrokerProduceSerializationValue, CallCountAllHarvests = 5 },
             new() { metricName = messageBrokerProduceSerializationValue, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
 
-            new() { metricName = consumeWithTimeoutTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = consumeWithTimeoutTransactionName, CallCountAllHarvests = 3 }, // 2 normal + 1 for existing headers
             new() { metricName = consumeWithCancellationTransactionName, CallCountAllHarvests = 2 },
-            new() { metricName = messageBrokerConsume, CallCountAllHarvests = 4 },
-            new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = messageBrokerConsume, CallCountAllHarvests = 5 }, // 4 normal + 1 for existing headers
+            new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, CallCountAllHarvests = 3 },
             new() { metricName = messageBrokerConsume, metricScope = consumeWithCancellationTransactionName, CallCountAllHarvests = 2 },
-            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 4 },
-            new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 4 },
+            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 5 }, // 4 normal + 1 with existing headers replaced
+            new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 5 }, // 4 normal + 1 with existing headers replaced
 
-            new() { metricName = messageBrokerNode, CallCountAllHarvests = 8 },
-            new() { metricName = messageBrokerNodeProduceTopic, CallCountAllHarvests = 4 },
-            new() { metricName = messageBrokerNodeConsumeTopic, CallCountAllHarvests = 4 }
+            new() { metricName = messageBrokerNode, CallCountAllHarvests = 10 }, // 8 normal + 2 for existing headers (produce+consume)
+            new() { metricName = messageBrokerNodeProduceTopic, CallCountAllHarvests = 5 },
+            new() { metricName = messageBrokerNodeConsumeTopic, CallCountAllHarvests = 5 }
         };
 
         NrAssert.Multiple(
@@ -110,12 +113,12 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             () => Assert.True(produceSpan.IntrinsicAttributes.ContainsKey("parentId")),
             () => Assert.NotNull(consumeWithTimeoutTxnSpan),
             () => Assert.True(consumeWithTimeoutTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
-            () => Assert.InRange((long)consumeWithTimeoutTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 470), // includes headers
+            () => Assert.InRange((long)consumeWithTimeoutTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 500), // includes headers; upper bound accommodates existing-headers message
             () => Assert.True(consumeWithTimeoutTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
             () => Assert.True(consumeWithTimeoutTxnSpan.IntrinsicAttributes.ContainsKey("parentId")),
             () => Assert.NotNull(consumeWithCancellationTxnSpan),
             () => Assert.True(consumeWithCancellationTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
-            () => Assert.InRange((long)consumeWithCancellationTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 470), // includes headers
+            () => Assert.InRange((long)consumeWithCancellationTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 500), // includes headers; upper bound accommodates potential race with existing-headers message
             () => Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
             () => Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("parentId"))
         );

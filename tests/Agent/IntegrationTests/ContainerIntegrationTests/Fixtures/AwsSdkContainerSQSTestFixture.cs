@@ -38,6 +38,19 @@ public class AwsSdkContainerSQSTestFixture : AwsSdkContainerTestFixtureBase
         return messagesJson;
     }
 
+    public string ExerciseSQS_SendAndReceiveWithExistingDTHeaders(string queueName)
+    {
+        var queueUrl = GetString($"{BaseUrl}/SQS_InitializeQueue?queueName={queueName}");
+
+        GetAndAssertStatusCode($"{BaseUrl}/SQS_SendMessageWithExistingDTHeadersToQueue?message=HelloDT&messageQueueUrl={queueUrl}", System.Net.HttpStatusCode.OK);
+
+        var messagesJson = GetString($"{BaseUrl}/SQS_ReceiveMessageFromQueue?messageQueueUrl={queueUrl}");
+
+        GetAndAssertStatusCode($"{BaseUrl}/SQS_DeleteQueue?messageQueueUrl={queueUrl}", System.Net.HttpStatusCode.OK);
+
+        return messagesJson;
+    }
+
     public string ExerciseSQS_ReceiveEmptyMessage(string queueName)
     {
         var queueUrl = GetString($"{BaseUrl}/SQS_InitializeQueue?queueName={queueName}");

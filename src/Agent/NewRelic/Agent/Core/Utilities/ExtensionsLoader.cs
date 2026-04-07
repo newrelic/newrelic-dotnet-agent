@@ -86,6 +86,13 @@ public class ExtensionsLoader
             { "KafkaProducerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
             { "KafkaSerializerWrapper",                                                                        Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
             { "KafkaConsumerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
+
+            // NewRelic.Providers.Wrapper.AwsLambda.dll depends on Amazon.Lambda.RuntimeSupport; therefore, it
+            // should only be loaded by the agent when running in a Lambda environment, otherwise an assembly
+            // load exception will occur.
+            { "NewRelic.Providers.Wrapper.AwsLambda.EnsureTransformCompletesWrapper",                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AwsLambda.dll") },
+            { "NewRelic.Providers.Wrapper.AwsLambda.HandlerMethod",                                            Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AwsLambda.dll") },
+            { "OpenTracingWrapper",                                                                            Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AwsLambda.dll") },
         };
 
         var nonAutoReflectedAssemblies = _dynamicLoadWrapperAssemblies.Values.Distinct().ToList();

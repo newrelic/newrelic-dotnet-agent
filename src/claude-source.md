@@ -527,8 +527,8 @@ NEWRELIC_LOG_LEVEL=debug
 
 ## Related Documentation
 
-- @../claude.md - Main repository guide
-- @../build/claude-build.md - Build system
-- @../tests/claude-tests.md - Testing guide
+- [Main repository guide](../claude.md)
+- [Build system](../build/claude-build.md)
+- [Testing guide](../tests/claude-tests.md)
 - [Profiler README](Agent/NewRelic/Profiler/README.md)
 - [Development guide](../docs/development.md)

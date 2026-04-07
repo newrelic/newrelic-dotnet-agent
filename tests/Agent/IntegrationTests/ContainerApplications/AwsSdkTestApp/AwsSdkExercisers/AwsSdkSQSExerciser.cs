@@ -142,6 +142,29 @@ public class AwsSdkSQSExerciser : IDisposable
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task SQS_SendMessageWithExistingDTHeadersAsync(string message)
+    {
+        if (_sqsQueueUrl == null)
+        {
+            throw new InvalidOperationException("Queue URL is not set. Call SQS_Initialize or SQS_SetQueueUrl first.");
+        }
+
+        var request = new SendMessageRequest
+        {
+            QueueUrl = _sqsQueueUrl,
+            MessageBody = message,
+            MessageAttributes = new Dictionary<string, MessageAttributeValue>
+            {
+                { "traceparent", new MessageAttributeValue { DataType = "String", StringValue = "00-stale0000000000000000000000000-stale000000000-01" } },
+                { "tracestate", new MessageAttributeValue { DataType = "String", StringValue = "stale=value" } },
+                { "newrelic", new MessageAttributeValue { DataType = "String", StringValue = "stale-newrelic-payload" } },
+            }
+        };
+
+        await _amazonSqsClient.SendMessageAsync(request);
+    }
+
     // send message batch
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task SQS_SendMessageBatchAsync(string[] messages)

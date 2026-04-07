@@ -21,8 +21,10 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
     private readonly string _testQueueName1 = $"TestQueue1-{Guid.NewGuid()}";
     private readonly string _testQueueName2 = $"TestQueue2-{Guid.NewGuid()}";
     private readonly string _testQueueName3 = $"TestQueue3-{Guid.NewGuid()}";
+    private readonly string _testQueueName4 = $"TestQueue4-{Guid.NewGuid()}";
     private readonly string _metricScope1 = "WebTransaction/MVC/AwsSdkSQS/SQS_SendReceivePurge/{queueName}";
     private readonly string _metricScope2 = "WebTransaction/MVC/AwsSdkSQS/SQS_SendMessageToQueue/{message}/{messageQueueUrl}";
+    private readonly string _metricScope4 = "WebTransaction/MVC/AwsSdkSQS/SQS_SendMessageWithExistingDTHeadersToQueue/{message}/{messageQueueUrl}";
     private bool _initCollections;
 
     protected AwsSdkSQSTestBase(AwsSdkContainerSQSTestFixture fixture, ITestOutputHelper output, bool initCollections) : base(fixture)
@@ -51,6 +53,7 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
                 _fixture.ExerciseSQS_SendReceivePurge(_testQueueName1);
                 _fixture.ExerciseSQS_SendAndReceiveInSeparateTransactions(_testQueueName2);
                 _fixture.ExerciseSQS_ReceiveEmptyMessage(_testQueueName3);
+                _fixture.ExerciseSQS_SendAndReceiveWithExistingDTHeaders(_testQueueName4);
 
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
@@ -93,12 +96,18 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
             new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName3}", callCount = 1},
             new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName3}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
 
+            // Queue 4: send with pre-existing DT headers (verifies agent replaces them)
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName4}", callCount = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName4}", callCount = 1, metricScope = _metricScope4},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName4}", callCount = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName4}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
         };
 
         // If the AWS SDK is configured to NOT initialize empty collections, trace headers will not be accepted
         if (_initCollections)
         {
-            expectedMetrics.Add(new() { metricName = "Supportability/TraceContext/Accept/Success", callCount = 1 });
+            // 2 accept successes: one for queue 2 (normal) and one for queue 4 (with pre-existing DT headers replaced by agent)
+            expectedMetrics.Add(new() { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 });
         }
 
         var sendReceivePurgeTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_metricScope1);
@@ -148,6 +157,28 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
                 () => Assert.True(processRequestSpan != null, "processRequestSpan should not be null"),
                 () => Assert.Equal(produceSpan!.IntrinsicAttributes["traceId"], consumeSpan!.IntrinsicAttributes["traceId"]),
                 () => Assert.Equal(produceSpan!.IntrinsicAttributes["guid"], processRequestSpan!.IntrinsicAttributes["parentId"])
+            );
+        }
+
+        // Verify DT propagation works for queue 4 (pre-existing DT headers should have been replaced by agent)
+        // Uses transaction events instead of spans since adaptive sampling may not sample later transactions
+        if (_initCollections)
+        {
+            var sendDTTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_metricScope4);
+            var receiveDTTransactionEvents = _fixture.AgentLog.GetTransactionEvents()
+                .Where(e => e.IntrinsicAttributes["name"].Equals("OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync")
+                    && e.IntrinsicAttributes.ContainsKey("parentId")
+                    && e.IntrinsicAttributes.ContainsKey("traceId"));
+            // Find the receive event that shares the same traceId as the send event
+            var receiveDTTransactionEvent = sendDTTransactionEvent != null
+                ? receiveDTTransactionEvents.FirstOrDefault(e => e.IntrinsicAttributes["traceId"].Equals(sendDTTransactionEvent.IntrinsicAttributes["traceId"]))
+                : null;
+
+            NrAssert.Multiple(
+                () => Assert.True(sendDTTransactionEvent != null, "sendDTTransactionEvent should not be null"),
+                () => Assert.True(receiveDTTransactionEvent != null, "receiveDTTransactionEvent (with existing DT headers) should not be null — agent should have replaced stale headers"),
+                // Verify the stale traceId was NOT propagated
+                () => Assert.NotEqual("stale0000000000000000000000000", receiveDTTransactionEvent!.IntrinsicAttributes["traceId"].ToString())
             );
         }
 

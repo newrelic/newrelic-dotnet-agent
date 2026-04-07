@@ -27,21 +27,6 @@ class NLogLoggingAdapter : ILoggingAdapter
         _log.Info(message);
     }
 
-    public void Info(string message, Dictionary<string, object> context)
-    {
-        LogEventInfo logEvent = new LogEventInfo(LogLevel.Info, null, message);
-        foreach (var kvp in context)
-        {
-            logEvent.Properties[kvp.Key] = kvp.Value;
-        }
-        _log.Log(logEvent);
-    }
-
-    public void InfoWithParam(string message, object param)
-    {
-        _log.Info(message, param);
-    }
-
     public void Warn(string message)
     {
         _log.Warn(message);
@@ -65,6 +50,42 @@ class NLogLoggingAdapter : ILoggingAdapter
     public void NoMessage()
     {
         _log.Trace(string.Empty);
+    }
+
+    public void InfoWithContextDictionary(string message, Dictionary<string, object> context)
+    {
+        LogEventInfo logEvent = new LogEventInfo(LogLevel.Info, null, message);
+        foreach (var kvp in context)
+        {
+            logEvent.Properties[kvp.Key] = kvp.Value;
+        }
+        _log.Log(logEvent);
+    }
+
+    public void InfoWithObjectParameter(string message, object param)
+    {
+        _log.Info(message, param);
+    }
+
+    public void InfoWithStructuredArgs(string messageTemplate, object[] args)
+    {
+        _log.Info(messageTemplate, args);
+    }
+
+    public void InfoWithStructuredArgsAndContextDictionary(string messageTemplate, object[] args, Dictionary<string, object> context)
+    {
+        var logEvent = new LogEventInfo(LogLevel.Info, null, messageTemplate);
+        logEvent.Parameters = args;
+        foreach (var kvp in context)
+        {
+            logEvent.Properties[kvp.Key] = kvp.Value;
+        }
+        _log.Log(logEvent);
+    }
+
+    public void LogMessageInNestedScopes()
+    {
+        throw new NotImplementedException();
     }
 
     public void Configure()
@@ -93,11 +114,6 @@ class NLogLoggingAdapter : ILoggingAdapter
         };
 
         _log = _log = GetLogger(LogLevel.Debug, jsonLayout);
-    }
-
-    public void LogMessageInNestedScopes()
-    {
-        throw new NotImplementedException();
     }
 
     private Logger GetLogger(LogLevel minimumLogLevel, Layout layoutOverride = null)

@@ -44,7 +44,7 @@ public class AgentHealthReporter : ConfigurationBasedService, IAgentHealthReport
     private InterlockedCounter _distributedTraceHeadersAcceptedLateCounter = new InterlockedCounter();
 
     private readonly InterlockedCounter _customInstrumentationCounter;
-    private readonly HashSet<string> _customInstrumentationIds = new();
+    private readonly ConcurrentDictionary<string, byte> _customInstrumentationIds = new();
     private bool _customInstrumentationMaxLogged;
 
     private HealthCheck _healthCheck;
@@ -188,7 +188,7 @@ public class AgentHealthReporter : ConfigurationBasedService, IAgentHealthReport
     {
         // record only unique custom instrumentation metrics
         var uniqueIdentifier = $"{assemblyName}.{className}.{method}";
-        if (!_customInstrumentationIds.Add(uniqueIdentifier))
+        if (!_customInstrumentationIds.TryAdd(uniqueIdentifier, 0))
         {
             return;
         }
