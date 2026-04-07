@@ -188,6 +188,14 @@
 
     <Message Importance="High" Text="Executing ILRepack.exe for $(TargetFramework) build: $(ILRepackCommand)" />
     <Exec Command="$(ILRepackCommand)" />
+
+    <PropertyGroup>
+      <AssemblyModifierCommand>&quot;$(SolutionDir)src\Agent\NewRelic\AssemblyModifier\bin\$(Configuration)\AssemblyModifier.exe&quot;</AssemblyModifierCommand>
+      <AssemblyToModify>&quot;$(OutputPath)..\$(TargetFramework)-ILRepacked\$(AssemblyName).dll&quot;</AssemblyToModify>
+      <AssemblyDependency>&quot;$(OutputPath)..\..\NewRelic.Agent.Extensions\$(TargetFramework)-ILRepacked&quot;</AssemblyDependency>
+    </PropertyGroup>
+    <Message Importance="High" Text="Executing AssemblyModifier to complete the ILRepack process" />
+    <Exec Command="$(AssemblyModifierCommand) $(AssemblyToModify) $(AssemblyDependency)" />
   </Target>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />

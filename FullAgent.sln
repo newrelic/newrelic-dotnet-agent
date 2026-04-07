@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 18.0.11205.157 d18.0
 MinimumVisualStudioVersion = 15.0.26228.04
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "src\Agent\NewRelic\Agent\Core\Core.csproj", "{D6E22195-EE69-4320-B08B-E68229FB69AB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{36C4B766-2A2F-CACB-CB91-0FC5C2E69773} = {36C4B766-2A2F-CACB-CB91-0FC5C2E69773}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Api.Agent", "src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj", "{64C7F267-5185-4AB7-9EB5-0183D8BB0171}"
 EndProject
@@ -230,6 +233,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureServiceBus", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\AzureServiceBus\AzureServiceBus.csproj", "{4078E594-E738-48F7-A7ED-B208ADD04900}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HybridHttpContext", "src\Agent\NewRelic\Agent\Extensions\Providers\Storage\HybridHttpContext\HybridHttpContext.csproj", "{CE9B992B-A2A7-20F9-9EEB-AE699C6D77CC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyModifier", "src\Agent\NewRelic\AssemblyModifier\AssemblyModifier.csproj", "{36C4B766-2A2F-CACB-CB91-0FC5C2E69773}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -485,6 +490,10 @@ Global
 		{CE9B992B-A2A7-20F9-9EEB-AE699C6D77CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE9B992B-A2A7-20F9-9EEB-AE699C6D77CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE9B992B-A2A7-20F9-9EEB-AE699C6D77CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36C4B766-2A2F-CACB-CB91-0FC5C2E69773}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36C4B766-2A2F-CACB-CB91-0FC5C2E69773}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36C4B766-2A2F-CACB-CB91-0FC5C2E69773}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36C4B766-2A2F-CACB-CB91-0FC5C2E69773}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -558,6 +567,7 @@ Global
 		{A0F784BB-D66D-47E0-80F4-66CF8DAF697C} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{4078E594-E738-48F7-A7ED-B208ADD04900} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{CE9B992B-A2A7-20F9-9EEB-AE699C6D77CC} = {2D194040-0192-4A87-A076-2B640C7FA82F}
+		{36C4B766-2A2F-CACB-CB91-0FC5C2E69773} = {E3DAC9C6-AE41-4B37-A253-C621E568590E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
