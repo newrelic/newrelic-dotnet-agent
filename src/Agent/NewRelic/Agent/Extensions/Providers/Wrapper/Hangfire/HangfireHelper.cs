@@ -3,6 +3,7 @@
 
 using System;
 using System.Reflection;
+using NewRelic.Agent.Api;
 using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.Hangfire;
@@ -21,10 +22,18 @@ internal static class HangfireHelper
     private static Func<object, Type> _jobTypeAccessor;
     private static Func<object, MethodInfo> _jobMethodAccessor;
 
+    private static bool _jobIdWarnLogged;
+    private static bool _jobWarnLogged;
+    private static bool _queueWarnLogged;
+    private static bool _serverIdWarnLogged;
+    private static bool _backgroundJobWarnLogged;
+    private static bool _jobClassNameWarnLogged;
+    private static bool _jobMethodNameWarnLogged;
+
     /// <summary>
     /// Extracts job ID from BackgroundJob object.
     /// </summary>
-    public static string GetJobId(object backgroundJob)
+    public static string GetJobId(object backgroundJob, IAgent agent)
     {
         if (backgroundJob == null)
         {
@@ -36,8 +45,14 @@ internal static class HangfireHelper
             _jobIdAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(backgroundJob.GetType(), "Id");
             return _jobIdAccessor(backgroundJob);
         }
-        catch
+        catch (Exception ex)
         {
+            if (!_jobIdWarnLogged)
+            {
+                agent.Logger.Warn(ex, "HangfireHelper: Unable to access Id property on BackgroundJob. Job ID will not be captured.");
+                _jobIdWarnLogged = true;
+            }
+
             return null;
         }
     }
@@ -45,7 +60,7 @@ internal static class HangfireHelper
     /// <summary>
     /// Extracts Job object from BackgroundJob.
     /// </summary>
-    public static object GetJob(object backgroundJob)
+    public static object GetJob(object backgroundJob, IAgent agent)
     {
         if (backgroundJob == null)
         {
@@ -57,8 +72,14 @@ internal static class HangfireHelper
             _jobAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(backgroundJob.GetType(), "Job");
             return _jobAccessor(backgroundJob);
         }
-        catch
+        catch (Exception ex)
         {
+            if (!_jobWarnLogged)
+            {
+                agent.Logger.Warn(ex, "HangfireHelper: Unable to access Job property on BackgroundJob. Job class and method name will not be captured.");
+                _jobWarnLogged = true;
+            }
+
             return null;
         }
     }
@@ -66,7 +87,7 @@ internal static class HangfireHelper
     /// <summary>
     /// Extracts queue name from Job object.
     /// </summary>
-    public static string GetQueueName(object job)
+    public static string GetQueueName(object job, IAgent agent)
     {
         if (job == null)
         {
@@ -78,8 +99,14 @@ internal static class HangfireHelper
             _queueAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(job.GetType(), "Queue");
             return _queueAccessor(job);
         }
-        catch
+        catch (Exception ex)
         {
+            if (!_queueWarnLogged)
+            {
+                agent.Logger.Warn(ex, "HangfireHelper: Unable to access Queue property on Job. Queue name will not be captured.");
+                _queueWarnLogged = true;
+            }
+
             return null;
         }
     }
@@ -87,7 +114,7 @@ internal static class HangfireHelper
     /// <summary>
     /// Extracts server ID from PerformContext.
     /// </summary>
-    public static string GetServerId(object performContext)
+    public static string GetServerId(object performContext, IAgent agent)
     {
         if (performContext == null)
         {
@@ -99,8 +126,14 @@ internal static class HangfireHelper
             _serverIdAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(performContext.GetType(), "ServerId");
             return _serverIdAccessor(performContext);
         }
-        catch
+        catch (Exception ex)
         {
+            if (!_serverIdWarnLogged)
+            {
+                agent.Logger.Warn(ex, "HangfireHelper: Unable to access ServerId property on PerformContext. Server ID will not be captured.");
+                _serverIdWarnLogged = true;
+            }
+
             return null;
         }
     }
@@ -108,7 +141,7 @@ internal static class HangfireHelper
     /// <summary>
     /// Gets type name from a Job object.
     /// </summary>
-    public static string GetJobClassName(object job)
+    public static string GetJobClassName(object job, IAgent agent)
     {
         if (job == null)
         {
@@ -121,8 +154,14 @@ internal static class HangfireHelper
             var jobType = _jobTypeAccessor(job);
             return jobType?.FullName;
         }
-        catch
+        catch (Exception ex)
         {
+            if (!_jobClassNameWarnLogged)
+            {
+                agent.Logger.Warn(ex, "HangfireHelper: Unable to access Type property on Job. Job class name will not be captured.");
+                _jobClassNameWarnLogged = true;
+            }
+
             return null;
         }
     }
@@ -130,7 +169,7 @@ internal static class HangfireHelper
     /// <summary>
     /// Gets method name from a Job object.
     /// </summary>
-    public static string GetJobMethodName(object job)
+    public static string GetJobMethodName(object job, IAgent agent)
     {
         if (job == null)
         {
@@ -143,8 +182,14 @@ internal static class HangfireHelper
             var method = _jobMethodAccessor(job);
             return method?.Name;
         }
-        catch
+        catch (Exception ex)
         {
+            if (!_jobMethodNameWarnLogged)
+            {
+                agent.Logger.Warn(ex, "HangfireHelper: Unable to access Method property on Job. Job method name will not be captured.");
+                _jobMethodNameWarnLogged = true;
+            }
+
             return null;
         }
     }
@@ -152,7 +197,7 @@ internal static class HangfireHelper
     /// <summary>
     /// Gets BackgroundJob from PerformContext.
     /// </summary>
-    public static object GetBackgroundJob(object performContext)
+    public static object GetBackgroundJob(object performContext, IAgent agent)
     {
         if (performContext == null)
         {
@@ -164,8 +209,14 @@ internal static class HangfireHelper
             _backgroundJobAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(performContext.GetType(), "BackgroundJob");
             return _backgroundJobAccessor(performContext);
         }
-        catch
+        catch (Exception ex)
         {
+            if (!_backgroundJobWarnLogged)
+            {
+                agent.Logger.Warn(ex, "HangfireHelper: Unable to access BackgroundJob property on PerformContext. Job will not be instrumented.");
+                _backgroundJobWarnLogged = true;
+            }
+
             return null;
         }
     }

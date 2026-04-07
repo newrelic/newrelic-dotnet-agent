@@ -31,13 +31,13 @@ public class HangfirePerformerWrapper : IWrapper
         }
 
         // Extract job information from context
-        var backgroundJob = HangfireHelper.GetBackgroundJob(performContext);
-        var jobId = HangfireHelper.GetJobId(backgroundJob);
-        var job = HangfireHelper.GetJob(backgroundJob);
-        var jobClassName = HangfireHelper.GetJobClassName(job);
-        var jobMethodName = HangfireHelper.GetJobMethodName(job);
-        var queueName = HangfireHelper.GetQueueName(job);
-        var serverId = HangfireHelper.GetServerId(performContext);
+        var backgroundJob = HangfireHelper.GetBackgroundJob(performContext, agent);
+        var jobId = HangfireHelper.GetJobId(backgroundJob, agent);
+        var job = HangfireHelper.GetJob(backgroundJob, agent);
+        var jobClassName = HangfireHelper.GetJobClassName(job, agent);
+        var jobMethodName = HangfireHelper.GetJobMethodName(job, agent);
+        var queueName = HangfireHelper.GetQueueName(job, agent);
+        var serverId = HangfireHelper.GetServerId(performContext, agent);
 
         // Build transaction name
         var taskName = jobClassName + "." + jobMethodName;
@@ -51,6 +51,7 @@ public class HangfirePerformerWrapper : IWrapper
 
         // Required so that we can ensure that the transaction is active during the entire job execution, including any async continuations
         transaction.AttachToAsync();
+        transaction.DetachFromPrimary(); //Remove from thread-local type storage
 
         // If this is in a queue, we want to create a metric more like a message queue.  Based on how Ruby handles ActiveJob.
         var segmentName = string.IsNullOrWhiteSpace(queueName) ? "Hangfire/" + taskName : "Hangfire/Queue/Consume/Named/" + queueName + "/" + taskName;
