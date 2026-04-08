@@ -1,81 +1,56 @@
 # The following must be set either in environment variables or via a .env file in the same folder as this file:
 #
-# AGENT_PATH      host path to the Agent linux home folder - will map to /usr/local/newrelic-dotnet-agent in the container
-# LOG_PATH        host path for Agent logfile output - will map to /app/logs in the container
-# DISTRO_TAG      distro tag for build, not including the architecture suffix
-# TARGET_ARCH     the target architecture for the run -- either amd64 or arm64
-# BUILD_ARCH      the build architecture-- either amd64 or arm64
-# PORT            external port for the smoketest API
-# CONTAINER_NAME  The name for the container
-# PLATFORM        The platform that the service runs on -- linux/amd64 or linux/arm64/v8
-# DOTNET_VERSION  The dotnet version number to use (8.0, etc)
-# NETWORK_NAME    The network name to use for containers in this app. Should be unique among all running instances.
-# TEST_DOCKERFILE The path and dockerfile to use for the service.
-# 
-# and the usual suspects:
-# NEW_RELIC_LICENSE_KEY
-# NEW_RELIC_HOST
-# NEW_RELIC_APP_NAME
+# See docker-compose-base.yml for common required variables.
+# CONTAINER_NAME       The name for the container
+# AWSSDK_INITCOLLECTIONS
+# LOCALSTACK_VOLUME_DIR
 #
-#
-# To build and run, execute `docker compose -f <path to docker-compose.yml> up` 
+# To build and run, execute `docker compose -f <path to docker-compose.yml> up`
 # Alternatively, set COMPOSE_FILE environment variable to the path and omit the -f parameter
 
 services:
-  localstack:
-    image: localstack/localstack:4.14.0@sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a
-    expose: # ports are only available internal to the service, not external so there's no chance for conflicts
-      - "4566"       # LocalStack Gateway
-      - "4559"  # external services port range
-    environment:
-      # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
-      - DEBUG=${DEBUG:-0}
-      # firehose depends on s3 and sts
-      - SERVICES=sqs,sns,ses,kinesis,firehose,s3,sts # http://localhost:4566/_localstack/health to see the entire list of possible services and their status
-    volumes:
-      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
+    localstack:
+        image: localstack/localstack:4.14.0@sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a
+        expose: # ports are only available internal to the service, not external so there's no chance for conflicts
+            - "4566"      # LocalStack Gateway
+            - "4559" # external services port range
+        environment:
+            # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
+            - DEBUG=${DEBUG:-0}
+            # firehose depends on s3 and sts
+            - SERVICES=sqs,sns,ses,kinesis,firehose,s3,sts # http://localhost:4566/_localstack/health to see the entire list of possible services and their status
+        volumes:
+            - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+            - "/var/run/docker.sock:/var/run/docker.sock"
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+            start_period: 10s
 
-  dynamodb:
-    command: "-jar DynamoDBLocal.jar -inMemory"
-    image: "amazon/dynamodb-local:latest"
-    expose: # ports are only available internal to the service, not external so there's no chance for conflicts
-      - "8000"
-    working_dir: /home/dynamodblocal
+    dynamodb:
+        command: "-jar DynamoDBLocal.jar -inMemory"
+        image: "amazon/dynamodb-local:latest"
+        expose: # ports are only available internal to the service, not external so there's no chance for conflicts
+            - "8000"
+        working_dir: /home/dynamodblocal
 
-  awssdktestapp:
-    depends_on:
-      localstack:
-        condition: service_healthy
-      dynamodb:
-        condition: service_started
-    container_name: ${CONTAINER_NAME}
-    image: ${CONTAINER_NAME}
-    platform: ${PLATFORM}
-    build:
-      context: .
-      dockerfile: ${TEST_DOCKERFILE}
-      args:
-        DISTRO_TAG: ${DISTRO_TAG}
-        TARGET_ARCH: ${TARGET_ARCH}
-        BUILD_ARCH: ${BUILD_ARCH}
-        NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
-        NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
-        NEW_RELIC_HOST: ${NEW_RELIC_HOST}
-        DOTNET_VERSION: ${DOTNET_VERSION}
-        APP_DOTNET_VERSION: ${APP_DOTNET_VERSION}
-        AWSSDK_INITCOLLECTIONS: ${AWSSDK_INITCOLLECTIONS}
-    ports:
-      - "${PORT}:80"
-    volumes:
-      - ${AGENT_PATH}:/usr/local/newrelic-dotnet-agent # AGENT_PATH from .env, points to newrelichome_linux_x64
-      - ${LOG_PATH}:/app/logs # LOG_PATH from .env, should be a folder unique to this run of the smoketest app
+    awssdktestapp:
+        extends:
+            file: docker-compose-base.yml
+            service: base-app
+        depends_on:
+            localstack:
+                condition: service_healthy
+            dynamodb:
+                condition: service_started
+        container_name: ${CONTAINER_NAME}
+        image: ${CONTAINER_NAME}
+        platform: ${PLATFORM}
+        build:
+            args:
+                AWSSDK_INITCOLLECTIONS: ${AWSSDK_INITCOLLECTIONS}
 
 networks:
     default:

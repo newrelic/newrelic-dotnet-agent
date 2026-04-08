@@ -9,6 +9,7 @@ using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
@@ -23,7 +24,7 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
     private readonly IConfigurationService _configurationService;
     private readonly IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
 
-    private readonly Meter _newRelicBridgeMeter = new Meter("NewRelicOTelBridgeMeter");
+    private readonly Lazy<Meter> _newRelicBridgeMeter = new Lazy<Meter>(() => new Meter("NewRelicOTelBridgeMeter"));
     private readonly ConcurrentDictionary<string, Meter> _bridgedMeters = new ConcurrentDictionary<string, Meter>();
     // NOTE: These caches are unbounded and grow with the number of unique instrument types encountered.
     // This is acceptable because the set of instrument types is typically small and bounded by application code.
@@ -41,6 +42,13 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
         _meterListener = meterListener;
         _configurationService = configurationService;
         _supportabilityMetricCounters = supportabilityMetricCounters;
+    }
+
+    private int _isInitialized = 0;
+    public void TryInitialize()
+    {
+        if (1 == Interlocked.CompareExchange(ref _isInitialized, 1, 0))
+            return;
 
         _meterListener.InstrumentPublished = OnInstrumentPublished;
         _meterListener.MeasurementsCompleted = OnMeasurementsCompleted;
@@ -50,6 +58,8 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
 
     public void StartListening(object meter = null)
     {
+        TryInitialize();
+
         // Note: meter parameter is unused but kept for interface compatibility
         _meterListener.Start();
     }
@@ -269,7 +279,7 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
 
     private Meter CreateBridgedMeter(object originalMeter)
     {
-        if (originalMeter == null) return _newRelicBridgeMeter;
+        if (originalMeter == null) return _newRelicBridgeMeter.Value;
         var type = originalMeter.GetType();
         var name = type.GetProperty("Name")?.GetValue(originalMeter) as string ?? "Unknown";
         var version = type.GetProperty("Version")?.GetValue(originalMeter) as string;
@@ -614,7 +624,7 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
     public override void Dispose()
     {
         _meterListener.Dispose();
-        _newRelicBridgeMeter.Dispose();
+        _newRelicBridgeMeter.Value.Dispose();
         foreach (var meter in _bridgedMeters.Values) meter.Dispose();
         base.Dispose();
     }

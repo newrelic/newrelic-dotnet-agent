@@ -2,7 +2,8 @@
 #
 # See docker-compose-base.yml for common required variables.
 # CONTAINER_NAME  The name for the container
-# NEW_RELIC_KAFKA_TOPIC
+# MASSTRANSIT_KAFKA_TOPIC
+# MASSTRANSIT_RABBITMQ_QUEUE
 #
 # To build and run, execute `docker compose -f <path to docker-compose.yml> up`
 # Alternatively, set COMPOSE_FILE environment variable to the path and omit the -f parameter
@@ -17,9 +18,12 @@ services:
         platform: ${PLATFORM}
         depends_on:
             - kafka-broker
+            - rabbitmq
         environment:
-            - NEW_RELIC_KAFKA_TOPIC=${NEW_RELIC_KAFKA_TOPIC}
-            - NEW_RELIC_KAFKA_BROKER_NAME=kafka-broker
+            - MASSTRANSIT_KAFKA_TOPIC=${MASSTRANSIT_KAFKA_TOPIC}
+            - MASSTRANSIT_KAFKA_BROKER=kafka-broker
+            - MASSTRANSIT_RABBITMQ_HOST=rabbitmq
+            - MASSTRANSIT_RABBITMQ_QUEUE=${MASSTRANSIT_RABBITMQ_QUEUE}
 
     kafka-broker:
         image: confluentinc/cp-kafka:7.5.0
@@ -40,8 +44,12 @@ services:
           KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
           CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
 
+    rabbitmq:
+        image: rabbitmq:3-management-alpine
+        environment:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+
 networks:
     default:
         driver: bridge
-        driver_opts:
-          com.docker.network.bridge.enable_icc: "true"

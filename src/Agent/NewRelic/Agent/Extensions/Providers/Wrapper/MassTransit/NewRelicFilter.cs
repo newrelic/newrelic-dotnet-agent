@@ -40,7 +40,7 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
 
         var mc = new MethodCall(_consumeMethod, context, default(string[]), true);
 
-        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress);
+        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress, context.DestinationAddress);
 
         var transaction = _agent.CreateTransaction(
             destinationType: queueData.DestinationType,
@@ -52,7 +52,7 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
 
         transaction.AcceptDistributedTraceHeaders(context.Headers, GetHeaderValue, TransportType.AMQP);
 
-        var segment = transaction.StartMessageBrokerSegment(mc, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, MessageBrokerVendorName, queueData.QueueName);
+        var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Consume, MessageBrokerVendorName, queueData.QueueName);
 
         await next.Send(context);
         segment.End();
@@ -86,7 +86,7 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
 
         var mc = new MethodCall(_publishMethod, context, default(string[]), true);
 
-        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress);
+        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress, context.DestinationAddress);
 
         var transaction = _agent.CurrentTransaction;
         InsertDistributedTraceHeaders(context.Headers, transaction);
@@ -103,7 +103,7 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
 
         var mc = new MethodCall(_sendMethod, context, default(string[]), true);
 
-        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress);
+        var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress, context.DestinationAddress);
 
         var transaction = _agent.CurrentTransaction;
         InsertDistributedTraceHeaders(context.Headers, transaction);
