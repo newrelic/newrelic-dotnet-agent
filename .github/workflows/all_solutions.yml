@@ -242,6 +242,7 @@ jobs:
             "DataTransmission",
             "DistributedTracing",
             "Errors",
+            "Hangfire",
             "HttpClientInstrumentation",
             "HybridHttpContextStorage",
             "InfiniteTracing",
