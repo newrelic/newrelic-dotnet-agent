@@ -9,7 +9,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.WCF;
+namespace NewRelic.Agent.IntegrationTests.WCF.Client.Self;
 
 /// <summary>
 /// Verifies that when outbound WCF HTTP requests already have DT headers
