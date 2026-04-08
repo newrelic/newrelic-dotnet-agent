@@ -40,7 +40,11 @@ public class HangfirePerformerWrapper : IWrapper
         var serverId = HangfireHelper.GetServerId(performContext, agent);
 
         // Build transaction name
-        var taskName = jobClassName + "." + jobMethodName;
+        var taskName = "unknown";
+        if (jobClassName is not null && jobMethodName is not null)
+        {
+            taskName = jobClassName + "." + jobMethodName;
+        }
 
         // Create background transaction following Ruby formatting for ActiveJob
         transaction = agent.CreateTransaction(
