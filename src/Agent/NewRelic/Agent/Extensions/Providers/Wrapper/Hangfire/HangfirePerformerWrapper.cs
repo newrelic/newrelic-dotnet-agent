@@ -72,7 +72,7 @@ public class HangfirePerformerWrapper : IWrapper
             onFailure: exception =>
             {
                 segment.AddAgentAttribute("workflow.execution.result", "failure");
-                segment.AddAgentAttribute("error.type", exception.GetType().Name);
+                transaction.NoticeError(exception);
                 segment.End(exception);
             },
             onComplete: () =>

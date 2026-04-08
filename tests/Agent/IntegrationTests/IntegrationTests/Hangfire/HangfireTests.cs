@@ -16,6 +16,13 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
     private readonly TFixture _fixture;
     private readonly Version _version;
 
+    // Expected call counts
+    private readonly int _expectedSyncSuccessCount = 3;
+    private readonly int _expectedAsyncSuccessCount = 3;
+    private readonly int _expectedSyncFailureCount = 1;
+    private readonly int _expectedAsyncFailureCount = 1;
+    private readonly int _expectedTotalCallCount = 8; // the sum of the above
+
 
     protected HangfireTestsBase(TFixture fixture, ITestOutputHelper output, Version version) : base(fixture)
     {
@@ -55,16 +62,22 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             // We expect 3 calls to the simple jobs (parent, child, and standalone) and 1 call to the failing job. The async variants should have the same counts.
-            new Assertions.ExpectedMetric {metricName = metricPrefix + ".SimpleJob", CallCountAllHarvests = 3},
-            new Assertions.ExpectedMetric {metricName = metricPrefix + ".FailingJob", CallCountAllHarvests = 1},
-            new Assertions.ExpectedMetric {metricName = metricPrefix + ".SimpleAsyncJob", CallCountAllHarvests = 3},
-            new Assertions.ExpectedMetric {metricName = metricPrefix + ".FailingAsyncJob", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = metricPrefix + ".SimpleJob", CallCountAllHarvests = _expectedSyncSuccessCount},
+            new Assertions.ExpectedMetric {metricName = metricPrefix + ".FailingJob", CallCountAllHarvests = _expectedSyncFailureCount},
+            new Assertions.ExpectedMetric {metricName = metricPrefix + ".SimpleAsyncJob", CallCountAllHarvests = _expectedAsyncSuccessCount},
+            new Assertions.ExpectedMetric {metricName = metricPrefix + ".FailingAsyncJob", CallCountAllHarvests = _expectedAsyncFailureCount},
         };
 
         Assertions.MetricsExist(expectedMetrics, metrics);
 
+        var errorEvents = _fixture.AgentLog.GetErrorEvents().Where(e => e.IntrinsicAttributes["transactionName"].ToString().Contains("Hangfire")).ToList();
+        var errorTraces = _fixture.AgentLog.GetErrorTraces().Where(t => t.Path.Contains("Hangfire")).ToList();
+
+        Assert.Equal(_expectedSyncFailureCount + _expectedAsyncFailureCount, errorEvents.Count);
+        Assert.Equal(_expectedSyncFailureCount + _expectedAsyncFailureCount, errorTraces.Count);
+
         var spans = _fixture.AgentLog.GetSpanEvents().Where(s => s.AgentAttributes.ContainsKey("workflow.platform.name")).ToList();
-        Assert.Equal(8, spans.Count);
+        Assert.Equal(_expectedTotalCallCount, spans.Count);
         foreach (var span in spans)
         {
             Assert.Equal("hangfire", span.AgentAttributes["workflow.platform.name"]);
@@ -81,14 +94,13 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             {
                 Assert.Equal("System.InvalidOperationException", span.AgentAttributes["error.class"]);
                 Assert.Equal("Job intentionally failed", span.AgentAttributes["error.message"]);
-                Assert.Equal("JobPerformanceException", span.AgentAttributes["error.type"]);
             }
         }
 
         var transactions = _fixture.AgentLog.GetTransactionEvents()
             .Where(t => t.IntrinsicAttributes["name"].ToString().StartsWith("OtherTransaction/Hangfire"))
             .ToList();
-        Assert.Equal(8, transactions.Count);
+        Assert.Equal(_expectedTotalCallCount, transactions.Count);
     }
 }
 
