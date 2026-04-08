@@ -18,6 +18,9 @@
         "projectFile": "tests/Agent/IntegrationTests/ContainerApplications/KafkaTestApp/KafkaTestApp.csproj"
     },
     {
+        "projectFile": "tests/Agent/IntegrationTests/ContainerApplications/MassTransitTestApp/MassTransitTestApp.csproj"
+    },
+    {
         "projectFile": "tests/Agent/IntegrationTests/ContainerApplications/MemcachedTestApp/MemcachedTestApp.csproj"
     },
     {

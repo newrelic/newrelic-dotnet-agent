@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContainerIntegrationTests", "ContainerIntegrationTests\ContainerIntegrationTests.csproj", "{3B33858F-A8CF-44FE-B1A6-9308254C0019}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0EECB18A-4350-4D17-AB0D-F7647B4E3B58} = {0EECB18A-4350-4D17-AB0D-F7647B4E3B58}
+		{103FD92E-0674-43E8-823F-7A017B5DFE63} = {103FD92E-0674-43E8-823F-7A017B5DFE63}
 		{1F7402D8-E345-480C-BBA6-6313A1DEEB23} = {1F7402D8-E345-480C-BBA6-6313A1DEEB23}
 		{3D46F286-A19A-4942-8E3F-8999E953A6F2} = {3D46F286-A19A-4942-8E3F-8999E953A6F2}
 		{70731828-AFC8-4262-9076-3FB39E224D10} = {70731828-AFC8-4262-9076-3FB39E224D10}
@@ -28,6 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docker", "_docker", "{FB10
 		ContainerApplications\docker-compose-awssdk.yml = ContainerApplications\docker-compose-awssdk.yml
 		ContainerApplications\docker-compose-base.yml = ContainerApplications\docker-compose-base.yml
 		ContainerApplications\docker-compose-kafka.yml = ContainerApplications\docker-compose-kafka.yml
+		ContainerApplications\docker-compose-masstransit.yml = ContainerApplications\docker-compose-masstransit.yml
 		ContainerApplications\docker-compose-memcached.yml = ContainerApplications\docker-compose-memcached.yml
 		ContainerApplications\docker-compose.yml = ContainerApplications\docker-compose.yml
 	EndProjectSection
@@ -39,6 +41,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsSdkTestApp", "ContainerApplications\AwsSdkTestApp\AwsSdkTestApp.csproj", "{70731828-AFC8-4262-9076-3FB39E224D10}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemcachedTestApp", "ContainerApplications\MemcachedTestApp\MemcachedTestApp.csproj", "{3D46F286-A19A-4942-8E3F-8999E953A6F2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MassTransitTestApp", "ContainerApplications\MassTransitTestApp\MassTransitTestApp.csproj", "{103FD92E-0674-43E8-823F-7A017B5DFE63}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSerializationHelpers", "..\Shared\TestSerializationHelpers\TestSerializationHelpers.csproj", "{C8DF0638-A57D-4F5F-9ED2-E54879685DBC}"
 EndProject
@@ -86,6 +90,10 @@ Global
 		{3D46F286-A19A-4942-8E3F-8999E953A6F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D46F286-A19A-4942-8E3F-8999E953A6F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D46F286-A19A-4942-8E3F-8999E953A6F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{103FD92E-0674-43E8-823F-7A017B5DFE63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{103FD92E-0674-43E8-823F-7A017B5DFE63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{103FD92E-0674-43E8-823F-7A017B5DFE63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{103FD92E-0674-43E8-823F-7A017B5DFE63}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C8DF0638-A57D-4F5F-9ED2-E54879685DBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C8DF0638-A57D-4F5F-9ED2-E54879685DBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8DF0638-A57D-4F5F-9ED2-E54879685DBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -104,6 +112,7 @@ Global
 		{1F7402D8-E345-480C-BBA6-6313A1DEEB23} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
 		{70731828-AFC8-4262-9076-3FB39E224D10} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
 		{3D46F286-A19A-4942-8E3F-8999E953A6F2} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
+		{103FD92E-0674-43E8-823F-7A017B5DFE63} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BB230433-D05D-4A1F-951B-CC14F47BBF42}

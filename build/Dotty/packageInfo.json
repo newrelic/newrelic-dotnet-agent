@@ -84,7 +84,23 @@
         "ignorePatch": true,
         "ignoreMinor": true,
         "ignoreMajor": true,
-        "ignoreReason": "9.x requires a paid license. Stay on 8.5.7 which is the latest free version."
+        "ignoreReason": "9.x requires a paid license. Stay on the latest 8.x free version."
+    },
+    {
+        "packageName": "masstransit.kafka",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreTFMs": "net8.0",
+        "ignoreReason": "9.x requires a paid license. Stay on the latest 8.x free version."
+    },
+    {
+        "packageName": "masstransit.rabbitmq",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreTFMs": "net8.0",
+        "ignoreReason": "9.x requires a paid license. Stay on the latest 8.x free version."
     },
     {
         "packageName": "microsoft.azure.cosmos"
