@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Core.Attributes;
 
 namespace NewRelic.Agent.Core.Segments;
@@ -31,6 +34,8 @@ public partial class AttributeValue : IAttributeValue
 
     public bool IsImmutable { get; private set; }
 
+    private List<object> _arrayValue;
+
     private Lazy<object> _lazyValue;
     public Lazy<object> LazyValue
     {
@@ -42,6 +47,11 @@ public partial class AttributeValue : IAttributeValue
     {
         get
         {
+            if (_arrayValue != null)
+            {
+                return _arrayValue;
+            }
+
             switch (ValueCase)
             {
                 case ValueOneofCase.StringValue:
@@ -93,6 +103,9 @@ public partial class AttributeValue : IAttributeValue
             return;
         }
 
+        // Clear array value when setting a scalar value; overwritten below for IEnumerable
+        _arrayValue = null;
+
         if (value is string)
         {
             StringValue = (string)value;
@@ -126,6 +139,14 @@ public partial class AttributeValue : IAttributeValue
         if (value is DateTimeOffset)
         {
             StringValue = ((DateTimeOffset)value).ToString("o");
+            return;
+        }
+
+        // Note: this check relies on the string check earlier in this method to have already
+        // returned, since string implements IEnumerable<char>.
+        if (value is IEnumerable enumerable)
+        {
+            _arrayValue = value as List<object> ?? enumerable.Cast<object>().ToList();
             return;
         }
 

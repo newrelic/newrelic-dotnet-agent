@@ -87,6 +87,9 @@ public class MyController : ApiController
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("emptyArray", new string[] { });
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("nullOnlyArray", new object[] { null, null });
 
+        // Attempt to force this as the captured transaction trace.
+        Thread.Sleep(1000);
+
         return "success";
     }
 

@@ -83,6 +83,9 @@ public class AttributeTestingController : Controller
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("emptyArray", new string[] { });
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("nullOnlyArray", new object[] { null, null });
 
+        // Attempt to force this as the captured transaction trace.
+        System.Threading.Thread.Sleep(1000);
+
         return "success";
     }
 
@@ -92,6 +95,9 @@ public class AttributeTestingController : Controller
     {
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("arrayWithNulls", new object[] { "first", null, "third" });
         NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("listAttribute", new List<string> { "list1", "list2", "list3" });
+
+        // Attempt to force this as the captured transaction trace.
+        System.Threading.Thread.Sleep(1000);
 
         return "success";
     }
