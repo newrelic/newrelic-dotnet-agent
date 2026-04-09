@@ -2253,8 +2253,8 @@ public class AgentApiTests
             new ExpectedAttribute(){ Key = "key5", Value = true},
             new ExpectedAttribute(){ Key = "key6", Value = dtm1.ToString("o")},
             new ExpectedAttribute(){ Key = "key7", Value = dtm2.ToString("o")},
-            new ExpectedAttribute(){ Key = "key9a", Value = "avalue"},
-            new ExpectedAttribute(){ Key = "key9b", Value = "onevalue,twovalue,threevalue"}
+            new ExpectedAttribute(){ Key = "key9a", Value = new List<object> { "avalue" }},
+            new ExpectedAttribute(){ Key = "key9b", Value = new List<object> { "onevalue", "twovalue", "threevalue" }}
         };
 
         var unexpectedAttributes = new[]
@@ -2276,6 +2276,50 @@ public class AgentApiTests
             () => Assert.That(allSpans, Has.Count.EqualTo(2)),
             () => SpanAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, testSpan),
             () => SpanAssertions.DoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, testSpan)
+        );
+    }
+
+    [Test]
+    public void SpanCustomAttributes_WithArrays()
+    {
+        var agentWrapperApi = _compositeTestAgent.GetAgent();
+
+        // ACT
+        var transaction = agentWrapperApi.CreateTransaction(
+            isWeb: true,
+            category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+            transactionDisplayName: "name",
+            doNotTrackAsUnitOfWork: true);
+
+        var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+
+        segment.AddCustomAttribute("stringArray", new[] { "red", "green", "blue" });
+        segment.AddCustomAttribute("intArray", new[] { 1, 2, 3, 4, 5 });
+        segment.AddCustomAttribute("boolArray", new[] { true, false, true });
+        segment.AddCustomAttribute("mixedList", new List<object> { "hello", 42, true });
+        segment.AddCustomAttribute("emptyArray", new string[0]);
+
+        var expectedAttributes = new[]
+        {
+            new ExpectedAttribute { Key = "stringArray", Value = new List<object> { "red", "green", "blue" } },
+            new ExpectedAttribute { Key = "intArray", Value = new List<object> { 1L, 2L, 3L, 4L, 5L } },
+            new ExpectedAttribute { Key = "boolArray", Value = new List<object> { true, false, true } },
+            new ExpectedAttribute { Key = "mixedList", Value = new List<object> { "hello", 42L, true } },
+            new ExpectedAttribute { Key = "emptyArray", Value = new List<object>() }
+        };
+
+        segment.End();
+        transaction.End();
+
+        _compositeTestAgent.Harvest();
+
+        var allSpans = _compositeTestAgent.SpanEvents;
+        var testSpan = allSpans.LastOrDefault();
+
+        NrAssert.Multiple
+        (
+            () => Assert.That(allSpans, Has.Count.EqualTo(2)),
+            () => SpanAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, testSpan)
         );
     }
 
