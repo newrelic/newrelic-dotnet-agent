@@ -9,7 +9,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.WCF;
+namespace NewRelic.Agent.IntegrationTests.WCF.Client.Self;
 
 /// <summary>
 /// Verifies that when outbound WCF HTTP requests already have DT headers
@@ -65,7 +65,9 @@ public class WCFClient_Self_BasicHTTP_DTHeaderReplacement : NewRelicIntegrationT
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 1 },
+            // One create from the external call used to start the agent during WCF service initialization,
+            // one create from the call being made by GetDataWithExistingDTHeaders
+            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 2 },
             new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 1 },
         };
 
