@@ -28,7 +28,7 @@ public class AspNetCoreCustomAttributesArraySupport : NewRelicIntegrationTest<Re
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
                 configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
+                configModifier.SetLogLevel("debug");
             },
             exerciseApplication: () =>
             {
