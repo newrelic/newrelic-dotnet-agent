@@ -238,6 +238,7 @@ public class WCFClient
     }
 
     [LibraryMethod]
+    [Transaction]
     public void GetDataWithExistingDTHeaders()
     {
         using (var scope = new OperationContextScope((_wcfClient as WcfClient).InnerChannel))
