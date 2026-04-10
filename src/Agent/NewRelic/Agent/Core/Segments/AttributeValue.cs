@@ -147,6 +147,11 @@ public partial class AttributeValue : IAttributeValue
         if (value is IEnumerable enumerable)
         {
             _arrayValue = value as List<object> ?? enumerable.Cast<object>().ToList();
+
+            // Set StringValue as fallback for the protobuf/infinite tracing serialization path,
+            // which doesn't support array types in the oneof. This preserves the pre-array-support
+            // behavior so the attribute is still captured rather than silently dropped.
+            StringValue = value.ToString();
             return;
         }
 
