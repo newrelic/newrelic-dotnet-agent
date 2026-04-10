@@ -27,15 +27,23 @@ public class AspNetCoreCustomAttributesArraySupport : NewRelicIntegrationTest<Re
                 configModifier.ForceTransactionTraces();
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
                 configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+                configModifier.SetLogLevel("debug");
             },
             exerciseApplication: () =>
             {
+                // Space each slow request across separate harvest cycles so each gets its own transaction trace.
                 _fixture.GetCustomArrayAttributes();
-                _fixture.GetCustomEmptyArrayAttributes();
-                _fixture.GetCustomArrayWithNulls();
-
                 _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
+
+                _fixture.GetCustomEmptyArrayAttributes();
+                _fixture.AgentLog.WaitForLogLines(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1), 2);
+
+                _fixture.GetCustomArrayWithNulls();
+                _fixture.AgentLog.WaitForLogLines(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1), 3);
+
+                // Wait for span event data to be harvested
+                _fixture.AgentLog.WaitForLogLine(AgentLogFile.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
             });
         _fixture.Initialize();
     }
@@ -93,6 +101,34 @@ public class AspNetCoreCustomAttributesArraySupport : NewRelicIntegrationTest<Re
     }
 
     [Fact]
+    public void Test_ArrayAttributes_AppearInSpanEvent()
+    {
+        var expectedTransactionName = @"WebTransaction/MVC/AttributeTesting/CustomArrayAttributes";
+
+        var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
+        var rootSpan = spanEvents.FirstOrDefault(se =>
+            se.IntrinsicAttributes.ContainsKey("nr.entryPoint") &&
+            se.IntrinsicAttributes["name"]?.ToString() == expectedTransactionName);
+
+        Assert.NotNull(rootSpan);
+
+        NrAssert.Multiple(
+            () => Assertions.SpanEventHasAttributes(new Dictionary<string, object>
+            {
+                { "stringArray", new[] { "red", "green", "blue" } }
+            }, SpanEventAttributeType.User, rootSpan),
+            () => Assertions.SpanEventHasAttributes(new Dictionary<string, object>
+            {
+                { "intArray", new[] { 1, 2, 3, 4, 5 } }
+            }, SpanEventAttributeType.User, rootSpan),
+            () => Assertions.SpanEventHasAttributes(new Dictionary<string, object>
+            {
+                { "boolArray", new[] { true, false, true } }
+            }, SpanEventAttributeType.User, rootSpan)
+        );
+    }
+
+    [Fact]
     public void Test_EmptyAndNullOnlyArrays_AreSkipped()
     {
         var expectedTransactionName = @"WebTransaction/MVC/AttributeTesting/CustomEmptyArrayAttributes";
@@ -101,10 +137,18 @@ public class AspNetCoreCustomAttributesArraySupport : NewRelicIntegrationTest<Re
 
         Assert.NotNull(transactionEvent);
 
+        var transactionSample = _fixture.AgentLog.GetTransactionSamples()
+            .Where(sample => sample.Path == expectedTransactionName)
+            .FirstOrDefault();
+
+        Assert.NotNull(transactionSample);
+
         // Verify empty/null arrays don't appear (consistent with our JsonSerializerHelpers behavior)
         NrAssert.Multiple(
             () => Assert.False(TransactionEventHasAttribute("emptyArray", transactionEvent), "Empty array should be skipped in transaction event"),
-            () => Assert.False(TransactionEventHasAttribute("nullOnlyArray", transactionEvent), "Null-only array should be skipped in transaction event")
+            () => Assert.False(TransactionEventHasAttribute("nullOnlyArray", transactionEvent), "Null-only array should be skipped in transaction event"),
+            () => Assert.False(TransactionTraceHasAttribute("emptyArray", transactionSample), "Empty array should be skipped in transaction trace"),
+            () => Assert.False(TransactionTraceHasAttribute("nullOnlyArray", transactionSample), "Null-only array should be skipped in transaction trace")
         );
     }
 
@@ -127,12 +171,29 @@ public class AspNetCoreCustomAttributesArraySupport : NewRelicIntegrationTest<Re
                 { "listAttribute", new[] { "list1", "list2", "list3" } } // List<T> works as array
             }, TransactionEventAttributeType.User, transactionEvent)
         );
+
+        var transactionSample = _fixture.AgentLog.GetTransactionSamples()
+            .Where(sample => sample.Path == expectedTransactionName)
+            .FirstOrDefault();
+
+        Assert.NotNull(transactionSample);
+
+        NrAssert.Multiple(
+            () => Assertions.TransactionTraceHasAttributes(new Dictionary<string, object>
+            {
+                { "arrayWithNulls", new[] { "first", "third" } }
+            }, TransactionTraceAttributeType.User, transactionSample),
+            () => Assertions.TransactionTraceHasAttributes(new Dictionary<string, object>
+            {
+                { "listAttribute", new[] { "list1", "list2", "list3" } }
+            }, TransactionTraceAttributeType.User, transactionSample)
+        );
     }
 
     // Helper methods to check if attributes exist
-    private bool TransactionTraceHasAttribute(string attributeName, dynamic transactionTrace)
+    private bool TransactionTraceHasAttribute(string attributeName, TransactionSample sample)
     {
-        return transactionTrace.TransactionTraceData.Attributes.UserAttributes.ContainsKey(attributeName);
+        return sample.TraceData.Attributes.UserAttributes.ContainsKey(attributeName);
     }
 
     private bool TransactionEventHasAttribute(string attributeName, dynamic transactionEvent)

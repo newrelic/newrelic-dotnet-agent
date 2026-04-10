@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NewRelic.Agent.Configuration;
@@ -10,6 +11,7 @@ using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.WireModels;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -317,6 +319,144 @@ public class EventWireModelSerializerTests
         // Assert
         Assert.That(actualJson, Is.Not.Null);
         Assert.That(actualJson, Does.Contain("\"event.custom\":123"));
+    }
+
+    [Test]
+    public void SpanEventWireModelSerializer_SerializesCustomAttributeWithStringArray()
+    {
+        // Arrange
+        var attribValues = new SpanAttributeValueCollection();
+        attribValues.Priority = 0.5f;
+        _attribDefs.GetTypeAttribute(TypeAttributeValue.Span).TrySetDefault(attribValues);
+        _attribDefs.GetCustomAttributeForSpan("tags").TrySetValue(attribValues, new object[] { "red", "green", "blue" });
+
+        var serializer = new SpanEventWireModelSerializer();
+        var stringBuilder = new StringBuilder();
+        var writer = new JsonTextWriter(new StringWriter(stringBuilder));
+
+        // Act
+        serializer.WriteJson(writer, attribValues, JsonSerializer.CreateDefault());
+        writer.Flush();
+        var actualJson = stringBuilder.ToString();
+
+        // Assert
+        var parsed = JArray.Parse(actualJson);
+        var userAttribs = parsed[1];
+        Assert.That(userAttribs["tags"], Is.Not.Null);
+        Assert.That(userAttribs["tags"].Type, Is.EqualTo(JTokenType.Array));
+        Assert.That(userAttribs["tags"].ToObject<List<string>>(), Is.EqualTo(new List<string> { "red", "green", "blue" }));
+    }
+
+    [Test]
+    public void SpanEventWireModelSerializer_SerializesCustomAttributeWithIntArray()
+    {
+        // Arrange
+        var attribValues = new SpanAttributeValueCollection();
+        attribValues.Priority = 0.5f;
+        _attribDefs.GetTypeAttribute(TypeAttributeValue.Span).TrySetDefault(attribValues);
+        _attribDefs.GetCustomAttributeForSpan("scores").TrySetValue(attribValues, new object[] { 10, 20, 30 });
+
+        var serializer = new SpanEventWireModelSerializer();
+        var stringBuilder = new StringBuilder();
+        var writer = new JsonTextWriter(new StringWriter(stringBuilder));
+
+        // Act
+        serializer.WriteJson(writer, attribValues, JsonSerializer.CreateDefault());
+        writer.Flush();
+        var actualJson = stringBuilder.ToString();
+
+        // Assert - GenericConverter converts ints to longs
+        var parsed = JArray.Parse(actualJson);
+        var userAttribs = parsed[1];
+        Assert.That(userAttribs["scores"], Is.Not.Null);
+        Assert.That(userAttribs["scores"].Type, Is.EqualTo(JTokenType.Array));
+        Assert.That(userAttribs["scores"].ToObject<List<long>>(), Is.EqualTo(new List<long> { 10, 20, 30 }));
+    }
+
+    [Test]
+    public void SpanEventWireModelSerializer_SerializesCustomAttributeWithMixedArray()
+    {
+        // Arrange
+        var attribValues = new SpanAttributeValueCollection();
+        attribValues.Priority = 0.5f;
+        _attribDefs.GetTypeAttribute(TypeAttributeValue.Span).TrySetDefault(attribValues);
+        _attribDefs.GetCustomAttributeForSpan("mixed").TrySetValue(attribValues, new object[] { "hello", 42, true });
+
+        var serializer = new SpanEventWireModelSerializer();
+        var stringBuilder = new StringBuilder();
+        var writer = new JsonTextWriter(new StringWriter(stringBuilder));
+
+        // Act
+        serializer.WriteJson(writer, attribValues, JsonSerializer.CreateDefault());
+        writer.Flush();
+        var actualJson = stringBuilder.ToString();
+
+        // Assert
+        var parsed = JArray.Parse(actualJson);
+        var userAttribs = parsed[1];
+        Assert.That(userAttribs["mixed"], Is.Not.Null);
+        Assert.That(userAttribs["mixed"].Type, Is.EqualTo(JTokenType.Array));
+        var array = userAttribs["mixed"] as JArray;
+        Assert.That(array[0].Value<string>(), Is.EqualTo("hello"));
+        Assert.That(array[1].Value<long>(), Is.EqualTo(42));
+        Assert.That(array[2].Value<bool>(), Is.EqualTo(true));
+    }
+
+    [Test]
+    public void SpanEventWireModelSerializer_CopiedArrayAttributeSerializesCorrectly()
+    {
+        // Arrange - simulates the SpanEventMaker.AddRange flow where transaction attributes
+        // are copied into a SpanAttributeValueCollection.
+        // Must use AllTargetModelTypes (individual flags) rather than AttributeDestinations.All
+        // (composite flag) because IsAvailableForAny checks individual keys in the availability dictionary.
+        var transactionAttribs = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+        _attribDefs.GetCustomAttributeForTransaction("tags").TrySetValue(transactionAttribs, new object[] { "a", "b", "c" });
+
+        var spanAttribs = new SpanAttributeValueCollection();
+        spanAttribs.Priority = 0.5f;
+        _attribDefs.GetTypeAttribute(TypeAttributeValue.Span).TrySetDefault(spanAttribs);
+        spanAttribs.AddRange(transactionAttribs.GetAttributeValues(AttributeClassification.UserAttributes));
+
+        var serializer = new SpanEventWireModelSerializer();
+        var stringBuilder = new StringBuilder();
+        var writer = new JsonTextWriter(new StringWriter(stringBuilder));
+
+        // Act
+        serializer.WriteJson(writer, spanAttribs, JsonSerializer.CreateDefault());
+        writer.Flush();
+        var actualJson = stringBuilder.ToString();
+
+        // Assert
+        var parsed = JArray.Parse(actualJson);
+        var userAttribs = parsed[1];
+        Assert.That(userAttribs["tags"], Is.Not.Null);
+        Assert.That(userAttribs["tags"].Type, Is.EqualTo(JTokenType.Array));
+        Assert.That(userAttribs["tags"].ToObject<List<string>>(), Is.EqualTo(new List<string> { "a", "b", "c" }));
+    }
+
+    [Test]
+    public void SpanEventWireModelSerializer_DoesNotSerializeGarbageStringForArrays()
+    {
+        // Arrange - verifies the specific bug case: arrays should NOT be serialized as
+        // "System.Collections.Generic.List`1[System.Object]" or "System.Int32[]"
+        var attribValues = new SpanAttributeValueCollection();
+        attribValues.Priority = 0.5f;
+        _attribDefs.GetTypeAttribute(TypeAttributeValue.Span).TrySetDefault(attribValues);
+        _attribDefs.GetCustomAttributeForSpan("nums").TrySetValue(attribValues, new object[] { 1, 2, 3 });
+
+        var serializer = new SpanEventWireModelSerializer();
+        var stringBuilder = new StringBuilder();
+        var writer = new JsonTextWriter(new StringWriter(stringBuilder));
+
+        // Act
+        serializer.WriteJson(writer, attribValues, JsonSerializer.CreateDefault());
+        writer.Flush();
+        var actualJson = stringBuilder.ToString();
+
+        // Assert - Should NOT contain ToString() garbage
+        Assert.That(actualJson, Does.Not.Contain("System.Collections"));
+        Assert.That(actualJson, Does.Not.Contain("System.Int32[]"));
+        Assert.That(actualJson, Does.Not.Contain("System.Object[]"));
     }
 
     [Test]
