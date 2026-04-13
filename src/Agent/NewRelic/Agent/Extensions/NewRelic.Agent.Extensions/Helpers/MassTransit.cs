@@ -13,7 +13,7 @@ public class MassTransitQueueData
     public MessageBrokerDestinationType DestinationType { get; set; } = MessageBrokerDestinationType.Queue;
 }
 
-public class MassTransitHelpers
+public static class MassTransitHelpers
 {
     public static MassTransitQueueData GetQueueData(Uri sourceAddress, Uri fallbackAddress = null)
     {
@@ -36,74 +36,81 @@ public class MassTransitHelpers
         if (sourceAddress == null)
             return data;
 
-        var scheme = sourceAddress.Scheme.ToLowerInvariant();
-
-        // Short-form addressing schemes used by any transport: queue://, topic://, exchange://
-        switch (scheme)
+        try
         {
-            case "topic":
-                data.QueueName = GetLastPathSegment(sourceAddress);
-                data.DestinationType = MessageBrokerDestinationType.Topic;
-                return data;
-            case "queue":
-                data.QueueName = GetLastPathSegment(sourceAddress);
-                data.DestinationType = MessageBrokerDestinationType.Queue;
-                return data;
-            case "exchange":
-                data.QueueName = GetLastPathSegment(sourceAddress);
-                data.DestinationType = MessageBrokerDestinationType.Queue;
-                return data;
-        }
+            var scheme = sourceAddress.Scheme.ToLowerInvariant();
 
-        // MassTransit Rider embeds path prefixes (e.g. /kafka/, /event-hub/) regardless
-        // of the bus transport scheme. Check for these before scheme-specific parsing.
-        if (TryParseRiderPrefix(sourceAddress, data))
+            // Short-form addressing schemes used by any transport: queue://, topic://, exchange://
+            switch (scheme)
+            {
+                case "topic":
+                    data.QueueName = GetLastPathSegment(sourceAddress);
+                    data.DestinationType = MessageBrokerDestinationType.Topic;
+                    return data;
+                case "queue":
+                    data.QueueName = GetLastPathSegment(sourceAddress);
+                    data.DestinationType = MessageBrokerDestinationType.Queue;
+                    return data;
+                case "exchange":
+                    data.QueueName = GetLastPathSegment(sourceAddress);
+                    data.DestinationType = MessageBrokerDestinationType.Queue;
+                    return data;
+            }
+
+            // MassTransit Rider embeds path prefixes (e.g. /kafka/, /event-hub/) regardless
+            // of the bus transport scheme. Check for these before scheme-specific parsing.
+            if (TryParseRiderPrefix(sourceAddress, data))
+                return data;
+
+            // Transport-specific parsing by URI scheme
+            switch (scheme)
+            {
+                case "kafka":
+                    data.QueueName = GetLastPathSegment(sourceAddress);
+                    data.DestinationType = MessageBrokerDestinationType.Topic;
+                    break;
+
+                case "sb":
+                    ParseServiceBusUri(sourceAddress, data);
+                    break;
+
+                case "amazonsqs":
+                    data.QueueName = GetLastPathSegment(sourceAddress);
+                    data.DestinationType = GetDestinationTypeFromQueryParam(sourceAddress);
+                    if (data.DestinationType == MessageBrokerDestinationType.Queue && HasQueryParam(sourceAddress, "temporary", "true"))
+                        data.DestinationType = MessageBrokerDestinationType.TempQueue;
+                    break;
+
+                case "activemq":
+                case "amqp":
+                case "amqps":
+                    data.QueueName = GetLastPathSegment(sourceAddress);
+                    data.DestinationType = GetDestinationTypeFromQueryParam(sourceAddress);
+                    if (data.DestinationType == MessageBrokerDestinationType.Queue && HasQueryParam(sourceAddress, "temporary", "true"))
+                        data.DestinationType = MessageBrokerDestinationType.TempQueue;
+                    break;
+
+                case "rabbitmq":
+                case "rabbitmqs":
+                    ParseRabbitMqUri(sourceAddress, data);
+                    break;
+
+                case "loopback":
+                    data.QueueName = GetLastPathSegment(sourceAddress);
+                    break;
+
+                default:
+                    // Graceful fallback for unknown transports: try last path segment
+                    data.QueueName = GetLastPathSegment(sourceAddress);
+                    break;
+            }
+
             return data;
-
-        // Transport-specific parsing by URI scheme
-        switch (scheme)
-        {
-            case "kafka":
-                data.QueueName = GetLastPathSegment(sourceAddress);
-                data.DestinationType = MessageBrokerDestinationType.Topic;
-                break;
-
-            case "sb":
-                ParseServiceBusUri(sourceAddress, data);
-                break;
-
-            case "amazonsqs":
-                data.QueueName = GetLastPathSegment(sourceAddress);
-                data.DestinationType = GetDestinationTypeFromQueryParam(sourceAddress);
-                if (data.DestinationType == MessageBrokerDestinationType.Queue && HasQueryParam(sourceAddress, "temporary", "true"))
-                    data.DestinationType = MessageBrokerDestinationType.TempQueue;
-                break;
-
-            case "activemq":
-            case "amqp":
-            case "amqps":
-                data.QueueName = GetLastPathSegment(sourceAddress);
-                data.DestinationType = GetDestinationTypeFromQueryParam(sourceAddress);
-                if (data.DestinationType == MessageBrokerDestinationType.Queue && HasQueryParam(sourceAddress, "temporary", "true"))
-                    data.DestinationType = MessageBrokerDestinationType.TempQueue;
-                break;
-
-            case "rabbitmq":
-            case "rabbitmqs":
-                ParseRabbitMqUri(sourceAddress, data);
-                break;
-
-            case "loopback":
-                data.QueueName = GetLastPathSegment(sourceAddress);
-                break;
-
-            default:
-                // Graceful fallback for unknown transports: try last path segment
-                data.QueueName = GetLastPathSegment(sourceAddress);
-                break;
         }
-
-        return data;
+        catch
+        {
+            return data;
+        }
     }
 
     private static bool TryParseRiderPrefix(Uri sourceAddress, MassTransitQueueData data)
