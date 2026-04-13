@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -109,10 +110,10 @@ public class UpdatedLoadedModulesServiceTests
             .Returns(DataTransportResponseStatus.RequestSuccessful);
 
         _getLoadedModulesAction();
-        var initialModules = loadedModulesCollection.LoadedModules;
-        var initialCount = initialModules.Count;
-        Assert.That(initialCount, Is.GreaterThan(0), "Initial module count should be greater than 0");
+        var initialAssemblyNames = loadedModulesCollection.LoadedModules.Select(m => m.AssemblyName).ToList();
+        Assert.That(initialAssemblyNames.Count, Is.GreaterThan(0), "Initial module count should be greater than 0");
 
+        // Simulate another harvest
         _getLoadedModulesAction();
 
         // Act - Simulate reconnect
@@ -120,13 +121,16 @@ public class UpdatedLoadedModulesServiceTests
 
         // Harvest again after reconnect
         _getLoadedModulesAction();
-        var afterReconnectModules = loadedModulesCollection.LoadedModules;
-        var afterReconnectCount = afterReconnectModules.Count;
+        var afterReconnectAssemblyNames = loadedModulesCollection.LoadedModules.Select(m => m.AssemblyName).ToList();
 
         // Assert - All modules should be resent
         // We use GreaterThanOrEqualTo here because it's possible that new modules were loaded between the
         // initial send and the reconnect, but we want to ensure that at least all of the initial modules were resent.
-        Assert.That(afterReconnectCount, Is.GreaterThanOrEqualTo(initialCount), "All modules should be resent after reconnect");
+        Assert.That(afterReconnectAssemblyNames.Count, Is.GreaterThanOrEqualTo(initialAssemblyNames.Count), "All modules should be resent after reconnect");
+        foreach (var assemblyName in initialAssemblyNames)
+        {
+            Assert.That(afterReconnectAssemblyNames, Does.Contain(assemblyName), $"Module {assemblyName} should be resent after reconnect");
+        }
     }
 
     [Test]
