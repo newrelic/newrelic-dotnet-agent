@@ -125,4 +125,20 @@ public class MassTransitHelperTests
             Assert.That(data.DestinationType, Is.EqualTo(expectedDestType));
         });
     }
+
+    [Test]
+    public void GetQueueData_ReturnsDefaults_WhenParsingThrows()
+    {
+        // A relative Uri passes the null check but throws InvalidOperationException
+        // when .Scheme is accessed, exercising the catch block.
+        var relativeUri = new Uri("relative-path", UriKind.Relative);
+
+        var data = MassTransitHelpers.GetQueueData(relativeUri);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(data.QueueName, Is.EqualTo("Unknown"));
+            Assert.That(data.DestinationType, Is.EqualTo(MessageBrokerDestinationType.Queue));
+        });
+    }
 }

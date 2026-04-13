@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 
@@ -107,8 +108,10 @@ public static class MassTransitHelpers
 
             return data;
         }
-        catch
+        catch (Exception ex)
         {
+            Log.Debug(ex, "Unexpected error parsing MassTransit URI. Falling back to default values.");
+
             return data;
         }
     }
