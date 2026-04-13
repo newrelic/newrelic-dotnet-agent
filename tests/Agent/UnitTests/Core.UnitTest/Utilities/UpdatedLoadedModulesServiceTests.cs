@@ -109,25 +109,30 @@ public class UpdatedLoadedModulesServiceTests
             .Returns(DataTransportResponseStatus.RequestSuccessful);
 
         _getLoadedModulesAction();
-        var initialCount = loadedModulesCollection.LoadedModules.Count;
-        Assert.That(initialCount, Is.GreaterThan(0));
+        var initialModules = loadedModulesCollection.LoadedModules;
+        var initialCount = initialModules.Count;
+        Assert.That(initialCount, Is.GreaterThan(0), "Initial module count should be greater than 0");
 
         // Verify deduplication is working (second call sends nothing new)
         _getLoadedModulesAction();
+        Assert.That(loadedModulesCollection.LoadedModules.Count, Is.EqualTo(0), "No new modules should be sent on second call");
 
         // Act - Simulate reconnect
         EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
         // Harvest again after reconnect
         _getLoadedModulesAction();
-        var afterReconnectCount = loadedModulesCollection.LoadedModules.Count;
+        var afterReconnectModules = loadedModulesCollection.LoadedModules;
+        var afterReconnectCount = afterReconnectModules.Count;
 
         // Assert - All modules should be resent
-        Assert.That(afterReconnectCount, Is.EqualTo(initialCount));
+        // We use GreaterThanOrEqualTo here because it's possible that new modules were loaded between the
+        // initial send and the reconnect, but we want to ensure that at least all of the initial modules were resent.
+        Assert.That(afterReconnectCount, Is.GreaterThanOrEqualTo(initialCount), "All modules should be resent after reconnect");
     }
 
     [Test]
-    public void GetLoadedModules_SendError_DuplciatesNotSaved()
+    public void GetLoadedModules_SendError_DuplicatesNotSaved()
     {
         LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
         var result = Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
