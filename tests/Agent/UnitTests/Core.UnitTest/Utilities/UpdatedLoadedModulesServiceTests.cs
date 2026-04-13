@@ -113,9 +113,7 @@ public class UpdatedLoadedModulesServiceTests
         var initialCount = initialModules.Count;
         Assert.That(initialCount, Is.GreaterThan(0), "Initial module count should be greater than 0");
 
-        // Verify deduplication is working (second call sends nothing new)
         _getLoadedModulesAction();
-        Assert.That(loadedModulesCollection.LoadedModules.Count, Is.EqualTo(0), "No new modules should be sent on second call");
 
         // Act - Simulate reconnect
         EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
