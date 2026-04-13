@@ -99,6 +99,34 @@ public class UpdatedLoadedModulesServiceTests
     }
 
     [Test]
+    public void GetLoadedModules_AfterReconnect_ResendsAllModules()
+    {
+        // Arrange - First send succeeds
+        LoadedModuleWireModelCollection loadedModulesCollection = null;
+        Mock.Arrange(() => _dataTransportService.Send(
+                Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
+            .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
+            .Returns(DataTransportResponseStatus.RequestSuccessful);
+
+        _getLoadedModulesAction();
+        var initialCount = loadedModulesCollection.LoadedModules.Count;
+        Assert.That(initialCount, Is.GreaterThan(0));
+
+        // Verify deduplication is working (second call sends nothing new)
+        _getLoadedModulesAction();
+
+        // Act - Simulate reconnect
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+        // Harvest again after reconnect
+        _getLoadedModulesAction();
+        var afterReconnectCount = loadedModulesCollection.LoadedModules.Count;
+
+        // Assert - All modules should be resent
+        Assert.That(afterReconnectCount, Is.EqualTo(initialCount));
+    }
+
+    [Test]
     public void GetLoadedModules_SendError_DuplciatesNotSaved()
     {
         LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
