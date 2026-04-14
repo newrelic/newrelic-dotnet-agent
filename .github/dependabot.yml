@@ -27,7 +27,6 @@ updates:
   # Update all NuGet packages used by core agent projects
   - package-ecosystem: nuget
     directories: # not recursive - only the specified directory will be scanned for .csproj or .sln files
-      - /build # BuildTools.sln
       - /src/Agent/NewRelic/Agent/Core # Core.csproj
       - /src/Agent/NewRelic.Api.Agent # NewRelic.Api.Agent.csproj
       - /src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions # NewRelic.Agent.Extensions.csproj
@@ -48,6 +47,18 @@ updates:
       - dependency-name: "System.Diagnostics.DiagnosticSource" 
         update-types: ["version-update:semver-major"] # not ready to upgrade to v9 yet
 
+  # Update all NuGet packages used by build/release tool projects
+  - package-ecosystem: nuget
+    directories: # not recursive - only the specified directory will be scanned for .csproj or .sln files
+      - /build # BuildTools.sln
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "chore(deps):"
+    groups: 
+      nuget-agent:
+        patterns:
+          - "*"
 
   # Update a specific set of packages for unit and integration tests
   - package-ecosystem: nuget
