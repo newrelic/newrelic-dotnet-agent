@@ -493,6 +493,40 @@ public static class MetricNames
         return MetricName.Create(DatastoreInstance, EnumNameCache<DatastoreVendor>.GetName(vendor), host, portPathOrId);
     }
 
+    // String-based overloads for custom vendor names via RecordDatastoreSegment()
+
+    public static MetricName GetDatastoreVendorAll(string vendorName)
+    {
+        return MetricName.Create(Datastore, vendorName, All);
+    }
+
+    public static MetricName GetDatastoreVendorAllWeb(string vendorName)
+    {
+        return MetricName.Create(Datastore, vendorName, AllWeb);
+    }
+
+    public static MetricName GetDatastoreVendorAllOther(string vendorName)
+    {
+        return MetricName.Create(Datastore, vendorName, AllOther);
+    }
+
+    public static MetricName GetDatastoreOperation(string vendorName, string operation = null)
+    {
+        operation ??= DatastoreUnknownOperationName;
+        return MetricName.Create(DatastoreOperation, vendorName, operation);
+    }
+
+    public static MetricName GetDatastoreStatement(string vendorName, string model, string operation = null)
+    {
+        operation ??= DatastoreUnknownOperationName;
+        return MetricName.Create(DatastoreStatement, vendorName, model, operation);
+    }
+
+    public static MetricName GetDatastoreInstance(string vendorName, string host, string portPathOrId)
+    {
+        return MetricName.Create(DatastoreInstance, vendorName, host, portPathOrId);
+    }
+
     #endregion Datastore
 
     #region External

@@ -65,6 +65,56 @@ public class MetricNamesTests
         Assert.That(MetricNames.GetDatastoreInstance(DatastoreVendor.MSSQL, "compy64", "808").ToString(), Is.EqualTo("Datastore/instance/MSSQL/compy64/808"));
     }
 
+    // String-based overloads for custom vendor names
+
+    [Test]
+    public void GetDatastoreVendorAll_StringOverload()
+    {
+        Assert.That(MetricNames.GetDatastoreVendorAll("DynamoDB").ToString(), Is.EqualTo("Datastore/DynamoDB/all"));
+    }
+
+    [Test]
+    public void GetDatastoreVendorAllWeb_StringOverload()
+    {
+        Assert.That(MetricNames.GetDatastoreVendorAllWeb("DynamoDB").ToString(), Is.EqualTo("Datastore/DynamoDB/allWeb"));
+    }
+
+    [Test]
+    public void GetDatastoreVendorAllOther_StringOverload()
+    {
+        Assert.That(MetricNames.GetDatastoreVendorAllOther("DynamoDB").ToString(), Is.EqualTo("Datastore/DynamoDB/allOther"));
+    }
+
+    [Test]
+    public void GetDatastoreOperation_StringOverload()
+    {
+        Assert.That(MetricNames.GetDatastoreOperation("DynamoDB", "scan").ToString(), Is.EqualTo("Datastore/operation/DynamoDB/scan"));
+    }
+
+    [Test]
+    public void GetDatastoreOperation_StringOverload_NullOperation_DefaultsToUnknown()
+    {
+        Assert.That(MetricNames.GetDatastoreOperation("DynamoDB", null).ToString(), Is.EqualTo("Datastore/operation/DynamoDB/other"));
+    }
+
+    [Test]
+    public void GetDatastoreStatement_StringOverload()
+    {
+        Assert.That(MetricNames.GetDatastoreStatement("DynamoDB", "users", "scan").ToString(), Is.EqualTo("Datastore/statement/DynamoDB/users/scan"));
+    }
+
+    [Test]
+    public void GetDatastoreStatement_StringOverload_NullOperation_DefaultsToUnknown()
+    {
+        Assert.That(MetricNames.GetDatastoreStatement("DynamoDB", "users", null).ToString(), Is.EqualTo("Datastore/statement/DynamoDB/users/other"));
+    }
+
+    [Test]
+    public void GetDatastoreInstance_StringOverload()
+    {
+        Assert.That(MetricNames.GetDatastoreInstance("DynamoDB", "myhost", "8080").ToString(), Is.EqualTo("Datastore/instance/DynamoDB/myhost/8080"));
+    }
+
     #region GetTransactionApdex
 
     [Test]

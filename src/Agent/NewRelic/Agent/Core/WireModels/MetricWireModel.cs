@@ -471,6 +471,61 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
             txStats.MergeUnscopedStats(proposedName, data);
         }
 
+        // String-based overloads for custom vendor names via RecordDatastoreSegment()
+
+        public static void TryBuildDatastoreStatementMetric(ParsedSqlStatement sqlStatement,
+            TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats)
+        {
+            var proposedName = MetricName.Create(sqlStatement.DatastoreStatementMetricName);
+            var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveDuration);
+            txStats.MergeUnscopedStats(proposedName, data);
+            txStats.MergeScopedStats(proposedName, data);
+        }
+
+        public static void TryBuildDatastoreVendorOperationMetric(string vendorName, string operation,
+            TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats, bool onlyUnscoped)
+        {
+            var proposedName = MetricNames.GetDatastoreOperation(vendorName, operation);
+            var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveDuration);
+            txStats.MergeUnscopedStats(proposedName, data);
+            if (!onlyUnscoped)
+            {
+                txStats.MergeScopedStats(proposedName, data);
+            }
+        }
+
+        public static void TryBuildDatastoreRollupMetrics(string vendorName, TimeSpan totalTime, TimeSpan exclusiveTime,
+            TransactionMetricStatsCollection txStats)
+        {
+            var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveTime);
+
+            // Datastore/All
+            txStats.MergeUnscopedStats(MetricNames.DatastoreAll, data);
+
+            // Datastore/<allWeb/allOther>
+            var proposedName = txStats.GetTransactionName().IsWebTransactionName
+                ? MetricNames.DatastoreAllWeb
+                : MetricNames.DatastoreAllOther;
+            txStats.MergeUnscopedStats(proposedName, data);
+
+            // Datastore/<vendor>/all
+            txStats.MergeUnscopedStats(MetricNames.GetDatastoreVendorAll(vendorName), data);
+
+            // Datastore/<vendor>/<allWeb/allOther>
+            proposedName = txStats.GetTransactionName().IsWebTransactionName
+                ? MetricNames.GetDatastoreVendorAllWeb(vendorName)
+                : MetricNames.GetDatastoreVendorAllOther(vendorName);
+            txStats.MergeUnscopedStats(proposedName, data);
+        }
+
+        public static void TryBuildDatastoreInstanceMetric(string vendorName, string host, string portPathOrId,
+            TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats)
+        {
+            var proposedName = MetricNames.GetDatastoreInstance(vendorName, host, portPathOrId);
+            var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveDuration);
+            txStats.MergeUnscopedStats(proposedName, data);
+        }
+
         public static void TryBuildSpanEventLinksDroppedMetric(int droppedCount, TransactionMetricStatsCollection txStats)
         {
             var data = MetricDataWireModel.BuildCountData(droppedCount);

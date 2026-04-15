@@ -28,6 +28,19 @@ public class DatastoreSegmentData : AbstractSegmentData, IDatastoreSegmentData
     public string Operation => _parsedSqlStatement.Operation;
     public DatastoreVendor DatastoreVendorName => _parsedSqlStatement.DatastoreVendor;
     public string Model => _parsedSqlStatement.Model;
+
+    /// <summary>
+    /// Returns the vendor name string for use in metric and segment names.
+    /// For known vendors (MySQL, Postgres, etc.), returns the enum name.
+    /// For custom vendors via RecordDatastoreSegment(), returns the caller-provided string,
+    /// falling back to "Other" if the caller-provided string is null or empty.
+    /// </summary>
+    public string GetVendorName()
+    {
+        return DatastoreVendorName == DatastoreVendor.Other && !string.IsNullOrEmpty(_parsedSqlStatement.DatastoreVendorNameString)
+            ? _parsedSqlStatement.DatastoreVendorNameString
+             : EnumNameCache<DatastoreVendor>.GetName(DatastoreVendorName);
+    }
     public string CommandText { get; set; }
     public string Host => _connectionInfo.Host;
     public int? Port => _connectionInfo.Port;
@@ -189,7 +202,10 @@ public class DatastoreSegmentData : AbstractSegmentData, IDatastoreSegmentData
 
     public override string GetTransactionTraceName()
     {
-        var name = string.IsNullOrEmpty(Model) ? DatastoreVendorName.GetDatastoreOperation(Operation) : MetricNames.GetDatastoreStatement(DatastoreVendorName, Model, Operation);
+        var vendorName = GetVendorName();
+        var name = string.IsNullOrEmpty(Model)
+            ? MetricNames.GetDatastoreOperation(vendorName, Operation)
+            : MetricNames.GetDatastoreStatement(vendorName, Model, Operation);
         return name.ToString();
     }
 
@@ -197,22 +213,23 @@ public class DatastoreSegmentData : AbstractSegmentData, IDatastoreSegmentData
     {
         var duration = segment.Duration.Value;
         var exclusiveDuration = TimeSpanMath.Max(TimeSpan.Zero, duration - durationOfChildren);
+        var vendorName = GetVendorName();
 
         if (!string.IsNullOrEmpty(Model))
         {
-            MetricBuilder.TryBuildDatastoreStatementMetric(DatastoreVendorName, _parsedSqlStatement, duration, exclusiveDuration, txStats);
-            MetricBuilder.TryBuildDatastoreVendorOperationMetric(DatastoreVendorName, Operation, duration, exclusiveDuration, txStats, true);
+            MetricBuilder.TryBuildDatastoreStatementMetric(_parsedSqlStatement, duration, exclusiveDuration, txStats);
+            MetricBuilder.TryBuildDatastoreVendorOperationMetric(vendorName, Operation, duration, exclusiveDuration, txStats, true);
         }
         else
         {
-            MetricBuilder.TryBuildDatastoreVendorOperationMetric(DatastoreVendorName, Operation, duration, exclusiveDuration, txStats, false);
+            MetricBuilder.TryBuildDatastoreVendorOperationMetric(vendorName, Operation, duration, exclusiveDuration, txStats, false);
         }
 
-        MetricBuilder.TryBuildDatastoreRollupMetrics(DatastoreVendorName, duration, exclusiveDuration, txStats);
+        MetricBuilder.TryBuildDatastoreRollupMetrics(vendorName, duration, exclusiveDuration, txStats);
 
         if (configService.Configuration.InstanceReportingEnabled)
         {
-            MetricBuilder.TryBuildDatastoreInstanceMetric(DatastoreVendorName, Host,
+            MetricBuilder.TryBuildDatastoreInstanceMetric(vendorName, Host,
                 PortPathOrId, duration, duration, txStats);
         }
     }
@@ -225,7 +242,7 @@ public class DatastoreSegmentData : AbstractSegmentData, IDatastoreSegmentData
     public override void SetSpanTypeSpecificAttributes(SpanAttributeValueCollection attribVals)
     {
         AttribDefs.SpanCategory.TrySetValue(attribVals, SpanCategory.Datastore);
-        AttribDefs.Component.TrySetValue(attribVals, EnumNameCache<DatastoreVendor>.GetName(DatastoreVendorName));
+        AttribDefs.Component.TrySetValue(attribVals, GetVendorName());
 
         if (!string.IsNullOrWhiteSpace(CommandText))
         {
@@ -237,7 +254,10 @@ public class DatastoreSegmentData : AbstractSegmentData, IDatastoreSegmentData
             AttribDefs.DbCollection.TrySetValue(attribVals, _parsedSqlStatement.Model);
         }
 
-        AttribDefs.DbSystem.TrySetValue(attribVals, DatastoreVendorName.ToKnownName());
+        AttribDefs.DbSystem.TrySetValue(attribVals,
+            DatastoreVendorName == DatastoreVendor.Other && !string.IsNullOrEmpty(_parsedSqlStatement.DatastoreVendorNameString) && _parsedSqlStatement.DatastoreVendorNameString != "Other"
+                ? _parsedSqlStatement.DatastoreVendorNameString.ToLowerInvariant()
+                : DatastoreVendorName.ToKnownName());
         AttribDefs.DbInstance.TrySetValue(attribVals, DatabaseName);
         AttribDefs.DbOperation.TrySetValue(attribVals, Operation);
         AttribDefs.PeerAddress.TrySetValue(attribVals, $"{Host}:{PortPathOrId}");
