@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -99,7 +100,41 @@ public class UpdatedLoadedModulesServiceTests
     }
 
     [Test]
-    public void GetLoadedModules_SendError_DuplciatesNotSaved()
+    public void GetLoadedModules_AfterReconnect_ResendsAllModules()
+    {
+        // Arrange - First send succeeds
+        LoadedModuleWireModelCollection loadedModulesCollection = null;
+        Mock.Arrange(() => _dataTransportService.Send(
+                Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
+            .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
+            .Returns(DataTransportResponseStatus.RequestSuccessful);
+
+        _getLoadedModulesAction();
+        var initialAssemblyNames = loadedModulesCollection.LoadedModules.Select(m => m.AssemblyName).ToList();
+        Assert.That(initialAssemblyNames.Count, Is.GreaterThan(0), "Initial module count should be greater than 0");
+
+        // Simulate another harvest
+        _getLoadedModulesAction();
+
+        // Act - Simulate reconnect
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+        // Harvest again after reconnect
+        _getLoadedModulesAction();
+        var afterReconnectAssemblyNames = loadedModulesCollection.LoadedModules.Select(m => m.AssemblyName).ToList();
+
+        // Assert - All modules should be resent
+        // We use GreaterThanOrEqualTo here because it's possible that new modules were loaded between the
+        // initial send and the reconnect, but we want to ensure that at least all of the initial modules were resent.
+        Assert.That(afterReconnectAssemblyNames.Count, Is.GreaterThanOrEqualTo(initialAssemblyNames.Count), "All modules should be resent after reconnect");
+        foreach (var assemblyName in initialAssemblyNames)
+        {
+            Assert.That(afterReconnectAssemblyNames, Does.Contain(assemblyName), $"Module {assemblyName} should be resent after reconnect");
+        }
+    }
+
+    [Test]
+    public void GetLoadedModules_SendError_DuplicatesNotSaved()
     {
         LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
         var result = Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>(), Arg.IsAny<string>()))
