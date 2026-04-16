@@ -61,6 +61,7 @@ public class HangfirePerformerWrapper : IWrapper
         var segmentName = string.IsNullOrWhiteSpace(queueName) ? "Hangfire/" + taskName : "Hangfire/Queue/Consume/Named/" + queueName + "/" + taskName;
         var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, segmentName);
 
+        // These attributes are based on a suggested OTel semantic convention for for workflows - itself based on AI workflow conventions.
         segment.AddAgentAttribute("workflow.platform.name", "hangfire");
         segment.AddAgentAttribute("workflow.task.name", taskName);
         segment.AddAgentAttribute("workflow.task.id", jobId);
