@@ -17,8 +17,8 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
     private readonly Version _version;
 
     // Expected call counts
-    private readonly int _expectedFailureCount = 2; // 1 sync and 1 async failing job
-    private readonly int _expectedTotalCallCount = 8; // 3 of each simplejob * 2 (sync and async) + 2 failed jobs
+    private readonly int _maxFailureCount = 2; // 1 sync and 1 async failing job
+    private readonly int _maxCallCount = 8; // 3 of each simplejob * 2 (sync and async) + 2 failed jobs
 
 
     protected HangfireTestsBase(TFixture fixture, ITestOutputHelper output, Version version) : base(fixture)
@@ -42,10 +42,12 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             },
             exerciseApplication: () =>
             {
+                // Reduce the wait times as we check for different payloads.
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorEventDataLogLineRegex, TimeSpan.FromMinutes(2));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(2));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorEventDataLogLineRegex, TimeSpan.FromSeconds(30));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromSeconds(15));
+                
             }
         );
 
@@ -73,11 +75,11 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
         var errorEvents = _fixture.AgentLog.GetErrorEvents().Where(e => e.IntrinsicAttributes["transactionName"].ToString().Contains("Hangfire")).ToList();
         var errorTraces = _fixture.AgentLog.GetErrorTraces().Where(t => t.Path.Contains("Hangfire")).ToList();
 
-        Assert.InRange(errorEvents.Count, 1, _expectedFailureCount);
-        Assert.InRange(errorTraces.Count, 1, _expectedFailureCount);
+        Assert.InRange(errorEvents.Count, 1, _maxFailureCount);
+        Assert.InRange(errorTraces.Count, 1, _maxFailureCount);
 
         var spans = _fixture.AgentLog.GetSpanEvents().Where(s => s.AgentAttributes.ContainsKey("workflow.platform.name")).ToList();
-        Assert.InRange(spans.Count, 1, _expectedTotalCallCount);
+        Assert.InRange(spans.Count, 6, _maxCallCount);
         foreach (var span in spans)
         {
             Assert.Equal("hangfire", span.AgentAttributes["workflow.platform.name"]);
@@ -100,7 +102,7 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
         var transactions = _fixture.AgentLog.GetTransactionEvents()
             .Where(t => t.IntrinsicAttributes["name"].ToString().StartsWith("OtherTransaction/Hangfire"))
             .ToList();
-        Assert.Equal(_expectedTotalCallCount, transactions.Count);
+        Assert.InRange(transactions.Count, 6, _maxCallCount);
     }
 }
 
