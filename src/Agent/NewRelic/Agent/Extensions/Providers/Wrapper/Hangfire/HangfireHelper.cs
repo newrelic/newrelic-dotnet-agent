@@ -21,6 +21,7 @@ internal static class HangfireHelper
     private static Func<object, object> _backgroundJobAccessor;
     private static Func<object, Type> _jobTypeAccessor;
     private static Func<object, MethodInfo> _jobMethodAccessor;
+    private static Func<object, Exception> _exceptionAccessor;
 
     private static bool _jobIdWarnLogged;
     private static bool _jobWarnLogged;
@@ -29,6 +30,7 @@ internal static class HangfireHelper
     private static bool _backgroundJobWarnLogged;
     private static bool _jobClassNameWarnLogged;
     private static bool _jobMethodNameWarnLogged;
+    private static bool _exceptionWarnLogged;
 
     /// <summary>
     /// Extracts job ID from BackgroundJob object.
@@ -215,6 +217,33 @@ internal static class HangfireHelper
             {
                 agent.Logger.Warn(ex, "HangfireHelper: Unable to access BackgroundJob property on PerformContext. Job will not be instrumented.");
                 _backgroundJobWarnLogged = true;
+            }
+
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Extracts Exception from PerformedContext. Returns null if the job completed successfully.
+    /// </summary>
+    public static Exception GetException(object performedContext, IAgent agent)
+    {
+        if (performedContext == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            _exceptionAccessor ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(performedContext.GetType(), "Exception");
+            return _exceptionAccessor(performedContext);
+        }
+        catch (Exception ex)
+        {
+            if (!_exceptionWarnLogged)
+            {
+                agent.Logger.Warn(ex, "HangfireHelper: Unable to access Exception property on PerformedContext. Job exceptions will not be captured.");
+                _exceptionWarnLogged = true;
             }
 
             return null;

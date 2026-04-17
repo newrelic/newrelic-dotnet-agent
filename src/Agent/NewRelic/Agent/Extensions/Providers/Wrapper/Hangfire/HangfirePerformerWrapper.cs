@@ -69,12 +69,23 @@ public class HangfirePerformerWrapper : IWrapper
         segment.AddAgentAttribute("workflow.task.server", serverId);
 
         return Delegates.GetDelegateFor<object>(
+            // returns a PerformedContext and unless there is a major Hangfire issue, this always returns successfully.
             onSuccess: o =>
             {
-                segment.AddAgentAttribute("workflow.execution.result", "success");
-                segment.End();
+                var exception = HangfireHelper.GetException(o, agent);
+                if (exception != null)
+                {
+                    segment.AddAgentAttribute("workflow.execution.result", "failure");
+                    transaction.NoticeError(exception);
+                    segment.End(exception);
+                }
+                else
+                {
+                    segment.AddAgentAttribute("workflow.execution.result", "success");
+                    segment.End();
+                }
             },
-            onFailure: exception =>
+            onFailure: exception => // catch hangfire issues.
             {
                 segment.AddAgentAttribute("workflow.execution.result", "failure");
                 transaction.NoticeError(exception);
