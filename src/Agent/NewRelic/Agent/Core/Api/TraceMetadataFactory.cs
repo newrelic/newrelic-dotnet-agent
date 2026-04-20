@@ -8,7 +8,7 @@ namespace NewRelic.Agent.Core.Api;
 
 public class TraceMetadata : ITraceMetadata
 {
-    public static readonly ITraceMetadata EmptyModel = new TraceMetadata(string.Empty, string.Empty, false);
+    public static readonly ITraceMetadata EmptyModel = new TraceMetadata(string.Empty, string.Empty, false, string.Empty);
 
     public string TraceId { get; private set; }
 
@@ -16,11 +16,14 @@ public class TraceMetadata : ITraceMetadata
 
     public bool IsSampled { get; private set; }
 
-    public TraceMetadata(string traceId, string spanId, bool isSampled)
+    public string TransactionId { get; private set; }
+
+    public TraceMetadata(string traceId, string spanId, bool isSampled, string transactionId)
     {
         TraceId = traceId;
         SpanId = spanId;
         IsSampled = isSampled;
+        TransactionId = transactionId;
     }
 }
 
@@ -35,6 +38,7 @@ public class TraceMetadataFactory : ITraceMetadataFactory
     {
         var traceId = transaction.TraceId;
         var spanId = transaction.CurrentSegment.SpanId;
+        var transactionId = transaction.Guid;
 
         // if Sampled has not been set, compute it now
         if (transaction.Sampled is null)
@@ -44,6 +48,6 @@ public class TraceMetadataFactory : ITraceMetadataFactory
 
         var isSampled = transaction.Sampled ?? false;
 
-        return new TraceMetadata(traceId, spanId, isSampled);
+        return new TraceMetadata(traceId, spanId, isSampled, transactionId);
     }
 }

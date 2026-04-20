@@ -3276,6 +3276,8 @@ namespace NewRelic.Agent.Core.Config
         
         private System.Nullable<bool> captureAttributesField;
         
+        private string sqlMetadataCommentsField;
+        
         /// <summary>
         /// configurationTransactionTracer class constructor
         /// </summary>
@@ -3291,6 +3293,7 @@ namespace NewRelic.Agent.Core.Config
             this.maxSegmentsField = 3000;
             this.maxStackTraceField = 0;
             this.maxExplainPlansField = 20;
+            this.sqlMetadataCommentsField = "";
         }
         
         public configurationTransactionTracerAttributes attributes
@@ -3464,6 +3467,20 @@ namespace NewRelic.Agent.Core.Config
                 {
                     this.captureAttributesField = null;
                 }
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("")]
+        public string sqlMetadataComments
+        {
+            get
+            {
+                return this.sqlMetadataCommentsField;
+            }
+            set
+            {
+                this.sqlMetadataCommentsField = value;
             }
         }
         
