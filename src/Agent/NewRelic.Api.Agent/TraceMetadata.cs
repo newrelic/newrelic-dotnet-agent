@@ -36,4 +36,12 @@ internal class TraceMetadata : ITraceMetadata
             return _wrappedTraceMetadata.IsSampled;
         }
     }
+
+    public string TransactionId
+    {
+        get
+        {
+            return _wrappedTraceMetadata.TransactionId;
+        }
+    }
 }

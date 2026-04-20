@@ -524,6 +524,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("transaction_tracer.max_stack_traces")]
     public int TransactionTracerMaxStackTraces => _configuration.TransactionTracerMaxStackTraces;
 
+    [JsonProperty("transaction_tracer.sql_metadata_comments")]
+    public IReadOnlyList<string> TransactionTracerSqlMetadataCommentKeys => _configuration.TransactionTracerSqlMetadataCommentKeys;
+
     [JsonProperty("agent.trusted_account_ids")]
     public IEnumerable<long> TrustedAccountIds => _configuration.TrustedAccountIds;
 

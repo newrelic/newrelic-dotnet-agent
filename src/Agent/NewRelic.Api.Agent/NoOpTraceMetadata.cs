@@ -10,4 +10,6 @@ internal class NoOpTraceMetadata : ITraceMetadata
     public string SpanId => string.Empty;
 
     public bool IsSampled => false;
+
+    public string TransactionId => string.Empty;
 }

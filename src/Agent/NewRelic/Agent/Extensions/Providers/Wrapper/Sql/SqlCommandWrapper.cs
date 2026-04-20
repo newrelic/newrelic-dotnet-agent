@@ -82,6 +82,25 @@ public abstract class SqlCommandWrapperBase : IWrapper
             return Delegates.NoOp;
 
         var sql = sqlCommand.CommandText ?? string.Empty;
+
+        var metadataCommentKeys = agent.Configuration.TransactionTracerSqlMetadataCommentKeys;
+        if (metadataCommentKeys.Count > 0)
+        {
+            var comment = SqlMetadataCommentBuilder.BuildComment(
+                metadataCommentKeys,
+                agent.Configuration.ApplicationNames.FirstOrDefault(),
+                agent.Configuration.EntityGuid,
+                agent.TraceMetadata.TransactionId,
+                agent.TraceMetadata.TraceId);
+
+            var commentedSql = SqlMetadataCommentBuilder.PrependCommentToSql(sql, comment);
+            if (commentedSql != sql)
+            {
+                sqlCommand.CommandText = commentedSql;
+                sql = commentedSql;
+            }
+        }
+
         var vendor = SqlWrapperHelper.GetVendorName(sqlCommand);
         object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString, agent.Configuration.UtilizationHostName);
         var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);

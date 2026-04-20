@@ -1153,7 +1153,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         [Test]
         public void TraceMetadata_ReturnsTraceMetadata_DTAndTransactionAreAvailable()
         {
-            var expectedTraceMetadata = new TraceMetadata("traceId", "spanId", true);
+            var expectedTraceMetadata = new TraceMetadata("traceId", "spanId", true, string.Empty);
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
             Mock.Arrange(() => _transaction.IsValid).Returns(true);
             Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(expectedTraceMetadata);
@@ -1173,7 +1173,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             //TraceMetadata
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
             Mock.Arrange(() => _transaction.IsValid).Returns(true);
-            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true, string.Empty));
             //HostName
             Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
             Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
@@ -1203,7 +1203,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             //TraceMetadata
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
             Mock.Arrange(() => _transaction.IsValid).Returns(true);
-            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata(string.Empty, "spanId", true));
+            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata(string.Empty, "spanId", true, string.Empty));
             //HostName
             Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
             Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
@@ -1223,7 +1223,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             //TraceMetadata
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
             Mock.Arrange(() => _transaction.IsValid).Returns(true);
-            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", string.Empty, true));
+            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", string.Empty, true, string.Empty));
             //HostName
             Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
             Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
@@ -1261,7 +1261,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             //TraceMetadata
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
             Mock.Arrange(() => _transaction.IsValid).Returns(true);
-            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true, string.Empty));
             //HostName
             Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
             Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
@@ -1281,7 +1281,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             //TraceMetadata
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
             Mock.Arrange(() => _transaction.IsValid).Returns(true);
-            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true, string.Empty));
             //HostName
             Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
             Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
@@ -1301,7 +1301,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             //TraceMetadata
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
             Mock.Arrange(() => _transaction.IsValid).Returns(true);
-            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true, string.Empty));
             //HostName
             Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
             Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
@@ -1321,7 +1321,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             //TraceMetadata
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
             Mock.Arrange(() => _transaction.IsValid).Returns(true);
-            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true, string.Empty));
             //HostName
             Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns(string.Empty);
             Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
@@ -1341,7 +1341,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             //TraceMetadata
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
             Mock.Arrange(() => _transaction.IsValid).Returns(true);
-            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+            Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true, string.Empty));
             //HostName
             Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns(string.Empty);
             Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns(string.Empty);

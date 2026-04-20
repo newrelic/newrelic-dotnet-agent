@@ -350,6 +350,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
 
     public int TransactionTracerMaxStackTraces => 4321;
 
+    public IReadOnlyList<string> TransactionTracerSqlMetadataCommentKeys => new List<string>();
+
     public IEnumerable<long> TrustedAccountIds => new long[] { 1, 2, 3 };
 
     public bool ServerSideConfigurationEnabled => true;
