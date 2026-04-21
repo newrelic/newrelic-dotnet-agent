@@ -72,6 +72,7 @@ public class FrameworkAgentComponents : AgentComponents
             $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Memcached.dll",
             $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenSearch.dll",
             $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Hangfire.dll"
         };
 
         var wrapperXmls = new[]
@@ -118,6 +119,7 @@ public class FrameworkAgentComponents : AgentComponents
             $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Memcached.Instrumentation.xml",
             $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.OpenSearch.Instrumentation.xml",
             $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Hangfire.Instrumentation.xml",
         };
 
         ExtensionXsd = $@"{SourceHomeBuilderPath}\extensions\extension.xsd";

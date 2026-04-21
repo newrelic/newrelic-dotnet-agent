@@ -20,6 +20,13 @@
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.0.7" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Hangfire" Version="1.8.23" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Hangfire" Version="1.8.23" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Hangfire.InMemory" Version="1.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Hangfire.InMemory" Version="1.0.0" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <!-- Hangfire.SqlServer is excluded from all target frameworks because we aren't using it, and it has a dependency on System.Data.SqlClient that causes problems for NServiceBus -->
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.23" ExcludeAssets="all" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.23" ExcludeAssets="all" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="LibGit2Sharp" Version="0.31.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="LibGit2Sharp" Version="0.31.0" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.323" Condition="'$(TargetFramework)' == 'net481'" />

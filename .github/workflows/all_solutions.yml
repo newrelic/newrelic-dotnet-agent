@@ -243,6 +243,7 @@ jobs:
             "DistributedTracing",
             "Errors",
             "Grpc",
+            "Hangfire",
             "HttpClientInstrumentation",
             "HybridHttpContextStorage",
             "InfiniteTracing",

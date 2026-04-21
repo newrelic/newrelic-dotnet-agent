@@ -13,7 +13,7 @@
     },
     {
         "packageName": "amazon.lambda.kinesisevents",
-        "ignoreTFMs" : "net8.0",
+        "ignoreTFMs": "net8.0",
         "ignoreReason": "net8.0 tests 2.x.x version"
     },
     {
@@ -75,6 +75,10 @@
         "packageName": "enyimmemcachedcore",
         "ignoreTFMs": "net8.0",
         "ignoreReason": "net8.0 tests 2.x.x version"
+    },
+
+    {
+        "packageName": "hangfire"
     },
     {
         "packageName": "log4net"
