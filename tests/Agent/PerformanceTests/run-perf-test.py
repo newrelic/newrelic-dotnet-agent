@@ -287,6 +287,7 @@ def main():
             capture_output=True,
             check=False,
             env=compose_env,
+            timeout=30
         )
 
     atexit.register(cleanup)
@@ -360,6 +361,7 @@ def main():
         ["docker", "compose", "down", "--volumes", "--remove-orphans"],
         check=False,
         env=compose_env,
+        timeout=30,
     )
     print("Containers stopped.")
 
