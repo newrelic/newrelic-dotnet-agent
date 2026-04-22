@@ -215,6 +215,8 @@ public class TransactionTransformer : ITransactionTransformer
         var spanEventLinksDropped = 0;
         var spanEventEventsDropped = 0;
 
+        // TODO: remove this before merging to main
+        Log.Info("GenerateAndCollectMetrics: about to generate segment metrics");
         foreach (var segment in immutableTransaction.Segments)
         {
             GenerateSegmentMetrics(segment, txStats);
@@ -231,6 +233,8 @@ public class TransactionTransformer : ITransactionTransformer
 
         if (_configurationService.Configuration.DistributedTracingEnabled)
         {
+            // TODO: remove this before merging to main
+            Log.Info("GenerateAndCollectMetrics: building distributed trace metrics");
             TimeSpan duration = default;
             string type = default;
             string account = default;
@@ -260,6 +264,8 @@ public class TransactionTransformer : ITransactionTransformer
             }
         }
 
+        // TODO: remove this before merging to main
+        Log.Info("GenerateAndCollectMetrics: about to build transaction metrics");
         MetricBuilder.TryBuildTransactionMetrics(isWebTransaction, immutableTransaction.ResponseTimeOrDuration, txStats);
 
         // Total time is the total amount of time spent, even when work is happening parallel, which means it is the sum of all exclusive times.
@@ -280,8 +286,12 @@ public class TransactionTransformer : ITransactionTransformer
             GetApdexMetrics(immutableTransaction, apdexT.Value, transactionApdexMetricName, txStats);
         }
 
+        // TODO: remove this before merging to main
+        Log.Info("GenerateAndCollectMetrics: about to check if we need to build errors metrics");
         if (ErrorCollectionEnabled() && immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
         {
+            // TODO: remove this before merging to main
+            Log.Info("GenerateAndCollectMetrics: building errors metrics");
             var isErrorExpected = immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.IsExpected;
             MetricBuilder.TryBuildErrorsMetrics(isWebTransaction, txStats, isErrorExpected);
         }
@@ -289,6 +299,8 @@ public class TransactionTransformer : ITransactionTransformer
         var referrerCrossProcessId = immutableTransaction.TransactionMetadata.CrossApplicationReferrerProcessId;
         if (referrerCrossProcessId != null)
         {
+            // TODO: remove this before merging to main
+            Log.Info("GenerateAndCollectMetrics: CAT metrics");
             var catResponseTime = TimeSpan.FromSeconds(immutableTransaction.TransactionMetadata.CrossApplicationResponseTimeInSeconds);
             MetricBuilder.TryBuildClientApplicationMetric(referrerCrossProcessId, catResponseTime, catResponseTime, txStats);
         }
@@ -296,7 +308,6 @@ public class TransactionTransformer : ITransactionTransformer
         // Capture required Kafka metrics
         if (immutableTransaction.TransactionName.Name.StartsWith("Message/Kafka/Topic/Consume/Named"))
         {
-
             MetricBuilder.TryBuildKafkaMessagesReceivedMetric(immutableTransaction.TransactionName.Name, 1, txStats);
         }
 
