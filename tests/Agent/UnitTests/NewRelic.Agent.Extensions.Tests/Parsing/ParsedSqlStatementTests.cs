@@ -56,6 +56,20 @@ public class ParsedSqlStatementTests
         Assert.That(statement.Operation, Is.EqualTo("other"));
     }
 
+    [TestCase(null)]
+    [TestCase("")]
+    public void StringConstructor_NullOrEmptyVendor_FallsBackToOther(string vendor)
+    {
+        var statement = new ParsedSqlStatement(vendor, "users", "select");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(statement.DatastoreVendor, Is.EqualTo(DatastoreVendor.Other));
+            Assert.That(statement.DatastoreVendorNameString, Is.EqualTo("Other"));
+            Assert.That(statement.DatastoreStatementMetricName, Is.EqualTo("Datastore/statement/Other/users/select"));
+        });
+    }
+
     [Test]
     public void StringConstructor_ToString_ReturnsModelSlashOperation()
     {

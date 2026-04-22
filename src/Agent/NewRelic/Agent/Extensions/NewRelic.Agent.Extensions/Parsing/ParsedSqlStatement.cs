@@ -43,13 +43,8 @@ public class ParsedSqlStatement
     /// <param name="model">What the statement is operating on, eg the "direct object" of the operation.</param>
     /// <param name="operation">What the operation is doing.</param>
     public ParsedSqlStatement(DatastoreVendor datastoreVendor, string model, string operation)
+        : this(datastoreVendor, EnumNameCache<DatastoreVendor>.GetName(datastoreVendor), model, operation)
     {
-        Model = model;
-        Operation = operation ?? "other";
-        DatastoreVendor = datastoreVendor;
-        DatastoreVendorNameString = EnumNameCache<DatastoreVendor>.GetName(datastoreVendor);
-        _asString = $"{Model}/{Operation}";
-        DatastoreStatementMetricName = $"Datastore/statement/{DatastoreVendorNameString}/{_asString}";
     }
 
     /// <summary>
@@ -61,13 +56,18 @@ public class ParsedSqlStatement
     /// <param name="model">What the statement is operating on, eg the "direct object" of the operation.</param>
     /// <param name="operation">What the operation is doing.</param>
     public ParsedSqlStatement(string vendor, string model, string operation)
+        : this(DatastoreVendor.Other, string.IsNullOrEmpty(vendor) ? EnumNameCache<DatastoreVendor>.GetName(DatastoreVendor.Other) : vendor, model, operation)
+    {
+    }
+
+    private ParsedSqlStatement(DatastoreVendor datastoreVendor, string vendorNameString, string model, string operation)
     {
         Model = model;
         Operation = operation ?? "other";
-        DatastoreVendor = DatastoreVendor.Other;
-        DatastoreVendorNameString = vendor;
+        DatastoreVendor = datastoreVendor;
+        DatastoreVendorNameString = vendorNameString;
         _asString = $"{Model}/{Operation}";
-        DatastoreStatementMetricName = $"Datastore/statement/{vendor}/{_asString}";
+        DatastoreStatementMetricName = $"Datastore/statement/{DatastoreVendorNameString}/{_asString}";
     }
 
     public static ParsedSqlStatement FromOperation(DatastoreVendor vendor, string operation)

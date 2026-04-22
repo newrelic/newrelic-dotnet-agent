@@ -41,6 +41,7 @@ public class DatastoreSegmentData : AbstractSegmentData, IDatastoreSegmentData
             ? _parsedSqlStatement.DatastoreVendorNameString
              : EnumNameCache<DatastoreVendor>.GetName(DatastoreVendorName);
     }
+
     public string CommandText { get; set; }
     public string Host => _connectionInfo.Host;
     public int? Port => _connectionInfo.Port;
