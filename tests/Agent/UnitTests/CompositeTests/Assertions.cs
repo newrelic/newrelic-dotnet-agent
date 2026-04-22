@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -357,6 +358,23 @@ internal class ExpectedAttribute
 
         if (actualValue is string && expectedValue is string)
             return string.Equals((string)actualValue, (string)expectedValue);
+
+        // Compare IEnumerable values element-by-element (for array/list attributes)
+        if (actualValue is IEnumerable actualEnumerable && !(actualValue is string)
+            && expectedValue is IEnumerable expectedEnumerable && !(expectedValue is string))
+        {
+            var actualList = actualEnumerable.Cast<object>().ToList();
+            var expectedList = expectedEnumerable.Cast<object>().ToList();
+            if (actualList.Count != expectedList.Count)
+                return false;
+
+            for (var i = 0; i < actualList.Count; i++)
+            {
+                if (!HaveSameValue(actualList[i], expectedList[i]))
+                    return false;
+            }
+            return true;
+        }
 
         return actualValue.Equals(expectedValue);
     }

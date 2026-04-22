@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.51.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.50.0...v10.51.0) (2026-04-21)
+
+
+### New features
+
+* Add support for instrumenting Hangfire background jobs. ([#3520](https://github.com/newrelic/newrelic-dotnet-agent/issues/3520)) ([2e82366](https://github.com/newrelic/newrelic-dotnet-agent/commit/2e823667a4c97425d62bcca4353b8dfd52e41544))
+* Include structured log message arguments as context data for MEL ([#3479](https://github.com/newrelic/newrelic-dotnet-agent/issues/3479)) ([24819c4](https://github.com/newrelic/newrelic-dotnet-agent/commit/24819c4fce3a84f17be3306f3ec70467b7446bb6))
+
+
+### Fixes
+
+* Complete array attribute serialization for all payload types ([#3531](https://github.com/newrelic/newrelic-dotnet-agent/issues/3531)) ([62bdb44](https://github.com/newrelic/newrelic-dotnet-agent/commit/62bdb44b9166d5b9b605adf2d397d45a2e37be13))
+* Resolve Lambda auto-instrumentation race condition ([#3508](https://github.com/newrelic/newrelic-dotnet-agent/issues/3508)) ([25c59e7](https://github.com/newrelic/newrelic-dotnet-agent/commit/25c59e751ccafdeb160a5c3e4b445ece384a8dc5))
+* Restore dotnet-counters tool compatibility ([#3526](https://github.com/newrelic/newrelic-dotnet-agent/issues/3526)) ([407eae5](https://github.com/newrelic/newrelic-dotnet-agent/commit/407eae55a36ddda15ac6f1c30a142ff1d500c14c))
+* Send loaded modules on agent reconnect ([#3534](https://github.com/newrelic/newrelic-dotnet-agent/issues/3534)) ([ecaa550](https://github.com/newrelic/newrelic-dotnet-agent/commit/ecaa55064623033238772c1d6010ff2b6223930a))
+* Support multi-transport queue name parsing for MassTransit ([#3523](https://github.com/newrelic/newrelic-dotnet-agent/issues/3523)) ([db48d08](https://github.com/newrelic/newrelic-dotnet-agent/commit/db48d0837add4eae94663e60974907cc4b6cca82))
+
+## [10.50.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.49.0...v10.50.0) (2026-03-17)
+
+
+### New features
+
+* Add array support for custom attributes in .NET Agent API ([#3456](https://github.com/newrelic/newrelic-dotnet-agent/issues/3456)) ([4fb9405](https://github.com/newrelic/newrelic-dotnet-agent/commit/4fb9405fff5c95ed32f7d067e199add79a686de4))
+* Add hybrid agent support for grpc-dotnet. ([#3475](https://github.com/newrelic/newrelic-dotnet-agent/issues/3475)) ([6b48c06](https://github.com/newrelic/newrelic-dotnet-agent/commit/6b48c06704838ee62ccf2854afa3370125c3ef3e))
+* Add LLM monitoring for `Microsoft.Extensions.AI` via OpenTelemetry bridge ([#3472](https://github.com/newrelic/newrelic-dotnet-agent/issues/3472)) ([2e03c0c](https://github.com/newrelic/newrelic-dotnet-agent/commit/2e03c0c63856a0e8ee09f5b28c941eba5f24504f))
+
+
+### Fixes
+
+* Don't instrument Blazor / SignalR websocket connections ([#3468](https://github.com/newrelic/newrelic-dotnet-agent/issues/3468)) ([7f2a5e9](https://github.com/newrelic/newrelic-dotnet-agent/commit/7f2a5e909601310a02c823508ccd214d8cd63e12))
+
 ## [10.49.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.48.1...v10.49.0) (2026-02-10)
 
 

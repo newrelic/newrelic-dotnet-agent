@@ -28,9 +28,9 @@ newrelic-dotnet-agent/
 ### Detailed Documentation
 
 For comprehensive information about each area, see:
-- @src/claude-source.md - Agent implementation details
-- @build/claude-build.md - Build tools, packaging, and release process
-- @tests/claude-tests.md - Unit and integration test structure
+- [Agent implementation details](src/claude-source.md)
+- [Build tools, packaging, and release process](build/claude-build.md)
+- [Unit and integration test structure](tests/claude-tests.md)
 
 ## Quick Start for Development
 

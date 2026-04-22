@@ -159,6 +159,7 @@ public class LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixt
         CommandLineArguments = "--handler APIGatewayHttpApiV2ProxyFunctionEntryPoint";
     }
 }
+
 public class LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreOldest : AspNetCoreWebApiLambdaFixtureBase
 {
     public LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreOldest() : base(CoreOldestTFM)
@@ -166,6 +167,14 @@ public class LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtu
         CommandLineArguments = "--handler ApplicationLoadBalancerFunctionEntryPoint";
     }
 }
+public class LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreLatest : AspNetCoreWebApiLambdaFixtureBase
+{
+    public LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreLatest() : base(CoreLatestTFM)
+    {
+        CommandLineArguments = "--handler ApplicationLoadBalancerFunctionEntryPoint";
+    }
+}
+
 public class LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreLatest : AspNetCoreWebApiLambdaFixtureBase
 {
     public LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreLatest() : base(CoreLatestTFM)
@@ -179,12 +188,5 @@ public class LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixt
     public LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreLatest() : base(CoreLatestTFM)
     {
         CommandLineArguments = "--handler APIGatewayHttpApiV2ProxyFunctionEntryPoint";
-    }
-}
-public class LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreLatest : AspNetCoreWebApiLambdaFixtureBase
-{
-    public LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreLatest() : base(CoreLatestTFM)
-    {
-        CommandLineArguments = "--handler ApplicationLoadBalancerFunctionEntryPoint";
     }
 }

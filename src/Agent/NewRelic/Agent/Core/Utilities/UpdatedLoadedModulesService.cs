@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 
@@ -25,6 +26,26 @@ public class UpdatedLoadedModulesService : DisposableService
         _dataTransportService = dataTransportService;
         _scheduler = scheduler;
         _scheduler.ExecuteEvery(GetLoadedModules, _configuration.UpdateLoadedModulesCycle);
+
+        _subscriptions.Add<StopHarvestEvent>(OnStopHarvest);
+        _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
+    }
+
+    private void OnStopHarvest(StopHarvestEvent _)
+    {
+        _scheduler.StopExecuting(GetLoadedModules, TimeSpan.FromSeconds(2));
+    }
+
+    private void OnAgentConnected(AgentConnectedEvent _)
+    {
+        _loadedModulesSeen.Clear();
+        _scheduler.ExecuteEvery(GetLoadedModules, _configuration.UpdateLoadedModulesCycle);
+    }
+
+    public override void Dispose()
+    {
+        _scheduler.StopExecuting(GetLoadedModules);
+        base.Dispose();
     }
 
     private void GetLoadedModules()

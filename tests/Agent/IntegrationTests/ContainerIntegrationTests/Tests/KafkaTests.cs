@@ -70,6 +70,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var consumeWithTimeoutTransactionName = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithTimeoutAsync";
         var consumeWithCancellationTransactionName = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithCancellationTokenAsync";
         var produceWebTransactionName = @"WebTransaction/MVC/Kafka/Produce";
+        var produceWithExistingHeadersWebTransactionName = @"WebTransaction/MVC/Kafka/ProduceAsyncWithExistingHeaders";
 
         var messageBrokerNode = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}";
         var messageBrokerNodeProduceTopic = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}/Produce/{_topicName}";
@@ -105,29 +106,31 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             new() { metricName = produceWebTransactionName, CallCountAllHarvests = 4 }, // includes sync and async actions
-            new() { metricName = messageBrokerProduce, CallCountAllHarvests = 6 },
+            new() { metricName = produceWithExistingHeadersWebTransactionName, CallCountAllHarvests = 1 }, // produce with pre-existing DT headers
+            new() { metricName = messageBrokerProduce, CallCountAllHarvests = null }, // variable: 4 normal + 1 existing headers + 2 custom-stats produces
             new() { metricName = messageBrokerProduce, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
-            new() { metricName = messageBrokerProduceSerializationKey, CallCountAllHarvests = 6 },
+            new() { metricName = messageBrokerProduce, metricScope = produceWithExistingHeadersWebTransactionName, CallCountAllHarvests = 1 },
+            new() { metricName = messageBrokerProduceSerializationKey, CallCountAllHarvests = null }, // variable: same as messageBrokerProduce
             new() { metricName = messageBrokerProduceSerializationKey, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
-            new() { metricName = messageBrokerProduceSerializationValue, CallCountAllHarvests = 6 },
+            new() { metricName = messageBrokerProduceSerializationValue, CallCountAllHarvests = null }, // variable: same as messageBrokerProduce
             new() { metricName = messageBrokerProduceSerializationValue, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
 
-            // Consumer transaction calls remain the same (2 calls each)
-            new() { metricName = consumeWithTimeoutTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = consumeWithTimeoutTransactionName, CallCountAllHarvests = 3 }, // 2 normal + 1 for existing headers
             new() { metricName = consumeWithCancellationTransactionName, CallCountAllHarvests = 2 },
 
             // Consume counts are variable — depends on consumer duration and message availability
             new() { metricName = messageBrokerConsume, CallCountAllHarvests = null },
             new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, CallCountAllHarvests = null },
+            new() { metricName = messageBrokerConsume, metricScope = consumeWithCancellationTransactionName, CallCountAllHarvests = 2 },
 
-            // TraceContext metrics — counts vary with consumer timing
+            // TraceContext metrics — variable due to custom-stats produces/consumes
             new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = null },
             new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = null },
 
-            // Node metrics: variable consumption but producers are consistent
-            new() { metricName = messageBrokerNode, CallCountAllHarvests = null }, // Variable total operations
-            new() { metricName = messageBrokerNodeProduceTopic, CallCountAllHarvests = 4 }, // Consistent producer operations
-            new() { metricName = messageBrokerNodeConsumeTopic, CallCountAllHarvests = null } // Variable consumer operations
+            // Node metrics: variable due to custom-stats producers
+            new() { metricName = messageBrokerNode, CallCountAllHarvests = null },
+            new() { metricName = messageBrokerNodeProduceTopic, CallCountAllHarvests = null }, // variable: normal + existing headers + custom stats
+            new() { metricName = messageBrokerNodeConsumeTopic, CallCountAllHarvests = null },
         };
 
         NrAssert.Multiple(
@@ -159,16 +162,17 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             // ConsumeWithTimeout span assertions (should exist since it consumes messages)
             () => Assert.NotNull(consumeWithTimeoutTxnSpan),
             () => Assert.True(consumeWithTimeoutTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
-            () => Assert.InRange((long)consumeWithTimeoutTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 470), // includes headers
+            () => Assert.InRange((long)consumeWithTimeoutTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 500), // includes headers; upper bound accommodates existing-headers message
             () => Assert.True(consumeWithTimeoutTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
-            () => Assert.True(consumeWithTimeoutTxnSpan.IntrinsicAttributes.ContainsKey("parentId"))
-
-            // ConsumeWithCancellationToken span assertions (may be null if no messages consumed)
-            // Note: Span only exists when messages are actually consumed
-            // The logs show this consumer sometimes consumes 0 messages, so no span is created
+            () => Assert.True(consumeWithTimeoutTxnSpan.IntrinsicAttributes.ContainsKey("parentId")),
+            () => Assert.NotNull(consumeWithCancellationTxnSpan),
+            () => Assert.True(consumeWithCancellationTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
+            () => Assert.InRange((long)consumeWithCancellationTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 500), // includes headers; upper bound accommodates existing-headers message
+            () => Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
+            () => Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("parentId"))
         );
 
-        ValidateInternalMetrics(); 
+        ValidateInternalMetrics();
     }
 
     private void ValidateInternalMetrics()
@@ -227,6 +231,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
     }
 }
 
+[Collection("KafkaTests")]
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Ubuntu")]
 public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
@@ -236,6 +241,7 @@ public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
     }
 }
 
+[Collection("KafkaTests")]
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Ubuntu")]
 public class KafkaDotNet10Test : LinuxKafkaTest<KafkaDotNet10TestFixture>

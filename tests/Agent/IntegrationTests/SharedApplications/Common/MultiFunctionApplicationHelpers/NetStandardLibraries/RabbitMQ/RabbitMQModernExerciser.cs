@@ -71,6 +71,24 @@ public class RabbitMQModernExerciser
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task SendReceiveWithExistingDTHeadersAsync(string queueName, string message)
+    {
+        if (string.IsNullOrEmpty(message)) { message = "Caller provided no message."; }
+
+        await DeclareQueueAsync(queueName);
+
+        await BasicPublishMessageWithExistingDTHeadersAsync(queueName, message);
+
+        var receiveMessage = await BasicGetMessageAsync(queueName);
+
+        await DeleteQueueAsync(queueName);
+
+        Console.WriteLine($"method=SendReceiveWithExistingDTHeaders,sent message={message},received message={receiveMessage}, queueName={queueName}");
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task SendReceiveWithEventingConsumerAsync(string queueName, string message)
     {
         if (string.IsNullOrEmpty(message)) { message = "Caller provided no message."; }
@@ -192,6 +210,23 @@ public class RabbitMQModernExerciser
         var props = new BasicProperties
         {
             Headers = userHeaders
+        };
+
+        await Channel.BasicPublishAsync("", queueName, false, props, body);
+    }
+
+    private async Task BasicPublishMessageWithExistingDTHeadersAsync(string queueName, string message)
+    {
+        var body = Encoding.UTF8.GetBytes(message);
+        var headers = new Dictionary<string, object>(userHeaders)
+        {
+            { "traceparent", "00-stale0000000000000000000000000-stale000000000-01" },
+            { "tracestate", "stale=value" },
+            { "newrelic", "stale-newrelic-payload" }
+        };
+        var props = new BasicProperties
+        {
+            Headers = headers
         };
 
         await Channel.BasicPublishAsync("", queueName, false, props, body);

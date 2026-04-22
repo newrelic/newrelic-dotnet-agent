@@ -184,7 +184,7 @@ public sealed class AgentManager : IAgentManager, IDisposable
                 // We need to resolve the MeterListenerBridge before the connect event is triggered so that
                 // the MeterListenerBridge is ready to receive the connect event and start listening for
                 // metrics.
-                _container.Resolve<OpenTelemetryBridge.Metrics.MeterListenerBridge>();
+                _container.Resolve<OpenTelemetryBridge.Metrics.MeterListenerBridge>().Start();
             }
         }
 

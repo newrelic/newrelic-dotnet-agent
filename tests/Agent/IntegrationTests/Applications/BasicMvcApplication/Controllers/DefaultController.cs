@@ -160,6 +160,21 @@ public class DefaultController : Controller
         return "Worked";
     }
 
+    public string ChainedWebRequestWithExistingHeaders(string chainedServerName, string chainedPortNumber, string chainedAction)
+    {
+        var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
+        var httpWebRequest = (HttpWebRequest)WebRequest.Create(address);
+        // Pre-populate with stale DT headers — agent should replace them
+        httpWebRequest.Headers.Set("traceparent", "00-stale0000000000000000000000000-stale000000000-01");
+        httpWebRequest.Headers.Set("tracestate", "stale=value");
+        httpWebRequest.Headers.Set("newrelic", "stale-newrelic-payload");
+        httpWebRequest.GetResponse();
+#pragma warning restore SYSLIB0014
+
+        return "Worked";
+    }
+
     public async Task<string> ChainedHttpClient(string chainedServerName, string chainedPortNumber, string chainedAction)
     {
         var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";

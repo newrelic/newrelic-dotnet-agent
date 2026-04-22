@@ -33,7 +33,7 @@ for manifest in k8s/*.yaml; do
     fi
     
     echo "Applying $manifest..."
-    envsubst < $manifest | kubectl apply -f -
+    envsubst '${RESOURCE_GROUP} ${PUBLIC_IP_NAME} ${PUBLIC_IP}' < $manifest | kubectl apply -f -
 done
 
 echo "Deployment to AKS completed successfully!"

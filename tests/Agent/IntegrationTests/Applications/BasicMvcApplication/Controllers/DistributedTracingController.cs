@@ -62,4 +62,23 @@ public class DistributedTracingController : Controller
         }
         return "Worked";
     }
+
+    [Route("DistributedTracing/MakeExternalCallUsingRestClientWithExistingHeaders")]
+    public async Task<string> MakeExternalCallUsingRestClientWithExistingHeaders(string externalCallUrl)
+    {
+        var uri = new Uri(externalCallUrl);
+        var client = new RestClient($"http://{uri.Host}:{uri.Port}");
+        var restRequest = new RestRequest(uri.PathAndQuery);
+        // Pre-populate with stale DT headers — agent should replace them
+        restRequest.AddHeader("traceparent", "00-stale0000000000000000000000000-stale000000000-01");
+        restRequest.AddHeader("tracestate", "stale=value");
+        restRequest.AddHeader("newrelic", "stale-newrelic-payload");
+        var response = await client.ExecuteTaskAsync<IEnumerable<Bird>>(restRequest);
+
+        if ((response.StatusCode != HttpStatusCode.OK) && (response.StatusCode != HttpStatusCode.NoContent))
+        {
+            return $"Unexpected HTTP status code {response.StatusCode}";
+        }
+        return "Worked";
+    }
 }

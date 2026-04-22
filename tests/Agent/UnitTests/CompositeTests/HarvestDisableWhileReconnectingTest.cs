@@ -43,7 +43,7 @@ public class HarvestDisableWhileReconnectingTest
 #endif
         _compositeTestAgent.Container.Resolve<IConnectionManager>();
 
-        var numExistingAggregators = 9; //We currently have 9 different aggregators.
+        var numExistingAggregators = 10; //We currently have 10 different aggregators.
 
         var scheduler = _compositeTestAgent.Container.Resolve<IScheduler>();
 

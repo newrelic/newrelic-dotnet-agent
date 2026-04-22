@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Attributes.Tests;
@@ -121,5 +122,110 @@ public class GenericConverterTests
         var result = AttributeDefinitionBuilder.GenericConverter(custom);
         Assert.That(result, Is.EqualTo("Custom"));
         Assert.That(result, Is.TypeOf<string>());
+    }
+
+    [Test]
+    public void ConvertsStringArray_ToListOfStrings()
+    {
+        var input = new[] { "red", "green", "blue" };
+        var result = AttributeDefinitionBuilder.GenericConverter(input);
+        Assert.That(result, Is.TypeOf<List<object>>());
+        var list = (List<object>)result;
+        Assert.That(list, Is.EqualTo(new List<object> { "red", "green", "blue" }));
+    }
+
+    [Test]
+    public void ConvertsIntArray_ToListOfLongs()
+    {
+        var input = new[] { 1, 2, 3, 4, 5 };
+        var result = AttributeDefinitionBuilder.GenericConverter(input);
+        Assert.That(result, Is.TypeOf<List<object>>());
+        var list = (List<object>)result;
+        Assert.That(list, Is.EqualTo(new List<object> { 1L, 2L, 3L, 4L, 5L }));
+    }
+
+    [Test]
+    public void ConvertsBoolArray_ToListOfBools()
+    {
+        var input = new[] { true, false, true };
+        var result = AttributeDefinitionBuilder.GenericConverter(input);
+        Assert.That(result, Is.TypeOf<List<object>>());
+        var list = (List<object>)result;
+        Assert.That(list, Is.EqualTo(new List<object> { true, false, true }));
+    }
+
+    [Test]
+    public void ConvertsArrayWithNulls_FiltersNullElements()
+    {
+        var input = new object[] { "first", null, "third" };
+        var result = AttributeDefinitionBuilder.GenericConverter(input);
+        Assert.That(result, Is.TypeOf<List<object>>());
+        var list = (List<object>)result;
+        Assert.That(list, Is.EqualTo(new List<object> { "first", "third" }));
+    }
+
+    [Test]
+    public void ConvertsEmptyArray_ToEmptyList()
+    {
+        var input = new string[] { };
+        var result = AttributeDefinitionBuilder.GenericConverter(input);
+        Assert.That(result, Is.TypeOf<List<object>>());
+        var list = (List<object>)result;
+        Assert.That(list, Is.Empty);
+    }
+
+    [Test]
+    public void ConvertsListOfStrings_ToListOfObjects()
+    {
+        var input = new List<string> { "list1", "list2", "list3" };
+        var result = AttributeDefinitionBuilder.GenericConverter(input);
+        Assert.That(result, Is.TypeOf<List<object>>());
+        var list = (List<object>)result;
+        Assert.That(list, Is.EqualTo(new List<object> { "list1", "list2", "list3" }));
+    }
+
+    [Test]
+    public void LeavesString_AsString_NotEnumerable()
+    {
+        // String implements IEnumerable<char> but should NOT be treated as a collection
+        var result = AttributeDefinitionBuilder.GenericConverter("hello");
+        Assert.That(result, Is.EqualTo("hello"));
+        Assert.That(result, Is.TypeOf<string>());
+    }
+
+    [Test]
+    public void ConvertsMixedTypeArray_AppliesRecursiveConversion()
+    {
+        var input = new object[] { 42, "text", true, 3.14 };
+        var result = AttributeDefinitionBuilder.GenericConverter(input);
+        Assert.That(result, Is.TypeOf<List<object>>());
+        var list = (List<object>)result;
+        Assert.That(list.Count, Is.EqualTo(4));
+        Assert.That(list[0], Is.EqualTo(42L));     // int -> long
+        Assert.That(list[1], Is.EqualTo("text"));   // string unchanged
+        Assert.That(list[2], Is.EqualTo(true));      // bool unchanged
+        Assert.That(list[3], Is.EqualTo(3.14));      // double unchanged
+    }
+
+    [Test]
+    public void ConvertsNullOnlyArray_ToEmptyList()
+    {
+        var input = new object[] { null, null };
+        var result = AttributeDefinitionBuilder.GenericConverter(input);
+        Assert.That(result, Is.TypeOf<List<object>>());
+        var list = (List<object>)result;
+        Assert.That(list, Is.Empty);
+    }
+
+    [Test]
+    public void ConvertsArrayWithDateTimes_RecursivelyConvertsElements()
+    {
+        var dt = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc);
+        var input = new object[] { dt, "label" };
+        var result = AttributeDefinitionBuilder.GenericConverter(input);
+        Assert.That(result, Is.TypeOf<List<object>>());
+        var list = (List<object>)result;
+        Assert.That(list[0], Is.EqualTo(dt.ToString("o")));
+        Assert.That(list[1], Is.EqualTo("label"));
     }
 }

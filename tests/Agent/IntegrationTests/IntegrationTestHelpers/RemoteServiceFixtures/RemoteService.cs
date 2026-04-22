@@ -104,16 +104,22 @@ public class RemoteService : RemoteApplication
 
     private void PublishWithDotnetExe(string framework)
     {
+        var deployPath = Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName);
+        var runtime = Utilities.CurrentRuntime;
+
+        if (TryCopyPrebuiltPublishOutput(framework, runtime, deployPath))
+        {
+            return;
+        }
+
         var projectFile = Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName,
             ApplicationDirectoryName + ".csproj");
-        var deployPath = Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName);
 
         TestLogger?.WriteLine($"[RemoteService]: Publishing to {deployPath}.");
 
         var sw = new Stopwatch();
         sw.Start();
 
-        var runtime = Utilities.CurrentRuntime;
         var process = new Process();
         var startInfo = new ProcessStartInfo
         {
@@ -169,6 +175,39 @@ public class RemoteService : RemoteApplication
 
         sw.Stop();
         Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath} in {sw.Elapsed}");
+    }
+
+    /// <summary>
+    /// When NR_DOTNET_TEST_PREBUILT_APPS is set (e.g., in CI), copies pre-published output
+    /// instead of invoking dotnet publish. This avoids file-lock collisions on shared dependency
+    /// obj/ directories when multiple fixtures publish in parallel.
+    /// </summary>
+    private bool TryCopyPrebuiltPublishOutput(string framework, string runtime, string deployPath)
+    {
+        if (Environment.GetEnvironmentVariable("NR_DOTNET_TEST_PREBUILT_APPS") != "1")
+        {
+            return false;
+        }
+
+        var prebuiltPath = Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName,
+            "bin", "Release", framework, runtime, "publish");
+
+        if (!Directory.Exists(prebuiltPath))
+        {
+            TestLogger?.WriteLine($"[RemoteService]: Pre-built publish output not found at {prebuiltPath}, falling back to dotnet publish.");
+            return false;
+        }
+
+        var sw = new Stopwatch();
+        sw.Start();
+
+        TestLogger?.WriteLine($"[RemoteService]: Copying pre-built publish output from {prebuiltPath} to {deployPath}.");
+        Directory.CreateDirectory(deployPath);
+        CommonUtils.CopyDirectory(prebuiltPath, deployPath);
+
+        sw.Stop();
+        Console.WriteLine($"[{DateTime.Now}] Copied pre-built publish output to {deployPath} in {sw.Elapsed}");
+        return true;
     }
 
     private object GetPublishLockObjectForCoreApp()

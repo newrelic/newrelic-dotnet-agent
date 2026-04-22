@@ -13,11 +13,14 @@
     },
     {
         "packageName": "amazon.lambda.kinesisevents",
-        "ignoreTFMs" : "net8.0",
+        "ignoreTFMs": "net8.0",
         "ignoreReason": "net8.0 tests 2.x.x version"
     },
     {
         "packageName": "amazon.lambda.kinesisfirehoseevents"
+    },
+    {
+        "packageName": "amazon.lambda.runtimesupport"
     },
     {
         "packageName": "amazon.lambda.s3events"
@@ -69,7 +72,13 @@
         "ignoreReason": "Breaking since 8.16.0. See https://new-relic.atlassian.net/browse/NR-356677"
     },
     {
-        "packageName": "enyimmemcachedcore"
+        "packageName": "enyimmemcachedcore",
+        "ignoreTFMs": "net8.0",
+        "ignoreReason": "net8.0 tests 2.x.x version"
+    },
+
+    {
+        "packageName": "hangfire"
     },
     {
         "packageName": "log4net"
@@ -79,7 +88,23 @@
         "ignorePatch": true,
         "ignoreMinor": true,
         "ignoreMajor": true,
-        "ignoreReason": "9.x requires a paid license. Stay on 8.5.7 which is the latest free version."
+        "ignoreReason": "9.x requires a paid license. Stay on the latest 8.x free version."
+    },
+    {
+        "packageName": "masstransit.kafka",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreTFMs": "net8.0",
+        "ignoreReason": "9.x requires a paid license. Stay on the latest 8.x free version."
+    },
+    {
+        "packageName": "masstransit.rabbitmq",
+        "ignorePatch": true,
+        "ignoreMinor": true,
+        "ignoreMajor": true,
+        "ignoreTFMs": "net8.0",
+        "ignoreReason": "9.x requires a paid license. Stay on the latest 8.x free version."
     },
     {
         "packageName": "microsoft.azure.cosmos"

@@ -72,6 +72,56 @@ namespace Agent.Extensions.Tests.Helpers
             Assert.That(sendMessageRequest.MessageAttributes["tracestate"].StringValue, Is.EqualTo("tracestatevalue"));
         }
         [Test]
+        public void InsertDistributedTraceHeaders_ExistingHeaders_ReplacesHeaders()
+        {
+            // Arrange - pre-populate with DT headers that should be replaced
+            var sendMessageRequest = new MockMessageRequest
+            {
+                MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                {
+                    { "traceparent", new MessageAttributeValue { DataType = "String", StringValue = "old-traceparent" } },
+                    { "tracestate", new MessageAttributeValue { DataType = "String", StringValue = "old-tracestate" } },
+                }
+            };
+
+            // Act
+            SqsHelper.InsertDistributedTraceHeaders(_mockTransaction, sendMessageRequest, 2);
+
+            // Assert - headers should be replaced, not duplicated or errored
+            Assert.That(sendMessageRequest.MessageAttributes, Has.Count.EqualTo(2));
+            Assert.That(sendMessageRequest.MessageAttributes["traceparent"].StringValue, Is.EqualTo("traceparentvalue"));
+            Assert.That(sendMessageRequest.MessageAttributes["tracestate"].StringValue, Is.EqualTo("tracestatevalue"));
+        }
+
+        [Test]
+        public void InsertDistributedTraceHeaders_ExistingHeaders_AtAttributeLimit_StillReplacesHeaders()
+        {
+            // Arrange - pre-populate with DT headers + 8 others = 10 total (the SQS max)
+            var sendMessageRequest = new MockMessageRequest
+            {
+                MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                {
+                    { "traceparent", new MessageAttributeValue { DataType = "String", StringValue = "old-traceparent" } },
+                    { "tracestate", new MessageAttributeValue { DataType = "String", StringValue = "old-tracestate" } },
+                }
+            };
+
+            for (int i = 0; i < 8; i++)
+            {
+                sendMessageRequest.MessageAttributes.Add($"key{i}",
+                    new MessageAttributeValue { DataType = "String", StringValue = $"value{i}" });
+            }
+
+            // Act
+            SqsHelper.InsertDistributedTraceHeaders(_mockTransaction, sendMessageRequest, 2);
+
+            // Assert - replacement should work even at the 10-attribute limit
+            Assert.That(sendMessageRequest.MessageAttributes, Has.Count.EqualTo(10));
+            Assert.That(sendMessageRequest.MessageAttributes["traceparent"].StringValue, Is.EqualTo("traceparentvalue"));
+            Assert.That(sendMessageRequest.MessageAttributes["tracestate"].StringValue, Is.EqualTo("tracestatevalue"));
+        }
+
+        [Test]
         [TestCase(7, true)]
         [TestCase(8, false)]
         public void InsertDistributedTraceHeaders_AttributeLimit_ExceedsLimitGracefully(int attributeCount, bool dtHeadersShouldBeAdded)

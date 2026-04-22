@@ -32,13 +32,6 @@ public class MeterListenerBridge : ConfigurationBasedService
         _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
         _subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
         _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
-
-        // Start listening immediately to catch instruments created early in app lifecycle
-        // OTLP exporter will be configured later when agent connects
-        if (_configuration.OpenTelemetryMetricsEnabled)
-        {
-            _meterBridgingService.StartListening(null);
-        }
     }
 
     private void OnAgentConnected(AgentConnectedEvent agentConnectedEvent)
@@ -95,6 +88,14 @@ public class MeterListenerBridge : ConfigurationBasedService
         }
 
         _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid);
+    }
+
+    public void Start()
+    {
+        if (_configuration.OpenTelemetryMetricsEnabled)
+        {
+            _meterBridgingService.StartListening(_otlpConfigurationService);
+        }
     }
 
     public void Stop()

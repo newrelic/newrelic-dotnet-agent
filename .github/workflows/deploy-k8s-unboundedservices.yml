@@ -36,14 +36,14 @@ jobs:
       CLUSTER_NAME: ${{ secrets.AZURE_K8S_CLUSTER_NAME }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
         with:
           disable-sudo: true
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Azure Login
-        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
         with:
           client-id: ${{ secrets.AZURE_UNBOUNDED_SERVICES_MANAGED_IDENTITY_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_UNBOUNDED_SERVICES_MANAGED_IDENTITY_TENANT_ID }}
@@ -103,7 +103,7 @@ jobs:
           ./create_k8s_secrets.sh
       - name: Set AKS Context
         if: ${{ inputs.deploy_to_aks == true || inputs.restart_services == true }}
-        uses: azure/aks-set-context@v4
+        uses: azure/aks-set-context@60623acbdcbbdcf799ad50a1adf8703874339f8b # v5.0.0
         with:
           resource-group: ${{ env.RESOURCE_GROUP }}
           cluster-name: ${{ env.CLUSTER_NAME }}

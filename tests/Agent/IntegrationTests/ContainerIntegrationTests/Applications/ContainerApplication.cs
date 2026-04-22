@@ -148,6 +148,7 @@ public class ContainerApplication : RemoteApplication
         Console.WriteLine($"[{AppName} {DateTime.Now}] Cleaning up container and images related to {ContainerName} container.");
         TestLogger?.WriteLine($"[{AppName}] Cleaning up container and images related to {ContainerName} container.");
 
+        var composeDownSucceeded = false;
         try
         {
             var downProc = Process.Start(new ProcessStartInfo
@@ -158,57 +159,63 @@ public class ContainerApplication : RemoteApplication
                 RedirectStandardError = true,
                 UseShellExecute = false
             });
-            downProc?.WaitForExit(30000);
+            if (downProc?.WaitForExit(30000) == true)
+            {
+                composeDownSucceeded = downProc.ExitCode == 0;
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[{AppName} {DateTime.Now}] Error during compose down: {ex.Message}");
         }
 
-        // Force remove lingering container with same name if still present
-        try
+        // Only force-remove individual resources if compose down didn't clean up successfully
+        if (!composeDownSucceeded)
         {
-            var inspect = Process.Start(new ProcessStartInfo
+            // Force remove lingering container with same name if still present
+            try
             {
-                FileName = "docker",
-                Arguments = $"ps -a --filter name=^/{ContainerName}$ -q",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            });
-            var output = inspect?.StandardOutput.ReadToEnd();
-            inspect?.WaitForExit(5000);
-            if (!string.IsNullOrWhiteSpace(output))
-            {
-                var rm = Process.Start(new ProcessStartInfo
+                var inspect = Process.Start(new ProcessStartInfo
                 {
                     FileName = "docker",
-                    Arguments = $"rm -f {ContainerName}",
+                    Arguments = $"ps -a --filter name=^/{ContainerName}$ -q",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false
                 });
-                rm?.WaitForExit(10000);
+                var output = inspect?.StandardOutput.ReadToEnd();
+                inspect?.WaitForExit(5000);
+                if (!string.IsNullOrWhiteSpace(output))
+                {
+                    var rm = Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "docker",
+                        Arguments = $"rm -f {ContainerName}",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false
+                    });
+                    rm?.WaitForExit(10000);
+                }
             }
-        }
-        catch { /* ignore */ }
+            catch { /* ignore */ }
 
-        // Attempt removal of lingering default network (compose sometimes races on rapid successive runs)
-        try
-        {
-            var networkName = $"{ContainerName.ToLower()}_default";
-            var proc = Process.Start(new ProcessStartInfo
+            // Attempt removal of lingering default network (compose sometimes races on rapid successive runs)
+            try
             {
-                FileName = "docker",
-                Arguments = $"network rm {networkName}",
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                UseShellExecute = false
-            });
-            proc?.WaitForExit(5000);
+                var networkName = $"{ContainerName.ToLower()}_default";
+                var proc = Process.Start(new ProcessStartInfo
+                {
+                    FileName = "docker",
+                    Arguments = $"network rm {networkName}",
+                    RedirectStandardError = true,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                });
+                proc?.WaitForExit(5000);
+            }
+            catch { /* ignore */ }
         }
-        catch { /* ignore */ }
-
 
 #if DEBUG
         // Cleanup the networks with no attached containers. Mainly for testings on dev laptops - they can build up and block runs.
@@ -219,7 +226,8 @@ public class ContainerApplication : RemoteApplication
     protected override void PrepareForStart()
     {
         CleanupContainer();
-        // Remove any stale network with expected name so compose can recreate it with correct labels
+
+        // Remove any stale network left by a previous crashed run so compose can recreate it cleanly
         try
         {
             var networkName = $"{ContainerName.ToLower()}_default";
@@ -233,7 +241,7 @@ public class ContainerApplication : RemoteApplication
             });
             netRm?.WaitForExit(5000);
         }
-        catch { /* ignore */ }
+        catch { /* ignore — network may not exist */ }
 
         CaptureDockerState("pre-start");
     }
@@ -257,13 +265,19 @@ public class ContainerApplication : RemoteApplication
 
         Console.WriteLine($"[{AppName} {DateTime.Now}] Did not find PID file matching {pidFilePath}. {(RemoteProcess.HasExited ? "Process exited" : "Wait timed out")}.");
 
-        // Retry once if compose exited quickly (often due to transient network creation issues)
-        if (RemoteProcess.HasExited && _startupAttempts == 0)
+        // Retry if compose exited quickly (often due to transient Docker network issues
+        // where the daemon hasn't fully released resources from a prior compose project).
+        const int maxRetries = 2;
+        if (RemoteProcess.HasExited && _startupAttempts < maxRetries)
         {
             _startupAttempts++;
-            Console.WriteLine($"[{AppName} {DateTime.Now}] Early compose exit detected. Retrying docker compose up (attempt {_startupAttempts}).");
+            Console.WriteLine($"[{AppName} {DateTime.Now}] Early compose exit detected. Retrying docker compose up (attempt {_startupAttempts} of {maxRetries}).");
             TestLogger?.WriteLine($"[{AppName}] Retrying docker compose up.");
             CleanupContainer();
+
+            // Give Docker time to fully release network resources before retrying
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+
             try
             {
                 var startInfo = new ProcessStartInfo
@@ -362,8 +376,11 @@ public class ContainerApplication : RemoteApplication
             RunAndWrite("containers", "docker", "ps -a --filter name=containertestapp_ --format \"{{.ID}} {{.Names}} {{.Status}}\"");
             // List networks
             RunAndWrite("networks", "docker", "network ls --format \"{{.ID}} {{.Name}}\"");
-            // Inspect the specific expected network (may fail if absent)
-            RunAndWrite("inspect_target_network", "docker", $"network inspect {ContainerName.ToLower()}_default");
+            // Inspect the specific expected network (skip at pre-start since the network hasn't been created yet)
+            if (stage != "pre-start")
+            {
+                RunAndWrite("inspect_target_network", "docker", $"network inspect {ContainerName.ToLower()}_default");
+            }
             // Compose ls (if available)
             RunAndWrite("compose_projects", "docker", "compose ls");
 

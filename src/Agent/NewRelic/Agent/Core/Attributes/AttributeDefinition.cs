@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -121,6 +122,17 @@ public static class AttributeDefinitionBuilder
                 return span.TotalSeconds;
             case DateTimeOffset offset:
                 return offset.ToString("o");
+            case IEnumerable enumerable when !(input is string):
+                var convertedList = new List<object>();
+                foreach (var element in enumerable)
+                {
+                    var converted = GenericConverter(element);
+                    if (converted != null)
+                    {
+                        convertedList.Add(converted);
+                    }
+                }
+                return convertedList;
             default:
                 switch (Type.GetTypeCode(input.GetType()))
                 {

@@ -66,8 +66,8 @@ public abstract class InfiniteTracingContainerTest<T> : NewRelicIntegrationTest<
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", callCount = expectedSeenCount },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", callCount = ExpectedSentCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", CallCountAllHarvests = expectedSeenCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", CallCountAllHarvests = ExpectedSentCount },
         };
 
         Assertions.MetricsExist(expectedMetrics, actualMetrics);

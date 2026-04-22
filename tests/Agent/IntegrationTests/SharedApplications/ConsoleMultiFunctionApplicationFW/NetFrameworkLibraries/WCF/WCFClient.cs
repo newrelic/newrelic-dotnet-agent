@@ -237,6 +237,29 @@ public class WCFClient
         }
     }
 
+    [LibraryMethod]
+    [Transaction]
+    public void GetDataWithExistingDTHeaders()
+    {
+        using (var scope = new OperationContextScope((_wcfClient as WcfClient).InnerChannel))
+        {
+            OperationContext.Current.OutgoingMessageProperties[HttpRequestMessageProperty.Name] = new HttpRequestMessageProperty()
+            {
+                Headers =
+                {
+                    // Pre-populate with stale DT headers — agent should replace them
+                    { "traceparent", "00-stale0000000000000000000000000-stale000000000-01" },
+                    { "tracestate", "stale=value" },
+                    { "newrelic", "stale-newrelic-payload" }
+                }
+            };
+
+            var result = _wcfClient.Sync_SyncGetData(2000);
+
+            ConsoleMFLogger.Info($"Result: {result ?? "<NULL>"}");
+        }
+    }
+
     /// <summary>
     /// Calls the WCF Service ThrowException function with both client and server invocation methods (sync,begin/end,tap async)
     /// </summary>

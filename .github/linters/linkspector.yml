@@ -1,0 +1,13 @@
+dirs:
+  - .
+excludedFiles:
+  - ./src/Agent/CHANGELOG.md # This file is huge and takes too long to check
+ignorePatterns:
+  - pattern: '^http://example.net'
+  - pattern: '^http://localhost'
+  - pattern: '^https://github.com/newrelic/php-agent-testing/tree/main/soak-tests'
+replacementPatterns:
+    - pattern: '^/'
+      replacement: '{{BASEURL}}/'
+aliveStatusCodes: [200, 206, 403]
+
