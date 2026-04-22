@@ -338,6 +338,18 @@
     <Protobuf Include="NetStandardLibraries\Grpc\greet.proto" Condition="'$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 
+  <!-- Hangfire -->
+  <ItemGroup>
+    <PackageReference Include="Hangfire" Version="1.7.15" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="Hangfire.InMemory" Version="0.11.0" Condition="'$(TargetFramework)' == 'net462'" />
+
+    <PackageReference Include="Hangfire" Version="1.7.15" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Hangfire.InMemory" Version="0.11.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+
+    <!-- Hangfire.SqlServer is excluded from all target frameworks because we aren't using it, and it has a dependency on System.Data.SqlClient that causes problems for NServiceBus -->
+    <PackageReference Include="Hangfire.SqlServer" Version="1.7.15" ExcludeAssets="all" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.7.15" ExcludeAssets="all" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net8.0'" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />

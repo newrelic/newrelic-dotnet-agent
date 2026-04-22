@@ -1,0 +1,99 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+
+namespace NewRelic.Providers.Wrapper.Hangfire;
+
+/// <summary>
+/// Wrapper for Hangfire.Server.CoreBackgroundJobPerformer.Perform() instrumentation.
+/// Captures all background job execution with transaction and segment tracking.
+/// </summary>
+public class HangfirePerformerWrapper : IWrapper
+{
+    private const string WrapperName = "HangfirePerformerWrapper";
+
+    public bool IsTransactionRequired => false;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+    {
+        return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+    }
+
+    public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+    {
+        // Extract PerformContext parameter
+        var performContext = instrumentedMethodCall.MethodCall.MethodArguments[0];
+        if (performContext == null)
+        {
+            return Delegates.NoOp; // No params, no way to name this.
+        }
+
+        // Extract job information from context
+        var backgroundJob = HangfireHelper.GetBackgroundJob(performContext, agent);
+        var jobId = HangfireHelper.GetJobId(backgroundJob, agent);
+        var job = HangfireHelper.GetJob(backgroundJob, agent);
+        var jobClassName = HangfireHelper.GetJobClassName(job, agent);
+        var jobMethodName = HangfireHelper.GetJobMethodName(job, agent);
+        var queueName = HangfireHelper.GetQueueName(job, agent);
+        var serverId = HangfireHelper.GetServerId(performContext, agent);
+
+        // Build transaction name
+        var taskName = "unknown";
+        if (jobClassName is not null && jobMethodName is not null)
+        {
+            taskName = jobClassName + "." + jobMethodName;
+        }
+
+        // Create background transaction following Ruby formatting for ActiveJob
+        transaction = agent.CreateTransaction(
+            isWeb: false,
+            category: "Hangfire", 
+            transactionDisplayName: taskName + "/execute",
+            doNotTrackAsUnitOfWork: false);
+
+        // Required so that we can ensure that the transaction is active during the entire job execution, including any async continuations
+        transaction.AttachToAsync();
+        transaction.DetachFromPrimary(); //Remove from thread-local type storage
+
+        // If this is in a queue, we want to create a metric more like a message queue.  Based on how Ruby handles ActiveJob.
+        var segmentName = string.IsNullOrWhiteSpace(queueName) ? "Hangfire/" + taskName : "Hangfire/Queue/Consume/Named/" + queueName + "/" + taskName;
+        var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, segmentName);
+
+        // These attributes are based on a suggested OTel semantic convention for for workflows - itself based on AI workflow conventions.
+        segment.AddAgentAttribute("workflow.platform.name", "hangfire");
+        segment.AddAgentAttribute("workflow.task.name", taskName);
+        segment.AddAgentAttribute("workflow.task.id", jobId);
+        segment.AddAgentAttribute("workflow.task.queue", queueName);
+        segment.AddAgentAttribute("workflow.task.server", serverId);
+
+        return Delegates.GetDelegateFor<object>(
+            // returns a PerformedContext and unless there is a major Hangfire issue, this always returns successfully.
+            onSuccess: o =>
+            {
+                var exception = HangfireHelper.GetException(o, agent);
+                if (exception != null)
+                {
+                    segment.AddAgentAttribute("workflow.execution.result", "failure");
+                    transaction.NoticeError(exception);
+                    segment.End(exception);
+                }
+                else
+                {
+                    segment.AddAgentAttribute("workflow.execution.result", "success");
+                    segment.End();
+                }
+            },
+            onFailure: exception => // catch hangfire issues.
+            {
+                segment.AddAgentAttribute("workflow.execution.result", "failure");
+                transaction.NoticeError(exception);
+                segment.End(exception);
+            },
+            onComplete: () =>
+            {
+                transaction.End();
+            });
+    }
+}

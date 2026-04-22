@@ -5,16 +5,16 @@
     <DockerfileContext>.</DockerfileContext>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Kinesis" Version="4.0.8.7" />
-    <PackageReference Include="AWSSDK.KinesisFirehose" Version="4.0.3.20" />
-    <PackageReference Include="AWSSDK.S3" Version="4.0.20.1" />
+    <PackageReference Include="AWSSDK.Kinesis" Version="4.0.8.11" />
+    <PackageReference Include="AWSSDK.KinesisFirehose" Version="4.0.3.24" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.21.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="AWSSDK.SQS" Version="4.0.2.21" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.17.4" />
+    <PackageReference Include="AWSSDK.SQS" Version="4.0.2.25" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.17.8" />
     <PackageReference Include="NewRelic.Agent.Api" Version="10.50.0" />
   </ItemGroup>
 </Project>
