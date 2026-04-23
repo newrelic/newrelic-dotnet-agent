@@ -1,11 +1,12 @@
 ARG DOTNET_VERSION=10.0
 
 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build
+ARG DOTNET_VERSION
 WORKDIR /src
 COPY ["PerformanceTestApp.csproj", "./"]
-RUN dotnet restore "PerformanceTestApp.csproj"
+RUN dotnet restore "PerformanceTestApp.csproj" /p:TargetFramework=net${DOTNET_VERSION}
 COPY . .
-RUN dotnet publish "PerformanceTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "PerformanceTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:TargetFramework=net${DOTNET_VERSION}
 
 FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION} AS final
 WORKDIR /app
