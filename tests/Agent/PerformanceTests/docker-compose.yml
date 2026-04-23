@@ -122,11 +122,9 @@ services:
       --run-time ${TEST_DURATION:-2m}
       --csv /results/locust
       --logfile /logs/locust.log
-      --logfile /logs/locust.log
       --exit-code-on-error 0
     volumes:
       - ./results:/results
-      - ./logs:/logs
       - ./logs:/logs
     networks:
       - perfnet
