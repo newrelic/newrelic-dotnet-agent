@@ -6,7 +6,7 @@ ARG DOTNET_VERSION
 WORKDIR /src
 COPY ["PerformanceTestApp.csproj", "./"]
 RUN dotnet restore "PerformanceTestApp.csproj"
-COPY . .    
+COPY . .
 RUN dotnet publish "PerformanceTestApp.csproj" -c Release -o /app/publish -f net${DOTNET_VERSION} /p:UseAppHost=false
 
 # The final layer uses the ASP.NET image version matching the supplied DOTNET_VERSION argument.
