@@ -24,7 +24,7 @@
 
 services:
   redis:
-    image: redis:8
+    image: redis:8.6.2-trixie
     container_name: perf-redis
     networks:
       - perfnet
@@ -36,7 +36,7 @@ services:
       start_period: 10s
 
   rabbitmq:
-    image: rabbitmq:4
+    image: rabbitmq:4.3.0
     container_name: perf-rabbitmq
     networks:
       - perfnet
@@ -48,7 +48,7 @@ services:
       start_period: 20s
 
   mongodb:
-    image: mongo:8
+    image: mongo:8.2.7
     container_name: perf-mongodb
     networks:
       - perfnet
