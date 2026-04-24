@@ -25,7 +25,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(
 var rabbitHost = builder.Configuration["RABBITMQ_HOST"] ?? "localhost";
 var rabbitConnection = new ConnectionFactory { HostName = rabbitHost }.CreateConnection();
 using (var ch = rabbitConnection.CreateModel())
-    ch.QueueDeclare("perf", durable: false, exclusive: false, autoDelete: false, arguments: null);
+    ch.QueueDeclare("perf", durable: true, exclusive: false, autoDelete: false, arguments: null);
 builder.Services.AddSingleton<IConnection>(rabbitConnection);
 
 builder.WebHost.UseUrls($"http://{IPAddress.Any}:8080");

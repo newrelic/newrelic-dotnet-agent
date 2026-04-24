@@ -46,8 +46,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
-    environment:
-      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-deprecated_features.permit.transient_nonexcl_queues true
 
   mongodb:
     image: mongo:8
