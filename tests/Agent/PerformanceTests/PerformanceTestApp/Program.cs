@@ -11,6 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((_, config) => config.WriteTo.Console());
 
+// Print .NET version
+var dotnetVersion = Environment.Version.ToString();
+Console.WriteLine("Starting PerformanceTestApp on .NET {0}", dotnetVersion);
+
 builder.Services.AddControllers();
 
 var mongoConnectionString = builder.Configuration["MONGODB_CONNECTION_STRING"]
