@@ -175,19 +175,20 @@ public static class MetricNames
     static MetricNames()
     {
         _databaseVendorAll = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
-            MetricName.Create(Datastore + PathSeparator + EnumNameCache<DatastoreVendor>.GetName(vendor) + PathSeparator + All));
+            GetDatastoreVendorAll(EnumNameCache<DatastoreVendor>.GetName(vendor)));
         _databaseVendorAllWeb = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
-            MetricName.Create(Datastore + PathSeparator + EnumNameCache<DatastoreVendor>.GetName(vendor) + PathSeparator + AllWeb));
+            GetDatastoreVendorAllWeb(EnumNameCache<DatastoreVendor>.GetName(vendor)));
         _databaseVendorAllOther = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
-            MetricName.Create(Datastore + PathSeparator + EnumNameCache<DatastoreVendor>.GetName(vendor) + PathSeparator + AllOther));
+            GetDatastoreVendorAllOther(EnumNameCache<DatastoreVendor>.GetName(vendor)));
 
         var operations = new HashSet<string>(SqlParser.Operations);
         operations.Add(DatastoreUnknownOperationName);
         _databaseVendorOperations = GetEnumerationFunc<DatastoreVendor, Func<string, MetricName>>(
             vendor =>
             {
+                var vendorName = EnumNameCache<DatastoreVendor>.GetName(vendor);
                 var dict = new Dictionary<string, MetricName>(operations.Count);
-                var metricNamePrefix = DatastoreOperation + PathSeparator + EnumNameCache<DatastoreVendor>.GetName(vendor) + PathSeparator;
+                var metricNamePrefix = DatastoreOperation + PathSeparator + vendorName + PathSeparator;
                 foreach (var operation in operations)
                 {
                     dict[operation] = MetricName.Create(metricNamePrefix + operation);
@@ -195,7 +196,7 @@ public static class MetricNames
 
                 return operation => (dict.TryGetValue(operation, out var name))
                     ? name
-                    : MetricName.Create(DatastoreOperation, EnumNameCache<DatastoreVendor>.GetName(vendor), operation);
+                    : GetDatastoreOperation(vendorName, operation);
             });
     }
                 
@@ -484,13 +485,12 @@ public static class MetricNames
     public static MetricName GetDatastoreStatement(DatastoreVendor vendor, string model,
         string operation = null)
     {
-        operation = operation ?? DatastoreUnknownOperationName;
-        return MetricName.Create(DatastoreStatement, EnumNameCache<DatastoreVendor>.GetName(vendor), model, operation);
+        return GetDatastoreStatement(EnumNameCache<DatastoreVendor>.GetName(vendor), model, operation);
     }
 
     public static MetricName GetDatastoreInstance(DatastoreVendor vendor, string host, string portPathOrId)
     {
-        return MetricName.Create(DatastoreInstance, EnumNameCache<DatastoreVendor>.GetName(vendor), host, portPathOrId);
+        return GetDatastoreInstance(EnumNameCache<DatastoreVendor>.GetName(vendor), host, portPathOrId);
     }
 
     // String-based overloads for custom vendor names via RecordDatastoreSegment()

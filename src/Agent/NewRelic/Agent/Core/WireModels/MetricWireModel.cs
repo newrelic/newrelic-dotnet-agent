@@ -440,39 +440,6 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         }
 
         // Datastore/statement/<vendor>/<model>/<operation>
-        public static void TryBuildDatastoreStatementMetric(DatastoreVendor vendor, ParsedSqlStatement sqlStatement,
-            TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats)
-        {
-            var proposedName = MetricName.Create(sqlStatement.DatastoreStatementMetricName);
-            var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveDuration);
-            txStats.MergeUnscopedStats(proposedName, data);
-            txStats.MergeScopedStats(proposedName, data);
-        }
-
-        // Datastore/operation/<vendor>/<operation>
-        public static void TryBuildDatastoreVendorOperationMetric(DatastoreVendor vendor, string operation,
-            TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats, bool onlyUnscoped)
-        {
-            var proposedName = vendor.GetDatastoreOperation(operation);
-            var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveDuration);
-            txStats.MergeUnscopedStats(proposedName, data);
-            if (!onlyUnscoped)
-            {
-                txStats.MergeScopedStats(proposedName, data);
-            }
-        }
-
-        //Datastore/instance/datastore/host/port_path_or_id
-        public static void TryBuildDatastoreInstanceMetric(DatastoreVendor vendor, string host, string portPathOrId,
-            TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats)
-        {
-            var proposedName = MetricNames.GetDatastoreInstance(vendor, host, portPathOrId);
-            var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveDuration);
-            txStats.MergeUnscopedStats(proposedName, data);
-        }
-
-        // String-based overloads for custom vendor names via RecordDatastoreSegment()
-
         public static void TryBuildDatastoreStatementMetric(ParsedSqlStatement sqlStatement,
             TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats)
         {
