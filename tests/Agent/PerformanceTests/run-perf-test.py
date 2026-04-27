@@ -287,6 +287,7 @@ def main():
             capture_output=True,
             check=False,
             env=compose_env,
+            timeout=30
         )
 
     atexit.register(cleanup)
@@ -296,7 +297,20 @@ def main():
     subprocess.run(["docker", "compose", "build"], check=True, env=compose_env)
 
     print("Starting test app and traffic driver...")
-    subprocess.run(["docker", "compose", "up", "-d"], check=True, env=compose_env)
+    try:
+        subprocess.run(["docker", "compose", "up", "-d"], check=True, env=compose_env)
+    except subprocess.CalledProcessError as e:
+        print("ERROR: 'docker compose up -d' failed.")
+        print("Last 100 lines of Docker Compose logs:")
+        logs_proc = subprocess.run(
+            ["docker", "compose", "logs", "--tail", "100"],
+            capture_output=True,
+            text=True,
+            env=compose_env,
+        )
+        print(logs_proc.stdout)
+        print(logs_proc.stderr)
+        sys.exit(1)
 
     # --- Wait for test app to become healthy ---
     print("Waiting for test app to become healthy...")
@@ -360,6 +374,7 @@ def main():
         ["docker", "compose", "down", "--volumes", "--remove-orphans"],
         check=False,
         env=compose_env,
+        timeout=30,
     )
     print("Containers stopped.")
 
