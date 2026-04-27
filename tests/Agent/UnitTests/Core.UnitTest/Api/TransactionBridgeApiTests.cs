@@ -87,6 +87,7 @@ public class TransactionBridgeApiTests
                 && methodCall.Method.ParameterTypeNames == string.Empty),
             Arg.Matches<ParsedSqlStatement>(statement =>
                 statement.DatastoreVendor == DatastoreVendor.Other
+                && statement.DatastoreVendorNameString == expectedVendor
                 && statement.Model == expectedModel
                 && statement.Operation == expectedOperation),
             Arg.Matches<ConnectionInfo>(info =>

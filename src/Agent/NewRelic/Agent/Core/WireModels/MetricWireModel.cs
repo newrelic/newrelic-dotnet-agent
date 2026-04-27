@@ -440,7 +440,7 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         }
 
         // Datastore/statement/<vendor>/<model>/<operation>
-        public static void TryBuildDatastoreStatementMetric(DatastoreVendor vendor, ParsedSqlStatement sqlStatement,
+        public static void TryBuildDatastoreStatementMetric(ParsedSqlStatement sqlStatement,
             TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats)
         {
             var proposedName = MetricName.Create(sqlStatement.DatastoreStatementMetricName);
@@ -449,11 +449,10 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
             txStats.MergeScopedStats(proposedName, data);
         }
 
-        // Datastore/operation/<vendor>/<operation>
-        public static void TryBuildDatastoreVendorOperationMetric(DatastoreVendor vendor, string operation,
+        public static void TryBuildDatastoreVendorOperationMetric(string vendorName, string operation,
             TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats, bool onlyUnscoped)
         {
-            var proposedName = vendor.GetDatastoreOperation(operation);
+            var proposedName = MetricNames.GetDatastoreOperation(vendorName, operation);
             var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveDuration);
             txStats.MergeUnscopedStats(proposedName, data);
             if (!onlyUnscoped)
@@ -462,11 +461,34 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
             }
         }
 
-        //Datastore/instance/datastore/host/port_path_or_id
-        public static void TryBuildDatastoreInstanceMetric(DatastoreVendor vendor, string host, string portPathOrId,
+        public static void TryBuildDatastoreRollupMetrics(string vendorName, TimeSpan totalTime, TimeSpan exclusiveTime,
+            TransactionMetricStatsCollection txStats)
+        {
+            var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveTime);
+
+            // Datastore/All
+            txStats.MergeUnscopedStats(MetricNames.DatastoreAll, data);
+
+            // Datastore/<allWeb/allOther>
+            var proposedName = txStats.GetTransactionName().IsWebTransactionName
+                ? MetricNames.DatastoreAllWeb
+                : MetricNames.DatastoreAllOther;
+            txStats.MergeUnscopedStats(proposedName, data);
+
+            // Datastore/<vendor>/all
+            txStats.MergeUnscopedStats(MetricNames.GetDatastoreVendorAll(vendorName), data);
+
+            // Datastore/<vendor>/<allWeb/allOther>
+            proposedName = txStats.GetTransactionName().IsWebTransactionName
+                ? MetricNames.GetDatastoreVendorAllWeb(vendorName)
+                : MetricNames.GetDatastoreVendorAllOther(vendorName);
+            txStats.MergeUnscopedStats(proposedName, data);
+        }
+
+        public static void TryBuildDatastoreInstanceMetric(string vendorName, string host, string portPathOrId,
             TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats)
         {
-            var proposedName = MetricNames.GetDatastoreInstance(vendor, host, portPathOrId);
+            var proposedName = MetricNames.GetDatastoreInstance(vendorName, host, portPathOrId);
             var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveDuration);
             txStats.MergeUnscopedStats(proposedName, data);
         }

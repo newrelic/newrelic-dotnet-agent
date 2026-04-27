@@ -225,7 +225,7 @@ public class TransactionBridgeApi
             _apiSupportabilityMetricCounters.Record(ApiMethod.StartDatastoreSegment);
             var method = new Method(typeof(object), "StartDatastoreSegment", string.Empty);
             var methodCall = new MethodCall(method, null, null, false);
-            var parsedSqlStatement = new ParsedSqlStatement(DatastoreVendor.Other, model, operation);
+            var parsedSqlStatement = new ParsedSqlStatement(vendor, model, operation);
             var connectionInfo = new ConnectionInfo(host, portPathOrID, databaseName);
             return _transaction.StartDatastoreSegment(
                 methodCall: methodCall,
