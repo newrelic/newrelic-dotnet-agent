@@ -62,6 +62,10 @@ public static class KafkaStatisticsHelper
         [JsonProperty("type")]
         public string Type { get; set; }
 
+        /// <summary>librdkafka's internal monotonic clock, in microseconds. Ever-increasing int.</summary>
+        [JsonProperty("ts")]
+        public long Ts { get; set; }
+
         [JsonProperty("tx")]
         public long Tx { get; set; }
 
@@ -120,6 +124,13 @@ public static class KafkaStatisticsHelper
         [JsonProperty("nodeid")]
         public int NodeId { get; set; }
 
+        /// <summary>
+        /// Broker source: "learned", "configured", "internal", or "logical".
+        /// "logical" marks synthetic brokers like GroupCoordinator which share nodeid=-1 with seed brokers.
+        /// </summary>
+        [JsonProperty("source")]
+        public string Source { get; set; }
+
         [JsonProperty("state")]
         public string State { get; set; }
 
@@ -149,6 +160,14 @@ public static class KafkaStatisticsHelper
 
         [JsonProperty("rtt")]
         public KafkaWindowStats RoundTripTime { get; set; }
+
+        /// <summary>
+        /// Per-API-type request counters. Keys are Kafka protocol API names ("Heartbeat", "Fetch",
+        /// "OffsetCommit", "Produce", etc). librdkafka also emits "Unknown-NN?" entries for API IDs
+        /// it does not recognize — these are filtered out at emit time.
+        /// </summary>
+        [JsonProperty("req")]
+        public Dictionary<string, long> RequestCounts { get; set; } = new Dictionary<string, long>();
     }
 
     /// <summary>
@@ -274,6 +293,24 @@ public static class KafkaStatisticsHelper
     #endregion
 
     /// <summary>
+    /// Maps librdkafka Kafka API names (as they appear in the broker "req" dictionary) to the
+    /// metric-name suffixes we emit. Suffixes end in "-total" so the rate machinery strips it
+    /// and produces heartbeat-rate, fetch-rate, etc. automatically. Unknown-NN? keys and API
+    /// types we don't care about are implicitly filtered by being absent from this map.
+    /// </summary>
+    private static readonly Dictionary<string, string> _protocolRequestMetricSuffixes = new Dictionary<string, string>
+    {
+        { "Heartbeat", "heartbeat-total" },
+        { "Fetch", "fetch-total" },
+        { "Produce", "produce-total" },
+        { "OffsetCommit", "commit-total" },
+        { "JoinGroup", "join-total" },
+        { "SyncGroup", "sync-total" },
+        { "LeaveGroup", "leave-total" },
+        { "Metadata", "metadata-total" },
+    };
+
+    /// <summary>
     /// Parses Kafka statistics JSON into the deserialized model.
     /// Returns null if parsing fails or JSON is empty.
     /// </summary>
@@ -345,6 +382,7 @@ public static class KafkaStatisticsHelper
             AddProducerMetrics(metrics, stats, clientId, vendorName);
 
         AddBrokerMetrics(metrics, stats, clientType, clientId, vendorName);
+        AddClientProtocolRequestMetrics(metrics, stats, clientType, clientId, vendorName);
         AddTopicAndPartitionMetrics(metrics, stats, clientType, clientId, vendorName);
     }
 
@@ -434,7 +472,7 @@ public static class KafkaStatisticsHelper
 
         foreach (var broker in stats.Brokers.Values)
         {
-            var normalizedNodeId = NormalizeNodeId(broker.NodeId);
+            var normalizedNodeId = NormalizeNodeId(broker);
             var nodePrefix = string.Concat("MessageBroker/", vendorName, "/Internal/", clientType, "-node-metrics/node/", normalizedNodeId, "/client/", clientId);
 
             AddMetricIfPositive(metrics, string.Concat(nodePrefix, "/request-total"), broker.Tx, KafkaMetricType.Cumulative);
@@ -443,6 +481,68 @@ public static class KafkaStatisticsHelper
             AddMetricIfPositive(metrics, string.Concat(nodePrefix, "/incoming-byte-total"), broker.RxBytes, KafkaMetricType.Cumulative);
             AddMetricIfPositive(metrics, string.Concat(nodePrefix, "/request-latency-avg"), broker.RoundTripTime?.Avg ?? 0, KafkaMetricType.WindowAvg);
             AddMetricIfPositive(metrics, string.Concat(nodePrefix, "/connection-count"), broker.Connects, KafkaMetricType.Cumulative);
+
+            // Per-broker Kafka protocol request-type counters. The rate machinery in the drain loop
+            // strips "-total" and produces heartbeat-rate, fetch-rate, etc. as a byproduct.
+            if (broker.RequestCounts != null)
+            {
+                foreach (var reqEntry in broker.RequestCounts)
+                {
+                    if (_protocolRequestMetricSuffixes.TryGetValue(reqEntry.Key, out var metricSuffix))
+                        AddMetricIfPositive(metrics, string.Concat(nodePrefix, "/", metricSuffix), reqEntry.Value, KafkaMetricType.Cumulative);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Emits client-level aggregated protocol request metrics that mirror the Java agent's naming:
+    ///   consumer-coordinator-metrics/heartbeat-total + heartbeat-rate, commit-total + commit-rate,
+    ///   join-total + join-rate, sync-total + sync-rate, leave-total + leave-rate
+    ///   consumer-fetch-manager-metrics/fetch-total + fetch-rate
+    ///   producer-metrics/produce-total + produce-rate, metadata-total + metadata-rate
+    /// Sums the per-broker req counts from librdkafka's statistics JSON. Heartbeats/commits/joins/syncs
+    /// only accumulate on the GroupCoordinator broker; fetches/produces only on data brokers.
+    /// </summary>
+    private static void AddClientProtocolRequestMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientType, string clientId, string vendorName)
+    {
+        if (stats.Brokers == null || stats.Brokers.Count == 0) return;
+
+        long totalHeartbeats = 0, totalCommits = 0, totalJoins = 0, totalSyncs = 0, totalLeaves = 0;
+        long totalFetches = 0, totalProduces = 0, totalMetadata = 0;
+
+        foreach (var broker in stats.Brokers.Values)
+        {
+            if (broker.RequestCounts == null) continue;
+
+            long v;
+            if (broker.RequestCounts.TryGetValue("Heartbeat", out v)) totalHeartbeats += v;
+            if (broker.RequestCounts.TryGetValue("OffsetCommit", out v)) totalCommits += v;
+            if (broker.RequestCounts.TryGetValue("JoinGroup", out v)) totalJoins += v;
+            if (broker.RequestCounts.TryGetValue("SyncGroup", out v)) totalSyncs += v;
+            if (broker.RequestCounts.TryGetValue("LeaveGroup", out v)) totalLeaves += v;
+            if (broker.RequestCounts.TryGetValue("Fetch", out v)) totalFetches += v;
+            if (broker.RequestCounts.TryGetValue("Produce", out v)) totalProduces += v;
+            if (broker.RequestCounts.TryGetValue("Metadata", out v)) totalMetadata += v;
+        }
+
+        if (clientType == "consumer")
+        {
+            var coordPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/consumer-coordinator-metrics/client/", clientId);
+            var fetchPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/consumer-fetch-manager-metrics/client/", clientId);
+
+            AddMetricIfPositive(metrics, string.Concat(coordPrefix, "/heartbeat-total"), totalHeartbeats, KafkaMetricType.Cumulative);
+            AddMetricIfPositive(metrics, string.Concat(coordPrefix, "/commit-total"), totalCommits, KafkaMetricType.Cumulative);
+            AddMetricIfPositive(metrics, string.Concat(coordPrefix, "/join-total"), totalJoins, KafkaMetricType.Cumulative);
+            AddMetricIfPositive(metrics, string.Concat(coordPrefix, "/sync-total"), totalSyncs, KafkaMetricType.Cumulative);
+            AddMetricIfPositive(metrics, string.Concat(coordPrefix, "/leave-total"), totalLeaves, KafkaMetricType.Cumulative);
+            AddMetricIfPositive(metrics, string.Concat(fetchPrefix, "/fetch-total"), totalFetches, KafkaMetricType.Cumulative);
+        }
+        else if (clientType == "producer")
+        {
+            var producerPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/producer-metrics/client/", clientId);
+            AddMetricIfPositive(metrics, string.Concat(producerPrefix, "/produce-total"), totalProduces, KafkaMetricType.Cumulative);
+            AddMetricIfPositive(metrics, string.Concat(producerPrefix, "/metadata-total"), totalMetadata, KafkaMetricType.Cumulative);
         }
     }
 
@@ -455,7 +555,14 @@ public static class KafkaStatisticsHelper
 
         foreach (var topic in stats.Topics.Values)
         {
-            var topicPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/", clientType, "-topic-metrics/topic/", topic.Topic, "/client/", clientId);
+            // Consumer and producer use different Kafka-native topic-level groups:
+            //   consumer: consumer-fetch-manager-metrics  (per Kafka FetchMetricsRegistry.java)
+            //   producer: producer-topic-metrics          (per Kafka SenderMetricsRegistry.TOPIC_METRIC_GROUP_NAME)
+            // Verified against kafka-consumer.yml / KafkaTopicTable.tsx in the APM UI repo at
+            // source.datanerd.us/APM/apm-agent-nerdlets — the UI queries these exact group names
+            // via WITH METRIC_FORMAT 'MessageBroker/Kafka/Internal/{group}/topic/{t}/client/{c}/...'.
+            var topicGroupName = clientType == "consumer" ? "consumer-fetch-manager-metrics" : "producer-topic-metrics";
+            var topicPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/", topicGroupName, "/topic/", topic.Topic, "/client/", clientId);
             var partitionBasePrefix = string.Concat("MessageBroker/", vendorName, "/Internal/", clientType, "-metrics/topic/", topic.Topic);
 
             // Aggregate partition stats and emit partition metrics in a single pass
@@ -516,20 +623,33 @@ public static class KafkaStatisticsHelper
     }
 
     /// <summary>
-    /// Normalizes node ID following Java agent MetricNameUtil pattern
+    /// Derives the node label for a broker's metric path.
+    ///
+    /// librdkafka exposes two different broker entries that both use nodeid=-1:
+    ///   - Seed brokers (source="configured") — bootstrap entries before real broker IDs are learned
+    ///   - Logical brokers (source="logical") — synthetic handles like GroupCoordinator
+    /// The broker Source field distinguishes them. Without this check, GroupCoordinator metrics
+    /// silently collide into the "seed" bucket.
     /// </summary>
-    private static string NormalizeNodeId(int nodeId)
+    private static string NormalizeNodeId(KafkaBrokerStats broker)
     {
-        if (nodeId < 0)
+        if (broker.Source == "logical")
+        {
+            if (broker.Name == "GroupCoordinator")
+                return "coordinator";
+            return broker.Name != null ? broker.Name.ToLowerInvariant() : "logical";
+        }
+
+        if (broker.NodeId < 0)
             return "seed";
 
-        if (nodeId > 1000000)
+        if (broker.NodeId > 1000000)
         {
-            var coordinatorId = int.MaxValue - nodeId;
+            var coordinatorId = int.MaxValue - broker.NodeId;
             if (coordinatorId > 0 && coordinatorId < 1000)
                 return string.Concat("coordinator-", coordinatorId.ToString());
         }
 
-        return nodeId.ToString();
+        return broker.NodeId.ToString();
     }
 }

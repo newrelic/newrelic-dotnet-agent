@@ -29,6 +29,7 @@ public class KafkaBuilderWrapper : IWrapper
     private readonly ConcurrentDictionary<object, string> _latestStatisticsPerClient = new();
     private readonly ConcurrentDictionary<object, Dictionary<string, long>> _previousValuesPerClient = new();
     private readonly ConcurrentDictionary<object, Dictionary<string, KafkaMetricValue>> _metricsPerClient = new();
+    private readonly ConcurrentDictionary<object, long> _previousTsPerClient = new();
     private int _drainStarted;
 
     public bool IsTransactionRequired => false;
@@ -172,6 +173,8 @@ public class KafkaBuilderWrapper : IWrapper
                 if (!_latestStatisticsPerClient.TryRemove(clientEntry.Key, out var json))
                     continue;
 
+                Log.Debug($"KafkaBuilderWrapper: Raw statistics JSON: {json}");
+
                 var stats = KafkaStatisticsHelper.ParseStatistics(json);
                 if (!KafkaStatisticsHelper.IsValid(stats))
                 {
@@ -185,6 +188,30 @@ public class KafkaBuilderWrapper : IWrapper
                 KafkaStatisticsHelper.PopulateMetricsDictionary(metricsDict, stats, MessageBrokerVendorConstants.Kafka);
                 var previousValues = _previousValuesPerClient.GetOrAdd(clientEntry.Key, _ => new Dictionary<string, long>(metricsDict.Count));
 
+                // Elapsed seconds derived from librdkafka's own monotonic clock (ts, in microseconds).
+                // Both the delta numerator and this denominator come from the same librdkafka snapshot pair,
+                // so rates are independent of our scheduler's timing accuracy.
+                var previousTs = _previousTsPerClient.TryGetValue(clientEntry.Key, out var pts) ? pts : 0L;
+                double elapsedSeconds;
+
+                if (stats.Ts == 0)
+                {
+                    // ts is documented in librdkafka STATISTICS.md as an ever-increasing monotonic clock
+                    // (microseconds). A zero value means the field is absent or unsupported by this version
+                    // of librdkafka. Rate metrics cannot be computed without it.
+                    Log.Debug($"KafkaBuilderWrapper: Statistics payload for client '{KafkaStatisticsHelper.GetClientId(stats)}' has no 'ts' timestamp field — rate metrics will not be reported for this client.");
+                    elapsedSeconds = 0.0;
+                }
+                else if (previousTs == 0)
+                {
+                    // First observation for this client — no prior ts to form a delta against. Normal on startup.
+                    elapsedSeconds = 0.0;
+                }
+                else
+                {
+                    elapsedSeconds = (stats.Ts - previousTs) / 1_000_000.0;
+                }
+
                 foreach (var kvp in metricsDict)
                 {
                     float valueToReport;
@@ -196,6 +223,14 @@ public class KafkaBuilderWrapper : IWrapper
                             var delta = kvp.Value.Value - prev;
                             // Handle counter reset: if delta is negative, report the raw value
                             valueToReport = delta >= 0 ? delta : kvp.Value.Value;
+
+                            // Rate = delta / elapsed seconds. Only emit when both observations are real
+                            // and elapsed time is meaningful (guards first observation and ts=0 payloads).
+                            if (elapsedSeconds > 0 && delta > 0)
+                            {
+                                experimentalApi.RecordGaugeMetric(ToRateMetricName(kvp.Key), (float)(delta / elapsedSeconds));
+                                reportedCount++;
+                            }
                         }
                         else
                         {
@@ -217,6 +252,9 @@ public class KafkaBuilderWrapper : IWrapper
                         reportedCount++;
                     }
                 }
+
+                if (stats.Ts > 0)
+                    _previousTsPerClient[clientEntry.Key] = stats.Ts;
             }
 
             if (reportedCount > 0)
@@ -263,6 +301,22 @@ public class KafkaBuilderWrapper : IWrapper
             setConfigMethod.Invoke(builder, new object[] { "statistics.interval.ms", "5000" });
             Log.Finest("KafkaBuilderWrapper: Set statistics interval to 5000ms");
         }
+    }
+
+    /// <summary>
+    /// Derives a rate metric name from a cumulative metric name by replacing the trailing
+    /// aggregation suffix (-total, -counter, -count) with -rate, or appending -rate if none match.
+    /// Examples: "outgoing-byte-total" → "outgoing-byte-rate", "request-counter" → "request-rate".
+    /// </summary>
+    private static string ToRateMetricName(string metricName)
+    {
+        if (metricName.EndsWith("-total"))
+            return metricName.Substring(0, metricName.Length - 6) + "-rate";
+        if (metricName.EndsWith("-counter"))
+            return metricName.Substring(0, metricName.Length - 8) + "-rate";
+        if (metricName.EndsWith("-count"))
+            return metricName.Substring(0, metricName.Length - 6) + "-rate";
+        return metricName + "-rate";
     }
 
     private bool ShouldSetStatisticsInterval(object builder)
