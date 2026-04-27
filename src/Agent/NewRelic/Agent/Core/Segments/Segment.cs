@@ -512,7 +512,10 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         {
             return;
         }
-
+        if (Data == null) {
+            Log.Info("Data is null for segment {0} in transaction {1}, skipping adding metric stats.", GetTransactionTraceName(), GetTransactionGuid());
+            return;
+        }
         Data.AddMetricStats(this, TotalChildDuration, txStats, configService);
     }
 
