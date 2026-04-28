@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Linq;
 using NewRelic.Agent.Extensions.Helpers;
 using NUnit.Framework;
 
@@ -273,7 +272,7 @@ public class KafkaStatisticsHelperTests
     public void ParseStatistics_ValidProducerJson_ParsesBatchMetricsViaDictionary()
     {
         var result = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(result, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(result);
 
         // BatchSizeAvg is computed from topics and reported as a metric
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/batch-size-avg"));
@@ -297,7 +296,7 @@ public class KafkaStatisticsHelperTests
     public void ParseStatistics_ConsumerJsonWithMultiplePartitions_TotalConsumerLagInMetrics()
     {
         var result = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(result, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(result);
 
         // Total consumer lag (10 + 15 = 25) is reported as records-lag-max
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/client/consumer-test/records-lag-max"));
@@ -511,7 +510,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_ValidProducerData_CreatesCorrectMetrics()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Is.Not.Null);
         Assert.That(metrics, Is.Not.Empty);
@@ -531,7 +530,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_ValidConsumerData_CreatesCorrectMetrics()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Is.Not.Null);
         Assert.That(metrics, Is.Not.Empty);
@@ -550,7 +549,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_ValidData_CreatesBrokerMetrics()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-node-metrics/node/1/client/producer-test/request-total"));
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-node-metrics/node/1/client/producer-test/response-total"));
@@ -565,7 +564,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_ValidData_CreatesTopicMetrics()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-topic-metrics/topic/test-topic/client/producer-test/record-send-total"));
         Assert.That(metrics["MessageBroker/Kafka/Internal/producer-topic-metrics/topic/test-topic/client/producer-test/record-send-total"].Value, Is.EqualTo(50));
@@ -575,7 +574,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_ValidData_CreatesPartitionMetrics()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/topic/test-topic/partition/0/client/producer-test/record-send-total"));
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/topic/test-topic/partition/0/client/producer-test/byte-total"));
@@ -588,7 +587,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_ConsumerData_CreatesPartitionLagMetrics()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-metrics/topic/test-topic/partition/0/client/consumer-test/records-lag"));
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-metrics/topic/test-topic/partition/1/client/consumer-test/records-lag"));
@@ -613,7 +612,7 @@ public class KafkaStatisticsHelperTests
             ""metadata_cache_cnt"": 1
         }";
         var stats = KafkaStatisticsHelper.ParseStatistics(jsonWithZeros);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/request-counter"));
         Assert.That(metrics, Does.Not.ContainKey("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/response-counter"));
@@ -627,7 +626,7 @@ public class KafkaStatisticsHelperTests
     [Test]
     public void CreateMetricsDictionary_NullStats_ReturnsEmptyDictionary()
     {
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(null, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(null);
 
         Assert.That(metrics, Is.Not.Null);
         Assert.That(metrics, Is.Empty);
@@ -642,19 +641,10 @@ public class KafkaStatisticsHelperTests
             Type = "producer"
         };
 
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(invalidStats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(invalidStats);
 
         Assert.That(metrics, Is.Not.Null);
         Assert.That(metrics, Is.Empty);
-    }
-
-    [Test]
-    public void CreateMetricsDictionary_CustomVendorName_UsesCorrectVendorName()
-    {
-        var stats = KafkaStatisticsHelper.ParseStatistics(MinimalValidJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "CustomKafka");
-
-        Assert.That(metrics.Keys.First(), Does.Contain("MessageBroker/CustomKafka/Internal/"));
     }
 
     [Test]
@@ -680,7 +670,7 @@ public class KafkaStatisticsHelperTests
         }";
 
         var stats = KafkaStatisticsHelper.ParseStatistics(producerWithoutBatchesJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(stats, Is.Not.Null);
         // No batch-size-avg metric when batch metrics are absent
@@ -722,12 +712,12 @@ public class KafkaStatisticsHelperTests
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
         var metrics = new System.Collections.Generic.Dictionary<string, KafkaMetricValue>();
 
-        KafkaStatisticsHelper.PopulateMetricsDictionary(metrics, stats, "Kafka");
+        KafkaStatisticsHelper.PopulateMetricsDictionary(metrics, stats);
         var firstCount = metrics.Count;
         Assert.That(firstCount, Is.GreaterThan(0));
 
         // Populate again — should clear and refill
-        KafkaStatisticsHelper.PopulateMetricsDictionary(metrics, stats, "Kafka");
+        KafkaStatisticsHelper.PopulateMetricsDictionary(metrics, stats);
         Assert.That(metrics.Count, Is.EqualTo(firstCount));
     }
 
@@ -738,7 +728,7 @@ public class KafkaStatisticsHelperTests
         metrics["stale/metric"] = new KafkaMetricValue(999, KafkaMetricType.Gauge);
 
         var stats = KafkaStatisticsHelper.ParseStatistics(MinimalValidJson);
-        KafkaStatisticsHelper.PopulateMetricsDictionary(metrics, stats, "Kafka");
+        KafkaStatisticsHelper.PopulateMetricsDictionary(metrics, stats);
 
         Assert.That(metrics, Does.Not.ContainKey("stale/metric"));
     }
@@ -749,7 +739,7 @@ public class KafkaStatisticsHelperTests
         var metrics = new System.Collections.Generic.Dictionary<string, KafkaMetricValue>();
         metrics["existing"] = new KafkaMetricValue(1, KafkaMetricType.Gauge);
 
-        KafkaStatisticsHelper.PopulateMetricsDictionary(metrics, null, "Kafka");
+        KafkaStatisticsHelper.PopulateMetricsDictionary(metrics, null);
 
         Assert.That(metrics, Is.Empty);
     }
@@ -762,7 +752,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_CumulativeCounters_AreTaggedAsCumulative()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         // Client-level cumulative counters
         Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/request-counter"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
@@ -783,7 +773,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_GaugeValues_AreTaggedAsGauge()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/metadata_cache_cnt"].MetricType, Is.EqualTo(KafkaMetricType.Gauge));
         Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/record-queue-time-avg"].MetricType, Is.EqualTo(KafkaMetricType.Gauge));
@@ -793,7 +783,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_ConsumerGaugeValues_AreTaggedAsGauge()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/consumer-test/assigned-partitions"].MetricType, Is.EqualTo(KafkaMetricType.Gauge));
         Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/consumer-test/rebalance-latency-avg"].MetricType, Is.EqualTo(KafkaMetricType.Gauge));
@@ -805,7 +795,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_WindowAverages_AreTaggedAsWindowAvg()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/batch-size-avg"].MetricType, Is.EqualTo(KafkaMetricType.WindowAvg));
         Assert.That(metrics["MessageBroker/Kafka/Internal/producer-node-metrics/node/1/client/producer-test/request-latency-avg"].MetricType, Is.EqualTo(KafkaMetricType.WindowAvg));
@@ -815,7 +805,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_ConsumerCumulativeCounters_AreTaggedAsCumulative()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/consumer-test/rebalance-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
         Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/client/consumer-test/records-consumed-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
@@ -830,7 +820,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_NoDuplicateRequestCounterAndRequestTotal()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         // Client-level should have request-counter but NOT request-total (was a duplicate)
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/request-counter"));
@@ -878,7 +868,7 @@ public class KafkaStatisticsHelperTests
         }";
 
         var stats = KafkaStatisticsHelper.ParseStatistics(jsonWithNegativeNodeId);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-node-metrics/node/seed/client/test-client/request-total"));
         Assert.That(metrics["MessageBroker/Kafka/Internal/producer-node-metrics/node/seed/client/test-client/request-total"].Value, Is.EqualTo(5));
@@ -918,7 +908,7 @@ public class KafkaStatisticsHelperTests
         }";
 
         var stats = KafkaStatisticsHelper.ParseStatistics(jsonWithCoordinatorNodeId);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator-5/client/test-client/request-total"));
         Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator-5/client/test-client/request-total"].Value, Is.EqualTo(7));
@@ -958,7 +948,7 @@ public class KafkaStatisticsHelperTests
         }";
 
         var stats = KafkaStatisticsHelper.ParseStatistics(jsonWithMaxNodeId);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-node-metrics/node/" + maxNodeId + "/client/test-client/request-total"));
     }
@@ -997,7 +987,7 @@ public class KafkaStatisticsHelperTests
         }";
 
         var stats = KafkaStatisticsHelper.ParseStatistics(jsonWithLargeNodeId);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-node-metrics/node/" + largeNodeId + "/client/test-client/request-total"));
     }
@@ -1048,7 +1038,7 @@ public class KafkaStatisticsHelperTests
     {
         // Ts is a model field, not emitted as a metric — verify it is not added to the metrics dictionary
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics.Keys, Has.None.Contains("/ts"));
         Assert.That(metrics.Keys, Has.None.Contains("ts"));
@@ -1085,7 +1075,7 @@ public class KafkaStatisticsHelperTests
         // The GroupCoordinator logical broker has nodeid=-1 but source=logical — our code must
         // NOT conflate it with seed brokers (which also have nodeid=-1).
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator/client/consumer-test/heartbeat-total"));
         Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator/client/consumer-test/heartbeat-total"].Value, Is.EqualTo(36));
@@ -1109,7 +1099,7 @@ public class KafkaStatisticsHelperTests
         }";
 
         var stats = KafkaStatisticsHelper.ParseStatistics(jsonWithSeedBroker);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-node-metrics/node/seed/client/seed-test/request-total"));
         Assert.That(metrics, Does.Not.ContainKey("MessageBroker/Kafka/Internal/producer-node-metrics/node/coordinator/client/seed-test/request-total"));
@@ -1119,7 +1109,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_PerBrokerReqMetrics_EmittedWithTotalSuffix()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         // Data broker: fetch non-zero, heartbeat zero (filtered)
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-node-metrics/node/1/client/consumer-test/fetch-total"));
@@ -1138,7 +1128,7 @@ public class KafkaStatisticsHelperTests
     {
         // The "Unknown-62?" entry in the fixture must not produce any metric — the allowlist filters it.
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics.Keys, Has.None.Contains("Unknown"));
         Assert.That(metrics.Keys, Has.None.Contains("unknown"));
@@ -1149,7 +1139,7 @@ public class KafkaStatisticsHelperTests
     {
         // Rate metrics are only produced from Cumulative-tagged metrics.
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator/client/consumer-test/heartbeat-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
         Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-node-metrics/node/1/client/consumer-test/fetch-total"].MetricType, Is.EqualTo(KafkaMetricType.Cumulative));
@@ -1161,7 +1151,7 @@ public class KafkaStatisticsHelperTests
         // Java parity: client-level aggregated metrics under consumer-coordinator-metrics/ and
         // consumer-fetch-manager-metrics/. These sum across all brokers.
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         // Heartbeat is 36 on coordinator + 0 on data broker = 36
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/consumer-test/heartbeat-total"));
@@ -1182,7 +1172,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_ProducerClientLevelAggregates_EmitUnderProducerMetrics()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidProducerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/produce-total"));
         Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/producer-test/produce-total"].Value, Is.EqualTo(481));
@@ -1205,7 +1195,7 @@ public class KafkaStatisticsHelperTests
         }";
 
         var stats = KafkaStatisticsHelper.ParseStatistics(jsonNoReq);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         Assert.That(metrics, Does.Not.ContainKey("MessageBroker/Kafka/Internal/consumer-coordinator-metrics/client/no-req/heartbeat-total"));
         Assert.That(metrics, Does.Not.ContainKey("MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/client/no-req/fetch-total"));
@@ -1219,7 +1209,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_ConsumerTopicLevel_ReportsRecordsLagAvg()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         // totalConsumerLag = 10 + 15 = 25, partitionCount = 2, avg = 25 / 2 = 12
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/topic/test-topic/client/consumer-test/records-lag-avg"));
@@ -1231,7 +1221,7 @@ public class KafkaStatisticsHelperTests
     public void CreateMetricsDictionary_ConsumerTopicLevel_ReportsConsumedTotals()
     {
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
-        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats, "Kafka");
+        var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
         // totalRxMessages = 75 + 75 = 150, totalRxBytes = 3750 + 3750 = 7500
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/topic/test-topic/client/consumer-test/records-consumed-total"));

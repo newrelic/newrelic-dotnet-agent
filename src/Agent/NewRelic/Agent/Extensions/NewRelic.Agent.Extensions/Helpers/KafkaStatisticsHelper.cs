@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Extensions.Helpers;
 
@@ -101,10 +103,10 @@ public static class KafkaStatisticsHelper
 
         // Hierarchical metrics
         [JsonProperty("brokers")]
-        public Dictionary<string, KafkaBrokerStats> Brokers { get; set; } = new Dictionary<string, KafkaBrokerStats>();
+        public Dictionary<string, KafkaBrokerStats> Brokers { get; set; } = new();
 
         [JsonProperty("topics")]
-        public Dictionary<string, KafkaTopicStats> Topics { get; set; } = new Dictionary<string, KafkaTopicStats>();
+        public Dictionary<string, KafkaTopicStats> Topics { get; set; } = new();
 
         [JsonProperty("cgrp")]
         public KafkaConsumerGroupStats ConsumerGroup { get; set; }
@@ -167,7 +169,7 @@ public static class KafkaStatisticsHelper
         /// it does not recognize — these are filtered out at emit time.
         /// </summary>
         [JsonProperty("req")]
-        public Dictionary<string, long> RequestCounts { get; set; } = new Dictionary<string, long>();
+        public Dictionary<string, long> RequestCounts { get; set; } = new();
     }
 
     /// <summary>
@@ -188,7 +190,7 @@ public static class KafkaStatisticsHelper
         public KafkaWindowStats BatchCount { get; set; }
 
         [JsonProperty("partitions")]
-        public Dictionary<string, KafkaPartitionStats> Partitions { get; set; } = new Dictionary<string, KafkaPartitionStats>();
+        public Dictionary<string, KafkaPartitionStats> Partitions { get; set; } = new();
     }
 
     /// <summary>
@@ -292,13 +294,22 @@ public static class KafkaStatisticsHelper
 
     #endregion
 
+    private static readonly ConcurrentDictionary<string, string> _prefixCache = new();
+
+    private static string GetOrCreatePrefix(string clientId, string group)
+    {
+        var key = string.Concat(clientId, "|", group);
+        return _prefixCache.GetOrAdd(key, _ =>
+            string.Concat("MessageBroker/", MessageBrokerVendorConstants.Kafka, "/Internal/", group, "/client/", clientId));
+    }
+
     /// <summary>
     /// Maps librdkafka Kafka API names (as they appear in the broker "req" dictionary) to the
     /// metric-name suffixes we emit. Suffixes end in "-total" so the rate machinery strips it
     /// and produces heartbeat-rate, fetch-rate, etc. automatically. Unknown-NN? keys and API
     /// types we don't care about are implicitly filtered by being absent from this map.
     /// </summary>
-    private static readonly Dictionary<string, string> _protocolRequestMetricSuffixes = new Dictionary<string, string>
+    private static readonly Dictionary<string, string> _protocolRequestMetricSuffixes = new()
     {
         { "Heartbeat", "heartbeat-total" },
         { "Fetch", "fetch-total" },
@@ -352,10 +363,10 @@ public static class KafkaStatisticsHelper
     /// <summary>
     /// Creates a new dictionary of metric names to values from parsed statistics.
     /// </summary>
-    public static Dictionary<string, KafkaMetricValue> CreateMetricsDictionary(KafkaStatistics stats, string vendorName = "Kafka")
+    public static Dictionary<string, KafkaMetricValue> CreateMetricsDictionary(KafkaStatistics stats)
     {
         var metrics = new Dictionary<string, KafkaMetricValue>();
-        PopulateMetricsDictionary(metrics, stats, vendorName);
+        PopulateMetricsDictionary(metrics, stats);
         return metrics;
     }
 
@@ -363,7 +374,7 @@ public static class KafkaStatisticsHelper
     /// Populates an existing dictionary with metrics from parsed statistics.
     /// Clears the dictionary first, reusing its internal storage.
     /// </summary>
-    public static void PopulateMetricsDictionary(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string vendorName = "Kafka")
+    public static void PopulateMetricsDictionary(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats)
     {
         metrics.Clear();
 
@@ -373,22 +384,22 @@ public static class KafkaStatisticsHelper
         var clientId = GetClientId(stats);
         var clientType = stats.Type;
 
-        AddClientLevelMetrics(metrics, stats, clientType, clientId, vendorName);
+        AddClientLevelMetrics(metrics, stats, clientType, clientId);
 
         if (clientType == "consumer" && stats.ConsumerGroup != null)
-            AddConsumerMetrics(metrics, stats, clientId, vendorName);
+            AddConsumerMetrics(metrics, stats, clientId);
 
         if (clientType == "producer")
-            AddProducerMetrics(metrics, stats, clientId, vendorName);
+            AddProducerMetrics(metrics, stats, clientId);
 
-        AddBrokerMetrics(metrics, stats, clientType, clientId, vendorName);
-        AddClientProtocolRequestMetrics(metrics, stats, clientType, clientId, vendorName);
-        AddTopicAndPartitionMetrics(metrics, stats, clientType, clientId, vendorName);
+        AddBrokerMetrics(metrics, stats, clientType, clientId);
+        AddClientProtocolRequestMetrics(metrics, stats, clientType, clientId);
+        AddTopicAndPartitionMetrics(metrics, stats, clientType, clientId);
     }
 
-    private static void AddClientLevelMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientType, string clientId, string vendorName)
+    private static void AddClientLevelMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientType, string clientId)
     {
-        var basePrefix = string.Concat("MessageBroker/", vendorName, "/Internal/", clientType, "-metrics/client/", clientId);
+        var basePrefix = GetOrCreatePrefix(clientId, clientType == "consumer" ? "consumer-metrics" : "producer-metrics");
 
         // Cumulative counters (librdkafka "int" type — ever-increasing)
         AddMetricIfPositive(metrics, string.Concat(basePrefix, "/request-counter"), stats.Tx, KafkaMetricType.Cumulative);
@@ -406,10 +417,10 @@ public static class KafkaStatisticsHelper
         AddMetricIfPositive(metrics, string.Concat(basePrefix, "/record-size-avg"), stats.MsgCnt > 0 ? stats.MsgSize / stats.MsgCnt : 0, KafkaMetricType.Gauge);
     }
 
-    private static void AddConsumerMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientId, string vendorName)
+    private static void AddConsumerMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientId)
     {
         var cgrp = stats.ConsumerGroup;
-        var coordinatorPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/consumer-coordinator-metrics/client/", clientId);
+        var coordinatorPrefix = GetOrCreatePrefix(clientId, "consumer-coordinator-metrics");
         AddMetricIfPositive(metrics, string.Concat(coordinatorPrefix, "/rebalance-total"), cgrp.RebalanceCount, KafkaMetricType.Cumulative);
         AddMetricIfPositive(metrics, string.Concat(coordinatorPrefix, "/rebalance-latency-avg"), cgrp.RebalanceAge, KafkaMetricType.Gauge);
         AddMetricIfPositive(metrics, string.Concat(coordinatorPrefix, "/assigned-partitions"), cgrp.AssignmentSize, KafkaMetricType.Gauge);
@@ -426,7 +437,7 @@ public static class KafkaStatisticsHelper
             }
         }
 
-        var fetchPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/consumer-fetch-manager-metrics/client/", clientId);
+        var fetchPrefix = GetOrCreatePrefix(clientId, "consumer-fetch-manager-metrics");
         AddMetricIfPositive(metrics, string.Concat(fetchPrefix, "/records-consumed-total"), stats.RxMsgs, KafkaMetricType.Cumulative);
         AddMetricIfPositive(metrics, string.Concat(fetchPrefix, "/bytes-consumed-total"), stats.RxMsgBytes, KafkaMetricType.Cumulative);
         AddMetricIfPositive(metrics, string.Concat(fetchPrefix, "/records-lag-avg"),
@@ -434,9 +445,9 @@ public static class KafkaStatisticsHelper
         AddMetricIfPositive(metrics, string.Concat(fetchPrefix, "/records-lag-max"), totalConsumerLag, KafkaMetricType.Gauge);
     }
 
-    private static void AddProducerMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientId, string vendorName)
+    private static void AddProducerMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientId)
     {
-        var producerPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/producer-metrics/client/", clientId);
+        var producerPrefix = GetOrCreatePrefix(clientId, "producer-metrics");
 
         // Compute batch averages across topics with running sums (no LINQ/List allocation)
         long batchSizeSum = 0, batchSizeCount = 0;
@@ -466,14 +477,14 @@ public static class KafkaStatisticsHelper
         }
     }
 
-    private static void AddBrokerMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientType, string clientId, string vendorName)
+    private static void AddBrokerMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientType, string clientId)
     {
         if (stats.Brokers == null) return;
 
         foreach (var broker in stats.Brokers.Values)
         {
             var normalizedNodeId = NormalizeNodeId(broker);
-            var nodePrefix = string.Concat("MessageBroker/", vendorName, "/Internal/", clientType, "-node-metrics/node/", normalizedNodeId, "/client/", clientId);
+            var nodePrefix = string.Concat("MessageBroker/", MessageBrokerVendorConstants.Kafka, "/Internal/", clientType, "-node-metrics/node/", normalizedNodeId, "/client/", clientId);
 
             AddMetricIfPositive(metrics, string.Concat(nodePrefix, "/request-total"), broker.Tx, KafkaMetricType.Cumulative);
             AddMetricIfPositive(metrics, string.Concat(nodePrefix, "/response-total"), broker.Rx, KafkaMetricType.Cumulative);
@@ -486,10 +497,10 @@ public static class KafkaStatisticsHelper
             // strips "-total" and produces heartbeat-rate, fetch-rate, etc. as a byproduct.
             if (broker.RequestCounts != null)
             {
-                foreach (var reqEntry in broker.RequestCounts)
+                foreach (var kvp in _protocolRequestMetricSuffixes)
                 {
-                    if (_protocolRequestMetricSuffixes.TryGetValue(reqEntry.Key, out var metricSuffix))
-                        AddMetricIfPositive(metrics, string.Concat(nodePrefix, "/", metricSuffix), reqEntry.Value, KafkaMetricType.Cumulative);
+                    if (broker.RequestCounts.TryGetValue(kvp.Key, out var count))
+                        AddMetricIfPositive(metrics, string.Concat(nodePrefix, "/", kvp.Value), count, KafkaMetricType.Cumulative);
                 }
             }
         }
@@ -504,7 +515,7 @@ public static class KafkaStatisticsHelper
     /// Sums the per-broker req counts from librdkafka's statistics JSON. Heartbeats/commits/joins/syncs
     /// only accumulate on the GroupCoordinator broker; fetches/produces only on data brokers.
     /// </summary>
-    private static void AddClientProtocolRequestMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientType, string clientId, string vendorName)
+    private static void AddClientProtocolRequestMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientType, string clientId)
     {
         if (stats.Brokers == null || stats.Brokers.Count == 0) return;
 
@@ -528,8 +539,8 @@ public static class KafkaStatisticsHelper
 
         if (clientType == "consumer")
         {
-            var coordPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/consumer-coordinator-metrics/client/", clientId);
-            var fetchPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/consumer-fetch-manager-metrics/client/", clientId);
+            var coordPrefix = GetOrCreatePrefix(clientId, "consumer-coordinator-metrics");
+            var fetchPrefix = GetOrCreatePrefix(clientId, "consumer-fetch-manager-metrics");
 
             AddMetricIfPositive(metrics, string.Concat(coordPrefix, "/heartbeat-total"), totalHeartbeats, KafkaMetricType.Cumulative);
             AddMetricIfPositive(metrics, string.Concat(coordPrefix, "/commit-total"), totalCommits, KafkaMetricType.Cumulative);
@@ -540,7 +551,7 @@ public static class KafkaStatisticsHelper
         }
         else if (clientType == "producer")
         {
-            var producerPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/producer-metrics/client/", clientId);
+            var producerPrefix = GetOrCreatePrefix(clientId, "producer-metrics");
             AddMetricIfPositive(metrics, string.Concat(producerPrefix, "/produce-total"), totalProduces, KafkaMetricType.Cumulative);
             AddMetricIfPositive(metrics, string.Concat(producerPrefix, "/metadata-total"), totalMetadata, KafkaMetricType.Cumulative);
         }
@@ -549,7 +560,7 @@ public static class KafkaStatisticsHelper
     /// <summary>
     /// Single-pass topic and partition metric generation. Avoids iterating partitions twice.
     /// </summary>
-    private static void AddTopicAndPartitionMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientType, string clientId, string vendorName)
+    private static void AddTopicAndPartitionMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientType, string clientId)
     {
         if (stats.Topics == null) return;
 
@@ -562,8 +573,8 @@ public static class KafkaStatisticsHelper
             // source.datanerd.us/APM/apm-agent-nerdlets — the UI queries these exact group names
             // via WITH METRIC_FORMAT 'MessageBroker/Kafka/Internal/{group}/topic/{t}/client/{c}/...'.
             var topicGroupName = clientType == "consumer" ? "consumer-fetch-manager-metrics" : "producer-topic-metrics";
-            var topicPrefix = string.Concat("MessageBroker/", vendorName, "/Internal/", topicGroupName, "/topic/", topic.Topic, "/client/", clientId);
-            var partitionBasePrefix = string.Concat("MessageBroker/", vendorName, "/Internal/", clientType, "-metrics/topic/", topic.Topic);
+            var topicPrefix = string.Concat("MessageBroker/", MessageBrokerVendorConstants.Kafka, "/Internal/", topicGroupName, "/topic/", topic.Topic, "/client/", clientId);
+            var partitionBasePrefix = string.Concat("MessageBroker/", MessageBrokerVendorConstants.Kafka, "/Internal/", clientType, "-metrics/topic/", topic.Topic);
 
             // Aggregate partition stats and emit partition metrics in a single pass
             long totalTxMessages = 0, totalRxMessages = 0, totalRxBytes = 0, totalConsumerLag = 0;
@@ -630,6 +641,9 @@ public static class KafkaStatisticsHelper
     ///   - Logical brokers (source="logical") — synthetic handles like GroupCoordinator
     /// The broker Source field distinguishes them. Without this check, GroupCoordinator metrics
     /// silently collide into the "seed" bucket.
+    ///
+    /// Additionally, some Confluent client versions encode synthetic coordinator broker IDs as
+    /// int.MaxValue - brokerId. NodeId values above 1,000,000 are decoded back to coordinator-N.
     /// </summary>
     private static string NormalizeNodeId(KafkaBrokerStats broker)
     {
@@ -640,14 +654,17 @@ public static class KafkaStatisticsHelper
             return broker.Name != null ? broker.Name.ToLowerInvariant() : "logical";
         }
 
-        if (broker.NodeId < 0)
-            return "seed";
-
-        if (broker.NodeId > 1000000)
+        switch (broker.NodeId)
         {
-            var coordinatorId = int.MaxValue - broker.NodeId;
-            if (coordinatorId > 0 && coordinatorId < 1000)
-                return string.Concat("coordinator-", coordinatorId.ToString());
+            case < 0:
+                return "seed";
+            case > 1000000:
+            {
+                var coordinatorId = int.MaxValue - broker.NodeId;
+                if (coordinatorId is > 0 and < 1000)
+                    return string.Concat("coordinator-", coordinatorId.ToString());
+                break;
+            }
         }
 
         return broker.NodeId.ToString();
