@@ -597,8 +597,10 @@ public class KafkaStatisticsHelperTests
     }
 
     [Test]
-    public void CreateMetricsDictionary_OnlyPositiveValues_AreIncluded()
+    public void CreateMetricsDictionary_CumulativeCountersIncludedAtZero_GaugesFilteredAtZero()
     {
+        // Cumulative counters are always recorded so the drain's delta machinery has a
+        // continuous baseline (even at zero). Gauges at zero are not interesting and are filtered.
         var jsonWithZeros = @"{
             ""name"": ""rdkafka"",
             ""client_id"": ""test-zeros"",
@@ -609,18 +611,23 @@ public class KafkaStatisticsHelperTests
             ""rxmsgs"": 0,
             ""txmsg_bytes"": 0,
             ""rxmsg_bytes"": 0,
-            ""metadata_cache_cnt"": 1
+            ""metadata_cache_cnt"": 0
         }";
         var stats = KafkaStatisticsHelper.ParseStatistics(jsonWithZeros);
         var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
+        // Cumulative counters — included even when value is 0
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/request-counter"));
-        Assert.That(metrics, Does.Not.ContainKey("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/response-counter"));
-        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/txmsgs"));
-        Assert.That(metrics, Does.Not.ContainKey("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/rxmsgs"));
-
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/response-counter"));
         Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/request-counter"].Value, Is.EqualTo(5));
+        Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/response-counter"].Value, Is.EqualTo(0));
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/txmsgs"));
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/rxmsgs"));
         Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/txmsgs"].Value, Is.EqualTo(10));
+        Assert.That(metrics["MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/rxmsgs"].Value, Is.EqualTo(0));
+
+        // Gauge at zero — filtered out
+        Assert.That(metrics, Does.Not.ContainKey("MessageBroker/Kafka/Internal/producer-metrics/client/test-zeros/metadata_cache_cnt"));
     }
 
     [Test]
@@ -1108,19 +1115,24 @@ public class KafkaStatisticsHelperTests
     [Test]
     public void CreateMetricsDictionary_PerBrokerReqMetrics_EmittedWithTotalSuffix()
     {
+        // Cumulative counters are recorded at all values (including 0) so the drain maintains
+        // a continuous baseline for rate derivation. Zero-valued counters are still filtered
+        // at wire-emission time in the drain (via the valueToReport > 0 gate).
         var stats = KafkaStatisticsHelper.ParseStatistics(ValidConsumerStatisticsJson);
         var metrics = KafkaStatisticsHelper.CreateMetricsDictionary(stats);
 
-        // Data broker: fetch non-zero, heartbeat zero (filtered)
+        // Data broker: fetch=1216, heartbeat=0 — both present; heartbeat's value is 0.
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-node-metrics/node/1/client/consumer-test/fetch-total"));
         Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-node-metrics/node/1/client/consumer-test/fetch-total"].Value, Is.EqualTo(1216));
-        Assert.That(metrics, Does.Not.ContainKey("MessageBroker/Kafka/Internal/consumer-node-metrics/node/1/client/consumer-test/heartbeat-total"));
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-node-metrics/node/1/client/consumer-test/heartbeat-total"));
+        Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-node-metrics/node/1/client/consumer-test/heartbeat-total"].Value, Is.EqualTo(0));
 
-        // Coordinator broker: heartbeat non-zero, fetch zero (filtered)
+        // Coordinator broker: heartbeat=36, commit=24, fetch=0 — all present.
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator/client/consumer-test/heartbeat-total"));
         Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator/client/consumer-test/commit-total"));
         Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator/client/consumer-test/commit-total"].Value, Is.EqualTo(24));
-        Assert.That(metrics, Does.Not.ContainKey("MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator/client/consumer-test/fetch-total"));
+        Assert.That(metrics, Contains.Key("MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator/client/consumer-test/fetch-total"));
+        Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-node-metrics/node/coordinator/client/consumer-test/fetch-total"].Value, Is.EqualTo(0));
     }
 
     [Test]

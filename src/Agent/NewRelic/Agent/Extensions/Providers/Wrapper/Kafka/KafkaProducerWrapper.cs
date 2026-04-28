@@ -27,7 +27,7 @@ public class KafkaProducerWrapper : IWrapper
         var topicPartition = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<TopicPartition>(0);
         var messageMetadata = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<MessageMetadata>(1);
 
-        Log.Finest($"KafkaProducerWrapper: BeforeWrappedMethod called, topic: '{topicPartition.Topic}', partition: {topicPartition.Partition}");
+        Log.Finest("KafkaProducerWrapper: BeforeWrappedMethod called, topic: '{0}', partition: {1}", topicPartition.Topic, topicPartition.Partition);
 
         var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Produce, MessageBrokerVendorConstants.Kafka, topicPartition.Topic);
 

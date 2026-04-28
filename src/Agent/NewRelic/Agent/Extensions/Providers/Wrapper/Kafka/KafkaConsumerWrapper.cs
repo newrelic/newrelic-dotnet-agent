@@ -63,7 +63,7 @@ public class KafkaConsumerWrapper : IWrapper
                 // result is actually ConsumeResult<TKey, TValue> - but, because of the generic parameters,
                 // we have to reference it as object so we can use VisibilityBypasser on it
                 var type = resultAsObject.GetType();
-                Log.Finest($"KafkaConsumerWrapper: Processing result of type: {type.Name}");
+                Log.Finest("KafkaConsumerWrapper: Processing result of type: {0}", type.Name);
 
                 // get the topic
                 string topic = null;
@@ -71,17 +71,17 @@ public class KafkaConsumerWrapper : IWrapper
                 {
                     var topicAccessor = TopicAccessorDictionary.GetOrAdd(type, GetTopicAccessorFunc);
                     topic = topicAccessor(resultAsObject);
-                    Log.Finest($"KafkaConsumerWrapper: Extracted topic name: '{topic}'");
+                    Log.Finest("KafkaConsumerWrapper: Extracted topic name: '{0}'", topic);
                 }
                 catch (Exception ex)
                 {
-                    Log.Finest($"KafkaConsumerWrapper: Failed to extract topic name: {ex.Message}");
+                    Log.Finest("KafkaConsumerWrapper: Failed to extract topic name: {0}", ex.Message);
                     topic = "unknown"; // fallback
                 }
 
                 // set the segment name now that we have the topic
                 segment.SetMessageBrokerDestination(topic);
-                Log.Finest($"KafkaConsumerWrapper: Updated segment destination to: '{topic}'");
+                Log.Finest("KafkaConsumerWrapper: Updated segment destination to: '{0}'", topic);
 
                 if (KafkaHelper.TryGetBootstrapServersFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var bootstrapServers))
                 {

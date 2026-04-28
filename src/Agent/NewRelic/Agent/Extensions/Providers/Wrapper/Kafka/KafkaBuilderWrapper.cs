@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Extensions.Caching;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Helpers;
@@ -27,12 +28,17 @@ public class KafkaBuilderWrapper : IWrapper
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(2);
 
     private IAgent _currentAgent;
-    private readonly ConcurrentDictionary<object, string> _latestStatisticsPerClient = new();
-    private readonly ConcurrentDictionary<object, Dictionary<string, long>> _previousValuesPerClient = new();
-    private readonly ConcurrentDictionary<object, Dictionary<string, KafkaMetricValue>> _metricsPerClient = new();
-    private readonly ConcurrentDictionary<object, long> _previousTsPerClient = new();
+    // Per-client state is keyed by WeakReferenceKey<object> so that disposing a Kafka client
+    // does not hold it rooted until TTL eviction fires. Stale dictionary entries (whose weak
+    // target has been collected) are swept during the periodic TTL cleanup pass.
+    private readonly ConcurrentDictionary<WeakReferenceKey<object>, string> _latestStatisticsPerClient = new();
+    private readonly ConcurrentDictionary<WeakReferenceKey<object>, Dictionary<string, long>> _previousValuesPerClient = new();
+    private readonly ConcurrentDictionary<WeakReferenceKey<object>, Dictionary<string, KafkaMetricValue>> _metricsPerClient = new();
+    private readonly ConcurrentDictionary<WeakReferenceKey<object>, long> _previousTsPerClient = new();
     private readonly ConcurrentDictionary<Type, Func<object, object, object>> _setStatisticsCallerCache = new();
-    private readonly ConcurrentDictionary<object, DateTime> _clientLastSeen = new();
+    private readonly ConcurrentDictionary<Type, Func<object, object>> _statisticsHandlerGetterCache = new();
+    private readonly ConcurrentDictionary<Type, Action<object, object>> _statisticsHandlerFieldWriterCache = new();
+    private readonly ConcurrentDictionary<WeakReferenceKey<object>, DateTime> _clientLastSeen = new();
     private int _drainStarted;
     private volatile bool _metricsCollectionDisabled;
     private DateTime _lastCleanupTime;
@@ -50,13 +56,7 @@ public class KafkaBuilderWrapper : IWrapper
 
         Log.Finest("KafkaBuilderWrapper: BeforeWrappedMethod called for builder type: {0}", builder?.GetType().Name);
 
-        if (!_builderConfigGetterDictionary.TryGetValue(builder.GetType(), out var configGetter))
-        {
-            configGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<IEnumerable>(builder.GetType(), "Config");
-            _builderConfigGetterDictionary[builder.GetType()] = configGetter;
-        }
-
-        var configuration = configGetter(builder);
+        var configuration = GetBuilderConfig(builder);
         string bootstrapServers = null;
 
         try
@@ -160,6 +160,9 @@ public class KafkaBuilderWrapper : IWrapper
 
     /// <summary>
     /// Called by librdkafka on every statistics interval. Must be fast — just caches the JSON per client.
+    /// Allocates a new WeakReferenceKey per callback; if the client has already been seen, the dictionary
+    /// keeps its original key (hashcode+Equals match) and only updates the value, so the transient key is
+    /// immediately eligible for GC. Same allocation pattern as AwsSdk/AmazonServiceClientWrapper.
     /// </summary>
     private void StatisticsHandlerMethod(object client, string json)
     {
@@ -167,7 +170,7 @@ public class KafkaBuilderWrapper : IWrapper
             return;
 
         Log.Finest("KafkaBuilderWrapper: Statistics callback, JSON length: {0}", json?.Length ?? 0);
-        _latestStatisticsPerClient[client] = json;
+        _latestStatisticsPerClient[new WeakReferenceKey<object>(client)] = json;
     }
 
     /// <summary>
@@ -176,7 +179,12 @@ public class KafkaBuilderWrapper : IWrapper
     /// computes deltas for cumulative counters, and reports all metrics as gauges.
     /// Also runs periodic TTL eviction (every 2 minutes) to remove state for clients
     /// that have not reported statistics in the last 5 minutes.
-    /// On an unrecoverable error, permanently disables metrics collection for this instance.
+    ///
+    /// A single outer try/catch is deliberate: any exception — whether tied to one client
+    /// or the experimental API as a whole — disables metrics collection for the remainder
+    /// of this agent's lifetime. This is preferred over logging per failure: repeatedly
+    /// logging the same error floods customer logs, whereas disabling surfaces as a
+    /// customer bug report that we can then investigate directly.
     /// </summary>
     private void DrainAndReportMetrics()
     {
@@ -190,100 +198,93 @@ public class KafkaBuilderWrapper : IWrapper
 
             foreach (var clientEntry in _latestStatisticsPerClient)
             {
-                try
+                if (!_latestStatisticsPerClient.TryRemove(clientEntry.Key, out var json))
+                    continue;
+
+                Log.Debug("KafkaBuilderWrapper: Raw statistics JSON: {0}", json);
+
+                var stats = KafkaStatisticsHelper.ParseStatistics(json);
+                if (!KafkaStatisticsHelper.IsValid(stats))
                 {
-                    if (!_latestStatisticsPerClient.TryRemove(clientEntry.Key, out var json))
-                        continue;
+                    Log.Debug("KafkaBuilderWrapper: Failed to parse Kafka statistics or data is invalid");
+                    continue;
+                }
 
-                    Log.Debug("KafkaBuilderWrapper: Raw statistics JSON: {0}", json);
+                Log.Debug("KafkaBuilderWrapper: Draining stats - ClientId: {0}, Type: {1}", KafkaStatisticsHelper.GetClientId(stats), stats.Type);
 
-                    var stats = KafkaStatisticsHelper.ParseStatistics(json);
-                    if (!KafkaStatisticsHelper.IsValid(stats))
+                var metricsDict = _metricsPerClient.GetOrAdd(clientEntry.Key, _ => new Dictionary<string, KafkaMetricValue>());
+                KafkaStatisticsHelper.PopulateMetricsDictionary(metricsDict, stats);
+                var previousValues = _previousValuesPerClient.GetOrAdd(clientEntry.Key, _ => new Dictionary<string, long>(metricsDict.Count));
+
+                // Elapsed seconds derived from librdkafka's own monotonic clock (ts, in microseconds).
+                // Both the delta numerator and this denominator come from the same librdkafka snapshot pair,
+                // so rates are independent of our scheduler's timing accuracy.
+                var previousTs = _previousTsPerClient.TryGetValue(clientEntry.Key, out var pts) ? pts : 0L;
+                double elapsedSeconds;
+
+                if (stats.Ts == 0)
+                {
+                    // ts is documented in librdkafka STATISTICS.md as an ever-increasing monotonic clock
+                    // (microseconds). A zero value means the field is absent or unsupported by this version
+                    // of librdkafka. Rate metrics cannot be computed without it.
+                    Log.Debug("KafkaBuilderWrapper: Statistics payload for client '{0}' has no 'ts' timestamp field — rate metrics will not be reported for this client.", KafkaStatisticsHelper.GetClientId(stats));
+                    elapsedSeconds = 0.0;
+                }
+                else if (previousTs == 0)
+                {
+                    // First observation for this client — no prior ts to form a delta against. Normal on startup.
+                    elapsedSeconds = 0.0;
+                }
+                else
+                {
+                    elapsedSeconds = (stats.Ts - previousTs) / 1_000_000.0;
+                }
+
+                foreach (var kvp in metricsDict)
+                {
+                    float valueToReport;
+
+                    if (kvp.Value.MetricType == KafkaMetricType.Cumulative)
                     {
-                        Log.Debug("KafkaBuilderWrapper: Failed to parse Kafka statistics or data is invalid");
-                        continue;
-                    }
-
-                    Log.Debug("KafkaBuilderWrapper: Draining stats - ClientId: {0}, Type: {1}", KafkaStatisticsHelper.GetClientId(stats), stats.Type);
-
-                    var metricsDict = _metricsPerClient.GetOrAdd(clientEntry.Key, _ => new Dictionary<string, KafkaMetricValue>());
-                    KafkaStatisticsHelper.PopulateMetricsDictionary(metricsDict, stats);
-                    var previousValues = _previousValuesPerClient.GetOrAdd(clientEntry.Key, _ => new Dictionary<string, long>(metricsDict.Count));
-
-                    // Elapsed seconds derived from librdkafka's own monotonic clock (ts, in microseconds).
-                    // Both the delta numerator and this denominator come from the same librdkafka snapshot pair,
-                    // so rates are independent of our scheduler's timing accuracy.
-                    var previousTs = _previousTsPerClient.TryGetValue(clientEntry.Key, out var pts) ? pts : 0L;
-                    double elapsedSeconds;
-
-                    if (stats.Ts == 0)
-                    {
-                        // ts is documented in librdkafka STATISTICS.md as an ever-increasing monotonic clock
-                        // (microseconds). A zero value means the field is absent or unsupported by this version
-                        // of librdkafka. Rate metrics cannot be computed without it.
-                        Log.Debug("KafkaBuilderWrapper: Statistics payload for client '{0}' has no 'ts' timestamp field — rate metrics will not be reported for this client.", KafkaStatisticsHelper.GetClientId(stats));
-                        elapsedSeconds = 0.0;
-                    }
-                    else if (previousTs == 0)
-                    {
-                        // First observation for this client — no prior ts to form a delta against. Normal on startup.
-                        elapsedSeconds = 0.0;
-                    }
-                    else
-                    {
-                        elapsedSeconds = (stats.Ts - previousTs) / 1_000_000.0;
-                    }
-
-                    foreach (var kvp in metricsDict)
-                    {
-                        float valueToReport;
-
-                        if (kvp.Value.MetricType == KafkaMetricType.Cumulative)
+                        if (previousValues.TryGetValue(kvp.Key, out var prev))
                         {
-                            if (previousValues.TryGetValue(kvp.Key, out var prev))
-                            {
-                                var delta = kvp.Value.Value - prev;
-                                // Handle counter reset: if delta is negative, report the raw value
-                                valueToReport = delta >= 0 ? delta : kvp.Value.Value;
+                            var delta = kvp.Value.Value - prev;
+                            // Handle counter reset: if delta is negative, report the raw value
+                            valueToReport = delta >= 0 ? delta : kvp.Value.Value;
 
-                                // Rate = delta / elapsed seconds. Only emit when both observations are real
-                                // and elapsed time is meaningful (guards first observation and ts=0 payloads).
-                                if (elapsedSeconds > 0 && delta > 0)
-                                {
-                                    experimentalApi.RecordGaugeMetric(ToRateMetricName(kvp.Key), (float)(delta / elapsedSeconds));
-                                    reportedCount++;
-                                }
-                            }
-                            else
+                            // Rate = delta / elapsed seconds. Only emit when both observations are real
+                            // and elapsed time is meaningful (guards first observation and ts=0 payloads).
+                            if (elapsedSeconds > 0 && delta > 0)
                             {
-                                // First observation — report raw value (counters start at 0, so raw == delta from 0)
-                                valueToReport = kvp.Value.Value;
+                                experimentalApi.RecordGaugeMetric(ToRateMetricName(kvp.Key), (float)(delta / elapsedSeconds));
+                                reportedCount++;
                             }
-
-                            previousValues[kvp.Key] = kvp.Value.Value;
                         }
                         else
                         {
-                            // Gauge and WindowAvg: report raw value
+                            // First observation — report raw value (counters start at 0, so raw == delta from 0)
                             valueToReport = kvp.Value.Value;
                         }
 
-                        if (valueToReport > 0)
-                        {
-                            experimentalApi.RecordGaugeMetric(kvp.Key, valueToReport);
-                            reportedCount++;
-                        }
+                        previousValues[kvp.Key] = kvp.Value.Value;
+                    }
+                    else
+                    {
+                        // Gauge and WindowAvg: report raw value
+                        valueToReport = kvp.Value.Value;
                     }
 
-                    if (stats.Ts > 0)
-                        _previousTsPerClient[clientEntry.Key] = stats.Ts;
+                    if (valueToReport > 0)
+                    {
+                        experimentalApi.RecordGaugeMetric(kvp.Key, valueToReport);
+                        reportedCount++;
+                    }
+                }
 
-                    _clientLastSeen[clientEntry.Key] = DateTime.UtcNow;
-                }
-                catch (Exception ex)
-                {
-                    Log.Debug("KafkaBuilderWrapper: Error processing client metrics, skipping client: {0}", ex.Message);
-                }
+                if (stats.Ts > 0)
+                    _previousTsPerClient[clientEntry.Key] = stats.Ts;
+
+                _clientLastSeen[clientEntry.Key] = DateTime.UtcNow;
             }
 
             if (reportedCount > 0)
@@ -296,12 +297,14 @@ public class KafkaBuilderWrapper : IWrapper
                 var cutoff = now - ClientTtl;
                 foreach (var entry in _clientLastSeen)
                 {
-                    if (entry.Value < cutoff)
+                    // Evict if the client has been collected (weak ref dead) or has gone quiet past TTL.
+                    if (entry.Key.Value == null || entry.Value < cutoff)
                     {
                         _clientLastSeen.TryRemove(entry.Key, out _);
                         _previousValuesPerClient.TryRemove(entry.Key, out _);
                         _previousTsPerClient.TryRemove(entry.Key, out _);
                         _metricsPerClient.TryRemove(entry.Key, out _);
+                        _latestStatisticsPerClient.TryRemove(entry.Key, out _);
                     }
                 }
             }
@@ -315,15 +318,39 @@ public class KafkaBuilderWrapper : IWrapper
             _previousTsPerClient.Clear();
             _metricsPerClient.Clear();
             _clientLastSeen.Clear();
+            _currentAgent?.GetExperimentalApi().SimpleSchedulingService.StopExecuting(DrainAndReportMetrics);
         }
     }
 
     /// <summary>
-    /// Sets statistics handler on the Kafka builder using a VisibilityBypasser-generated IL delegate.
+    /// Installs our statistics handler on the Kafka builder. If the customer has already set a
+    /// statistics handler, our handler is composed with theirs via Delegate.Combine and the
+    /// composite is written directly to the backing field — Confluent.Kafka's public
+    /// SetStatisticsHandler throws on a second call, so we bypass it in that case.
+    /// Ours is placed first in the invocation list so our metric caching always runs even if
+    /// the customer's handler later throws.
     /// </summary>
-    private void SetStatisticsHandlerOnBuilder(object builder, object handler)
+    private void SetStatisticsHandlerOnBuilder(object builder, object ourHandler)
     {
-        var caller = _setStatisticsCallerCache.GetOrAdd(builder.GetType(), t =>
+        var builderType = builder.GetType();
+        var existingHandler = TryGetExistingStatisticsHandler(builderType, builder);
+
+        if (existingHandler != null)
+        {
+            var combined = Delegate.Combine((Delegate)ourHandler, (Delegate)existingHandler);
+            if (TryWriteStatisticsHandlerField(builderType, builder, combined))
+            {
+                Log.Debug("KafkaBuilderWrapper: Composed our statistics handler with customer's existing handler on {0}", builderType.Name);
+            }
+            else
+            {
+                Log.Info("KafkaBuilderWrapper: Customer statistics handler present and field-level composition failed — internal Kafka metrics will not be collected for this client");
+            }
+            return;
+        }
+
+        // No existing handler — use the public SetStatisticsHandler method.
+        var caller = _setStatisticsCallerCache.GetOrAdd(builderType, t =>
         {
             try
             {
@@ -336,14 +363,53 @@ public class KafkaBuilderWrapper : IWrapper
             }
         });
 
-        if (caller != null)
+        if (caller == null)
         {
-            caller(builder, handler);
+            Log.Info("KafkaBuilderWrapper: No SetStatisticsHandler method found on builder type {0}", builderType);
+            return;
+        }
+
+        try
+        {
+            caller(builder, ourHandler);
             Log.Finest("KafkaBuilderWrapper: SetStatisticsHandler invoked successfully");
         }
-        else
+        catch (Exception ex)
         {
-            Log.Info("KafkaBuilderWrapper: No SetStatisticsHandler methods found on builder type {0}", builder.GetType());
+            Log.Info("KafkaBuilderWrapper: SetStatisticsHandler failed on {0}: {1} — internal Kafka metrics will not be collected for this client", builderType.Name, ex.Message);
+        }
+    }
+
+    private object TryGetExistingStatisticsHandler(Type builderType, object builder)
+    {
+        try
+        {
+            var getter = _statisticsHandlerGetterCache.GetOrAdd(builderType, t =>
+                VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "StatisticsHandler"));
+            return getter(builder);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug("KafkaBuilderWrapper: Could not read existing StatisticsHandler from {0}: {1}", builderType.Name, ex.Message);
+            return null;
+        }
+    }
+
+    private bool TryWriteStatisticsHandlerField(Type builderType, object builder, Delegate value)
+    {
+        try
+        {
+            // Auto-property backing field name — the C# compiler emits "<PropertyName>k__BackingField"
+            // for auto-properties. Stable across modern C# compilers.
+            var writer = _statisticsHandlerFieldWriterCache.GetOrAdd(builderType, t =>
+                VisibilityBypasser.Instance.GenerateFieldWriteAccessor<object>(t, "<StatisticsHandler>k__BackingField"));
+            writer(builder, value);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Debug("KafkaBuilderWrapper: Could not write StatisticsHandler backing field on {0}: {1}", builderType.Name, ex.Message);
+            return false;
         }
     }
 
@@ -361,6 +427,18 @@ public class KafkaBuilderWrapper : IWrapper
             setConfigMethod.Invoke(builder, new object[] { "statistics.interval.ms", "5000" });
             Log.Finest("KafkaBuilderWrapper: Set statistics interval to 5000ms");
         }
+    }
+
+    /// <summary>
+    /// Returns the builder's Config enumerable via a cached property accessor. Used both when
+    /// reading bootstrap servers and when checking whether the customer has already configured
+    /// a statistics interval.
+    /// </summary>
+    private IEnumerable GetBuilderConfig(object builder)
+    {
+        var configGetter = _builderConfigGetterDictionary.GetOrAdd(builder.GetType(),
+            t => VisibilityBypasser.Instance.GeneratePropertyAccessor<IEnumerable>(t, "Config"));
+        return configGetter(builder);
     }
 
     /// <summary>
@@ -383,13 +461,7 @@ public class KafkaBuilderWrapper : IWrapper
     {
         try
         {
-            if (!_builderConfigGetterDictionary.TryGetValue(builder.GetType(), out var configGetter))
-            {
-                configGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<IEnumerable>(builder.GetType(), "Config");
-                _builderConfigGetterDictionary[builder.GetType()] = configGetter;
-            }
-
-            var config = configGetter(builder);
+            var config = GetBuilderConfig(builder);
             if (config == null)
                 return true;
 
