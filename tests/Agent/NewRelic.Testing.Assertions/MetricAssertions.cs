@@ -4,26 +4,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NewRelic.Agent.Extensions.Helpers;
 using NUnit.Framework;
 
-namespace Agent.Extensions.Tests.Helpers;
+namespace NewRelic.Testing.Assertions;
 
 /// <summary>
-/// Test assertion helpers for metric dictionaries produced by
-/// <see cref="KafkaStatisticsHelper"/>. Prefer these over the bare
-/// <c>Assert.That(metrics, Contains.Key("…"))</c> form — the failure messages
-/// list nearby keys so you can see the likely typo or rename at a glance.
+/// Test assertion helpers for metric dictionaries keyed by metric name. Prefer these
+/// over bare <c>Assert.That(metrics, Contains.Key("…"))</c> — on failure, ExpectKey
+/// lists the keys that share the longest common prefix with the expected one, so the
+/// failure message points at the likely typo or rename instead of just "key missing".
 /// </summary>
-internal static class MetricAssertions
+public static class MetricAssertions
 {
     /// <summary>
     /// Asserts that <paramref name="expectedKey"/> is present in <paramref name="metrics"/>.
     /// On failure, lists up to 10 keys that share the longest possible prefix with the
-    /// expected key, so the message points at likely typos or renamed paths instead of
-    /// just "key missing".
+    /// expected key.
     /// </summary>
-    public static void ExpectKey(Dictionary<string, KafkaMetricValue> metrics, string expectedKey)
+    public static void ExpectKey<TValue>(IDictionary<string, TValue> metrics, string expectedKey)
     {
         if (metrics.ContainsKey(expectedKey))
             return;
@@ -52,13 +50,13 @@ internal static class MetricAssertions
 
     /// <summary>
     /// Asserts that <paramref name="expectedAbsentKey"/> is NOT present in
-    /// <paramref name="metrics"/>. Used for zero-filtering tests and rename-regression guards.
+    /// <paramref name="metrics"/>. Useful for filter-behavior checks and rename-regression guards.
     /// </summary>
-    public static void ExpectNoKey(Dictionary<string, KafkaMetricValue> metrics, string expectedAbsentKey)
+    public static void ExpectNoKey<TValue>(IDictionary<string, TValue> metrics, string expectedAbsentKey)
     {
         if (!metrics.ContainsKey(expectedAbsentKey))
             return;
 
-        Assert.Fail($"Metric '{expectedAbsentKey}' was present but should have been filtered. Value: {metrics[expectedAbsentKey].Value}, Type: {metrics[expectedAbsentKey].MetricType}");
+        Assert.Fail($"Metric '{expectedAbsentKey}' was present but should have been absent. Value: {metrics[expectedAbsentKey]}");
     }
 }
