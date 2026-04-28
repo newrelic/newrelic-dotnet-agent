@@ -94,6 +94,8 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     /// </remarks>
     public void Start()
     {
+        // TODO:
+        StartThreadProfilingSession(0, 10 * 1000, 0);
     }
 
     /// <summary>
@@ -320,7 +322,8 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
 
             var profileData = SerializeData();
 
-            _dataTransportService.SendThreadProfilingData(profileData);
+            // TODO: 
+            //_dataTransportService.SendThreadProfilingData(profileData);
 
             LogFailedProfiles();
 

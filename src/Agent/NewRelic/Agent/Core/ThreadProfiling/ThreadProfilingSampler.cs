@@ -74,17 +74,19 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
     {
         int samples = 0;
 
-        var lastTickOfSamplingPeriod = DateTime.UtcNow.AddMilliseconds(durationInMsec).Ticks;
+        // TODO:
+        // var lastTickOfSamplingPeriod = DateTime.UtcNow.AddMilliseconds(durationInMsec).Ticks;
         try
         {
             while (!_shutdownEvent.Wait((int)frequencyInMsec))
             {
-                if (DateTime.UtcNow.Ticks > lastTickOfSamplingPeriod)
-                {
-                    _shutdownEvent.Set();
-                    Log.Debug("InternalPolling_WaitCallback: Duration Elapsed -- Stopping Sampler");
-                    break;
-                }
+                // TODO:
+                //if (DateTime.UtcNow.Ticks > lastTickOfSamplingPeriod)
+                //{
+                //    _shutdownEvent.Set();
+                //    Log.Debug("InternalPolling_WaitCallback: Duration Elapsed -- Stopping Sampler");
+                //    break;
+                //}
 
                 try
                 {
