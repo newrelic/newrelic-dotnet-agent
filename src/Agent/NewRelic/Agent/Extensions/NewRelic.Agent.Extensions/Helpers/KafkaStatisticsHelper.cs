@@ -363,7 +363,11 @@ public static class KafkaStatisticsHelper
     }
 
     /// <summary>
-    /// Creates a new dictionary of metric names to values from parsed statistics.
+    /// Test-only convenience: allocates a dictionary and populates it in one call. Not a
+    /// supported public API — production code must use <see cref="PopulateMetricsDictionary"/>
+    /// so the buffer can be reused across drains without reallocating. Kept at <c>public</c>
+    /// visibility only because the test assembly is not a strong-name friend of this one;
+    /// do not take a dependency on this method from production code or instrumentation wrappers.
     /// </summary>
     public static Dictionary<string, KafkaMetricValue> CreateMetricsDictionary(KafkaStatistics stats)
     {
