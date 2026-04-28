@@ -95,7 +95,7 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     public void Start()
     {
         // TODO:
-        StartThreadProfilingSession(0, 10 * 1000, 0);
+        StartThreadProfilingSession(0, 1 * 1000, 0);
     }
 
     /// <summary>
