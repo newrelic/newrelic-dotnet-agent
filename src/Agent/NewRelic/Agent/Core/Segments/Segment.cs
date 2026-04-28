@@ -113,17 +113,17 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
 
     public Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData)
     {
+        MethodCallData = methodCallData;
+        Data = new MethodSegmentData(methodCallData.TypeName, methodCallData.MethodName);
+        Combinable = false;
+        IsLeaf = false;
+        IsAsync = methodCallData.IsAsync;
         ThreadId = transactionSegmentState.CurrentManagedThreadId;
         RelativeStartTime = transactionSegmentState.GetRelativeTime();
         _transactionSegmentState = transactionSegmentState;
         ParentUniqueId = transactionSegmentState.ParentSegmentId();
         UniqueId = transactionSegmentState.CallStackPush(this);
-        MethodCallData = methodCallData;
-        Data = new MethodSegmentData(methodCallData.TypeName, methodCallData.MethodName);
         Data.AttachSegmentDataState(this);
-        Combinable = false;
-        IsLeaf = false;
-        IsAsync = methodCallData.IsAsync;
     }
 
     /// <summary>
@@ -135,18 +135,18 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     /// <param name="relativeEndTime"></param>
     public Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData, TimeSpan relativeStartTime, TimeSpan relativeEndTime)
     {
+        MethodCallData = methodCallData;
+        Data = new MethodSegmentData(methodCallData.TypeName, methodCallData.MethodName);
+        Combinable = false;
+        IsLeaf = true;
+        IsAsync = methodCallData.IsAsync;
         ThreadId = transactionSegmentState.CurrentManagedThreadId;
         RelativeStartTime = relativeStartTime;
         RelativeEndTime = relativeEndTime;
         _transactionSegmentState = transactionSegmentState;
         ParentUniqueId = transactionSegmentState.ParentSegmentId();
         UniqueId = transactionSegmentState.CallStackPush(this);
-        MethodCallData = methodCallData;
-        Data = new MethodSegmentData(methodCallData.TypeName, methodCallData.MethodName);
         Data.AttachSegmentDataState(this);
-        Combinable = false;
-        IsLeaf = true;
-        IsAsync = methodCallData.IsAsync;
     }
 
     /// <summary>
