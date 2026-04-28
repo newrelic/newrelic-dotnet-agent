@@ -512,11 +512,11 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         {
             return;
         }
-        if (Data == null) {
-            var methodName = MethodCallData != null ? $"{MethodCallData.TypeName}.{MethodCallData.MethodName}" : "UnknownMethod";
-            Log.Error("Data is null in Segment.AddMetricStats, methodName={0}.", methodName);
-            //return;
-        }
+        //if (Data == null) {
+        //    var methodName = MethodCallData != null ? $"{MethodCallData.TypeName}.{MethodCallData.MethodName}" : "UnknownMethod";
+        //    Log.Error("Data is null in Segment.AddMetricStats, methodName={0}.", methodName);
+        //    //return;
+        //}
         Data.AddMetricStats(this, TotalChildDuration, txStats, configService);
     }
 
