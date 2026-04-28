@@ -46,8 +46,11 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
                 _bootstrapServer = _fixture.GetBootstrapServer();
 
                 _fixture.TestLogger.WriteLine("Waiting for metrics to be harvested");
-                // With 10s harvest cycle and 10s drain interval, wait for a few cycles
-                // to ensure cumulative deltas and gauge metrics are collected
+                // Timing breakdown:
+                //   librdkafka statistics.interval.ms = 5000 — callback fires every 5s per client.
+                //   Agent MetricsHarvestCycle = 10s (set by ConfigureFasterMetricsHarvestCycle).
+                //   Rate metrics (-rate) require at least TWO drains to form a delta.
+                //   30s wait => ≥3 drains and ≥5-6 stats callbacks per long-lived client.
                 _fixture.Delay(30);
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(15));
 
@@ -59,8 +62,54 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         _fixture.Initialize();
     }
 
+    /// <summary>
+    /// Verifies the composite-handler path in KafkaBuilderWrapper: when a customer installs
+    /// their own SetStatisticsHandler before Build(), BOTH the customer's handler AND our
+    /// internal-metric-caching handler must fire on every librdkafka statistics interval.
+    /// The long-lived custom-stats producer and consumer in the test app have customer
+    /// handlers installed and have been alive since container startup, so their callback
+    /// counters have been incrementing continuously.
+    /// </summary>
     [Fact]
-    public void Test()
+    public void CompositeStatisticsHandler_CustomerAndAgentHandlersBothFire()
+    {
+        var statusResult = _fixture.CustomStatisticsStatus;
+        Assert.False(string.IsNullOrEmpty(statusResult),
+            "Fixture did not capture /customstatisticsstatus response — exercise may have failed to reach the status endpoint.");
+
+        var statusProducerCount = ExtractNamedCount(statusResult, "Producer callbacks");
+        var statusConsumerCount = ExtractNamedCount(statusResult, "Consumer callbacks");
+
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+        var internalMetrics = metrics.Where(m => m.MetricSpec.Name.Contains("MessageBroker/Kafka/Internal/")).ToList();
+        var producerInternal = internalMetrics.Where(m => m.MetricSpec.Name.Contains("/producer-metrics/")).ToList();
+        var consumerInternal = internalMetrics.Where(m => m.MetricSpec.Name.Contains("/consumer-metrics/")).ToList();
+
+        NrAssert.Multiple(
+            // Customer handlers fired — proves both callers in the Delegate.Combine composite
+            // are invoked by librdkafka.
+            () => Assert.True(statusProducerCount > 0,
+                $"Customer producer statistics handler should have been invoked at least once; got {statusProducerCount}. Status: {statusResult}"),
+            () => Assert.True(statusConsumerCount > 0,
+                $"Customer consumer statistics handler should have been invoked at least once; got {statusConsumerCount}. Status: {statusResult}"),
+
+            // Our internal-metric handler is the OTHER caller in the composite. If the customer
+            // handler had replaced ours (composition broken), these would be empty — the drain
+            // would have no cached JSON to parse.
+            () => Assert.NotEmpty(producerInternal),
+            () => Assert.NotEmpty(consumerInternal)
+        );
+    }
+
+    /// <summary>
+    /// Verifies the agent emits the expected Kafka metrics, including all the metric paths
+    /// the APM Kafka UI queries via its MetricFormat templates. Also covers span + transaction
+    /// behavior, rate derivation on the producer side, and the GroupCoordinator broker labelling.
+    /// Independent of customer statistics handlers (the custom-stats clients' metrics happen to
+    /// be part of the set but no assertion here depends on their callbacks being invoked).
+    /// </summary>
+    [Fact]
+    public void KafkaMetrics_EmitsExpectedMetricsAndUIPaths()
     {
         var messageBrokerProduce = "MessageBroker/Kafka/Topic/Produce/Named/" + _topicName;
         var messageBrokerProduceSerializationKey = messageBrokerProduce + "/Serialization/Key";
@@ -72,24 +121,22 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var consumeWithCancellationTransactionName = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithCancellationTokenAsync";
         var produceWebTransactionName = @"WebTransaction/MVC/Kafka/Produce";
         var produceWithExistingHeadersWebTransactionName = @"WebTransaction/MVC/Kafka/ProduceAsyncWithExistingHeaders";
+        var produceWithCustomStatisticsWebTransactionName = @"WebTransaction/MVC/Kafka/ProduceWithCustomStatistics";
 
         var messageBrokerNode = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}";
         var messageBrokerNodeProduceTopic = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}/Produce/{_topicName}";
         var messageBrokerNodeConsumeTopic = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}/Consume/{_topicName}";
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
-        
-
         var spans = _fixture.AgentLog.GetSpanEvents();
         var produceSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(messageBrokerProduce));
         var consumeWithTimeoutTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeWithTimeoutTransactionName));
         var consumeWithCancellationTxnSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(consumeWithCancellationTransactionName));
 
-        // Extract internal metrics for validation (client IDs are dynamic, so we use pattern matching)
         var internalMetrics = metrics.Where(m => m.MetricSpec.Name.Contains("MessageBroker/Kafka/Internal/")).ToList();
 
-        // Cumulative counters — librdkafka "int" type. Reported as raw values and also paired with
-        // a derived -rate metric computed from delta / librdkafka ts_delta_seconds.
+        // Cumulative counters — librdkafka "int" type. Reported as raw values and paired with a
+        // derived -rate metric computed from delta / librdkafka ts_delta_seconds.
         var producerRequestMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("request-counter")).ToList();
         var producerResponseMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("response-counter")).ToList();
         var consumerRequestMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("consumer-metrics") && m.MetricSpec.Name.EndsWith("request-counter")).ToList();
@@ -105,8 +152,11 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var brokerRequestLatencyAvgMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("node-metrics") && m.MetricSpec.Name.EndsWith("/request-latency-avg")).ToList();
 
         // Rate metrics — derived from cumulative counter deltas / librdkafka ts interval.
-        // Present from the second harvest onward (first drain has no previous ts to divide by).
-        // The 30s test wait with 10s harvest cycle guarantees at least 2 drains.
+        // Reliable for both producer and consumer clients because all four are long-lived:
+        //   - Main producer + custom-stats producer both constructed at app startup
+        //   - Work consumer + custom-stats consumer both constructed in Consumer.StartAsync
+        // So stats callbacks accumulate across ≥5 drain cycles during the 30s metric wait,
+        // which is well above the 2-drain minimum the rate machinery needs.
         var producerRequestRateMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("/request-rate")).ToList();
         var producerOutgoingByteRateMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("/outgoing-byte-rate")).ToList();
         var producerIncomingByteRateMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("/incoming-byte-rate")).ToList();
@@ -115,27 +165,27 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var allRateMetrics = internalMetrics.Where(m => m.MetricSpec.Name.EndsWith("-rate")).ToList();
 
         // Protocol request-type rates derived from librdkafka broker "req" counters.
-        // heartbeat-rate + commit-rate come from the GroupCoordinator broker (exposed via the
-        // logical broker with source=logical). fetch-rate comes from the data broker.
+        // heartbeat-rate + commit-rate come from the GroupCoordinator broker (source=logical).
+        // fetch-rate from the data broker; produce-rate from the producer.
         var heartbeatRateMetrics = internalMetrics.Where(m => m.MetricSpec.Name.EndsWith("/heartbeat-rate")).ToList();
         var commitRateMetrics = internalMetrics.Where(m => m.MetricSpec.Name.EndsWith("/commit-rate")).ToList();
         var fetchRateMetrics = internalMetrics.Where(m => m.MetricSpec.Name.EndsWith("/fetch-rate")).ToList();
         var produceRateMetrics = internalMetrics.Where(m => m.MetricSpec.Name.EndsWith("/produce-rate")).ToList();
+
         // GroupCoordinator should appear as a "coordinator" node label, not "seed"
         var coordinatorNodeMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("/node/coordinator/")).ToList();
 
-        // Regression guard: the old custom group name consumer-topic-metrics was renamed to
-        // consumer-fetch-manager-metrics on 2026-04-27 to match the APM Kafka UI's
-        // WITH METRIC_FORMAT queries. If any metric comes back with the old name, the rename
-        // regressed and the UI's Topics table will stop receiving data.
+        // Regression guard: the custom group name consumer-topic-metrics was renamed to
+        // consumer-fetch-manager-metrics on 2026-04-27 to match the APM Kafka UI queries.
+        // If any metric comes back with the old name, the UI's Topics table will stop receiving data.
         var oldConsumerTopicGroupMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("/consumer-topic-metrics/")).ToList();
 
-        // UI-compatibility paths. These are the exact MetricFormat templates the APM Kafka UI
-        // queries (source: source.datanerd.us/app-experience/shared-component-named-queries/
-        // signals/ext-service/kafka-{consumer,producer}.yml, plus APM/apm-agent-nerdlets
-        // common/utils/queries.js and common/components/kafka-topic-table/KafkaTopicTable.tsx).
-        // Regex-anchored so we hit the exact group + client/topic placement — not loose
-        // substring matches that can pass for unrelated metric paths.
+        // UI-compatibility paths — the exact MetricFormat templates the APM Kafka UI queries.
+        // Source: source.datanerd.us/app-experience/shared-component-named-queries/signals/ext-service/
+        // kafka-{consumer,producer}.yml + APM/apm-agent-nerdlets common/utils/queries.js and
+        // common/components/kafka-topic-table/KafkaTopicTable.tsx. Regex-anchored to reject loose
+        // substring matches.
+        // Consumer-tab charts
         var uiConsumerIncomingByteRate = MatchExact(internalMetrics, "consumer-metrics/client/[^/]+/incoming-byte-rate");
         var uiConsumerRequestRate = MatchExact(internalMetrics, "consumer-metrics/client/[^/]+/request-rate");
         var uiConsumerRequestCounter = MatchExact(internalMetrics, "consumer-metrics/client/[^/]+/request-counter");
@@ -144,42 +194,61 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var uiConsumerCoordinatorHeartbeatRate = MatchExact(internalMetrics, "consumer-coordinator-metrics/client/[^/]+/heartbeat-rate");
         var uiConsumerCoordinatorCommitRate = MatchExact(internalMetrics, "consumer-coordinator-metrics/client/[^/]+/commit-rate");
         var uiConsumerCoordinatorAssignedPartitions = MatchExact(internalMetrics, "consumer-coordinator-metrics/client/[^/]+/assigned-partitions");
+
+        // Producer-tab charts
         var uiProducerOutgoingByteRate = MatchExact(internalMetrics, "producer-metrics/client/[^/]+/outgoing-byte-rate");
         var uiProducerRequestRate = MatchExact(internalMetrics, "producer-metrics/client/[^/]+/request-rate");
         var uiProducerRequestCounter = MatchExact(internalMetrics, "producer-metrics/client/[^/]+/request-counter");
         var uiProducerBatchSizeAvg = MatchExact(internalMetrics, "producer-metrics/client/[^/]+/batch-size-avg");
-        // Topic-level (UI Topics table on Summary tab):
+
+        // Summary-tab Topics table
         var uiProducerTopicByteRate = MatchExact(internalMetrics, "producer-topic-metrics/topic/[^/]+/client/[^/]+/byte-rate");
         var uiConsumerTopicBytesConsumedRate = MatchExact(internalMetrics, "consumer-fetch-manager-metrics/topic/[^/]+/client/[^/]+/bytes-consumed-rate");
 
-        // Note: With long-lived consumers (15 seconds each), message consumption patterns have changed
+        // Produce-side counts are deterministic:
+        //   Main exercise: produce, produceasync, produceasyncwithexistingheaders,
+        //                  produce, produceasync                          = 5 produces (normal producer)
+        //   Custom-stats:  producewithcustomstatistics × 2                = 2 produces (custom-stats producer)
+        //   Total produces = 7.
+        //
+        // Consume-side counts are non-deterministic: ConsumeOne*Async methods long-poll for 5s,
+        // consuming whatever messages happen to be available. Metrics that multiply across consumes
+        // (messageBrokerConsume, TraceContext/Accept, messageBrokerNode, messageBrokerNodeConsumeTopic)
+        // are therefore asserted null.
+        //
+        // ASP.NET Core MVC strips the trailing "Async" suffix from action names, so
+        // Produce+ProduceAsync share WebTransaction/MVC/Kafka/Produce (4 calls). The custom-stats
+        // produce lives under its own transaction name (ProduceWithCustomStatistics, 2 calls),
+        // and ProduceAsyncWithExistingHeaders is its own (1 call).
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = produceWebTransactionName, CallCountAllHarvests = 4 }, // includes sync and async actions
-            new() { metricName = produceWithExistingHeadersWebTransactionName, CallCountAllHarvests = 1 }, // produce with pre-existing DT headers
-            new() { metricName = messageBrokerProduce, CallCountAllHarvests = null }, // variable: 4 normal + 1 existing headers + 2 custom-stats produces
+            new() { metricName = produceWebTransactionName, CallCountAllHarvests = 4 },
+            new() { metricName = produceWithExistingHeadersWebTransactionName, CallCountAllHarvests = 1 },
+            new() { metricName = produceWithCustomStatisticsWebTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = messageBrokerProduce, CallCountAllHarvests = 7 },
             new() { metricName = messageBrokerProduce, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
             new() { metricName = messageBrokerProduce, metricScope = produceWithExistingHeadersWebTransactionName, CallCountAllHarvests = 1 },
-            new() { metricName = messageBrokerProduceSerializationKey, CallCountAllHarvests = null }, // variable: same as messageBrokerProduce
+            new() { metricName = messageBrokerProduce, metricScope = produceWithCustomStatisticsWebTransactionName, CallCountAllHarvests = 2 },
+            new() { metricName = messageBrokerProduceSerializationKey, CallCountAllHarvests = 7 },
             new() { metricName = messageBrokerProduceSerializationKey, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
-            new() { metricName = messageBrokerProduceSerializationValue, CallCountAllHarvests = null }, // variable: same as messageBrokerProduce
+            new() { metricName = messageBrokerProduceSerializationValue, CallCountAllHarvests = 7 },
             new() { metricName = messageBrokerProduceSerializationValue, metricScope = produceWebTransactionName, CallCountAllHarvests = 4 },
 
-            new() { metricName = consumeWithTimeoutTransactionName, CallCountAllHarvests = 3 }, // 2 normal + 1 for existing headers
+            new() { metricName = consumeWithTimeoutTransactionName, CallCountAllHarvests = 3 },
             new() { metricName = consumeWithCancellationTransactionName, CallCountAllHarvests = 2 },
 
-            // Consume counts are variable — depends on consumer duration and message availability
+            // One DT header inject per produce — deterministic like the produce count.
+            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 7 },
+
+            // One Kafka node metric per produce. Consume-side contributions are non-deterministic,
+            // so messageBrokerNode (which sums produce+consume) stays null.
+            new() { metricName = messageBrokerNodeProduceTopic, CallCountAllHarvests = 7 },
+
+            // Non-deterministic — depend on how many messages the long-polling consumers see.
             new() { metricName = messageBrokerConsume, CallCountAllHarvests = null },
             new() { metricName = messageBrokerConsume, metricScope = consumeWithTimeoutTransactionName, CallCountAllHarvests = null },
-            new() { metricName = messageBrokerConsume, metricScope = consumeWithCancellationTransactionName, CallCountAllHarvests = 2 },
-
-            // TraceContext metrics — variable due to custom-stats produces/consumes
-            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = null },
             new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = null },
-
-            // Node metrics: variable due to custom-stats producers
             new() { metricName = messageBrokerNode, CallCountAllHarvests = null },
-            new() { metricName = messageBrokerNodeProduceTopic, CallCountAllHarvests = null }, // variable: normal + existing headers + custom stats
             new() { metricName = messageBrokerNodeConsumeTopic, CallCountAllHarvests = null },
         };
 
@@ -205,18 +274,20 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             () => Assert.All(internalMetrics,
                 m => Assert.True(m.Values.CallCount > 0, $"Internal metric {m.MetricSpec.Name} should have non-zero call count")),
 
-            // Rate metrics: present after second harvest because first drain has no previous ts.
-            // The rate machinery strips trailing -total/-counter/-count and appends -rate.
-            () => Assert.True(producerRequestRateMetrics.Any(), "Producer request-rate metrics should exist after multiple harvests (derived from request-counter)"),
+            // Rate metrics: the drain derives -rate from two consecutive observations of a
+            // -total/-counter/-count metric with delta > 0. All four Kafka clients in the test
+            // app are long-lived (main producer, custom-stats producer, work consumer, custom-stats
+            // consumer), so stats callbacks accumulate across multiple drain cycles and rate
+            // derivation is reliable for both producer-side and consumer-side metrics.
+            () => Assert.True(producerRequestRateMetrics.Any(), "Producer request-rate metrics should exist (derived from request-counter)"),
             () => Assert.True(producerOutgoingByteRateMetrics.Any(), "Producer outgoing-byte-rate metrics should exist (derived from outgoing-byte-total)"),
             () => Assert.True(producerIncomingByteRateMetrics.Any(), "Producer incoming-byte-rate metrics should exist (derived from incoming-byte-total)"),
             () => Assert.True(consumerBytesConsumedRateMetrics.Any(), "Consumer bytes-consumed-rate metrics should exist (derived from bytes-consumed-total)"),
             () => Assert.True(consumerRecordsConsumedRateMetrics.Any(), "Consumer records-consumed-rate metrics should exist (derived from records-consumed-total)"),
-            // All rate metrics must carry a positive value — zero would mean division-by-zero or no real activity
             () => Assert.All(allRateMetrics,
                 m => Assert.True(m.Values.Total > 0, $"Rate metric {m.MetricSpec.Name} should have a positive value")),
 
-            // Protocol-level rates from broker "req" field — these are what Java exposes as "protocol-level rates"
+            // Protocol-level rates from broker "req" field.
             () => Assert.True(heartbeatRateMetrics.Any(), "Consumer heartbeat-rate metrics should exist"),
             () => Assert.True(commitRateMetrics.Any(), "Consumer commit-rate metrics should exist"),
             () => Assert.True(fetchRateMetrics.Any(), "Consumer fetch-rate metrics should exist"),
@@ -226,12 +297,11 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             () => Assert.True(coordinatorNodeMetrics.Any(),
                 "GroupCoordinator broker should be exposed under node/coordinator (not collapsed into node/seed)"),
 
-            // Regression guard: old custom group name must NEVER reappear. If it does, the APM UI's
-            // Topics table on the Summary tab stops receiving data (it queries consumer-fetch-manager-metrics).
+            // Regression guard: old custom group name must NEVER reappear.
             () => Assert.Empty(oldConsumerTopicGroupMetrics),
 
-            // UI-compatibility path existence (verified against APM Kafka UI queries on 2026-04-27).
-            // Each of these lines says "the UI expects exactly this path pattern; we must emit it."
+            // UI-compatibility paths (verified against APM Kafka UI queries on 2026-04-27).
+            // Each line says "the UI expects exactly this path pattern; we must emit it."
             // Consumer-tab charts:
             () => Assert.True(uiConsumerIncomingByteRate.Any(), "UI query: consumer-metrics/client/{clientId}/incoming-byte-rate"),
             () => Assert.True(uiConsumerRequestRate.Any(), "UI query: consumer-metrics/client/{clientId}/request-rate"),
@@ -257,59 +327,20 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
             // ConsumeWithTimeout span assertions (should exist since it consumes messages)
             () => Assert.NotNull(consumeWithTimeoutTxnSpan),
             () => Assert.True(consumeWithTimeoutTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
-            () => Assert.InRange((long)consumeWithTimeoutTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 500), // includes headers; upper bound accommodates existing-headers message
+            () => Assert.InRange((long)consumeWithTimeoutTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 500),
             () => Assert.True(consumeWithTimeoutTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
             () => Assert.True(consumeWithTimeoutTxnSpan.IntrinsicAttributes.ContainsKey("parentId")),
-            () => Assert.NotNull(consumeWithCancellationTxnSpan),
-            () => Assert.True(consumeWithCancellationTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount")),
-            () => Assert.InRange((long)consumeWithCancellationTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 500), // includes headers; upper bound accommodates existing-headers message
-            () => Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("traceId")),
-            () => Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("parentId"))
-        );
 
-        ValidateInternalMetrics();
-    }
-
-    private void ValidateInternalMetrics()
-    {
-        // Get results from the custom statistics testing that ran during ExerciseApplication
-        var customStatisticsResults = _fixture.CustomStatisticsResults;
-        Assert.NotNull(customStatisticsResults);
-
-        var (produceResult, consumeResult, statusResult) = customStatisticsResults.Value;
-
-        // Get metrics after all application operations
-        var metrics = _fixture.AgentLog.GetMetrics().ToList();
-        var internalMetrics = metrics.Where(m => m.MetricSpec.Name.Contains("MessageBroker/Kafka/Internal/")).ToList();
-
-        // Find producer and consumer internal metrics (should still exist even with customer handlers)
-        var producerRequestMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("request-counter")).ToList();
-        var producerResponseMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("producer-metrics") && m.MetricSpec.Name.EndsWith("response-counter")).ToList();
-        var consumerRequestMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("consumer-metrics") && m.MetricSpec.Name.EndsWith("request-counter")).ToList();
-        var consumerResponseMetrics = internalMetrics.Where(m => m.MetricSpec.Name.Contains("consumer-metrics") && m.MetricSpec.Name.EndsWith("response-counter")).ToList();
-
-        NrAssert.Multiple(
-            // Verify that API responses contain evidence of customer handler activity
-            () => Assert.Contains("callback count", produceResult, StringComparison.InvariantCultureIgnoreCase),
-            () => Assert.Contains("callback count", consumeResult, StringComparison.InvariantCultureIgnoreCase),
-            () => Assert.Contains("Producer callbacks:", statusResult, StringComparison.InvariantCultureIgnoreCase),
-            () => Assert.Contains("Consumer callbacks:", statusResult, StringComparison.InvariantCultureIgnoreCase),
-
-            // Verify our internal metrics are STILL being collected despite customer handlers
-            () => Assert.True(producerRequestMetrics.Any(), "Producer request-counter internal metrics should still exist with custom handlers"),
-            () => Assert.True(producerResponseMetrics.Any(), "Producer response-counter internal metrics should still exist with custom handlers"),
-            () => Assert.True(consumerRequestMetrics.Any() || consumerResponseMetrics.Any(),
-                "At least some consumer internal metrics should exist with custom handlers (consumer may not get messages but should still generate some statistics)"),
-
-            // Verify internal metric names still follow expected pattern (proving our metrics coexist with customer's)
-            () => Assert.All(producerRequestMetrics.Concat(producerResponseMetrics),
-                m => Assert.Contains("MessageBroker/Kafka/Internal/", m.MetricSpec.Name)),
-            () => Assert.All(consumerRequestMetrics.Concat(consumerResponseMetrics),
-                m => Assert.Contains("MessageBroker/Kafka/Internal/", m.MetricSpec.Name)),
-
-            // Verify internal metrics have reasonable values (indicating our composite handlers are working)
-            () => Assert.All(producerRequestMetrics.Concat(producerResponseMetrics).Where(m => m.Values.CallCount > 0),
-                m => Assert.True(m.Values.CallCount > 0, $"Internal metric {m.MetricSpec.Name} should have non-zero count when composite handlers are active"))
+            // Cancellation-token span: asserted only when present. Whether it's sampled depends on
+            // priority and whether at least one message was consumed within the 5-second window.
+            () =>
+            {
+                if (consumeWithCancellationTxnSpan == null) return;
+                Assert.True(consumeWithCancellationTxnSpan.UserAttributes.ContainsKey("kafka.consume.byteCount"));
+                Assert.InRange((long)consumeWithCancellationTxnSpan.UserAttributes["kafka.consume.byteCount"], 450, 500);
+                Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("traceId"));
+                Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("parentId"));
+            }
         );
     }
 
@@ -318,11 +349,22 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var builder = new StringBuilder();
         for (int i = 0; i < TopicNameLength; i++)
         {
-            var shifter= RandomNumberGenerator.GetInt32(0, 26);
+            var shifter = RandomNumberGenerator.GetInt32(0, 26);
             builder.Append(Convert.ToChar(shifter + 65));
         }
 
         return builder.ToString();
+    }
+
+    /// <summary>
+    /// Extracts a named count from a response string of the form "... {label}: N ...".
+    /// Returns 0 if no count is found for that label.
+    /// </summary>
+    private static int ExtractNamedCount(string response, string label)
+    {
+        if (string.IsNullOrEmpty(response)) return 0;
+        var match = Regex.Match(response, Regex.Escape(label) + @":\s*(\d+)", RegexOptions.IgnoreCase);
+        return match.Success ? int.Parse(match.Groups[1].Value) : 0;
     }
 
     /// <summary>

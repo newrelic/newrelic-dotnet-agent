@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
@@ -17,20 +18,84 @@ public class Producer
 {
     private readonly string _topic;
     private readonly IProducer<string, string> _producer;
+    private readonly IProducer<string, string> _customStatsProducer;
     private readonly ILogger _logger;
-    private readonly IConfiguration _configuration;
+
+    // Background produce loop keeps librdkafka's per-topic batchsize window populated.
+    // librdkafka's topic.batchsize is a ~5-second rolling window; with only the HTTP-triggered
+    // produces (5 main + 2 custom-stats over ~15s of exercise), no stats snapshot's window
+    // reliably contains a batch send, so producer-metrics/batch-size-avg ends up filtered at
+    // AddMetric's WindowAvg>0 gate. A slow trickle of background sends ensures every 5-second
+    // window sees at least one batch.
+    //
+    // These produces are NOT counted in messageBrokerProduce / TraceContext/Create/Success
+    // metrics because KafkaProducerWrapper.IsTransactionRequired == true and Task.Run lacks a
+    // transaction. They go to a SEPARATE topic from _topic so the work consumer — which
+    // subscribes only to _topic — never sees them; otherwise the burst would fill the consume
+    // buffer with DT-header-less messages, starving the real DT-header-bearing produces and
+    // breaking Supportability/TraceContext/Accept/Success. The same _producer client handles
+    // both topics, so librdkafka aggregates batchsize across them in stats.topics, which is
+    // what AddProducerMetrics averages → batch-size-avg reliably > 0.
+    private const string BurstTopicSuffix = "-burst";
+    private readonly string _burstTopic;
+    private readonly CancellationTokenSource _burstCts = new();
+    private readonly Task _burstTask;
 
     public Producer(IConfiguration configuration, string topic, ILogger logger)
     {
         _topic = topic;
-        _configuration = configuration;
+        _burstTopic = topic + BurstTopicSuffix;
+        _logger = logger;
 
-        // Add statistics configuration to enable our metrics collection
         var configDict = configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        configDict["statistics.interval.ms"] = "5000"; // Enable statistics with 5 second interval
+        configDict["statistics.interval.ms"] = "5000";
 
         _producer = new ProducerBuilder<string, string>(configDict).Build();
-        _logger = logger;
+
+        // Long-lived producer with a customer-installed statistics handler — exercises the
+        // composite-handler path in KafkaBuilderWrapper. Built at construction so librdkafka
+        // stats callbacks accumulate for the full lifetime of the test container; the
+        // customstatisticsstatus endpoint can be queried at any time and will see a
+        // monotonically growing ProducerCallbackCount.
+        var customStatsBuilder = new ProducerBuilder<string, string>(configDict);
+        customStatsBuilder.SetStatisticsHandler(CustomerStatisticsCallbacks.ProducerStatisticsHandler);
+        _customStatsProducer = customStatsBuilder.Build();
+
+        _burstTask = Task.Run(() => BackgroundBurstProduceLoop(_burstCts.Token));
+    }
+
+    private async Task BackgroundBurstProduceLoop(CancellationToken ct)
+    {
+        try
+        {
+            var counter = 0;
+            while (!ct.IsCancellationRequested)
+            {
+                // Five rapid fire-and-forget produces per pass. linger.ms defaults to 5ms, so
+                // librdkafka coalesces them into a single message set → batchsize.cnt > 0 in
+                // the enclosing stats window.
+                for (int i = 0; i < 5 && !ct.IsCancellationRequested; i++)
+                {
+                    try
+                    {
+                        _producer.Produce(_burstTopic,
+                            new Message<string, string> { Key = "burst", Value = "burst-" + (++counter) },
+                            null);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug("BackgroundBurstProduceLoop: Produce threw: {Message}", ex.Message);
+                    }
+                }
+
+                try { await Task.Delay(TimeSpan.FromSeconds(2), ct).ConfigureAwait(false); }
+                catch (OperationCanceledException) { break; }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "BackgroundBurstProduceLoop: unexpected error — loop exiting");
+        }
     }
 
     public void CreateTopic(IConfiguration configuration)
@@ -40,12 +105,16 @@ public class Producer
             try
             {
                 adminClient.CreateTopicsAsync(new TopicSpecification[] {
-                    new TopicSpecification { Name = _topic, ReplicationFactor = 1, NumPartitions = 1 }
+                    new TopicSpecification { Name = _topic, ReplicationFactor = 1, NumPartitions = 1 },
+                    new TopicSpecification { Name = _burstTopic, ReplicationFactor = 1, NumPartitions = 1 }
                 }).Wait(10 * 1000);
             }
             catch (CreateTopicsException e)
             {
-                _logger.LogInformation($"An error occured creating topic {e.Results[0].Topic}: {e.Results[0].Error.Reason}");
+                foreach (var result in e.Results)
+                {
+                    _logger.LogInformation($"An error occured creating topic {result.Topic}: {result.Error.Reason}");
+                }
             }
         }
     }
@@ -78,38 +147,17 @@ public class Producer
     }
 
     /// <summary>
-    /// Test method to verify that customer statistics handlers work alongside our metrics collection.
-    /// This creates a producer with a custom statistics handler to test our composite handler pattern.
+    /// Produces via the long-lived producer whose builder had a customer statistics handler
+    /// installed before Build(). The long-lived client means librdkafka statistics callbacks
+    /// have been firing on the customer's handler since container startup — so the callback
+    /// count visible via /customstatisticsstatus is reliably > 0 by the time the test reads it.
     /// </summary>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public async Task ProduceWithCustomStatistics()
     {
-        // Track if the customer's statistics handler was called
-        CustomerStatisticsCallbacks.ResetCounters();
-
-        // Add statistics configuration using same config as main producer
-        var configDict = _configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        configDict["statistics.interval.ms"] = "5000"; // Enable statistics with 5 second interval
-
-        // Create producer builder with customer statistics handler
-        var builder = new ProducerBuilder<string, string>(configDict);
-
-        // Set up customer's statistics handler BEFORE Build() - this tests our composite pattern
-        builder.SetStatisticsHandler(CustomerStatisticsCallbacks.ProducerStatisticsHandler);
-
-        using var customProducer = builder.Build();
-
-        // Produce a message
         var user = "customStatsUser";
         var item = "customStatsItem";
-        await customProducer.ProduceAsync(_topic, new Message<string, string> { Key = user, Value = item });
-
-        _logger.LogInformation($"ProduceWithCustomStatistics: Produced message with custom statistics handler. Customer callback count: {CustomerStatisticsCallbacks.ProducerCallbackCount}");
-
-        // Keep producer alive for at least one statistics interval to ensure callbacks trigger
-        await Task.Delay(6000); // Wait 6 seconds to ensure statistics callback fires
-
-        _logger.LogInformation($"ProduceWithCustomStatistics: Completed. Final customer callback count: {CustomerStatisticsCallbacks.ProducerCallbackCount}");
+        await _customStatsProducer.ProduceAsync(_topic, new Message<string, string> { Key = user, Value = item });
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -135,38 +183,28 @@ public class Producer
 }
 
 /// <summary>
-/// Helper class to track customer statistics callback invocations for testing.
+/// Tracks customer statistics callback invocations for the composite-handler integration test.
+/// Counters are monotonic across the process lifetime — incremented with Interlocked so
+/// callbacks on the librdkafka poll thread stay correct under concurrent producer+consumer use.
+/// The integration test asserts only that counts are > 0, so never resetting is safe.
 /// </summary>
 public static class CustomerStatisticsCallbacks
 {
-    public static int ProducerCallbackCount { get; private set; }
-    public static int ConsumerCallbackCount { get; private set; }
-    public static string LastProducerStatistics { get; private set; }
-    public static string LastConsumerStatistics { get; private set; }
+    private static int _producerCallbackCount;
+    private static int _consumerCallbackCount;
 
-    public static void ResetCounters()
-    {
-        ProducerCallbackCount = 0;
-        ConsumerCallbackCount = 0;
-        LastProducerStatistics = null;
-        LastConsumerStatistics = null;
-    }
+    public static int ProducerCallbackCount => Volatile.Read(ref _producerCallbackCount);
+    public static int ConsumerCallbackCount => Volatile.Read(ref _consumerCallbackCount);
 
     public static void ProducerStatisticsHandler(IProducer<string, string> producer, string statistics)
     {
-        ProducerCallbackCount++;
-        LastProducerStatistics = statistics;
-
-        // Log that customer handler was called (simulating customer behavior)
-        Console.WriteLine($"Customer Producer Statistics Handler Called: Count={ProducerCallbackCount}, JSON length={statistics?.Length ?? 0}");
+        var count = Interlocked.Increment(ref _producerCallbackCount);
+        Console.WriteLine($"Customer Producer Statistics Handler Called: Count={count}, JSON length={statistics?.Length ?? 0}");
     }
 
     public static void ConsumerStatisticsHandler(IConsumer<string, string> consumer, string statistics)
     {
-        ConsumerCallbackCount++;
-        LastConsumerStatistics = statistics;
-
-        // Log that customer handler was called (simulating customer behavior)
-        Console.WriteLine($"Customer Consumer Statistics Handler Called: Count={ConsumerCallbackCount}, JSON length={statistics?.Length ?? 0}");
+        var count = Interlocked.Increment(ref _consumerCallbackCount);
+        Console.WriteLine($"Customer Consumer Statistics Handler Called: Count={count}, JSON length={statistics?.Length ?? 0}");
     }
 }

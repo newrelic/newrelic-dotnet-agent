@@ -43,27 +43,19 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
         Delay(1); // wait a bit to ensure the consumer is started before we produce
         GetAndAssertStatusCode(address + "produceasync", System.Net.HttpStatusCode.OK); // produce after the consume is started so we know the consume will get a message
 
-        // Test custom statistics handlers (composite pattern) - integrated into main exercise
+        // Exercise the producer-side composite handler path — one extra produce on the
+        // long-lived custom-stats producer. The custom-stats consumer is always running
+        // in the background of the test app, so it needs no explicit trigger here.
         GetAndAssertStatusCode(address + "producewithcustomstatistics", System.Net.HttpStatusCode.OK);
-        var produceResult = GetString(address + "producewithcustomstatistics");
-        Delay(1); // Allow time for async completion
+        GetAndAssertStatusCode(address + "producewithcustomstatistics", System.Net.HttpStatusCode.OK);
 
-        GetAndAssertStatusCode(address + "consumewithcustomstatistics", System.Net.HttpStatusCode.OK);
-        var consumeResult = GetString(address + "consumewithcustomstatistics");
-        Delay(1); // Allow time for async completion
-
-        // Wait for statistics callbacks to trigger (they fire every 5 seconds)
-        Delay(3);
-
-        // Check status of customer handlers
-        GetAndAssertStatusCode(address + "customstatisticsstatus", System.Net.HttpStatusCode.OK);
-        var statusResult = GetString(address + "customstatisticsstatus");
-
-        // Store results for later test validation
-        CustomStatisticsResults = (produceResult, consumeResult, statusResult);
+        // Status read happens at the end of the exercise. Both long-lived custom-stats
+        // clients have been alive since container startup and will have fired multiple
+        // librdkafka statistics callbacks by now (statistics.interval.ms = 5000).
+        CustomStatisticsStatus = GetString(address + "customstatisticsstatus");
     }
 
-    public (string produceResult, string consumeResult, string statusResult)? CustomStatisticsResults { get; private set; }
+    public string CustomStatisticsStatus { get; private set; }
 
     public string GetBootstrapServer()
     {

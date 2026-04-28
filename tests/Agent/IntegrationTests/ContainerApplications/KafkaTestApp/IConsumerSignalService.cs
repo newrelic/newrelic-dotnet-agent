@@ -8,12 +8,10 @@ namespace KafkaTestApp;
 public enum ConsumptionMode
 {
     Timeout,
-    CancellationToken,
-    CustomStatistics
+    CancellationToken
 }
 
 public interface IConsumerSignalService
 {
     Task RequestConsumeAsync(ConsumptionMode mode);
-    Task RequestConsumeWithCustomStatisticsAsync();
 }

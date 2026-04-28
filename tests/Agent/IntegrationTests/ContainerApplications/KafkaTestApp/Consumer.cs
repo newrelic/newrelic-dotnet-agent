@@ -20,6 +20,20 @@ public class Consumer : BackgroundService, IConsumerSignalService
     private readonly IConfiguration _configuration;
     private readonly ILogger<Consumer> _logger;
 
+    // Work consumer: serves the [Transaction]-scoped HTTP paths (timeout / cancellation).
+    // Long-lived so successive HTTP requests reuse the same librdkafka client and stats
+    // callbacks accumulate across drain cycles.
+    private IConsumer<string, string> _workConsumer;
+
+    // Custom-stats consumer: exercises the composite-handler path in KafkaBuilderWrapper by
+    // installing a customer statistics handler before Build(). Runs a continuous background
+    // poll loop so librdkafka statistics callbacks fire throughout the test. Not decorated
+    // with [Transaction] — its purpose is callback coverage, not span/transaction emission.
+    // Uses a distinct group.id so it reads independently of the work consumer.
+    private IConsumer<string, string> _customStatsConsumer;
+    private Task _customStatsPollTask;
+    private CancellationTokenSource _customStatsPollCts;
+
     private sealed record ConsumeRequest(ConsumptionMode Mode);
 
     private readonly Channel<ConsumeRequest> _requests =
@@ -35,6 +49,69 @@ public class Consumer : BackgroundService, IConsumerSignalService
         _topic = topic;
         _configuration = configuration;
         _logger = logger;
+    }
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        InitializeWorkConsumer();
+        InitializeCustomStatsConsumer();
+        return base.StartAsync(cancellationToken);
+    }
+
+    private void InitializeWorkConsumer()
+    {
+        var configDict = _configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        configDict["statistics.interval.ms"] = "5000";
+        configDict["group.id"] = "test-consumer-group-work";
+
+        _workConsumer = new ConsumerBuilder<string, string>(configDict).Build();
+        _workConsumer.Subscribe(_topic);
+        _logger.LogInformation("Work consumer initialized (group=test-consumer-group-work, topic={Topic})", _topic);
+    }
+
+    private void InitializeCustomStatsConsumer()
+    {
+        var configDict = _configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        configDict["statistics.interval.ms"] = "5000";
+        configDict["group.id"] = "test-consumer-group-customstats";
+
+        var builder = new ConsumerBuilder<string, string>(configDict);
+        // Customer handler installed BEFORE Build() so the KafkaBuilderWrapper sees an
+        // existing StatisticsHandler and takes the Delegate.Combine composite path.
+        builder.SetStatisticsHandler(CustomerStatisticsCallbacks.ConsumerStatisticsHandler);
+
+        _customStatsConsumer = builder.Build();
+        _customStatsConsumer.Subscribe(_topic);
+        _logger.LogInformation("Custom-stats consumer initialized (group=test-consumer-group-customstats, topic={Topic})", _topic);
+
+        _customStatsPollCts = new CancellationTokenSource();
+        _customStatsPollTask = Task.Run(() => CustomStatsPollLoop(_customStatsPollCts.Token));
+    }
+
+    // Continuous non-[Transaction] poll. KafkaConsumerWrapper.IsTransactionRequired == true,
+    // so these Consume() calls create no segments or consume metrics — the poll exists solely
+    // to keep the librdkafka client active and firing statistics callbacks.
+    private void CustomStatsPollLoop(CancellationToken ct)
+    {
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                try
+                {
+                    _customStatsConsumer.Consume(TimeSpan.FromSeconds(1));
+                }
+                catch (ConsumeException ex)
+                {
+                    _logger.LogWarning(ex, "CustomStatsPollLoop: consume exception (continuing)");
+                }
+            }
+        }
+        catch (OperationCanceledException) { /* normal shutdown */ }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CustomStatsPollLoop: unexpected error — loop exiting");
+        }
     }
 
     public Task RequestConsumeAsync(ConsumptionMode mode)
@@ -69,16 +146,12 @@ public class Consumer : BackgroundService, IConsumerSignalService
                             case ConsumptionMode.CancellationToken:
                                 await ConsumeOneWithCancellationTokenAsync();
                                 break;
-                            case ConsumptionMode.CustomStatistics:
-                                await ConsumeWithCustomStatisticsAsync();
-                                break;
                         }
                         _logger.LogInformation("Completed consume request ({Mode}).", req.Mode);
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Error processing consume request ({Mode}).", req.Mode);
-                        // Errors are now only logged (caller is not notified).
                     }
                 }
             }
@@ -90,38 +163,43 @@ public class Consumer : BackgroundService, IConsumerSignalService
         finally
         {
             _logger.LogInformation("Consumer background service is stopping.");
-            // Drain any leftover queued requests (they are fire-and-forget now).
             while (_requests.Reader.TryRead(out _)) { }
+
+            if (_customStatsPollCts != null)
+            {
+                try { await _customStatsPollCts.CancelAsync().ConfigureAwait(false); } catch { /* best effort */ }
+            }
+            // Poll task was started via Task.Run on the threadpool; VSTHRD003 flags awaiting it here,
+            // but there is no UI / single-threaded sync context in a BackgroundService so the deadlock
+            // the analyzer guards against cannot occur. Suppressing is the correct action.
+#pragma warning disable VSTHRD003
+            try { if (_customStatsPollTask != null) await _customStatsPollTask.ConfigureAwait(false); } catch { /* best effort */ }
+#pragma warning restore VSTHRD003
+
+            try { _workConsumer?.Close(); } catch { /* best effort */ }
+            try { _workConsumer?.Dispose(); } catch { /* best effort */ }
+            try { _customStatsConsumer?.Close(); } catch { /* best effort */ }
+            try { _customStatsConsumer?.Dispose(); } catch { /* best effort */ }
+            try { _customStatsPollCts?.Dispose(); } catch { /* best effort */ }
         }
     }
 
     [Transaction]
     private async Task ConsumeOneWithTimeoutAsync()
     {
-        // Add statistics configuration to enable our metrics collection
-        var configDict = _configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        configDict["statistics.interval.ms"] = "5000"; // Enable statistics with 5 second interval
-        configDict["group.id"] = "test-consumer-group"; // Ensure group.id is set
-
-        using var consumer = new ConsumerBuilder<string, string>(configDict).Build();
-        consumer.Subscribe(_topic);
-
-        // Keep consumer alive long enough for at least one statistics callback (every 5 seconds)
         var startTime = DateTime.UtcNow;
         var maxDuration = TimeSpan.FromSeconds(5);
         var messagesConsumed = 0;
-        var targetMessages = 1; // Still consume at least one message for test logic
 
         try
         {
-            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Starting consumer ({Duration}s) to collect statistics", maxDuration.TotalSeconds);
+            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Polling work consumer for up to {Duration}s", maxDuration.TotalSeconds);
 
             while (DateTime.UtcNow - startTime < maxDuration)
             {
                 try
                 {
-                    // Poll for messages with shorter timeout to keep consumer active
-                    var result = consumer.Consume(TimeSpan.FromSeconds(2));
+                    var result = _workConsumer.Consume(TimeSpan.FromSeconds(2));
 
                     if (result != null)
                     {
@@ -129,19 +207,11 @@ public class Consumer : BackgroundService, IConsumerSignalService
                         _logger.LogInformation("ConsumeOneWithTimeoutAsync: Consumed message '{MessageValue}' at: '{ResultTopicPartitionOffset}' (#{Count})",
                             result.Message.Value, result.TopicPartitionOffset, messagesConsumed);
 
-                        // After consuming target messages, just keep polling to maintain connection
-                        if (messagesConsumed >= targetMessages)
-                        {
-                            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Target messages consumed, maintaining consumer for statistics collection...");
-                        }
-
-                        // Simulate processing time
                         await Task.Delay(Random.Shared.Next(500, 1000));
                     }
                     else
                     {
-                        // No message available, but keep consumer alive for statistics
-                        await Task.Delay(1000); // Wait 1 second before next poll
+                        await Task.Delay(1000);
                     }
                 }
                 catch (ConsumeException ex)
@@ -151,46 +221,31 @@ public class Consumer : BackgroundService, IConsumerSignalService
                 }
             }
 
-            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Completed consumer session. Messages consumed: {Count}", messagesConsumed);
+            _logger.LogInformation("ConsumeOneWithTimeoutAsync: Completed. Messages consumed: {Count}", messagesConsumed);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ConsumeOneWithTimeoutAsync: Consumer error");
-        }
-        finally
-        {
-            consumer.Close();
         }
     }
 
     [Transaction]
     private async Task ConsumeOneWithCancellationTokenAsync()
     {
-        // Add statistics configuration to enable our metrics collection
-        var configDict = _configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        configDict["statistics.interval.ms"] = "5000"; // Enable statistics with 5 second interval
-        configDict["group.id"] = "test-consumer-group"; // Ensure group.id is set
-
         var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        using var consumer = new ConsumerBuilder<string, string>(configDict).Build();
-        consumer.Subscribe(_topic);
-
-        // Keep consumer alive long enough for at least one statistics callback (every 5 seconds)
         var startTime = DateTime.UtcNow;
         var maxDuration = TimeSpan.FromSeconds(5);
         var messagesConsumed = 0;
-        var targetMessages = 1; // Still consume at least one message for test logic
 
         try
         {
-            _logger.LogInformation("ConsumeOneWithCancellationToken: Starting consumer ({Duration}s) to collect statistics", maxDuration.TotalSeconds);
+            _logger.LogInformation("ConsumeOneWithCancellationToken: Polling work consumer for up to {Duration}s", maxDuration.TotalSeconds);
 
             while (DateTime.UtcNow - startTime < maxDuration && !cts.Token.IsCancellationRequested)
             {
                 try
                 {
-                    // Poll for messages with shorter timeout to keep consumer active
-                    var result = consumer.Consume(TimeSpan.FromSeconds(2));
+                    var result = _workConsumer.Consume(TimeSpan.FromSeconds(2));
 
                     if (result != null)
                     {
@@ -198,19 +253,11 @@ public class Consumer : BackgroundService, IConsumerSignalService
                         _logger.LogInformation("ConsumeOneWithCancellationToken: Consumed message '{MessageValue}' at: '{ResultTopicPartitionOffset}' (#{Count})",
                             result.Message.Value, result.TopicPartitionOffset, messagesConsumed);
 
-                        // After consuming target messages, just keep polling to maintain connection
-                        if (messagesConsumed >= targetMessages)
-                        {
-                            _logger.LogInformation("ConsumeOneWithCancellationToken: Target messages consumed, maintaining consumer for statistics collection...");
-                        }
-
-                        // Simulate processing time - longer than timeout version to ensure different transaction timing
                         await Task.Delay(Random.Shared.Next(1000, 2000), cts.Token);
                     }
                     else
                     {
-                        // No message available, but keep consumer alive for statistics
-                        await Task.Delay(1000, cts.Token); // Wait 1 second before next poll
+                        await Task.Delay(1000, cts.Token);
                     }
                 }
                 catch (ConsumeException ex) when (!cts.Token.IsCancellationRequested)
@@ -220,7 +267,7 @@ public class Consumer : BackgroundService, IConsumerSignalService
                 }
             }
 
-            _logger.LogInformation("ConsumeOneWithCancellationToken: Completed consumer session. Messages consumed: {Count}", messagesConsumed);
+            _logger.LogInformation("ConsumeOneWithCancellationToken: Completed. Messages consumed: {Count}", messagesConsumed);
         }
         catch (OperationCanceledException)
         {
@@ -230,99 +277,5 @@ public class Consumer : BackgroundService, IConsumerSignalService
         {
             _logger.LogError(ex, "ConsumeOneWithCancellationToken: Consumer error");
         }
-        finally
-        {
-            consumer.Close();
-        }
-    }
-
-    /// <summary>
-    /// Test method to verify that customer statistics handlers work alongside our metrics collection.
-    /// This creates a consumer with a custom statistics handler to test our composite handler pattern.
-    /// </summary>
-    [Transaction]
-    private async Task ConsumeWithCustomStatisticsAsync()
-    {
-        // Track if the customer's statistics handler was called
-        CustomerStatisticsCallbacks.ResetCounters();
-
-        // Add statistics configuration to enable our metrics collection
-        var configDict = _configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        configDict["statistics.interval.ms"] = "5000"; // Enable statistics with 5 second interval
-        configDict["group.id"] = "test-consumer-group-custom"; // Use different group for custom test
-
-        // Create consumer builder with customer statistics handler
-        var builder = new ConsumerBuilder<string, string>(configDict);
-
-        // Set up customer's statistics handler BEFORE Build() - this tests our composite pattern
-        builder.SetStatisticsHandler(CustomerStatisticsCallbacks.ConsumerStatisticsHandler);
-
-        using var consumer = builder.Build();
-        consumer.Subscribe(_topic);
-
-        // Keep consumer alive long enough for at least one statistics callback (every 5 seconds)
-        var startTime = DateTime.UtcNow;
-        var maxDuration = TimeSpan.FromSeconds(5);
-        var messagesConsumed = 0;
-
-        try
-        {
-            _logger.LogInformation("ConsumeWithCustomStatisticsAsync: Starting consumer ({Duration}s) with custom statistics handler", maxDuration.TotalSeconds);
-
-            while (DateTime.UtcNow - startTime < maxDuration)
-            {
-                try
-                {
-                    // Poll for messages with shorter timeout to keep consumer active
-                    var result = consumer.Consume(TimeSpan.FromSeconds(2));
-
-                    if (result != null)
-                    {
-                        messagesConsumed++;
-                        _logger.LogInformation("ConsumeWithCustomStatisticsAsync: Consumed message '{MessageValue}' at: '{ResultTopicPartitionOffset}' (#{Count})",
-                            result.Message.Value, result.TopicPartitionOffset, messagesConsumed);
-
-                        // Simulate processing time
-                        await Task.Delay(Random.Shared.Next(500, 1000));
-                    }
-                    else
-                    {
-                        // No message available, but keep consumer alive for statistics
-                        await Task.Delay(1000); // Wait 1 second before next poll
-                    }
-                }
-                catch (ConsumeException ex)
-                {
-                    _logger.LogWarning(ex, "ConsumeWithCustomStatisticsAsync: Consume exception (continuing)");
-                    await Task.Delay(1000);
-                }
-            }
-
-            _logger.LogInformation("ConsumeWithCustomStatisticsAsync: Completed consumer session. Messages consumed: {Count}, Customer callback count: {CallbackCount}",
-                messagesConsumed, CustomerStatisticsCallbacks.ConsumerCallbackCount);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "ConsumeWithCustomStatisticsAsync: Consumer error");
-        }
-        finally
-        {
-            consumer.Close();
-        }
-    }
-
-    /// <summary>
-    /// Public method to request custom statistics consumption test
-    /// </summary>
-    public Task RequestConsumeWithCustomStatisticsAsync()
-    {
-        _logger.LogInformation("Queueing custom statistics consume request");
-        if (!_requests.Writer.TryWrite(new ConsumeRequest(ConsumptionMode.CustomStatistics)))
-        {
-            _logger.LogError("Unable to queue custom statistics consume request - channel is closed.");
-            return Task.FromException(new InvalidOperationException("Channel is closed."));
-        }
-
-        return Task.CompletedTask;
     }
 }
