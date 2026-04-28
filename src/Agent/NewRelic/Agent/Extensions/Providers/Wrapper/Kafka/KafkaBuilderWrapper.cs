@@ -487,8 +487,5 @@ public class KafkaBuilderWrapper : IWrapper
         }
     }
 
-
-
-
     #endregion
 }

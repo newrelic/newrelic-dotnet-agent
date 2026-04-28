@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -294,13 +293,16 @@ public static class KafkaStatisticsHelper
 
     #endregion
 
-    private static readonly ConcurrentDictionary<string, string> _prefixCache = new();
-
-    private static string GetOrCreatePrefix(string clientId, string group)
+    // Prefix computation is inlined per call rather than cached across calls. A prior static
+    // ConcurrentDictionary cache keyed by (clientId, group) was unbounded and would retain
+    // prefix strings for the lifetime of the process, growing for workloads that churn through
+    // many short-lived Kafka clients with distinct client.id values. The Concat cost is
+    // trivial at drain cadence (~20 calls per client per drain), so bounding by eliminating
+    // the cache is the simplest correct fix. The caller pattern of storing the prefix in a
+    // local and reusing it across multiple AddMetric calls preserves within-function reuse.
+    private static string BuildPrefix(string clientId, string group)
     {
-        var key = string.Concat(clientId, "|", group);
-        return _prefixCache.GetOrAdd(key, _ =>
-            string.Concat("MessageBroker/", MessageBrokerVendorConstants.Kafka, "/Internal/", group, "/client/", clientId));
+        return string.Concat("MessageBroker/", MessageBrokerVendorConstants.Kafka, "/Internal/", group, "/client/", clientId);
     }
 
     /// <summary>
@@ -399,7 +401,7 @@ public static class KafkaStatisticsHelper
 
     private static void AddClientLevelMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientType, string clientId)
     {
-        var basePrefix = GetOrCreatePrefix(clientId, clientType == "consumer" ? "consumer-metrics" : "producer-metrics");
+        var basePrefix = BuildPrefix(clientId, clientType == "consumer" ? "consumer-metrics" : "producer-metrics");
 
         // Cumulative counters (librdkafka "int" type — ever-increasing)
         AddMetric(metrics, string.Concat(basePrefix, "/request-counter"), stats.Tx, KafkaMetricType.Cumulative);
@@ -414,13 +416,14 @@ public static class KafkaStatisticsHelper
         // Gauges (librdkafka "int gauge" type — point-in-time snapshot)
         AddMetric(metrics, string.Concat(basePrefix, "/metadata_cache_cnt"), stats.MetadataCacheCnt, KafkaMetricType.Gauge);
         AddMetric(metrics, string.Concat(basePrefix, "/record-queue-time-avg"), stats.MsgCnt, KafkaMetricType.Gauge);
-        AddMetric(metrics, string.Concat(basePrefix, "/record-size-avg"), stats.MsgCnt > 0 ? stats.MsgSize / stats.MsgCnt : 0, KafkaMetricType.Gauge);
+        if (stats.MsgCnt > 0)
+            AddMetric(metrics, string.Concat(basePrefix, "/record-size-avg"), stats.MsgSize / stats.MsgCnt, KafkaMetricType.Gauge);
     }
 
     private static void AddConsumerMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientId)
     {
         var cgrp = stats.ConsumerGroup;
-        var coordinatorPrefix = GetOrCreatePrefix(clientId, "consumer-coordinator-metrics");
+        var coordinatorPrefix = BuildPrefix(clientId, "consumer-coordinator-metrics");
         AddMetric(metrics, string.Concat(coordinatorPrefix, "/rebalance-total"), cgrp.RebalanceCount, KafkaMetricType.Cumulative);
         AddMetric(metrics, string.Concat(coordinatorPrefix, "/rebalance-latency-avg"), cgrp.RebalanceAge, KafkaMetricType.Gauge);
         AddMetric(metrics, string.Concat(coordinatorPrefix, "/assigned-partitions"), cgrp.AssignmentSize, KafkaMetricType.Gauge);
@@ -437,17 +440,17 @@ public static class KafkaStatisticsHelper
             }
         }
 
-        var fetchPrefix = GetOrCreatePrefix(clientId, "consumer-fetch-manager-metrics");
+        var fetchPrefix = BuildPrefix(clientId, "consumer-fetch-manager-metrics");
         AddMetric(metrics, string.Concat(fetchPrefix, "/records-consumed-total"), stats.RxMsgs, KafkaMetricType.Cumulative);
         AddMetric(metrics, string.Concat(fetchPrefix, "/bytes-consumed-total"), stats.RxMsgBytes, KafkaMetricType.Cumulative);
-        AddMetric(metrics, string.Concat(fetchPrefix, "/records-lag-avg"),
-            totalConsumerLag > 0 && cgrp.AssignmentSize > 0 ? totalConsumerLag / cgrp.AssignmentSize : 0, KafkaMetricType.Gauge);
+        if (totalConsumerLag > 0 && cgrp.AssignmentSize > 0)
+            AddMetric(metrics, string.Concat(fetchPrefix, "/records-lag-avg"), totalConsumerLag / cgrp.AssignmentSize, KafkaMetricType.Gauge);
         AddMetric(metrics, string.Concat(fetchPrefix, "/records-lag-max"), totalConsumerLag, KafkaMetricType.Gauge);
     }
 
     private static void AddProducerMetrics(Dictionary<string, KafkaMetricValue> metrics, KafkaStatistics stats, string clientId)
     {
-        var producerPrefix = GetOrCreatePrefix(clientId, "producer-metrics");
+        var producerPrefix = BuildPrefix(clientId, "producer-metrics");
 
         // Compute batch averages across topics with running sums (no LINQ/List allocation)
         long batchSizeSum = 0, batchSizeCount = 0;
@@ -463,11 +466,13 @@ public static class KafkaStatisticsHelper
             }
         }
 
-        var batchSizeAvg = batchSizeCount > 0 ? batchSizeSum / batchSizeCount : 0;
-        var recordsPerRequestAvg = batchSizeAvg > 0 ? stats.TxMsgs / batchSizeAvg : 0;
-
-        AddMetric(metrics, string.Concat(producerPrefix, "/batch-size-avg"), batchSizeAvg, KafkaMetricType.WindowAvg);
-        AddMetric(metrics, string.Concat(producerPrefix, "/records-per-request-avg"), recordsPerRequestAvg, KafkaMetricType.WindowAvg);
+        if (batchSizeCount > 0)
+        {
+            var batchSizeAvg = batchSizeSum / batchSizeCount;
+            AddMetric(metrics, string.Concat(producerPrefix, "/batch-size-avg"), batchSizeAvg, KafkaMetricType.WindowAvg);
+            if (batchSizeAvg > 0)
+                AddMetric(metrics, string.Concat(producerPrefix, "/records-per-request-avg"), stats.TxMsgs / batchSizeAvg, KafkaMetricType.WindowAvg);
+        }
         AddMetric(metrics, string.Concat(producerPrefix, "/record-send-total"), stats.TxMsgs, KafkaMetricType.Cumulative);
 
         // Idempotent producer metrics
@@ -539,8 +544,8 @@ public static class KafkaStatisticsHelper
 
         if (clientType == "consumer")
         {
-            var coordPrefix = GetOrCreatePrefix(clientId, "consumer-coordinator-metrics");
-            var fetchPrefix = GetOrCreatePrefix(clientId, "consumer-fetch-manager-metrics");
+            var coordPrefix = BuildPrefix(clientId, "consumer-coordinator-metrics");
+            var fetchPrefix = BuildPrefix(clientId, "consumer-fetch-manager-metrics");
 
             AddMetric(metrics, string.Concat(coordPrefix, "/heartbeat-total"), totalHeartbeats, KafkaMetricType.Cumulative);
             AddMetric(metrics, string.Concat(coordPrefix, "/commit-total"), totalCommits, KafkaMetricType.Cumulative);
@@ -551,7 +556,7 @@ public static class KafkaStatisticsHelper
         }
         else if (clientType == "producer")
         {
-            var producerPrefix = GetOrCreatePrefix(clientId, "producer-metrics");
+            var producerPrefix = BuildPrefix(clientId, "producer-metrics");
             AddMetric(metrics, string.Concat(producerPrefix, "/produce-total"), totalProduces, KafkaMetricType.Cumulative);
             AddMetric(metrics, string.Concat(producerPrefix, "/metadata-total"), totalMetadata, KafkaMetricType.Cumulative);
         }
@@ -624,8 +629,8 @@ public static class KafkaStatisticsHelper
             {
                 AddMetric(metrics, string.Concat(topicPrefix, "/records-consumed-total"), totalRxMessages, KafkaMetricType.Cumulative);
                 AddMetric(metrics, string.Concat(topicPrefix, "/bytes-consumed-total"), totalRxBytes, KafkaMetricType.Cumulative);
-                AddMetric(metrics, string.Concat(topicPrefix, "/records-lag-avg"),
-                    totalConsumerLag > 0 && partitionCount > 0 ? totalConsumerLag / partitionCount : 0, KafkaMetricType.Gauge);
+                if (totalConsumerLag > 0 && partitionCount > 0)
+                    AddMetric(metrics, string.Concat(topicPrefix, "/records-lag-avg"), totalConsumerLag / partitionCount, KafkaMetricType.Gauge);
             }
         }
     }
