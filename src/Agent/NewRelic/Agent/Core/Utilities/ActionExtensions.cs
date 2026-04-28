@@ -19,10 +19,12 @@ public static class ActionExtensions
             try
             {
                 Log.Error(ex, $"An exception occurred while doing some background work");
+                throw;
             }
             catch
             {
             }
+            throw;
         }
     }
 }

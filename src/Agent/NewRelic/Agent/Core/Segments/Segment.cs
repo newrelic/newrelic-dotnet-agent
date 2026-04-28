@@ -513,8 +513,9 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
             return;
         }
         if (Data == null) {
-            Log.Error("Data is null for segment {0} in transaction {1}, skipping adding metric stats.", GetTransactionTraceName(), GetTransactionGuid());
-            return;
+            var methodName = MethodCallData != null ? $"{MethodCallData.TypeName}.{MethodCallData.MethodName}" : "UnknownMethod";
+            Log.Error("Data is null in Segment.AddMetricStats, methodName={0}.", methodName);
+            //return;
         }
         Data.AddMetricStats(this, TotalChildDuration, txStats, configService);
     }
