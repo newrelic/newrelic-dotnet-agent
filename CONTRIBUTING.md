@@ -1,6 +1,6 @@
 # Contributing
 
-Contributions are always welcome. Before contributing please read the
+Contributions are totes welcome. Before contributing please read the
 [code of conduct](https://opensource.newrelic.com/code-of-conduct/) and [search the issue tracker](https://github.com/newrelic/newrelic-dotnet-agent/issues); your issue may have already been discussed or fixed in `master`. To contribute,
 [fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) this repository, commit your changes, and [send a Pull Request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
