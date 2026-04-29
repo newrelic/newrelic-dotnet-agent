@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Extensions.Logging;
 using Newtonsoft.Json;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -336,8 +337,9 @@ public static class KafkaStatisticsHelper
         {
             return JsonConvert.DeserializeObject<KafkaStatistics>(statisticsJson);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Log.Debug("Failed to parse Kafka statistics JSON: {0}", ex.Message);
             return null;
         }
     }
@@ -392,11 +394,15 @@ public static class KafkaStatisticsHelper
 
         AddClientLevelMetrics(metrics, stats, clientType, clientId);
 
-        if (clientType == "consumer" && stats.ConsumerGroup != null)
-            AddConsumerMetrics(metrics, stats, clientId);
-
-        if (clientType == "producer")
-            AddProducerMetrics(metrics, stats, clientId);
+        switch (clientType)
+        {
+            case "consumer" when stats.ConsumerGroup != null:
+                AddConsumerMetrics(metrics, stats, clientId);
+                break;
+            case "producer":
+                AddProducerMetrics(metrics, stats, clientId);
+                break;
+        }
 
         AddBrokerMetrics(metrics, stats, clientType, clientId);
         AddClientProtocolRequestMetrics(metrics, stats, clientType, clientId);
@@ -578,8 +584,7 @@ public static class KafkaStatisticsHelper
             // Consumer and producer use different Kafka-native topic-level groups:
             //   consumer: consumer-fetch-manager-metrics  (per Kafka FetchMetricsRegistry.java)
             //   producer: producer-topic-metrics          (per Kafka SenderMetricsRegistry.TOPIC_METRIC_GROUP_NAME)
-            // Verified against kafka-consumer.yml / KafkaTopicTable.tsx in the APM UI repo at
-            // source.datanerd.us/APM/apm-agent-nerdlets — the UI queries these exact group names
+            // Verified against kafka-consumer.yml / KafkaTopicTable.tsx in the APM UI repo — the UI queries these exact group names
             // via WITH METRIC_FORMAT 'MessageBroker/Kafka/Internal/{group}/topic/{t}/client/{c}/...'.
             var topicGroupName = clientType == "consumer" ? "consumer-fetch-manager-metrics" : "producer-topic-metrics";
             var topicPrefix = string.Concat("MessageBroker/", MessageBrokerVendorConstants.Kafka, "/Internal/", topicGroupName, "/topic/", topic.Topic, "/client/", clientId);
@@ -603,38 +608,42 @@ public static class KafkaStatisticsHelper
                     // Emit partition-level metrics inline
                     var partitionPrefix = string.Concat(partitionBasePrefix, "/partition/", partition.Partition.ToString(), "/client/", clientId);
 
-                    if (clientType == "consumer")
+                    switch (clientType)
                     {
-                        AddMetric(metrics, string.Concat(partitionPrefix, "/records-consumed-total"), partition.RxMsgs, KafkaMetricType.Cumulative);
-                        AddMetric(metrics, string.Concat(partitionPrefix, "/bytes-consumed-total"), partition.RxBytes, KafkaMetricType.Cumulative);
-                        AddMetric(metrics, string.Concat(partitionPrefix, "/records-lag"), partition.ConsumerLag, KafkaMetricType.Gauge);
-                        AddMetric(metrics, string.Concat(partitionPrefix, "/committed-offset"), partition.CommittedOffset, KafkaMetricType.Gauge);
-                        AddMetric(metrics, string.Concat(partitionPrefix, "/position"), partition.HighWatermark, KafkaMetricType.Gauge);
-                    }
-                    else if (clientType == "producer")
-                    {
-                        AddMetric(metrics, string.Concat(partitionPrefix, "/record-send-total"), partition.TxMsgs, KafkaMetricType.Cumulative);
-                        AddMetric(metrics, string.Concat(partitionPrefix, "/byte-total"), partition.TxBytes, KafkaMetricType.Cumulative);
+                        case "consumer":
+                            AddMetric(metrics, string.Concat(partitionPrefix, "/records-consumed-total"), partition.RxMsgs, KafkaMetricType.Cumulative);
+                            AddMetric(metrics, string.Concat(partitionPrefix, "/bytes-consumed-total"), partition.RxBytes, KafkaMetricType.Cumulative);
+                            AddMetric(metrics, string.Concat(partitionPrefix, "/records-lag"), partition.ConsumerLag, KafkaMetricType.Gauge);
+                            AddMetric(metrics, string.Concat(partitionPrefix, "/committed-offset"), partition.CommittedOffset, KafkaMetricType.Gauge);
+                            AddMetric(metrics, string.Concat(partitionPrefix, "/position"), partition.HighWatermark, KafkaMetricType.Gauge);
+                            break;
+                        case "producer":
+                            AddMetric(metrics, string.Concat(partitionPrefix, "/record-send-total"), partition.TxMsgs, KafkaMetricType.Cumulative);
+                            AddMetric(metrics, string.Concat(partitionPrefix, "/byte-total"), partition.TxBytes, KafkaMetricType.Cumulative);
+                            break;
                     }
                 }
             }
 
-            // Emit topic-level metrics using aggregated partition data.
-            // byte-total must be a true monotonic counter (sum of cumulative partition txbytes),
-            // not a derived value involving BatchSize.Avg — the latter is a window average that
-            // fluctuates, which produced negative deltas and prevented the -rate metric from
-            // being derived in the drain.
-            if (clientType == "producer")
+            switch (clientType)
             {
-                AddMetric(metrics, string.Concat(topicPrefix, "/record-send-total"), totalTxMessages, KafkaMetricType.Cumulative);
-                AddMetric(metrics, string.Concat(topicPrefix, "/byte-total"), totalTxBytes, KafkaMetricType.Cumulative);
-            }
-            else if (clientType == "consumer")
-            {
-                AddMetric(metrics, string.Concat(topicPrefix, "/records-consumed-total"), totalRxMessages, KafkaMetricType.Cumulative);
-                AddMetric(metrics, string.Concat(topicPrefix, "/bytes-consumed-total"), totalRxBytes, KafkaMetricType.Cumulative);
-                if (totalConsumerLag > 0 && partitionCount > 0)
-                    AddMetric(metrics, string.Concat(topicPrefix, "/records-lag-avg"), totalConsumerLag / partitionCount, KafkaMetricType.Gauge);
+                // Emit topic-level metrics using aggregated partition data.
+                // byte-total must be a true monotonic counter (sum of cumulative partition txbytes),
+                // not a derived value involving BatchSize.Avg — the latter is a window average that
+                // fluctuates, which produced negative deltas and prevented the -rate metric from
+                // being derived in the drain.
+                case "producer":
+                    AddMetric(metrics, string.Concat(topicPrefix, "/record-send-total"), totalTxMessages, KafkaMetricType.Cumulative);
+                    AddMetric(metrics, string.Concat(topicPrefix, "/byte-total"), totalTxBytes, KafkaMetricType.Cumulative);
+                    break;
+                case "consumer":
+                {
+                    AddMetric(metrics, string.Concat(topicPrefix, "/records-consumed-total"), totalRxMessages, KafkaMetricType.Cumulative);
+                    AddMetric(metrics, string.Concat(topicPrefix, "/bytes-consumed-total"), totalRxBytes, KafkaMetricType.Cumulative);
+                    if (totalConsumerLag > 0 && partitionCount > 0)
+                        AddMetric(metrics, string.Concat(topicPrefix, "/records-lag-avg"), totalConsumerLag / partitionCount, KafkaMetricType.Gauge);
+                    break;
+                }
             }
         }
     }
@@ -677,12 +686,12 @@ public static class KafkaStatisticsHelper
         // Confluent-specific encoding: coordinator broker IDs are int.MaxValue - K for small K.
         // Restrict the decode window to within 1000 of int.MaxValue to avoid misclassifying
         // legitimate high node IDs in large clusters.
-        const int CoordinatorIdWindow = 1000;
+        const int coordinatorIdWindow = 1000;
 
         if (broker.NodeId < 0)
             return "seed";
 
-        if (broker.NodeId > int.MaxValue - CoordinatorIdWindow)
+        if (broker.NodeId > int.MaxValue - coordinatorIdWindow)
         {
             var coordinatorId = int.MaxValue - broker.NodeId;
             if (coordinatorId > 0)

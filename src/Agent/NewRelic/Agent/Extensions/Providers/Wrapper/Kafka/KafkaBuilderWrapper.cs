@@ -23,11 +23,14 @@ public class KafkaBuilderWrapper : IWrapper
 
     private const string WrapperName = "KafkaBuilderWrapper";
     private const string BootstrapServersKey = "bootstrap.servers";
+    private const string StatisticsIntervalKey = "statistics.interval.ms";
+    private const int MinStatisticsIntervalMs = 5000;
     private static readonly TimeSpan DrainInitialDelay = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan ClientTtl = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(2);
 
     private IAgent _currentAgent;
+
     // Per-client state is keyed by WeakReferenceKey<object> so that disposing a Kafka client
     // does not hold it rooted until TTL eviction fires. Stale dictionary entries (whose weak
     // target has been collected) are swept during the periodic TTL cleanup pass.
@@ -110,7 +113,7 @@ public class KafkaBuilderWrapper : IWrapper
         }
 
         SetStatisticsHandlerOnBuilder(builder, ourHandler);
-        SetStatisticsIntervalOnBuilder(builder);
+        SetStatisticsIntervalOnBuilder(builder, agent);
 
         // Start the drain exactly once — subsequent builders just register their callbacks
         if (Interlocked.CompareExchange(ref _drainStarted, 1, 0) == 0)
@@ -415,17 +418,29 @@ public class KafkaBuilderWrapper : IWrapper
 
     /// <summary>
     /// Enables statistics on the Kafka builder if not already configured by the customer.
+    /// Derives an interval as half the harvest cycle (floored at MinStatisticsIntervalMs) so that
+    /// scheduler phase offset between librdkafka's timer and our drain can never cause a missed cycle.
+    /// If the customer has already set an interval, it is left unchanged, but a warning is logged
+    /// when it exceeds the harvest cycle since metrics may not be reported reliably in that case.
     /// </summary>
-    private void SetStatisticsIntervalOnBuilder(object builder)
+    private void SetStatisticsIntervalOnBuilder(object builder, IAgent agent)
     {
-        if (!ShouldSetStatisticsInterval(builder))
-            return;
+        var harvestMs = (int)agent.Configuration.MetricsHarvestCycle.TotalMilliseconds;
+        var customerInterval = TryGetCustomerStatisticsIntervalMs(builder);
 
-        var setConfigMethod = builder.GetType().GetMethod("SetConfig", new[] { typeof(string), typeof(string) });
+        if (customerInterval.HasValue)
+        {
+            if (customerInterval.Value > harvestMs)
+                Log.Debug("KafkaBuilderWrapper: Customer-configured statistics.interval.ms is {0}ms, which exceeds the metrics harvest cycle ({1}ms). Kafka internal metrics may not be reported on every harvest cycle.", customerInterval.Value, harvestMs);
+            return;
+        }
+
+        var setConfigMethod = builder.GetType().GetMethod("SetConfig", [typeof(string), typeof(string)]);
         if (setConfigMethod != null)
         {
-            setConfigMethod.Invoke(builder, new object[] { "statistics.interval.ms", "5000" });
-            Log.Finest("KafkaBuilderWrapper: Set statistics interval to 5000ms");
+            var intervalMs = Math.Max(MinStatisticsIntervalMs, harvestMs / 2);
+            setConfigMethod.Invoke(builder, [StatisticsIntervalKey, intervalMs.ToString()]);
+            Log.Finest("KafkaBuilderWrapper: Set statistics interval to {0}ms (harvest cycle: {1}ms)", intervalMs, harvestMs);
         }
     }
 
@@ -441,6 +456,8 @@ public class KafkaBuilderWrapper : IWrapper
         return configGetter(builder);
     }
 
+    private static readonly string[] RateSuffixes = ["-total", "-counter", "-count"];
+
     /// <summary>
     /// Derives a rate metric name from a cumulative metric name by replacing the trailing
     /// aggregation suffix (-total, -counter, -count) with -rate, or appending -rate if none match.
@@ -448,42 +465,35 @@ public class KafkaBuilderWrapper : IWrapper
     /// </summary>
     private static string ToRateMetricName(string metricName)
     {
-        if (metricName.EndsWith("-total"))
-            return metricName.Substring(0, metricName.Length - 6) + "-rate";
-        if (metricName.EndsWith("-counter"))
-            return metricName.Substring(0, metricName.Length - 8) + "-rate";
-        if (metricName.EndsWith("-count"))
-            return metricName.Substring(0, metricName.Length - 6) + "-rate";
+        foreach (var suffix in RateSuffixes)
+        {
+            if (metricName.EndsWith(suffix))
+                return metricName.Substring(0, metricName.Length - suffix.Length) + "-rate";
+        }
         return metricName + "-rate";
     }
 
-    private bool ShouldSetStatisticsInterval(object builder)
+    private int? TryGetCustomerStatisticsIntervalMs(object builder)
     {
         try
         {
             var config = GetBuilderConfig(builder);
             if (config == null)
-                return true;
+                return null;
 
             foreach (KeyValuePair<string, string> kvp in config)
             {
-                if (kvp.Key == "statistics.interval.ms")
-                {
-                    var value = kvp.Value;
-                    if (!string.IsNullOrEmpty(value) && value != "0")
-                    {
-                        Log.Debug("KafkaBuilderWrapper: Customer has already configured statistics interval to {0}ms", value);
-                        return false;
-                    }
-                }
+                if (kvp.Key == StatisticsIntervalKey && !string.IsNullOrEmpty(kvp.Value) && kvp.Value != "0"
+                    && int.TryParse(kvp.Value, out var ms))
+                    return ms;
             }
 
-            return true;
+            return null;
         }
         catch (Exception ex)
         {
-            Log.Debug("KafkaBuilderWrapper: Could not check existing statistics interval: {0}", ex.Message);
-            return false;
+            Log.Debug("KafkaBuilderWrapper: Could not read existing statistics interval: {0}", ex.Message);
+            return null;
         }
     }
 
