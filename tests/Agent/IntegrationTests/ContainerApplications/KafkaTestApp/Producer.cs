@@ -100,21 +100,50 @@ public class Producer
 
     public void CreateTopic(IConfiguration configuration)
     {
-        using (var adminClient = new AdminClientBuilder(configuration.AsEnumerable()).Build())
+        // Compose's `depends_on: condition: service_healthy` only guarantees the broker's
+        // PLAINTEXT_HOST listener is accepting connections. Under KRaft, the controller may
+        // still be registering the broker / propagating metadata for several seconds after
+        // that, so CreateTopicsAsync can fail with transient broker-not-available errors.
+        // Retry with a generous total budget until metadata is ready, then create topics.
+        using var adminClient = new AdminClientBuilder(configuration.AsEnumerable()).Build();
+
+        var deadline = DateTime.UtcNow.AddMinutes(2);
+        var attempt = 0;
+
+        while (true)
         {
+            attempt++;
             try
             {
+                // GetMetadata waits for a cluster-level metadata response — a positive answer
+                // means the controller is up and the broker is registered. Without this gate,
+                // CreateTopicsAsync occasionally returns "success" before the topic is
+                // discoverable, and subsequent Produce calls hit UnknownTopicOrPartition.
+                var metadata = adminClient.GetMetadata(TimeSpan.FromSeconds(10));
+                if (metadata.Brokers.Count == 0)
+                {
+                    throw new InvalidOperationException("Kafka metadata returned zero brokers.");
+                }
+
                 adminClient.CreateTopicsAsync(new TopicSpecification[] {
                     new TopicSpecification { Name = _topic, ReplicationFactor = 1, NumPartitions = 1 },
                     new TopicSpecification { Name = _burstTopic, ReplicationFactor = 1, NumPartitions = 1 }
-                }).Wait(10 * 1000);
+                }).GetAwaiter().GetResult();
+
+                _logger.LogInformation("Created topics '{Topic}' and '{BurstTopic}' on attempt {Attempt}.",
+                    _topic, _burstTopic, attempt);
+                return;
             }
-            catch (CreateTopicsException e)
+            catch (CreateTopicsException e) when (e.Results.All(r => r.Error.Code == ErrorCode.TopicAlreadyExists))
             {
-                foreach (var result in e.Results)
-                {
-                    _logger.LogInformation($"An error occured creating topic {result.Topic}: {result.Error.Reason}");
-                }
+                _logger.LogInformation("Topics already exist on attempt {Attempt}.", attempt);
+                return;
+            }
+            catch (Exception e) when (DateTime.UtcNow < deadline)
+            {
+                _logger.LogInformation("Kafka not ready on attempt {Attempt}: {Message}. Retrying...",
+                    attempt, e.Message);
+                Thread.Sleep(TimeSpan.FromSeconds(2));
             }
         }
     }
