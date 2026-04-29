@@ -183,6 +183,13 @@ runs:
         path: ${{ env.PERF_TEST_DIR }}/results/
         if-no-files-found: warn
 
+    - name: Fix log file permissions
+      if: always()
+      shell: bash
+      run: |
+        sudo chown -R "$(id -u):$(id -g)" "${{ env.PERF_TEST_DIR }}/logs" || true
+        sudo chmod -R a+rX "${{ env.PERF_TEST_DIR }}/logs" || true
+
     - name: Upload perf logs
       if: always()
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
