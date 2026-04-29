@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -16,18 +14,12 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 
 public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : KafkaTestFixtureBase
 {
-    private const int TopicNameLength = 15;
-
-    private readonly string _topicName;
     private readonly T _fixture;
-    private string _bootstrapServer;
 
     protected LinuxKafkaTest(T fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
-
-        _topicName = GenerateTopic();
 
         _fixture.Actions(setupConfiguration: () =>
             {
@@ -35,7 +27,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
                 configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
 
-                _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_KAFKA_TOPIC", _topicName);
+                _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_KAFKA_TOPIC", _fixture.TopicName);
             },
             exerciseApplication: () =>
             {
@@ -43,7 +35,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
                 _fixture.TestLogger.WriteLine("Starting exercise application");
                 _fixture.ExerciseApplication();
 
-                _bootstrapServer = _fixture.GetBootstrapServer();
+                _fixture.GetBootstrapServer();
 
                 _fixture.TestLogger.WriteLine("Waiting for metrics to be harvested");
                 // Timing breakdown:
@@ -111,11 +103,14 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
     [Fact]
     public void KafkaMetrics_EmitsExpectedMetricsAndUIPaths()
     {
-        var messageBrokerProduce = "MessageBroker/Kafka/Topic/Produce/Named/" + _topicName;
+        var topicName = _fixture.TopicName;
+        var bootstrapServer = _fixture.BootstrapServer;
+
+        var messageBrokerProduce = "MessageBroker/Kafka/Topic/Produce/Named/" + topicName;
         var messageBrokerProduceSerializationKey = messageBrokerProduce + "/Serialization/Key";
         var messageBrokerProduceSerializationValue = messageBrokerProduce + "/Serialization/Value";
 
-        var messageBrokerConsume = "MessageBroker/Kafka/Topic/Consume/Named/" + _topicName;
+        var messageBrokerConsume = "MessageBroker/Kafka/Topic/Consume/Named/" + topicName;
 
         var consumeWithTimeoutTransactionName = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithTimeoutAsync";
         var consumeWithCancellationTransactionName = @"OtherTransaction/Custom/KafkaTestApp.Consumer/ConsumeOneWithCancellationTokenAsync";
@@ -123,9 +118,9 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         var produceWithExistingHeadersWebTransactionName = @"WebTransaction/MVC/Kafka/ProduceAsyncWithExistingHeaders";
         var produceWithCustomStatisticsWebTransactionName = @"WebTransaction/MVC/Kafka/ProduceWithCustomStatistics";
 
-        var messageBrokerNode = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}";
-        var messageBrokerNodeProduceTopic = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}/Produce/{_topicName}";
-        var messageBrokerNodeConsumeTopic = $"MessageBroker/Kafka/Nodes/{_bootstrapServer}/Consume/{_topicName}";
+        var messageBrokerNode = $"MessageBroker/Kafka/Nodes/{bootstrapServer}";
+        var messageBrokerNodeProduceTopic = $"MessageBroker/Kafka/Nodes/{bootstrapServer}/Produce/{topicName}";
+        var messageBrokerNodeConsumeTopic = $"MessageBroker/Kafka/Nodes/{bootstrapServer}/Consume/{topicName}";
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
         var spans = _fixture.AgentLog.GetSpanEvents();
@@ -342,18 +337,6 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
                 Assert.True(consumeWithCancellationTxnSpan.IntrinsicAttributes.ContainsKey("parentId"));
             }
         );
-    }
-
-    internal static string GenerateTopic()
-    {
-        var builder = new StringBuilder();
-        for (int i = 0; i < TopicNameLength; i++)
-        {
-            var shifter = RandomNumberGenerator.GetInt32(0, 26);
-            builder.Append(Convert.ToChar(shifter + 65));
-        }
-
-        return builder.ToString();
     }
 
     /// <summary>
