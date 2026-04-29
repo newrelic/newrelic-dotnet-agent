@@ -131,6 +131,7 @@ public interface IAgentHealthReporter : IOutOfBandMetricSource
 
     void ReportSupportabilityCountMetric(string metricName, long count = 1);
     void ReportCountMetric(string metricName, long count = 1);
+    void ReportGaugeMetric(string metricName, float value);
 
     void ReportInfiniteTracingSpanResponseError();
     void ReportInfiniteTracingSpanEventsSeen(long count = 1);

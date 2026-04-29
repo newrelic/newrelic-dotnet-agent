@@ -514,6 +514,11 @@ public class Agent : IAgent // any changes to api, update the interface in exten
         _agentHealthReporter.ReportCountMetric(metricName, count);
     }
 
+    public void RecordGaugeMetric(string metricName, float value)
+    {
+        _agentHealthReporter.ReportGaugeMetric(metricName, value);
+    }
+
     public void RecordByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null)
     {
         _agentHealthReporter.ReportByteMetric(metricName, totalBytes, exclusiveBytes);

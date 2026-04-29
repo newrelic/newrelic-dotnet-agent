@@ -25,6 +25,18 @@ public interface IAgentExperimental
     /// <param name="metricName"></param>
     /// <param name="count"></param>
     void RecordCountMetric(string metricName, long count = 1);
+
+    /// <summary>
+    /// Records a scalar metric with the given name. The wire format is a summary of a single
+    /// sample — count=1, sum/min/max all equal to <paramref name="value"/>. Suitable for
+    /// point-in-time gauge readings as well as derived per-interval values such as rate
+    /// metrics computed by the caller (e.g., the Kafka wrapper reports delta-per-second
+    /// rates via this API).
+    /// </summary>
+    /// <param name="metricName"></param>
+    /// <param name="value"></param>
+    void RecordGaugeMetric(string metricName, float value);
+
     /// <summary>
     /// Records a byte count metric with the given name
     /// </summary>
