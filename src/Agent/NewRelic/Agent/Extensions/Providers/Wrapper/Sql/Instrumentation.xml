@@ -187,9 +187,14 @@ SPDX-License-Identifier: Apache-2.0
 
       <!-- MySql (official) driver-->
       <!-- Prior to 8.0.33 we instrument non-async methods in the SqlCommandTracer factory above -->
-      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand" minVersion="8.0.33">
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand" minVersion="8.0.33" maxVersion="9.7.0">
         <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
+      </match>
+      <!-- MySql.Data 9.7.0 removed the isAsync bool parameter from internal async methods -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand" minVersion="9.7.0">
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
       </match>
 
       <!-- MySqlConnector 0.x -->
@@ -346,10 +351,15 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ReadAsync" />
       </match>
 
-      <!-- Prior to version 8.0.33 these methods were synchroous and are instrumented in the DataReaderTracer factory above -->
-      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlDataReader" minVersion="8.0.33">
+      <!-- Prior to version 8.0.33 these methods were synchronous and are instrumented in the DataReaderTracer factory above -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlDataReader" minVersion="8.0.33" maxVersion="9.7.0">
         <exactMethodMatcher methodName="NextResultAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ReadAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
+      </match>
+      <!-- MySql.Data 9.7.0 removed the isAsync bool parameter from internal async methods -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlDataReader" minVersion="9.7.0">
+        <exactMethodMatcher methodName="NextResultAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ReadAsync" parameters="System.Threading.CancellationToken" />
       </match>
 
       <!-- MySqlConnector 0.x -->
@@ -476,8 +486,13 @@ SPDX-License-Identifier: Apache-2.0
 
       <!-- MySql (official) driver -->
       <!-- Up until 8.0.33, OpenAsync was not actually async -->
-      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection" minVersion="8.0.33">
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection" minVersion="8.0.33" maxVersion="9.7.0">
         <exactMethodMatcher methodName="OpenAsync" parameters="System.Boolean,System.Threading.CancellationToken"/>
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken"/>
+      </match>
+      <!-- MySql.Data 9.7.0 removed the isAsync bool parameter from OpenAsync -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection" minVersion="9.7.0">
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken"/>
       </match>
 
       <!-- MySqlConnector 0.x -->
