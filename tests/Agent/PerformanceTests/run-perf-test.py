@@ -57,6 +57,8 @@ def parse_args():
     parser.add_argument("--license-key",        default=os.environ.get("NEW_RELIC_LICENSE_KEY", ""))
     parser.add_argument("--collector-host",     default=os.environ.get("NEW_RELIC_HOST", ""))
     parser.add_argument("--env",                action="append", default=[], dest="extra_envs", metavar="NAME=VALUE")
+    parser.add_argument("--enabled-tasks",      default="",
+                        help="Comma-separated Locust task names to exercise (e.g. 'simple,redis_crud'). Empty = all tasks.")
     parser.add_argument("--verbose",            default="false")
     return parser.parse_args()
 
@@ -263,6 +265,7 @@ def main():
         "NEW_RELIC_LICENSE_KEY": args.license_key,
         "NEW_RELIC_HOST":        args.collector_host,
         "NEW_RELIC_APP_NAME":    args.app_name,
+        "LOCUST_ENABLED_TASKS":  args.enabled_tasks,
     })
     if attach_agent:
         compose_env["AGENT_PATH"] = agent_home

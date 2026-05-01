@@ -13,6 +13,14 @@ test:
   locust_users: 10      # Concurrent Locust users
   locust_spawn_rate: 2  # Users to spawn per second
   dotnet_version: "10.0"
+  # Optional: restrict traffic to a subset of Locust tasks. Accepts a
+  # comma-separated string or a YAML list. Omit or leave empty to run all.
+  # Valid: simple, nested_async, rabbitmq_publish, rabbitmq_consume,
+  #        redis_crud, mongo_crud, health.
+  # enabled_tasks: "simple,redis_crud"
+  # enabled_tasks:
+  #   - simple
+  #   - redis_crud
 
 runs:
   # --- Baseline: no agent ---
