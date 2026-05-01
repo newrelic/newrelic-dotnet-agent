@@ -55,6 +55,7 @@ public class DatastoreSegmentDataTests
             Assert.That(segmentData.Operation, Is.EqualTo(_parsedSqlStatement.Operation));
             Assert.That(segmentData.DatastoreVendorName, Is.EqualTo(_parsedSqlStatement.DatastoreVendor));
             Assert.That(segmentData.Model, Is.EqualTo(_parsedSqlStatement.Model));
+            Assert.That(segmentData.GetVendorName(), Is.EqualTo("Other"));
         });
     }
 
@@ -110,6 +111,59 @@ public class DatastoreSegmentDataTests
         var result = segmentData.GetTransactionTraceName();
 
         Assert.That(result, Is.EqualTo("Datastore/statement/Other/model/operation"));
+    }
+
+    [Test]
+    public void GetVendorName_KnownVendor_ReturnsEnumName()
+    {
+        var parsedSqlStatement = new ParsedSqlStatement(DatastoreVendor.MSSQL, "model", "operation");
+        var segmentData = new DatastoreSegmentData(_databaseService, parsedSqlStatement);
+
+        Assert.That(segmentData.GetVendorName(), Is.EqualTo("MSSQL"));
+    }
+
+    [Test]
+    public void GetVendorName_CustomVendorString_ReturnsCustomString()
+    {
+        var parsedSqlStatement = new ParsedSqlStatement("DynamoDB", "model", "operation");
+        var segmentData = new DatastoreSegmentData(_databaseService, parsedSqlStatement);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(segmentData.DatastoreVendorName, Is.EqualTo(DatastoreVendor.Other));
+            Assert.That(segmentData.GetVendorName(), Is.EqualTo("DynamoDB"));
+        });
+    }
+
+    [Test]
+    public void GetVendorName_OtherVendorWithNullString_FallsBackToOther()
+    {
+        var parsedSqlStatement = new ParsedSqlStatement(DatastoreVendor.Other, "model", "operation");
+        var segmentData = new DatastoreSegmentData(_databaseService, parsedSqlStatement);
+
+        Assert.That(segmentData.GetVendorName(), Is.EqualTo("Other"));
+    }
+
+    [Test]
+    public void GetTransactionTraceName_CustomVendor_UsesCustomVendorName()
+    {
+        var parsedSqlStatement = new ParsedSqlStatement("DynamoDB", "users", "scan");
+        var segmentData = new DatastoreSegmentData(_databaseService, parsedSqlStatement);
+
+        var result = segmentData.GetTransactionTraceName();
+
+        Assert.That(result, Is.EqualTo("Datastore/statement/DynamoDB/users/scan"));
+    }
+
+    [Test]
+    public void GetTransactionTraceName_CustomVendor_NullModel_UsesOperationMetric()
+    {
+        var parsedSqlStatement = new ParsedSqlStatement("DynamoDB", null, "scan");
+        var segmentData = new DatastoreSegmentData(_databaseService, parsedSqlStatement);
+
+        var result = segmentData.GetTransactionTraceName();
+
+        Assert.That(result, Is.EqualTo("Datastore/operation/DynamoDB/scan"));
     }
 
     [Test]
