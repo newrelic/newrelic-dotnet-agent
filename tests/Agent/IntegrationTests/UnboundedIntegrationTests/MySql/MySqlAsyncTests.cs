@@ -24,8 +24,6 @@ public abstract class MySqlAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TF
         _fixture = fixture;
         _fixture.TestLogger = output;
 
-        _fixture.ProfilerLogExpected = true;
-
         _fixture.AddCommand($"MySqlExerciser SingleDateQueryAsync");
 
         _fixture.AddActions

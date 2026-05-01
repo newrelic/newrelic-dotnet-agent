@@ -113,6 +113,11 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
         <exactMethodMatcher methodName="ExecuteNonQuery" />
       </match>
+      <!-- MySql.Data 9.7.0 changed the internal sync method signatures to include a CancellationToken -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand" minVersion="9.7.0">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" parameters="System.Threading.CancellationToken" />
+      </match>
 
       <!-- MySql CoreLabs driver -->
       <match assemblyName="Devart.Data.MySql" className="Devart.Data.MySql.MySqlCommand">
@@ -297,6 +302,11 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" />
       </match>
+      <!-- MySql.Data 9.7.0 changed the internal sync method signatures to include a CancellationToken -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlDataReader" minVersion="9.7.0">
+        <exactMethodMatcher methodName="NextResult" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="Read" parameters="System.Threading.CancellationToken" />
+      </match>
 
       <!-- MySqlConnector 0.x -->
       <match assemblyName="MySqlConnector" className="MySql.Data.MySqlClient.MySqlDataReader">
@@ -441,9 +451,9 @@ SPDX-License-Identifier: Apache-2.0
       <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection">
         <exactMethodMatcher methodName="Open"/>
       </match>
-      <!-- Up until 8.0.33, OpenAsync was not actually async -->
+      <!-- Up until 8.0.33, OpenAsync was not actually async; explicit parameter prevents 9.7.0+ block from stealing the match -->
       <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection" maxVersion="8.0.33">
-        <exactMethodMatcher methodName="OpenAsync"/>
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken"/>
       </match>
       
       <!-- MySqlConnector 0.x -->
@@ -488,7 +498,6 @@ SPDX-License-Identifier: Apache-2.0
       <!-- Up until 8.0.33, OpenAsync was not actually async -->
       <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection" minVersion="8.0.33" maxVersion="9.7.0">
         <exactMethodMatcher methodName="OpenAsync" parameters="System.Boolean,System.Threading.CancellationToken"/>
-        <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken"/>
       </match>
       <!-- MySql.Data 9.7.0 removed the isAsync bool parameter from OpenAsync -->
       <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection" minVersion="9.7.0">
