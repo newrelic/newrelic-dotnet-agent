@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.52.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.51.0...v10.52.0) (2026-05-01)
+
+
+### Notice
+
+* Customers using `RecordDatastoreSegment()` with a custom vendor name will see metric names change from `Datastore/*/Other/*` to `Datastore/*/<VendorName>/*`. Update any dashboards, alerts, or queries that reference the old Other-based metric names. ([f6c0e48](https://github.com/newrelic/newrelic-dotnet-agent/commit/f6c0e483e00bbaa17a5b44aa3c8b9d07c5c41e91))
+
+
+### New features
+
+* Add on-demand profiler log capture and improve unbounded services reliability ([7cfde8c](https://github.com/newrelic/newrelic-dotnet-agent/commit/7cfde8c15bbd52a8b6a61cd910d8f389f281914e))
+
+
+### Fixes
+
+* `RecordDatastoreSegment()` API will correctly use the caller-supplied vendor name instead of ignoring it. ([f6c0e48](https://github.com/newrelic/newrelic-dotnet-agent/commit/f6c0e483e00bbaa17a5b44aa3c8b9d07c5c41e91))
+
 ## [10.51.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.50.0...v10.51.0) (2026-04-21)
 
 
