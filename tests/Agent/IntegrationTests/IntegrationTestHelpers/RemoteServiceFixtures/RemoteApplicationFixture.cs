@@ -61,6 +61,7 @@ public abstract class RemoteApplicationFixture : IDisposable
     public AuditLogFile AuditLog => _auditLogFile ?? (_auditLogFile = new AuditLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, timeoutOrZero: Timing.TimeToWaitForLog, throwIfNotFound: AuditLogExpected));
 
 
+    public bool ProfilerLogExpected { get; set; } = false;
     public ProfilerLogFile ProfilerLog { get { return RemoteApplication.ProfilerLog; } }
 
     public virtual string DestinationServerName { get { return RemoteApplication.DestinationServerName; } }
@@ -411,6 +412,20 @@ public abstract class RemoteApplicationFixture : IDisposable
                     {
                         TestForKnownProblems();
                     }
+                }
+
+                if (ProfilerLogExpected)
+                {
+                    TestLogger?.WriteLine("===== Begin Profiler log file =====");
+                    try
+                    {
+                        TestLogger?.WriteLine(ProfilerLog.GetFullLogAsString());
+                    }
+                    catch (Exception)
+                    {
+                        TestLogger?.WriteLine("No profiler log file found.");
+                    }
+                    TestLogger?.WriteLine("----- End of Profiler log file -----");
                 }
             }
         }
