@@ -15,9 +15,8 @@
   </ItemGroup>
   <ItemGroup>
     <!-- 1.7.0 is from Feb 2022 -->
-    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.7.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.14.2" Condition="'$(TargetFramework)' == 'net10.0'" />
-
+    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.14.3" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.14.3" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Amazon.Lambda.AspNetCoreServer" Version="9.0.1" />
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.3" />
   </ItemGroup>
