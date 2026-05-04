@@ -100,7 +100,7 @@ public class StringsTest
 
     [TestCase("[{\"high_security\":false}]", ExpectedResult = "[{\"high_security\":false}]")]
     [TestCase("https://collector.newrelic.com/agent_listener/invoke_raw_method?method=preconnect&license_key=abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcde&marshal_format=json&protocol_version=17",
-        ExpectedResult = "https://collector.newrelic.com/agent_listener/invoke_raw_method?method=preconnect&license_key=abcdeabc********************************&marshal_format=json&protocol_version=17")]
+        ExpectedResult = "https://collector.newrelic.com/agent_listener/invoke_raw_method?method=preconnect&license_key=abcdeabcde******************************&marshal_format=json&protocol_version=17")]
     [TestCase("https://collector.newrelic.com/agent_listener/invoke_raw_method?method=preconnect&license_key=shortLicenseKey&marshal_format=json&protocol_version=17",
         ExpectedResult = "https://collector.newrelic.com/agent_listener/invoke_raw_method?method=preconnect&license_key=***************&marshal_format=json&protocol_version=17")]
     public string ObfuscateLicenseKeyForAuditLog(string inputText)

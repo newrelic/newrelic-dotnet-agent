@@ -101,7 +101,7 @@ public class CustomActions
             session.Log("licenseKey attribute found in /configuration/service node.");
 
             licenseKeyAttribute.Value = licenseKey;
-            session.Log("License key set to " + licenseKey);
+            session.Log("License key set to " + ObfuscateLicenseKey(licenseKey));
 
             document.Save(session.CustomActionData["NETAGENTCOMMONFOLDER"] + @"\newrelic.config");
             session.Log("newrelic.config saved with updated license key.");
@@ -380,6 +380,21 @@ public class CustomActions
     {
         session["LogHack"] = String.Format(message, arguments);
     }
+
+    internal static string ObfuscateLicenseKey(string licenseKey)
+    {
+        if (string.IsNullOrEmpty(licenseKey))
+        {
+            return licenseKey;
+        }
+
+        if (licenseKey.Length == 40)
+        {
+            return licenseKey.Substring(0, 10) + new string('*', 30);
+        }
+
+        return new string('*', licenseKey.Length);
+    }
 }
 
 internal abstract class MySession
@@ -524,7 +539,7 @@ internal class LicenseKeyFinder : MySession
             String licenseKey = GetKeyFromFolder(folderPath);
             if (licenseKey == null) continue;
 
-            Log("Setting NR_LICENSE_KEY to {0} found in {1}", licenseKey, folderPath);
+            Log("Setting NR_LICENSE_KEY to {0} found in {1}", CustomActions.ObfuscateLicenseKey(licenseKey), folderPath);
             session["NR_LICENSE_KEY"] = licenseKey;
             session["PREVLICENSEKEYFOUND"] = "1";
 

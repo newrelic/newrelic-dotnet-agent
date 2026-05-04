@@ -194,11 +194,11 @@ public static class Strings
 
     public static string ObfuscateLicenseKey(string licenseKey)
     {
-        // We can log up to 8 characters of a 40-character license key, the rest must be obfuscated
+        // We can log up to 10 characters of a 40-character license key, the rest must be obfuscated
         // For our agent, the license key should always be 40 characters. For safety, if it isn't, just obfuscate the whole thing
         if (licenseKey.Length == 40)
         {
-            return licenseKey.Substring(0, 8) + new string('*', 32);
+            return licenseKey.Substring(0, 10) + new string('*', 30);
         }
         else
         {
