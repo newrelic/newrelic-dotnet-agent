@@ -193,10 +193,13 @@ public class BootstrapConfiguration : IBootstrapConfiguration
             return;
         }
 
-        _agentEnabledWithProvenance = TryGetAgentEnabledFromAppSettings();
-        if (_agentEnabledWithProvenance != null)
+        if (!ConfigLoaderHelpers.IsConfigurationManagerSupportDisabled())
         {
-            return;
+            _agentEnabledWithProvenance = TryGetAgentEnabledFromAppSettings();
+            if (_agentEnabledWithProvenance != null)
+            {
+                return;
+            }
         }
 
         _agentEnabledWithProvenance = new ValueWithProvenance<bool>(_agentEnabledValueFromLocalConfig, ConfigurationFileName);

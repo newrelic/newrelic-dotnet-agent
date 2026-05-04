@@ -314,6 +314,18 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="disableConfigurationManagerSupport" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    If true, the agent will skip all ConfigurationManager API reads. Use this to
+                                    prevent deadlocks when the monitored app has configured ConfigurationManager to
+                                    integrate with APIs the agent also instruments. Any settings previously read
+                                    from web.config/app.config/appsettings.json must be migrated to newrelic.config
+                                    or environment variables. Default: false.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
                     </xs:complexType>
                 </xs:element>
 

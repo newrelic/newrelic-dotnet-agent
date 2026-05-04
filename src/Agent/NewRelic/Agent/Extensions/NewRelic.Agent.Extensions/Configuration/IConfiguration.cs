@@ -285,4 +285,6 @@ public interface IConfiguration
     #endregion
 
     bool HybridHttpContextStorageEnabled { get; }
+
+    bool DisableConfigurationManagerSupport { get; }
 }

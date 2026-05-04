@@ -828,7 +828,9 @@ namespace NewRelic.Agent.Core.Config
         private bool forceNewTransactionOnNewThreadField;
         
         private bool disableFileSystemWatcherField;
-        
+
+        private bool disableConfigurationManagerSupportField;
+
         /// <summary>
         /// configurationService class constructor
         /// </summary>
@@ -843,6 +845,7 @@ namespace NewRelic.Agent.Core.Config
             this.completeTransactionsOnThreadField = false;
             this.forceNewTransactionOnNewThreadField = false;
             this.disableFileSystemWatcherField = false;
+            this.disableConfigurationManagerSupportField = false;
         }
         
         public string obscuringKey
@@ -1078,7 +1081,21 @@ namespace NewRelic.Agent.Core.Config
                 this.disableFileSystemWatcherField = value;
             }
         }
-        
+
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool disableConfigurationManagerSupport
+        {
+            get
+            {
+                return this.disableConfigurationManagerSupportField;
+            }
+            set
+            {
+                this.disableConfigurationManagerSupportField = value;
+            }
+        }
+
         #region Clone method
         /// <summary>
         /// Create a clone of this configurationService object

@@ -366,6 +366,20 @@ public class DefaultConfigurationTests
         return _defaultConfig.CollectorSendDataOnExit;
     }
 
+    [TestCase("true",  true,  ExpectedResult = true)]
+    [TestCase("false", true,  ExpectedResult = false)]
+    [TestCase("1",     false, ExpectedResult = true)]
+    [TestCase("0",     true,  ExpectedResult = false)]
+    [TestCase(null,    true,  ExpectedResult = true)]
+    [TestCase(null,    false, ExpectedResult = false)]
+    public bool DisableConfigurationManagerSupport_EnvironmentOverride(string envValue, bool localValue)
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_DISABLE_CONFIGURATION_MANAGER_SUPPORT"))
+            .Returns(envValue);
+        _localConfig.service.disableConfigurationManagerSupport = localValue;
+        return _defaultConfig.DisableConfigurationManagerSupport;
+    }
+
     [TestCase("100", 500f, ExpectedResult = 100f)]
     [TestCase("blarg", 500f, ExpectedResult = 500f)]
     [TestCase(null, 500f, ExpectedResult = 500f)]

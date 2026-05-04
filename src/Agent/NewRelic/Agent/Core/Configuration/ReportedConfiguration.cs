@@ -811,5 +811,8 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("hybrid_http_context_storage.enabled")]
     public bool HybridHttpContextStorageEnabled => _configuration.HybridHttpContextStorageEnabled;
 
+    [JsonProperty("disable_configuration_manager_support")]
+    public bool DisableConfigurationManagerSupport => _configuration.DisableConfigurationManagerSupport;
+
     #endregion
 }

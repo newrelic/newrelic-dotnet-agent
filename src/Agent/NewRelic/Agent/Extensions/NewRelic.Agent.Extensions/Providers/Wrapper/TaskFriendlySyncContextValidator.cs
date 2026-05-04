@@ -47,6 +47,11 @@ public class TaskFriendlySyncContextValidator
         }
 
         // This will return true if the web.config includes <add key="aspnet:UseTaskFriendlySynchronizationContext" value="true" />
+        var disableVal = System.Environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_CONFIGURATION_MANAGER_SUPPORT");
+        var isDisabled = disableVal != null && (bool.TryParse(disableVal, out var b) ? b : disableVal == "1");
+        if (isDisabled)
+            return false;
+
         var appSettingValue = ConfigurationManager.AppSettings["aspnet:UseTaskFriendlySynchronizationContext"];
         bool.TryParse(appSettingValue, out var isTaskFriendlySyncContextEnabled);
 

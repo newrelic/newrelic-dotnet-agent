@@ -31,7 +31,7 @@ public static class ConfigurationLoader
 
     #region Unit test helpers
 
-    // These fields and methods exists and is public so that the test projects can replace the functionality
+    // These fields and methods exist and are public so that the test projects can replace the functionality
     // without requiring a redesign of this static class.
 
 #if NETFRAMEWORK
@@ -95,6 +95,9 @@ public static class ConfigurationLoader
     {
         ValueWithProvenance<string> value = null;
 #if NETFRAMEWORK
+        if (ConfigLoaderHelpers.IsConfigurationManagerSupportDisabled())
+            return value;
+
         try
         {
             if (GetAppDomainAppId() != null)
@@ -122,13 +125,13 @@ public static class ConfigurationLoader
     {
         ValueWithProvenance<string> value = GetWebConfigAppSetting(key);
 #if NETFRAMEWORK
-        if (value.Value == null)
+        if (value.Value == null && !ConfigLoaderHelpers.IsConfigurationManagerSupportDisabled())
         {
             value = new ValueWithProvenance<string>(ConfigurationManager.AppSettings[key],
                 "ConfigurationManager app setting");
         }
 #else
-            if (value?.Value == null)
+            if (value?.Value == null && !ConfigLoaderHelpers.IsConfigurationManagerSupportDisabled())
             {
                 // Use configuration manager to access application's actual config system
                 var configMgrStatic = new ConfigurationManagerStatic();
@@ -593,6 +596,18 @@ public static class ConfigLoaderHelpers
     public static bool GetOverride(string name, bool fallback)
     {
         return DefaultConfiguration.EnvironmentOverrides(EnvironmentVariableProxy, fallback, name);
+    }
+
+    public static bool IsConfigurationManagerSupportDisabled()
+    {
+        if (GetEnvironmentVar("NEW_RELIC_DISABLE_CONFIGURATION_MANAGER_SUPPORT").TryToBoolean(out var disabled))
+        {
+            if (disabled)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static bool TryToBoolean(this string val, out bool boolVal)

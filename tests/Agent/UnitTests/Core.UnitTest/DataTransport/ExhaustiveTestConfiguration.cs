@@ -539,4 +539,6 @@ public class ExhaustiveTestConfiguration : IConfiguration
     public int OpenTelemetryMetricsExportTimeoutMs => 10000;
 
     public bool HybridHttpContextStorageEnabled => false;
+
+    public bool DisableConfigurationManagerSupport => false;
 }

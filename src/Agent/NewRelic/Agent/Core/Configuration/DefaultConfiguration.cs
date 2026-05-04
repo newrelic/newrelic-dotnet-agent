@@ -216,7 +216,7 @@ public class DefaultConfiguration : IConfiguration
         // same order as old process - appsettings > env var(a/b) > newrelic.config
         var candidateKeys = new Dictionary<string, string>
         {
-            { "AppSettings", _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey) },
+            { "AppSettings", DisableConfigurationManagerSupport ? null : _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLicenseKey) },
             { "EnvironmentVariable", _environment.GetEnvironmentVariableFromList("NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY") },
             { "newrelic.config", _localConfiguration.service.licenseKey }
         };
@@ -304,7 +304,7 @@ public class DefaultConfiguration : IConfiguration
         }
 
         // 2. App/web config (web.config/app.config/appsettings.json)
-        var appName = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName);
+        var appName = DisableConfigurationManagerSupport ? null : _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName);
         if (appName != null)
         {
             Log.Info("Application name from web.config or app.config.");
@@ -770,6 +770,8 @@ public class DefaultConfiguration : IConfiguration
     public virtual string CollectorHost { get { return EnvironmentOverrides(_localConfiguration.service.host, @"NEW_RELIC_HOST"); } }
     public virtual int CollectorPort => EnvironmentOverrides(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : (int?)null, "NEW_RELIC_PORT") ?? DefaultSslPort;
     public virtual bool CollectorSendDataOnExit { get { return EnvironmentOverrides(_localConfiguration.service.sendDataOnExit, "NEW_RELIC_SEND_DATA_ON_EXIT"); } }
+
+    public virtual bool DisableConfigurationManagerSupport => EnvironmentOverrides(_localConfiguration.service.disableConfigurationManagerSupport, "NEW_RELIC_DISABLE_CONFIGURATION_MANAGER_SUPPORT");
     public virtual float CollectorSendDataOnExitThreshold { get { return EnvironmentOverrides((uint?)null, "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS") ?? _localConfiguration.service.sendDataOnExitThreshold; } }
     public virtual bool CollectorSendEnvironmentInfo { get { return _localConfiguration.service.sendEnvironmentInfo; } }
     public virtual bool CollectorSyncStartup { get { return _localConfiguration.service.syncStartup; } }
@@ -1422,7 +1424,7 @@ public class DefaultConfiguration : IConfiguration
         {
             if (!_labelsChecked)
             {
-                var labels = _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLabels);
+                var labels = DisableConfigurationManagerSupport ? null : _configurationManagerStatic.GetAppSetting(Constants.AppSettingsLabels);
                 if (labels != null)
                 {
                     Log.Info("Application labels from web.config, app.config, or appsettings.json.");
@@ -1814,7 +1816,7 @@ public class DefaultConfiguration : IConfiguration
     #endregion Metric naming
 
     public string NewRelicConfigFilePath => _bootstrapConfiguration.ConfigurationFileName;
-    public string AppSettingsConfigFilePath => _configurationManagerStatic.AppSettingsFilePath;
+    public string AppSettingsConfigFilePath => DisableConfigurationManagerSupport ? null : _configurationManagerStatic.AppSettingsFilePath;
 
     #region Utilization
 

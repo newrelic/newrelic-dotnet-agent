@@ -36,6 +36,18 @@ public class ConfigurationManagerStaticMock : IConfigurationManagerStatic
     {
         private bool localConfigChecksDisabled;
 
+        public ConfigurationManagerStatic()
+        {
+            if (IsDisabledViaEnvironmentVariable())
+                localConfigChecksDisabled = true;
+        }
+
+        private static bool IsDisabledViaEnvironmentVariable()
+        {
+            var val = System.Environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_CONFIGURATION_MANAGER_SUPPORT");
+            return val != null && (bool.TryParse(val, out var b) ? b : val == "1");
+        }
+
         public string AppSettingsFilePath
         {
             get
@@ -80,6 +92,18 @@ public class ConfigurationManagerStaticMock : IConfigurationManagerStatic
 public class ConfigurationManagerStatic : IConfigurationManagerStatic
 {
     private bool localConfigChecksDisabled;
+
+    public ConfigurationManagerStatic()
+    {
+        if (IsDisabledViaEnvironmentVariable())
+            localConfigChecksDisabled = true;
+    }
+
+    private static bool IsDisabledViaEnvironmentVariable()
+    {
+        var val = System.Environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_CONFIGURATION_MANAGER_SUPPORT");
+        return val != null && (bool.TryParse(val, out var b) ? b : val == "1");
+    }
 
     public string AppSettingsFilePath
     {
