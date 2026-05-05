@@ -82,9 +82,10 @@ jobs:
           $installPath = & $vswhere -latest -products * -property installationPath
           Write-Host "Visual Studio install path: $installPath"
           $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
+          # Quote installPath because it contains spaces; Start-Process -ArgumentList does not quote individual array elements.
           $args = @(
             'modify',
-            '--installPath', $installPath,
+            '--installPath', "`"$installPath`"",
             '--add', 'Microsoft.VisualStudio.Component.VC.ATL',
             '--add', 'Microsoft.VisualStudio.Component.VC.ATL.ARM64',
             '--add', 'Microsoft.VisualStudio.Component.VC.v142.ATL',
