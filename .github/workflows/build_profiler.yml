@@ -43,7 +43,7 @@ jobs:
 
   build-windows-profiler:
     name: Build Windows Profiler & Run Unit Tests / Code Coverage
-    runs-on: windows-latest
+    runs-on: windows-2022
     needs: check-modified-files
     # only run this job if source files were modified, or if triggered by a manual execution
     if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
