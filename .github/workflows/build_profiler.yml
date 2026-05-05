@@ -84,9 +84,10 @@ jobs:
           Write-Host "Locating vs setup.exe at $vs_setup"
           $vs_path = & "$vswhere" -property installationPath
           Write-Host "Visual Studio installation path: $vs_path"
-          & "$vs_setup" export --quiet --installPath "$vs_path" --config "C:\temp\vs_components.json"
+          $vsConfigFile = "${env:TEMP}\vs_components.json"
+          & "$vs_setup" export --quiet --installPath "$vs_path" --config "$vsConfigFile" --all
           Write-Host "Current Visual Studio components:"
-          Get-Content C:\temp\vs_components.json | ConvertFrom-Json | ForEach-Object { $_.id }
+          Get-Content $vsConfigFile | ConvertFrom-Json | ForEach-Object { $_.id }
         shell: powershell 
 
       - name: Install Visual Studio ATL components
