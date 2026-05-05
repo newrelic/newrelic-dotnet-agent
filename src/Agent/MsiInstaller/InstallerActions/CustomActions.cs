@@ -388,12 +388,13 @@ public class CustomActions
             return licenseKey;
         }
 
-        if (licenseKey.Length == 40)
+        const int PlaintextPrefixLength = 10;
+        if (licenseKey.Length <= PlaintextPrefixLength)
         {
-            return licenseKey.Substring(0, 10) + new string('*', 30);
+            return new string('*', licenseKey.Length);
         }
 
-        return new string('*', licenseKey.Length);
+        return licenseKey.Substring(0, PlaintextPrefixLength) + new string('*', licenseKey.Length - PlaintextPrefixLength);
     }
 }
 
