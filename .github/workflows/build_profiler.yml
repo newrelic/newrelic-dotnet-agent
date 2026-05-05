@@ -90,8 +90,7 @@ jobs:
           & "$vs_setup" export --quiet --installPath "$vs_path" --config "$vsConfigFile"
           Sleep 30 # give some time for the file to be written before we read it
           Write-Host "Current Visual Studio components:"
-          Get-Content $vsConfigFile | ConvertFrom-Json | ForEach-Object { $_.id }
-          
+          Get-Content $vsConfigFile
         shell: powershell 
 
       # - name: Install Visual Studio ATL components
