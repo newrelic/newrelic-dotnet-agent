@@ -85,11 +85,13 @@ jobs:
           $vs_path = & "$vswhere" -property installationPath
           Write-Host "Visual Studio installation path: $vs_path"
           $vsConfigFile = "${env:TEMP}\test.json"
+          "vs_config_file=$vsConfigFile" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           Write-Host "Exporting Visual Studio components to $vsConfigFile"
           & "$vs_setup" export --quiet --installPath "$vs_path" --config "$vsConfigFile"
           Sleep 30 # give some time for the file to be written before we read it
           Write-Host "Current Visual Studio components:"
           Get-Content $vsConfigFile | ConvertFrom-Json | ForEach-Object { $_.id }
+          
         shell: powershell 
 
       - name: Install Visual Studio ATL components
@@ -161,7 +163,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: vs-components
-          path: C:\temp\vs_components.json
+          path: ${{ env.vs_config_file }}
           if-no-files-found: error
 
       - name: Archive Build Artifacts
