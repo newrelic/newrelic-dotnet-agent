@@ -76,6 +76,29 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -Recurse -ErrorAction SilentlyContinue
         shell: powershell
 
+      - name: Install Visual Studio ATL components
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $installPath = & $vswhere -latest -products * -property installationPath
+          Write-Host "Visual Studio install path: $installPath"
+          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
+          $args = @(
+            'modify',
+            '--installPath', $installPath,
+            '--add', 'Microsoft.VisualStudio.Component.VC.ATL',
+            '--add', 'Microsoft.VisualStudio.Component.VC.ATL.ARM64',
+            '--add', 'Microsoft.VisualStudio.Component.VC.v142.ATL',
+            '--quiet', '--norestart', '--nocache'
+          )
+          Write-Host "Running: $installer $args"
+          $process = Start-Process -FilePath $installer -ArgumentList $args -Wait -PassThru -NoNewWindow
+          Write-Host "VS Installer exit code: $($process.ExitCode)"
+          # Exit codes 0 and 3010 (reboot required, but not needed here) are success
+          if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
+            throw "VS Installer failed with exit code $($process.ExitCode)"
+          }
+        shell: powershell
+
       - name: Build x64
         run: |
           Write-Host "List NuGet Sources"
