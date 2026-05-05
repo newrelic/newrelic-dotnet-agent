@@ -386,46 +386,46 @@ jobs:
   #         nuget.exe push $packagePath -Source ${{ env.nuget_source }}
   #       shell: powershell
 
-  update-nuget-reference:
-    name: Update Profiler Nuget Reference
-    runs-on: ubuntu-22.04
-    needs: package-and-deploy
-    if: ${{ inputs.deploy }}
-    permissions:
-      pull-requests: write
+  # update-nuget-reference:
+  #   name: Update Profiler Nuget Reference
+  #   runs-on: ubuntu-22.04
+  #   needs: package-and-deploy
+  #   if: ${{ inputs.deploy }}
+  #   permissions:
+  #     pull-requests: write
 
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-        with:
-          egress-policy: audit
+  #   steps:
+  #     - name: Harden Runner
+  #       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+  #       with:
+  #         egress-policy: audit
 
-      - name: Install xmlstarlet
-        run: |
-          sudo apt-get install -y xmlstarlet
+  #     - name: Install xmlstarlet
+  #       run: |
+  #         sudo apt-get install -y xmlstarlet
 
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #     - name: Checkout
+  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Update Profiler Package Reference to Latest Version
-        run: |
-          cat ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj | \
-          xmlstarlet edit --pf --omit-decl \
-          --update "//PackageReference[@Include='NewRelic.Agent.Internal.Profiler']/@Version" \
-          --value "${{ needs.package-and-deploy.outputs.package_version }}" > ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp &&
-          cat ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp > ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj &&
-          rm -f ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp
+  #     - name: Update Profiler Package Reference to Latest Version
+  #       run: |
+  #         cat ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj | \
+  #         xmlstarlet edit --pf --omit-decl \
+  #         --update "//PackageReference[@Include='NewRelic.Agent.Internal.Profiler']/@Version" \
+  #         --value "${{ needs.package-and-deploy.outputs.package_version }}" > ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp &&
+  #         cat ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp > ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj &&
+  #         rm -f ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
-        with:
-            token: ${{ secrets.DOTNET_AGENT_GH_TOKEN}}
-            commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }} (built from ${{ github.sha }}).\n\nBuilt from commit: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
-            title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }} (built from ${{ github.sha }})"
-            branch: profiler-nuget-updates/${{ github.ref_name }}
-            labels: |
-              profiler nuget
-              automated pr
-            delete-branch: true
-            add-paths: |
-              src/Agent/NewRelic/Home/Home.csproj
+  #     - name: Create Pull Request
+  #       uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+  #       with:
+  #           token: ${{ secrets.DOTNET_AGENT_GH_TOKEN}}
+  #           commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }} (built from ${{ github.sha }}).\n\nBuilt from commit: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+  #           title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }} (built from ${{ github.sha }})"
+  #           branch: profiler-nuget-updates/${{ github.ref_name }}
+  #           labels: |
+  #             profiler nuget
+  #             automated pr
+  #           delete-branch: true
+  #           add-paths: |
+  #             src/Agent/NewRelic/Home/Home.csproj
