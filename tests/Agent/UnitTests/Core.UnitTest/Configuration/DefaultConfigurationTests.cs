@@ -1452,19 +1452,20 @@ public class DefaultConfigurationTests
     // local on its own
     [TestCase(null, null, "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
     [TestCase(null, null, "REPLACE_WITH_LICENSE_KEY", ExpectedResult = "REPLACE_WITH_LICENSE_KEY")]
-    // Length must be 40
+    // Surrounding whitespace is trimmed
     [TestCase("       foo1234567890abcdefghijklmnopqrstuvwxyz0         ", null, null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
-    [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", null, null, ExpectedResult = "")]
-    [TestCase("foo", null, null, ExpectedResult = "")]
-    // Allowed characters
-    [TestCase("foo1234567890abcdefghijklmnopqrstuvyz\tzz", null, null, ExpectedResult = "")]
-    // Bad keys skipped for lower priority keys
-    [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
-    [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
-    [TestCase("foo", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
-    [TestCase(null, "foo", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
-    [TestCase("foo1234567890abcdefghijklmnopqrstuvyz\tzz", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
-    [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvyz\tzz", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0")]
+    // Per Preconnect spec, license keys are not validated by length or character content.
+    // Keys of any length or containing any characters must be accepted as-is (aside from surrounding-whitespace trim).
+    [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", null, null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0123456789")]
+    [TestCase("foo", null, null, ExpectedResult = "foo")]
+    [TestCase("foo1234567890abcdefghijklmnopqrstuvyz\tzz", null, null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvyz\tzz")]
+    // Higher-priority sources always win, even when they carry unusual values
+    [TestCase("foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0123456789")]
+    [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvwxyz0123456789", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvwxyz0123456789")]
+    [TestCase("foo", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo")]
+    [TestCase(null, "foo", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo")]
+    [TestCase("foo1234567890abcdefghijklmnopqrstuvyz\tzz", "foo1234567890abcdefghijklmnopqrstuvwxyz0", null, ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvyz\tzz")]
+    [TestCase(null, "foo1234567890abcdefghijklmnopqrstuvyz\tzz", "foo1234567890abcdefghijklmnopqrstuvwxyz0", ExpectedResult = "foo1234567890abcdefghijklmnopqrstuvyz\tzz")]
     public string LicenseKeyEnvironmentOverridesLocal(string appSettingEnvironmentName, string newEnvironmentName, string local)
     {
         _localConfig.service.licenseKey = local;
