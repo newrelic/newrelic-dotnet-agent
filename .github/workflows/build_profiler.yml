@@ -76,6 +76,16 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -Recurse -ErrorAction SilentlyContinue
         shell: powershell
 
+      - name: Get current Visual Studio installed components
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs_setup = & $vswhere -property properties_setupEngineFilePath
+          $vs_path = & $vswhere -property installationPath
+          & $vs_setup export --quiet --installPath $vs_path --config "C:\temp\vs_components.json"
+          Write-Host "Current Visual Studio components:"
+          Get-Content C:\temp\vs_components.json | ConvertFrom-Json | ForEach-Object { $_.id }
+        shell: powershell 
+
       - name: Install Visual Studio ATL components
         run: |
           $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
@@ -140,6 +150,13 @@ jobs:
             flags: Profiler
             files: ${{ env.test_results_path }}/profilerx86.xml,${{ env.test_results_path }}/profilerx64.xml
             token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive VS components Artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vs-components
+          path: C:\temp\vs_components.json
+          if-no-files-found: error
 
       - name: Archive Build Artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
