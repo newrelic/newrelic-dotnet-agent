@@ -84,8 +84,9 @@ jobs:
           Write-Host "Locating vs setup.exe at $vs_setup"
           $vs_path = & "$vswhere" -property installationPath
           Write-Host "Visual Studio installation path: $vs_path"
-          $vsConfigFile = "${env:TEMP}\vs_components.json"
-          & "$vs_setup" export --quiet --installPath "$vs_path" --config "$vsConfigFile" --all
+          $vsConfigFile = "${env:TEMP}\test.json"
+          Write-Host "Exporting Visual Studio components to $vsConfigFile"
+          & "$vs_setup" export --quiet --installPath "$vs_path" --config "$vsConfigFile"
           Write-Host "Current Visual Studio components:"
           Get-Content $vsConfigFile | ConvertFrom-Json | ForEach-Object { $_.id }
         shell: powershell 
