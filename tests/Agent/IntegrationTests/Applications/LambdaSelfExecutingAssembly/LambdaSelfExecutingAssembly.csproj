@@ -38,11 +38,9 @@
     <!-- 1.2.0 is from October 2020 -->
     <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.1" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.1" Condition="'$(TargetFramework)' == 'net10.0'" />
-
     <!-- 1.7.0 is from Feb 2022 -->
-    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.7.0" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.14.2" Condition="'$(TargetFramework)' == 'net10.0'" />
-
+    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.14.3" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.14.3" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- Non-event libraries -->
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.3" />
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">

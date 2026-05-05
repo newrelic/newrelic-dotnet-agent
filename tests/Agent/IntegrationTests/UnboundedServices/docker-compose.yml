@@ -28,6 +28,7 @@ services:
             - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-RabbitUser}
             - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-RabbitPassword}
         container_name: RabbitmqServer
+        restart: unless-stopped
 
     mongodb32:
         build: ./mongodb32
@@ -37,6 +38,7 @@ services:
             - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-MongoUser}
             - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-MongoPassword}
         container_name: MongoDB32Server
+        restart: unless-stopped
 
     mongodb60:
         build: ./mongodb60
@@ -46,6 +48,7 @@ services:
             - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-MongoUser}
             - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-MongoPassword}
         container_name: MongoDB60Server
+        restart: unless-stopped
 
     redis:
         build: ./redis
@@ -53,6 +56,7 @@ services:
         ports:
             - "6379:6379"
         container_name: RedisServer
+        restart: unless-stopped
 
     couchbase:
         build: ./couchbase
@@ -60,10 +64,11 @@ services:
             - "8091-8095:8091-8095"
             - "11210:11210"
         environment:
-            # These credentials are used to configure the Couchbase container 
+            # These credentials are used to configure the Couchbase container
             # for use by the integration tests.
             - COUCHBASE_ADMINISTRATOR_PASSWORD=${COUCHBASE_ADMINISTRATOR_PASSWORD:-CouchbasePassword}
         container_name: CouchbaseServer
+        restart: unless-stopped
 
     postgres:
         build: ./postgres
@@ -77,6 +82,7 @@ services:
             - POSTGRES_USER=postgres
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-PostgresPassword}
         container_name: PostgresServer
+        restart: unless-stopped
 
     mssql:
         build:
@@ -89,6 +95,7 @@ services:
             - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-MssqlPassw0rd}
             - ACCEPT_EULA=Y
         container_name: MssqlServer
+        restart: unless-stopped
 
     oracle:
         build: ./oracle
@@ -96,10 +103,11 @@ services:
         ports:
             - "1521:1521"
         environment:
-            # The password set here must match the password set in the connection 
+            # The password set here must match the password set in the connection
             # string being used by the Oracle unbounded integration tests
             - ORACLE_PWD=${ORACLE_PWD:-OraclePassword}
         container_name: OracleServer
+        restart: unless-stopped
 
     mysql:
         build: ./mysql
@@ -107,11 +115,12 @@ services:
         ports:
             - "3306:3306"
         environment:
-            # These credentials are only used to configure the MySql container 
-            # for use by the integration tests. They must match the values from 
+            # These credentials are only used to configure the MySql container
+            # for use by the integration tests. They must match the values from
             # the connection string used by those tests
             - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-MysqlPassword}
         container_name: MySqlServer
+        restart: unless-stopped
 
     elastic9:
         build: ./elastic9
@@ -128,6 +137,7 @@ services:
                 limits:
                     memory: 2GB
         container_name: Elastic9Server
+        restart: unless-stopped
 
     elastic8:
         build: ./elastic8
@@ -144,6 +154,7 @@ services:
                 limits:
                     memory: 2GB
         container_name: Elastic8Server
+        restart: unless-stopped
 
     elastic7:
         build: ./elastic7
@@ -160,6 +171,7 @@ services:
                 limits:
                     memory: 2GB
         container_name: Elastic7Server
+        restart: unless-stopped
 
     # # have to manually set the password for kibana_user - use curl to hit the correct endpoint
     # kibana_pw_setup:

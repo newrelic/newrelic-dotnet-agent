@@ -21,6 +21,11 @@
 #   extra.env               Written by run-perf-test.sh from --env NAME=VALUE args.
 #                           Keys in this file are overridden by the explicit
 #                           'environment' block below if the same name appears there.
+#
+# Optional traffic-driver environment variables:
+#
+#   LOCUST_ENABLED_TASKS    Comma-separated Locust task names to exercise
+#                           (e.g. "simple,redis_crud"). Empty/unset = all tasks.
 
 services:
   redis:
@@ -123,6 +128,8 @@ services:
       --csv /results/locust
       --logfile /logs/locust.log
       --exit-code-on-error 0
+    environment:
+      LOCUST_ENABLED_TASKS: ${LOCUST_ENABLED_TASKS:-}
     volumes:
       - ./results:/results
       - ./logs:/logs
