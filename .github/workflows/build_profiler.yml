@@ -94,70 +94,70 @@ jobs:
           
         shell: powershell 
 
-      - name: Install Visual Studio ATL components
-        run: |
-          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          $installPath = & $vswhere -latest -products * -property installationPath
-          Write-Host "Visual Studio install path: $installPath"
-          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
-          # Quote installPath because it contains spaces; Start-Process -ArgumentList does not quote individual array elements.
-          $args = @(
-            'modify',
-            '--installPath', "`"$installPath`"",
-            '--add', 'Microsoft.VisualStudio.Component.VC.ATL',
-            '--quiet', '--norestart', '--nocache'
-          )
-          Write-Host "Running: $installer $args"
-          $process = Start-Process -FilePath $installer -ArgumentList $args -Wait -PassThru -NoNewWindow
-          Write-Host "VS Installer exit code: $($process.ExitCode)"
-          # Exit codes 0 and 3010 (reboot required, but not needed here) are success
-          if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
-            throw "VS Installer failed with exit code $($process.ExitCode)"
-          }
-        shell: powershell
+      # - name: Install Visual Studio ATL components
+      #   run: |
+      #     $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+      #     $installPath = & $vswhere -latest -products * -property installationPath
+      #     Write-Host "Visual Studio install path: $installPath"
+      #     $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
+      #     # Quote installPath because it contains spaces; Start-Process -ArgumentList does not quote individual array elements.
+      #     $args = @(
+      #       'modify',
+      #       '--installPath', "`"$installPath`"",
+      #       '--add', 'Microsoft.VisualStudio.Component.VC.ATL',
+      #       '--quiet', '--norestart', '--nocache'
+      #     )
+      #     Write-Host "Running: $installer $args"
+      #     $process = Start-Process -FilePath $installer -ArgumentList $args -Wait -PassThru -NoNewWindow
+      #     Write-Host "VS Installer exit code: $($process.ExitCode)"
+      #     # Exit codes 0 and 3010 (reboot required, but not needed here) are success
+      #     if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
+      #       throw "VS Installer failed with exit code $($process.ExitCode)"
+      #     }
+      #   shell: powershell
 
-      - name: Build x64
-        run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
-        shell: powershell
+      # - name: Build x64
+      #   run: |
+      #     Write-Host "List NuGet Sources"
+      #     dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+      #     Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+      #     MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
+      #   shell: powershell
 
-      - name: Build x86
-        run: |
-          Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
-        shell: powershell
+      # - name: Build x86
+      #   run: |
+      #     Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+      #     MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
+      #   shell: powershell
         
-      - name: Setup VSTest and add to PATH
-        uses: darenm/Setup-VSTest@3a16d909a1f3bbc65b52f8270d475d905e7d3e44 # 1.3
-        id: setup_vstest
+      # - name: Setup VSTest and add to PATH
+      #   uses: darenm/Setup-VSTest@3a16d909a1f3bbc65b52f8270d475d905e7d3e44 # 1.3
+      #   id: setup_vstest
 
-      - name: Setup OpenCppCoverage and add to PATH
-        id: setup_opencppcoverage
-        run: |
-          choco install OpenCppCoverage -y
-          echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
+      # - name: Setup OpenCppCoverage and add to PATH
+      #   id: setup_opencppcoverage
+      #   run: |
+      #     choco install OpenCppCoverage -y
+      #     echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
 
-      - name: Generate Report
-        id: generate_test_report
-        shell: cmd
-        run: |
-            cd ${{ env.tests_base_path }}
-            OpenCppCoverage.exe --sources Profiler --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:${{ env.test_results_path }}\profilerx86.xml -- "vstest.console.exe" /Platform:x86 "Profiler\CommonTest\bin\x86\Release\CommonTest.dll" "Profiler\ConfigurationTest\bin\x86\Release\ConfigurationTest.dll" "Profiler\LoggingTest\bin\x86\Release\LoggingTest.dll" "Profiler\MethodRewriterTest\bin\x86\Release\MethodRewriterTest.dll" "Profiler\SignatureParserTest\bin\x86\Release\SignatureParserTest.dll" "Profiler\Sicily\SicilyTest\bin\x86\Release\SicilyTest.dll"
-            if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
-            mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x86.log
-            OpenCppCoverage.exe --sources Profiler --cover_children --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:${{ env.test_results_path }}\profilerx64.xml -- "vstest.console.exe" /Platform:x64 "Profiler\CommonTest\bin\x64\Release\CommonTest.dll" "Profiler\ConfigurationTest\bin\x64\Release\ConfigurationTest.dll" "Profiler\LoggingTest\bin\x64\Release\LoggingTest.dll" "Profiler\MethodRewriterTest\bin\x64\Release\MethodRewriterTest.dll" "Profiler\SignatureParserTest\bin\x64\Release\SignatureParserTest.dll" "Profiler\Sicily\SicilyTest\bin\x64\Release\SicilyTest.dll"
-            if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
-            mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x64.log
+      # - name: Generate Report
+      #   id: generate_test_report
+      #   shell: cmd
+      #   run: |
+      #       cd ${{ env.tests_base_path }}
+      #       OpenCppCoverage.exe --sources Profiler --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:${{ env.test_results_path }}\profilerx86.xml -- "vstest.console.exe" /Platform:x86 "Profiler\CommonTest\bin\x86\Release\CommonTest.dll" "Profiler\ConfigurationTest\bin\x86\Release\ConfigurationTest.dll" "Profiler\LoggingTest\bin\x86\Release\LoggingTest.dll" "Profiler\MethodRewriterTest\bin\x86\Release\MethodRewriterTest.dll" "Profiler\SignatureParserTest\bin\x86\Release\SignatureParserTest.dll" "Profiler\Sicily\SicilyTest\bin\x86\Release\SicilyTest.dll"
+      #       if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+      #       mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x86.log
+      #       OpenCppCoverage.exe --sources Profiler --cover_children --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:${{ env.test_results_path }}\profilerx64.xml -- "vstest.console.exe" /Platform:x64 "Profiler\CommonTest\bin\x64\Release\CommonTest.dll" "Profiler\ConfigurationTest\bin\x64\Release\ConfigurationTest.dll" "Profiler\LoggingTest\bin\x64\Release\LoggingTest.dll" "Profiler\MethodRewriterTest\bin\x64\Release\MethodRewriterTest.dll" "Profiler\SignatureParserTest\bin\x64\Release\SignatureParserTest.dll" "Profiler\Sicily\SicilyTest\bin\x64\Release\SicilyTest.dll"
+      #       if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+      #       mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x64.log
 
-      - name: Upload coverage reports to Codecov.io
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
-        with:
-            flags: Profiler
-            files: ${{ env.test_results_path }}/profilerx86.xml,${{ env.test_results_path }}/profilerx64.xml
-            token: ${{ secrets.CODECOV_TOKEN }}
+      # - name: Upload coverage reports to Codecov.io
+      #   uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+      #   with:
+      #       flags: Profiler
+      #       files: ${{ env.test_results_path }}/profilerx86.xml,${{ env.test_results_path }}/profilerx64.xml
+      #       token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Archive VS components Artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -166,21 +166,21 @@ jobs:
           path: ${{ env.vs_config_file }}
           if-no-files-found: error
 
-      - name: Archive Build Artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: profiler-windows
-          path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
-          if-no-files-found: error
+      # - name: Archive Build Artifacts
+      #   uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      #   with:
+      #     name: profiler-windows
+      #     path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
+      #     if-no-files-found: error
 
-      - name: Archive Code Coverage Artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: profiler-code-coverage
-          path: |
-            ${{ env.test_results_path }}\*.xml
-            ${{ env.tests_base_path }}\*.log
-          if-no-files-found: error
+      # - name: Archive Code Coverage Artifacts
+      #   uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      #   with:
+      #     name: profiler-code-coverage
+      #     path: |
+      #       ${{ env.test_results_path }}\*.xml
+      #       ${{ env.tests_base_path }}\*.log
+      #     if-no-files-found: error
   
   # build-linux-x64-profiler:
   #   name: Build Linux x64 Profiler
