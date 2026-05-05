@@ -177,214 +177,214 @@ jobs:
             ${{ env.tests_base_path }}\*.log
           if-no-files-found: error
   
-  build-linux-x64-profiler:
-    name: Build Linux x64 Profiler
-    runs-on: ubuntu-22.04
-    needs: check-modified-files
-    # only run this job if source files were modified, or if triggered by a manual execution
-    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
-    permissions:
-      contents: read
+  # build-linux-x64-profiler:
+  #   name: Build Linux x64 Profiler
+  #   runs-on: ubuntu-22.04
+  #   needs: check-modified-files
+  #   # only run this job if source files were modified, or if triggered by a manual execution
+  #   if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
+  #   permissions:
+  #     contents: read
 
-    env:
-      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
-      CORECLR_NEW_RELIC_HOME: ${{ github.workspace }}/src/Agent/NewRelic/newrelichome_x64_coreclr_linux # not used but required by Profiler/docker-compose.yml
+  #   env:
+  #     profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+  #     CORECLR_NEW_RELIC_HOME: ${{ github.workspace }}/src/Agent/NewRelic/newrelichome_x64_coreclr_linux # not used but required by Profiler/docker-compose.yml
 
-    steps:
-      # intentionally disabled for this job, when enabled it causes a failure in the Build Linux Profiler step
-      # - name: Harden Runner
-      #   uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-      #   with:
-      #     egress-policy: audit
+  #   steps:
+  #     # intentionally disabled for this job, when enabled it causes a failure in the Build Linux Profiler step
+  #     # - name: Harden Runner
+  #     #   uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+  #     #   with:
+  #     #     egress-policy: audit
 
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #     - name: Checkout
+  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Clean out _profilerBuild directory
-        run: |
-          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
-        shell: bash
+  #     - name: Clean out _profilerBuild directory
+  #       run: |
+  #         rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+  #         rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
+  #         rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
+  #         rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
+  #         rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
+  #       shell: bash
 
-      - name: Build Linux Profiler
-        run: |
-          cd ${{ env.profiler_path }}
-          docker compose build build
-          docker compose run build
-        shell: bash
+  #     - name: Build Linux Profiler
+  #       run: |
+  #         cd ${{ env.profiler_path }}
+  #         docker compose build build
+  #         docker compose run build
+  #       shell: bash
 
-      - name: Move Profiler to staging folder
-        run: |
-          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/
-          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
-        shell: bash
+  #     - name: Move Profiler to staging folder
+  #       run: |
+  #         mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/
+  #         mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
+  #       shell: bash
 
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: profiler-amd64
-          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
-          if-no-files-found: error
+  #     - name: Archive Artifacts
+  #       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+  #       with:
+  #         name: profiler-amd64
+  #         path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+  #         if-no-files-found: error
 
-  build-linux-arm64-profiler:
-    name: Build Linux ARM64 Profiler
-    runs-on: ubuntu-22.04
-    needs: check-modified-files
-    # only run this job if source files were modified, or if triggered by a manual execution
-    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
-    permissions:
-      contents: read # for actions/checkout to fetch code
-      packages: write # for uraimo/run-on-arch-action to cache docker images
+  # build-linux-arm64-profiler:
+  #   name: Build Linux ARM64 Profiler
+  #   runs-on: ubuntu-22.04
+  #   needs: check-modified-files
+  #   # only run this job if source files were modified, or if triggered by a manual execution
+  #   if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
+  #   permissions:
+  #     contents: read # for actions/checkout to fetch code
+  #     packages: write # for uraimo/run-on-arch-action to cache docker images
 
-    env:
-      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+  #   env:
+  #     profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
 
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-        with:
-          egress-policy: audit
+  #   steps:
+  #     - name: Harden Runner
+  #       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+  #       with:
+  #         egress-policy: audit
 
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #     - name: Checkout
+  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Clean out _profilerBuild directory
-        run: |
-          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
-        shell: bash
+  #     - name: Clean out _profilerBuild directory
+  #       run: |
+  #         rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+  #         rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
+  #         rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
+  #         rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
+  #         rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
+  #       shell: bash
 
-      - uses: uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9 # v3.1.0
-        name: Run commands
-        id: runcmd
-        with:
-          arch: aarch64
-          distro: ubuntu18.04
-          githubToken: ${{ github.token }}
-          install: |
-            apt-get update -q -y
-            apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
-            echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
-            wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-            mkdir /root/git
-            cd /root/git
-            git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
-            curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
-            chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
-            ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
-            rm /usr/bin/cc || true
-            ln -s /usr/bin/clang-3.9 /usr/bin/cc
-            rm /usr/bin/c++ || true
-            ln -s /usr/bin/clang++-3.9 /usr/bin/c++
-          dockerRunArgs: |
-            --volume "${{ env.profiler_path }}:/profiler"
-          run: |
-            cd /profiler
-            chmod 777 ./linux/build_profiler.sh
-            ./linux/build_profiler.sh
+  #     - uses: uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9 # v3.1.0
+  #       name: Run commands
+  #       id: runcmd
+  #       with:
+  #         arch: aarch64
+  #         distro: ubuntu18.04
+  #         githubToken: ${{ github.token }}
+  #         install: |
+  #           apt-get update -q -y
+  #           apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
+  #           echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
+  #           wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+  #           mkdir /root/git
+  #           cd /root/git
+  #           git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
+  #           curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
+  #           chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
+  #           ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
+  #           rm /usr/bin/cc || true
+  #           ln -s /usr/bin/clang-3.9 /usr/bin/cc
+  #           rm /usr/bin/c++ || true
+  #           ln -s /usr/bin/clang++-3.9 /usr/bin/c++
+  #         dockerRunArgs: |
+  #           --volume "${{ env.profiler_path }}:/profiler"
+  #         run: |
+  #           cd /profiler
+  #           chmod 777 ./linux/build_profiler.sh
+  #           ./linux/build_profiler.sh
 
-      - name: Move Profiler to staging folder
-        run: |
-          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/
-          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/libNewRelicProfiler.so
-        shell: bash
+  #     - name: Move Profiler to staging folder
+  #       run: |
+  #         mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/
+  #         mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/libNewRelicProfiler.so
+  #       shell: bash
 
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: profiler-arm64
-          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
-          if-no-files-found: error
+  #     - name: Archive Artifacts
+  #       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+  #       with:
+  #         name: profiler-arm64
+  #         path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+  #         if-no-files-found: error
 
-  package-and-deploy:
-    needs:
-      [
-        build-windows-profiler,
-        build-linux-x64-profiler,
-        build-linux-arm64-profiler,
-      ]
-    if: ${{ inputs.deploy }}
-    name: Package and Deploy Profiler NuGet
-    runs-on: windows-2022
+  # package-and-deploy:
+  #   needs:
+  #     [
+  #       build-windows-profiler,
+  #       build-linux-x64-profiler,
+  #       build-linux-arm64-profiler,
+  #     ]
+  #   if: ${{ inputs.deploy }}
+  #   name: Package and Deploy Profiler NuGet
+  #   runs-on: windows-2022
 
-    env:
-      nuget_source: https://www.nuget.org
+  #   env:
+  #     nuget_source: https://www.nuget.org
 
-    outputs:
-      package_version: ${{ steps.agentVersion.outputs.version }}
+  #   outputs:
+  #     package_version: ${{ steps.agentVersion.outputs.version }}
   
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          filter: blob:none
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #       with:
+  #         fetch-depth: 0
+  #         filter: blob:none
 
-      - name: Download Windows Profiler Artifacts to working Directory
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: profiler-windows
-          path: ${{ github.workspace }}/_workingDir
+  #     - name: Download Windows Profiler Artifacts to working Directory
+  #       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+  #       with:
+  #         name: profiler-windows
+  #         path: ${{ github.workspace }}/_workingDir
       
-      - name: Download Linux amd64 Profiler Artifacts to working Directory
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: profiler-amd64
-          path: ${{ github.workspace }}/_workingDir
+  #     - name: Download Linux amd64 Profiler Artifacts to working Directory
+  #       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+  #       with:
+  #         name: profiler-amd64
+  #         path: ${{ github.workspace }}/_workingDir
 
-      - name: Download Linux arm64 Profiler Artifacts to working Directory
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: profiler-arm64
-          path: ${{ github.workspace }}/_workingDir
+  #     - name: Download Linux arm64 Profiler Artifacts to working Directory
+  #       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+  #       with:
+  #         name: profiler-arm64
+  #         path: ${{ github.workspace }}/_workingDir
 
-      - name: Determine Package Version from Git history
-        id: agentVersion
-        run: |
-          # get latest agent version tag
-          $agentVersion = git describe --match v* --abbrev=0 HEAD --tags
-          # get commit count since that tag
-          $getRevCmd = "git rev-list $agentVersion..HEAD --count HEAD"
-          $agentRev = Invoke-Expression $getRevCmd
-          # if count is > 0, add the rev to the version
-          if ($agentRev -gt 0) { $agentVersion = $agentVersion + "." + $agentRev}
-          # remove the leading "v" from the version number
-          $agentVersion = $agentVersion.substring(1)
-          echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
-        shell: powershell
+  #     - name: Determine Package Version from Git history
+  #       id: agentVersion
+  #       run: |
+  #         # get latest agent version tag
+  #         $agentVersion = git describe --match v* --abbrev=0 HEAD --tags
+  #         # get commit count since that tag
+  #         $getRevCmd = "git rev-list $agentVersion..HEAD --count HEAD"
+  #         $agentRev = Invoke-Expression $getRevCmd
+  #         # if count is > 0, add the rev to the version
+  #         if ($agentRev -gt 0) { $agentVersion = $agentVersion + "." + $agentRev}
+  #         # remove the leading "v" from the version number
+  #         $agentVersion = $agentVersion.substring(1)
+  #         echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
+  #       shell: powershell
 
-      - name: Stage files in working directory
-        run: |
-          New-Item "${{ github.workspace }}/_workingDir/images" -Type "directory"
-          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/images/*.*" -Destination "${{ github.workspace }}/_workingDir/images"
-          New-Item "${{ github.workspace }}/_workingDir/build" -Type "directory"
-          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/build/*.*" -Destination "${{ github.workspace }}/_workingDir/build"
-          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/readme.md" -Destination "${{ github.workspace }}/_workingDir"
+  #     - name: Stage files in working directory
+  #       run: |
+  #         New-Item "${{ github.workspace }}/_workingDir/images" -Type "directory"
+  #         Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/images/*.*" -Destination "${{ github.workspace }}/_workingDir/images"
+  #         New-Item "${{ github.workspace }}/_workingDir/build" -Type "directory"
+  #         Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/build/*.*" -Destination "${{ github.workspace }}/_workingDir/build"
+  #         Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/readme.md" -Destination "${{ github.workspace }}/_workingDir"
 
-      - name: Pack Profiler NuGet Package
-        run: |
-          New-Item "${{ github.workspace }}/_workingDir/NugetProfiler" -Type "directory"
-          nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version ${{ steps.agentVersion.outputs.version }} -Verbosity detailed
-        shell: powershell
+  #     - name: Pack Profiler NuGet Package
+  #       run: |
+  #         New-Item "${{ github.workspace }}/_workingDir/NugetProfiler" -Type "directory"
+  #         nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version ${{ steps.agentVersion.outputs.version }} -Verbosity detailed
+  #       shell: powershell
 
-      - name: Setup NuGet API Key
-        run: |
-          nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
-        shell: pwsh
+  #     - name: Setup NuGet API Key
+  #       run: |
+  #         nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
+  #       shell: pwsh
 
-      - name: Deploy Profiler Package to Nuget
-        run: |
-          $packageName = Get-ChildItem ${{ github.workspace }}/_workingDir/NugetProfiler/NewRelic.Agent.Internal.Profiler.*.nupkg -Name
-          $packagePath = Convert-Path ${{ github.workspace }}//_workingDir/NugetProfiler/$packageName
-          $version = $packageName.TrimStart('NewRelic.Agent.Internal.Profiler').TrimStart('.').TrimEnd('.nupkg')
-          nuget.exe push $packagePath -Source ${{ env.nuget_source }}
-        shell: powershell
+  #     - name: Deploy Profiler Package to Nuget
+  #       run: |
+  #         $packageName = Get-ChildItem ${{ github.workspace }}/_workingDir/NugetProfiler/NewRelic.Agent.Internal.Profiler.*.nupkg -Name
+  #         $packagePath = Convert-Path ${{ github.workspace }}//_workingDir/NugetProfiler/$packageName
+  #         $version = $packageName.TrimStart('NewRelic.Agent.Internal.Profiler').TrimStart('.').TrimEnd('.nupkg')
+  #         nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+  #       shell: powershell
 
   update-nuget-reference:
     name: Update Profiler Nuget Reference
