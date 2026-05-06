@@ -118,14 +118,14 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         _transactionSegmentState = transactionSegmentState;
         ParentUniqueId = transactionSegmentState.ParentSegmentId();
         UniqueId = transactionSegmentState.CallStackPush(this);
-        Log.Info($"Segment {SpanId} pushed for method {methodCallData.TypeName}.{methodCallData.MethodName}");
+        //Log.Info($"Segment {SpanId} pushed for method {methodCallData.TypeName}.{methodCallData.MethodName}");
         MethodCallData = methodCallData;
         Data = new MethodSegmentData(methodCallData.TypeName, methodCallData.MethodName);
         Data.AttachSegmentDataState(this);
         Combinable = false;
         IsLeaf = false;
         IsAsync = methodCallData.IsAsync;
-        Log.Info($"Segment {SpanId} constructor finished");
+        //Log.Info($"Segment {SpanId} constructor finished");
     }
 
     /// <summary>
@@ -150,7 +150,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         Combinable = false;
         IsLeaf = true;
         IsAsync = methodCallData.IsAsync;
-        Log.Info($"Segment {SpanId} constructor finished");
+        //Log.Info($"Segment {SpanId} constructor finished");
     }
 
     /// <summary>

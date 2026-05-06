@@ -75,7 +75,7 @@ internal class WrapPipelineMiddleware
         try
         {
             transaction = SetupTransaction(context.Request);
-            transaction.LogInfo($"Transaction starting from ASP.NET Core 6+ instrumentation.");
+            //transaction.LogInfo($"Transaction starting from ASP.NET Core 6+ instrumentation.");
             transaction.AttachToAsync(); //Important that this is called from an Invoke method that has the async keyword.
             transaction.DetachFromPrimary(); //Remove from thread-local type storage
 
@@ -84,7 +84,7 @@ internal class WrapPipelineMiddleware
             segment = SetupSegment(transaction, context);
             segment.AlwaysDeductChildDuration = true;
 
-            transaction.LogInfo($"Added root segment {segment.SpanId}");
+            transaction.LogInfo($"aspnetcore txn started with root segment {segment.SpanId}");
 
             if (_agent.Configuration.AllowAllRequestHeaders)
             {
@@ -165,11 +165,11 @@ internal class WrapPipelineMiddleware
                 transaction.SetWebTransactionName(WebTransactionType.StatusCode, $"{responseStatusCode}", TransactionNamePriority.StatusCode);
             }
 
-            transaction.LogInfo($"Segment {segment.SpanId} ending from ASP.NET Core 6+ instrumentation.");
+            //transaction.LogInfo($"Segment {segment.SpanId} ending from ASP.NET Core 6+ instrumentation.");
             segment.End();
 
             transaction.SetHttpResponseStatusCode(responseStatusCode);
-            transaction.LogInfo("Transaction ending from ASP.NET Core 6+ instrumentation.");
+            //transaction.LogInfo("Transaction ending from ASP.NET Core 6+ instrumentation.");
             transaction.End();
         }
         catch (Exception ex)

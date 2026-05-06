@@ -72,6 +72,14 @@ public class SessionCache : IStackExchangeRedisCache
 
             // This new segment maker accepts relative start and stop times since we will be starting and ending(RemoveSegmentFromCallStack) the segment immediately.
             // This also sets the segment as a Leaf.
+
+            // EXPERIMENTAL
+            // Each time we go through this loop, check to make sure that the transaction has not finished.  If it has, don't create any more segments.
+            if (transaction.IsFinished)
+            {
+                transaction.LogInfo($"SER Harvest ending early for host segment {hostSegment.SpanId} because transaction finished.");
+                break;
+            }
             var segment = xTransaction.StartStackExchangeRedisSegment(_invocationTargetHashCode,
                 ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, command.Command),
                 GetConnectionInfo(command.EndPoint), relativeStartTime, relativeEndTime);
@@ -161,7 +169,7 @@ public class SessionCache : IStackExchangeRedisCache
             // Don't want to save to a Datastore segment - could be another Redis segment or something else.
             var segment = transaction.CurrentSegment;
 
-            transaction.LogInfo($"GetProfilingSession called for segment {segment.SpanId}");
+            //transaction.LogInfo($"GetProfilingSession called for segment {segment.SpanId}");
 
             // These don't change over time so they don't need to be in the lock.
             if (!segment.IsValid || ((ISegmentExperimental)segment).GetCategory() == "Datastore")
