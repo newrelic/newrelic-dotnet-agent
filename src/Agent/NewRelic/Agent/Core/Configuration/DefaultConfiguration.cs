@@ -18,7 +18,6 @@ using NewRelic.Agent.Core.SharedInterfaces.Web.Core;
 #endif
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.SystemExtensions;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 using NewRelic.Agent.Helpers;
@@ -1768,22 +1767,9 @@ public class DefaultConfiguration : IConfiguration
 
     public virtual int TransactionTracerMaxStackTraces => _localConfiguration.transactionTracer.maxStackTrace;
 
-    public virtual IReadOnlyList<string> TransactionTracerSqlMetadataCommentKeys
-    {
-        get
-        {
-            var raw = EnvironmentOverrides(
-                _localConfiguration.transactionTracer.sqlMetadataComments,
-                "NEW_RELIC_TRANSACTION_TRACER_SQL_METADATA_COMMENTS");
-            if (string.IsNullOrWhiteSpace(raw))
-                return [];
-            return raw.Split(',')
-                .Select(k => k.Trim())
-                .Where(SqlMetadataCommentBuilder.ValidKeys.Contains)
-                .Distinct()
-                .ToList();
-        }
-    }
+    public virtual bool TransactionTracerSqlMetadataCommentsEnabled =>
+        EnvironmentOverrides(_localConfiguration.transactionTracer.sqlMetadataCommentsEnabled,
+            "NEW_RELIC_TRANSACTION_TRACER_SQL_METADATA_COMMENTS_ENABLED");
 
     private IList<Regex> _requestPathExclusionList;
     public virtual IEnumerable<Regex> RequestPathExclusionList => _requestPathExclusionList ??= ReadUrlBlacklist(_localConfiguration);
