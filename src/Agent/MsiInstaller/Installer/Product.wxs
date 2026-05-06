@@ -421,6 +421,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="AzureServiceBusWrapperComponent" Guid="{5B625630-B816-4E9D-BE30-9403D8C1682A}">
         <File Id="AzureServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll" />
       </Component>
+      <Component Id="HangfireWrapperComponent" Guid="{4E086BCC-4FC0-46B7-9E31-8EA5E42BCA78}">
+        <File Id="HangfireWrapperFile" Name="NewRelic.Providers.Wrapper.Hangfire.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Hangfire.dll" />
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions" Directory="CoreProgramFilesExtensionsFolder">
@@ -510,6 +513,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAzureServiceBusWrapperComponent" Guid="{E2F1AE1C-9EE8-410D-932B-D6B9C25FE405}">
         <File Id="CoreAzureServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.dll" />
+      </Component>
+      <Component Id="CoreHangfireWrapperComponent" Guid="{6CE3FE7E-A93B-4FEA-AD38-303010C7085A}">
+        <File Id="CoreHangfireWrapperFile" Name="NewRelic.Providers.Wrapper.Hangfire.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Hangfire.dll" />
       </Component>
    </ComponentGroup>
 
@@ -641,6 +647,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="AzureServiceBusInstrumentationComponent" Guid="{77A2B667-7535-45A6-9CAC-27BFCFEF95B8}">
         <File Id="AzureServiceBusInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml" />
       </Component>
+      <Component Id="HangfireInstrumentationComponent" Guid="{515414DD-D27A-41E7-A579-CB8F69094C70}">
+        <File Id="HangfireInstrumentationFile" Name="NewRelic.Providers.Wrapper.Hangfire.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Hangfire.Instrumentation.xml" />
+      </Component>
    </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions.Instrumentation" Directory="CoreExtensionsFolder">
@@ -727,6 +736,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreAzureServiceBusInstrumentationComponent" Guid="{78AF8B95-BC14-41DA-8046-8F9348BA4769}">
         <File Id="CoreAzureServiceBusInstrumentationFile" Name="NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AzureServiceBus.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreHangfireInstrumentationComponent" Guid="{D3519623-E3DE-41BF-A8A4-295F144ADE43}">
+        <File Id="CoreHangfireInstrumentationFile" Name="NewRelic.Providers.Wrapper.Hangfire.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Hangfire.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 

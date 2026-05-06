@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
+using NewRelic.Testing.Assertions;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Api;
@@ -73,6 +75,7 @@ public abstract class RecordDatastoreSegmentTests<TFixture> : NewRelicIntegratio
                 configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 configModifier.ConfigureFasterMetricsHarvestCycle(25);
                 configModifier.ConfigureFasterSqlTracesHarvestCycle(30);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(25);
             }
         );
 
@@ -80,7 +83,8 @@ public abstract class RecordDatastoreSegmentTests<TFixture> : NewRelicIntegratio
         (
             exerciseApplication: () =>
             {
-                var threadProfileMatch = _fixture.AgentLog.WaitForLogLine(AgentLogFile.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogFile.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogFile.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
 
@@ -88,19 +92,19 @@ public abstract class RecordDatastoreSegmentTests<TFixture> : NewRelicIntegratio
     }
 
     [Fact]
-    public void Test()
+    public void Metrics()
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/StartDatastoreSegment" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/statement/Other/MyModel/MyOperation" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/operation/Other/MyOperation" },
+            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/statement/MyVendor/MyModel/MyOperation" },
+            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/operation/MyVendor/MyOperation" },
             new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/all" },
             new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/allOther" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/Other/all" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/Other/allOther" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = _allOptions ? "Datastore/instance/Other/MyHost/MyPath" : "Datastore/instance/Other/unknown/unknown" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/statement/Other/MyModel/MyOperation", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.Libraries.ApiCalls/RecordDatastoreSegment" },
+            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/MyVendor/all" },
+            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/MyVendor/allOther" },
+            new Assertions.ExpectedMetric(){ callCount = 1, metricName = _allOptions ? "Datastore/instance/MyVendor/MyHost/MyPath" : "Datastore/instance/MyVendor/unknown/unknown" },
+            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/statement/MyVendor/MyModel/MyOperation", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.Libraries.ApiCalls/RecordDatastoreSegment" },
         };
 
         // this will not exist if command text is missing.
@@ -109,15 +113,14 @@ public abstract class RecordDatastoreSegmentTests<TFixture> : NewRelicIntegratio
             new Assertions.ExpectedSqlTrace()
             {
                 Sql = "MyCommandText",
-                DatastoreMetricName = "Datastore/statement/Other/MyModel/MyOperation",
+                DatastoreMetricName = "Datastore/statement/MyVendor/MyModel/MyOperation",
                 TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.Libraries.ApiCalls/RecordDatastoreSegment",
                 HasExplainPlan = false
             }
         };
 
         var actualMetrics = _fixture.AgentLog.GetMetrics().ToList();
-
-        var actualSqlTraces = _fixture.AgentLog.GetSqlTraces().ToList(); //0
+        var actualSqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
 
         Assertions.MetricsExist(expectedMetrics, actualMetrics);
 
@@ -129,6 +132,42 @@ public abstract class RecordDatastoreSegmentTests<TFixture> : NewRelicIntegratio
         {
             Assert.True(actualSqlTraces.Count == 0);
         }
-            
+    }
+
+    [Fact]
+    public void SpanEvents()
+    {
+        var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
+        var datastoreSpan = spanEvents.FirstOrDefault(se =>
+            se.IntrinsicAttributes.ContainsKey("name") &&
+            se.IntrinsicAttributes["name"].ToString() == "Datastore/statement/MyVendor/MyModel/MyOperation");
+
+        Assert.NotNull(datastoreSpan);
+
+        var expectedIntrinsicAttributes = new List<KeyValuePair<string, string>>
+        {
+            new("category", "datastore"),
+            new("component", "MyVendor"),
+            new("span.kind", "client"),
+        };
+
+        var expectedAgentAttributes = new List<KeyValuePair<string, string>>
+        {
+            new("db.system", "myvendor"),
+            new("db.operation", "MyOperation"),
+            new("db.collection", "MyModel"),
+        };
+
+        if (_allOptions)
+        {
+            expectedAgentAttributes.Add(new("server.address", "MyHost"));
+            expectedAgentAttributes.Add(new("peer.address", "MyHost:MyPath"));
+            expectedAgentAttributes.Add(new("db.instance", "MyDatabase"));
+        }
+
+        NrAssert.Multiple(
+            () => Assertions.SpanEventHasAttributes(expectedIntrinsicAttributes, SpanEventAttributeType.Intrinsic, datastoreSpan),
+            () => Assertions.SpanEventHasAttributes(expectedAgentAttributes, SpanEventAttributeType.Agent, datastoreSpan)
+        );
     }
 }

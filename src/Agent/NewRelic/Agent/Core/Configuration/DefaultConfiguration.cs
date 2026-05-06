@@ -224,43 +224,27 @@ public class DefaultConfiguration : IConfiguration
 
         foreach (var candidateKey in candidateKeys)
         {
-            // Did we find a key?
             if (string.IsNullOrWhiteSpace(candidateKey.Value))
             {
                 continue;
             }
 
-            // We found something, but is it a valid key?
-
-            // If the key is the default value from newrelic.config, we return the default value
+            // If the key is the default value from newrelic.config, return it untrimmed.
             // AgentManager.AssertAgentEnabled() relies on this behavior and will throw an exception if the key is the default value
             if (candidateKey.Value.ToLower().Contains("license"))
             {
-                // newrelic.config is the last place to look
                 return candidateKey.Value;
             }
 
-            // Keys are only 40 characters long, but we trim to be safe
+            // Per the Preconnect spec, the agent must not validate license keys by length or character content.
+            // Trim surrounding whitespace for safety, then return whatever the user configured.
             var trimmedCandidateKey = candidateKey.Value.Trim();
-            if (trimmedCandidateKey.Length != 40)
-            {
-                Log.Warn($"License key from {candidateKey.Key} is not 40 characters long. Checking for other license keys.");
-                continue;
-            }
-
-            // Keys can only contain printable ASCII characters from 0x21 to 0x7E
-            if (!trimmedCandidateKey.All(c => c >= 0x21 && c <= 0x7E))
-            {
-                Log.Warn($"License key from {candidateKey.Key} contains invalid characters. Checking for other license keys.");
-                continue;
-            }
-
-            Log.Info($"License key from {candidateKey.Key} appears to be in the correct format.");
+            Log.Info($"Using license key from {candidateKey.Key}.");
             return trimmedCandidateKey;
         }
 
         // return string.Empty instead of null to allow caching and prevent checking repeatedly
-        Log.Warn("No valid license key found.");
+        Log.Warn("No license key configured.");
         return string.Empty;
     }
 

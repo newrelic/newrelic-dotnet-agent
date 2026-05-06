@@ -329,6 +329,149 @@ public class DatastoreSegmentTransformerTests
     }
     #endregion Transform
 
+    #region Custom Vendor (String-based)
+
+    [Test]
+    public void TransformSegment_CustomVendor_CreatesWebSegmentMetrics()
+    {
+        var segment = GetSegment("DynamoDB", "INSERT", "MY_TABLE", 5);
+
+        var txName = new TransactionMetricName("WebTransaction", "Test", false);
+        var txStats = new TransactionMetricStatsCollection(txName);
+
+        segment.AddMetricStats(txStats, _configurationService);
+
+        var scoped = txStats.GetScopedForTesting();
+        var unscoped = txStats.GetUnscopedForTesting();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(scoped, Has.Count.EqualTo(1));
+            Assert.That(unscoped, Has.Count.EqualTo(6));
+        });
+
+        const string statementMetric = "Datastore/statement/DynamoDB/MY_TABLE/INSERT";
+        const string operationMetric = "Datastore/operation/DynamoDB/INSERT";
+        Assert.Multiple(() =>
+        {
+            Assert.That(unscoped.ContainsKey("Datastore/all"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/allWeb"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/DynamoDB/all"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/DynamoDB/allWeb"), Is.True);
+            Assert.That(unscoped.ContainsKey(statementMetric), Is.True);
+            Assert.That(unscoped.ContainsKey(operationMetric), Is.True);
+
+            Assert.That(scoped.ContainsKey(statementMetric), Is.True);
+        });
+    }
+
+    [Test]
+    public void TransformSegment_CustomVendor_CreatesOtherSegmentMetrics()
+    {
+        var segment = GetSegment("DynamoDB", "INSERT", "MY_TABLE", 5);
+
+        var txName = new TransactionMetricName("OtherTransaction", "Test", false);
+        var txStats = new TransactionMetricStatsCollection(txName);
+
+        segment.AddMetricStats(txStats, _configurationService);
+
+        var scoped = txStats.GetScopedForTesting();
+        var unscoped = txStats.GetUnscopedForTesting();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(scoped, Has.Count.EqualTo(1));
+            Assert.That(unscoped, Has.Count.EqualTo(6));
+        });
+
+        const string statementMetric = "Datastore/statement/DynamoDB/MY_TABLE/INSERT";
+        const string operationMetric = "Datastore/operation/DynamoDB/INSERT";
+        Assert.Multiple(() =>
+        {
+            Assert.That(unscoped.ContainsKey("Datastore/all"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/allOther"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/DynamoDB/all"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/DynamoDB/allOther"), Is.True);
+            Assert.That(unscoped.ContainsKey(statementMetric), Is.True);
+            Assert.That(unscoped.ContainsKey(operationMetric), Is.True);
+
+            Assert.That(scoped.ContainsKey(statementMetric), Is.True);
+        });
+    }
+
+    [Test]
+    public void TransformSegment_CustomVendor_CreatesNullModelSegmentMetrics()
+    {
+        var segment = GetSegment("DynamoDB", "INSERT", null, 5);
+
+        var txName = new TransactionMetricName("WebTransaction", "Test", false);
+        var txStats = new TransactionMetricStatsCollection(txName);
+        segment.AddMetricStats(txStats, _configurationService);
+
+        var scoped = txStats.GetScopedForTesting();
+        var unscoped = txStats.GetUnscopedForTesting();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(scoped, Has.Count.EqualTo(1));
+            Assert.That(unscoped, Has.Count.EqualTo(5));
+        });
+
+        const string operationMetric = "Datastore/operation/DynamoDB/INSERT";
+        Assert.Multiple(() =>
+        {
+            Assert.That(unscoped.ContainsKey("Datastore/all"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/allWeb"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/DynamoDB/all"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/DynamoDB/allWeb"), Is.True);
+            Assert.That(unscoped.ContainsKey(operationMetric), Is.True);
+
+            Assert.That(scoped.ContainsKey(operationMetric), Is.True);
+        });
+    }
+
+    [Test]
+    public void TransformSegment_CustomVendor_CreatesInstanceMetrics()
+    {
+        var segment = GetSegment("DynamoDB", "INSERT", "MY_TABLE", 5, host: "HOST", portPathOrId: "8080");
+
+        var txName = new TransactionMetricName("OtherTransaction", "Test", false);
+        var txStats = new TransactionMetricStatsCollection(txName);
+
+        Mock.Arrange(() => _configurationService.Configuration.InstanceReportingEnabled).Returns(true);
+
+        segment.AddMetricStats(txStats, _configurationService);
+
+        var scoped = txStats.GetScopedForTesting();
+        var unscoped = txStats.GetUnscopedForTesting();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(scoped, Has.Count.EqualTo(1));
+            Assert.That(unscoped, Has.Count.EqualTo(7));
+        });
+
+        const string statementMetric = "Datastore/statement/DynamoDB/MY_TABLE/INSERT";
+        const string operationMetric = "Datastore/operation/DynamoDB/INSERT";
+        const string instanceMetric = "Datastore/instance/DynamoDB/HOST/8080";
+        Assert.Multiple(() =>
+        {
+            Assert.That(unscoped.ContainsKey("Datastore/all"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/allOther"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/DynamoDB/all"), Is.True);
+            Assert.That(unscoped.ContainsKey("Datastore/DynamoDB/allOther"), Is.True);
+            Assert.That(unscoped.ContainsKey(statementMetric), Is.True);
+            Assert.That(unscoped.ContainsKey(operationMetric), Is.True);
+            Assert.That(unscoped.ContainsKey(instanceMetric), Is.True);
+
+            Assert.That(scoped.ContainsKey(statementMetric), Is.True);
+        });
+    }
+
+    #endregion Custom Vendor (String-based)
+
+    #region Helpers
+
     private Segment GetSegment(DatastoreVendor vendor, string operation, string model)
     {
         var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, operation));
@@ -347,4 +490,16 @@ public class DatastoreSegmentTransformerTests
 
         return segment.CreateSimilar(new TimeSpan(), TimeSpan.FromSeconds(duration), null);
     }
+
+    private Segment GetSegment(string vendorName, string operation, string model, double duration, string host = null, string portPathOrId = null)
+    {
+        var methodCallData = new MethodCallData("foo", "bar", 1);
+        var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendorName, model, operation), null, new ConnectionInfo(host, portPathOrId, null));
+        var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);
+        segment.SetSegmentData(data);
+
+        return segment.CreateSimilar(new TimeSpan(), TimeSpan.FromSeconds(duration), null);
+    }
+
+    #endregion Helpers
 }

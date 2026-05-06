@@ -681,6 +681,78 @@ public class SpanEventMakerTests
         );
     }
 
+    [Test]
+    public void GetSpanEvent_CustomVendor_UsesCustomVendorNameInAttributes()
+    {
+        // ARRANGE
+        var customVendorStatement = new ParsedSqlStatement("DynamoDB", "users", "scan");
+        var customVendorSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
+        customVendorSegment.SetSegmentData(new DatastoreSegmentData(_databaseService, customVendorStatement, null, _connectionInfo));
+
+        var segments = new List<Segment>()
+        {
+            customVendorSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>()),
+        };
+
+        var immutableTransaction = BuildTestTransaction(segments, true, false);
+
+        var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+        var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+        var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+        // ACT
+        var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
+        var spanEvent = spanEvents.ToList()[1];
+        var spanEventIntrinsicAttributes = spanEvent.IntrinsicAttributes();
+        var spanEventAgentAttributes = spanEvent.AgentAttributes();
+
+        // ASSERT
+        NrAssert.Multiple
+        (
+            () => Assert.That((string)spanEventIntrinsicAttributes["category"], Is.EqualTo(DatastoreCategory)),
+            () => Assert.That((string)spanEventIntrinsicAttributes["component"], Is.EqualTo("DynamoDB")),
+            () => Assert.That((string)spanEventAgentAttributes["db.system"], Is.EqualTo("dynamodb")),
+            () => Assert.That((string)spanEventAgentAttributes["db.operation"], Is.EqualTo("scan")),
+            () => Assert.That((string)spanEventAgentAttributes["db.collection"], Is.EqualTo("users")),
+            () => Assert.That((string)spanEventAgentAttributes["server.address"], Is.EqualTo(_connectionInfo.Host)),
+            () => Assert.That(spanEventAgentAttributes["server.port"], Is.EqualTo(_connectionInfo.Port.Value)),
+            () => Assert.That((string)spanEventIntrinsicAttributes["span.kind"], Is.EqualTo("client"))
+        );
+    }
+
+    [Test]
+    public void GetSpanEvent_EnumBasedOtherVendor_UsesOtherSqlForDbSystem()
+    {
+        // ARRANGE - use the enum-based constructor with DatastoreVendor.Other
+        var otherVendorStatement = new ParsedSqlStatement(DatastoreVendor.Other, "users", "select");
+        var otherVendorSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
+        otherVendorSegment.SetSegmentData(new DatastoreSegmentData(_databaseService, otherVendorStatement, null, _connectionInfo));
+
+        var segments = new List<Segment>()
+        {
+            otherVendorSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>()),
+        };
+
+        var immutableTransaction = BuildTestTransaction(segments, true, false);
+
+        var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+        var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+        var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+        // ACT
+        var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
+        var spanEvent = spanEvents.ToList()[1];
+        var spanEventIntrinsicAttributes = spanEvent.IntrinsicAttributes();
+        var spanEventAgentAttributes = spanEvent.AgentAttributes();
+
+        // ASSERT - db.system should be "other_sql" (from ToKnownName()), not "other"
+        NrAssert.Multiple
+        (
+            () => Assert.That((string)spanEventIntrinsicAttributes["component"], Is.EqualTo("Other")),
+            () => Assert.That((string)spanEventAgentAttributes["db.system"], Is.EqualTo("other_sql"))
+        );
+    }
+
     private void GetSpanEvent_ReturnsSpanEventPerSegment_DatastoreTruncateLongStatement()
     {
 

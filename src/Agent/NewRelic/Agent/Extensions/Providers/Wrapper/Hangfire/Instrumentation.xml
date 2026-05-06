@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <!-- Primary instrumentation: Job execution -->
+    <tracerFactory name="HangfirePerformerWrapper">
+      <match assemblyName="Hangfire.Core" className="Hangfire.Server.CoreBackgroundJobPerformer">
+        <exactMethodMatcher methodName="Perform" parameterTypes="Hangfire.Server.PerformContext" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

@@ -31,6 +31,9 @@ inputs:
   dotnet-version:
     description: '.NET version for the test app container (e.g. "10.0", "8.0")'
     default: '10.0'
+  enabled-tasks:
+    description: 'Comma-separated Locust task names to exercise (empty = all). Valid: simple, nested_async, rabbitmq_publish, rabbitmq_consume, redis_crud, mongo_crud, health.'
+    default: ''
   license-key:
     description: 'New Relic license key (only used when attach-agent is true)'
     default: ''
@@ -166,6 +169,7 @@ runs:
           --dotnet-version  "${{ inputs.dotnet-version }}" \
           --license-key     "${{ inputs.license-key }}" \
           --collector-host  "${{ inputs.collector-host }}" \
+          --enabled-tasks   "${{ inputs.enabled-tasks }}" \
           "${EXTRA_ENV_ARGS[@]}"
 
     # -------------------------------------------------------------------------
@@ -178,6 +182,13 @@ runs:
         name: perf-results-${{ inputs.run-label }}
         path: ${{ env.PERF_TEST_DIR }}/results/
         if-no-files-found: warn
+
+    - name: Fix log file permissions
+      if: always()
+      shell: bash
+      run: |
+        sudo chown -R "$(id -u):$(id -g)" "${{ env.PERF_TEST_DIR }}/logs" || true
+        sudo chmod -R a+rX "${{ env.PERF_TEST_DIR }}/logs" || true
 
     - name: Upload perf logs
       if: always()

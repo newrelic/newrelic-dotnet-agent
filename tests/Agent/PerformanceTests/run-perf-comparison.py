@@ -224,6 +224,12 @@ def run_perf_test(run_cfg, test_cfg, label, agent_app_name, add_label_to_app_nam
         "--dotnet-version", str(test_cfg.get("dotnet_version", "10.0")),
     ]
 
+    enabled_tasks = test_cfg.get("enabled_tasks", "")
+    if enabled_tasks:
+        if isinstance(enabled_tasks, list):
+            enabled_tasks = ",".join(str(t) for t in enabled_tasks)
+        cmd += ["--enabled-tasks", str(enabled_tasks)]
+
     license_key = os.environ.get("NEW_RELIC_LICENSE_KEY", "")
     collector_host = os.environ.get("NEW_RELIC_HOST", "")
     if license_key:

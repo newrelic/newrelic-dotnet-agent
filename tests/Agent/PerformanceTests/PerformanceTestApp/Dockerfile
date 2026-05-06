@@ -1,12 +1,15 @@
 ARG DOTNET_VERSION=10.0
 
-FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build
+# The build layer uses the SDK version matching the highest TFM in the project file, but publishes for the specific DOTNET_VERSION supplied as a build argument. 
+FROM mcr.microsoft.com/dotnet/sdk:10.0.203-noble AS build
+ARG DOTNET_VERSION
 WORKDIR /src
 COPY ["PerformanceTestApp.csproj", "./"]
 RUN dotnet restore "PerformanceTestApp.csproj"
 COPY . .
-RUN dotnet publish "PerformanceTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "PerformanceTestApp.csproj" -c Release -o /app/publish -f net${DOTNET_VERSION} /p:UseAppHost=false
 
+# The final layer uses the ASP.NET image version matching the supplied DOTNET_VERSION argument.
 FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION} AS final
 WORKDIR /app
 EXPOSE 8080

@@ -57,6 +57,8 @@ def parse_args():
     parser.add_argument("--license-key",        default=os.environ.get("NEW_RELIC_LICENSE_KEY", ""))
     parser.add_argument("--collector-host",     default=os.environ.get("NEW_RELIC_HOST", ""))
     parser.add_argument("--env",                action="append", default=[], dest="extra_envs", metavar="NAME=VALUE")
+    parser.add_argument("--enabled-tasks",      default="",
+                        help="Comma-separated Locust task names to exercise (e.g. 'simple,redis_crud'). Empty = all tasks.")
     parser.add_argument("--verbose",            default="false")
     return parser.parse_args()
 
@@ -263,6 +265,7 @@ def main():
         "NEW_RELIC_LICENSE_KEY": args.license_key,
         "NEW_RELIC_HOST":        args.collector_host,
         "NEW_RELIC_APP_NAME":    args.app_name,
+        "LOCUST_ENABLED_TASKS":  args.enabled_tasks,
     })
     if attach_agent:
         compose_env["AGENT_PATH"] = agent_home
@@ -287,6 +290,7 @@ def main():
             capture_output=True,
             check=False,
             env=compose_env,
+            timeout=30
         )
 
     atexit.register(cleanup)
@@ -296,7 +300,20 @@ def main():
     subprocess.run(["docker", "compose", "build"], check=True, env=compose_env)
 
     print("Starting test app and traffic driver...")
-    subprocess.run(["docker", "compose", "up", "-d"], check=True, env=compose_env)
+    try:
+        subprocess.run(["docker", "compose", "up", "-d"], check=True, env=compose_env)
+    except subprocess.CalledProcessError as e:
+        print("ERROR: 'docker compose up -d' failed.")
+        print("Last 100 lines of Docker Compose logs:")
+        logs_proc = subprocess.run(
+            ["docker", "compose", "logs", "--tail", "100"],
+            capture_output=True,
+            text=True,
+            env=compose_env,
+        )
+        print(logs_proc.stdout)
+        print(logs_proc.stderr)
+        sys.exit(1)
 
     # --- Wait for test app to become healthy ---
     print("Waiting for test app to become healthy...")
@@ -360,6 +377,7 @@ def main():
         ["docker", "compose", "down", "--volumes", "--remove-orphans"],
         check=False,
         env=compose_env,
+        timeout=30,
     )
     print("Containers stopped.")
 

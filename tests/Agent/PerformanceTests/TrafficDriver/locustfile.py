@@ -5,13 +5,17 @@
 # Drives traffic to all endpoints with a realistic mix of request types.
 #
 # Environment variables:
-#   TARGET_HOST  - base URL of the test app (default: http://testapp:8080)
+#   TARGET_HOST          - base URL of the test app (default: http://testapp:8080)
+#   LOCUST_ENABLED_TASKS - optional comma-separated list of task names to
+#                          exercise (e.g. "simple,redis_crud"). Unset or empty
+#                          runs every task. Unknown names abort the run.
 #
 # Run headless (non-interactive) with:
 #   locust --headless -u <users> -r <spawn_rate> --run-time <duration>
 #          --host http://testapp:8080 --csv results --exit-code-on-error 0
 
 import os
+import sys
 from locust import HttpUser, TaskSet, task, between, events
 import logging
 
@@ -69,6 +73,37 @@ class PerformanceTasks(TaskSet):
         with self.client.get("/health", catch_response=True) as response:
             if response.status_code != 200:
                 response.failure(f"Health check failed: {response.status_code}")
+
+
+def _apply_task_filter():
+    """Filter PerformanceTasks.tasks based on LOCUST_ENABLED_TASKS."""
+    raw = os.environ.get("LOCUST_ENABLED_TASKS", "").strip()
+    if not raw:
+        return
+
+    requested = {name.strip() for name in raw.split(",") if name.strip()}
+    if not requested:
+        return
+
+    known = {t.__name__ for t in PerformanceTasks.tasks}
+    unknown = requested - known
+    if unknown:
+        logger.error(
+            "LOCUST_ENABLED_TASKS contains unknown task name(s): %s. Valid: %s",
+            ", ".join(sorted(unknown)),
+            ", ".join(sorted(known)),
+        )
+        sys.exit(2)
+
+    PerformanceTasks.tasks = [t for t in PerformanceTasks.tasks if t.__name__ in requested]
+    if not PerformanceTasks.tasks:
+        logger.error("LOCUST_ENABLED_TASKS filtered out every task; aborting.")
+        sys.exit(2)
+
+    logger.info("Locust task filter active: %s", ", ".join(sorted(requested)))
+
+
+_apply_task_filter()
 
 
 class PerformanceTestUser(HttpUser):
