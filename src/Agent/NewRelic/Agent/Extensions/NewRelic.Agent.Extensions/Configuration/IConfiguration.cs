@@ -161,7 +161,7 @@ public interface IConfiguration
     string TransactionTracerRecordSql { get; }
     string TransactionTracerRecordSqlSource { get; }
     int TransactionTracerMaxStackTraces { get; }
-    IReadOnlyList<string> TransactionTracerSqlMetadataCommentKeys { get; }
+    bool TransactionTracerSqlMetadataCommentsEnabled { get; }
     IEnumerable<long> TrustedAccountIds { get; }
     bool ServerSideConfigurationEnabled { get; }
     bool IgnoreServerSideConfiguration { get; }

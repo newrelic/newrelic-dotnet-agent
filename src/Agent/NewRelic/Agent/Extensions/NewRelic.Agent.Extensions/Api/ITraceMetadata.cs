@@ -10,6 +10,4 @@ public interface ITraceMetadata
     string SpanId { get; }
 
     bool IsSampled { get; }
-
-    string TransactionId { get; }
 }

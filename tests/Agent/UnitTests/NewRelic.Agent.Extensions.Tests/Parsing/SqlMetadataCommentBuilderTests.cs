@@ -12,111 +12,43 @@ public class SqlMetadataCommentBuilderTests
     // BuildComment tests
 
     [Test]
-    public void BuildComment_SingleKey_ReturnsCorrectFormat()
+    public void BuildComment_ValidGuid_ReturnsCorrectFormat()
     {
-        var result = SqlMetadataCommentBuilder.BuildComment(
-            ["nr_service"], "my-app", null, null, null);
+        var result = SqlMetadataCommentBuilder.BuildComment("abc123");
 
-        Assert.That(result, Is.EqualTo("/*nr_service=\"my-app\"*/"));
+        Assert.That(result, Is.EqualTo("/*nr_service_guid=\"abc123\"*/"));
     }
 
     [Test]
-    public void BuildComment_MultipleKeys_CombinesIntoSingleComment()
+    public void BuildComment_NullGuid_ReturnsEmpty()
     {
-        var result = SqlMetadataCommentBuilder.BuildComment(
-            ["nr_service", "nr_service_guid", "nr_txn", "nr_trace_id"],
-            "pet-clinic", "abc123", "txn-guid-456", "trace789");
-
-        Assert.That(result, Is.EqualTo("/*nr_service=\"pet-clinic\",nr_service_guid=\"abc123\",nr_txn=\"txn-guid-456\",nr_trace_id=\"trace789\"*/"));
-    }
-
-    [Test]
-    public void BuildComment_EmptyKeyList_ReturnsEmpty()
-    {
-        var result = SqlMetadataCommentBuilder.BuildComment(
-            [], "my-app", "guid", "txnid", "traceid");
+        var result = SqlMetadataCommentBuilder.BuildComment(null);
 
         Assert.That(result, Is.EqualTo(string.Empty));
     }
 
     [Test]
-    public void BuildComment_NullKeyList_ReturnsEmpty()
+    public void BuildComment_EmptyGuid_ReturnsEmpty()
     {
-        var result = SqlMetadataCommentBuilder.BuildComment(
-            null, "my-app", "guid", "txnid", "traceid");
+        var result = SqlMetadataCommentBuilder.BuildComment(string.Empty);
 
         Assert.That(result, Is.EqualTo(string.Empty));
     }
 
     [Test]
-    public void BuildComment_NullValue_OmitsKey()
+    public void BuildComment_GuidContainsStarSlash_ReturnsEmpty()
     {
-        var result = SqlMetadataCommentBuilder.BuildComment(
-            ["nr_service", "nr_service_guid"],
-            "my-app", null, null, null);
-
-        Assert.That(result, Is.EqualTo("/*nr_service=\"my-app\"*/"));
-    }
-
-    [Test]
-    public void BuildComment_EmptyValue_OmitsKey()
-    {
-        var result = SqlMetadataCommentBuilder.BuildComment(
-            ["nr_service", "nr_service_guid"],
-            "my-app", string.Empty, null, null);
-
-        Assert.That(result, Is.EqualTo("/*nr_service=\"my-app\"*/"));
-    }
-
-    [Test]
-    public void BuildComment_AllValuesNullOrEmpty_ReturnsEmpty()
-    {
-        var result = SqlMetadataCommentBuilder.BuildComment(
-            ["nr_service", "nr_service_guid", "nr_txn", "nr_trace_id"],
-            null, null, null, null);
+        var result = SqlMetadataCommentBuilder.BuildComment("injected*/DROP TABLE users");
 
         Assert.That(result, Is.EqualTo(string.Empty));
     }
 
     [Test]
-    public void BuildComment_ValueContainsStarSlash_OmitsKey()
+    public void BuildComment_GuidIsQuotedInOutput()
     {
-        var result = SqlMetadataCommentBuilder.BuildComment(
-            ["nr_service", "nr_txn"],
-            "safe-app", "injected*/DROP TABLE users", null, null);
+        var result = SqlMetadataCommentBuilder.BuildComment("my-guid");
 
-        Assert.That(result, Is.EqualTo("/*nr_service=\"safe-app\"*/"));
-    }
-
-    [Test]
-    public void BuildComment_AllValuesContainStarSlash_ReturnsEmpty()
-    {
-        var result = SqlMetadataCommentBuilder.BuildComment(
-            ["nr_service"],
-            "bad*/value", null, null, null);
-
-        Assert.That(result, Is.EqualTo(string.Empty));
-    }
-
-    [Test]
-    public void BuildComment_UnrecognizedKey_IsIgnored()
-    {
-        // Unrecognized keys should not appear in comment; ValidKeys filters them at config load time,
-        // but the builder's switch also handles unknown keys gracefully via the _ => null case.
-        var result = SqlMetadataCommentBuilder.BuildComment(
-            ["nr_service", "unknown_key"],
-            "my-app", null, null, null);
-
-        Assert.That(result, Is.EqualTo("/*nr_service=\"my-app\"*/"));
-    }
-
-    [Test]
-    public void BuildComment_ValuesAreQuoted()
-    {
-        var result = SqlMetadataCommentBuilder.BuildComment(
-            ["nr_service"], "my app", null, null, null);
-
-        Assert.That(result, Does.StartWith("/*nr_service=\""));
+        Assert.That(result, Does.StartWith("/*nr_service_guid=\""));
         Assert.That(result, Does.EndWith("\"*/"));
     }
 
@@ -126,9 +58,9 @@ public class SqlMetadataCommentBuilderTests
     public void PrependCommentToSql_NoExistingComment_PrependsComment()
     {
         var result = SqlMetadataCommentBuilder.PrependCommentToSql(
-            "SELECT 1", "/*nr_service=\"app\"*/");
+            "SELECT 1", "/*nr_service_guid=\"abc123\"*/");
 
-        Assert.That(result, Is.EqualTo("/*nr_service=\"app\"*/SELECT 1"));
+        Assert.That(result, Is.EqualTo("/*nr_service_guid=\"abc123\"*/SELECT 1"));
     }
 
     [Test]
@@ -136,17 +68,17 @@ public class SqlMetadataCommentBuilderTests
     {
         var result = SqlMetadataCommentBuilder.PrependCommentToSql(
             "/*this is a test*/ select name from users",
-            "/*nr_service=\"my_app\"*/");
+            "/*nr_service_guid=\"abc123\"*/");
 
-        Assert.That(result, Is.EqualTo("/*nr_service=\"my_app\"*//*this is a test*/ select name from users"));
+        Assert.That(result, Is.EqualTo("/*nr_service_guid=\"abc123\"*//*this is a test*/ select name from users"));
     }
 
     [Test]
-    public void PrependCommentToSql_SqlAlreadyHasNrPrefix_DoesNotPrepend()
+    public void PrependCommentToSql_SqlAlreadyHasNrServiceGuidPrefix_DoesNotPrepend()
     {
-        var original = "/*nr_service=\"old-app\"*/SELECT 1";
+        var original = "/*nr_service_guid=\"old-guid\"*/SELECT 1";
         var result = SqlMetadataCommentBuilder.PrependCommentToSql(
-            original, "/*nr_service=\"new-app\"*/");
+            original, "/*nr_service_guid=\"new-guid\"*/");
 
         Assert.That(result, Is.SameAs(original));
     }
@@ -167,25 +99,5 @@ public class SqlMetadataCommentBuilderTests
         var result = SqlMetadataCommentBuilder.PrependCommentToSql(original, null);
 
         Assert.That(result, Is.SameAs(original));
-    }
-
-    // ValidKeys tests
-
-    [Test]
-    public void ValidKeys_ContainsAllSpecDefinedKeys()
-    {
-        Assert.Multiple(() =>
-        {
-            Assert.That(SqlMetadataCommentBuilder.ValidKeys, Does.Contain("nr_service"));
-            Assert.That(SqlMetadataCommentBuilder.ValidKeys, Does.Contain("nr_service_guid"));
-            Assert.That(SqlMetadataCommentBuilder.ValidKeys, Does.Contain("nr_txn"));
-            Assert.That(SqlMetadataCommentBuilder.ValidKeys, Does.Contain("nr_trace_id"));
-        });
-    }
-
-    [Test]
-    public void ValidKeys_DoesNotContainUnknownKeys()
-    {
-        Assert.That(SqlMetadataCommentBuilder.ValidKeys, Does.Not.Contain("unknown_key"));
     }
 }

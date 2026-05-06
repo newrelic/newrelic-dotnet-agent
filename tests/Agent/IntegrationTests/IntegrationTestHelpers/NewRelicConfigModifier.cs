@@ -184,10 +184,10 @@ public class NewRelicConfigModifier
             "explainEnabled", enabled.ToString().ToLower());
     }
 
-    public void SetTransactionTracerSqlMetadataComments(string commentKeys)
+    public void SetTransactionTracerSqlMetadataCommentsEnabled(bool enabled)
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "transactionTracer" },
-            "sqlMetadataComments", commentKeys);
+            "sqlMetadataCommentsEnabled", enabled.ToString().ToLower());
     }
 
     public NewRelicConfigModifier SetLogLevel(string level)

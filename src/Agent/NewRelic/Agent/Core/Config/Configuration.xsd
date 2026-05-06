@@ -1178,13 +1178,11 @@
                             </xs:annotation>
                         </xs:attribute>
 
-                        <xs:attribute name="sqlMetadataComments" type="xs:string" default="">
+                        <xs:attribute name="sqlMetadataCommentsEnabled" type="xs:boolean" default="false">
                             <xs:annotation>
                                 <xs:documentation>
-                                    Comma-delimited list of keys to include in SQL metadata comments prepended to each executed SQL statement.
-                                    Valid values are: nr_service, nr_service_guid, nr_txn, nr_trace_id.
-                                    A blank value (the default) disables the feature.
-                                    Can also be set via the NEW_RELIC_TRANSACTION_TRACER_SQL_METADATA_COMMENTS environment variable.
+                                    When true, a SQL metadata comment containing the service entity GUID is prepended to each executed SQL statement.
+                                    Can also be set via the NEW_RELIC_TRANSACTION_TRACER_SQL_METADATA_COMMENTS_ENABLED environment variable.
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>

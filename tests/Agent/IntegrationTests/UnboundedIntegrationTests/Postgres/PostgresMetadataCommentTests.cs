@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres;
@@ -31,16 +33,18 @@ public abstract class PostgresMetadataCommentTestsBase<TFixture> : NewRelicInteg
                 configModifier.ConfigureFasterMetricsHarvestCycle(15);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
                 configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
                 configModifier.ForceTransactionTraces().SetLogLevel("finest");
 
                 configModifier.ForceSqlTraces();
                 configModifier.SetTransactionTracerRecordSql("raw");
-                configModifier.SetTransactionTracerSqlMetadataComments("nr_service,nr_service_guid,nr_txn,nr_trace_id");
+                configModifier.SetTransactionTracerSqlMetadataCommentsEnabled(true);
             },
             exerciseApplication: () =>
             {
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
 
@@ -50,6 +54,9 @@ public abstract class PostgresMetadataCommentTestsBase<TFixture> : NewRelicInteg
     [Fact]
     public void Test()
     {
+        const string commentPrefix = "/*nr_service_guid=\"";
+
+        // SQL traces
         var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
         var tracesForTransaction = sqlTraces.Where(t => t.TransactionName == TransactionName).ToList();
 
@@ -58,9 +65,52 @@ public abstract class PostgresMetadataCommentTestsBase<TFixture> : NewRelicInteg
         foreach (var trace in tracesForTransaction)
         {
             Assert.True(
-                trace.Sql.StartsWith("/*nr_service=\"", StringComparison.Ordinal),
+                trace.Sql.StartsWith(commentPrefix, StringComparison.Ordinal),
                 $"Expected SQL trace to start with SQL metadata comment, but was: {trace.Sql}");
         }
+
+        // Transaction trace segments
+        var transactionSample = _fixture.AgentLog.TryGetTransactionSample(TransactionName);
+        Assert.NotNull(transactionSample);
+
+        var sqlSegments = GetAllSegments(transactionSample.TraceData.RootSegment)
+            .Where(s => s.Parameters != null && s.Parameters.ContainsKey("sql"))
+            .ToList();
+
+        Assert.True(sqlSegments.Count > 0, "No SQL segments found in transaction trace");
+
+        foreach (var segment in sqlSegments)
+        {
+            var sql = segment.Parameters["sql"] as string;
+            Assert.True(
+                sql?.StartsWith(commentPrefix, StringComparison.Ordinal) == true,
+                $"Expected transaction trace segment SQL to start with metadata comment, but was: {sql}");
+        }
+
+        // Span events
+        var dbSpans = _fixture.AgentLog.GetSpanEvents()
+            .Where(s => s.AgentAttributes.ContainsKey("db.statement"))
+            .ToList();
+
+        Assert.True(dbSpans.Count > 0, "No span events with db.statement found");
+
+        foreach (var span in dbSpans)
+        {
+            var sql = span.AgentAttributes["db.statement"] as string;
+            Assert.True(
+                sql?.StartsWith(commentPrefix, StringComparison.Ordinal) == true,
+                $"Expected span event db.statement to start with metadata comment, but was: {sql}");
+        }
+    }
+
+    private static IEnumerable<TransactionTraceSegment> GetAllSegments(TransactionTraceSegment segment)
+    {
+        yield return segment;
+        if (segment.ChildSegments == null)
+            yield break;
+        foreach (var child in segment.ChildSegments)
+            foreach (var descendant in GetAllSegments(child))
+                yield return descendant;
     }
 }
 
