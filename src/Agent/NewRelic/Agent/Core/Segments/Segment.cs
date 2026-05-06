@@ -118,12 +118,14 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         _transactionSegmentState = transactionSegmentState;
         ParentUniqueId = transactionSegmentState.ParentSegmentId();
         UniqueId = transactionSegmentState.CallStackPush(this);
+        Log.Info($"Segment {SpanId} pushed for method {methodCallData.TypeName}.{methodCallData.MethodName}");
         MethodCallData = methodCallData;
         Data = new MethodSegmentData(methodCallData.TypeName, methodCallData.MethodName);
         Data.AttachSegmentDataState(this);
         Combinable = false;
         IsLeaf = false;
         IsAsync = methodCallData.IsAsync;
+        Log.Info($"Segment {SpanId} constructor finished");
     }
 
     /// <summary>
@@ -141,12 +143,14 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         _transactionSegmentState = transactionSegmentState;
         ParentUniqueId = transactionSegmentState.ParentSegmentId();
         UniqueId = transactionSegmentState.CallStackPush(this);
+        Log.Info($"Segment {SpanId} pushed for method {methodCallData.TypeName}.{methodCallData.MethodName}");
         MethodCallData = methodCallData;
         Data = new MethodSegmentData(methodCallData.TypeName, methodCallData.MethodName);
         Data.AttachSegmentDataState(this);
         Combinable = false;
         IsLeaf = true;
         IsAsync = methodCallData.IsAsync;
+        Log.Info($"Segment {SpanId} constructor finished");
     }
 
     /// <summary>
@@ -217,6 +221,10 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
 
     public void End()
     {
+        if (Data == null)
+        {
+            Log.Error($"Data is null in Segment.End(), methodName={MethodCallData?.TypeName}.{MethodCallData?.MethodName}.");
+        }
         // this segment may have already been forced to end
         if (RelativeEndTime.HasValue == false)
         {
@@ -512,11 +520,12 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         {
             return;
         }
-        //if (Data == null) {
-        //    var methodName = MethodCallData != null ? $"{MethodCallData.TypeName}.{MethodCallData.MethodName}" : "UnknownMethod";
-        //    Log.Error("Data is null in Segment.AddMetricStats, methodName={0}.", methodName);
-        //    //return;
-        //}
+        if (Data == null)
+        {
+            var methodName = MethodCallData != null ? $"{MethodCallData.TypeName}.{MethodCallData.MethodName}" : "UnknownMethod";
+            Log.Error("Data is null in Segment.AddMetricStats, methodName={0}.", methodName);
+            //return;
+        }
         Data.AddMetricStats(this, TotalChildDuration, txStats, configService);
     }
 

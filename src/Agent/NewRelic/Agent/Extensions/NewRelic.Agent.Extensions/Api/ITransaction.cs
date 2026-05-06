@@ -12,6 +12,7 @@ namespace NewRelic.Agent.Api;
 public interface ITransaction
 {
     void LogFinest(string message);
+    void LogInfo(string message);
 
     /// <summary>
     /// Flags the current transaction as ignored.  The transaction will continue to be built up as normal, but once it is complete it will be dropped rather than being reported to New Relic.  No new segments will be created.

@@ -255,6 +255,7 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
     {
         var methodCallData = GetMethodCallData(typeName, methodName, invocationTargetHashCode);
 
+        //Log.Info($"Starting segment for {typeName}.{methodName} with invocation target hash code {invocationTargetHashCode} for transaction {Guid}");
         return new Segment(this, methodCallData, relativeStartTime, relativeEndTime);
     }
 
@@ -385,14 +386,15 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
         if (Ignored)
             return Segment.NoOpSegment;
 
-        // Since we are not instrumenting a specific method when making these segments, this creates a stand-in method that aligns with our previous instrumentation.
+        //Log.Info($"Starting SER segment for transaction {Guid}");
+// Since we are not instrumenting a specific method when making these segments, this creates a stand-in method that aligns with our previous instrumentation.
         var segment = StartSegmentImpl("StackExchange.Redis.IConnectionMultiplexer", "Execute", invocationTargetHashCode, relativeStartTime, relativeEndTime);
         segment.IsLeaf = true;
         var datastoreSegmentData = CreateDatastoreSegmentData(parsedSqlStatement, connectionInfo, null, null);
 
         segment.SetSegmentData(datastoreSegmentData);
 
-        if (Log.IsFinestEnabled) LogFinest($"Segment(stackexchange redis) start {{{segment.ToStringForFinestLogging()}}}");
+        LogInfo($"Segment(stackexchange redis) start {{{segment.ToStringForFinestLogging()}}}");
 
         return segment;
     }
@@ -1116,6 +1118,13 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
         if (Log.IsFinestEnabled)
         {
             Log.Finest($"Trx {Guid}: {message}");
+        }
+    }
+    public void LogInfo(string message)
+    {
+        if (Log.IsInfoEnabled)
+        {
+            Log.Info($"Trx {Guid}: {message}");
         }
     }
 

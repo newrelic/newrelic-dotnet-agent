@@ -97,6 +97,7 @@ public class TransactionTransformer : ITransactionTransformer
 
         using (_agentTimerService.StartNew("Transform", transactionMetricName.PrefixedName))
         {
+            transaction.LogInfo($"Transaction {transactionMetricName.PrefixedName} transform started");
             Transform(immutableTransaction, transactionMetricName);
         }
 
@@ -215,6 +216,7 @@ public class TransactionTransformer : ITransactionTransformer
         var spanEventLinksDropped = 0;
         var spanEventEventsDropped = 0;
         var txId = immutableTransaction.Guid;
+        Log.Info("GenerateAndCollectMetrics started for transaction " + txId);
 
         foreach (var segment in immutableTransaction.Segments)
         {

@@ -50,6 +50,7 @@ public class SessionCache : IStackExchangeRedisCache
             // If we can't remove the session, it doesn't exist, so do nothing and return.
             if (!_sessionCache.TryRemove(hostSegment, out sessionData))
             {
+                Log.Info($"No profiling session for host segment {hostSegment.SpanId} during harvest.");
                 return;
             }
         }
@@ -59,6 +60,7 @@ public class SessionCache : IStackExchangeRedisCache
         {
             return;
         }
+        transaction.LogInfo($"SER Harvest starting for host segment {hostSegment.SpanId}");
 
         var xTransaction = (ITransactionExperimental)transaction;
         var commands = sessionData.session.FinishProfiling();
@@ -73,6 +75,7 @@ public class SessionCache : IStackExchangeRedisCache
             var segment = xTransaction.StartStackExchangeRedisSegment(_invocationTargetHashCode,
                 ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, command.Command),
                 GetConnectionInfo(command.EndPoint), relativeStartTime, relativeEndTime);
+            //Log.Info($"Created segment {segment.SpanId}");
 
             // This version of End does not set the end time or check for redis Harvests
             // This calls Finish and removes the segment from the callstack.
@@ -157,6 +160,8 @@ public class SessionCache : IStackExchangeRedisCache
             // Don't want to save data to a session to a NoOp - no way to clean it up easily or reliably.
             // Don't want to save to a Datastore segment - could be another Redis segment or something else.
             var segment = transaction.CurrentSegment;
+
+            transaction.LogInfo($"GetProfilingSession called for segment {segment.SpanId}");
 
             // These don't change over time so they don't need to be in the lock.
             if (!segment.IsValid || ((ISegmentExperimental)segment).GetCategory() == "Datastore")

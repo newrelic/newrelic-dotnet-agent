@@ -174,6 +174,8 @@ public static class Delegates
                 }
                 else
                 {
+                    // The following log line crashes this agent with an NRE for some reason
+                    //transaction.LogInfo($"Segment {segment.SpanId} is ending after async work completed.");
                     segment.End();
                 }
 

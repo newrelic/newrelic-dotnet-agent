@@ -258,6 +258,13 @@ public class NoOpTransaction : ITransaction, ITransactionExperimental
             Log.Finest($"Trx Noop: {message}");
         }
     }
+    public void LogInfo(string message)
+    {
+        if (Log.IsInfoEnabled)
+        {
+            Log.Info($"Trx Noop: {message}");
+        }
+    }
 
     public void Ignore()
     {
