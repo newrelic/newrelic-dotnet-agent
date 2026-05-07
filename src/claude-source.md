@@ -1,313 +1,109 @@
-# New Relic .NET Agent - Source Code Architecture
+# Source Code Architecture
 
-This document describes the source code organization and architecture of the New Relic .NET Agent.
+Orientation map for `src/`. See the [root claude.md](../claude.md) for how
+instrumentation works end-to-end and for coding standards.
 
-## Overview
-
-The agent consists of two main components:
-1. **Native Profiler** - C++ code that hooks into the CLR profiling API
-2. **Managed Agent** - C# code that collects telemetry and communicates with New Relic
-
-## Directory Structure
+## Layout
 
 ```
-src/
-├── Agent/
-│   ├── NewRelic/
-│   │   ├── Agent/
-│   │   │   ├── Core/             # Main agent implementation
-│   │   │   └── Extensions/       # Framework instrumentation
-│   │   ├── Profiler/             # Native profiler (C++)
-│   │   └── Home/                 # Home directory project
-│   ├── NewRelic.Api.Agent/       # Public API
-│   ├── Configuration/            # Configuration schemas
-│   ├── MsiInstaller/             # Windows installer
-│   ├── newrelichome_*/           # Built agent home directories
-│   └── Scripts/                  # Build scripts
-└── _build/                       # Build output
+src/Agent/
+├── NewRelic/
+│   ├── Agent/
+│   │   ├── Core/        # Managed agent core (C#)
+│   │   └── Extensions/  # Instrumentation framework + per-framework wrappers
+│   ├── Profiler/        # Native profiler (C++)
+│   └── Home/            # Home-directory layout project (assembles newrelichome_*)
+├── NewRelic.Api.Agent/  # Public API consumed by customer code
+├── Configuration/       # XSD / config surface (see note below)
+├── MsiInstaller/        # Windows MSI
+├── newrelichome_*/      # Built agent homes (FullAgent.sln output)
+└── Scripts/             # Misc maintenance scripts (e.g. flush_dotnet_temp.cmd)
 ```
 
-## Core Components
+## Profiler (`Agent/NewRelic/Profiler/`)
 
-### 1. Native Profiler (`Agent/NewRelic/Profiler/`)
+Native C++ implementing the CLR Profiling API. On JIT, matches methods
+against instrumentation XML, requests ReJIT, and wraps the bytecode with
+`try/catch/finally` IL that calls into `AgentShim`.
 
-The profiler is written in C++ and implements the .NET Profiling API to inject instrumentation bytecode.
+**Entry points worth knowing:**
+- `Profiler/CorProfilerCallbackImpl.h` — main profiler callbacks
+- `MethodRewriter/InstrumentFunctionManipulator.h` — bytecode injection
+- `MethodRewriter/FunctionManipulator.h` — low-level IL manipulation
 
-**Key Files:**
-- [Profiler/CorProfilerCallbackImpl.h](Agent/NewRelic/Profiler/Profiler/CorProfilerCallbackImpl.h) - Main profiler callback implementation
-- [MethodRewriter/InstrumentFunctionManipulator.h](Agent/NewRelic/Profiler/MethodRewriter/InstrumentFunctionManipulator.h) - Bytecode injection logic
-- [MethodRewriter/FunctionManipulator.h](Agent/NewRelic/Profiler/MethodRewriter/FunctionManipulator.h) - Low-level bytecode manipulation
-
-**How It Works:**
-1. Profiler attaches to CLR via `COR_ENABLE_PROFILING` environment variable
-2. Sets flags to monitor JIT compilation events
-3. On `JITCompilationStarted`, checks if method should be instrumented
-4. Requests ReJIT for instrumented methods
-5. On `ReJITCompilationStarted`, modifies bytecode to wrap method with try-catch-finally
-6. Injected code calls into agent core via `AgentShim.GetFinishTracerDelegate()`
-
-**Profiler GUIDs:**
-- .NET Framework: `{71DA0A04-7777-4EC6-9643-7D28B46A8A41}`
-- .NET Core/.NET: `{36032161-FFC0-4B61-B559-F6C5D41BAE5A}`
-
-**Building:**
-Use PowerShell script at [Profiler/build/build.ps1](Agent/NewRelic/Profiler/build/build.ps1):
+**Build:** `src/Agent/NewRelic/Profiler/build/build.ps1`
 ```powershell
-# Windows x64
-build.ps1 -Platform x64 -Configuration Debug
-
-# Linux (requires Docker)
-build.ps1 -Platform linux
+build.ps1 -Platform x64 -Configuration Debug    # Windows x64
+build.ps1 -Platform linux                       # Linux (requires Docker)
 ```
 
-### 2. Agent Core (`Agent/NewRelic/Agent/Core/`)
+Profiler GUIDs are documented in the [root claude.md](../claude.md).
 
-The core agent is the heart of the monitoring solution, written in C#.
-
-#### Core Structure
+## Agent Core (`Agent/NewRelic/Agent/Core/`)
 
 ```
 Core/
-├── AgentHealth/              # Agent health monitoring
-├── Aggregators/              # Metric and event aggregation
-├── Api/                      # Internal API implementations
-├── Attributes/               # Attribute collection and filtering
-├── BrowserMonitoring/        # Real User Monitoring (RUM)
-├── CallStack/                # Call stack tracking
-├── Commands/                 # Server commands from New Relic
-├── Configuration/            # Configuration management
-├── DataTransport/            # Communication with New Relic
-├── DistributedTracing/       # Distributed tracing implementation
-├── Errors/                   # Error tracking
-├── Events/                   # Event models
-├── Instrumentation/          # Instrumentation coordination
-├── Metrics/                  # Metric collection and aggregation
-├── Samplers/                 # Periodic sampling (CPU, memory, etc.)
-├── Segments/                 # Segment creation and tracking
-├── Spans/                    # Span creation for distributed tracing
-├── ThreadProfiling/          # Thread profiler
-├── Transactions/             # Transaction management
-├── TransactionTraces/        # Transaction trace generation
-├── Transformers/             # Data transformation pipeline
-├── Utilities/                # Helper utilities
-├── Utilization/              # Host utilization detection
-├── WireModels/               # Data models for New Relic protocol
-└── Wrapper/                  # Wrapper base classes
+├── AgentHealth/          Aggregators/         Api/
+├── Attributes/           BrowserMonitoring/   CallStack/
+├── Commands/             Configuration/       DataTransport/
+├── DependencyInjection/  DistributedTracing/  Errors/
+├── Events/               Instrumentation/     Metrics/
+├── Samplers/             Segments/            Spans/
+├── ThreadProfiling/      Transactions/        TransactionTraces/
+├── Transformers/         Utilities/           Utilization/
+├── WireModels/           Wrapper/
 ```
 
-#### Key Subsystems
+**Notable classes / entry points:**
+- **Transactions:** `Transaction`, `ImmutableTransaction` (snapshot handed
+  to the pipeline when the transaction ends), `TransactionName`,
+  `TransactionMetricNameMaker`. Lifecycle: created by framework
+  instrumentation → segments added as operations run → custom attributes
+  collected → finished → transformed → aggregated into metrics, traces,
+  events, and spans.
+- **Segments:** `Segment` plus `*SegmentData` variants that carry the
+  per-category metadata. Segment categories: **external** (HTTP client
+  calls), **datastore** (SQL, NoSQL, caches), **message broker**
+  (queue/topic produce & consume), and **custom** (public-API or
+  wrapper-defined). Wrappers pick the category by which `*SegmentData`
+  they attach.
+- **Distributed tracing:** `DistributedTracePayload`,
+  `DistributedTracingApiModel`, `TracePriorityManager`. Inbound wrappers
+  accept trace context from headers and link the current transaction to
+  its parent span; outbound wrappers inject trace context into outgoing
+  calls. Implements W3C Trace Context plus the New Relic payload.
+- **Data transport:** `ConnectionManager`, `DataTransportService`,
+  `HttpCollectorWire`, `AgentCommands` (processes server-side config
+  returned by the collector).
+- **Aggregators:** one per data type (metrics, transaction events, error
+  events, span events, custom events, SQL traces, transaction traces).
+  Harvest cycle is ~60s by default: aggregators sample/combine, serialize,
+  and ship, then reset.
+- **DI:** `Core/DependencyInjection/AgentContainer`.
 
-##### Transaction Management (`Transactions/`)
-
-Transactions represent units of work being monitored.
-
-**Key Classes:**
-- `Transaction` - Main transaction implementation
-- `TransactionName` - Transaction naming logic
-- `TransactionMetricNameMaker` - Metric name generation
-- `ImmutableTransaction` - Immutable snapshot for data pipeline
-
-**Transaction Lifecycle:**
-1. Created by framework instrumentation (e.g., ASP.NET request handler)
-2. Segments added as operations execute
-3. Custom attributes and metadata collected
-4. Transaction finished when work completes
-5. Sent through data transformation pipeline
-6. Aggregated into metrics, traces, events, and spans
-
-##### Segments (`Segments/`)
-
-Segments track individual operations within transactions.
-
-**Segment Types:**
-- External segments (HTTP calls)
-- Database segments (SQL queries)
-- Datastore segments (NoSQL operations)
-- Message broker segments
-- Custom segments
-
-**Key Classes:**
-- `Segment` - Base segment implementation
-- `ExternalSegmentData` - HTTP call metadata
-- `DatastoreSegmentData` - Database operation metadata
-- `MessageBrokerSegmentData` - Message queue metadata
-
-##### Distributed Tracing (`DistributedTracing/`)
-
-Implements W3C Trace Context and New Relic distributed tracing.
-
-**Key Classes:**
-- `DistributedTracePayload` - Trace context payload
-- `DistributedTracingApiModel` - API for accepting trace context
-- `TracePriorityManager` - Sampling priority calculation
-
-**Flow:**
-1. Inbound: Accept trace context from headers
-2. Link current transaction to parent span
-3. Outbound: Inject trace context into outgoing calls
-4. Generate spans for distributed tracing visualization
-
-##### Data Transport (`DataTransport/`)
-
-Manages communication with New Relic's data ingest services.
-
-**Key Classes:**
-- `ConnectionManager` - Manages connections to New Relic
-- `DataTransportService` - Sends data to New Relic
-- `AgentCommands` - Processes server-side configuration
-- `HttpCollectorWire` - HTTP protocol implementation
-
-**Data Flow:**
-1. Agent collects metrics, events, traces, spans
-2. Data aggregated in harvest cycle (typically 60 seconds)
-3. Serialized to JSON
-4. Compressed with gzip
-5. Sent via HTTPS to New Relic collectors
-6. Response processed for server-side configuration
-
-##### Aggregators (`Aggregators/`)
-
-Aggregate telemetry data before sending to New Relic.
-
-**Key Aggregators:**
-- `MetricAggregator` - Aggregates metrics
-- `TransactionEventAggregator` - Transaction events
-- `ErrorEventAggregator` - Error events
-- `SpanEventAggregator` - Distributed tracing spans
-- `CustomEventAggregator` - Custom events
-- `SqlTraceAggregator` - SQL traces
-- `TransactionTraceAggregator` - Transaction traces
-
-**Harvest Cycle:**
-1. Data collected during 60-second window
-2. Aggregators combine and sample data
-3. Data serialized and sent to New Relic
-4. Aggregators reset for next cycle
-
-##### Configuration (`Configuration/`)
-
-Hierarchical configuration system with multiple sources.
-
-**Configuration Sources (Priority Order):**
-1. Environment variables (highest)
-2. Local `newrelic.config` file
-3. Server-side configuration
-4. Default values (lowest)
-
-**Key Classes:**
-- `Configuration` - Main configuration model
-- `ConfigurationService` - Configuration loading and updates
-- `EnvironmentVariables` - Environment variable access
-- `ServerConfiguration` - Server-side config from New Relic
-
-**Important Configuration:**
-- License key
-- Application name
-- Transaction tracer settings
-- Distributed tracing settings
-- Error collection settings
-- Instrumentation settings
-
-### 3. Extensions System (`Agent/NewRelic/Agent/Extensions/`)
-
-The extensions system provides framework-specific instrumentation.
-
-#### Extension Architecture
-
+**Data pipeline:**
 ```
-Extensions/
-├── NewRelic.Agent.Extensions/    # Base extension framework
-│   ├── Providers/
-│   │   ├── Storage/              # Async context storage
-│   │   └── Wrapper/              # Framework wrappers
+method → tracer/wrapper → segment/transaction → ImmutableTransaction
+      → transformers → aggregators → DataTransport → collector
 ```
 
-#### Storage Providers (`Providers/Storage/`)
+## Extensions (`Agent/NewRelic/Agent/Extensions/`)
 
-Manage async context across async/await boundaries.
-
-**Implementations:**
-- `AsyncLocal/` - Uses AsyncLocal<T> (.NET Core/.NET)
-- `CallContext/` - Uses CallContext (.NET Framework)
-- `HttpContext/` - Uses HttpContext for ASP.NET
-- `OperationContext/` - Uses OperationContext for WCF
-- `HybridHttpContext/` - Hybrid approach
-
-#### Wrapper Providers (`Providers/Wrapper/`)
-
-Instrument specific frameworks and libraries. Over 40 instrumentation providers:
-
-**Web Frameworks:**
-- `AspNet/` - ASP.NET Framework (MVC, Web Forms, etc.)
-- `AspNetCore/` - ASP.NET Core 1.0-5.0
-- `AspNetCore6Plus/` - ASP.NET Core 6.0+
-- `Mvc3/` - ASP.NET MVC 3+
-- `WebApi1/`, `WebApi2/` - ASP.NET Web API
-- `Owin/` - OWIN middleware
-- `OpenRasta/` - OpenRasta framework
-
-**Databases:**
-- `Sql/` - ADO.NET (SqlClient, etc.)
-- `MongoDb/`, `MongoDb26/` - MongoDB drivers
-- `Couchbase/`, `Couchbase3/` - Couchbase
-- `CosmosDb/` - Azure Cosmos DB
-- `Elasticsearch/` - Elasticsearch
-- `OpenSearch/` - OpenSearch
-- `ServiceStackRedis/` - ServiceStack.Redis
-- `StackExchangeRedis/`, `StackExchangeRedis2Plus/` - StackExchange.Redis
-- `Memcached/` - Memcached
-
-**HTTP Clients:**
-- `HttpClient/` - HttpClient
-- `HttpWebRequest/` - HttpWebRequest
-- `RestSharp/` - RestSharp
-
-**Messaging:**
-- `RabbitMq/` - RabbitMQ
-- `Kafka/` - Kafka
-- `Msmq/` - MSMQ
-- `NServiceBus/` - NServiceBus
-- `MassTransit/`, `MassTransitLegacy/` - MassTransit
-- `AzureServiceBus/` - Azure Service Bus
-
-**Cloud Services:**
-- `AwsSdk/` - AWS SDK
-- `AwsLambda/` - AWS Lambda
-- `AzureFunction/` - Azure Functions
-- `Bedrock/` - AWS Bedrock (AI)
-
-**AI/ML:**
-- `OpenAI/` - OpenAI SDK (GPT, etc.)
-- `Bedrock/` - AWS Bedrock
-
-**Logging:**
-- `Log4NetLogging/` - log4net
-- `NLogLogging/` - NLog
-- `SerilogLogging/` - Serilog
-- `MicrosoftExtensionsLogging/` - Microsoft.Extensions.Logging
-
-**Other:**
-- `Wcf3/` - WCF
-- `WebServices/` - ASMX web services
-- `ScriptHandlerFactory/` - ASP.NET AJAX
-- `WebOptimization/` - ASP.NET bundling and minification
-
-#### Creating a Wrapper
-
-Each wrapper typically contains:
-1. **Extension XML** - Defines instrumentation points
-2. **Wrapper classes** - Implement instrumentation logic
-3. **Tracer factories** - Create tracers for instrumented methods
-
-**Example Structure:**
 ```
-MyFramework/
-├── MyFramework.csproj
-├── MyFrameworkInstrumentation.xml
-└── MyFrameworkWrapper.cs
+Extensions/NewRelic.Agent.Extensions/
+└── Providers/
+    ├── Storage/   Async-context storage (AsyncLocal, CallContext, HttpContext,
+    │             OperationContext, HybridHttpContext)
+    └── Wrapper/   Per-framework instrumentation wrappers (40+ projects —
+                   one subfolder per instrumented library; ls to enumerate)
 ```
 
-**Extension XML Format:**
+### Creating a wrapper
+
+Each wrapper project contains the csproj, an `*Instrumentation.xml` that
+tells the profiler what to hook, and the `IWrapper` implementation(s).
+
+Minimal instrumentation XML:
 ```xml
 <extension>
   <instrumentation>
@@ -320,215 +116,147 @@ MyFramework/
 </extension>
 ```
 
-**Wrapper Implementation:**
+Minimal wrapper:
 ```csharp
 public class MyFrameworkWrapper : IWrapper
 {
+    // true  = wrapper is skipped if no transaction is in progress
+    //         (use when the wrapper only adds a segment to an existing tx)
+    // false = wrapper runs regardless; typically it creates a transaction
+    //         itself (entry points: request handlers, message consumers,
+    //         lambda handlers, background job starts)
+    public bool IsTransactionRequired => true;
+
+    public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo) =>
+        new CanWrapResponse(methodInfo.RequestedWrapperName == nameof(MyFrameworkWrapper));
+
     public AfterWrappedMethodDelegate BeforeWrappedMethod(
         InstrumentedMethodCall instrumentedMethodCall,
         IAgent agent,
         ITransaction transaction)
     {
         var segment = transaction.StartTransactionSegment(
-            instrumentedMethodCall.MethodCall,
-            "MyFramework");
-
+            instrumentedMethodCall.MethodCall, "MyFramework");
         return Delegates.GetDelegateFor(segment);
     }
 }
 ```
 
-### 4. Public API (`NewRelic.Api.Agent/`)
+**Debugging tip:** if a wrapper seems not to fire, check
+`IsTransactionRequired`. A `true` wrapper on a method that runs outside
+any transaction (e.g. a background poller, a message consumer invoked by
+an SDK thread before a transaction exists) will be silently skipped —
+`transaction` would be null, so the agent bypasses the wrapper entirely.
+Wrappers that *start* transactions must return `false`.
 
-The public API allows developers to add custom instrumentation.
+`maxVersion` in instrumentation XML is **exclusive**. Prefer
+`VisibilityBypasser` over reflection / `dynamic` when reaching into
+instrumented types; cache generated delegates per type. Both conventions
+are detailed in the [root claude.md](../claude.md).
 
-**Key Interfaces:**
-- `IAgent` - Access to agent functionality
-- `ITransaction` - Current transaction operations
-- `ISegment` - Custom segment creation
-- `ISpan` - Current span access
+Wrapper projects have **no unit tests** — they're covered by integration
+and unbounded test solutions. Only `NewRelic.Agent.Extensions` (shared
+helpers like `SqsHelper`) is unit tested. When adding non-trivial logic
+to a wrapper, lift it into a helper in `NewRelic.Agent.Extensions` so it
+can be unit tested — keep the wrapper itself thin. The same rule is
+covered in the [root claude.md](../claude.md) testing conventions.
 
-**Static API:**
-```csharp
-// Located in NewRelic.Api.Agent.NewRelic class
-AddCustomAttribute(string key, object value)
-NoticeError(Exception exception)
-SetTransactionName(string category, string name)
-GetAgent()
-StartAgent()
+## Public API (`NewRelic.Api.Agent/`)
+
+Customer-facing surface:
+- Interfaces: `IAgent`, `ITransaction`, `ISegment`, `ISpan`
+- Static helpers on `NewRelic.Api.Agent.NewRelic` (`AddCustomAttribute`,
+  `NoticeError`, `SetTransactionName`, `GetAgent`, `StartAgent`)
+- Attributes: `[Transaction]`, `[Trace]` for custom instrumentation
+
+Changes here are gated by `PublicApiChangeTests` — intentional breaks need
+an explicit baseline update.
+
+## Configuration
+
+Runtime config precedence is in the [root claude.md](../claude.md).
+
+The canonical schema is `src/Agent/NewRelic/Agent/Core/Config/Configuration.xsd`
+and it generates `Configuration.cs` in the same directory.
+`src/Agent/Configuration/` holds additional config surface / validation
+artifacts.
+
+### Regenerating `Configuration.cs` after editing the XSD
+
+`Configuration.cs` is **auto-generated — never hand-edit it.** After
+changing `Configuration.xsd`, regenerate by running the following from
+the repo root:
+
+```powershell
+$root = (Resolve-Path .).Path
+& "$root\build\Tools\xsd2code\xsd2code.exe" `
+  "$root\src\Agent\NewRelic\Agent\Core\Config\Configuration.xsd" `
+  NewRelic.Agent.Core.Config `
+  "$root\src\Agent\NewRelic\Agent\Core\Config\Configuration.cs" `
+  /cl /ap /sc /xa
 ```
 
-**Custom Instrumentation:**
-```csharp
-[Transaction]
-public void MyBusinessMethod()
-{
-    // Creates a transaction if none exists
-}
-
-[Trace]
-public void MyTracedMethod()
-{
-    // Creates a segment within transaction
-}
+`xsd2code` strips file headers, so re-prepend the two-line license header
+to the regenerated file:
+```
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
 ```
 
-### 5. Configuration Schemas (`Agent/Configuration/`)
+See [docs/config-development.md](../docs/config-development.md) for the
+full reference on config development.
 
-XML schemas and related files for agent configuration.
+## Performance principles
 
-**Key Files:**
-- `newrelic.xsd` - Schema for newrelic.config
-- Configuration validation and documentation
+The agent runs inside every instrumented process, so overhead directly
+taxes customer apps. When writing or modifying agent code, honor these:
 
-## Agent Initialization Flow
+- **Minimize allocations on hot paths.** Tracer start/finish, segment
+  creation, and per-call wrapper code run on every instrumented method
+  call. Avoid LINQ, closures, string concatenation, `params` arrays, and
+  boxing in these paths.
+- **Cache reflection.** Any `Type.GetMethod` / `PropertyInfo` / generated
+  delegate must be cached per type (typically in a
+  `ConcurrentDictionary<Type, …>`). In wrapper projects, use
+  `VisibilityBypasser` — it both caches and compiles to IL (see root
+  claude.md).
+- **Keep the non-instrumented fast path cheap.** When a method isn't
+  matched by any wrapper, the agent code in its path should do as little
+  as possible — ideally a single guard check.
+- **Lazy initialization** for anything not needed at agent startup.
+- **Favor immutable + snapshot handoffs** (see `ImmutableTransaction`)
+  over locking shared mutable state; use lock-free structures where
+  practical and `ReaderWriterLockSlim` when you must share.
+- **Prefer pooling / reuse** (`StringBuilder`, buffers, event reservoirs)
+  on repeated per-transaction work.
 
-1. **Profiler Attachment**
-   - CLR loads profiler DLL
-   - Profiler initializes and sets event masks
-   - Profiler reads instrumentation XML from extensions
+**Sampling keeps volume bounded:**
+- Transaction traces: 1/min by default.
+- Span events: sampled by priority.
+- Custom events: reservoir sampling.
 
-2. **Agent Core Initialization**
-   - AgentInitializer.Initialize() called
-   - Configuration loaded from all sources
-   - Services registered in dependency injection container
-   - Connection to New Relic established
-   - Background services started (samplers, aggregators)
+Respect these when adding new telemetry — unsampled firehoses are not an
+option.
 
-3. **Instrumentation Active**
-   - Methods JIT compiled with instrumentation
-   - Transactions and segments created
-   - Data collected and aggregated
-   - Periodic harvest sends data to New Relic
+## Agent initialization order
 
-## Instrumentation Workflow
+1. CLR loads profiler via `*_PROFILER_PATH`.
+2. Profiler reads instrumentation XML from the agent home + extensions
+   directory and sets event masks.
+3. Agent core `AgentInitializer.Initialize()` runs: loads config from all
+   sources, registers services in `AgentContainer`, opens connection to
+   New Relic, starts samplers and aggregators.
+4. JIT compiles application methods; matched methods get ReJIT'd with
+   instrumented bytecode.
+5. Harvest cycle (~60s) aggregates and ships data.
 
-1. **Method JIT Compilation**
-   - Profiler intercepts JIT event
-   - Checks if method matches instrumentation XML
-   - Requests ReJIT if match found
+## Debugging signals
 
-2. **ReJIT Event**
-   - Profiler gets original method bytecode
-   - Wraps bytecode with try-catch-finally blocks
-   - Injects calls to AgentShim
-   - Returns modified bytecode to CLR
-
-3. **Method Execution**
-   - Try: Call GetFinishTracerDelegate (starts tracer)
-   - Original method body executes
-   - Catch: Report exception to tracer
-   - Finally: Finish tracer with result
-
-4. **Tracer Lifecycle**
-   - Tracer created by wrapper
-   - Segment/transaction started
-   - Timing begins
-   - Custom data collected
-   - Segment/transaction finished
-   - Data sent to aggregators
-
-## Data Pipeline
-
-```
-Method Execution
-    ↓
-Tracer/Wrapper
-    ↓
-Segment/Transaction
-    ↓
-ImmutableTransaction
-    ↓
-Transformers
-    ↓
-Aggregators
-    ↓
-DataTransport
-    ↓
-New Relic Platform
-```
-
-## Dependency Injection
-
-The agent uses a custom DI container for service management.
-
-**Container:** `Core/DependencyInjection/AgentContainer`
-
-**Key Services:**
-- Configuration services
-- Aggregators
-- Data transport
-- Samplers
-- API implementations
-- Metric builders
-
-## Threading Model
-
-- **Agent thread** - Background thread for harvesting and sampling
-- **Instrumented threads** - Application threads being monitored
-- **Async context** - Maintains transaction context across async boundaries
-
-**Synchronization:**
-- Lock-free data structures where possible
-- ReaderWriterLockSlim for shared state
-- Immutable objects for thread safety
-
-## Performance Considerations
-
-**Low Overhead Design:**
-- Minimize allocations in hot paths
-- Cache reflection results
-- Fast path for non-instrumented methods
-- Lazy initialization where possible
-- Aggressive inlining of small methods
-
-**Sampling:**
-- Transaction traces sampled (1 per minute by default)
-- Span events sampled based on priority
-- Custom events reservoir sampling
-
-## Debugging Tips
-
-**Enable Debug Logging:**
-```xml
-<configuration>
-  <log level="debug" />
-</configuration>
-```
-
-Or environment variable:
-```
-NEWRELIC_LOG_LEVEL=debug
-```
-
-**Common Log Locations:**
-- `{NEWRELIC_HOME}/logs/` - Agent logs
-- Windows Event Viewer - Profiler errors
-
-**Attach Debugger:**
-1. Set environment variables for target app
-2. Start target app
-3. Attach Visual Studio debugger to process
-4. Set breakpoints in agent code
-
-**Profiler Debugging:**
-- Check profiler loads: Look for "Profiler attached" in logs
-- Enable profiler debug logging: See profiler documentation
-- Windows Event Viewer for profiler failures
-
-## Code Conventions
-
-- File-scoped namespaces (recent refactoring)
-- Prefer records for immutable data
-- Use dependency injection for services
-- Minimal public surface area
-- XML documentation on public APIs
-- Unit tests for all new code
-
-## Related Documentation
-
-- [Main repository guide](../claude.md)
-- [Build system](../build/claude-build.md)
-- [Testing guide](../tests/claude-tests.md)
-- [Profiler README](Agent/NewRelic/Profiler/README.md)
-- [Development guide](../docs/development.md)
+When an agent appears attached but does nothing:
+- Check the agent log (`<home>/logs/`) for a **"Profiler attached"** line —
+  absence means the profiler never loaded.
+- If the log itself is missing, the profiler failed to load. Check the
+  Windows **Event Viewer** (Applications and Services Logs → Application)
+  for profiler DLL load errors — GUID mismatch, bitness mismatch, or
+  missing dependencies all surface here.
+- Turn up verbosity with `NEWRELIC_LOG_LEVEL=debug` for the managed side.
