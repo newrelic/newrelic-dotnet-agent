@@ -62,21 +62,32 @@ public class SessionCache : IStackExchangeRedisCache
 
         var xTransaction = (ITransactionExperimental)transaction;
         var commands = sessionData.session.FinishProfiling();
-        foreach (var command in commands)
+
+        // Hold the transaction open while we create and finish segments for each command.  This allows us to get the timing information into the transaction
+        // and ensures the segments are created before the transaction is potentially finished from another thread
+        transaction.Hold();
+        try
         {
-            // We need to build the relative start and stop time based on the transaction start time.
-            var relativeStartTime = command.CommandCreated - xTransaction.StartTime;
-            var relativeEndTime = relativeStartTime + command.ElapsedTime;
+            foreach (var command in commands)
+            {
+                // We need to build the relative start and stop time based on the transaction start time.
+                var relativeStartTime = command.CommandCreated - xTransaction.StartTime;
+                var relativeEndTime = relativeStartTime + command.ElapsedTime;
 
-            // This new segment maker accepts relative start and stop times since we will be starting and ending(RemoveSegmentFromCallStack) the segment immediately.
-            // This also sets the segment as a Leaf.
-            var segment = xTransaction.StartStackExchangeRedisSegment(_invocationTargetHashCode,
-                ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, command.Command),
-                GetConnectionInfo(command.EndPoint), relativeStartTime, relativeEndTime);
+                // This new segment maker accepts relative start and stop times since we will be starting and ending(RemoveSegmentFromCallStack) the segment immediately.
+                // This also sets the segment as a Leaf.
+                var segment = xTransaction.StartStackExchangeRedisSegment(_invocationTargetHashCode,
+                    ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, command.Command),
+                    GetConnectionInfo(command.EndPoint), relativeStartTime, relativeEndTime);
 
-            // This version of End does not set the end time or check for redis Harvests
-            // This calls Finish and removes the segment from the callstack.
-            segment.EndStackExchangeRedis();
+                // This version of End does not set the end time or check for redis Harvests
+                // This calls Finish and removes the segment from the callstack.
+                segment.EndStackExchangeRedis();
+            }
+        }
+        finally
+        {
+            transaction.Release();
         }
     }
 
