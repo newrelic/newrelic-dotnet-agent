@@ -1,6 +1,6 @@
 # Testing Guide
 
-Four test layers. See the [root claude.md](../claude.md) for CLI build /
+Five test layers. See the [root claude.md](../claude.md) for CLI build /
 test commands and for the no-unit-tests-for-wrappers rule.
 
 - **Unit tests** — `tests/Agent/UnitTests/` (NUnit-primary, some xUnit)
@@ -9,6 +9,10 @@ test commands and for the no-unit-tests-for-wrappers rule.
   external infra (databases, brokers)
 - **Container integration tests** — `ContainerIntegrationTests.sln`, run
   instrumented apps inside Docker
+- **Performance tests** — `PerformanceTests.sln` in
+  `tests/Agent/PerformanceTests/`, measures agent overhead against a
+  containerized workload app; orchestrated via Python scripts, not
+  `dotnet test`
 
 All three integration solutions read from the built agent home
 directories, so **build `FullAgent.sln` first** before running them.
@@ -216,6 +220,56 @@ Then:
 ```powershell
 dotnet test tests/Agent/IntegrationTests/UnboundedIntegrationTests/UnboundedIntegrationTests.csproj
 ```
+
+## Performance tests
+
+Agent-overhead harness under `tests/Agent/PerformanceTests/`
+(`PerformanceTests.sln`). Not run via `dotnet test` — driven by Python
+orchestration scripts that spin up a Docker Compose stack, run a load
+test, and post-process the results.
+
+**Components:**
+- `PerformanceTestApp/` — ASP.NET Core workload app (.NET 10) with
+  endpoints exercising simple JSON, nested async, MongoDB CRUD, Redis
+  CRUD, RabbitMQ publish/consume, and a health probe.
+- `TrafficDriver/` — Python / Locust container that drives a weighted
+  mix of requests and enforces a <1% error-rate threshold.
+- `ReportGenerator/` — .NET console app that reads Locust and Docker
+  stats CSVs and emits ScottPlot PNG charts plus a `summary.md`.
+- `run-perf-test.py` — orchestrates a single run (writes `extra.env`,
+  starts Compose, polls health, collects Docker stats, validates
+  results). Results → `results/`, logs → `logs/`.
+- `run-perf-comparison.py` — runs multiple sequential configurations
+  (e.g. no-agent baseline, local build, release, CI artifact) defined in
+  `compare.yml`, then invokes `ReportGenerator` across the collected
+  result sets.
+
+**How the agent is attached:** `run-perf-test.py` bind-mounts the
+supplied agent-home directory into the container at
+`/usr/local/newrelic-dotnet-agent` and sets `CORECLR_ENABLE_PROFILING=1`
+(or `0` for the no-agent baseline). The `agent-home/` directory is
+repopulated before each run — from a local path, a downloaded archive,
+or a GitHub Actions artifact — and cleared between runs so no files
+from a previous run linger.
+
+**Typical local use:**
+```powershell
+cd tests/Agent/PerformanceTests
+
+# No-agent baseline
+python run-perf-test.py
+
+# With agent attached
+python run-perf-test.py `
+  --attach-agent true `
+  --agent-home <path>/newrelichome_x64_coreclr_linux `
+  --license-key $env:NEW_RELIC_LICENSE_KEY
+```
+
+Prerequisites: Docker Desktop in Linux-containers mode, Python 3, and
+`pip install pyyaml` for the comparison runner. Full option reference
+and CI wiring are in
+[PerformanceTests/README.md](Agent/PerformanceTests/README.md).
 
 ## Troubleshooting
 
