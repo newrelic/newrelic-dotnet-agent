@@ -62,32 +62,42 @@ public class SessionCache : IStackExchangeRedisCache
         }
         transaction.LogInfo($"SER Harvest starting for host segment {hostSegment.SpanId}");
 
-        var xTransaction = (ITransactionExperimental)transaction;
-        var commands = sessionData.session.FinishProfiling();
-        foreach (var command in commands)
+        // increment unit of work on transaction
+        transaction.Hold();
+
+        try
         {
-            // We need to build the relative start and stop time based on the transaction start time.
-            var relativeStartTime = command.CommandCreated - xTransaction.StartTime;
-            var relativeEndTime = relativeStartTime + command.ElapsedTime;
-
-            // This new segment maker accepts relative start and stop times since we will be starting and ending(RemoveSegmentFromCallStack) the segment immediately.
-            // This also sets the segment as a Leaf.
-
-            // EXPERIMENTAL
-            // Each time we go through this loop, check to make sure that the transaction has not finished.  If it has, don't create any more segments.
-            if (transaction.IsFinished)
+            var xTransaction = (ITransactionExperimental)transaction;
+            var commands = sessionData.session.FinishProfiling();
+            foreach (var command in commands)
             {
-                transaction.LogInfo($"SER Harvest ending early for host segment {hostSegment.SpanId} because transaction finished.");
-                break;
-            }
-            var segment = xTransaction.StartStackExchangeRedisSegment(_invocationTargetHashCode,
-                ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, command.Command),
-                GetConnectionInfo(command.EndPoint), relativeStartTime, relativeEndTime);
-            //Log.Info($"Created segment {segment.SpanId}");
+                // We need to build the relative start and stop time based on the transaction start time.
+                var relativeStartTime = command.CommandCreated - xTransaction.StartTime;
+                var relativeEndTime = relativeStartTime + command.ElapsedTime;
 
-            // This version of End does not set the end time or check for redis Harvests
-            // This calls Finish and removes the segment from the callstack.
-            segment.EndStackExchangeRedis();
+                // This new segment maker accepts relative start and stop times since we will be starting and ending(RemoveSegmentFromCallStack) the segment immediately.
+                // This also sets the segment as a Leaf.
+
+                // EXPERIMENTAL
+                // Each time we go through this loop, check to make sure that the transaction has not finished.  If it has, don't create any more segments.
+                if (transaction.IsFinished)
+                {
+                    transaction.LogInfo($"SER Harvest ending early for host segment {hostSegment.SpanId} because transaction finished.");
+                    break;
+                }
+                var segment = xTransaction.StartStackExchangeRedisSegment(_invocationTargetHashCode,
+                    ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, command.Command),
+                    GetConnectionInfo(command.EndPoint), relativeStartTime, relativeEndTime);
+                //Log.Info($"Created segment {segment.SpanId}");
+
+                // This version of End does not set the end time or check for redis Harvests
+                // This calls Finish and removes the segment from the callstack.
+                segment.EndStackExchangeRedis();
+            }
+        }
+        finally
+        {
+            transaction.Release();
         }
     }
 
