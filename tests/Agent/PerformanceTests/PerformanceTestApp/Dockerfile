@@ -1,7 +1,7 @@
 ARG DOTNET_VERSION=10.0
 
 # The build layer uses the SDK version matching the highest TFM in the project file, but publishes for the specific DOTNET_VERSION supplied as a build argument. 
-FROM mcr.microsoft.com/dotnet/sdk:10.0.203-noble AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.203-noble@sha256:8a90a473da5205a16979de99d2fc20975e922c68304f5c79d564e666dc3982fc AS build
 ARG DOTNET_VERSION
 WORKDIR /src
 COPY ["PerformanceTestApp.csproj", "./"]
