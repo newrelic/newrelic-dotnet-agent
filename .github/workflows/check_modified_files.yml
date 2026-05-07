@@ -41,8 +41,16 @@ jobs:
               filters: |
                 source-files-changed:
                   - '**'
+                  - '!**/*.md'
                   - '!.github/**'
                   - '!.claude/**'
+                  - '!.vscode/**'
+                  - '!.idea/**'
+                  - '!.editorconfig'
+                  - '!.gitignore'
+                  - '!.gitattributes'
+                  - '!LICENSE'
+                  - '!CODEOWNERS'
                   - '!docs/**'
                   - '!tests/Agent/IntegrationTests/UnboundedServices/**'
               list-files: 'csv'
