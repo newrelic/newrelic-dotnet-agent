@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net481;net10.0</TargetFrameworks>
+    <TargetFrameworks>net481;net11.0</TargetFrameworks>
     <RootNamespace>CompositeTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.Core.CompositeTests</AssemblyName>
     <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>
@@ -25,7 +25,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net11.0'">
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net481'">
