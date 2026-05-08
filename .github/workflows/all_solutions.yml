@@ -104,6 +104,12 @@ jobs:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
 
+      - name: Install .NET 11 Preview SDK
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: 'preview'
+
       - name: Build FullAgent.sln
         run: |
           Write-Host "dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
@@ -350,6 +356,12 @@ jobs:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
 
+      - name: Install .NET 11 Preview SDK
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: 'preview'
+
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
         # if needed for future .NET preview builds:
@@ -465,6 +477,12 @@ jobs:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
 
+      - name: Install .NET 11 Preview SDK
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: 'preview'
+
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
         # if needed for future .NET preview builds:
@@ -552,7 +570,7 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net10.0
+      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net11.0
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
@@ -638,6 +656,12 @@ jobs:
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
+
+      - name: Install .NET 11 Preview SDK
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: 'preview'
 
       - name: Run Integration Tests
         run: |
@@ -748,7 +772,7 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net10.0
+      unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net11.0
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       NR_DOTNET_TEST_PREBUILT_APPS: 1 # use pre-published test app output instead of dotnet publish at runtime
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
@@ -830,7 +854,13 @@ jobs:
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
-  
+
+      - name: Install .NET 11 Preview SDK
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: 'preview'
+
       - name: Run Unbounded Integration Tests
         run: |
           if ($Env:enhanced_logging -eq $True) {
