@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NET10_0_OR_GREATER || NET481_OR_GREATER || NET8_0 || NET462
+#if NET11_0_OR_GREATER || NET481_OR_GREATER || NET10_0 || NET462
 
 using System.Threading;
 using Hangfire;
@@ -23,7 +23,7 @@ public class HangfireExerciser
             Queues = new[] { "alpha", "default" }
         };
 
-#if NET10_0_OR_GREATER || NET481_OR_GREATER
+#if NET11_0_OR_GREATER || NET481_OR_GREATER
         var cLevel = CompatibilityLevel.Version_180;
 #else
         var cLevel = CompatibilityLevel.Version_170;

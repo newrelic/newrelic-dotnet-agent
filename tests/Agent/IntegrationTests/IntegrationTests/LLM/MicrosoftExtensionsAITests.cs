@@ -160,7 +160,7 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
 }
 
 // CoreLatest only - MEAI packages require OpenAI >= 2.8.0 which is only
-// available in MFALatestPackages (net10.0). The net8.0 target has OpenAI 2.0.0
+// available in MFALatestPackages (net11.0). The net10.0 target has OpenAI 2.0.0
 // which is incompatible with Microsoft.Extensions.AI.OpenAI.
 public class MicrosoftExtensionsAI_AzureTests_CoreLatest : MicrosoftExtensionsAITestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {

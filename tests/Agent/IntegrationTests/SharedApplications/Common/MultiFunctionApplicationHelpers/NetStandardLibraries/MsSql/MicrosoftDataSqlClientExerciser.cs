@@ -264,7 +264,7 @@ public class MicrosoftDataSqlClientExerciser : MsSqlExerciserBase
         Thread.Sleep(millisecondsTimeOut);
     }
 
-#if NET10_0
+#if NET11_0
         [LibraryMethod]
         public async Task MsSqlCreateStoredProcWithTempTable(string procedureName)
         {

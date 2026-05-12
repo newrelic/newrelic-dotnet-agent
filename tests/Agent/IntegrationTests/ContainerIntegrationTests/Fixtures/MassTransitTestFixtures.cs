@@ -44,16 +44,6 @@ public abstract class MassTransitTestFixtureBase : RemoteApplicationFixture
     }
 }
 
-public class MassTransitDotNet8TestFixture : MassTransitTestFixtureBase
-{
-    private const string Dockerfile = "MassTransitTestApp/Dockerfile";
-    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
-    private const string DotnetVersion = "8.0";
-
-    public MassTransitDotNet8TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
-}
-
 public class MassTransitDotNet10TestFixture : MassTransitTestFixtureBase
 {
     private const string Dockerfile = "MassTransitTestApp/Dockerfile";
@@ -62,4 +52,14 @@ public class MassTransitDotNet10TestFixture : MassTransitTestFixtureBase
     private const string DotnetVersion = "10.0";
 
     public MassTransitDotNet10TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+}
+
+public class MassTransitDotNet11TestFixture : MassTransitTestFixtureBase
+{
+    private const string Dockerfile = "MassTransitTestApp/Dockerfile";
+    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private const string DistroTag = "noble";
+    private const string DotnetVersion = "11.0";
+
+    public MassTransitDotNet11TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }

@@ -104,13 +104,20 @@ public class ConsoleDynamicMethodFixtureCore100 : ConsoleDynamicMethodFixtureCor
     }
 }
 
+public class ConsoleDynamicMethodFixtureCore110 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+{
+    public ConsoleDynamicMethodFixtureCore110() : base("net11.0")
+    {
+    }
+}
+
 /// <summary>
 /// Use this fixture to test against the oldest supported .NET version.
 /// If you need to test against a feature that belongs to a specific .net core version, then consider
 /// using one of the existing specific version fixtures, or create a new specific version.
 /// When testing newer .net core preview releases, this targetFramework version should be updated.
 /// </summary>
-public class ConsoleDynamicMethodFixtureCoreOldest : ConsoleDynamicMethodFixtureCore80
+public class ConsoleDynamicMethodFixtureCoreOldest : ConsoleDynamicMethodFixtureCore100
 {
     public ConsoleDynamicMethodFixtureCoreOldest()
     {
@@ -123,7 +130,7 @@ public class ConsoleDynamicMethodFixtureCoreOldest : ConsoleDynamicMethodFixture
 /// using one of the existing specific version fixtures, or create a new specific version.
 /// When testing newer .net core preview releases, this targetFramework version should be updated.
 /// </summary>
-public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore100
+public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore110
 {
     public ConsoleDynamicMethodFixtureCoreLatest()
     {
@@ -239,7 +246,7 @@ public abstract class ConsoleDynamicMethodFixture : RemoteApplicationFixture
         }
         catch (System.IO.IOException)
         {
-            // Starting in .NET 8, writes to a closed pipe throw an IO exception. So we'll just eat it and continue.
+            // Starting in .NET 8+, writes to a closed pipe throw an IO exception. So we'll just eat it and continue.
         }
 
         base.ShutdownRemoteApplication();

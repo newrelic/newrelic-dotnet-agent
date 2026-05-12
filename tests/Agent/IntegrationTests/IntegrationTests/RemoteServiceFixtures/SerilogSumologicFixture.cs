@@ -14,7 +14,7 @@ public class SerilogSumologicFixture : RemoteApplicationFixture
         base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            "net10.0",
+            "net11.0",
             ApplicationType.Bounded,
             true,
             true,

@@ -16,7 +16,7 @@ public abstract class AwsSdkContainerTestFixtureBase(
     : RemoteApplicationFixture(new ContainerApplication(distroTag, containerArchitecture, DotnetVersion, dockerfile,
         dockerComposeFile, "awssdktestapp"))
 {
-    private const string DotnetVersion = "8.0";
+    private const string DotnetVersion = "10.0";
 
     protected override int MaxTries => 1;
 

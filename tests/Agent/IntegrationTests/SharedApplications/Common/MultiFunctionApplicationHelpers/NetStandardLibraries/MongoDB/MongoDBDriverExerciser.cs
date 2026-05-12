@@ -7,7 +7,7 @@
 #endif
 
 // Some methods exercised here do not exist in MongoDB.Driver version 2.8.1 which is the oldest we support on .NET Core. It is bound to the net6.0 TFM in MultiFunctionApplicationHelpers.csproj
-#if NET8_0
+#if NET10_0
 #define MONGODRIVER2_8_1
 #endif
 

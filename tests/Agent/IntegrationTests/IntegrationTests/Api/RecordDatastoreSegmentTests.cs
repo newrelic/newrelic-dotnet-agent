@@ -72,7 +72,7 @@ public abstract class RecordDatastoreSegmentTests<TFixture> : NewRelicIntegratio
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                 configModifier.SetOrDeleteDistributedTraceEnabled(true);
                 configModifier.SetLogLevel("finest");
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
+                configModifier.DisableEventListenerSamplers(); // Required for .NET 10+ to pass.
                 configModifier.ConfigureFasterMetricsHarvestCycle(25);
                 configModifier.ConfigureFasterSqlTracesHarvestCycle(30);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(25);

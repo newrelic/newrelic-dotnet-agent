@@ -15,7 +15,7 @@ public class AspNetCoreFeaturesFixture : RemoteApplicationFixture
         base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            targetFramework: "net10.0",
+            targetFramework: "net11.0",
             ApplicationType.Bounded,
             true,
             true,

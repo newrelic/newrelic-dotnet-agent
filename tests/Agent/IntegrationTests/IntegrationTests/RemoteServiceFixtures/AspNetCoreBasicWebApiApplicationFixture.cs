@@ -11,7 +11,7 @@ public class AspNetCoreBasicWebApiApplicationFixture : RemoteApplicationFixture
     public AspNetCoreBasicWebApiApplicationFixture() :
         base(new RemoteService("AspNetCoreBasicWebApiApplication",
             "AspNetCoreBasicWebApiApplication.exe",
-            "net10.0",
+            "net11.0",
             ApplicationType.Bounded,
             true,
             true,

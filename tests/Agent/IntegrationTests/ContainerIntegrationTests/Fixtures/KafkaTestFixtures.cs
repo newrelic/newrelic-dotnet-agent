@@ -58,16 +58,6 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
     }
 }
 
-public class KafkaDotNet8TestFixture : KafkaTestFixtureBase
-{
-    private const string Dockerfile = "KafkaTestApp/Dockerfile";
-    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
-    private const string DotnetVersion = "8.0";
-
-    public KafkaDotNet8TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
-}
-
 public class KafkaDotNet10TestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
@@ -76,4 +66,14 @@ public class KafkaDotNet10TestFixture : KafkaTestFixtureBase
     private const string DotnetVersion = "10.0";
 
     public KafkaDotNet10TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+}
+
+public class KafkaDotNet11TestFixture : KafkaTestFixtureBase
+{
+    private const string Dockerfile = "KafkaTestApp/Dockerfile";
+    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private const string DistroTag = "noble";
+    private const string DotnetVersion = "11.0";
+
+    public KafkaDotNet11TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }

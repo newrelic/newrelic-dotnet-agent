@@ -37,7 +37,7 @@ class NServiceBusDriver
         endpointConfiguration.SendFailedMessagesTo("error");
         endpointConfiguration.EnableInstallers();
 
-#if NET8_0_OR_GREATER // serializer must be specified starting with NServiceBus 9.0.0
+#if NET10_0_OR_GREATER // serializer must be specified starting with NServiceBus 9.0.0
             endpointConfiguration.UseSerialization<XmlSerializer>();
 #endif
 

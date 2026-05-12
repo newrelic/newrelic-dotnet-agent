@@ -56,7 +56,7 @@ public abstract class NetStandardLibraryInstrumentation<TFixture>
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces();
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
+                configModifier.DisableEventListenerSamplers(); // Required for .NET 10+ to pass.
 
                 var instrumentationXmlFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "TestCustomInstrumetnation.xml");
 

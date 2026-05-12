@@ -60,9 +60,16 @@ public abstract class OtlpMetricsWithCollectorFixtureBase : MockNewRelicFixture
     }
 }
 
-public class OtlpMetricsWithCollectorFixtureCoreLatest : OtlpMetricsWithCollectorFixtureCoreNet10
+public class OtlpMetricsWithCollectorFixtureCoreLatest : OtlpMetricsWithCollectorFixtureCoreNet11
 {
     public OtlpMetricsWithCollectorFixtureCoreLatest() : base()
+    {
+    }
+}
+
+public class OtlpMetricsWithCollectorFixtureCoreNet11 : OtlpMetricsWithCollectorFixtureBase
+{
+    public OtlpMetricsWithCollectorFixtureCoreNet11() : base("net11.0", true)
     {
     }
 }
@@ -70,13 +77,6 @@ public class OtlpMetricsWithCollectorFixtureCoreLatest : OtlpMetricsWithCollecto
 public class OtlpMetricsWithCollectorFixtureCoreNet10 : OtlpMetricsWithCollectorFixtureBase
 {
     public OtlpMetricsWithCollectorFixtureCoreNet10() : base("net10.0", true)
-    {
-    }
-}
-
-public class OtlpMetricsWithCollectorFixtureCoreNet8 : OtlpMetricsWithCollectorFixtureBase
-{
-    public OtlpMetricsWithCollectorFixtureCoreNet8() : base("net8.0", true)
     {
     }
 }

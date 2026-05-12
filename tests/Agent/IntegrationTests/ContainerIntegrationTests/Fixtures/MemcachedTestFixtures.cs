@@ -37,16 +37,6 @@ public abstract class MemcachedTestFixtureBase : RemoteApplicationFixture
 }
 
 
-public class MemcachedDotNet8TestFixture : MemcachedTestFixtureBase
-{
-    private const string Dockerfile = "MemcachedTestApp/Dockerfile";
-    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
-    private const string DotnetVersion = "8.0";
-
-    public MemcachedDotNet8TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
-}
-
 public class MemcachedDotNet10TestFixture : MemcachedTestFixtureBase
 {
     private const string Dockerfile = "MemcachedTestApp/Dockerfile";
@@ -55,4 +45,14 @@ public class MemcachedDotNet10TestFixture : MemcachedTestFixtureBase
     private const string DotnetVersion = "10.0";
 
     public MemcachedDotNet10TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+}
+
+public class MemcachedDotNet11TestFixture : MemcachedTestFixtureBase
+{
+    private const string Dockerfile = "MemcachedTestApp/Dockerfile";
+    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private const string DistroTag = "noble";
+    private const string DotnetVersion = "11.0";
+
+    public MemcachedDotNet11TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }

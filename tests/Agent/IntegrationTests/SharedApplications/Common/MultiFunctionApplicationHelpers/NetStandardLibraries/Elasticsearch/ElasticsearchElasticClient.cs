@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Non-async client methods are deprecated in the latest Elastic.Clients.Elasticsearch
-#if (NETFRAMEWORK && !NET48_OR_GREATER) || (NET && !NET10_0)
+#if (NETFRAMEWORK && !NET48_OR_GREATER) || (NET && !NET11_0)
 #define SYNC_METHODS_OK
 #endif
 
@@ -10,7 +10,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Clients.Elasticsearch;
-#if NET481_OR_GREATER || NET10_0
+#if NET481_OR_GREATER || NET11_0
 using Elastic.Clients.Elasticsearch.Core.MSearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 #endif
@@ -26,7 +26,7 @@ internal class ElasticsearchElasticClient : ElasticsearchTestClient
 
     private const string NonAsyncDeprecationMessage = "Non-async methods are deprecated in the latest Elasticsearch clients.";
 
-#if NET10_0
+#if NET11_0
         protected override Uri Address
         {
             get
@@ -101,7 +101,7 @@ internal class ElasticsearchElasticClient : ElasticsearchTestClient
 #endif
     }
 
-#if NET10_0 // Elastic.Clients.Elasticsearch 9.0 and later
+#if NET11_0 // Elastic.Clients.Elasticsearch 9.0 and later
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override async Task<bool> IndexAsync()
         {
@@ -157,7 +157,7 @@ internal class ElasticsearchElasticClient : ElasticsearchTestClient
     public override async Task<long> SearchAsync()
     {
         var response = await _client.SearchAsync<FlightRecord>(s => s
-#if NET10_0
+#if NET11_0
                 .Indices(IndexName)
 #else
             .Index(IndexName)
@@ -215,7 +215,7 @@ internal class ElasticsearchElasticClient : ElasticsearchTestClient
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public override async Task<long> MultiSearchAsync()
     {
-#if NET10_0 || NET481_OR_GREATER
+#if NET11_0 || NET481_OR_GREATER
             var req = new MultiSearchRequest
             {
                 Searches =

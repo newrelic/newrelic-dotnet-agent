@@ -29,7 +29,7 @@ public class AspNetCoreDistTraceRequestChainFixture : RemoteApplicationFixture
         : base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            "net10.0",
+            "net11.0",
             ApplicationType.Bounded,
             true,
             true,
@@ -80,7 +80,7 @@ public class AspNetCoreDistTraceRequestChainFixture : RemoteApplicationFixture
         var service = new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            "net10.0",
+            "net11.0",
             ApplicationType.Bounded,
             true,
             true,

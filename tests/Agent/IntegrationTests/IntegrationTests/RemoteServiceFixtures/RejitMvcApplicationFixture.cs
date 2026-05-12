@@ -20,7 +20,7 @@ public class AspNetCoreReJitMvcApplicationFixture : RejitMvcApplicationFixture
         : base(new RemoteService(
             "AspNetCoreMvcRejitApplication",
             "AspNetCoreMvcRejitApplication.exe",
-            "net10.0",
+            "net11.0",
             ApplicationType.Bounded,
             true,
             true,

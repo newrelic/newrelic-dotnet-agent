@@ -23,12 +23,12 @@ public abstract class OtlpStressWithCollectorFixtureBase : OtlpMetricsWithCollec
 
 public class OtlpStressWithCollectorFixtureCoreLatest : OtlpStressWithCollectorFixtureBase
 {
-    public OtlpStressWithCollectorFixtureCoreLatest() : base("net10.0", true) { }
+    public OtlpStressWithCollectorFixtureCoreLatest() : base("net11.0", true) { }
 }
 
-public class OtlpStressWithCollectorFixtureCoreNet8 : OtlpStressWithCollectorFixtureBase
+public class OtlpStressWithCollectorFixtureCoreNet10 : OtlpStressWithCollectorFixtureBase
 {
-    public OtlpStressWithCollectorFixtureCoreNet8() : base("net8.0", true) { }
+    public OtlpStressWithCollectorFixtureCoreNet10() : base("net10.0", true) { }
 }
 
 public class OtlpStressWithCollectorFixtureFW472 : OtlpStressWithCollectorFixtureBase

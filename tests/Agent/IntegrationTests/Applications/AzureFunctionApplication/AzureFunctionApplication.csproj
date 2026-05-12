@@ -1,8 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net481;net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net481;net10.0;net11.0</TargetFrameworks>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
     <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <!-- Azure Functions SDK 2.0.7 doesn't know about net11.0 yet; provide the suffix manually -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net11.0'">
+    <_ToolingSuffix>net11-isolated</_ToolingSuffix>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="appsettings.Development.json" />
@@ -21,11 +25,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" Condition="'$(TargetFramework)' == 'net11.0'" />
     <None Include="local.settings.json" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.52.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.3.0" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.0.2" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.0.2" Condition="'$(TargetFramework)' == 'net11.0'" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" Version="5.22.1" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage.Queues" Version="5.5.4" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.7" />
