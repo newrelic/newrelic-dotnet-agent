@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
@@ -16,7 +17,7 @@ public abstract class AwsSdkContainerTestFixtureBase(
     : RemoteApplicationFixture(new ContainerApplication(distroTag, containerArchitecture, DotnetVersion, dockerfile,
         dockerComposeFile, "awssdktestapp"))
 {
-    private const string DotnetVersion = "10.0";
+    private const string DotnetVersion = Tfm.NetOldestVersion;
 
     protected override int MaxTries => 1;
 

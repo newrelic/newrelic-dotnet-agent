@@ -22,7 +22,7 @@ public class BlazorSignalRApplicationFixture : RemoteApplicationFixture
         : base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            targetFramework: "net11.0",
+            targetFramework: Tfm.NetLatest,
             ApplicationType.Bounded,
             true,
             true,

@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
@@ -58,22 +59,22 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
     }
 }
 
-public class KafkaDotNet10TestFixture : KafkaTestFixtureBase
+public class KafkaDotNetOldestTestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "noble";
-    private const string DotnetVersion = "10.0";
+    private const string DotnetVersion = Tfm.NetOldestVersion;
 
-    public KafkaDotNet10TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public KafkaDotNetOldestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
 
-public class KafkaDotNet11TestFixture : KafkaTestFixtureBase
+public class KafkaDotNetLatestTestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "noble";
-    private const string DotnetVersion = "11.0";
+    private const string DotnetVersion = Tfm.NetLatestVersion;
 
-    public KafkaDotNet11TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public KafkaDotNetLatestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }

@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
@@ -37,22 +38,22 @@ public abstract class MemcachedTestFixtureBase : RemoteApplicationFixture
 }
 
 
-public class MemcachedDotNet10TestFixture : MemcachedTestFixtureBase
+public class MemcachedDotNetOldestTestFixture : MemcachedTestFixtureBase
 {
     private const string Dockerfile = "MemcachedTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "noble";
-    private const string DotnetVersion = "10.0";
+    private const string DotnetVersion = Tfm.NetOldestVersion;
 
-    public MemcachedDotNet10TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public MemcachedDotNetOldestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
 
-public class MemcachedDotNet11TestFixture : MemcachedTestFixtureBase
+public class MemcachedDotNetLatestTestFixture : MemcachedTestFixtureBase
 {
     private const string Dockerfile = "MemcachedTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "noble";
-    private const string DotnetVersion = "11.0";
+    private const string DotnetVersion = Tfm.NetLatestVersion;
 
-    public MemcachedDotNet11TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public MemcachedDotNetLatestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }

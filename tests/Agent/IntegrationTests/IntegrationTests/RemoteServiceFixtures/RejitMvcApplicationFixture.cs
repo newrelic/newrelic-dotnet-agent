@@ -6,6 +6,7 @@ using System;
 using System.Net.Http;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
@@ -20,7 +21,7 @@ public class AspNetCoreReJitMvcApplicationFixture : RejitMvcApplicationFixture
         : base(new RemoteService(
             "AspNetCoreMvcRejitApplication",
             "AspNetCoreMvcRejitApplication.exe",
-            "net11.0",
+            Tfm.NetLatest,
             ApplicationType.Bounded,
             true,
             true,

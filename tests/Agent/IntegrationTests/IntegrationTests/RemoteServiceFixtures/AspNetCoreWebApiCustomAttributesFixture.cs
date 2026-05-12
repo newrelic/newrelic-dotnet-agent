@@ -3,6 +3,7 @@
 
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
@@ -15,7 +16,7 @@ public class AspNetCoreWebApiCustomAttributesFixture : RemoteApplicationFixture
         base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            "net11.0",
+            Tfm.NetLatest,
             ApplicationType.Bounded,
             true,
             true,

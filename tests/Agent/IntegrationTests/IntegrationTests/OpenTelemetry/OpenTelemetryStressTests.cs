@@ -122,9 +122,9 @@ public class OpenTelemetryBridgeMetricsCollectionTestsCoreLatest : OpenTelemetry
 }
 
 [Collection("OtelBridgeMetricsTest")]
-public class OpenTelemetryBridgeMetricsCollectionTestsCoreNet10 : OpenTelemetryStressTestsBase<OtlpStressWithCollectorFixtureCoreNet10>
+public class OpenTelemetryBridgeMetricsCollectionTestsCoreOldest : OpenTelemetryStressTestsBase<OtlpStressWithCollectorFixtureCoreOldest>
 {
-    public OpenTelemetryBridgeMetricsCollectionTestsCoreNet10(OtlpStressWithCollectorFixtureCoreNet10 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+    public OpenTelemetryBridgeMetricsCollectionTestsCoreOldest(OtlpStressWithCollectorFixtureCoreOldest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 [Collection("OtelBridgeMetricsTest")]
 public class OpenTelemetryBridgeMetricsCollectionTestsNet472 : OpenTelemetryStressTestsBase<OtlpStressWithCollectorFixtureFW472>

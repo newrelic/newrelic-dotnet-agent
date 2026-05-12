@@ -13,8 +13,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures.AwsLambda;
 
 public class LambdaTestToolFixture : RemoteApplicationFixture
 {
-    public const string CoreOldestTFM = "net10.0";
-    public const string CoreLatestTFM = "net11.0";
+    public const string CoreOldestTFM = Tfm.NetOldest;
+    public const string CoreLatestTFM = Tfm.NetLatest;
 
     public DotnetTool LambdaTestTool { get; set; }
     public Action AdditionalSetupConfiguration { get; set; }

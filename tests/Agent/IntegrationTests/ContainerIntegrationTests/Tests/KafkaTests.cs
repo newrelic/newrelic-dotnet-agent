@@ -140,9 +140,9 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
 [Collection("KafkaTests")]
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Ubuntu")]
-public class KafkaDotNet10Test : LinuxKafkaTest<KafkaDotNet10TestFixture>
+public class KafkaDotNetOldestTest : LinuxKafkaTest<KafkaDotNetOldestTestFixture>
 {
-    public KafkaDotNet10Test(KafkaDotNet10TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public KafkaDotNetOldestTest(KafkaDotNetOldestTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }
@@ -150,9 +150,9 @@ public class KafkaDotNet10Test : LinuxKafkaTest<KafkaDotNet10TestFixture>
 [Collection("KafkaTests")]
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Ubuntu")]
-public class KafkaDotNet11Test : LinuxKafkaTest<KafkaDotNet11TestFixture>
+public class KafkaDotNetLatestTest : LinuxKafkaTest<KafkaDotNetLatestTestFixture>
 {
-    public KafkaDotNet11Test(KafkaDotNet11TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public KafkaDotNetLatestTest(KafkaDotNetLatestTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }

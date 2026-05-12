@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
@@ -84,7 +85,7 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
 
 public class AzureFunctionApplicationFixtureHttpTriggerCoreOldest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureHttpTriggerCoreOldest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net10.0", true)
+    public AzureFunctionApplicationFixtureHttpTriggerCoreOldest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", Tfm.NetOldest, true)
     {
     }
 }
@@ -92,7 +93,7 @@ public class AzureFunctionApplicationFixtureHttpTriggerCoreOldest : AzureFunctio
 // TODO: will need to update this for net11.0
 public class AzureFunctionApplicationFixtureHttpTriggerCoreLatest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net11.0", true)
+    public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", Tfm.NetLatest, true)
     {
     }
 }
@@ -106,21 +107,21 @@ public class AzureFunctionApplicationFixtureHttpTriggerFWLatest : AzureFunctionA
 
 public class AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net11.0", false)
+    public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", Tfm.NetLatest, false)
     {
     }
 }
 
 public class AzureFunctionApplicationFixtureQueueTriggerCoreOldest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureQueueTriggerCoreOldest() : base("queueTriggerFunction", "net10.0", true)
+    public AzureFunctionApplicationFixtureQueueTriggerCoreOldest() : base("queueTriggerFunction", Tfm.NetOldest, true)
     {
     }
 }
 
 public class AzureFunctionApplicationFixtureQueueTriggerCoreLatest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureQueueTriggerCoreLatest() : base("queueTriggerFunction", "net11.0", true)
+    public AzureFunctionApplicationFixtureQueueTriggerCoreLatest() : base("queueTriggerFunction", Tfm.NetLatest, true)
     {
     }
 }
@@ -129,14 +130,14 @@ public class AzureFunctionApplicationFixtureQueueTriggerCoreLatest : AzureFuncti
 #region InProc model fixtures
 public class AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest() : base("HttpTriggerFunction", "net10.0", true, inProc: true)
+    public AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest() : base("HttpTriggerFunction", Tfm.NetOldest, true, inProc: true)
     {
     }
 }
 
 public class AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest() : base("ServiceBusTriggerFunction HttpTrigger_SendServiceBusMessage", "net10.0", true, inProc: true)
+    public AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest() : base("ServiceBusTriggerFunction HttpTrigger_SendServiceBusMessage", Tfm.NetOldest, true, inProc: true)
     {
     }
 }

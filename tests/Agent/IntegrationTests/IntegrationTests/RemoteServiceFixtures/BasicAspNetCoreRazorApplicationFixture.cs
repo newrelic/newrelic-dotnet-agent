@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
@@ -19,7 +20,7 @@ public class BasicAspNetCoreRazorApplicationFixture : RemoteApplicationFixture
         : base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            targetFramework: "net11.0",
+            targetFramework: Tfm.NetLatest,
             ApplicationType.Bounded,
             true,
             true,

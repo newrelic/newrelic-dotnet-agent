@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.IntegrationTests.RemoteServiceFixtures;
 
@@ -23,12 +24,12 @@ public abstract class OtlpStressWithCollectorFixtureBase : OtlpMetricsWithCollec
 
 public class OtlpStressWithCollectorFixtureCoreLatest : OtlpStressWithCollectorFixtureBase
 {
-    public OtlpStressWithCollectorFixtureCoreLatest() : base("net11.0", true) { }
+    public OtlpStressWithCollectorFixtureCoreLatest() : base(Tfm.NetLatest, true) { }
 }
 
-public class OtlpStressWithCollectorFixtureCoreNet10 : OtlpStressWithCollectorFixtureBase
+public class OtlpStressWithCollectorFixtureCoreOldest : OtlpStressWithCollectorFixtureBase
 {
-    public OtlpStressWithCollectorFixtureCoreNet10() : base("net10.0", true) { }
+    public OtlpStressWithCollectorFixtureCoreOldest() : base(Tfm.NetOldest, true) { }
 }
 
 public class OtlpStressWithCollectorFixtureFW472 : OtlpStressWithCollectorFixtureBase

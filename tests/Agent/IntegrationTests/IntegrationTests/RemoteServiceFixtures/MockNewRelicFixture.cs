@@ -15,7 +15,7 @@ public class MockNewRelicFixture : RemoteApplicationFixture
 {
     private const string ApplicationDirectoryName = @"MockNewRelic";
     private const string ExecutableName = @"MockNewRelic.exe";
-    private const string TargetFramework = "net11.0";
+    private const string TargetFramework = Tfm.NetLatest;
 
     public RemoteService MockNewRelicApplication { get; set; }
 

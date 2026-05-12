@@ -102,9 +102,9 @@ public class OpenTelemetryMetricsTestsCoreLatest : OpenTelemetryMetricsTestsBase
 }
 
 // Net10 test targets DiagnosticSource v8.x
-public class OpenTelemetryMetricsTestsCoreNet10 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet10>
+public class OpenTelemetryMetricsTestsCoreOldest : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreOldest>
 {
-    public OpenTelemetryMetricsTestsCoreNet10(OtlpMetricsWithCollectorFixtureCoreNet10 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+    public OpenTelemetryMetricsTestsCoreOldest(OtlpMetricsWithCollectorFixtureCoreOldest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
 // Net472 test targets DiagnosticSource v8.x

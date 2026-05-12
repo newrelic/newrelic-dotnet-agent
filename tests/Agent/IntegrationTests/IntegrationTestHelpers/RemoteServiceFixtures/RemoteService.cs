@@ -75,7 +75,7 @@ public class RemoteService : RemoteApplication
     {
         if (IsCoreApp && _publishApp)
         {
-            PublishWithDotnetExe(string.IsNullOrWhiteSpace(_targetFramework) ? "net11.0" : _targetFramework);
+            PublishWithDotnetExe(string.IsNullOrWhiteSpace(_targetFramework) ? Tfm.NetLatest : _targetFramework);
             CopyNewRelicHomeCoreClrDirectoryToRemote();
         }
         else if (_publishApp)

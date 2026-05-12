@@ -3,6 +3,7 @@
 
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
@@ -12,7 +13,7 @@ public class AspNetCoreWebApiWithCollectorFixture : MockNewRelicFixture
         base(new RemoteService(
             "AspNetCoreBasicWebApiApplication",
             "AspNetCoreBasicWebApiApplication.exe",
-            "net11.0",
+            Tfm.NetLatest,
             ApplicationType.Bounded,
             true,
             true,

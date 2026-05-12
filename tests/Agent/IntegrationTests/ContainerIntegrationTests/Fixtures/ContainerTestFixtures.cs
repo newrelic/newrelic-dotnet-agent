@@ -5,12 +5,13 @@ using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
 public abstract class ContainerTestFixtureBase : RemoteApplicationFixture
 {
-    private const string DotnetVersion = "11.0";
+    private const string DotnetVersion = Tfm.NetLatestVersion;
 
     protected override int MaxTries => 1;
 
