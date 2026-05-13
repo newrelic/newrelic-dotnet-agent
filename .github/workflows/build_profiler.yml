@@ -231,8 +231,6 @@ jobs:
             apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
             echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
             wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-            # CoreCLR profiling-API headers are vendored in-repo at
-            # src/Agent/NewRelic/Profiler/externals/coreclr-headers/ — no clone needed.
             curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
             chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
             ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true

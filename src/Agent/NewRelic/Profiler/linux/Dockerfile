@@ -1,8 +1,5 @@
 # Builds an Ubuntu image and sets up the environment for compiling
-# the New Relic .NET profiler. CoreCLR profiling-API headers are vendored
-# in the repo at src/Agent/NewRelic/Profiler/externals/coreclr-headers/ and
-# are mounted in at build time via docker-compose.yml, so this image no
-# longer needs to clone dotnet/coreclr.
+# the New Relic .NET profiler. 
 # v14.04
 FROM ubuntu@sha256:881afbae521c910f764f7187dbfbca3cc10c26f8bafa458c76dda009a901c29d
 

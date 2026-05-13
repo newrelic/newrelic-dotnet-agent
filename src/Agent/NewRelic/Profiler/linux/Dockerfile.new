@@ -29,7 +29,4 @@ RUN apt-get install -y \
   locales \
   locales-all
 
-# CoreCLR profiling-API headers are vendored in-repo at
-# src/Agent/NewRelic/Profiler/externals/coreclr-headers/ — no clone needed.
-
 RUN ln -sf /usr/bin/clang-7 /usr/bin/cc; ln -sf /usr/bin/clang++-7 /usr/bin/c++
