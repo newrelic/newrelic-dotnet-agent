@@ -105,22 +105,40 @@ public abstract class AgentLogBase
 
     public string GetAccountId()
     {
-        var reportingAppLink = GetReportingAppLink();
-        var reportingAppUri = new Uri(reportingAppLink);
-        var accountId = reportingAppUri.Segments[2];
-        if (accountId == null)
-            throw new Exception("Could not find account ID in second segment of reporting app link: " + reportingAppLink);
-        return accountId.TrimEnd('/');
+        var (accountId, _) = ParseReportingAppLink();
+        return accountId;
     }
 
     public string GetApplicationId()
     {
+        var (_, applicationId) = ParseReportingAppLink();
+        return applicationId;
+    }
+
+    // Handles both URL formats the collector has used:
+    //   Old: https://rpm.newrelic.com/accounts/{accountId}/applications/{appId}
+    //   New: https://.../redirect/entity/{base64({accountId}|APM|APPLICATION|{appId})}
+    private (string accountId, string applicationId) ParseReportingAppLink()
+    {
         var reportingAppLink = GetReportingAppLink();
-        var reportingAppUri = new Uri(reportingAppLink);
-        var applicationId = reportingAppUri.Segments[4];
-        if (applicationId == null)
-            throw new Exception("Could not find application ID in second segment of reporting app link: " + reportingAppLink);
-        return applicationId.TrimEnd('/');
+        var uri = new Uri(reportingAppLink);
+
+        // New entity-redirect format: /redirect/entity/{base64EncodedEntityGuid}
+        if (uri.Segments.Length >= 4 && uri.Segments[1].TrimEnd('/') == "redirect" && uri.Segments[2].TrimEnd('/') == "entity")
+        {
+            var decoded = System.Text.Encoding.UTF8.GetString(System.Buffers.Text.Base64Url.DecodeFromChars(uri.Segments[3].TrimEnd('/')));
+            // decoded format: "{accountId}|APM|APPLICATION|{appId}"
+            var parts = decoded.Split('|');
+            if (parts.Length >= 4)
+                return (parts[0], parts[3]);
+            throw new Exception($"Unexpected entity GUID format in reporting app link: {decoded}");
+        }
+
+        // Legacy format: /accounts/{accountId}/applications/{appId}
+        if (uri.Segments.Length >= 5)
+            return (uri.Segments[2].TrimEnd('/'), uri.Segments[4].TrimEnd('/'));
+
+        throw new Exception($"Could not parse account/application IDs from reporting app link: {reportingAppLink}");
     }
 
     public string GetCrossProcessId()
