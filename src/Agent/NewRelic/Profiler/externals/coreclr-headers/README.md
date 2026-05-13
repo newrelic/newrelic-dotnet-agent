@@ -45,9 +45,11 @@ git clone https://github.com/dotnet/coreclr.git C:\source\repos\coreclr
 cd C:\source\repos\coreclr
 git checkout release/3.1    # or whatever commit is being tracked
 
-# Re-run the audit Python logic from the PR that introduced vendoring
-# (seeds: profiler-source entry points + direct-compile corhlpr.cpp + coreclr
-# header seeds, closure over #include directives).
+# Re-audit #include closure from the same seed set used originally:
+# - profiler-source entry points
+# - direct-compile corhlpr.cpp
+# - coreclr header seeds (cor.h, corhlpr.h, corerror.h, corprof.h, pal.h, etc.)
+# Walk transitive #include directives and copy each resolved header.
 ```
 
 Any refresh must be accompanied by:
