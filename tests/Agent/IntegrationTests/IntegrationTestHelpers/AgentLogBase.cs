@@ -126,8 +126,7 @@ public abstract class AgentLogBase
         // New entity-redirect format: /redirect/entity/{base64EncodedEntityGuid}
         if (uri.Segments.Length >= 4 && uri.Segments[1].TrimEnd('/') == "redirect" && uri.Segments[2].TrimEnd('/') == "entity")
         {
-            var encoded = uri.Segments[3].TrimEnd('/');
-            var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+            var decoded = System.Text.Encoding.UTF8.GetString(System.Buffers.Text.Base64Url.DecodeFromChars(uri.Segments[3].TrimEnd('/')));
             // decoded format: "{accountId}|APM|APPLICATION|{appId}"
             var parts = decoded.Split('|');
             if (parts.Length >= 4)
