@@ -38,25 +38,23 @@ externals/coreclr-headers/
 
 ## How to refresh
 
-If a change in the profiler later requires a header that is not in the vendored set, or a bug fix lands in a still-maintained CoreCLR branch that we need, refresh by re-running the audit against a fresh checkout of `dotnet/coreclr`:
+The `dotnet/coreclr` repository is archived and will receive no further commits.
+If the profiler requires a header not present in the vendored set (e.g., a newer
+`ICorProfilerCallback` interface), the source of truth is now `dotnet/runtime`:
 
-```powershell
-git clone https://github.com/dotnet/coreclr.git C:\source\repos\coreclr
-cd C:\source\repos\coreclr
-git checkout release/3.1    # or whatever commit is being tracked
+    https://github.com/dotnet/runtime
 
-# Re-audit #include closure from the same seed set used originally:
-# - profiler-source entry points
-# - direct-compile corhlpr.cpp
-# - coreclr header seeds (cor.h, corhlpr.h, corerror.h, corprof.h, pal.h, etc.)
-# Walk transitive #include directives and copy each resolved header.
-```
+The equivalent headers live under `src/coreclr/inc/` and
+`src/coreclr/pal/inc/` in that repository. A refresh would require:
 
-Any refresh must be accompanied by:
-
-1. An update to the "Upstream commit" line above with the new SHA and date.
-2. A binary-parity check confirming the rebuilt profiler binaries are equivalent to the pre-refresh binaries under the verification recipe in `PROFILER_MODERNIZATION_PLAN.md` (Linux: `readelf -d` DT_NEEDED set, `readelf -V` max GLIBC version, `nm -D --defined-only` exported symbols; Windows: `dumpbin /disasm` and `dumpbin /exports`).
-3. Updates to `licenses/THIRD_PARTY_NOTICES.txt` if upstream license text or attribution changed.
+1. Identifying the minimum set of additional headers needed (walk `#include`
+   directives from the new entry point).
+2. Copying only the required files into this vendored tree, preserving the
+   upstream path layout.
+3. Updating the "Upstream repository" and "Upstream commit" lines in the
+   **Provenance** section above to reflect the new source and SHA.
+4. Updates to `licenses/THIRD_PARTY_NOTICES.txt` if license text or
+   attribution changed (`dotnet/runtime` is also MIT).
 
 ## Do not hand-edit
 
