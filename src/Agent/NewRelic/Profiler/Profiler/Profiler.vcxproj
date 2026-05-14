@@ -19,23 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup>
-    <CoreClrRepo>https://github.com/dotnet/coreclr.git</CoreClrRepo>
-    <CoreClrBranch>release/3.1</CoreClrBranch>
-    <CloneCoreClr Condition="'$(CORECLR_PATH)' == ''">true</CloneCoreClr>
-    <CORECLR_PATH Condition="'$(CORECLR_PATH)' == ''">$(SolutionDir)..\..\..\..\..\coreclr</CORECLR_PATH>
+    <!-- CoreCLR profiling-API headers are vendored under externals/coreclr-headers. -->
+    <CoreClrVendoredHeaders>$(SolutionDir)externals\coreclr-headers</CoreClrVendoredHeaders>
   </PropertyGroup>
-  <Choose>
-    <When Condition="Exists('$(CORECLR_PATH)')">
-      <PropertyGroup>
-        <GitCoreClr>git --git-dir="$(CORECLR_PATH)\.git" --work-tree="$(CORECLR_PATH)" fetch --tags --all &amp;&amp; git --git-dir="$(CORECLR_PATH)\.git" --work-tree="$(CORECLR_PATH)" checkout $(CoreClrBranch)</GitCoreClr>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <GitCoreClr>git clone --branch $(CoreClrBranch) $(CoreClrRepo) "$(CORECLR_PATH)"</GitCoreClr>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DD9D2763-2E4F-48AA-BDFD-E23ABB9822AB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -91,32 +77,32 @@
     <OutDir>$(ProjectDir)\..\..\..\_profilerBuild\$(PlatformTarget)-$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
-    <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
-    <ExternalIncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
+    <IncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)\..\..\..\_profilerBuild\$(PlatformTarget)-$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
-    <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
-    <ExternalIncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
+    <IncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)\..\..\..\_profilerBuild\$(PlatformTarget)-$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
-    <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
-    <ExternalIncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
+    <IncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)\..\..\..\_profilerBuild\$(PlatformTarget)-$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
-    <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
-    <ExternalIncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
+    <IncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -268,15 +254,4 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <Target Name="CheckCoreClrPath" Condition="'$(CloneCoreClr)' == 'true'">
-    <Message Importance="high" Text="Executing '$(GitCoreClr)'" />
-    <Message Importance="high" Text="CORECLR_PATH=$(CORECLR_PATH)" />
-    <Exec Command="$(GitCoreClr)" />
-  </Target>
-  <PropertyGroup>
-    <BuildDependsOn>
-      CheckCoreClrPath;
-      $(BuildDependsOn)
-    </BuildDependsOn>
-  </PropertyGroup>
 </Project>

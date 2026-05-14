@@ -3,10 +3,8 @@
 
 cd /profiler
 rm -f CMakeCache.txt libNewRelicProfiler.so
-cmake \
-	-DCORECLR_PATH=/root/git/coreclr \
-	.
-make clean && make 
+cmake .
+make clean && make
 retVal=$?
 
 if [ -f "libNewRelicProfiler.so" ]
