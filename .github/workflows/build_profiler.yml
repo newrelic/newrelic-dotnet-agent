@@ -44,7 +44,7 @@ jobs:
 
   build-windows-profiler:
     name: Build Windows Profiler & Run Unit Tests / Code Coverage
-    runs-on: windows-2022
+    runs-on: windows-2025-vs2026
     needs: check-modified-files
     # only run this job if source files were modified, or if triggered by a manual execution
     if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -82,13 +82,13 @@ jobs:
           Write-Host "List NuGet Sources"
           dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
           Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
+          MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release -p:NativeToolset=v145 ${{ env.profiler_solution_path }}
         shell: powershell
 
       - name: Build x86
         run: |
           Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
+          MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release -p:NativeToolset=v145 ${{ env.profiler_solution_path }}
         shell: powershell
         
       - name: Setup VSTest and add to PATH
@@ -267,7 +267,7 @@ jobs:
       ]
     if: ${{ inputs.deploy }}
     name: Package and Deploy Profiler NuGet
-    runs-on: windows-2022
+    runs-on: windows-2025-vs2026
     permissions:
       id-token: write
 
