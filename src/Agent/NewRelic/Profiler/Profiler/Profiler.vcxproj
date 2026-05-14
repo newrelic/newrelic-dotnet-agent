@@ -120,7 +120,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
-      <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);format.lib;version.lib</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);version.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <ModuleDefinitionFile>Profiler.def</ModuleDefinitionFile>
     </Link>
@@ -146,7 +146,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
-      <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);format.lib;version.lib</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);version.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <ModuleDefinitionFile>Profiler.def</ModuleDefinitionFile>
     </Link>
@@ -178,7 +178,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
-      <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);format.lib;version.lib</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);version.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <ModuleDefinitionFile>Profiler.def</ModuleDefinitionFile>
     </Link>
@@ -208,7 +208,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
-      <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);format.lib;version.lib</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);version.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <ModuleDefinitionFile>Profiler.def</ModuleDefinitionFile>
     </Link>
@@ -243,6 +243,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <!-- Compile corhlpr.cpp in-tree from vendored headers; replaces format.lib (NETFXSDK).
+         Must not use the PCH or the forced stdafx.h include — it has its own includes. -->
+    <ClCompile Include="$(CoreClrVendoredHeaders)\src\inc\corhlpr.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ForcedIncludeFiles></ForcedIncludeFiles>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
