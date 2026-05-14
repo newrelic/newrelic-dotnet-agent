@@ -178,6 +178,18 @@ public class NewRelicConfigModifier
             "explainThreshold", "1");
     }
 
+    public void SetTransactionTracerExplainEnabled(bool enabled)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "transactionTracer" },
+            "explainEnabled", enabled.ToString().ToLower());
+    }
+
+    public void SetTransactionTracerSqlMetadataCommentsEnabled(bool enabled)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "transactionTracer" },
+            "sqlMetadataCommentsEnabled", enabled.ToString().ToLower());
+    }
+
     public NewRelicConfigModifier SetLogLevel(string level)
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "level",
