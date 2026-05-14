@@ -105,54 +105,26 @@ public abstract class AgentLogBase
 
     public string GetAccountId()
     {
-        var (accountId, _) = ParseReportingAppLink();
-        return accountId;
+        var connectResponse = GetConnectResponseData();
+        if (connectResponse?.AccountId == null)
+            throw new Exception("Could not find account_id in connect response.");
+        return connectResponse.AccountId;
     }
 
     public string GetApplicationId()
     {
-        var (_, applicationId) = ParseReportingAppLink();
-        return applicationId;
-    }
-
-    // Handles both URL formats the collector has used:
-    //   Old: https://rpm.newrelic.com/accounts/{accountId}/applications/{appId}
-    //   New: https://.../redirect/entity/{base64({accountId}|APM|APPLICATION|{appId})}
-    private (string accountId, string applicationId) ParseReportingAppLink()
-    {
-        var reportingAppLink = GetReportingAppLink();
-        var uri = new Uri(reportingAppLink);
-
-        // New entity-redirect format: /redirect/entity/{base64EncodedEntityGuid}
-        if (uri.Segments.Length >= 4 && uri.Segments[1].TrimEnd('/') == "redirect" && uri.Segments[2].TrimEnd('/') == "entity")
-        {
-            var decoded = System.Text.Encoding.UTF8.GetString(System.Buffers.Text.Base64Url.DecodeFromChars(uri.Segments[3].TrimEnd('/')));
-            // decoded format: "{accountId}|APM|APPLICATION|{appId}"
-            var parts = decoded.Split('|');
-            if (parts.Length >= 4)
-                return (parts[0], parts[3]);
-            throw new Exception($"Unexpected entity GUID format in reporting app link: {decoded}");
-        }
-
-        // Legacy format: /accounts/{accountId}/applications/{appId}
-        if (uri.Segments.Length >= 5)
-            return (uri.Segments[2].TrimEnd('/'), uri.Segments[4].TrimEnd('/'));
-
-        throw new Exception($"Could not parse account/application IDs from reporting app link: {reportingAppLink}");
+        var connectResponse = GetConnectResponseData();
+        if (connectResponse?.ApplicationId == null)
+            throw new Exception("Could not find application_id in connect response.");
+        return connectResponse.ApplicationId;
     }
 
     public string GetCrossProcessId()
     {
-        return $@"{GetAccountId()}#{GetApplicationId()}";
-    }
-
-    private string GetReportingAppLink()
-    {
-        var match = TryGetLogLine(AgentReportingToLogLineRegex);
-        if (!match.Success || match.Groups.Count < 2)
-            throw new Exception("Could not find reporting app link in log file.");
-
-        return match.Groups[1].Value;
+        var connectResponse = GetConnectResponseData();
+        if (connectResponse?.CrossProcessId == null)
+            throw new Exception("Could not find cross_process_id in connect response.");
+        return connectResponse.CrossProcessId;
     }
 
     public void WaitForConnect(TimeSpan? timeoutOrZero = null)
