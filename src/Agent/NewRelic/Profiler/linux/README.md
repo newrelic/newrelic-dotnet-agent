@@ -47,5 +47,5 @@ that was removed from the main build in PR #3576; this file has not been updated
 
 The `Dockerfile` and `Arm64Dockerfile` images are based on old Ubuntu / clang versions
 and have known reliability risks (Ubuntu 14.04 EOL, apt-key deprecation, S3-hosted cmake
-for arm64). Modernization is tracked in `PROFILER_MODERNIZATION_PLAN.md` (P2.x items);
-the hard constraint is preserving the four binary properties listed above.
+for arm64). The hard constraint on any modernization effort is preserving the four binary
+properties listed above.
