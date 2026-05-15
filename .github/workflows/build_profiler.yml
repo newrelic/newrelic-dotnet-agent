@@ -207,7 +207,7 @@ jobs:
 
   build-linux-arm64-profiler:
     name: Build Linux ARM64 Profiler
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04-arm
     needs: check-modified-files
     # only run this job if source files were modified, or if triggered by a manual execution
     if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -235,11 +235,6 @@ jobs:
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
-
-      - name: Set up QEMU for arm64 emulation
-        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
-        with:
-          platforms: arm64
 
       - name: Build Linux ARM64 Profiler
         run: |
