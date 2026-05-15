@@ -231,9 +231,18 @@ jobs:
             apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
             echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
             wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-            curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
-            chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
-            ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
+            # Pinned to cmake 3.20.5: Kitware's post-3.20 Linux binaries are built against
+            # glibc 2.28+ and won't run on this Ubuntu 18.04 environment (glibc 2.27).
+            # Validated by the OTel .NET instrumentation project, which uses the same
+            # release on Ubuntu 16.04 (glibc 2.23) in production CI. See
+            # https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/blob/main/docker/ubuntu1604.dockerfile
+            CMAKE_VERSION=3.20.5
+            CMAKE_SHA256=d2fa6678e5f716de349be23f7096a935f35ed69caebea982f6d16368489c45a0
+            curl -fsSL -o /tmp/cmake.tar.gz "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-aarch64.tar.gz"
+            echo "${CMAKE_SHA256}  /tmp/cmake.tar.gz" | sha256sum -c -
+            tar -xzC ~ -f /tmp/cmake.tar.gz
+            rm /tmp/cmake.tar.gz
+            ln -s ~/cmake-${CMAKE_VERSION}-linux-aarch64/bin/cmake /usr/bin/cmake || true
             rm /usr/bin/cc || true
             ln -s /usr/bin/clang-3.9 /usr/bin/cc
             rm /usr/bin/c++ || true
