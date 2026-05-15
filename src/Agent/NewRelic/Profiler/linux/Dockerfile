@@ -14,8 +14,9 @@ RUN apt-get update && apt-get install -y \
 RUN sed -i 's/mozilla\/DST_Root_CA_X3.crt/!mozilla\/DST_Root_CA_X3.crt/g' /etc/ca-certificates.conf
 RUN update-ca-certificates
 
-RUN echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
-RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+RUN install -d -m 0755 /etc/apt/keyrings
+RUN wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /etc/apt/keyrings/llvm.gpg
+RUN echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
 
 # Install the build tools that the profiler requires
 RUN apt-get update && apt-get install -y \

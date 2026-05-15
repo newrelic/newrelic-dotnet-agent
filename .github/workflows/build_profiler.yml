@@ -246,8 +246,9 @@ jobs:
           install: |
             apt-get update -q -y
             apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
-            echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
-            wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+            install -d -m 0755 /etc/apt/keyrings
+            wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /etc/apt/keyrings/llvm.gpg
+            echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
             # Pinned to cmake 3.20.5: Kitware's post-3.20 Linux binaries are built against
             # glibc 2.28+ and won't run on this Ubuntu 18.04 environment (glibc 2.27).
             # Validated by the OTel .NET instrumentation project, which uses the same
