@@ -92,8 +92,25 @@ jobs:
         shell: powershell
         
       - name: Setup VSTest and add to PATH
-        uses: darenm/Setup-VSTest@3a16d909a1f3bbc65b52f8270d475d905e7d3e44 # 1.3
-        id: setup_vstest
+        shell: powershell
+        run: |
+          $vswhere = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (-not (Test-Path $vswhere)) {
+            Write-Error "vswhere.exe not found at $vswhere"
+            exit 1
+          }
+          $vsInstallPath = & $vswhere -latest -property installationPath
+          if (-not $vsInstallPath) {
+            Write-Error "vswhere did not return a Visual Studio installation path"
+            exit 1
+          }
+          $vstestDir = Join-Path $vsInstallPath "Common7\IDE\CommonExtensions\Microsoft\TestWindow"
+          if (-not (Test-Path (Join-Path $vstestDir "vstest.console.exe"))) {
+            Write-Error "vstest.console.exe not found at $vstestDir"
+            exit 1
+          }
+          Write-Host "Adding $vstestDir to PATH"
+          Add-Content -Path $env:GITHUB_PATH -Value $vstestDir
 
       - name: Setup OpenCppCoverage and add to PATH
         id: setup_opencppcoverage
