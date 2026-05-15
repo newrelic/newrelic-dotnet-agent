@@ -24,8 +24,14 @@ RUN apt-get install -q -y \
 RUN echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
 RUN wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 
-ARG CMAKE_VERSION=4.3.2
-ARG CMAKE_SHA256=377079ab739f5765176f427609d9a2015b756ea20d5cba908d279c3731a2f481
+# Pinned to cmake 3.20.5 because Kitware's post-3.20 Linux binaries are built
+# against glibc 2.28+ and won't run on Ubuntu 18.04 (glibc 2.27). 3.20.5 was
+# the last release built on the old glibc baseline. Validated by the OTel
+# .NET instrumentation project, which uses the same release on Ubuntu 16.04
+# (glibc 2.23) in production CI:
+# https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/blob/main/docker/ubuntu1604.dockerfile
+ARG CMAKE_VERSION=3.20.5
+ARG CMAKE_SHA256=d2fa6678e5f716de349be23f7096a935f35ed69caebea982f6d16368489c45a0
 RUN curl -fsSL -o /tmp/cmake.tar.gz "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-aarch64.tar.gz" \
  && echo "${CMAKE_SHA256}  /tmp/cmake.tar.gz" | sha256sum -c - \
  && tar -xzC ~ -f /tmp/cmake.tar.gz \
