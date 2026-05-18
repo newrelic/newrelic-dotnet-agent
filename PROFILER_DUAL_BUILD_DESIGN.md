@@ -253,9 +253,11 @@ fi
 export CORECLR_PROFILER_PATH="$PROFILER"
 ```
 
-Backwards-compat: if a customer has hardcoded `CORECLR_PROFILER_PATH=$NRHOME/libNewRelicProfiler.so` in their environment (some attach recipes do), their override wins because env vars are set before `setenv.sh` runs in the `if [ -z ... ]` guard pattern. To **also** keep the legacy path resolvable, postinst could symlink `libNewRelicProfiler.so → linux-<arch>/libNewRelicProfiler.so` at the home root. This selects the glibc binary by default — wrong for Alpine. **Recommend not symlinking;** instead, document the path change and require customers to re-source `setenv.sh` (which is what container/launcher recipes already do).
+Backwards-compat: **the vast majority of `.deb`/`.rpm`/tarball customers hardcode `CORECLR_PROFILER_PATH=$NRHOME/libNewRelicProfiler.so`** in their environment (Dockerfile `ENV`, systemd unit, k8s manifest) rather than sourcing `setenv.sh`. This is the dominant install pattern — confirmed by team experience and reinforced by the New Relic-published Dockerfile examples and install docs (see "What customers actually do" below). Removing the flat path without a compat shim would break the majority of Linux installs.
 
-This is a documented breaking change for the small subset of users who hardcode `CORECLR_PROFILER_PATH`. Tarball release notes should call it out.
+**The libc-aware compat symlink is therefore load-bearing, not optional.** Postinst (`.deb`/`.rpm`) probes the install host's libc and creates `$NRHOME/libNewRelicProfiler.so` → `linux-{musl-,}{x64,arm64}/libNewRelicProfiler.so` accordingly; `setenv.sh` refreshes the symlink on each source to handle tarball-into-different-libc-container cases. Full detail in the Customer impact assessment section below.
+
+A static, always-glibc symlink would work today (Alpine still loads the glibc binary via lazy-binding luck) but would silently break at Phase 3 — when the glibc binary stops loading on Alpine, the symlink would point at the wrong binary and hardcoded-path customers would break. The libc-aware version is what keeps the change non-breaking through all three phases.
 
 ---
 
@@ -478,7 +480,7 @@ The dual-build doubles the binary surface (one .so → two .so per arch), and Ph
 3. **Symbol-export parity between glibc and musl builds.** Both binaries need to export the same set of `DllGetClassObject` / etc. so the CLR's lookup works identically. CMakeLists.txt' `list(APPEND SOURCES ...)` should be identical for both; verify `nm -D --defined-only` matches.
 4. **`build_profiler.sh` accepting an "OS_TYPE" / "RID" env var.** Mirror OTel — single shell script, env-driven output directory, called four times by CI (x64-glibc, x64-musl, arm64-glibc, arm64-musl).
 5. **Decide: `runtimes/<RID>/native/` vs. nested `linux-x64/` directories at the home-dir root.** They can be the same string. Recommend literally using `linux-x64`, `linux-musl-x64`, etc. so the `runtimes/` switch in NuGet (Phase 4) is a path prefix swap, not a rename.
-6. **Customer-facing breaking change communication.** Phase 2 changes the on-disk layout from flat to per-RID. Any customer not sourcing `setenv.sh` needs a release note. Identify the docs surface for the breaking-change call-out (release notes + linux-attach docs).
+6. **Customer-facing breaking change communication.** Phase 2 changes the on-disk layout from flat to per-RID. The compat symlinks (postinst, tarball-baked, NuGet compat-copy) preserve the flat path for the dominant hardcoded-`CORECLR_PROFILER_PATH` install pattern. Release notes still need to cover the edge cases — primarily the tarball-into-Alpine-without-setenv-source scenario described in the Customer impact section. Identify the docs surface for the call-out (release notes + linux-attach docs); also update `newrelic/newrelic-dotnet-examples` and `newrelic/docs-website` Dockerfile examples to reference the per-RID path as the forward-looking pattern (with the flat path as the still-supported compat option).
 7. **`run.sh`** — audit during Phase 2. If it sets `CORECLR_PROFILER_PATH` directly, mirror the libc probe.
 8. **`atl.h:367` vendored bug.** `Common/xplat.h` aside, the spike exposed a second source-level blocker for any modern-clang build: `this->pElements` in the never-called `CallConstructors` helper at `externals/coreclr-headers/src/pal/inc/rt/atl.h:367` references a non-existent member. Clang ≥ 14 catches it in two-phase name lookup. The spike workaround is `-fdelayed-template-parsing` (restores the old MSVC/clang-3.9 behaviour of skipping unreached template bodies — no effect on emitted code). The clean fix is patching the vendored file one line. **Spike2 resolution:** `-fdelayed-template-parsing` as an `NR_MUSL_BUILD`-gated flag is confirmed functional for Phase 1. The vendored-header source patch can be deferred to a follow-up. **Phase 3 note:** the modernized glibc build (Ubuntu 18.04-based or whichever base tracks dotnet's portable baseline at adoption time) will hit the same issue if it uses a modern clang; the workaround or source patch should be evaluated at that time.
 9. **`BIND_NOW` / `-Wl,-z,lazy`.** The spike1 binary had `FLAGS: BIND_NOW`; today's glibc binary uses `RTLD_LAZY` (per the modernization plan). **Spike2 resolution:** `-Wl,-z,lazy` was added to the musl linker flags in CMakeLists.txt. `readelf -d` on the spike2 binary confirms no `BIND_NOW` flag — lazy binding is correctly enabled. This question is fully resolved for Phase 1.
@@ -538,7 +540,7 @@ This is the highest-priority section of the design. The dual-build only makes se
 | **Phase 3 — customer on Amazon Linux 2 / RHEL 7** | Works | n/a | **Fails loudly** with clear glibc-version error. Same distros dotnet 10 itself doesn't support. Customer must upgrade distro or pin pre-Phase-3 agent. Distros are EOL upstream regardless. |
 | Customer reads docs.newrelic.com Linux install instructions verbatim | Works | **Breaks** until docs are republished | Works (compat symlink); docs should still be updated to point at the new RID-aware path |
 
-The naive Phase 2 introduces a real breaking change for **a documented production attach pattern** (we don't know what fraction of installs use it vs. `setenv.sh`, but we know it's published in canonical examples and in install docs). **Mitigations below make Phase 2 non-breaking for both documented patterns simultaneously**, but require explicit design.
+The naive Phase 2 introduces a **major breaking change** for **the dominant Linux install pattern**: hardcoded `CORECLR_PROFILER_PATH=$NRHOME/libNewRelicProfiler.so`. Per team experience working with Linux customer installs, the vast majority of `.deb`/`.rpm`/tarball-installed agents hardcode this env var rather than sourcing `setenv.sh` — and that's exactly what our own published examples and install docs lead them to do. **The compat-symlink mitigations below are therefore load-bearing, not optional belt-and-suspenders.** They are the mechanism by which Phase 2 ships non-breaking for the majority of Linux customers; without them, Phase 2 is a major breaking release.
 
 ### What customers actually do (verified)
 
@@ -581,8 +583,8 @@ The customer-pattern claims here are grounded in five concrete pieces of evidenc
 
 The flat path is **a** documented attach path on every Linux install surface today, side-by-side with the `setenv.sh` option on the canonical install page. Removing the flat path without a compatibility shim would invalidate the published examples and require all of these doc pages to be updated in lockstep — including our own AlpineX64 integration test fixture, which models the customer pattern exactly.
 
-What the evidence does **not** tell us:
-- The fraction of active customer installs that hardcode the flat path vs. source `setenv.sh`. That number requires telemetry or a customer survey; it's listed as an open item below.
+What the team's experience confirms:
+- The vast majority of Linux `.deb`/`.rpm`/tarball customers hardcode the flat path. Sourcing `setenv.sh` is the minority case. This is corroborated by every published example and install-doc page above leading customers to the flat-path pattern. A precise customer-survey/telemetry number is not required to act on this; the design must treat hardcoded `CORECLR_PROFILER_PATH` as the dominant install pattern.
 
 ### Per-platform impact
 
@@ -634,7 +636,13 @@ fi
 
 (Falls back silently on read-only filesystems; the `setenv.sh`-exported `CORECLR_PROFILER_PATH` already points at the per-RID path so readonly is not actually a problem.)
 
-This mitigates the case where the customer extracts the tarball and sources `setenv.sh` at least once. The canonical install page (`linuxInstall3-enable-agent.mdx`) documents `setenv.sh` and manual env-var setting as two equally-presented options, so neither path can be assumed to be the majority. For customers who never source `setenv.sh` and only set the four env vars manually: their hardcoded flat path is broken until a symlink exists. Acceptable additional mitigation: ship the symlink **inside the tarball** at build time, pointing to `linux-x64/libNewRelicProfiler.so` (since the tarball is built on a glibc host, that's the only sensible default). This handles the glibc-on-glibc case transparently. The remaining edge case is a customer who extracts the tarball *into* an Alpine container without sourcing `setenv.sh` — the pre-baked symlink would point at the glibc binary, which today loads via lazy-binding luck and after Phase 2 would fail. That subgroup needs either to source `setenv.sh` (which fixes the symlink) or to set `CORECLR_PROFILER_PATH` explicitly. Release-note callout required for this specific edge case.
+This mitigates the case where the customer extracts the tarball and sources `setenv.sh` at least once — but `setenv.sh` is the minority install path, so we cannot rely on it to fix the symlink. **The tarball MUST ship a pre-baked default symlink at build time**, pointing to `linux-x64/libNewRelicProfiler.so` (since the tarball is built on a glibc host, that's the only sensible default for a static pre-bake). This handles the glibc-on-glibc case (the majority of tarball installs) transparently and without requiring the customer to source `setenv.sh`.
+
+The remaining edge case is a customer who extracts the tarball **into an Alpine container** without sourcing `setenv.sh` — the pre-baked symlink would point at the glibc binary, which today loads via lazy-binding luck and after Phase 3 would fail. Two layered mitigations cover this:
+1. **`setenv.sh`** detects when the symlink target's libc doesn't match the host libc and refreshes it. Customers who source `setenv.sh` once after the layered base swap get a corrected symlink automatically.
+2. **Release notes** call out this specific scenario for the small remaining subgroup who extract a tarball into Alpine and never source `setenv.sh` and never re-postinst.
+
+Importantly, this edge case is the only sub-pattern of tarball installs that requires explicit customer awareness — and it's the *minority* edge case of the *minority* tarball-without-setenv path. The mainline tarball-install scenario (extract on glibc, hardcode env vars, deploy to glibc image) stays non-breaking with the pre-baked symlink alone.
 
 #### `NewRelic.Agent` NuGet package (consumer-facing)
 
@@ -684,7 +692,7 @@ The four documented patterns (each grounded in either New Relic-published exampl
 
 **After Phase 2:**
 - If the install creates the postinst/setenv.sh compat symlink: the Alpine container resolves the legacy `…/libNewRelicProfiler.so` path to the **musl-native** binary. Customer transparently moves off the lazy-binding mechanism. No more `strtoll_l` fragility.
-- If the install does **not** create the compat symlink (some non-postinst install paths): customer must update `CORECLR_PROFILER_PATH` to the per-RID path. Documented breaking change for that subset.
+- If the install does **not** create the compat symlink (some non-postinst install paths): customer must update `CORECLR_PROFILER_PATH` to the per-RID path. **Phase 2 must therefore ensure the compat symlink is created on every supported install path** (postinst for `.deb`/`.rpm`, build-time pre-bake for tarball, NuGet compat-copy for the NuGet package). Without that universal coverage the change is breaking for the majority of installs, since the dominant install pattern is to hardcode `CORECLR_PROFILER_PATH`.
 
 **After Phase 3 (glibc baseline tracks dotnet's portable baseline — 2.27 if .NET 10 is the floor):** two distinct breaking-change populations:
 
@@ -725,19 +733,19 @@ The agent already respects an explicit `CORECLR_PROFILER_PATH` set by the custom
 
 ### Mitigation summary (must-haves for "non-breaking" claim)
 
-For Phase 2 to ship as effectively non-breaking, all of these must land in the same release:
+The dominant Linux install pattern is hardcoded `CORECLR_PROFILER_PATH=$NRHOME/libNewRelicProfiler.so`. Every item below is **load-bearing** for shipping Phase 2 non-breaking — none are optional belt-and-suspenders. All must land in the same release:
 
-1. **`.deb` / `.rpm` postinst** creates the legacy flat-path as a libc-aware symlink to the matching `linux-{musl-,}{x64,arm64}/libNewRelicProfiler.so`.
-2. **`setenv.sh`** creates the same symlink idempotently if missing, on first source. Handles tarball install.
-3. **Tarball build** ships a default `libNewRelicProfiler.so` symlink at the home root, pointing at `linux-x64/libNewRelicProfiler.so` — chosen because the tarball is built on a glibc host and the linux-x64 binary is the only sensible single default for a pre-baked symlink (Alpine users who don't source `setenv.sh` need an explicit `CORECLR_PROFILER_PATH` override; release notes call this out).
-4. **`NewRelic.Agent` NuGet package** ships a compat copy `newrelic/libNewRelicProfiler.so` (= linux-x64 glibc) **plus** the per-RID layout for `dotnet publish` RID resolution. This covers both customer patterns. The arm64 customer who already had to override gets no worse; the x64 customer with a hardcoded `CORECLR_PROFILER_PATH` keeps working.
-5. **Update our own `tests/Agent/IntegrationTests/ContainerApplications/SmokeTestApp/Dockerfile*`** to use the new RID-aware path **and** to source `setenv.sh`. This is a tests-only change but is required: today our tests model the customer pattern that's about to break. Our tests must explicitly verify both code paths (legacy compat symlink works; new RID-aware path works).
+1. **`.deb` / `.rpm` postinst** creates the legacy flat-path as a libc-aware symlink to the matching `linux-{musl-,}{x64,arm64}/libNewRelicProfiler.so`. **Required** — covers the dominant package-install pattern.
+2. **`setenv.sh`** creates/refreshes the symlink idempotently on each source. **Required** — handles tarball-into-different-libc-container migrations and serves as a fallback recovery path. The detection should re-point the symlink if its current target's libc doesn't match the host libc.
+3. **Tarball build** ships a default `libNewRelicProfiler.so` symlink at the home root, pointing at `linux-x64/libNewRelicProfiler.so` — chosen because the tarball is built on a glibc host and the linux-x64 binary is the only sensible single default for a pre-baked symlink. **Required** — covers the dominant tarball-install pattern (extract on glibc, hardcode env vars, deploy to glibc image) without requiring the customer to source `setenv.sh`. The Alpine-tarball edge case is covered by item 2 if the customer ever sources `setenv.sh`; release notes cover the remaining sliver who do neither.
+4. **`NewRelic.Agent` NuGet package** ships a compat copy `newrelic/libNewRelicProfiler.so` (= linux-x64 glibc) **plus** the per-RID layout for `dotnet publish` RID resolution. **Required** — the documented NuGet attach path on `nuget2.mdx` is the flat path; without the compat copy, every NuGet customer breaks. The arm64 customer who already had to override gets no worse; the x64 customer with a hardcoded `CORECLR_PROFILER_PATH` keeps working.
+5. **Update our own `tests/Agent/IntegrationTests/ContainerApplications/SmokeTestApp/Dockerfile*`** to use the new RID-aware path **and** to source `setenv.sh`. Tests-only change but **required**: today our tests model the customer pattern that's about to break. Tests must explicitly verify both code paths (legacy compat symlink works; new RID-aware path works) so regressions in the compat symlink would fail CI rather than reach customers.
 6. **`run.sh`** rewritten to do the libc probe + RID resolution.
 7. **Release notes** explicitly document:
-   - The new layout (per-RID subdirs).
-   - The compat symlink (and its limitations: it follows the *install-host* libc, which matters only for `dpkg-deb -x` extraction into a different-libc container).
-   - Recommended migration: customers update hardcoded `CORECLR_PROFILER_PATH` to the per-RID path or, better, source `setenv.sh`.
-   - Phase 3 forewarning: the upcoming release will raise the glibc floor to track dotnet's portable baseline for the agent's minimum supported runtime (glibc 2.27 / Ubuntu 18.04 if .NET 10 is the floor). Drops Amazon Linux 2 and RHEL 7 — both EOL upstream and unsupported by dotnet 10 itself. Alpine customers should also validate that `CORECLR_PROFILER_PATH` resolves to the musl binary before Phase 3 ships, since the glibc-on-Alpine luck mechanism is gone after Phase 3.
+   - The new layout (per-RID subdirs) — for forward-looking customers who want to migrate to the explicit RID path.
+   - The compat symlink — call out that the flat path **continues to work** for the majority of installs unchanged, so customers don't need to update unless they want to.
+   - The single edge case requiring action: extracting a tarball into an Alpine container while never sourcing `setenv.sh` and never running postinst. This subset must source `setenv.sh` once (which fixes the symlink) or set `CORECLR_PROFILER_PATH` explicitly.
+   - Phase 3 forewarning: the upcoming release will raise the glibc floor to track dotnet's portable baseline for the agent's minimum supported runtime (glibc 2.27 / Ubuntu 18.04 if .NET 10 is the floor). Drops Amazon Linux 2 and RHEL 7 — both EOL upstream and unsupported by dotnet 10 itself. Alpine customers should also validate that their `CORECLR_PROFILER_PATH` resolves to the musl binary before Phase 3 ships, since the glibc-on-Alpine luck mechanism is gone after Phase 3.
 
 ### Open items requiring product / docs decisions
 
@@ -746,7 +754,7 @@ These cross outside the build/CI scope and need product owner input before the m
 1. **docs.newrelic.com refresh.** All Linux install pages in `newrelic/docs-website` currently show the flat path. They need updating in lockstep with Phase 2. Verified count: at least 7 English-language `.mdx` files (`linuxInstall3-enable-agent`, `dockerLinux`, `nuget2`, `azure-linux-container`, `aws-elastic`, `azure-nuget-core-install`, `understanding-net-agent-environment-variables`) plus translated copies in es/jp/kr/fr/pt — total ≥ several dozen pages once translations are counted. Plus the Dockerfile examples in `newrelic/newrelic-dotnet-examples/docker-agent-nuget/{alpine,ubuntu,centos}/`.
 2. **AzureSiteExtension and Windows-side install pages** are unaffected but should be sanity-checked for Linux cross-references.
 3. **Phase 3 release timing and distro-drop pre-announcement.** Phase 3 raises the glibc floor to track dotnet's portable baseline for the agent's minimum supported runtime (glibc 2.27 / Ubuntu 18.04 if .NET 10 is the floor). Drops Amazon Linux 2 and RHEL 7 — both EOL upstream and unsupported by dotnet 10 itself. Pre-announce in the release that ships Phase 2; ship Phase 3 in a subsequent release. Major-version bump candidate. Decisions needed: which release ships Phase 2 vs Phase 3, when the agent's minimum supported runtime moves off .NET 8 (Phase 3 is contingent on this), and whether the Phase 3 release coincides with the .NET agent's next major version.
-4. **Customer-survey or telemetry data** on how many active installs hardcode `CORECLR_PROFILER_PATH=…flat`. If telemetry isn't available, conservative assumption: significant portion of containerized installs.
+4. ~~**Customer-survey or telemetry data** on how many active installs hardcode `CORECLR_PROFILER_PATH=…flat`.~~ **Resolved by team experience: the vast majority of `.deb`/`.rpm`/tarball installs hardcode the flat path.** The compat-symlink mitigations are load-bearing for non-breaking shipping; this is no longer an open item.
 5. **Release-notes review with support team** so the support runbook for "agent stopped loading after upgrade" is updated to immediately ask "did you set `CORECLR_PROFILER_PATH` manually?".
 
 ---
