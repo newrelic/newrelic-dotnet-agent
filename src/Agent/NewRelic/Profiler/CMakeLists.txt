@@ -36,8 +36,26 @@ if(${WIN32})
 else()
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-strict-aliasing -stdlib=libc++ -Wno-invalid-noreturn -Wno-ignored-attributes -Wno-macro-redefined -fms-extensions -fdeclspec -fPIC")
-  set (CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++") 
+  if(DEFINED ENV{NR_MUSL_BUILD})
+    # musl path: clang + libstdc++ on Alpine.
+    # Alpine 3.23's libc++-static is not built with -fPIC and cannot be
+    # statically linked into a shared object, so we use libstdc++ instead —
+    # matching OTel's alpine.dockerfile approach.
+    # -fdelayed-template-parsing: clang 21 two-phase name lookup catches a real
+    # bug in vendored atl.h:367 (this->pElements in a never-called helper).
+    # This flag restores the old clang-3.9/MSVC behaviour of skipping unreached
+    # template bodies; no effect on emitted code.
+    # -Wl,-z,lazy: clang/lld on Alpine defaults to BIND_NOW; lazy binding is
+    # required so CLR-provided symbols (e.g. RaiseException) resolve after the
+    # CLR loads rather than at dlopen time.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fno-strict-aliasing -Wno-invalid-noreturn -Wno-ignored-attributes -Wno-macro-redefined -fms-extensions -fdeclspec -fPIC -fdelayed-template-parsing")
+    set(CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++ -static-libgcc -Wl,-z,lazy")
+  else()
+    # glibc path: unchanged from historical build to preserve byte-for-byte
+    # build behaviour.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-strict-aliasing -stdlib=libc++ -Wno-invalid-noreturn -Wno-ignored-attributes -Wno-macro-redefined -fms-extensions -fdeclspec -fPIC")
+    set(CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++")
+  endif()
 endif()
 
 file(GLOB SOURCES
