@@ -3,6 +3,7 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 #pragma once
+#include <condition_variable>
 #include <mutex>
 #include <atomic>
 #include <thread>

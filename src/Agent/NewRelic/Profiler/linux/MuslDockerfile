@@ -1,0 +1,15 @@
+# Spike-only: musl-native build of libNewRelicProfiler.so on Alpine 3.23.
+# Not wired into docker-compose.yml or CI. Validates the technical assumption
+# that the profiler source compiles under a musl toolchain (clang + libstdc++)
+# with minimal CMakeLists.txt deltas. See PROFILER_DUAL_BUILD_DESIGN.md, Phase 1.
+FROM alpine:3.23
+
+RUN apk add --no-cache \
+    clang \
+    cmake \
+    make \
+    musl-dev \
+    g++ \
+    linux-headers \
+    bash \
+    dos2unix
