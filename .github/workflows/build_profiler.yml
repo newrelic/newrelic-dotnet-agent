@@ -256,6 +256,97 @@ jobs:
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
 
+  build-linux-musl-x64-profiler:
+    name: Build Linux musl x64 Profiler
+    runs-on: ubuntu-22.04
+    needs: check-modified-files
+    # only run this job if source files were modified, or if triggered by a manual execution
+    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
+    permissions:
+      contents: read
+
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+      CORECLR_NEW_RELIC_HOME: ${{ github.workspace }}/src/Agent/NewRelic/newrelichome_x64_coreclr_linux # not used but required by Profiler/docker-compose.yml
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Clean out _profilerBuild directory
+        run: |
+          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-x64-release || true
+        shell: bash
+
+      - name: Build Linux musl x64 Profiler
+        run: |
+          cd ${{ env.profiler_path }}
+          docker compose build build_musl_x64
+          docker compose run build_musl_x64
+        shell: bash
+
+      - name: Move Profiler to staging folder
+        run: |
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-x64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-x64-release/libNewRelicProfiler.so
+        shell: bash
+
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: profiler-musl-amd64
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          if-no-files-found: error
+
+  build-linux-musl-arm64-profiler:
+    name: Build Linux musl ARM64 Profiler
+    runs-on: ubuntu-24.04-arm
+    needs: check-modified-files
+    # only run this job if source files were modified, or if triggered by a manual execution
+    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
+    permissions:
+      contents: read
+
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+      CORECLR_NEW_RELIC_HOME: ${{ github.workspace }}/src/Agent/NewRelic/newrelichome_arm64_coreclr_linux # not used but required by Profiler/docker-compose.yml
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Clean out _profilerBuild directory
+        run: |
+          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-arm64-release || true
+        shell: bash
+
+      - name: Build Linux musl ARM64 Profiler
+        run: |
+          cd ${{ env.profiler_path }}
+          docker compose build build_musl_arm64
+          docker compose run build_musl_arm64
+        shell: bash
+
+      - name: Move Profiler to staging folder
+        run: |
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-arm64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-arm64-release/libNewRelicProfiler.so
+        shell: bash
+
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: profiler-musl-arm64
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          if-no-files-found: error
+
   package-and-deploy:
     needs:
       [
