@@ -539,6 +539,7 @@ This is the highest-priority section of the design. The dual-build only makes se
 | Same scenario, after Phase 3 (glibc baseline tracks dotnet's portable baseline — 2.27 if .NET 10 is the floor) | n/a | Glibc binary stops loading on Alpine if customer pinned a flat-path env var | Compat symlink resolves to musl binary; Alpine still works |
 | **Phase 3 — customer on Amazon Linux 2 / RHEL 7** | Works | n/a | **Fails loudly** with clear glibc-version error. Same distros dotnet 10 itself doesn't support. Customer must upgrade distro or pin pre-Phase-3 agent. Distros are EOL upstream regardless. |
 | Customer reads docs.newrelic.com Linux install instructions verbatim | Works | **Breaks** until docs are republished | Works (compat symlink); docs should still be updated to point at the new RID-aware path |
+| AWS Lambda (any arch) | Works | Works (Lambda is glibc-only; layer's flat `CORECLR_PROFILER_PATH` resolves via tarball-baked symlink → `linux-x64/`) | Works — no Lambda-side changes needed |
 | K8s auto-attach (operator + init container), glibc pod | Works | Works (compat symlink resolves to glibc binary) | Works |
 | K8s auto-attach, Alpine pod, no operator annotation | Works (lazy-binding luck) | Works (still lazy-binding luck — compat symlink → glibc binary, loads by luck) | Works (same mechanism); breaks at Phase 3 |
 | K8s auto-attach, Alpine pod, `dotnet-runtime: "linux-musl-x64"` annotation | n/a (annotation doesn't exist) | n/a (operator change required) | **Works on the proper musl-native binary**; survives Phase 3 |
@@ -736,6 +737,18 @@ The .NET agent's K8s auto-attach is a separate two-repo system that customers co
 - Phase 2 release notes for the operator must call out the new annotation as the migration path for Alpine pods. Encourage customers to add the annotation before Phase 3 ships.
 - The operator change is technically optional for Phase 2 functionally (today's behavior is preserved by the compat symlink), but is **required** before Phase 3 — otherwise Alpine K8s customers break with no way to recover short of editing `CORECLR_PROFILER_PATH` manually.
 - The operator change must coordinate with this dual-build PR series. Track as a dependent change-set, not a follow-up.
+
+#### AWS Lambda
+
+**No impact from the dual-build.** Investigated 2026-05-18; documented here so future readers don't re-derive it.
+
+The .NET Lambda layer is built in `newrelic/newrelic-lambda-layers/dotnet/publish-layers.sh` (public). It calls `get_agent amd64` / `get_agent arm64`, bundles the result with the universal NR Lambda extension, and publishes per-arch as `dotnet.x86_64.zip` / `dotnet.arm64.zip`. There is no per-libc handling — and there cannot be, because **AWS Lambda runtimes are glibc-only**: Amazon Linux 2 and 2023 are the only Lambda base images, and neither has an Alpine/musl variant. Customers cannot run a musl-based Lambda function.
+
+When Phase 2 changes the agent tarball layout to include per-RID subdirs and a libc-aware compat symlink at the home root, the layer's existing `CORECLR_PROFILER_PATH=<layer>/libNewRelicProfiler.so` continues to resolve correctly via the symlink → `linux-x64/libNewRelicProfiler.so` (because Lambda's host is always glibc, the tarball-baked symlink — which targets `linux-x64/` for the glibc-built tarball — resolves to the right binary). **No `newrelic-lambda-layers` build changes are strictly required for Phase 2.**
+
+The .NET agent itself detects Lambda via `AWS_LAMBDA_FUNCTION_NAME` (set by the Lambda runtime — see `src/Agent/NewRelic/Agent/Core/Config/BootstrapConfiguration.cs:165`) or `NEW_RELIC_SERVERLESS_MODE_ENABLED`. Both signals are independent of which `.so` is loaded; serverless mode is orthogonal to the libc-variant question.
+
+**No Lambda-side annotation, opt-in, or build axis is needed for the dual-build.** The Lambda layer build should still be exercised against a Phase-2 tarball as part of release validation, but no design changes are required there.
 
 #### Linux containers — Alpine specifically
 
