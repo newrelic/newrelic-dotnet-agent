@@ -539,6 +539,9 @@ This is the highest-priority section of the design. The dual-build only makes se
 | Same scenario, after Phase 3 (glibc baseline tracks dotnet's portable baseline — 2.27 if .NET 10 is the floor) | n/a | Glibc binary stops loading on Alpine if customer pinned a flat-path env var | Compat symlink resolves to musl binary; Alpine still works |
 | **Phase 3 — customer on Amazon Linux 2 / RHEL 7** | Works | n/a | **Fails loudly** with clear glibc-version error. Same distros dotnet 10 itself doesn't support. Customer must upgrade distro or pin pre-Phase-3 agent. Distros are EOL upstream regardless. |
 | Customer reads docs.newrelic.com Linux install instructions verbatim | Works | **Breaks** until docs are republished | Works (compat symlink); docs should still be updated to point at the new RID-aware path |
+| K8s auto-attach (operator + init container), glibc pod | Works | Works (compat symlink resolves to glibc binary) | Works |
+| K8s auto-attach, Alpine pod, no operator annotation | Works (lazy-binding luck) | Works (still lazy-binding luck — compat symlink → glibc binary, loads by luck) | Works (same mechanism); breaks at Phase 3 |
+| K8s auto-attach, Alpine pod, `dotnet-runtime: "linux-musl-x64"` annotation | n/a (annotation doesn't exist) | n/a (operator change required) | **Works on the proper musl-native binary**; survives Phase 3 |
 
 The naive Phase 2 introduces a **major breaking change** for **the dominant Linux install pattern**: hardcoded `CORECLR_PROFILER_PATH=$NRHOME/libNewRelicProfiler.so`. Per team experience working with Linux customer installs, the vast majority of `.deb`/`.rpm`/tarball-installed agents hardcode this env var rather than sourcing `setenv.sh` — and that's exactly what our own published examples and install docs lead them to do. **The compat-symlink mitigations below are therefore load-bearing, not optional belt-and-suspenders.** They are the mechanism by which Phase 2 ships non-breaking for the majority of Linux customers; without them, Phase 2 is a major breaking release.
 
@@ -686,6 +689,54 @@ The four documented patterns (each grounded in either New Relic-published exampl
 
 **Net Phase 2 customer impact with all mitigations applied: zero for the four documented patterns above. The visible differences are upside — a customer who switches from a glibc base to an Alpine base no longer relies on lazy-binding luck; they get a properly Alpine-native binary.** Edge cases not covered by the four patterns (e.g., a customer using a non-documented attach mechanism we don't know about) require telemetry to size — flagged as an open item.
 
+#### Kubernetes auto-attach (k8s-agents-operator + newrelic-agent-init-container)
+
+The .NET agent's K8s auto-attach is a separate two-repo system that customers consume independently of the agent home directory and tarball:
+
+- **`newrelic-agent-init-container`** ships a per-arch (`linux/amd64`, `linux/arm64`) image whose `dotnet-agent-download.sh` fetches the agent tarball from `https://download.newrelic.com/dot_net_agent/...` and unpacks it to `/instrumentation` inside the image. The image runtime is `busybox:stable`. The init container is later `cp -r`'d into the target pod's volume by the operator.
+- **`k8s-agents-operator`** mutates pod specs at admission. `internal/apm/dotnet.go:59` (verified 2026-05-18 against `main` of the operator repo) constructs the profiler path as a flat reference:
+  ```go
+  coreClrProfilerPath := mountPath + "/libNewRelicProfiler.so"
+  ```
+  This becomes the value of `CORECLR_PROFILER_PATH` injected into the customer's app container. There is no annotation today for selecting libc / RID.
+
+**Today, K8s customers running on Alpine-based pods work via the same glibc-on-Alpine lazy-binding luck as the package-install case** — the operator hardcodes the flat path; the init container ships only the glibc binary (the tarball doesn't have musl variants); the pod's app container loads the glibc `.so` and the loader's lazy binding masks the missing musl-symbol references at startup. Same mechanism, different attach surface.
+
+**Phase 2 has a coordinated three-repo dependency for non-breaking K8s support:**
+
+1. **Agent (this design / dual-build PR series):** ship a tarball whose extracted layout has per-RID subdirectories AND a libc-aware compat symlink at the home root (per the "Mitigation summary" below). The init container's `cp -r /instrumentation/.` copy preserves the symlink, and the operator's `mountPath + "/libNewRelicProfiler.so"` resolves to whichever variant the symlink points at.
+
+2. **Init container (`newrelic-agent-init-container`):** no functional change strictly required if (1) is done correctly — the existing `cp -r` copies whatever's in the tarball, so the per-RID subdirs and the symlink come along for free. Optional improvement: the init container could probe the *target* pod's libc at copy time and rewrite the symlink, but that requires the init container to introspect the target volume's intended runtime, which is awkward. Keeping the symlink at glibc-by-default and relying on a runtime annotation override (item 3) is simpler.
+
+3. **Operator (`k8s-agents-operator`):** add an annotation analogous to OTel's `otel-dotnet-auto-runtime` to let customers explicitly opt into the musl variant. Recommend `newrelic.com/instrumentation-dotnet-runtime` (the operator's existing annotation namespace pattern); accepted values mirror .NET RIDs. When the annotation is set, the operator constructs `coreClrProfilerPath` from the matching per-RID subdir:
+
+   ```yaml
+   metadata:
+     annotations:
+       instrumentation.newrelic.com/inject-dotnet: "true"
+       instrumentation.newrelic.com/dotnet-runtime: "linux-musl-x64"  # opt-in for musl-based pods
+       # Default (annotation absent): "linux-x64"
+       # Other valid values: "linux-arm64", "linux-musl-arm64"
+   ```
+
+   With the annotation set, `coreClrProfilerPath` becomes `mountPath + "/" + rid + "/libNewRelicProfiler.so"`; without it, the existing `mountPath + "/libNewRelicProfiler.so"` flat path resolves to the libc-aware compat symlink (which on a glibc-built tarball points at `linux-x64/libNewRelicProfiler.so`).
+
+   This is **opt-in for musl** — same pattern OTel uses, and for the same reason: at pod-spec mutation time the operator cannot detect the target container's libc, so an explicit annotation is the only signal available before the container is running. Customers running .NET on Alpine pods will need to add the annotation in Phase 2 if they want the proper musl-native binary; without the annotation, they continue to get the glibc binary loaded via lazy-binding luck (same as today). Phase 3 closes that fallback — Alpine customers must have the annotation set before Phase 3 ships.
+
+**K8s customer impact (per-phase summary):**
+
+| Phase | Alpine pod, no annotation | Alpine pod, `dotnet-runtime: "linux-musl-x64"` | glibc pod (any) |
+|---|---|---|---|
+| Today | Works via lazy-binding luck | n/a (annotation doesn't exist) | Works |
+| Phase 1 (this PR) | Unchanged — operator/init container untouched | n/a | Unchanged |
+| Phase 2 | Continues to work via lazy-binding luck (compat symlink → glibc binary on Alpine pod, loads via luck) | Works on the proper musl-native binary; no luck involved | Works (compat symlink → glibc binary) |
+| Phase 3 | **Breaks** — glibc binary stops loading on Alpine. Customer must have added the annotation. | Works — explicit musl path | Works |
+
+**Communication and timing:**
+- Phase 2 release notes for the operator must call out the new annotation as the migration path for Alpine pods. Encourage customers to add the annotation before Phase 3 ships.
+- The operator change is technically optional for Phase 2 functionally (today's behavior is preserved by the compat symlink), but is **required** before Phase 3 — otherwise Alpine K8s customers break with no way to recover short of editing `CORECLR_PROFILER_PATH` manually.
+- The operator change must coordinate with this dual-build PR series. Track as a dependent change-set, not a follow-up.
+
 #### Linux containers — Alpine specifically
 
 **Today:** the shipped glibc binary loads on Alpine via the four-property luck (DT_NEEDED narrow, GLIBC ≤ 2.17, no libc++, lazy-binding). `strtoll_l` / `strtoull_l` are latent fragility — any code path that hits locale-aware parsing on Alpine throws.
@@ -741,7 +792,9 @@ The dominant Linux install pattern is hardcoded `CORECLR_PROFILER_PATH=$NRHOME/l
 4. **`NewRelic.Agent` NuGet package** ships a compat copy `newrelic/libNewRelicProfiler.so` (= linux-x64 glibc) **plus** the per-RID layout for `dotnet publish` RID resolution. **Required** — the documented NuGet attach path on `nuget2.mdx` is the flat path; without the compat copy, every NuGet customer breaks. The arm64 customer who already had to override gets no worse; the x64 customer with a hardcoded `CORECLR_PROFILER_PATH` keeps working.
 5. **Update our own `tests/Agent/IntegrationTests/ContainerApplications/SmokeTestApp/Dockerfile*`** to use the new RID-aware path **and** to source `setenv.sh`. Tests-only change but **required**: today our tests model the customer pattern that's about to break. Tests must explicitly verify both code paths (legacy compat symlink works; new RID-aware path works) so regressions in the compat symlink would fail CI rather than reach customers.
 6. **`run.sh`** rewritten to do the libc probe + RID resolution.
-7. **Release notes** explicitly document:
+7. **`k8s-agents-operator` updated** to support a `instrumentation.newrelic.com/dotnet-runtime` annotation (opt-in pattern, mirroring OTel's `otel-dotnet-auto-runtime`). When the annotation is set, the operator constructs `coreClrProfilerPath` from the matching per-RID subdir (`mountPath + "/" + rid + "/libNewRelicProfiler.so"`); when absent, the operator continues to set the flat path (`mountPath + "/libNewRelicProfiler.so"`) which resolves via the libc-aware compat symlink. **Required for Phase 2 if we want Alpine K8s customers to have an explicit upgrade path before Phase 3**; functionally optional for Phase 2 in isolation (today's lazy-binding-luck behavior is preserved by the symlink) but **required before Phase 3** ships.
+8. **`newrelic-agent-init-container` validated** against the new tarball layout. No code changes strictly required — the existing `cp -r /instrumentation/.` copy preserves the per-RID subdirs and the symlink — but a tarball-shape integration test should be added to the init container repo's test matrix to guard against the layout regression.
+9. **Release notes** explicitly document:
    - The new layout (per-RID subdirs) — for forward-looking customers who want to migrate to the explicit RID path.
    - The compat symlink — call out that the flat path **continues to work** for the majority of installs unchanged, so customers don't need to update unless they want to.
    - The single edge case requiring action: extracting a tarball into an Alpine container while never sourcing `setenv.sh` and never running postinst. This subset must source `setenv.sh` once (which fixes the symlink) or set `CORECLR_PROFILER_PATH` explicitly.
@@ -756,6 +809,7 @@ These cross outside the build/CI scope and need product owner input before the m
 3. **Phase 3 release timing and distro-drop pre-announcement.** Phase 3 raises the glibc floor to track dotnet's portable baseline for the agent's minimum supported runtime (glibc 2.27 / Ubuntu 18.04 if .NET 10 is the floor). Drops Amazon Linux 2 and RHEL 7 — both EOL upstream and unsupported by dotnet 10 itself. Pre-announce in the release that ships Phase 2; ship Phase 3 in a subsequent release. Major-version bump candidate. Decisions needed: which release ships Phase 2 vs Phase 3, when the agent's minimum supported runtime moves off .NET 8 (Phase 3 is contingent on this), and whether the Phase 3 release coincides with the .NET agent's next major version.
 4. ~~**Customer-survey or telemetry data** on how many active installs hardcode `CORECLR_PROFILER_PATH=…flat`.~~ **Resolved by team experience: the vast majority of `.deb`/`.rpm`/tarball installs hardcode the flat path.** The compat-symlink mitigations are load-bearing for non-breaking shipping; this is no longer an open item.
 5. **Release-notes review with support team** so the support runbook for "agent stopped loading after upgrade" is updated to immediately ask "did you set `CORECLR_PROFILER_PATH` manually?".
+6. **K8s auto-attach coordination across three repos.** The dual-build's full customer-facing rollout requires changes in `newrelic/k8s-agents-operator` (add `instrumentation.newrelic.com/dotnet-runtime` annotation, branch `coreClrProfilerPath` construction on it) and validation in `newrelic/newrelic-dotnet-agent-init-container` (confirm the new tarball layout copies cleanly via `cp -r`). These are tracked in separate repos and need an explicit dependency contract: the operator change should land in the same release as the agent's Phase 2, OR ahead of it — never lag, because Alpine K8s customers need the annotation as their migration path before Phase 3 ships.
 
 ---
 
