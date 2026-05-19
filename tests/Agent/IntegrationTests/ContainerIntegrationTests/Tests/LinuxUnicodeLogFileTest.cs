@@ -55,5 +55,16 @@ public class LinuxUnicodeLogFileTest : NewRelicIntegrationTest<LinuxUnicodeLogFi
         var actualMetrics = _fixture.AgentLog.GetMetrics();
 
         Assert.Contains(actualMetrics, m => m.MetricSpec.Name.Equals("WebTransaction/MVC/WeatherForecast/Get"));
+
+        // Smoke-check that the profiler's wide-string log path produced output: at finest
+        // level the profiler writes xstring_t values (assembly/type names) via the wostream
+        // operator<< in Logger.h. ASCII-only assertions cannot distinguish the put() vs
+        // formatted-insert implementations of that operator, but they will catch a path
+        // that is completely broken (chars dropped, log file never created).
+        Assert.True(_fixture.ProfilerLog.Found, "Profiler log file was not created.");
+
+        var profilerLog = _fixture.ProfilerLog.GetFullLogAsString();
+        Assert.Contains("SmokeTestApp", profilerLog);
+        Assert.Contains("WeatherForecastController", profilerLog);
     }
 }
