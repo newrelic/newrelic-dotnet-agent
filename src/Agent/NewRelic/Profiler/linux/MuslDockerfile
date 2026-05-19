@@ -1,0 +1,31 @@
+# Builds an Alpine image and sets up the environment for compiling
+# the New Relic .NET profiler against musl libc. Used by the build_musl_x64
+# and build_musl_arm64 services in docker-compose.yml. The same Dockerfile
+# is used for both architectures; the platform is selected by the compose
+# service. CoreCLR profiling-API headers are vendored in the repo at
+# src/Agent/NewRelic/Profiler/externals/coreclr-headers/ and mounted in at
+# build time, so this image does not need to clone dotnet/coreclr.
+
+# alpine:3.23 - multi-platform image (linux/amd64 + linux/arm64/v8).
+# The musl-native profiler uses libstdc++ (matching OTel's alpine.dockerfile
+# choice) rather than libc++; Alpine's libc++-static package is not built
+# with -fPIC and cannot be statically linked into a shared object. See
+# PROFILER_DUAL_BUILD_DESIGN.md, Category A spike findings, for details.
+FROM alpine@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11
+
+RUN apk add --no-cache \
+    clang \
+    cmake \
+    make \
+    musl-dev \
+    g++ \
+    linux-headers \
+    bash \
+    dos2unix
+
+# Use clang as the C/C++ compiler. The CMakeLists.txt musl branch
+# uses clang-specific flags (-fms-extensions, -fdeclspec,
+# -fdelayed-template-parsing). g++ is installed for libstdc++ headers
+# and the static libstdc++ library only.
+ENV CC=clang
+ENV CXX=clang++
