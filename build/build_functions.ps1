@@ -145,6 +145,12 @@ function Copy-AgentRoot {
 
     
     if ($Linux) {
+        # Per-RID layout. The flat-path libNewRelicProfiler.so at the home root
+        # is also dropped here as a build-time placeholder so existing flat-path
+        # consumers (Container/Integration tests, customer paths that haven't
+        # been updated) keep working. On real .deb/.rpm/tarball installs the
+        # postinst / setenv.sh / tarball-pre-bake replace the placeholder with
+        # a libc-aware symlink.
         if ($Architecture -like "x64") {
             $glibcDir = "$Destination\linux-x64"
             $muslDir  = "$Destination\linux-musl-x64"
@@ -152,6 +158,7 @@ function Copy-AgentRoot {
             New-Item -ItemType Directory -Force -Path $muslDir  | Out-Null
             Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_x64\libNewRelicProfiler.so" -Destination "$glibcDir" -Force
             Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_musl_x64\libNewRelicProfiler.so" -Destination "$muslDir" -Force
+            Copy-Item -Path "$glibcDir\libNewRelicProfiler.so" -Destination "$Destination" -Force
         }
         if ($Architecture -like "ARM64") {
             $glibcDir = "$Destination\linux-arm64"
@@ -160,6 +167,7 @@ function Copy-AgentRoot {
             New-Item -ItemType Directory -Force -Path $muslDir  | Out-Null
             Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_arm64\libNewRelicProfiler.so" -Destination "$glibcDir" -Force
             Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_musl_arm64\libNewRelicProfiler.so" -Destination "$muslDir" -Force
+            Copy-Item -Path "$glibcDir\libNewRelicProfiler.so" -Destination "$Destination" -Force
         }
     }
     else {

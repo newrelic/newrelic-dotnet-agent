@@ -176,9 +176,11 @@ public class LinuxPackage : Artifact
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(installedFilesRoot, glibcRid), _coreAgentComponents.LinuxProfiler);
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(installedFilesRoot, muslRid), _coreAgentComponents.LinuxMuslProfiler);
         ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.ConfigurationComponents);
-        // These next two files are added to the Linux packages by the containerized build process, not the ArtifactBuilder, so they are hardcoded here
+        // These files are added to the Linux packages by the containerized build process or by build_home.ps1, not by the ArtifactBuilder, so they are hardcoded here.
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "run.sh");
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "setenv.sh");
+        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "agentinfo.json");
+        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "libNewRelicProfiler.so");
 
         var netcoreExtensionsFolder = Path.Join(installedFilesRoot, "extensions");
         ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netcoreExtensionsFolder, _coreAgentComponents.ExtensionDirectoryComponents);
