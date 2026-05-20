@@ -54,7 +54,11 @@ $env:NEWRELIC_LICENSE_KEY     = "<staging-key>"
 $env:NEWRELIC_APP_NAME        = "SignalR-POC-Server"
 $env:NEWRELIC_LOG_LEVEL       = "debug"
 # Hybrid OTel bridge — required so the SignalR ActivitySource is consumed.
-$env:NEW_RELIC_OPENTELEMETRY_TRACING_ENABLED = "true"
+# Master switch AND per-signal toggles. Tracing wires the ActivityListener;
+# metrics is needed for acceptance criterion 5 (HttpConnections meter).
+$env:NEW_RELIC_OPENTELEMETRY_ENABLED         = "true"
+$env:NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED  = "true"
+$env:NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED = "true"
 
 dotnet run --project poc/SignalR/Server/SignalRPocServer.csproj
 ```
@@ -72,7 +76,9 @@ $env:CORECLR_NEWRELIC_HOME    = "$home_dir"
 $env:NEWRELIC_LICENSE_KEY     = "<staging-key>"
 $env:NEWRELIC_APP_NAME        = "SignalR-POC-Client"
 $env:NEWRELIC_LOG_LEVEL       = "debug"
-$env:NEW_RELIC_OPENTELEMETRY_TRACING_ENABLED = "true"
+$env:NEW_RELIC_OPENTELEMETRY_ENABLED         = "true"
+$env:NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED  = "true"
+$env:NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED = "true"
 
 dotnet run --project poc/SignalR/Client/SignalRPocClient.csproj -- http://localhost:5050/chathub 3
 ```
