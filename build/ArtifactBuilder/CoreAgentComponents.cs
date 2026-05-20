@@ -23,7 +23,8 @@ public class CoreAgentComponents : AgentComponents
 
     protected override List<string> IgnoredHomeBuilderFiles => new List<string>() {
         $@"{SourceHomeBuilderPath}\extensions\NewRelic.Core.Instrumentation.xml",
-        $@"{SourceHomeBuilderPath}\extensions\NewRelic.Parsing.Instrumentation.xml"
+        $@"{SourceHomeBuilderPath}\extensions\NewRelic.Parsing.Instrumentation.xml",
+        $@"{SourceHomeBuilderPath}\libNewRelicProfiler.so"
     };
 
     protected override void CreateAgentComponents()
