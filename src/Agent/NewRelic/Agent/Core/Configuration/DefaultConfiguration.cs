@@ -2835,7 +2835,6 @@ public class DefaultConfiguration : IConfiguration
         "Microsoft.AspNetCore",
         "Microsoft.AspNetCore.Components",
         "Microsoft.AspNetCore.Components.Server.Circuits",
-        "Microsoft.AspNetCore.SignalR.Server",
         "Microsoft.Azure.Functions.Worker",
         "Microsoft.Data.SqlClient",
         "MongoDB.Driver.Core.Extensions.DiagnosticSources",
