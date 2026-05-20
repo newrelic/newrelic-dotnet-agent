@@ -150,13 +150,16 @@ public class CoreAgentComponents : AgentComponents
         AgentApiDll = $@"{SourcePath}\..\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll";
 
         LinuxProfiler = null;
+        LinuxMuslProfiler = null;
         if (Platform == "x64")
         {
-            LinuxProfiler = $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libNewRelicProfiler.so";
+            LinuxProfiler = $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\linux-x64\libNewRelicProfiler.so";
+            LinuxMuslProfiler = $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\linux-musl-x64\libNewRelicProfiler.so";
         }
         else if (Platform == "arm64")
         {
-            LinuxProfiler = $@"{HomeRootPath}\newrelichome_arm64_coreclr_linux\libNewRelicProfiler.so";
+            LinuxProfiler = $@"{HomeRootPath}\newrelichome_arm64_coreclr_linux\linux-arm64\libNewRelicProfiler.so";
+            LinuxMuslProfiler = $@"{HomeRootPath}\newrelichome_arm64_coreclr_linux\linux-musl-arm64\libNewRelicProfiler.so";
         }
 
         var configurationComponents = new List<string> { NewRelicXsd };

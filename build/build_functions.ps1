@@ -146,10 +146,20 @@ function Copy-AgentRoot {
     
     if ($Linux) {
         if ($Architecture -like "x64") {
-            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_x64\libNewRelicProfiler.so" -Destination "$Destination" -Force 
+            $glibcDir = "$Destination\linux-x64"
+            $muslDir  = "$Destination\linux-musl-x64"
+            New-Item -ItemType Directory -Force -Path $glibcDir | Out-Null
+            New-Item -ItemType Directory -Force -Path $muslDir  | Out-Null
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_x64\libNewRelicProfiler.so" -Destination "$glibcDir" -Force
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_musl_x64\libNewRelicProfiler.so" -Destination "$muslDir" -Force
         }
         if ($Architecture -like "ARM64") {
-            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_arm64\libNewRelicProfiler.so" -Destination "$Destination" -Force 
+            $glibcDir = "$Destination\linux-arm64"
+            $muslDir  = "$Destination\linux-musl-arm64"
+            New-Item -ItemType Directory -Force -Path $glibcDir | Out-Null
+            New-Item -ItemType Directory -Force -Path $muslDir  | Out-Null
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_arm64\libNewRelicProfiler.so" -Destination "$glibcDir" -Force
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_musl_arm64\libNewRelicProfiler.so" -Destination "$muslDir" -Force
         }
     }
     else {

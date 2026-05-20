@@ -21,6 +21,7 @@ public class LinuxPackage : Artifact
     private readonly string _packageName;
 
     private AgentComponents _coreAgentComponents;
+    private readonly string _agentPlatform;
 
     public LinuxPackage(string name, string packagePlatform, string fileExtension) : base(name)
     {
@@ -32,7 +33,8 @@ public class LinuxPackage : Artifact
         OutputDirectory = Path.Join(RepoRootDirectory, "build", "BuildArtifacts", Name);
         ValidateContentAction = ValidateContent;
 
-        _coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, "Release", "x64", RepoRootDirectory, HomeRootDirectory);
+        _agentPlatform = packagePlatform.Contains("arm64", StringComparison.OrdinalIgnoreCase) ? "arm64" : "x64";
+        _coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, "Release", _agentPlatform, RepoRootDirectory, HomeRootDirectory);
     }
 
     protected override void InternalBuild()
@@ -169,7 +171,10 @@ public class LinuxPackage : Artifact
 
         ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.RootInstallDirectoryComponents);
         ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.AgentHomeDirComponents.Where(f => f != _coreAgentComponents.WindowsProfiler));
-        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.LinuxProfiler);
+        var glibcRid = _agentPlatform == "arm64" ? "linux-arm64" : "linux-x64";
+        var muslRid = _agentPlatform == "arm64" ? "linux-musl-arm64" : "linux-musl-x64";
+        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(installedFilesRoot, glibcRid), _coreAgentComponents.LinuxProfiler);
+        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(installedFilesRoot, muslRid), _coreAgentComponents.LinuxMuslProfiler);
         ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.ConfigurationComponents);
         // These next two files are added to the Linux packages by the containerized build process, not the ArtifactBuilder, so they are hardcoded here
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "run.sh");
