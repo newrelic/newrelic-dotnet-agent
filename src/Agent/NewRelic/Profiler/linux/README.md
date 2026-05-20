@@ -2,23 +2,33 @@
 
 ### Active build images (used by CI)
 
-**`Dockerfile`** — x64 Linux build container. Ubuntu 14.04, clang-3.9, cmake-3.9.
+**`Dockerfile`** — x64 glibc Linux build container. Ubuntu 14.04, clang-3.9, cmake-3.9.
 Used by the `build_profiler.yml` `build-linux-profiler-x64` job via `docker compose`.
 
-**`Arm64Dockerfile`** — arm64 Linux build container. Ubuntu 18.04, clang-3.9,
+**`Arm64Dockerfile`** — arm64 glibc Linux build container. Ubuntu 18.04, clang-3.9,
 cmake 3.9 pulled from an NR-owned S3 bucket.
 Used by the `build_profiler.yml` `build-linux-profiler-arm64` job.
 
-Both images compile with `-stdlib=libc++ -static-libstdc++`, which together with the
-profiler's narrow set of external dependencies produces binaries that work on glibc-based
-distros **and** musl-based distros (Alpine) — see below.
+**`MuslDockerfile`** — x64 + arm64 musl Linux build container. Alpine-based,
+clang + libstdc++ toolchain. Used by the `build_profiler.yml`
+`build-linux-musl-x64-profiler` and `build-linux-musl-arm64-profiler` jobs.
+
+The agent ships **four** Linux profiler binaries — one per (libc, arch) combination —
+into per-RID subdirectories of the agent home: `linux-x64/`, `linux-arm64/`,
+`linux-musl-x64/`, `linux-musl-arm64/`. A libc-aware compat symlink at the home root
+keeps the legacy flat path (`$NRHOME/libNewRelicProfiler.so`) working for customers
+who hardcode `CORECLR_PROFILER_PATH`. The symlink is created by the `.deb`/`.rpm`
+postinst, by `setenv.sh` on first source, and pre-baked at tarball build time.
 
 ### Alpine compatibility
 
-The shipped `libNewRelicProfiler.so` loads successfully on Alpine Linux (including the
-`mcr.microsoft.com/dotnet/aspnet:*-alpine` images) **without `gcompat`**. This is not
-accidental — it is a direct consequence of four binary properties that the current build
-images preserve:
+Alpine support comes from the dedicated **`linux-musl-{x64,arm64}/libNewRelicProfiler.so`**
+binary — a true musl-native build linked against musl libc and libstdc++. On an Alpine
+host, the postinst (or `setenv.sh`) detects musl via `ldd /bin/ls 2>&1 | grep musl` and
+points the home-root compat symlink at the musl variant.
+
+**Historical context (legacy compat path).** Before the dual-build, the single shipped
+glibc binary loaded on Alpine via four properties of its build:
 
 | Property | x64 | arm64 |
 |---|---|---|
@@ -27,15 +37,19 @@ images preserve:
 | libc++/libstdc++ runtime dep | None (static-linked) | None |
 | Lazy binding (RTLD_LAZY) | Yes | Yes |
 
-Alpine's musl libc exposes the `libc.so.6` / `libm.so.6` / `libpthread.so.0` sonames,
-satisfying the ELF loader, and provides native equivalents of all referenced glibc symbols
-at those ancient version levels. `RaiseException` is a CoreCLR PAL export resolved from
-the already-loaded `libcoreclr.so`. The three `ldd`-reported misses (`strtoll_l`,
-`strtoull_l`) are lazy-binding holes that the profiler's normal code paths never reach.
+Alpine's musl exposes the `libc.so.6` / `libm.so.6` / `libpthread.so.0` sonames,
+satisfying the ELF loader, and provides native equivalents of those ancient glibc
+symbols. `RaiseException` is a CoreCLR PAL export resolved from `libcoreclr.so`. The
+`ldd`-reported lazy-binding holes (`strtoll_l`, `strtoull_l`) were not hit by the
+profiler's normal code paths. This was a fragile arrangement that survived through
+luck, not design — any build-image change that raised the max GLIBC_ version, added a
+libc++/libstdc++ `DT_NEEDED`, or changed the `DT_NEEDED` soname set would have broken it.
 
-**Do not break these properties.** Any build-image change that raises the max GLIBC_
-version above 2.17, adds a libc++/libstdc++ `DT_NEEDED`, or changes the `DT_NEEDED`
-soname set will break Alpine. Verify with `readelf -d` and `readelf -V` before merging.
+**The dedicated musl binary supersedes that mechanism.** The four-property invariant
+above no longer governs Alpine compatibility — it governs only the glibc binary's
+floor for old glibc distros. Alpine customers transparently move onto the musl-native
+binary via the compat symlink; no `gcompat` workaround, no lazy-binding luck, no
+`strtoll_l` fragility.
 
 ### Other files
 
@@ -43,9 +57,12 @@ soname set will break Alpine. Verify with `readelf -d` and `readelf -V` before m
 dotnet-sos, lldb). Not used by CI. Still references the old `dotnet/coreclr` clone
 that was removed from the main build in PR #3576; this file has not been updated.
 
-### Planned modernization
+### Planned modernization (Phase 3)
 
-The `Dockerfile` and `Arm64Dockerfile` images are based on old Ubuntu / clang versions
-and have known reliability risks (Ubuntu 14.04 EOL, apt-key deprecation, S3-hosted cmake
-for arm64). The hard constraint on any modernization effort is preserving the four binary
-properties listed above.
+With Alpine compatibility now provided by the dedicated musl binary, the glibc build
+base no longer has to preserve the four-property invariant — it is free to track .NET's
+own portable-build glibc baseline (Ubuntu 18.04 / glibc 2.27 if .NET 10 is the agent's
+minimum supported runtime). Phase 3 of the dual-build effort moves the glibc base
+forward, drops the libc++ static-link, and addresses the Ubuntu 14.04 EOL / apt-key /
+S3-cmake reliability risks. Phase 3 is gated on the agent moving its minimum supported
+runtime past .NET 8.
