@@ -65,6 +65,15 @@ public class AlpineX64ContainerTest : LinuxContainerTest<AlpineX64ContainerTestF
 }
 
 [Trait("Architecture", "arm64")]
+[Trait("Distro", "Alpine")]
+public class AlpineArm64ContainerTest : LinuxContainerTest<AlpineArm64ContainerTestFixture>
+{
+    public AlpineArm64ContainerTest(AlpineArm64ContainerTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+[Trait("Architecture", "arm64")]
 [Trait("Distro", "Ubuntu")]
 public class UbuntuArm64ContainerTest : LinuxContainerTest<UbuntuArm64ContainerTestFixture>
 {

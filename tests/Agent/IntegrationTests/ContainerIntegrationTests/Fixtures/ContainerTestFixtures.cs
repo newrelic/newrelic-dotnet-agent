@@ -48,6 +48,15 @@ public class AlpineX64ContainerTestFixture : ContainerTestFixtureBase
     public AlpineX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 }
 
+public class AlpineArm64ContainerTestFixture : ContainerTestFixtureBase
+{
+    private const string Dockerfile = "SmokeTestApp/Dockerfile";
+    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
+    private const string DistroTag = "alpine";
+
+    public AlpineArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+}
+
 public class UbuntuArm64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
