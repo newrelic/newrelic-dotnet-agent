@@ -353,6 +353,8 @@ jobs:
         build-windows-profiler,
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
+        build-linux-musl-x64-profiler,
+        build-linux-musl-arm64-profiler,
       ]
     if: ${{ inputs.deploy }}
     name: Package and Deploy Profiler NuGet
@@ -389,6 +391,18 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: profiler-arm64
+          path: ${{ github.workspace }}/_workingDir
+
+      - name: Download Linux musl amd64 Profiler Artifacts to working Directory
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: profiler-musl-amd64
+          path: ${{ github.workspace }}/_workingDir
+
+      - name: Download Linux musl arm64 Profiler Artifacts to working Directory
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: profiler-musl-arm64
           path: ${{ github.workspace }}/_workingDir
 
       - name: Determine Package Version from Git history

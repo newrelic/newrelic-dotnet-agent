@@ -18,6 +18,8 @@
     <file src="build\NewRelic.Agent.Internal.Profiler.targets" target="build\NewRelic.Agent.Internal.Profiler.targets" />
     <file src="linux-arm64-release\**" target="content\profiler\linux_arm64" />
     <file src="linux-x64-release\**" target="content\profiler\linux_x64" />
+    <file src="linux-musl-arm64-release\**" target="content\profiler\linux_musl_arm64" />
+    <file src="linux-musl-x64-release\**" target="content\profiler\linux_musl_x64" />
     <file src="x64-release\**" target="content\profiler\x64" />
     <file src="x86-release\**" target="content\profiler\x86" />
     <file src="readme.md" target="docs\readme.md" />

@@ -47,6 +47,7 @@ public abstract class AgentComponents
     public string AgentApiDll;
     public string WindowsProfiler;
     public string LinuxProfiler;
+    public string LinuxMuslProfiler;
     public string ExtensionXsd;
     public string NewRelicXsd;
     public string NewRelicConfig;
@@ -70,6 +71,11 @@ public abstract class AgentComponents
             if (!string.IsNullOrEmpty(LinuxProfiler))
             {
                 list.Add(LinuxProfiler);
+            }
+
+            if (!string.IsNullOrEmpty(LinuxMuslProfiler))
+            {
+                list.Add(LinuxMuslProfiler);
             }
 
             return list;
