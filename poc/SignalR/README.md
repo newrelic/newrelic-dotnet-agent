@@ -25,6 +25,22 @@ agent's `ActivityBridge` (`src/Agent/NewRelic/Agent/Core/OpenTelemetryBridge/Tra
 registers its own `ActivityListener`; subscribing the customer app to OTel is
 not required.
 
+### Why the client uses `[Transaction]`
+
+The bridge only starts a New Relic transaction for activities that are
+`Server`/`Consumer`-kind or have a remote parent. The client-side
+`Microsoft.AspNetCore.SignalR.Client` `InvocationOut` activity is `Client`-kind
+without a parent, so the bridge will only attach it as a *segment* — and only
+when a transaction is already in progress. A console app is not auto-instrumented
+by the agent, so without an explicit transaction boundary nothing anchors the
+activity, no NR trace context bridges onto it, and DT to the server breaks.
+
+The client therefore takes a `PackageReference` on `NewRelic.Agent.Api` and
+decorates each per-invocation method with `[Transaction]`. The agent's profiler wraps those method bodies in a
+"Background" transaction whose trace context is propagated onto the SignalR
+client activity, which in turn injects W3C `traceparent` into the hub
+invocation message headers.
+
 ## Prerequisites
 
 - .NET 10 SDK
@@ -49,10 +65,10 @@ $home_dir = "$((Resolve-Path .).Path)\src\Agent\newrelichome_x64_coreclr"
 $env:CORECLR_ENABLE_PROFILING = "1"
 $env:CORECLR_PROFILER         = "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
 $env:CORECLR_PROFILER_PATH    = "$home_dir\NewRelic.Profiler.dll"
-$env:CORECLR_NEWRELIC_HOME    = "$home_dir"
-$env:NEWRELIC_LICENSE_KEY     = "<staging-key>"
-$env:NEWRELIC_APP_NAME        = "SignalR-POC-Server"
-$env:NEWRELIC_LOG_LEVEL       = "debug"
+$env:CORECLR_NEW_RELIC_HOME    = "$home_dir"
+$env:NEW_RELIC_LICENSE_KEY     = "<staging-key>"
+$env:NEW_RELIC_APP_NAME        = "SignalR-POC-Server"
+$env:NEW_RELIC_LOG_LEVEL       = "debug"
 # Hybrid OTel bridge — required so the SignalR ActivitySource is consumed.
 # Master switch AND per-signal toggles. Tracing wires the ActivityListener;
 # metrics is needed for acceptance criterion 5 (HttpConnections meter).
@@ -72,10 +88,10 @@ $home_dir = "$((Resolve-Path .).Path)\src\Agent\newrelichome_x64_coreclr"
 $env:CORECLR_ENABLE_PROFILING = "1"
 $env:CORECLR_PROFILER         = "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
 $env:CORECLR_PROFILER_PATH    = "$home_dir\NewRelic.Profiler.dll"
-$env:CORECLR_NEWRELIC_HOME    = "$home_dir"
-$env:NEWRELIC_LICENSE_KEY     = "<staging-key>"
-$env:NEWRELIC_APP_NAME        = "SignalR-POC-Client"
-$env:NEWRELIC_LOG_LEVEL       = "debug"
+$env:CORECLR_NEW_RELIC_HOME    = "$home_dir"
+$env:NEW_RELIC_LICENSE_KEY     = "<staging-key>"
+$env:NEW_RELIC_APP_NAME        = "SignalR-POC-Client"
+$env:NEW_RELIC_LOG_LEVEL       = "debug"
 $env:NEW_RELIC_OPENTELEMETRY_ENABLED         = "true"
 $env:NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED  = "true"
 $env:NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED = "true"
@@ -84,6 +100,44 @@ dotnet run --project poc/SignalR/Client/SignalRPocClient.csproj -- http://localh
 ```
 
 The client takes two optional positional args: `<hubUrl> <iterations>`.
+
+### Burst / autocomplete-shape load test
+
+To characterize how the bridge behaves under an autocomplete-shaped workload
+(many short hub invocations from many concurrent connections), the client
+also has a `--burst` mode that drives the `Search(prefix)` hub method:
+
+```powershell
+# --burst <hubUrl> <connections> <durationSec> [keystrokeMs] [searchTerm]
+dotnet run --project poc/SignalR/Client/SignalRPocClient.csproj -- `
+    --burst http://localhost:5050/chathub 50 30 80 alpha
+```
+
+The above opens 50 concurrent `HubConnection`s and "types" the term `alpha`
+one character at a time on each connection (one `Search` invoke every 80 ms),
+for 30 seconds. The client prints throughput and p50/p95/p99 latency at the
+end. Run it three ways and compare:
+
+1. **Baseline** — server started with no agent attached.
+2. **Agent attached, SignalR source on the exclusion list** — set
+   `NEW_RELIC_OPENTELEMETRY_TRACES_EXCLUDE=Microsoft.AspNetCore.SignalR.Server`
+   to confirm the bridge add cost is the dominant overhead and not the agent
+   itself.
+3. **Agent attached, SignalR source bridged** (the POC's default).
+
+Then check NRDB for transaction-name cardinality and volume:
+
+```sql
+FROM Transaction
+SELECT count(*), uniqueCount(name), percentile(duration, 50, 95, 99)
+WHERE appName = 'SignalR-POC-Server'
+FACET name
+SINCE 5 minutes ago
+```
+
+Ideally `uniqueCount(name)` stays at 1 per hub method (no leakage of the
+search prefix into the transaction name), and the transaction count matches
+the client-side invocation count.
 
 ## Acceptance criteria → how to verify
 

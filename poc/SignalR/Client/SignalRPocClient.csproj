@@ -12,6 +12,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
+    <!-- Required so we can decorate hub-invoking methods with [Transaction].
+         Without an active New Relic transaction on the client, the bridge has
+         nothing to anchor the SignalR.Client activity to and DT does not flow. -->
+    <PackageReference Include="NewRelic.Agent.Api" Version="10.51.0" />
   </ItemGroup>
 
 </Project>

@@ -10,9 +10,44 @@ public class ChatHub : Hub
 {
     private readonly ILogger<ChatHub> _logger;
 
+    private static readonly string[] _searchCorpus =
+    [
+        "alpha", "albatross", "alphabet", "alpine",
+        "beacon", "beagle", "beaker", "berserk",
+        "candle", "candy", "canyon", "capable",
+        "delta", "denim", "dental", "destiny",
+        "echo", "edge", "elite", "ember",
+        "fjord", "flame", "flock", "fluent",
+    ];
+
     public ChatHub(ILogger<ChatHub> logger)
     {
         _logger = logger;
+    }
+
+    // Autocomplete-shaped hub method: high-frequency, cheap, small payload.
+    // Used by the burst-mode load test to characterize per-invoke bridge cost
+    // and transaction-name cardinality.
+    public string[] Search(string prefix)
+    {
+        if (string.IsNullOrEmpty(prefix))
+        {
+            return Array.Empty<string>();
+        }
+
+        var matches = new List<string>(8);
+        foreach (var word in _searchCorpus)
+        {
+            if (word.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                matches.Add(word);
+                if (matches.Count == 8)
+                {
+                    break;
+                }
+            }
+        }
+        return matches.ToArray();
     }
 
     // Acceptance criterion 1 + 3: regular invocation, single connected DT.
