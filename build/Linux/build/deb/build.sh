@@ -66,6 +66,20 @@ cp /tmp/${ARCH}/${PACKAGE_NAME}.deb /release/${PACKAGE_NAME}_${ARCH}.deb
 # agentinfo.json for tar.gz
 cp /common/agentinfo.json .
 
+# Pre-bake a default libc-aware compat symlink so that customers who extract
+# the tarball and hardcode CORECLR_PROFILER_PATH=$NRHOME/libNewRelicProfiler.so
+# get a working binary on a glibc host without sourcing setenv.sh. The build
+# host is always glibc, so the default points at the matching glibc binary;
+# setenv.sh refreshes the symlink to the musl variant on Alpine hosts.
+case "$ARCH" in
+    amd64) RID_ARCH=x64 ;;
+    arm64) RID_ARCH=arm64 ;;
+    *)     RID_ARCH="" ;;
+esac
+if [ -n "$RID_ARCH" ] && [ -f "linux-${RID_ARCH}/libNewRelicProfiler.so" ]; then
+    ln -sf "linux-${RID_ARCH}/libNewRelicProfiler.so" libNewRelicProfiler.so
+fi
+
 # create tar.gz archive
 cd ..
 

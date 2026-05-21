@@ -88,6 +88,26 @@ fi
 rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.Instrumentation.xml 2> /dev/null
 rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.dll 2> /dev/null
 
+# libc-aware compat symlink at the home root for hardcoded CORECLR_PROFILER_PATH
+case "$(uname -m)" in
+    x86_64)  __nr_arch=x64 ;;
+    aarch64) __nr_arch=arm64 ;;
+    *)       __nr_arch="" ;;
+esac
+if ldd /bin/ls 2>/dev/null | grep -q musl; then
+    __nr_libc=musl-
+else
+    __nr_libc=
+fi
+if [ -n "$__nr_arch" ]; then
+    __nr_target="linux-${__nr_libc}${__nr_arch}/libNewRelicProfiler.so"
+    if [ -f "$NEWRELIC_HOME/$__nr_target" ]; then
+        ln -sf "$__nr_target" "$NEWRELIC_HOME/libNewRelicProfiler.so"
+    fi
+    unset __nr_target
+fi
+unset __nr_arch __nr_libc
+
 echo "export CORECLR_NEWRELIC_HOME=${NEWRELIC_HOME}" > /etc/profile.d/%{name}-path.sh
 source /etc/profile.d/%{name}-path.sh
 
