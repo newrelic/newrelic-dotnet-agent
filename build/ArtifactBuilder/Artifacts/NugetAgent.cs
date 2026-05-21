@@ -53,8 +53,12 @@ public class NugetAgent : Artifact
 
         _coreAgentComponents.CopyComponents($@"{package.GetContentFilesDirectory("any", "netstandard2.0")}\newrelic");
         FileHelpers.CopyFile(_coreAgentX86Components.WindowsProfiler, $@"{package.GetContentFilesDirectory("any", "netstandard2.0")}\newrelic\x86");
-        package.CopyToContentFiles(_coreAgentComponents.LinuxProfiler, @"any\netstandard2.0\newrelic");
+        package.CopyToContentFiles(_coreAgentComponents.LinuxProfiler, @"any\netstandard2.0\newrelic\linux-x64");
+        package.CopyToContentFiles(_coreAgentComponents.LinuxMuslProfiler, @"any\netstandard2.0\newrelic\linux-musl-x64");
         package.CopyToContentFiles(_coreAgentArm64Components.LinuxProfiler, @"any\netstandard2.0\newrelic\linux-arm64");
+        package.CopyToContentFiles(_coreAgentArm64Components.LinuxMuslProfiler, @"any\netstandard2.0\newrelic\linux-musl-arm64");
+        // Compat copy at flat path for hardcoded CORECLR_PROFILER_PATH consumers.
+        package.CopyToContentFiles(_coreAgentComponents.LinuxProfiler, @"any\netstandard2.0\newrelic");
         Directory.CreateDirectory($@"{StagingDirectory}\contentFiles\any\netstandard2.0\newrelic\logs");
         File.Create($@"{StagingDirectory}\contentFiles\any\netstandard2.0\newrelic\logs\placeholder").Dispose();
 
@@ -167,7 +171,10 @@ public class NugetAgent : Artifact
     {
         AddFullAgentComponents(expectedComponents, folder, _coreAgentComponents);
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(folder, "x86"), _coreAgentX86Components.WindowsProfiler);
+        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(folder, "linux-x64"), _coreAgentComponents.LinuxProfiler);
+        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(folder, "linux-musl-x64"), _coreAgentComponents.LinuxMuslProfiler);
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(folder, "linux-arm64"), _coreAgentArm64Components.LinuxProfiler);
+        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, Path.Combine(folder, "linux-musl-arm64"), _coreAgentArm64Components.LinuxMuslProfiler);
     }
 
     private static void AddFullAgentComponents(SortedSet<string> expectedComponents, string rootFolder, AgentComponents agentComponents)
