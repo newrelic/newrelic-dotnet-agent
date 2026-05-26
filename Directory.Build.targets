@@ -1,3 +1,4 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)\build\Versioning.targets" Condition="Exists('$(MSBuildThisFileDirectory)\build\Versioning.targets')" />
+  <Import Project="$(MSBuildThisFileDirectory)\build\FleetControlSchema.targets" Condition="Exists('$(MSBuildThisFileDirectory)\build\FleetControlSchema.targets')" />
 </Project>

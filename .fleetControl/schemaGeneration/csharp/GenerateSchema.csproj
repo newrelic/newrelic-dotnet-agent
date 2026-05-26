@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>NewRelic.FleetControl.Schema</RootNamespace>
+    <AssemblyName>GenerateSchema</AssemblyName>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Self-validate the generated schema against the JSON Schema 2020-12
+         meta-schema before writing. -->
+    <PackageReference Include="JsonSchema.Net" Version="7.3.0" />
+    <!-- Round-trip configurationDefinitions.yml for the version bump,
+         preserving comments and key order. -->
+    <PackageReference Include="YamlDotNet" Version="16.2.1" />
+  </ItemGroup>
+
+</Project>
