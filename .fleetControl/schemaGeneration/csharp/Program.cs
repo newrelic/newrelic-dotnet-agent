@@ -320,6 +320,19 @@ static class SchemaGenerator
         ["configuration/service/@sendEnvironmentInfo"]            = "agent diagnostic metadata reporting; not a behavioral toggle",
     };
 
+    // Curated enums for attributes the XSD intentionally types as xs:string
+    // (e.g. log/@level — see the comment in Configuration.xsd above the
+    // attribute: an XSD enumeration would induce case sensitivity at parse
+    // time and break legacy newrelic.config files using "DEBUG" or "Debug").
+    // For Fleet Control's UI we want a real enum (dropdown). We keep the
+    // existing xs:documentation as the property's description so the
+    // case-insensitivity note travels with the schema.
+    static readonly Dictionary<string, string[]> EnumOverrides = new()
+    {
+        ["configuration/log/@level"]               = ["off", "error", "warn", "info", "debug", "finest", "all"],
+        ["configuration/browserMonitoring/@loader"] = ["rum", "full", "none"],
+    };
+
     // XSD primitive type → JSON Schema type
     static readonly Dictionary<string, string> PrimitiveTypeMap = new()
     {
@@ -503,6 +516,7 @@ static class SchemaGenerator
             // Inline simpleType wins over named-type reference
             var prop = InlineSimpleType(attrNode) ??
                        ResolveSimpleType((string?)attrNode.Attribute("type") ?? "xs:string");
+            ApplyEnumOverride(prop, path);
 
             string jsonType = prop["type"]?.GetValue<string>() ?? "string";
             var defaultRaw = (string?)attrNode.Attribute("default");
@@ -631,6 +645,14 @@ static class SchemaGenerator
         {
             // ToJsonString round-trip is the simplest way to deep-clone a JsonNode.
             return (JsonNode.Parse(src.ToJsonString()) as JsonObject)!;
+        }
+
+        static void ApplyEnumOverride(JsonObject prop, string path)
+        {
+            if (!EnumOverrides.TryGetValue(path, out var values)) return;
+            var arr = new JsonArray();
+            foreach (var v in values) arr.Add(v);
+            prop["enum"] = arr;
         }
 
         static string GetDoc(XElement node)

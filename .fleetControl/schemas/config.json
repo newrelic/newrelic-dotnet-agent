@@ -148,6 +148,15 @@
       "properties": {
         "level": {
           "type": "string",
+          "enum": [
+            "off",
+            "error",
+            "warn",
+            "info",
+            "debug",
+            "finest",
+            "all"
+          ],
           "default": "info",
           "description": "Specify the agent's log level here. It may be one of (in any case): off, error, warn, info, debug, finest, all. To enable audit logging, set the auditLog attribute to true; don't set the log level to \"audit\".",
           "x-xml-kind": "attribute"
@@ -1136,6 +1145,11 @@
         },
         "loader": {
           "type": "string",
+          "enum": [
+            "rum",
+            "full",
+            "none"
+          ],
           "default": "rum",
           "description": "This attribute defines the type of Javascript functionality to be injected. By default just RUM instrumentation is injected. Other valid values are \"full\" for Javascript Errors and possibly future features, and \"none\" which means no javascript injection.",
           "x-xml-kind": "attribute"
