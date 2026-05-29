@@ -120,7 +120,7 @@ public class LoadedModuleWireModelCollection
         try
         {
             var location = assembly.Location;
-            if (string.IsNullOrEmpty(location) || !fileWrapper.Exists(location))
+            if (!fileWrapper.Exists(location))
             {
                 sha1FileHash = null;
                 sha512FileHash = null;
@@ -192,33 +192,12 @@ public class LoadedModuleWireModelCollection
         }
     }
 
-    private static bool TryGetCopyright(Assembly assembly, out string copyright)
-    {
-        try
-        {
-            var attributes = assembly.GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true);
-            if (attributes.Length < 1)
-            {
-                copyright = null;
-                return false;
-            }
-
-            copyright = ((AssemblyCopyrightAttribute)attributes[0]).Copyright;
-            return !string.IsNullOrWhiteSpace(copyright);
-        }
-        catch
-        {
-            copyright = null;
-            return false;
-        }
-    }
-
     private static bool TryGetAssemblyFileVersion(Assembly assembly, IFileWrapper fileWrapper, out string version)
     {
         try
         {
             var location = assembly.Location;
-            if (string.IsNullOrEmpty(location) || !fileWrapper.Exists(location))
+            if (!fileWrapper.Exists(location))
             {
                 version = null;
                 return false;

@@ -301,6 +301,71 @@ public class LoadedModuleWireModelCollectionTests
             Assert.That(loadedModule.Data.ContainsKey("publicKeyToken"), Is.False);
         });
     }
+
+    [Test]
+    public void FileDoesNotExist_Sha1_Sha512_FileVersion()
+    {
+        var fileWrapper = Mock.Create<IFileWrapper>();
+        Mock.Arrange(() => fileWrapper.Exists(Arg.IsAny<string>())).Returns(false);
+
+        var assemblies = new List<Assembly>();
+        assemblies.Add(_baseTestAssembly);
+
+        var loadedModules = LoadedModuleWireModelCollection.Build(assemblies, fileWrapper);
+
+        Assert.That(loadedModules.LoadedModules, Has.Count.EqualTo(1));
+
+        var loadedModule = loadedModules.LoadedModules[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
+            Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
+            Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyNamespace));
+            Assert.That(loadedModule.Data["assemblyHashCode"], Is.EqualTo(BaseHashCode.ToString()));
+            Assert.That(loadedModule.Data["publicKeyToken"], Is.EqualTo(BasePublicKey));
+            Assert.That(loadedModule.Data["Implementation-Vendor"], Is.EqualTo(BaseCompanyName));
+            Assert.That(loadedModule.Data.ContainsKey("sha1Checksum"), Is.False);
+            Assert.That(loadedModule.Data.ContainsKey("sha512Checksum"), Is.False);
+            Assert.That(loadedModule.Data.ContainsKey("fileVersion"), Is.False);
+        });
+    }
+
+    [Test]
+    public void ErrorsHandled_Sha1_Sha512_FileVersion()
+    {
+        var fileStream = Mock.Create<FileStream>();
+        Mock.Arrange(() => fileStream.Length).Returns(1024);
+        Mock.Arrange(() => fileStream.Read(Arg.IsAny<byte[]>(), Arg.IsAny<int>(), Arg.IsAny<int>())).Returns(1024).InSequence(); // send some bytes
+        Mock.Arrange(() => fileStream.Read(Arg.IsAny<byte[]>(), Arg.IsAny<int>(), Arg.IsAny<int>())).Returns(0).InSequence(); // FileStream.Read returns 0 when the end of the stream is reached.
+        var fileWrapper = Mock.Create<IFileWrapper>();
+        Mock.Arrange(() => fileWrapper.Exists(Arg.IsAny<string>())).Returns(false);
+        Mock.Arrange(() => fileWrapper.Open(Arg.IsAny<string>(), Arg.IsAny<FileMode>(), Arg.IsAny<FileAccess>(), Arg.IsAny<FileShare>()))
+            .Throws(new Exception());
+        Mock.Arrange(() => fileWrapper.GetFileVersion(Arg.IsAny<string>())).Throws(new Exception());
+
+        var assemblies = new List<Assembly>();
+        assemblies.Add(_baseTestAssembly);
+
+        var loadedModules = LoadedModuleWireModelCollection.Build(assemblies, fileWrapper);
+
+        Assert.That(loadedModules.LoadedModules, Has.Count.EqualTo(1));
+
+        var loadedModule = loadedModules.LoadedModules[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(loadedModule.AssemblyName, Is.EqualTo(BaseAssemblyName));
+            Assert.That(loadedModule.Version, Is.EqualTo(BaseAssemblyVersion));
+            Assert.That(loadedModule.Data["namespace"], Is.EqualTo(BaseAssemblyNamespace));
+            Assert.That(loadedModule.Data["assemblyHashCode"], Is.EqualTo(BaseHashCode.ToString()));
+            Assert.That(loadedModule.Data["publicKeyToken"], Is.EqualTo(BasePublicKey));
+            Assert.That(loadedModule.Data["Implementation-Vendor"], Is.EqualTo(BaseCompanyName));
+            Assert.That(loadedModule.Data.ContainsKey("sha1Checksum"), Is.False);
+            Assert.That(loadedModule.Data.ContainsKey("sha512Checksum"), Is.False);
+            Assert.That(loadedModule.Data.ContainsKey("fileVersion"), Is.False);
+        });
+    }
 }
 
 public class TestAssembly : Assembly
