@@ -27,6 +27,12 @@ jobs:
           egress-policy: audit # Leave it audit mode
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Chrome for linkspector
+        run: |
+          npx puppeteer browsers install chrome@148.0.7778.215
+        shell: bash
+        
       
       - name: Run linkspector
         uses: umbrelladocs/action-linkspector@963b6264d7de32c904942a70b488d3407453049e # v1.5.1
