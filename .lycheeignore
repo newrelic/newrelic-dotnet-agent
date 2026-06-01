@@ -1,0 +1,3 @@
+^http://example\.net
+^http://localhost
+^https://github\.com/newrelic/php-agent-testing/tree/main/soak-tests
