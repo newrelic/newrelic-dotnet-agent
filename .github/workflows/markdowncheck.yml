@@ -30,7 +30,7 @@ jobs:
 
       - name: Install Chrome for linkspector
         run: |
-          npx puppeteer browsers install chrome@148.0.7778.215
+          npx puppeteer browsers install chrome@148.0.7778.97
         shell: bash
         
       
