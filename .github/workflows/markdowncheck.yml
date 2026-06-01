@@ -28,6 +28,7 @@ jobs:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      # Note that the specified exact version of Chrome is required by the version of linkspector being used, and may need to be updated if the linkspector version is updated.
       - name: Install Chrome for linkspector
         run: |
           npx puppeteer browsers install chrome@148.0.7778.97
