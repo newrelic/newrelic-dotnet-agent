@@ -12,7 +12,8 @@
       "Bash(tail *)",
       "Bash(find *)",
       "Bash(echo *)",
-      "Bash(pwd)"
+      "Bash(pwd)",
+      "Bash(xsd2code *)"
     ],
     "deny": [
       "Bash(rm -rf *)",

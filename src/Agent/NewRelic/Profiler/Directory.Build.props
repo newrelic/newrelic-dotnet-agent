@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Shared MSBuild properties for the native profiler solution.
+
+  NativeToolset defaults to v145 (VS 2025 / windows-2025-vs2026 CI runner).
+  To build with a different toolset without editing project files, pass
+  /p:NativeToolset=vNNN on the MSBuild command line or set the property
+  in a CI workflow before invoking MSBuild.
+-->
+<Project>
+  <PropertyGroup>
+    <NativeToolset Condition="'$(NativeToolset)'==''">v145</NativeToolset>
+  </PropertyGroup>
+</Project>

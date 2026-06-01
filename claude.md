@@ -1,328 +1,208 @@
-# New Relic .NET Agent Repository Guide
+# New Relic .NET Agent
 
-This repository contains the New Relic .NET Agent, an Application Performance Monitoring (APM) solution for .NET applications.
+Profiler-based APM agent for .NET Framework and .NET Core on Windows and Linux.
+A native C++ profiler injects IL into JIT-compiled methods; the managed agent
+core collects telemetry and ships it to the collector.
 
-## Repository Overview
+Sub-docs (read when working in that area):
+- [src/claude-source.md](src/claude-source.md) — agent/profiler/extensions internals
+- [build/claude-build.md](build/claude-build.md) — build, packaging, release
+- [tests/claude-tests.md](tests/claude-tests.md) — unit + integration test layout
 
-The New Relic .NET Agent is a profiler-based instrumentation agent that monitors .NET applications and reports performance data to New Relic. It supports both .NET Framework and .NET Core/.NET applications on Windows and Linux.
+## Solutions
 
-### Key Components
+- **FullAgent.sln** (repo root) — primary. Builds managed code; emits
+  platform-specific `src/Agent/newrelichome_*` directories. Use for almost
+  all work.
+- **Profiler.sln** (`src/Agent/NewRelic/Profiler/`) — native C++ profiler.
+  Only needed when changing the profiler itself; otherwise consumed via NuGet.
+- **IntegrationTests.sln** (`tests/Agent/IntegrationTests/`) — host-run
+  end-to-end tests against real test applications. Requires a built
+  FullAgent.sln (agent home directories must exist).
+- **UnboundedIntegrationTests.sln** (`tests/Agent/IntegrationTests/`) —
+  integration tests that require external infrastructure (databases,
+  brokers, etc.). Start services first via
+  `tests/Agent/IntegrationTests/UnboundedServices` docker compose.
+- **ContainerIntegrationTests.sln** (`tests/Agent/IntegrationTests/`) —
+  tests that run instrumented apps inside Docker containers; primary
+  coverage for the Linux agent and container-specific scenarios. Needs
+  Docker Desktop.
 
-1. **Profiler**: Native C++ component that uses the .NET Profiling API to inject instrumentation bytecode
-2. **Agent Core**: Managed C# code that collects telemetry, manages configuration, and communicates with New Relic
-3. **Extensions**: Framework-specific wrappers that instrument popular libraries and frameworks
-4. **Public API**: User-facing API for custom instrumentation
+## Agent home directories
 
-## Repository Structure
+Building `FullAgent.sln` creates/updates these directories under `src/Agent/`.
+Integration, unbounded, and container tests all read from them — so before
+running any of those test solutions, (re)build `FullAgent.sln` first so the
+test runs pick up your latest changes.
 
+| Framework | OS    | Arch  | Directory                         |
+|-----------|-------|-------|-----------------------------------|
+| .NET FW   | Win   | x64   | `newrelichome_x64`                |
+| .NET FW   | Win   | x86   | `newrelichome_x86`                |
+| .NET Core | Win   | x64   | `newrelichome_x64_coreclr`        |
+| .NET Core | Win   | x86   | `newrelichome_x86_coreclr`        |
+| .NET Core | Linux | x64   | `newrelichome_x64_coreclr_linux`  |
+| .NET Core | Linux | arm64 | `newrelichome_arm64_coreclr_linux`|
+
+## Attaching the agent locally
+
+.NET Framework:
 ```
-newrelic-dotnet-agent/
-├── src/               # Source code (@src/claude-source.md)
-├── build/             # Build tools and packaging (@build/claude-build.md)
-├── tests/             # Tests and test infrastructure (@tests/claude-tests.md)
-├── docs/              # Documentation
-├── deploy/            # Deployment configurations
-└── .github/           # GitHub workflows and CI/CD
-```
-
-### Detailed Documentation
-
-For comprehensive information about each area, see:
-- [Agent implementation details](src/claude-source.md)
-- [Build tools, packaging, and release process](build/claude-build.md)
-- [Unit and integration test structure](tests/claude-tests.md)
-
-## Quick Start for Development
-
-### Requirements
-
-- Visual Studio 2022 with:
-  - .NET desktop development workload
-  - Desktop development with C++ workload
-  - C++ ATL for v142 build tools (x86 & x64)
-- Optional: Docker Desktop for Linux builds and containerized tests
-
-### Building
-
-The agent consists of two main solutions:
-
-1. **FullAgent.sln** (Primary): Builds all managed code and creates platform-specific agent home directories
-   - Located at repository root
-   - Outputs to `src/Agent/newrelichome_*` directories
-   - Build this solution for most development work
-
-2. **Profiler.sln** (Advanced): Builds the native profiler component
-   - Located at `src/Agent/NewRelic/Profiler/`
-   - Only needed when modifying profiler code
-   - Available as NuGet package for normal development
-
-### Agent Home Directories
-
-Building FullAgent.sln creates these deployment directories:
-
-| Framework      | OS      | Arch  | Output Directory                           |
-|----------------|---------|-------|--------------------------------------------|
-| .NET Framework | Windows | x64   | src/Agent/newrelichome_x64                 |
-| .NET Framework | Windows | x86   | src/Agent/newrelichome_x86                 |
-| .NET Core      | Windows | x64   | src/Agent/newrelichome_x64_coreclr         |
-| .NET Core      | Windows | x86   | src/Agent/newrelichome_x86_coreclr         |
-| .NET Core      | Linux   | x64   | src/Agent/newrelichome_x64_coreclr_linux   |
-| .NET Core      | Linux   | arm64 | src/Agent/newrelichome_arm64_coreclr_linux |
-
-### Testing Locally
-
-Configure these environment variables to attach the agent to a process:
-
-**For .NET Framework:**
-```bash
-NEWRELIC_LICENSE_KEY=<your license key>
-NEWRELIC_HOME=path\to\home\directory
 COR_ENABLE_PROFILING=1
 COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}
-COR_PROFILER_PATH=path\to\home\directory\NewRelic.Profiler.dll
+COR_PROFILER_PATH=<home>\NewRelic.Profiler.dll
+NEWRELIC_HOME=<home>
+NEWRELIC_LICENSE_KEY=...
 ```
 
-**For .NET Core/.NET:**
-```bash
-NEWRELIC_LICENSE_KEY=<your license key>
-CORECLR_NEWRELIC_HOME=path\to\home\directory
+.NET Core/.NET:
+```
 CORECLR_ENABLE_PROFILING=1
 CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}
-CORECLR_PROFILER_PATH=path\to\home\directory\NewRelic.Profiler.dll
+CORECLR_PROFILER_PATH=<home>\NewRelic.Profiler.dll
+CORECLR_NEWRELIC_HOME=<home>
+NEWRELIC_LICENSE_KEY=...
 ```
 
-## How the Agent Works
+Debug logs: `NEWRELIC_LOG_LEVEL=debug` → `<home>/logs/`. Profiler load
+failures surface in the Windows Event Viewer.
 
-### Profiler Attachment Process
+## How instrumentation works (short version)
 
-1. CLR checks `COR_ENABLE_PROFILING` / `CORECLR_ENABLE_PROFILING` environment variable
-2. Loads profiler DLL from `COR_PROFILER_PATH` / `CORECLR_PROFILER_PATH`
-3. Profiler subscribes to JIT compilation events
-4. When methods are JIT compiled, profiler modifies bytecode to inject instrumentation
-5. Injected bytecode calls into agent core to create tracers and record telemetry
+1. CLR loads the profiler via `*_PROFILER_PATH`.
+2. Profiler subscribes to JIT events and consults XML extension files under
+   `src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/*` to decide which
+   methods to rewrite.
+3. Target methods get wrapped in try/catch/finally IL that calls
+   `AgentShim.GetFinishTracerDelegate()` to start/finish a tracer.
+4. Tracers record timing, errors, and segment data into the current
+   transaction.
 
-### Instrumentation Model
+**Runtime extension layout:** at runtime, instrumentation XML and wrapper
+DLLs live in `<agent-home>/extensions/` (and `extensions/netcore/` for
+the .NET Core wrappers). The agent watches this directory and picks up
+new or modified XML without a process restart — if new instrumentation
+isn't taking effect, verify the files are actually present there.
 
-The profiler wraps instrumented methods with try-catch-finally blocks that:
-1. Call `AgentShim.GetFinishTracerDelegate()` to start timing
-2. Execute the original method body
-3. Handle exceptions and record errors
-4. Finish the tracer with result/exception information
+### instrumentation.xml version ranges
 
-### Extension System
-
-The agent uses an XML-based extension system to define instrumentation points:
-- Extension files in `extensions/` directory define which methods to instrument
-- Profiler reads extensions and identifies target methods during JIT compilation
-- Agent can refresh instrumentation at runtime when extensions change
-
-## Key Architecture Concepts
-
-### Transactions
-A transaction represents a single unit of work (e.g., web request, background job). Transactions:
-- Track timing and performance metrics
-- Contain segments representing nested operations
-- Generate transaction traces when slow
-- Create transaction events for analytics
-
-### Segments
-Segments represent individual operations within a transaction:
-- External HTTP calls
-- Database queries
-- Custom instrumentation
-- Framework operations
-
-### Spans
-Distributed tracing spans provide detailed timing information:
-- Created for transactions and segments
-- Linked across services via trace context
-- Sent to New Relic for distributed tracing visualization
-
-### Metrics
-Aggregated performance measurements collected over time:
-- Transaction metrics (throughput, response time, error rate)
-- External call metrics
-- Database metrics
-- Custom metrics
+`maxVersion` is **exclusive** (strictly less than). To cover all versions up
+to but not including 9.7.0, write `maxVersion="9.7.0"` — not `"9.6.9999"`.
 
 ## Configuration
 
-Agent configuration sources (in priority order):
-1. Environment variables (highest priority)
-2. `newrelic.config` XML file
-3. Server-side configuration from New Relic
-4. Default values
+Precedence: env vars > `newrelic.config` > server-side config > defaults.
 
-Key configuration locations:
-- [src/Agent/NewRelic/Agent/Core/Configuration](src/Agent/NewRelic/Agent/Core/Configuration) - Configuration models
-- [src/Agent/NewRelic/Agent/Core/Config](src/Agent/NewRelic/Agent/Core/Config) - Configuration loading
+- Models: `src/Agent/NewRelic/Agent/Core/Configuration/`
+- Loader: `src/Agent/NewRelic/Agent/Core/Config/`
 
-## Important Files and Locations
+**Editing `Configuration.xsd`** requires regenerating `Configuration.cs`
+via `xsd2code` and restoring the license header — never hand-edit the
+generated file. Exact command and caveats in
+[src/claude-source.md](src/claude-source.md) under Configuration.
 
-- [FullAgent.sln](FullAgent.sln) - Main solution file
-- [src/Agent/CHANGELOG.md](src/Agent/CHANGELOG.md) - Release notes
-- [docs/development.md](docs/development.md) - Development guide
-- [docs/integration-tests.md](docs/integration-tests.md) - Integration test documentation
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
+## Building and testing from the CLI
 
-## Common Development Tasks
+Full build: open `FullAgent.sln` in the latest Visual Studio or run its
+MSBuild equivalent.
 
-### Adding New Instrumentation
+**Core.UnitTest** (and any project depending on `Core.csproj`) fails from
+the CLI with `AssemblyModifier.exe` / `*Undefined*` errors unless
+`SolutionDir` is passed explicitly — VS sets it, plain `dotnet` does not:
 
-1. Create or modify extension XML in `src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/<Framework>/`
-2. Implement wrapper classes that create tracers
-3. Add integration tests in `tests/Agent/IntegrationTests/`
-4. Update documentation
+Run from the repo root so `$PWD` resolves correctly; the trailing backslash
+on `SolutionDir` is required by MSBuild:
 
-### Debugging the Agent
-
-1. Set `NEWRELIC_LOG_LEVEL=debug` environment variable
-2. Check logs in agent home directory's `logs/` folder
-3. Use Visual Studio debugger attached to instrumented process
-4. For profiler issues, check Windows Event Viewer
-
-### Running Tests
-
-- **Unit Tests**: Use Visual Studio Test Explorer
-- **Integration Tests**: See @tests/claude-tests.md
-- Some integration tests require infrastructure (databases, message queues)
-
-## Common Code Patterns
-
-### Creating Transactions
-
-Transactions are typically created by framework instrumentation:
-- ASP.NET/ASP.NET Core wrappers create web transactions
-- Background frameworks create non-web transactions
-- Custom transactions via public API
-
-### Creating Segments
-
-Segments are created within transactions:
-1. Wrapper creates a tracer via the instrumentation wrapper interface
-2. Tracer records timing and metadata
-3. Tracer is finished when operation completes
-
-### Recording Custom Data
-
-Use the public API in `src/Agent/NewRelic.Api.Agent/`:
-- `IAgent.CurrentTransaction` - Access current transaction
-- `ITransaction.AddCustomAttribute()` - Add custom attributes
-- `NewRelic.Api.Agent.NewRelic.*` - Static helper methods
-
-## Coding Standards
-
-The .NET agent team follows coding standards that should be adhered to when generating or modifying code. These are best practices and encouraged guidelines rather than absolute requirements.
-
-### C# / Managed Agent
-
-**Indentation:**
-- Use spaces for indentation (Visual Studio default)
-- Follow Visual Studio default settings for number of spaces per indentation level
-
-**Naming Conventions:**
-- **Types**: Use type aliases (`int`, `string`) over BCL types (`Int32`, `String`)
-- **Private fields**: `_camelCase` with underscore prefix
-- **Public fields**: `PascalCase`
-- **Local variables**: `camelCase`, use `var` when possible
-- **Classes**: `PascalCase`, singular (plural for collections)
-- **Interfaces**: `PascalCase` with `I` prefix (e.g., `IAttributeFilter`)
-- **Methods**: `PascalCase`, descriptive action names
-- **Method parameters**: `camelCase`, named after their type
-
-**Class Structure (in order):**
-1. Fields (const, static readonly, readonly, static, private, public)
-2. Properties
-3. Constructors
-4. Methods
-5. Events
-
-**Code Organization:**
-- Fields declared and initialized at top of class
-- All declarations must have explicit access modifiers
-- Avoid multiple optional boolean parameters (use named parameters or overloads)
-- Line breaks between all code blocks
-
-**Example:**
-```csharp
-public class TransactionProcessor
-{
-	// Fields first
-	private const int MaxRetries = 3;
-	private readonly ILogger _logger;
-	private static int _instanceCount = 0;
-
-	// Properties second
-	public int TransactionCount { get; private set; }
-
-	// Constructor third
-	public TransactionProcessor(ILogger logger)
-	{
-		_logger = logger;
-		_instanceCount++;
-	}
-
-	// Methods fourth
-	public void ProcessTransaction(string transactionName)
-	{
-		var transaction = CreateTransaction(transactionName);
-		// ...
-	}
-}
+```powershell
+$sln = "$((Resolve-Path .).Path)\"
+dotnet build tests/Agent/UnitTests/Core.UnitTest/Core.UnitTest.csproj `
+  -f net10.0 -p:SolutionDir="$sln"
+dotnet test  tests/Agent/UnitTests/Core.UnitTest/Core.UnitTest.csproj `
+  -f net10.0 -p:SolutionDir="$sln" `
+  --filter "FullyQualifiedName~SomeTest"
 ```
 
-### C++ / Profiler
+Root cause: `Core.csproj` has a post-build ILRepack + AssemblyModifier step
+that references `$(SolutionDir)`.
 
-- Follow [WebKit C++ style guide](https://webkit.org/code-style-guidelines/)
-- Use compact namespaces: `namespace NewRelic::Profiler::Logger { ... }`
-- Formatting defined in `.clang-format` at solution root
-- ReSharper settings in `NewRelic.Profiler.sln.DotSettings`
+**Extensions tests** (`NewRelic.Agent.Extensions.Tests`) build fine with
+plain `dotnet build`, but `dotnet test` against the `.csproj` silently fails
+via VSTestTask. Run against the built DLL instead:
 
-### General Practices
+```
+dotnet test tests/Agent/UnitTests/NewRelic.Agent.Extensions.Tests/bin/Debug/net10.0/NewRelic.Agent.Extensions.Tests.dll `
+  --filter "FullyQualifiedName~SomeTest"
+```
 
-**Testing:**
-- Unit tests required for all new code
-- Near 100% code coverage for shared libraries
-- Test all behavior including exceptions
+**Unbounded integration tests** need infrastructure containers first:
 
-**Documentation:**
-- XML documentation on public APIs
-- Clear, descriptive naming to reduce need for comments
-- Comment only when logic isn't self-evident
+```
+cd tests/Agent/IntegrationTests/UnboundedServices
+docker compose up -d
+```
 
-**Code Quality:**
-- Minimal public surface area
-- Prefer dependency injection for services
-- Prefer records for immutable data
-- Use file-scoped namespaces (recent standard)
+## Testing conventions
 
-**Important:** When Claude generates or modifies code, these standards should be followed to maintain consistency with the existing codebase.
+- Unit tests: `tests/Agent/UnitTests/` (NUnit primary, xUnit used in some
+  places). Mocking is **JustMock Lite** (free tier) — interfaces and virtual
+  members only. No sealed / static / non-virtual mocking. Design new code
+  with interfaces and virtual methods so it can be mocked.
+- **Wrapper projects** under `src/.../Extensions/Providers/Wrapper/*` have
+  **no unit tests and should not** — they are covered by the Integration
+  and Unbounded test solutions only. The `NewRelic.Agent.Extensions` project
+  (shared helpers like `SqsHelper`) is the only Extensions-side code that
+  is unit tested. When adding non-trivial logic to a wrapper — parsing,
+  URI/version handling, header manipulation, data-shape transforms — lift
+  it into a helper in `NewRelic.Agent.Extensions` and call it from the
+  wrapper. That keeps the interesting logic unit-testable while the
+  wrapper itself stays thin (match, create segment, delegate, finish).
+- Integration tests: `tests/Agent/IntegrationTests/` — see
+  [tests/claude-tests.md](tests/claude-tests.md).
+- **Never use `InternalsVisibleTo`** in any production or test assembly.
+  If a test needs to reach non-public code, refactor the production type to
+  expose what's needed through a proper surface (interface, public helper,
+  or a dedicated testable seam) rather than piercing encapsulation.
 
-## Development Workflow
+## Coding standards (repo-specific bits)
 
-1. Create feature branch from `main`
-2. Make changes and add tests
-3. Run unit tests locally
-4. Build FullAgent.sln successfully
-5. Test locally with sample application
-6. Submit pull request
-7. CI runs all tests and checks
-8. Review and merge
+### C#
 
-## Release Process
+- Type aliases (`int`, `string`) — not `Int32` / `String`.
+- Private fields `_camelCase`; public fields / properties / methods
+  `PascalCase`; interfaces `I`-prefixed; locals `camelCase` with `var`.
+- Class member order: fields → properties → ctors → methods → events.
+  Fields grouped: const, static readonly, readonly, static, private, public.
+- Explicit access modifiers on every declaration.
+- Avoid multiple optional `bool` parameters — use overloads or named args.
+- **File-scoped namespaces are required.** Block-scoped namespaces are
+  configured as a **build error** — new and modified files must use
+  `namespace Foo.Bar;` form.
+- **Unused `using` directives fail the build.** Remove them before
+  compiling; don't leave speculative imports in place.
 
-Releases are managed via release-please:
-- Conventional commits drive version bumping
-- Release notes auto-generated from commits
-- See [release-please](release-please/) directory
+### Wrapper projects: prefer `VisibilityBypasser`
 
-## Getting Help
+In `src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/*`, reach for
+`VisibilityBypasser` before `MethodInfo.Invoke`, `GetMethods`, or the
+`dynamic` keyword. It generates IL-compiled delegates via `DynamicMethod`,
+avoiding boxing / `object[]` allocation / DLR overhead on hot paths.
 
-- **Documentation**: [docs.newrelic.com](https://docs.newrelic.com/docs/agents/net-agent/)
-- **Community**: [New Relic Community Forum](https://forum.newrelic.com/)
-- **Issues**: GitHub Issues in this repository
-- **Development Questions**: Check existing documentation in `docs/`
+Cache generated delegates per instrumented type (e.g., a
+`ConcurrentDictionary<Type, Func<...>>`) so IL generation happens once per
+type. Useful overloads:
 
-## License
+- `GeneratePropertyAccessor<TResult>(ownerType, propertyName)`
+- `GenerateParameterlessMethodCaller<TResult>(...)`
+- `GenerateOneParameterMethodCaller<TParam, TResult>(assemblyName, typeName, methodName)`
 
-Apache 2.0 - See [LICENSE](LICENSE)
+When the owner type is only known at runtime, use
+`t.Assembly.GetName().Name` and `t.FullName`; wrap the cache factory in
+`try/catch` for missing members. `dynamic` / `MethodInfo.Invoke` are fine
+only when no suitable overload exists *and* the call is not on a hot path.
+
+### C++ (profiler)
+
+- WebKit C++ style guide.
+- Compact namespaces: `namespace NewRelic::Profiler::Logger { ... }`.
+- `.clang-format` at the profiler solution root is authoritative.
+

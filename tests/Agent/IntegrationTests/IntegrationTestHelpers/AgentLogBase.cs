@@ -105,36 +105,26 @@ public abstract class AgentLogBase
 
     public string GetAccountId()
     {
-        var reportingAppLink = GetReportingAppLink();
-        var reportingAppUri = new Uri(reportingAppLink);
-        var accountId = reportingAppUri.Segments[2];
-        if (accountId == null)
-            throw new Exception("Could not find account ID in second segment of reporting app link: " + reportingAppLink);
-        return accountId.TrimEnd('/');
+        var connectResponse = GetConnectResponseData();
+        if (connectResponse?.AccountId == null)
+            throw new Exception("Could not find account_id in connect response.");
+        return connectResponse.AccountId;
     }
 
     public string GetApplicationId()
     {
-        var reportingAppLink = GetReportingAppLink();
-        var reportingAppUri = new Uri(reportingAppLink);
-        var applicationId = reportingAppUri.Segments[4];
-        if (applicationId == null)
-            throw new Exception("Could not find application ID in second segment of reporting app link: " + reportingAppLink);
-        return applicationId.TrimEnd('/');
+        var connectResponse = GetConnectResponseData();
+        if (connectResponse?.ApplicationId == null)
+            throw new Exception("Could not find application_id in connect response.");
+        return connectResponse.ApplicationId;
     }
 
     public string GetCrossProcessId()
     {
-        return $@"{GetAccountId()}#{GetApplicationId()}";
-    }
-
-    private string GetReportingAppLink()
-    {
-        var match = TryGetLogLine(AgentReportingToLogLineRegex);
-        if (!match.Success || match.Groups.Count < 2)
-            throw new Exception("Could not find reporting app link in log file.");
-
-        return match.Groups[1].Value;
+        var connectResponse = GetConnectResponseData();
+        if (connectResponse?.CrossProcessId == null)
+            throw new Exception("Could not find cross_process_id in connect response.");
+        return connectResponse.CrossProcessId;
     }
 
     public void WaitForConnect(TimeSpan? timeoutOrZero = null)

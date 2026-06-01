@@ -22,6 +22,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
@@ -43,7 +44,7 @@ jobs:
 
   build-windows-profiler:
     name: Build Windows Profiler & Run Unit Tests / Code Coverage
-    runs-on: windows-2022
+    runs-on: windows-2025-vs2026
     needs: check-modified-files
     # only run this job if source files were modified, or if triggered by a manual execution
     if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -81,18 +82,35 @@ jobs:
           Write-Host "List NuGet Sources"
           dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
           Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
+          MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release -p:NativeToolset=v145 ${{ env.profiler_solution_path }}
         shell: powershell
 
       - name: Build x86
         run: |
           Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
+          MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release -p:NativeToolset=v145 ${{ env.profiler_solution_path }}
         shell: powershell
         
       - name: Setup VSTest and add to PATH
-        uses: darenm/Setup-VSTest@3a16d909a1f3bbc65b52f8270d475d905e7d3e44 # 1.3
-        id: setup_vstest
+        shell: powershell
+        run: |
+          $vswhere = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (-not (Test-Path $vswhere)) {
+            Write-Error "vswhere.exe not found at $vswhere"
+            exit 1
+          }
+          $vsInstallPath = & $vswhere -latest -property installationPath
+          if (-not $vsInstallPath) {
+            Write-Error "vswhere did not return a Visual Studio installation path"
+            exit 1
+          }
+          $vstestDir = Join-Path $vsInstallPath "Common7\IDE\CommonExtensions\Microsoft\TestWindow"
+          if (-not (Test-Path (Join-Path $vstestDir "vstest.console.exe"))) {
+            Write-Error "vstest.console.exe not found at $vstestDir"
+            exit 1
+          }
+          Write-Host "Adding $vstestDir to PATH"
+          Add-Content -Path $env:GITHUB_PATH -Value $vstestDir
 
       - name: Setup OpenCppCoverage and add to PATH
         id: setup_opencppcoverage
@@ -189,16 +207,16 @@ jobs:
 
   build-linux-arm64-profiler:
     name: Build Linux ARM64 Profiler
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04-arm
     needs: check-modified-files
     # only run this job if source files were modified, or if triggered by a manual execution
     if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: read # for actions/checkout to fetch code
-      packages: write # for uraimo/run-on-arch-action to cache docker images
 
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+      CORECLR_NEW_RELIC_HOME: ${{ github.workspace }}/src/Agent/NewRelic/newrelichome_arm64_coreclr_linux # not used but required by Profiler/docker-compose.yml
 
     steps:
       - name: Harden Runner
@@ -218,34 +236,12 @@ jobs:
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
 
-      - uses: uraimo/run-on-arch-action@f9b26e3a1a408d5fd530d20c17b9f3f4428ff8d9 # v3.1.0
-        name: Run commands
-        id: runcmd
-        with:
-          arch: aarch64
-          distro: ubuntu18.04
-          githubToken: ${{ github.token }}
-          install: |
-            apt-get update -q -y
-            apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
-            echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
-            wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-            mkdir /root/git
-            cd /root/git
-            git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
-            curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
-            chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
-            ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
-            rm /usr/bin/cc || true
-            ln -s /usr/bin/clang-3.9 /usr/bin/cc
-            rm /usr/bin/c++ || true
-            ln -s /usr/bin/clang++-3.9 /usr/bin/c++
-          dockerRunArgs: |
-            --volume "${{ env.profiler_path }}:/profiler"
-          run: |
-            cd /profiler
-            chmod 777 ./linux/build_profiler.sh
-            ./linux/build_profiler.sh
+      - name: Build Linux ARM64 Profiler
+        run: |
+          cd ${{ env.profiler_path }}
+          docker compose build build_arm64
+          docker compose run build_arm64
+        shell: bash
 
       - name: Move Profiler to staging folder
         run: |
@@ -260,6 +256,97 @@ jobs:
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
 
+  build-linux-musl-x64-profiler:
+    name: Build Linux musl x64 Profiler
+    runs-on: ubuntu-22.04
+    needs: check-modified-files
+    # only run this job if source files were modified, or if triggered by a manual execution
+    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
+    permissions:
+      contents: read
+
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+      CORECLR_NEW_RELIC_HOME: ${{ github.workspace }}/src/Agent/NewRelic/newrelichome_x64_coreclr_linux # not used but required by Profiler/docker-compose.yml
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Clean out _profilerBuild directory
+        run: |
+          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-x64-release || true
+        shell: bash
+
+      - name: Build Linux musl x64 Profiler
+        run: |
+          cd ${{ env.profiler_path }}
+          docker compose build build_musl_x64
+          docker compose run build_musl_x64
+        shell: bash
+
+      - name: Move Profiler to staging folder
+        run: |
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-x64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-x64-release/libNewRelicProfiler.so
+        shell: bash
+
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: profiler-musl-amd64
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          if-no-files-found: error
+
+  build-linux-musl-arm64-profiler:
+    name: Build Linux musl ARM64 Profiler
+    runs-on: ubuntu-24.04-arm
+    needs: check-modified-files
+    # only run this job if source files were modified, or if triggered by a manual execution
+    if: ${{ needs.check-modified-files.outputs.source-files-changed == 'true' || github.event_name == 'workflow_dispatch' }}
+    permissions:
+      contents: read
+
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+      CORECLR_NEW_RELIC_HOME: ${{ github.workspace }}/src/Agent/NewRelic/newrelichome_arm64_coreclr_linux # not used but required by Profiler/docker-compose.yml
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Clean out _profilerBuild directory
+        run: |
+          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-arm64-release || true
+        shell: bash
+
+      - name: Build Linux musl ARM64 Profiler
+        run: |
+          cd ${{ env.profiler_path }}
+          docker compose build build_musl_arm64
+          docker compose run build_musl_arm64
+        shell: bash
+
+      - name: Move Profiler to staging folder
+        run: |
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-arm64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-musl-arm64-release/libNewRelicProfiler.so
+        shell: bash
+
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: profiler-musl-arm64
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          if-no-files-found: error
+
   package-and-deploy:
     needs:
       [
@@ -269,7 +356,9 @@ jobs:
       ]
     if: ${{ inputs.deploy }}
     name: Package and Deploy Profiler NuGet
-    runs-on: windows-2022
+    runs-on: windows-2025-vs2026
+    permissions:
+      id-token: write
 
     env:
       nuget_source: https://www.nuget.org
@@ -331,17 +420,19 @@ jobs:
           nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version ${{ steps.agentVersion.outputs.version }} -Verbosity detailed
         shell: powershell
 
-      - name: Setup NuGet API Key
-        run: |
-          nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
-        shell: pwsh
+      # Get a short-lived NuGet API key
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        id: login
+        with:
+          user: ${{ secrets.NUGET_TRUSTED_PUBLISH_POLICY_USER }}
 
       - name: Deploy Profiler Package to Nuget
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}/_workingDir/NugetProfiler/NewRelic.Agent.Internal.Profiler.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}//_workingDir/NugetProfiler/$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Internal.Profiler').TrimStart('.').TrimEnd('.nupkg')
-          nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
         shell: powershell
 
   update-nuget-reference:
