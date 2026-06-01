@@ -41,7 +41,7 @@
       "extra-files": [
         {
           "type": "yaml",
-          "path": "../../../../../../.fleetControl/configurationDefinitions.yml",
+          "path": "/.fleetControl/configurationDefinitions.yml",
           "jsonpath": "$.configurationDefinitions[0].version"
         }
       ]
