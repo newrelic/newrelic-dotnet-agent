@@ -166,12 +166,21 @@ function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath, $newRe
 	###Restore saved newrelic.config and custom instrumemtation files###
 	RestoreCustomerRelatedFiles $newRelicInstallPath $newRelicLegacyInstallPath
 
-	###Remove Linux profiler since it won't be used.
-	$linuxProfiler = "$newRelicInstallPath\libNewRelicProfiler.so"
-	if(Test-Path $linuxProfiler)
+	###Remove Linux profiler files since they won't be used on Windows Azure App Service.
+	$linuxProfilerPaths = @(
+		"$newRelicInstallPath\libNewRelicProfiler.so",
+		"$newRelicInstallPath\linux-x64",
+		"$newRelicInstallPath\linux-musl-x64",
+		"$newRelicInstallPath\linux-arm64",
+		"$newRelicInstallPath\linux-musl-arm64"
+	)
+	foreach($linuxProfilerPath in $linuxProfilerPaths)
 	{
-		WriteToInstallLog "Remove Linux profiler since it won't be used"
-		Remove-Item $linuxProfiler
+		if(Test-Path $linuxProfilerPath)
+		{
+			WriteToInstallLog "Remove Linux profiler artifact $linuxProfilerPath"
+			Remove-Item -Recurse -Force $linuxProfilerPath
+		}
 	}
 }
 
