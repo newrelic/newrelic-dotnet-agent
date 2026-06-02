@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   markdown-link-check:
@@ -37,9 +38,10 @@ jobs:
           restore-keys: cache-lychee-
 
       - name: Run markdown link check
+        id: lychee
         uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2.8.0
         with:
-          fail: true
+          fail: false
           args: >-
             --cache
             --cache-exclude-status '403,429,500..599'
@@ -59,3 +61,48 @@ jobs:
         with:
           path: .lycheecache
           key: ${{ steps.cache-restore.outputs.cache-primary-key }}
+
+      - name: Update or create link check issue
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const exitCode = '${{ steps.lychee.outputs.exit_code }}';
+            const fs = require('fs');
+            const label = 'linkcheck';
+            const title = 'Broken links detected in documentation';
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: label,
+              state: 'open'
+            });
+
+            if (exitCode !== '0') {
+              const body = fs.readFileSync('lychee/out.md', 'utf8');
+              if (issues.length > 0) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issues[0].number,
+                  body
+                });
+              } else {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title,
+                  body,
+                  labels: [label]
+                });
+              }
+            } else if (issues.length > 0) {
+              for (const issue of issues) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  state: 'closed'
+                });
+              }
+            }
