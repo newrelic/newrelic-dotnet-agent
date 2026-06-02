@@ -1,3 +1,4 @@
 {
-  ".": "10.51.0"
+  ".": "10.51.0",
+  "src/Agent/NewRelic/Agent/Core/Config": "1.0.0"
 }

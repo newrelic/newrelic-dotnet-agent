@@ -3,4 +3,5 @@ configurationDefinitions:
     description: Dotnet agent configuration
     type: agent-config
     version: 1.0.0
-# will add schema information here later
+    schema: ../src/Agent/NewRelic/Agent/Core/Config/Configuration.xsd
+    format: xml

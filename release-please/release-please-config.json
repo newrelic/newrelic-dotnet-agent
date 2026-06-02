@@ -29,6 +29,22 @@
           "hidden": false
         }
       ]
+    },
+    "src/Agent/NewRelic/Agent/Core/Config": {
+      "release-type": "simple",
+      "component": "config-schema",
+      "include-component-in-tag": true,
+      "include-v-in-tag": false,
+      "tag-separator": "-",
+      "skip-changelog": true,
+      "skip-github-release": true,
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "/.fleetControl/configurationDefinitions.yml",
+          "jsonpath": "$.configurationDefinitions[0].version"
+        }
+      ]
     }
   },
   "plugins": ["sentence-case"],
