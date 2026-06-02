@@ -490,5 +490,5 @@ jobs:
       name: Run Agent Metadata Workflow
       uses: newrelic/newrelic-dotnet-agent/.github/workflows/agent_metadata.yml@main
       with:
-          version: ${{ needs.get-release-info.outputs.release_version }}
+          version: v${{ needs.get-release-info.outputs.release_version }}
       secrets: inherit
