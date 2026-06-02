@@ -60,6 +60,9 @@
     <None Update="CrossAgentTests\SecurityPolicies\security_policies.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="CrossAgentTests\SqlMetadataComments\sql_metadata_comments.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="CrossAgentTests\SqlObfuscation\sql_obfuscation.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
