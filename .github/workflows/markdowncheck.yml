@@ -2,7 +2,7 @@ name: Check Markdown links
 
 on:
   schedule:
-    - cron: '0 0 1 * *' # run once a month on the first
+    - cron: '17 3 * * *' # run nightly
   workflow_dispatch:
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
