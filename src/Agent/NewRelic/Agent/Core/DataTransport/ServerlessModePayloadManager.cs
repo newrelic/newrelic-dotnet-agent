@@ -72,10 +72,28 @@ public class ServerlessModePayloadManager : IServerlessModePayloadManager
 
         if (!success)
         {
-            // fall back to writing to stdout
+            // Fall back to writing to stdout.
+            // Write directly to file descriptor 1 (stdout) to bypass the .NET Lambda runtime's
+            // structured logging wrapper (WrapperTextWriter / LogLevelLoggerWriter), which intercepts
+            // Console.SetOut and prepends a timestamp\trequestId\tinfo\t prefix to every Console.WriteLine
+            // call. That prefix prevents aws-log-ingestion from parsing the NR_LAMBDA_MONITORING payload.
+            // Other agents (Python, Node.js, Ruby, Go, Java) write to fd 1 directly and produce clean
+            // output that aws-log-ingestion can parse without additional configuration.
             Log.Debug("Writing serverless payload to stdout");
-
-            Console.WriteLine(payloadJson);
+            try
+            {
+                using var fd1 = new System.IO.FileStream(
+                    new Microsoft.Win32.SafeHandles.SafeFileHandle(new System.IntPtr(1), ownsHandle: false),
+                    System.IO.FileAccess.Write, bufferSize: 4096, isAsync: false);
+                var bytes = System.Text.Encoding.UTF8.GetBytes(payloadJson + System.Environment.NewLine);
+                fd1.Write(bytes, 0, bytes.Length);
+                fd1.Flush();
+            }
+            catch
+            {
+                // Fallback to Console.WriteLine if direct fd write is unavailable
+                Console.WriteLine(payloadJson);
+            }
         }
     }
 
