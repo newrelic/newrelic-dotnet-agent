@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
@@ -44,7 +45,17 @@ public class UpdatedLoadedModulesServiceTests
         Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
             .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _getLoadedModulesAction = action; _harvestCycle = harvestCycle; });
 
-        _updatedLoadedModulesService = new UpdatedLoadedModulesService(scheduler, _dataTransportService, configurationService);
+        var fileStream = Mock.Create<FileStream>();
+        Mock.Arrange(() => fileStream.Length).Returns(1024);
+        Mock.Arrange(() => fileStream.Read(Arg.IsAny<byte[]>(), Arg.IsAny<int>(), Arg.IsAny<int>())).Returns(1024).InSequence(); // send some bytes
+        Mock.Arrange(() => fileStream.Read(Arg.IsAny<byte[]>(), Arg.IsAny<int>(), Arg.IsAny<int>())).Returns(0).InSequence(); // FileStream.Read returns 0 when the end of the stream is reached.
+        var fileWrapper = Mock.Create<IFileWrapper>();
+        Mock.Arrange(() => fileWrapper.Exists(Arg.IsAny<string>())).Returns(true);
+        Mock.Arrange(() => fileWrapper.Open(Arg.IsAny<string>(), Arg.IsAny<FileMode>(), Arg.IsAny<FileAccess>(), Arg.IsAny<FileShare>()))
+            .Returns(fileStream);
+        Mock.Arrange(() => fileWrapper.GetFileVersion(Arg.IsAny<string>())).Returns("1.0.0.0");
+
+        _updatedLoadedModulesService = new UpdatedLoadedModulesService(scheduler, _dataTransportService, configurationService, fileWrapper);
 
         EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
     }
