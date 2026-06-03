@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.51.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.51.0...v10.51.1) (2026-06-03)
+
+
+### Notice
+
+* Customers using `RecordDatastoreSegment()` with a custom vendor name will see metric names change from `Datastore/*/Other/*` to `Datastore/*/<VendorName>/*`. Update any dashboards, alerts, or queries that reference the old Other-based metric names. ([f6c0e48](https://github.com/newrelic/newrelic-dotnet-agent/commit/f6c0e483e00bbaa17a5b44aa3c8b9d07c5c41e91))
+
+
+### Fixes
+
+* `RecordDatastoreSegment()` API will correctly use the caller-supplied vendor name instead of ignoring it. ([f6c0e48](https://github.com/newrelic/newrelic-dotnet-agent/commit/f6c0e483e00bbaa17a5b44aa3c8b9d07c5c41e91))
+* Ensure all StackExchange.Redis segments are created and added to transaction before it is harvested ([#3574](https://github.com/newrelic/newrelic-dotnet-agent/issues/3574)) ([4152ea2](https://github.com/newrelic/newrelic-dotnet-agent/commit/4152ea25b23318c68d372447c905c622ac5ac868))
+* Update MySql.Data instrumentation to support 9.7.0 signature changes ([#3562](https://github.com/newrelic/newrelic-dotnet-agent/issues/3562)) ([1e40e44](https://github.com/newrelic/newrelic-dotnet-agent/commit/1e40e44e89ab3f5c1af540a9aa30c6e1fa6a30e3))
+
 ## [10.51.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.50.0...v10.51.0) (2026-04-21)
 
 
