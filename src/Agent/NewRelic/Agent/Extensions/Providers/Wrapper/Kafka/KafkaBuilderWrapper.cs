@@ -103,6 +103,12 @@ public class KafkaBuilderWrapper : IWrapper
     /// </summary>
     private void SetupStatisticsCollection(object builder, IAgent agent)
     {
+        if (!agent.Configuration.KafkaInternalMetricsEnabled)
+        {
+            Log.Debug("KafkaBuilderWrapper: Internal metrics collection disabled via configuration.");
+            return;
+        }
+
         Log.Finest("KafkaBuilderWrapper: SetupStatisticsCollection called for builder type: {0}", builder?.GetType().Name);
 
         var ourHandler = CreateMetricsReportingHandler(agent, builder);
