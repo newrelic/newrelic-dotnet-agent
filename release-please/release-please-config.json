@@ -33,7 +33,7 @@
     "src/Agent/NewRelic/Agent/Core/Config": {
       "release-type": "simple",
       "component": "config-schema",
-      "bootstrap-sha": "3ced015fe10bfb0b49a18d428244fefbee925563",
+      "last-release-sha": "3ced015fe10bfb0b49a18d428244fefbee925563",
       "include-component-in-tag": true,
       "include-v-in-tag": false,
       "tag-separator": "-",
