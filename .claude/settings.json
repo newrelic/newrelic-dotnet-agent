@@ -26,5 +26,13 @@
       "Bash(gh push --force *)",
       "Bash(gh reset --hard *)"
     ]
-  }
+  },
+    "enabledPlugins": {
+        "nr@claude-plugin-marketplace": true,
+        "superpowers@claude-plugins-official": true,
+        "claude-md-management@claude-plugins-official": true,
+        "code-review@claude-plugins-official": true,
+        "document-skills@claude-plugins-official": true,
+        "skill-creator@claude-plugins-official": true
+    }
 }
