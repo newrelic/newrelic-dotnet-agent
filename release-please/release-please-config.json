@@ -38,6 +38,7 @@
       "tag-separator": "-",
       "skip-changelog": true,
       "skip-github-release": true,
+      "bootstrap-sha": "3ced015fe10bfb0b49a18d428244fefbee925563",
       "extra-files": [
         {
           "type": "yaml",
