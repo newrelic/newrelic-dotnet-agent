@@ -621,12 +621,6 @@ jobs:
           Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
         shell: powershell
 
-      - name: Install aiohttp
-        if: matrix.namespace == 'DistributedTracing'
-        run: |
-          pip install aiohttp
-        shell: powershell
-
       - name: Install Azure Functions Core Tools
         if: matrix.namespace == 'AzureFunction'
         run: |
