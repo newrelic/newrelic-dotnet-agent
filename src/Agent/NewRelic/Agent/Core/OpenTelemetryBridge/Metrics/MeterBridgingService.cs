@@ -118,7 +118,9 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
 
             if (MeterFilterHelpers.ShouldEnableInstrumentsInMeter(_configurationService.Configuration, meterName))
             {
+                var instrumentName = accessors.NameAccessor?.Invoke(instrument);
                 var state = GetStateForInstrumentWithMetrics(instrument);
+                Log.Debug($"OnInstrumentPublished: {meterName}/{instrumentName} ({instrumentType.Name}) -> state={(state == null ? "null" : state.GetType().Name)}");
                 _meterListener.EnableMeasurementEvents(instrument, state);
             }
         }
@@ -264,6 +266,11 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
                 upDownCounter.Add(measurement, validTagsSpan);
                 handled = true;
             }
+            else if (bridgedInstrument is Gauge<T> gauge)
+            {
+                gauge.Record(measurement, validTagsSpan);
+                handled = true;
+            }
                 
             if (handled)
             {
@@ -380,9 +387,6 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
                 break;
             case "ObservableUpDownCounter`1":
                 _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.CreateObservableUpDownCounter);
-                break;
-            case "ObservableHistogram`1":
-                _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.CreateObservableHistogram);
                 break;
         }
     }
@@ -558,6 +562,7 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
             "Histogram`1" => "CreateHistogram",
             "UpDownCounter`1" => "CreateUpDownCounter",
             "Counter`1" => "CreateCounter",
+            "Gauge`1" => "CreateGauge",
             _ => null
         };
 
@@ -775,3 +780,4 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
         public MeterBridgingService ServiceInstance { get; set; }
     }
 }
+

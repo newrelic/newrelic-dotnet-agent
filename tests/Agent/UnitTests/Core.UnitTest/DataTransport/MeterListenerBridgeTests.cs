@@ -11,6 +11,7 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Logging;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -402,7 +403,126 @@ public class MeterListenerBridgeTests
 
     #endregion
 
-    #region Start/Stop Method Tests
+    #region Serverless Mode Tests
+
+    [Test]
+    public void Start_WhenServerlessModeEnabled_CallsGetOrCreateMeterProviderWithoutConnectionInfo()
+    {
+        // Arrange
+        Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+        // Note: Start() always calls the no-arg overload regardless of serverless mode.
+        // In real serverless mode, ServerlessOtlpExporterConfigurationService is injected,
+        // which builds the capturing MeterProvider. In non-serverless mode the no-arg overload
+        // delegates to GetOrCreateMeterProvider(null, null) and returns null immediately.
+
+        // Act
+        _meterListenerBridge.Start();
+
+        // Assert — GetOrCreateMeterProvider() (no-arg overload) is called; connection-info overload is not
+        Mock.Assert(() => _otlpExporterConfigurationService.GetOrCreateMeterProvider(), Occurs.Once());
+        Mock.Assert(() => _otlpExporterConfigurationService.GetOrCreateMeterProvider(
+            Arg.IsAny<IConnectionInfo>(), Arg.IsAny<string>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Start_WhenServerlessModeEnabled_StillCallsStartListening()
+    {
+        // Arrange
+        Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+
+        // Act
+        _meterListenerBridge.Start();
+
+        // Assert — MeterListenerBridge always calls StartListening; in both normal and serverless
+        // mode the real MeterBridgingService is used to bridge app instruments into ILRepacked ones.
+        Mock.Assert(() => _meterBridgingService.StartListening(Arg.IsAny<object>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Start_WhenMetricsDisabled_ServerlessModeIgnored()
+    {
+        // Arrange
+        Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(false);
+
+        // Act
+        _meterListenerBridge.Start();
+
+        // Assert — nothing started
+        Mock.Assert(() => _meterBridgingService.StartListening(Arg.IsAny<object>()), Occurs.Never());
+        Mock.Assert(() => _otlpExporterConfigurationService.GetOrCreateMeterProvider(), Occurs.Never());
+    }
+
+    [Test]
+    public void Start_WhenNormalMode_CallsMeterBridgingServiceStartListening()
+    {
+        // Arrange
+        Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+        Mock.Arrange(() => _configuration.EventListenerSamplersEnabled).Returns(false);
+
+        // Act
+        _meterListenerBridge.Start();
+
+        // Assert — normal path delegates to MeterBridgingService
+        Mock.Assert(() => _meterBridgingService.StartListening(Arg.IsAny<object>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Start_WhenEventListenerSamplersEnabled_LogsWarning()
+    {
+        // Arrange
+        var mockLogger = Mock.Create<ILogger>();
+        Mock.Arrange(() => mockLogger.IsWarnEnabled).Returns(true);
+        Log.Initialize(mockLogger);
+
+        Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+        Mock.Arrange(() => _configuration.EventListenerSamplersEnabled).Returns(true);
+
+        try
+        {
+            // Act
+            _meterListenerBridge.Start();
+
+            // Assert — warning about EventSource conflicts is logged
+            Mock.Assert(() => mockLogger.Warn(
+                Arg.Matches<string>(s => s.Contains("EventListenerSamplersEnabled") && s.Contains("EventSource conflicts")),
+                Arg.IsAny<object[]>()), Occurs.Once());
+        }
+        finally
+        {
+            // Restore no-op logger to avoid affecting other tests
+            Log.Initialize(new NoOpLogger());
+        }
+    }
+
+    [Test]
+    public void Start_WhenEventListenerSamplersDisabled_DoesNotLogWarning()
+    {
+        // Arrange
+        var mockLogger = Mock.Create<ILogger>();
+        Mock.Arrange(() => mockLogger.IsWarnEnabled).Returns(true);
+        Log.Initialize(mockLogger);
+
+        Mock.Arrange(() => _configuration.OpenTelemetryMetricsEnabled).Returns(true);
+        Mock.Arrange(() => _configuration.EventListenerSamplersEnabled).Returns(false);
+
+        try
+        {
+            // Act
+            _meterListenerBridge.Start();
+
+            // Assert — no warning logged
+            Mock.Assert(() => mockLogger.Warn(
+                Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Never());
+        }
+        finally
+        {
+            Log.Initialize(new NoOpLogger());
+        }
+    }
+
+    #endregion
+
+    #region OTel Configuration Tests
 
     [Test]
     public void Start_WhenOpenTelemetryDisabled_ShouldNotInitializeComponents()

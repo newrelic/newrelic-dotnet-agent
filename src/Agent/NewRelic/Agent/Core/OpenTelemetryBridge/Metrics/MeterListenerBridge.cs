@@ -6,6 +6,7 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge.Metrics;
 
@@ -94,7 +95,26 @@ public class MeterListenerBridge : ConfigurationBasedService
     {
         if (_configuration.OpenTelemetryMetricsEnabled)
         {
+            if (_configuration.EventListenerSamplersEnabled)
+            {
+                Log.Warn("NewRelic.EventListenerSamplersEnabled is true while OpenTelemetry metrics are enabled. " +
+                         "This may cause EventSource conflicts. Set NewRelic.EventListenerSamplersEnabled=false to prevent conflicts.");
+            }
+
+            // Start the meter listener BEFORE creating the MeterProvider so that
+            // bridged ILRepacked instruments already exist when MeterProvider.Build()
+            // runs.  Build() starts the SDK's internal MeterListener which enumerates
+            // all published ILRepacked instruments and enables them for collection.
+            //
+            // In non-serverless mode the provider is built later via OnAgentConnected,
+            // so instruments naturally exist before the provider.  In serverless mode
+            // GetOrCreateMeterProvider() builds immediately, so we must ensure the
+            // bridged instruments are published first — otherwise the SDK's listener
+            // sees zero instruments at Build() time and sync instruments that are
+            // published later may not be picked up reliably through the ILRepacked
+            // static notification path.
             _meterBridgingService.StartListening(_otlpConfigurationService);
+            _otlpConfigurationService.GetOrCreateMeterProvider();
         }
     }
 

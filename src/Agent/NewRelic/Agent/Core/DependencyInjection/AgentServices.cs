@@ -139,6 +139,13 @@ public static class AgentServices
         {
             container.Register<IDataTransportService, IServerlessModeDataTransportService, ServerlessModeDataTransportService>();
             container.Register<IServerlessModePayloadManager, ServerlessModePayloadManager>();
+            // In serverless mode, the OTel SDK pipeline is set up by ServerlessOtlpExporterConfigurationService,
+            // which captures protobuf bytes via OtlpInterceptingMessageHandler for the Lambda extension.
+            // The real MeterBridgingService is required because the OTel SDK and DiagnosticSource types are
+            // ILRepacked into NewRelic.Agent.Core.dll — the ILRepacked MeterProvider cannot see the app's
+            // runtime meters directly. MeterBridgingService bridges app instruments into ILRepacked instruments.
+            container.Register<IOtlpExporterConfigurationService, ServerlessOtlpExporterConfigurationService>();
+            container.Register<MeterListenerBridge, MeterListenerBridge>();
         }
 
         container.Register<IFileWrapper, FileWrapper>();
@@ -248,13 +255,18 @@ public static class AgentServices
         container.Register<ActivityBridge, ActivityBridge>();
         container.Register<NewRelicActivitySourceProxy, NewRelicActivitySourceProxy>();
 
+        // MeterBridgingService and its dependencies are needed in both normal and serverless mode
+        // because ILRepack creates a separate copy of DiagnosticSource/Metrics types inside
+        // NewRelic.Agent.Core.dll — the bridging service listens to app meters via reflection
+        // and recreates instruments using the ILRepacked types so the MeterProvider can export them.
+        container.Register<IAssemblyProvider, AppDomainAssemblyProvider>();
+        container.Register<IMeterListenerWrapper, DynamicMeterListenerWrapper>();
+        container.Register<MeterBridgeConfiguration, MeterBridgeConfiguration>();
+        container.Register<IMeterBridgingService, MeterBridgingService>();
+
         if (!serverlessModeEnabled)
         {
-            container.Register<IAssemblyProvider, AppDomainAssemblyProvider>();
-            container.Register<IMeterListenerWrapper, DynamicMeterListenerWrapper>();
-            container.Register<MeterBridgeConfiguration, MeterBridgeConfiguration>();
             container.Register<IOtlpExporterConfigurationService, OtlpExporterConfigurationService>();
-            container.Register<IMeterBridgingService, MeterBridgingService>();
             container.Register<MeterListenerBridge, MeterListenerBridge>();
         }
 

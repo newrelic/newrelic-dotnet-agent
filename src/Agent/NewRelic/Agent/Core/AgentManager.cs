@@ -179,13 +179,10 @@ public sealed class AgentManager : IAgentManager, IDisposable
         {
             _container.Resolve<OpenTelemetryBridge.Tracing.ActivityBridge>().Start();
 
-            if (!bootstrapConfig.ServerlessModeEnabled)
-            {
-                // We need to resolve the MeterListenerBridge before the connect event is triggered so that
-                // the MeterListenerBridge is ready to receive the connect event and start listening for
-                // metrics.
-                _container.Resolve<OpenTelemetryBridge.Metrics.MeterListenerBridge>().Start();
-            }
+            // Start the meter listener bridge in both normal and serverless mode.
+            // In serverless mode, the standard OTel SDK pipeline is used with a capturing HTTP handler
+            // that intercepts protobuf export bytes for inclusion in the /tmp/newrelic-telemetry payload.
+            _container.Resolve<OpenTelemetryBridge.Metrics.MeterListenerBridge>().Start();
         }
 
         // Attempt to auto start the agent once all services have resolved, except in serverless mode

@@ -91,6 +91,7 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
 
     private void RecreateMeterProviderInternal()
     {
+        _meterProvider?.ForceFlush();
         _meterProvider?.Dispose();
         _httpClient?.Dispose();
         _httpClient = null;

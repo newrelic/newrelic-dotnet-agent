@@ -32,6 +32,14 @@ public interface IServerlessModeDataTransportService : IDataTransportService
     /// </summary>
     /// <returns></returns>
     bool FlushData(string transactionId);
+
+    /// <summary>
+    /// Registers a delegate that, when invoked, triggers ForceFlush() on the serverless
+    /// OTel MeterProvider and returns the captured OTLP protobuf bytes.
+    /// The bytes are written to the serverless payload as "otlp_payload" (base64-encoded
+    /// by Newtonsoft.Json), where the Lambda extension can read and forward them.
+    /// </summary>
+    void SetOtelPayloadFunc(Func<byte[]> payloadFunc);
 }
 
 /// <summary>
@@ -44,6 +52,7 @@ public class ServerlessModeDataTransportService : ConfigurationBasedService, ISe
     private readonly IServerlessModePayloadManager _serverlessModePayloadManager;
     private DateTime _lastMetricSendTime;
     private string _outputPath = $"{Path.DirectorySeparatorChar}tmp{Path.DirectorySeparatorChar}newrelic-telemetry";
+    private Func<byte[]> _otelPayloadFunc;
 
     public ServerlessModeDataTransportService(IDateTimeStatic dateTimeStatic, IServerlessModePayloadManager serverlessModePayloadManager)
     {
@@ -57,6 +66,11 @@ public class ServerlessModeDataTransportService : ConfigurationBasedService, ISe
     private void OnFlushServerlessDataEvent(FlushServerlessDataEvent flushServerlessDataEvent)
     {
         FlushData(flushServerlessDataEvent.TransactionId);
+    }
+
+    public void SetOtelPayloadFunc(Func<byte[]> payloadFunc)
+    {
+        _otelPayloadFunc = payloadFunc;
     }
 
     protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -168,13 +182,32 @@ public class ServerlessModeDataTransportService : ConfigurationBasedService, ISe
             return false;
         }
 
-        if (!_transactionWireData.TryGetValue(transactionId, out data))
+        var dataInDictionary = _transactionWireData.TryGetValue(transactionId, out data);
+        if (!dataInDictionary)
         {
-            Log.Error("Transaction id '{0}' does not exist", transactionId);
-            return false;
+            if (_otelPayloadFunc == null)
+            {
+                Log.Error("Transaction id '{0}' does not exist", transactionId);
+                return false;
+            }
+            // No traditional telemetry for this transaction, but OTel metrics may exist.
+            // Create an empty container so the payload func below can populate and flush them.
+            data = new WireData();
         }
 
         Log.Debug("ServerlessModeDataTransportService: FlushData starting.");
+
+        if (_otelPayloadFunc != null)
+        {
+            var otlpBytes = _otelPayloadFunc();
+            if (otlpBytes != null && otlpBytes.Length > 0)
+            {
+                // The Lambda extension reads otlp_payload[0], base64-decodes to get the
+                // raw OTLP protobuf ExportMetricsServiceRequest bytes, then adds resource
+                // attributes (entity.guid, etc.) before forwarding to New Relic OTLP Metrics ingest.
+                data["otlp_payload"] = new object[] { otlpBytes };
+            }
+        }
 
         if (!data.Any())
         {
@@ -188,8 +221,9 @@ public class ServerlessModeDataTransportService : ConfigurationBasedService, ISe
         // Write the payload to the /tmp/newrelic-telemetry file if it exists or to stdout if that file does not exist, as per the spec
         _serverlessModePayloadManager.WritePayload(jsonPayload, _outputPath);
 
-        // Done with this transaction
-        if (!_transactionWireData.TryRemove(transactionId, out _))
+        // Only remove from dictionary if the entry was there to begin with.
+        // OTel-only invocations create a transient WireData that was never inserted.
+        if (dataInDictionary && !_transactionWireData.TryRemove(transactionId, out _))
         {
             Log.Warn("Failed to remove transaction {0}", transactionId);
         }
