@@ -1,17 +1,14 @@
 GO := go
-GOPATH := $(shell pwd)
 BINARIES := indexer
 
-export GOPATH
-
 all: deps
-	go install indexer
+	$(GO) build -o bin/indexer ./src/indexer
 
 clean:
 	rm -rf bin pkg
 
 deps:
-	go get github.com/aws/aws-sdk-go
+	$(GO) mod download
 
 test: deps
-	go test indexer s3/indexer
+	$(GO) test ./...

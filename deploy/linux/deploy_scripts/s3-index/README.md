@@ -5,8 +5,8 @@ contains a directory listing to every "directory" within that bucket.
 
 ## Requirements
 
-This requires at least Go 1.5 with `GO15VENDOREXPERIMENT` enabled. In practice,
-I would strongly encourage Go 1.6 or later.
+This is a Go module that uses the [AWS SDK for Go
+v2](https://aws.github.io/aws-sdk-go-v2/docs/) and requires Go 1.24 or later.
 
 ## Building
 
@@ -14,20 +14,21 @@ I would strongly encourage Go 1.6 or later.
 
 ## Not building
 
-You can also `go run` the tool provided you've already used `go get` to get the
-AWS SDK for Go. You can run `make deps` to handle this for you if you like.
+You can also `go run` the tool directly. Module dependencies are downloaded on
+demand; `make deps` (which runs `go mod download`) can pre-fetch them if you
+like.
 
-Once done, you can run the tool with:
+You can run the tool with:
 
 ```sh
-GOPATH=$(pwd) go run src/indexer/main.go
+go run ./src/indexer
 ```
 
 ## Configuration
 
 The AWS configuration in `~/.aws` will be used, or environment variables can be
 set. More details are at the
-[AWS Go documentation](https://docs.aws.amazon.com/sdk-for-go/api/).
+[AWS SDK for Go v2 documentation](https://aws.github.io/aws-sdk-go-v2/docs/configuring-sdk/).
 
 If you go the environment variable route, you'll need to set `AWS_REGION`
 (probably to `us-east-1`), `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.

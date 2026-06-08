@@ -2,12 +2,13 @@ package indexer
 
 import (
 	"bytes"
+	"context"
 	"html/template"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type Directory struct {
@@ -34,13 +35,20 @@ func NewTopDirectory() *Directory {
 	return NewDirectory("", "", nil)
 }
 
-func (d *Directory) Enumerate(svc *s3.S3, bucket, prefix string) error {
+func (d *Directory) Enumerate(ctx context.Context, svc *s3.Client, bucket, prefix string) error {
 	params := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
 		Prefix: aws.String(prefix),
 	}
-	if err := svc.ListObjectsV2Pages(params, func(resp *s3.ListObjectsV2Output, lastPage bool) bool {
-		for _, obj := range resp.Contents {
+
+	paginator := s3.NewListObjectsV2Paginator(svc, params)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return err
+		}
+
+		for _, obj := range page.Contents {
 			file := NewFile(obj)
 
 			// Special case: ignore index.html when generating directories.
@@ -51,30 +59,26 @@ func (d *Directory) Enumerate(svc *s3.S3, bucket, prefix string) error {
 			// Split up the key and create the directory structure as required within
 			// the nested maps.
 			parts := strings.Split(*obj.Key, "/")
-			ctx := d
+			node := d
 			for i, part := range parts[:len(parts)-1] {
-				if ctx.LastModified.Before(*file.LastModified) {
-					ctx.LastModified = *file.LastModified
+				if node.LastModified.Before(*file.LastModified) {
+					node.LastModified = *file.LastModified
 				}
 
-				if child, ok := ctx.Directories[part]; ok {
-					ctx = child
+				if child, ok := node.Directories[part]; ok {
+					node = child
 				} else {
-					ctx.Directories[part] = NewDirectory(strings.Join(parts[0:i+1], "/"), part, ctx)
-					ctx = ctx.Directories[part]
+					node.Directories[part] = NewDirectory(strings.Join(parts[0:i+1], "/"), part, node)
+					node = node.Directories[part]
 				}
 			}
 
-			if ctx.LastModified.Before(*file.LastModified) {
-				ctx.LastModified = *file.LastModified
+			if node.LastModified.Before(*file.LastModified) {
+				node.LastModified = *file.LastModified
 			}
 
-			ctx.Files[file.Name] = file
+			node.Files[file.Name] = file
 		}
-
-		return true
-	}); err != nil {
-		return err
 	}
 
 	return nil

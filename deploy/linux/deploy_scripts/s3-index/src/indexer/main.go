@@ -2,15 +2,16 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"html/template"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"s3/indexer"
+	"github.com/newrelic/newrelic-dotnet-agent/deploy/linux/deploy_scripts/s3-index/src/s3/indexer"
 )
 
 var (
@@ -24,7 +25,7 @@ const (
 	IndexFileName = "index.html"
 )
 
-func indexDirectory(t *template.Template, mgr *s3manager.Uploader, dir *indexer.Directory) error {
+func indexDirectory(ctx context.Context, t *template.Template, mgr *manager.Uploader, dir *indexer.Directory) error {
 	content, err := dir.Index(t)
 	if err != nil {
 		return err
@@ -35,13 +36,13 @@ func indexDirectory(t *template.Template, mgr *s3manager.Uploader, dir *indexer.
 
 	if upload {
 		contentType := ContentType
-		input := &s3manager.UploadInput{
+		input := &s3.PutObjectInput{
 			Bucket:      &bucket,
 			Key:         &target,
 			Body:        bytes.NewReader(content),
 			ContentType: &contentType,
 		}
-		if _, err := mgr.Upload(input); err != nil {
+		if _, err := mgr.Upload(ctx, input); err != nil {
 			return err
 		}
 	}
@@ -49,15 +50,15 @@ func indexDirectory(t *template.Template, mgr *s3manager.Uploader, dir *indexer.
 	return nil
 }
 
-func handleDirectory(t *template.Template, mgr *s3manager.Uploader, dir *indexer.Directory) {
+func handleDirectory(ctx context.Context, t *template.Template, mgr *manager.Uploader, dir *indexer.Directory) {
 	if dir.ShouldIndex(prefix) {
-		if err := indexDirectory(t, mgr, dir); err != nil {
-			log.Println("Error indexing directory %s: %v", dir.Prefix, err)
+		if err := indexDirectory(ctx, t, mgr, dir); err != nil {
+			log.Printf("Error indexing directory %s: %v", dir.Prefix, err)
 		}
 	}
 
 	for _, d := range dir.Directories {
-		handleDirectory(t, mgr, d)
+		handleDirectory(ctx, t, mgr, d)
 	}
 }
 
@@ -77,20 +78,20 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	sess, err := session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	})
+	ctx := context.Background()
+
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	svc := s3.New(sess)
-	mgr := s3manager.NewUploader(sess)
+	svc := s3.NewFromConfig(cfg)
+	mgr := manager.NewUploader(svc)
 
 	top := indexer.NewTopDirectory()
-	if err := top.Enumerate(svc, bucket, prefix); err != nil {
+	if err := top.Enumerate(ctx, svc, bucket, prefix); err != nil {
 		log.Fatalln(err)
 	}
 
-	handleDirectory(t, mgr, top)
+	handleDirectory(ctx, t, mgr, top)
 }
