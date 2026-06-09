@@ -6,6 +6,7 @@ categories:
   - key: app-frameworks
     title: App frameworks
     tabs: [core, framework]
+    intro: "The .NET agent automatically instruments these application frameworks:"
     libraries:
       - name: ASP.NET Core MVC (includes Web API)
         tabs: [core]
@@ -26,16 +27,31 @@ categories:
       - name: ASP.NET Web Forms
         tabs: [framework]
         supportedVersions: ["(all supported .NET Framework versions)"]
+      - name: OWIN-hosted Web API
+        tabs: [framework]
+        supportedVersions: ["Microsoft.Owin.Host.HttpListener 2.x, 3.x, 4.x"]
+      - name: SOAP-based web services
+        tabs: [framework]
+        supportedVersions: ["(all supported .NET Framework versions)"]
+      - name: "[WCF](https://docs.newrelic.com/docs/apm/agents/net-agent/other-installation/install-net-agent-windows-communication-foundation-wcf/)"
+        tabs: [framework]
+        supportedVersions: ["(all supported .NET Framework versions)"]
+      - name: Castle MonoRail
+        tabs: [framework]
+        supportedVersions: ["v2 (no longer supported in agent 10.0 or higher)"]
 
   - key: datastores
     title: Datastores
     tabs: [core, framework]
     intro: "The .NET agent automatically instruments the performance of .NET application calls to these datastores:"
     footnotes:
-      - "The .NET agent doesn't collect data about datastore server processes. It only collects data from datastore client library usage. To directly monitor datastore server processes, use the New Relic infrastructure agent with on-host integrations."
-      - "By default, the .NET agent doesn't capture SQL parameters for stored procedures or parameterized queries in a query trace. To see these SQL parameters, you must enable the collection feature in the agent configuration."
+      - "The .NET agent doesn't collect data about datastore server processes. It only collects data from datastore client library usage. To directly monitor datastore server processes, use the New Relic infrastructure agent with [on-host integrations](https://docs.newrelic.com/docs/infrastructure/host-integrations/get-started/introduction-host-integrations/)."
+      - "By default, the .NET agent doesn't capture SQL parameters for stored procedures or parameterized queries in a query trace. To see these SQL parameters, you must enable the collection feature in the [agent configuration](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#datastore-tracer-query-parameters)."
+      - "All datastores listed above provide [instance details](https://docs.newrelic.com/docs/apm/applications-menu/features/analyze-database-instance-level-performance-issues) except where noted, and collection is enabled by default. To request instance-level information from datastores not currently listed, get support at [support.newrelic.com](https://support.newrelic.com)."
+      - "If your datastore isn't listed here, you can add custom instrumentation using the `RecordDatastoreSegment` method in the [.NET agent API](https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/net-agent-api/#ITransaction)."
     libraries:
       - name: Cosmos DB
+        minAgentVersion: "9.2.0"
         packages:
           - id: Microsoft.Azure.Cosmos
             nugetUrl: https://www.nuget.org/packages/Microsoft.Azure.Cosmos/
@@ -49,6 +65,7 @@ categories:
             nugetUrl: https://www.nuget.org/packages/CouchbaseNetClient/
             tabs: [core, framework]
             notes:
+              - { type: freeform, text: "Instance details aren't available for Couchbase." }
               - { type: knownIncompatibleVersions, versions: ["3.0.x", "3.1.x"] }
               - type: freeform
                 text: >
@@ -248,6 +265,7 @@ categories:
   - key: llm
     title: Large language model (LLM) libraries
     tabs: [core, framework]
+    intro: "The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#ai_monitoring) to automatically instrument these LLM frameworks:"
     libraries:
       - name: AWS Bedrock
         packages:
@@ -278,6 +296,7 @@ categories:
   - key: logging
     title: Logging frameworks
     tabs: [core, framework]
+    intro: "The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#application_logging) to automatically instrument these logging frameworks for automatic logs-in-context with [agent forwarding](https://docs.newrelic.com/docs/logs/logs-context/net-configure-logs-context-all/#1-agent) and [local log decoration](https://docs.newrelic.com/docs/logs/logs-context/net-configure-logs-context-all/#2-decorate):"
     libraries:
       - name: Log4Net
         minAgentVersion: "9.7.0"
@@ -301,11 +320,13 @@ categories:
             tabs: [core, framework]
 
       - name: Microsoft.Extensions.Logging
-        minAgentVersion: "9.7.0"
+        minAgentVersion: "10.0.0"
         packages:
           - id: Microsoft.Extensions.Logging
             nugetUrl: https://www.nuget.org/packages/Microsoft.Extensions.Logging/
             tabs: [core, framework]
+        notes:
+          - { type: freeform, text: "On .NET Framework, supported beginning with agent v9.7.0." }
 
   - key: messaging
     title: Message systems
@@ -321,6 +342,8 @@ categories:
           - IProducer.Produce
           - IProducer.ProduceAsync
           - IConsumer.Consume
+        notes:
+          - { type: freeform, text: "Produce and consume on topics." }
 
       - name: MSMQ
         tabs: [framework]
@@ -335,6 +358,8 @@ categories:
           - id: NServiceBus
             nugetUrl: https://www.nuget.org/packages/NServiceBus/
             tabs: [core, framework]
+        notes:
+          - { type: freeform, text: "Puts and takes on messages." }
 
       - name: RabbitMQ
         packages:
@@ -348,7 +373,9 @@ categories:
           - IModel.QueuePurge
           - EventingBasicConsumer.HandleBasicDeliver
         notes:
-          - { type: freeform, text: "`BasicGet` is instrumented, but distributed tracing is not supported for `BasicGet`. Only `EventingBasicConsumer` is instrumented for `IBasicConsumer`." }
+          - { type: freeform, text: "Puts and takes on messages and queue purge." }
+          - { type: freeform, text: "When receiving messages using an `IBasicConsumer`, the `EventingBasicConsumer` is the only implementation that is instrumented." }
+          - { type: freeform, text: "`BasicGet` is instrumented, but the agent does not support [distributed tracing](https://docs.newrelic.com/docs/apm/distributed-tracing/getting-started/introduction-distributed-tracing/) for `BasicGet`." }
           - { type: requiresHybridAgent, aboveVersion: "6.8.1" }
 
       - name: MassTransit
@@ -357,6 +384,8 @@ categories:
           - id: MassTransit
             nugetUrl: https://www.nuget.org/packages/MassTransit/
             tabs: [core, framework]
+        notes:
+          - { type: freeform, text: "Message publish/send and consume." }
 
       - name: AWSSDK.SQS
         minAgentVersion: "10.27.0"
@@ -364,6 +393,8 @@ categories:
           - id: AWSSDK.SQS
             nugetUrl: https://www.nuget.org/packages/AWSSDK.SQS/
             tabs: [core, framework]
+        notes:
+          - { type: freeform, text: "Message send and receive." }
 
       - name: AWSSDK.Kinesis
         minAgentVersion: "10.40.0"
@@ -404,11 +435,13 @@ categories:
           - ServiceBusReceiver.DeferMessageAsync
           - ServiceBusReceiver.RenewMessageLockAsync
         notes:
+          - { type: freeform, text: "Message send and receive." }
           - { type: freeform, text: "Supports Processor mode." }
 
   - key: background-jobs
     title: Background jobs and workflows
     tabs: [core, framework]
+    intro: "The .NET agent automatically instruments the performance of .NET application calls to these background job and workflow libraries:"
     libraries:
       - name: Hangfire
         minAgentVersion: "10.51.0"
