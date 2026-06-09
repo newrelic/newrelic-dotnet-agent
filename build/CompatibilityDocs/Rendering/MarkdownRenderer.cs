@@ -138,9 +138,9 @@ public class MarkdownRenderer
         // cell of the library's first row inside a collapsed <details> block so the long
         // method names don't force the table wide. Customers expand to see the list.
         var methodsCell = lib.Methods.Count > 0
-            ? $"<details><summary>Instrumented methods ({lib.Methods.Count})</summary>"
-              + string.Concat(lib.Methods.Select(m => $"<br><code>{m}</code>"))
-              + "</details>"
+            ? $"<details><summary>Instrumented methods ({lib.Methods.Count})</summary><ul>"
+              + string.Concat(lib.Methods.Select(m => $"<li><code>{m}</code></li>"))
+              + "</ul></details>"
             : "";
 
         var packages = lib.Packages.Where(p => p.Tabs.Contains(PlatformTab(platform))).ToList();

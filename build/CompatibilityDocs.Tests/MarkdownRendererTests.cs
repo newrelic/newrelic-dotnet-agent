@@ -160,7 +160,7 @@ No server-process data is collected.
         // Method-only library appears as a table row (dash for the versions column); the
         // methods go in the Notes column inside a collapsed <details> block.
         Assert.That(md, Does.Contain(
-            "| HttpClient | — | — | — | <details><summary>Instrumented methods (2)</summary><br><code>SendAsync</code><br><code>GetAsync</code></details> |"));
+            "| HttpClient | — | — | — | <details><summary>Instrumented methods (2)</summary><ul><li><code>SendAsync</code></li><li><code>GetAsync</code></li></ul></details> |"));
     }
 
     [Test]
@@ -195,6 +195,6 @@ No server-process data is collected.
         var md = new MarkdownRenderer(new NoteRenderer()).Render(model, versions).Replace("\r\n", "\n");
 
         Assert.That(md, Does.Contain(
-            "| 5.2.0 – 7.1.2 | — | Only EventingBasicConsumer is instrumented.<br><details><summary>Instrumented methods (2)</summary><br><code>IModel.BasicGet</code><br><code>IModel.BasicPublish</code></details> |"));
+            "| 5.2.0 – 7.1.2 | — | Only EventingBasicConsumer is instrumented.<br><details><summary>Instrumented methods (2)</summary><ul><li><code>IModel.BasicGet</code></li><li><code>IModel.BasicPublish</code></li></ul></details> |"));
     }
 }
