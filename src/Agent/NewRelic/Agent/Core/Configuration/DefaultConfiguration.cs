@@ -1767,6 +1767,10 @@ public class DefaultConfiguration : IConfiguration
 
     public virtual int TransactionTracerMaxStackTraces => _localConfiguration.transactionTracer.maxStackTrace;
 
+    public virtual bool TransactionTracerSqlMetadataCommentsEnabled =>
+        EnvironmentOverrides(_localConfiguration.transactionTracer.sqlMetadataCommentsEnabled,
+            "NEW_RELIC_TRANSACTION_TRACER_SQL_METADATA_COMMENTS_ENABLED");
+
     private IList<Regex> _requestPathExclusionList;
     public virtual IEnumerable<Regex> RequestPathExclusionList => _requestPathExclusionList ??= ReadUrlBlacklist(_localConfiguration);
 

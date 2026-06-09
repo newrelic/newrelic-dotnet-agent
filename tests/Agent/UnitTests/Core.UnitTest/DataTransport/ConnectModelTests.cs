@@ -310,6 +310,7 @@ public class ConnectModelTests
                                                     "transaction_tracer.record_sql": "TransactionTracerRecordSql",
                                                     "transaction_tracer.record_sql_source": "TransactionTracerRecordSqlSource",
                                                     "transaction_tracer.max_stack_traces": 4321,
+                                                    "transaction_tracer.sql_metadata_comments_enabled": false,
                                                     "agent.trusted_account_ids": [1, 2, 3],
                                                     "agent.server_side_config_enabled": true,
                                                     "agent.ignore_server_side_config": true,

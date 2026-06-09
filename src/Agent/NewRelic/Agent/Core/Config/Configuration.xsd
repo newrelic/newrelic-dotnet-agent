@@ -1178,6 +1178,15 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="sqlMetadataCommentsEnabled" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    When true, a SQL metadata comment containing the service entity GUID is prepended to each executed SQL statement.
+                                    Can also be set via the NEW_RELIC_TRANSACTION_TRACER_SQL_METADATA_COMMENTS_ENABLED environment variable.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
                     </xs:complexType>
                 </xs:element>
 
