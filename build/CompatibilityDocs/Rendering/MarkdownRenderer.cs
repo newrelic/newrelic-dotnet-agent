@@ -154,7 +154,7 @@ public class MarkdownRenderer
             // Method-only library (no NuGet package), or one whose packages don't apply
             // to this platform: a single row with a dash for the versions column.
             var agent = string.IsNullOrEmpty(lib.MinAgentVersion) ? "—" : lib.MinAgentVersion;
-            AppendRow(sb, lib.Name, "—", "—", agent, Combine(RenderNotes(lib.Notes), methodsCell));
+            AppendRow(sb, lib.Name, "—", "—", agent, RenderNotesCell(lib.Notes, methodsCell));
         }
     }
 
@@ -177,7 +177,7 @@ public class MarkdownRenderer
         var agent = string.IsNullOrEmpty(lib.MinAgentVersion) ? "—" : lib.MinAgentVersion;
 
         AppendRow(sb, lib.Name, pkgCell, VersionCell(min, latest), agent,
-            Combine(RenderNotes(pkg.Notes.Concat(lib.Notes)), methodsCell));
+            RenderNotesCell(pkg.Notes.Concat(lib.Notes), methodsCell));
     }
 
     // Collapses the separate min/latest values into a single "Versions tested" cell:
@@ -189,23 +189,26 @@ public class MarkdownRenderer
         return $"{min} – {latest}";
     }
 
-    private string RenderNotes(IEnumerable<Note> notes)
+    // The Notes cell is an HTML bullet list: one <li> per note, plus a final <li> for the
+    // collapsible instrumented-methods block when present. HTML lists (unlike markdown "- "
+    // syntax) render inside a table cell. Returns "" when there is nothing to show.
+    private string RenderNotesCell(IEnumerable<Note> notes, string methodsCell)
     {
-        // A note's text may come from a YAML block scalar (> or |), which can carry
-        // embedded or trailing newlines. A markdown table cell must be a single line,
-        // so trim each part and strip any residual newlines. Separate notes are joined
-        // with <br> so each renders on its own line rather than running together.
-        var parts = notes.Select(n => _notes.Render(n).Trim());
-        return string.Join("<br>", parts)
-            .Replace("\r", " ").Replace("\n", " ").Replace("|", "\\|");
+        var items = notes
+            .Select(n => Sanitize(_notes.Render(n).Trim()))
+            .Where(s => s.Length > 0)
+            .ToList();
+        if (!string.IsNullOrEmpty(methodsCell))
+            items.Add(methodsCell);
+        if (items.Count == 0) return "";
+        return "<ul>" + string.Concat(items.Select(i => $"<li>{i}</li>")) + "</ul>";
     }
 
-    private static string Combine(string notes, string methods)
-    {
-        if (string.IsNullOrEmpty(methods)) return notes;
-        if (string.IsNullOrEmpty(notes)) return methods;
-        return notes + "<br>" + methods;
-    }
+    // A note's text may come from a YAML block scalar (> or |), which can carry embedded
+    // or trailing newlines. A markdown table cell must stay on one line, so strip residual
+    // newlines and escape pipes.
+    private static string Sanitize(string s) =>
+        s.Replace("\r", " ").Replace("\n", " ").Replace("|", "\\|");
 
     private static void AppendRow(StringBuilder sb, string library, string pkgCell,
         string versions, string agent, string notesCell)
