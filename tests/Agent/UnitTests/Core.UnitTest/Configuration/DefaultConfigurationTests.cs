@@ -1003,7 +1003,7 @@ public class DefaultConfigurationTests
     {
         _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
         _localConfig.errorCollector.expectedStatusCodes = (local);
-        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES")).Returns(env);
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES", "NEW_RELIC_ERROR_COLLECTOR_EXPECTED_STATUS_CODES")).Returns(env);
 
         CreateDefaultConfiguration();
 
@@ -1022,7 +1022,7 @@ public class DefaultConfigurationTests
     {
         _serverConfig.RpmConfig.ErrorCollectorStatusCodesToIgnore = server;
         _localConfig.errorCollector.ignoreStatusCodes.code = (local.ToList());
-        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES")).Returns(env);
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES", "NEW_RELIC_ERROR_COLLECTOR_IGNORE_STATUS_CODES")).Returns(env);
 
         CreateDefaultConfiguration();
 
