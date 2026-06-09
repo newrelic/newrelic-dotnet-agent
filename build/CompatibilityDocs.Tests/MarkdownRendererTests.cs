@@ -58,15 +58,19 @@ public class MarkdownRendererTests
 
 # .NET agent automatic instrumentation compatibility
 
+## Contents
+- [.NET Core](#net-core) — [Datastores](#datastores) · [App frameworks](#app-frameworks)
+- [.NET Framework](#net-framework) — [Datastores](#datastores-1)
+
 ## .NET Core
 
 ### Datastores
 
 Instruments these datastores:
 
-| Library | NuGet package | Minimum version | Latest verified | Min agent version | Notes |
-| --- | --- | --- | --- | --- | --- |
-| PostgreSQL | [Npgsql](https://www.nuget.org/packages/Npgsql/) | 4.0.0 | 7.0.7 | — | Prior versions may be instrumented. |
+| Library | NuGet package | Versions tested | Min agent version | Notes |
+| --- | --- | --- | --- | --- |
+| PostgreSQL | [Npgsql](https://www.nuget.org/packages/Npgsql/) | 4.0.0 – 7.0.7 | — | Prior versions may be instrumented. |
 
 No server-process data is collected.
 
@@ -80,9 +84,9 @@ No server-process data is collected.
 
 Instruments these datastores:
 
-| Library | NuGet package | Minimum version | Latest verified | Min agent version | Notes |
-| --- | --- | --- | --- | --- | --- |
-| PostgreSQL | [Npgsql](https://www.nuget.org/packages/Npgsql/) | 4.0.0 | 7.0.7 | — | Prior versions may be instrumented. |
+| Library | NuGet package | Versions tested | Min agent version | Notes |
+| --- | --- | --- | --- | --- |
+| PostgreSQL | [Npgsql](https://www.nuget.org/packages/Npgsql/) | 4.0.0 – 7.0.7 | — | Prior versions may be instrumented. |
 
 No server-process data is collected.
 """;
@@ -153,10 +157,10 @@ No server-process data is collected.
             .Render(model, new Dictionary<(string, Platform), VersionRange>())
             .Replace("\r\n", "\n");
 
-        // Method-only library appears as a table row (dashes for version columns); the
-        // methods go in the Notes column, each on its own line via <br>.
+        // Method-only library appears as a table row (dash for the versions column); the
+        // methods go in the Notes column inside a collapsed <details> block.
         Assert.That(md, Does.Contain(
-            "| HttpClient | — | — | — | — | Instruments:<br>`SendAsync`<br>`GetAsync` |"));
+            "| HttpClient | — | — | — | <details><summary>Instrumented methods (2)</summary><br><code>SendAsync</code><br><code>GetAsync</code></details> |"));
     }
 
     [Test]
@@ -191,6 +195,6 @@ No server-process data is collected.
         var md = new MarkdownRenderer(new NoteRenderer()).Render(model, versions).Replace("\r\n", "\n");
 
         Assert.That(md, Does.Contain(
-            "| 5.2.0 | 7.1.2 | — | Only EventingBasicConsumer is instrumented.<br>Instruments:<br>`IModel.BasicGet`<br>`IModel.BasicPublish` |"));
+            "| 5.2.0 – 7.1.2 | — | Only EventingBasicConsumer is instrumented.<br><details><summary>Instrumented methods (2)</summary><br><code>IModel.BasicGet</code><br><code>IModel.BasicPublish</code></details> |"));
     }
 }
