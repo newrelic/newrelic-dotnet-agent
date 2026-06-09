@@ -189,19 +189,19 @@ public class MarkdownRenderer
         return $"{min} – {latest}";
     }
 
-    // The Notes cell is an HTML bullet list: one <li> per note, plus a final <li> for the
-    // collapsible instrumented-methods block when present. HTML lists (unlike markdown "- "
-    // syntax) render inside a table cell. Returns "" when there is nothing to show.
+    // The Notes cell is an HTML bullet list of the notes (HTML lists, unlike markdown "- "
+    // syntax, render inside a table cell), followed by the collapsible instrumented-methods
+    // block — which sits after the list, not as a bullet itself. Returns "" when empty.
     private string RenderNotesCell(IEnumerable<Note> notes, string methodsCell)
     {
         var items = notes
             .Select(n => Sanitize(_notes.Render(n).Trim()))
             .Where(s => s.Length > 0)
             .ToList();
-        if (!string.IsNullOrEmpty(methodsCell))
-            items.Add(methodsCell);
-        if (items.Count == 0) return "";
-        return "<ul>" + string.Concat(items.Select(i => $"<li>{i}</li>")) + "</ul>";
+        var list = items.Count > 0
+            ? "<ul>" + string.Concat(items.Select(i => $"<li>{i}</li>")) + "</ul>"
+            : "";
+        return list + methodsCell;
     }
 
     // A note's text may come from a YAML block scalar (> or |), which can carry embedded
