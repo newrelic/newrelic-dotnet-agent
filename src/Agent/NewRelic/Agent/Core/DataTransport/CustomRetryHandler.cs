@@ -5,6 +5,7 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport;
@@ -22,6 +23,13 @@ public class CustomRetryHandler : DelegatingHandler
     // Use simple Random for retry jitter - thread safety handled at call site
     private static readonly Random Random = new Random();
 
+    private readonly IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
+
+    public CustomRetryHandler(IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters = null)
+    {
+        _supportabilityMetricCounters = supportabilityMetricCounters;
+    }
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         Exception lastException = null;
@@ -36,6 +44,7 @@ public class CustomRetryHandler : DelegatingHandler
                 if (response.IsSuccessStatusCode)
                 {
                     LogSuccessIfRetried(attempt);
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.ExportSuccess);
                     return response;
                 }
 
@@ -43,6 +52,8 @@ public class CustomRetryHandler : DelegatingHandler
                 var shouldRetry = ShouldRetryResponse(response, attempt, out lastException);
                 if (!shouldRetry)
                 {
+                    if (lastException != null) // transient failure with retries exhausted
+                        _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.ExportFailure);
                     return response;
                 }
 
@@ -58,11 +69,13 @@ public class CustomRetryHandler : DelegatingHandler
             // Wait before retry (except on final attempt)
             if (attempt < MaxRetries)
             {
+                _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.ExportRetry);
                 await DelayBeforeRetry(attempt, cancellationToken);
             }
         }
 
-        // All retries exhausted
+        // All retries exhausted via exceptions
+        _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.ExportFailure);
         return HandleRetriesExhausted(lastException);
     }
 

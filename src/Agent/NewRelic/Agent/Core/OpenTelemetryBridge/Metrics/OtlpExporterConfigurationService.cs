@@ -141,7 +141,7 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
             }
 
 #if NETSTANDARD2_0_OR_GREATER
-                var retryHandler = new CustomRetryHandler { InnerHandler = httpClientHandler };
+                var retryHandler = new CustomRetryHandler(_supportabilityMetricCounters) { InnerHandler = httpClientHandler };
                 var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = retryHandler };
 #else
             var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = httpClientHandler };
