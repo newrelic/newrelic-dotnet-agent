@@ -8,7 +8,7 @@ public class Package
     public string? NugetUrl { get; set; }
     public List<string> Tabs { get; set; } = new();
     public string VersionSource { get; set; } = "derived";
-    public string? MinVersion { get; set; }
-    public string? LatestVersion { get; set; }
+    public VersionSpec? MinVersion { get; set; }
+    public VersionSpec? LatestVersion { get; set; }
     public List<Note> Notes { get; set; } = new();
 }

@@ -28,6 +28,20 @@
       "minItems": 1,
       "items": { "enum": ["core", "framework"] }
     },
+    "versionSpec": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "core": { "type": "string" },
+            "framework": { "type": "string" }
+          }
+        }
+      ]
+    },
     "note": {
       "type": "object",
       "required": ["type"],
@@ -52,19 +66,19 @@
     },
     "package": {
       "type": "object",
-      "required": ["id", "tabs"],
+      "required": ["id", "tabs", "minVersion"],
       "properties": {
         "id": { "type": "string" },
         "nugetUrl": { "type": "string" },
         "tabs": { "$ref": "#/$defs/tabs" },
         "versionSource": { "enum": ["derived", "manual"] },
-        "minVersion": { "type": "string" },
-        "latestVersion": { "type": "string" },
+        "minVersion": { "$ref": "#/$defs/versionSpec" },
+        "latestVersion": { "$ref": "#/$defs/versionSpec" },
         "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } }
       },
       "additionalProperties": false,
       "if": { "properties": { "versionSource": { "const": "manual" } }, "required": ["versionSource"] },
-      "then": { "required": ["minVersion", "latestVersion"] }
+      "then": { "required": ["latestVersion"] }
     },
     "library": {
       "type": "object",

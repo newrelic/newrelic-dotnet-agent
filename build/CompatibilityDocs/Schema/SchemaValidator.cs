@@ -41,11 +41,31 @@ public class SchemaValidator
             if (!AllowedVersionSources.Contains(pkg.VersionSource))
                 throw new SchemaValidationException(
                     $"{pw}: versionSource '{pkg.VersionSource}' invalid. Allowed: {string.Join(", ", AllowedVersionSources)}.");
-            if (pkg.VersionSource == "manual" && (string.IsNullOrEmpty(pkg.MinVersion) || string.IsNullOrEmpty(pkg.LatestVersion)))
-                throw new SchemaValidationException(
-                    $"{pw}: versionSource 'manual' requires both minVersion and latestVersion.");
+
+            RequireResolvableVersion(pkg.MinVersion, pkg, "minVersion", pw);
+            if (pkg.VersionSource == "manual")
+                RequireResolvableVersion(pkg.LatestVersion, pkg, "latestVersion", pw);
+
             ValidateNotes(pkg.Notes, pw);
         }
+    }
+
+    // A curated min/latest must resolve to a non-empty value for every tab the package
+    // declares, and a map form must not carry tab keys the package doesn't declare.
+    private static void RequireResolvableVersion(VersionSpec? spec, Package pkg, string field, string pw)
+    {
+        if (spec == null)
+            throw new SchemaValidationException($"{pw}: {field} is required.");
+
+        foreach (var tab in spec.Tabs)
+            if (!pkg.Tabs.Contains(tab))
+                throw new SchemaValidationException(
+                    $"{pw}: {field} has tab '{tab}' which the package does not declare.");
+
+        foreach (var tab in pkg.Tabs)
+            if (string.IsNullOrEmpty(spec.For(tab)))
+                throw new SchemaValidationException(
+                    $"{pw}: {field} does not resolve a version for declared tab '{tab}'.");
     }
 
     private static void RequireTabs(List<string> tabs, string where)

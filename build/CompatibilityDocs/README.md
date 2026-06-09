@@ -6,12 +6,33 @@ libraries the .NET agent instruments, with version ranges and notes.
 ## How it works
 
 - Curated data lives in `compatibility.yaml` (validated by `compatibility.schema.json`).
-- Tested version numbers (`versionSource: derived`) are computed at generation
-  time from the integration-test `.csproj` files listed in
-  `build/Dotty/projectInfo.json` plus `MultiFunctionApplicationHelpers.csproj`.
-  Do not hand-edit derived versions.
-- Packages with no test-project source use `versionSource: manual` with explicit
-  `minVersion`/`latestVersion`.
+- Every package requires a curated `minVersion` — the minimum supported version
+  sourced from the public docs. This value is **never derived**; it must always be
+  set explicitly in the YAML and supplies the lower bound of the "Supported versions"
+  column in the generated table.
+- `versionSource` governs only the **upper bound** (latest version):
+  - `derived` (default): the latest version is computed at generation time by
+    scanning the integration-test `.csproj` files listed in
+    `build/Dotty/projectInfo.json` plus `MultiFunctionApplicationHelpers.csproj`.
+    Do not hand-edit derived versions.
+  - `manual`: the latest version comes from `latestVersion` in the YAML.
+    `latestVersion` is required when `versionSource: manual`.
+
+### `minVersion` and `latestVersion` shapes
+
+Both fields accept either a scalar string (applies to all tabs the package
+declares) or a per-tab map keyed by `core` and/or `framework`. A map must cover
+every tab the package declares and must not include tabs it does not declare.
+
+```yaml
+# scalar — same value for all tabs
+minVersion: "3.17.0"
+
+# per-tab map — when the minimum differs by platform
+minVersion:
+  core: "3.2.0"
+  framework: "2.0.0"
+```
 
 ## Editing the schema
 

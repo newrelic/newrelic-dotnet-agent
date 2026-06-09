@@ -8,6 +8,7 @@ public class SchemaLoader
 {
     private readonly IDeserializer _deserializer = new DeserializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
+        .WithTypeConverter(new VersionSpecYamlConverter())
         .IgnoreUnmatchedProperties()
         .Build();
 

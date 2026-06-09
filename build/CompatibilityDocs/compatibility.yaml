@@ -56,6 +56,7 @@ categories:
           - id: Microsoft.Azure.Cosmos
             nugetUrl: https://www.nuget.org/packages/Microsoft.Azure.Cosmos/
             tabs: [core, framework]
+            minVersion: "3.17.0"
             notes:
               - { type: addedInAgent, sinceVersion: "3.35.0", agentVersion: "10.32.0" }
 
@@ -64,6 +65,9 @@ categories:
           - id: CouchbaseNetClient
             nugetUrl: https://www.nuget.org/packages/CouchbaseNetClient/
             tabs: [core, framework]
+            minVersion:
+              core: "3.2.0"
+              framework: "2.0.0"
             notes:
               - { type: freeform, text: "Instance details aren't available for Couchbase." }
               - { type: knownIncompatibleVersions, versions: ["3.0.x", "3.1.x"] }
@@ -89,6 +93,7 @@ categories:
           - id: Microsoft.Data.SqlClient
             nugetUrl: https://www.nuget.org/packages/Microsoft.Data.SqlClient/
             tabs: [core, framework]
+            minVersion: "1.0.19239.1"
           - id: System.Data
             tabs: [framework]
             versionSource: manual
@@ -102,13 +107,19 @@ categories:
         packages:
           - id: System.Data.Odbc
             nugetUrl: https://www.nuget.org/packages/System.Data.Odbc/
-            tabs: [core, framework]
+            tabs: [core]
+            minVersion: "8.0.0"
         notes:
           - type: freeform
             text: >
-              The following features supported for ODBC datastore calls in .NET Framework
-              (using the built-in System.Data namespace) are not supported for .NET 8+:
+              On .NET 8+, the following ODBC operations are not instrumented (they are
+              instrumented on .NET Framework via the built-in System.Data namespace):
               Connection `Open`/`OpenAsync` calls, SqlDataReader `Read`/`NextResult` calls, and slow SQL traces.
+
+      - name: System.Data.ODBC (built-in)
+        tabs: [framework]
+        minAgentVersion: "10.35.0"
+        supportedVersions: ["(built-in driver, all supported .NET Framework versions)"]
 
       - name: MongoDB (legacy driver)
         packages:
@@ -126,6 +137,7 @@ categories:
           - id: MongoDB.Driver
             nugetUrl: https://www.nuget.org/packages/MongoDB.Driver/
             tabs: [core, framework]
+            minVersion: "2.3.0"
             notes:
               - { type: addedInAgent, sinceVersion: "3.0.0", agentVersion: "10.40.0" }
         notes:
@@ -146,20 +158,24 @@ categories:
           - id: MySql.Data
             nugetUrl: https://www.nuget.org/packages/MySql.Data/
             tabs: [core, framework]
+            minVersion: "6.10.7"
             notes:
               - { type: addedInAgent, sinceVersion: "9.7.0", agentVersion: "10.52.0" }
           - id: MySqlConnector
             nugetUrl: https://www.nuget.org/packages/MySqlConnector/
             tabs: [core, framework]
+            minVersion: "1.0.1"
 
       - name: Oracle
         packages:
           - id: Oracle.ManagedDataAccess.Core
             nugetUrl: https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/
             tabs: [core]
+            minVersion: "23.4.0"
           - id: Oracle.ManagedDataAccess
             nugetUrl: https://www.nuget.org/packages/Oracle.ManagedDataAccess/
             tabs: [framework]
+            minVersion: "12.1.2400"
         notes:
           - { type: freeform, text: "Older versions may be instrumented but are not tested or supported." }
 
@@ -168,6 +184,7 @@ categories:
           - id: Npgsql
             nugetUrl: https://www.nuget.org/packages/Npgsql/
             tabs: [core, framework]
+            minVersion: "4.0.0"
         notes:
           - { type: freeform, text: "Prior versions of Npgsql may also be instrumented, but duplicate and/or missing metrics are possible." }
 
@@ -187,12 +204,14 @@ categories:
           - id: StackExchange.Redis
             nugetUrl: https://www.nuget.org/packages/StackExchange.Redis/
             tabs: [core, framework]
+            minVersion: "1.0.488"
 
       - name: Elasticsearch
         packages:
           - id: Elastic.Clients.Elasticsearch
             nugetUrl: https://www.nuget.org/packages/Elastic.Clients.Elasticsearch/
             tabs: [core, framework]
+            minVersion: "8.0.0"
             notes:
               - { type: addedInAgent, sinceVersion: "8.10.0", agentVersion: "10.20.1" }
               - { type: addedInAgent, sinceVersion: "8.12.1", agentVersion: "10.23.0" }
@@ -200,15 +219,18 @@ categories:
           - id: NEST
             nugetUrl: https://www.nuget.org/packages/NEST/
             tabs: [core, framework]
+            minVersion: "7.0.0"
           - id: Elasticsearch.Net
             nugetUrl: https://www.nuget.org/packages/Elasticsearch.Net/
             tabs: [core, framework]
+            minVersion: "7.0.0"
 
       - name: Memcached
         packages:
           - id: EnyimMemcachedCore
             nugetUrl: https://www.nuget.org/packages/EnyimMemcachedCore/
             tabs: [core, framework]
+            minVersion: "2.0.0"
 
       - name: DynamoDB
         minAgentVersion: "10.33.0"
@@ -216,6 +238,7 @@ categories:
           - id: AWSSDK.DynamoDBv2
             nugetUrl: https://www.nuget.org/packages/AWSSDK.DynamoDBv2/
             tabs: [core, framework]
+            minVersion: "3.5.0"
 
       - name: IBM DB2
         tabs: [framework]
@@ -246,6 +269,7 @@ categories:
           - id: RestSharp
             nugetUrl: https://www.nuget.org/packages/RestSharp/
             tabs: [framework]
+            minVersion: "105.2.3"
         methods:
           - ExecuteTaskAsync
           - ExecuteGetTaskAsync
@@ -272,6 +296,7 @@ categories:
           - id: AWSSDK.BedrockRuntime
             nugetUrl: https://www.nuget.org/packages/AWSSDK.BedrockRuntime/
             tabs: [core, framework]
+            minVersion: "3.7.200.0"
         notes:
           - { type: freeform, text: "Instrumented since agent v10.23.0 (`InvokeModelAsync`); v10.37.0 adds `ConverseAsync`." }
 
@@ -281,6 +306,7 @@ categories:
           - id: OpenAI
             nugetUrl: https://www.nuget.org/packages/OpenAI/
             tabs: [core, framework]
+            minVersion: "2.0.0"
         notes:
           - { type: freeform, text: "`CompleteChat` / `CompleteChatAsync` — only Text completions are supported." }
 
@@ -290,6 +316,7 @@ categories:
           - id: Azure.AI.OpenAI
             nugetUrl: https://www.nuget.org/packages/Azure.AI.OpenAI/
             tabs: [core, framework]
+            minVersion: "2.0.0"
         notes:
           - { type: freeform, text: "`CompleteChat` / `CompleteChatAsync` — only Text completions are supported." }
 
@@ -304,6 +331,9 @@ categories:
           - id: log4net
             nugetUrl: https://www.nuget.org/packages/log4net/
             tabs: [core, framework]
+            minVersion:
+              core: "2.0.10"
+              framework: "1.2.10"
 
       - name: Serilog
         minAgentVersion: "9.7.0"
@@ -311,6 +341,9 @@ categories:
           - id: Serilog
             nugetUrl: https://www.nuget.org/packages/Serilog/
             tabs: [core, framework]
+            minVersion:
+              core: "2.5.0"
+              framework: "2.0.0"
 
       - name: NLog
         minAgentVersion: "9.7.0"
@@ -318,6 +351,9 @@ categories:
           - id: NLog
             nugetUrl: https://www.nuget.org/packages/NLog/
             tabs: [core, framework]
+            minVersion:
+              core: "4.5.0"
+              framework: "4.1.0"
 
       - name: Microsoft.Extensions.Logging
         minAgentVersion: "10.0.0"
@@ -325,6 +361,7 @@ categories:
           - id: Microsoft.Extensions.Logging
             nugetUrl: https://www.nuget.org/packages/Microsoft.Extensions.Logging/
             tabs: [core, framework]
+            minVersion: "3.0.0"
         notes:
           - { type: freeform, text: "On .NET Framework, supported beginning with agent v9.7.0." }
 
@@ -338,6 +375,7 @@ categories:
           - id: Confluent.Kafka
             nugetUrl: https://www.nuget.org/packages/Confluent.Kafka/
             tabs: [core, framework]
+            minVersion: "1.4.0"
         methods:
           - IProducer.Produce
           - IProducer.ProduceAsync
@@ -358,6 +396,7 @@ categories:
           - id: NServiceBus
             nugetUrl: https://www.nuget.org/packages/NServiceBus/
             tabs: [core, framework]
+            minVersion: "5.0"
         notes:
           - { type: freeform, text: "Puts and takes on messages." }
 
@@ -366,6 +405,7 @@ categories:
           - id: RabbitMQ.Client
             nugetUrl: https://www.nuget.org/packages/RabbitMQ.Client/
             tabs: [core, framework]
+            minVersion: "3.5.2"
         methods:
           - IModel.BasicGet
           - IModel.BasicPublish
@@ -384,6 +424,7 @@ categories:
           - id: MassTransit
             nugetUrl: https://www.nuget.org/packages/MassTransit/
             tabs: [core, framework]
+            minVersion: "7.1.0"
         notes:
           - { type: freeform, text: "Message publish/send and consume." }
 
@@ -393,6 +434,7 @@ categories:
           - id: AWSSDK.SQS
             nugetUrl: https://www.nuget.org/packages/AWSSDK.SQS/
             tabs: [core, framework]
+            minVersion: "3.7.0"
         notes:
           - { type: freeform, text: "Message send and receive." }
 
@@ -402,6 +444,7 @@ categories:
           - id: AWSSDK.Kinesis
             nugetUrl: https://www.nuget.org/packages/AWSSDK.Kinesis/
             tabs: [core, framework]
+            minVersion: "3.7.0"
         notes:
           - { type: freeform, text: "`PutRecord(s)Async` and `GetRecordsAsync` are instrumented as message broker operations; other operations as basic method calls." }
 
@@ -411,6 +454,7 @@ categories:
           - id: AWSSDK.KinesisFirehose
             nugetUrl: https://www.nuget.org/packages/AWSSDK.KinesisFirehose/
             tabs: [core, framework]
+            minVersion: "3.7.0"
         notes:
           - { type: freeform, text: "All Kinesis Firehose operations are instrumented as basic method calls." }
 
@@ -420,6 +464,7 @@ categories:
           - id: Azure.Messaging.ServiceBus
             nugetUrl: https://www.nuget.org/packages/Azure.Messaging.ServiceBus/
             tabs: [core, framework]
+            minVersion: "7.11.0"
         methods:
           - ReceiverManager.ProcessOneMessageWithinScopeAsync
           - ServiceBusProcessor.OnProcessMessageAsync
@@ -449,3 +494,4 @@ categories:
           - id: Hangfire
             nugetUrl: https://www.nuget.org/packages/Hangfire/
             tabs: [core, framework]
+            minVersion: "1.7.0"

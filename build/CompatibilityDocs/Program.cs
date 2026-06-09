@@ -63,7 +63,7 @@ public static class Program
     }
 
     private static void CheckDerivedPackagesResolve(CompatibilityModel model,
-        System.Collections.Generic.IReadOnlyDictionary<(string, Platform), VersionRange> versions)
+        System.Collections.Generic.IReadOnlyDictionary<(string, Platform), string> versions)
     {
         foreach (var cat in model.Categories)
         foreach (var lib in cat.Libraries)

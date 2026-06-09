@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using CompatibilityDocs.Derivation;
 using CompatibilityDocs.Rendering;
 using CompatibilityDocs.Schema;
 using NUnit.Framework;
@@ -26,7 +25,7 @@ public class MarkdownRendererTests
                         new Library
                         {
                             Name = "PostgreSQL",
-                            Packages = { new Package { Id = "Npgsql", NugetUrl = "https://www.nuget.org/packages/Npgsql/", Tabs = { "core", "framework" } } },
+                            Packages = { new Package { Id = "Npgsql", NugetUrl = "https://www.nuget.org/packages/Npgsql/", Tabs = { "core", "framework" }, MinVersion = VersionSpec.Single("4.0.0") } },
                             Notes = { new Note { Type = "freeform", Text = "Prior versions may be instrumented." } }
                         }
                     }
@@ -42,10 +41,10 @@ public class MarkdownRendererTests
             }
         };
 
-        var versions = new Dictionary<(string, Platform), VersionRange>
+        var versions = new Dictionary<(string, Platform), string>
         {
-            { ("npgsql", Platform.Core), new VersionRange("4.0.0", "7.0.7") },
-            { ("npgsql", Platform.Framework), new VersionRange("4.0.0", "7.0.7") },
+            { ("npgsql", Platform.Core), "7.0.7" },
+            { ("npgsql", Platform.Framework), "7.0.7" },
         };
 
         var md = new MarkdownRenderer(new NoteRenderer()).Render(model, versions);
@@ -68,7 +67,7 @@ public class MarkdownRendererTests
 
 Instruments these datastores:
 
-| Library | NuGet package | Versions tested | Min agent version | Notes |
+| Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
 | PostgreSQL | [Npgsql](https://www.nuget.org/packages/Npgsql/) | 4.0.0 – 7.0.7 | — | <ul><li>Prior versions may be instrumented.</li></ul> |
 
@@ -84,7 +83,7 @@ No server-process data is collected.
 
 Instruments these datastores:
 
-| Library | NuGet package | Versions tested | Min agent version | Notes |
+| Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
 | PostgreSQL | [Npgsql](https://www.nuget.org/packages/Npgsql/) | 4.0.0 – 7.0.7 | — | <ul><li>Prior versions may be instrumented.</li></ul> |
 
@@ -97,9 +96,6 @@ No server-process data is collected.
     [Test]
     public void Render_NoteTextWithEmbeddedNewlines_StaysOnOneTableRow()
     {
-        // A YAML block scalar (> or |) can leave a trailing or embedded newline in the
-        // note text. The renderer must keep the table cell on a single line so the row
-        // stays a valid markdown table row.
         var model = new CompatibilityModel
         {
             Categories =
@@ -112,7 +108,7 @@ No server-process data is collected.
                         new Library
                         {
                             Name = "Couchbase",
-                            Packages = { new Package { Id = "CouchbaseNetClient", Tabs = { "core" } } },
+                            Packages = { new Package { Id = "CouchbaseNetClient", Tabs = { "core" }, MinVersion = VersionSpec.Single("3.2.0") } },
                             Notes =
                             {
                                 new Note { Type = "freeform", Text = "Multi-line note ending with a newline.\n" },
@@ -124,9 +120,9 @@ No server-process data is collected.
             }
         };
 
-        var versions = new Dictionary<(string, Platform), VersionRange>
+        var versions = new Dictionary<(string, Platform), string>
         {
-            { ("couchbasenetclient", Platform.Core), new VersionRange("3.5.1", "3.6.6") },
+            { ("couchbasenetclient", Platform.Core), "3.6.6" },
         };
 
         var md = new MarkdownRenderer(new NoteRenderer()).Render(model, versions);
@@ -154,11 +150,9 @@ No server-process data is collected.
         };
 
         var md = new MarkdownRenderer(new NoteRenderer())
-            .Render(model, new Dictionary<(string, Platform), VersionRange>())
+            .Render(model, new Dictionary<(string, Platform), string>())
             .Replace("\r\n", "\n");
 
-        // Method-only library appears as a table row (dash for the versions column); the
-        // methods go in the Notes column inside a collapsed <details> block.
         Assert.That(md, Does.Contain(
             "| HttpClient | — | — | — | <details><summary>Instrumented methods (2)</summary><ul><li><code>SendAsync</code></li><li><code>GetAsync</code></li></ul></details> |"));
     }
@@ -178,7 +172,7 @@ No server-process data is collected.
                         new Library
                         {
                             Name = "RabbitMQ",
-                            Packages = { new Package { Id = "RabbitMQ.Client", Tabs = { "core" } } },
+                            Packages = { new Package { Id = "RabbitMQ.Client", Tabs = { "core" }, MinVersion = VersionSpec.Single("3.5.2") } },
                             Methods = { "IModel.BasicGet", "IModel.BasicPublish" },
                             Notes = { new Note { Type = "freeform", Text = "Only EventingBasicConsumer is instrumented." } }
                         }
@@ -187,14 +181,84 @@ No server-process data is collected.
             }
         };
 
-        var versions = new Dictionary<(string, Platform), VersionRange>
+        var versions = new Dictionary<(string, Platform), string>
         {
-            { ("rabbitmq.client", Platform.Core), new VersionRange("5.2.0", "7.1.2") },
+            { ("rabbitmq.client", Platform.Core), "7.1.2" },
         };
 
         var md = new MarkdownRenderer(new NoteRenderer()).Render(model, versions).Replace("\r\n", "\n");
 
         Assert.That(md, Does.Contain(
-            "| 5.2.0 – 7.1.2 | — | <ul><li>Only EventingBasicConsumer is instrumented.</li></ul><details><summary>Instrumented methods (2)</summary><ul><li><code>IModel.BasicGet</code></li><li><code>IModel.BasicPublish</code></li></ul></details> |"));
+            "| 3.5.2 – 7.1.2 | — | <ul><li>Only EventingBasicConsumer is instrumented.</li></ul><details><summary>Instrumented methods (2)</summary><ul><li><code>IModel.BasicGet</code></li><li><code>IModel.BasicPublish</code></li></ul></details> |"));
+    }
+
+    [Test]
+    public void Render_KnownMinUnknownLatest_ShowsMinAlone()
+    {
+        var model = new CompatibilityModel
+        {
+            Categories =
+            {
+                new Category
+                {
+                    Key = "datastores", Title = "Datastores", Tabs = { "framework" },
+                    Libraries =
+                    {
+                        new Library
+                        {
+                            Name = "Memcached",
+                            Packages = { new Package { Id = "EnyimMemcachedCore", Tabs = { "framework" }, MinVersion = VersionSpec.Single("2.0.0") } }
+                        }
+                    }
+                }
+            }
+        };
+
+        var md = new MarkdownRenderer(new NoteRenderer())
+            .Render(model, new Dictionary<(string, Platform), string>())
+            .Replace("\r\n", "\n");
+
+        Assert.That(md, Does.Contain("| Memcached | EnyimMemcachedCore | 2.0.0 | — |"));
+    }
+
+    [Test]
+    public void Render_PerPlatformMin_RendersDifferentFloorPerTab()
+    {
+        var model = new CompatibilityModel
+        {
+            Categories =
+            {
+                new Category
+                {
+                    Key = "datastores", Title = "Datastores", Tabs = { "core", "framework" },
+                    Libraries =
+                    {
+                        new Library
+                        {
+                            Name = "Couchbase",
+                            Packages =
+                            {
+                                new Package
+                                {
+                                    Id = "CouchbaseNetClient", Tabs = { "core", "framework" },
+                                    MinVersion = VersionSpec.Map(new Dictionary<string, string> { ["core"] = "3.2.0", ["framework"] = "2.0.0" })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var versions = new Dictionary<(string, Platform), string>
+        {
+            { ("couchbasenetclient", Platform.Core), "3.6.6" },
+            { ("couchbasenetclient", Platform.Framework), "3.6.6" },
+        };
+
+        var md = new MarkdownRenderer(new NoteRenderer()).Render(model, versions).Replace("\r\n", "\n");
+
+        Assert.That(md, Does.Contain("| Couchbase | CouchbaseNetClient | 3.2.0 – 3.6.6 |"));
+        Assert.That(md, Does.Contain("| Couchbase | CouchbaseNetClient | 2.0.0 – 3.6.6 |"));
     }
 }

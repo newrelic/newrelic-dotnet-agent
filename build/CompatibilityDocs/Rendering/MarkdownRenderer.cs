@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using CompatibilityDocs.Derivation;
 using CompatibilityDocs.Schema;
 
 namespace CompatibilityDocs.Rendering;
@@ -23,7 +22,7 @@ public class MarkdownRenderer
 
     public MarkdownRenderer(NoteRenderer notes) => _notes = notes;
 
-    public virtual string Render(CompatibilityModel model, IReadOnlyDictionary<(string, Platform), VersionRange> versions)
+    public virtual string Render(CompatibilityModel model, IReadOnlyDictionary<(string, Platform), string> versions)
     {
         var sb = new StringBuilder();
         sb.Append(Banner).Append("\n\n");
@@ -93,7 +92,7 @@ public class MarkdownRenderer
     }
 
     private void RenderCategory(StringBuilder sb, Category cat, Platform platform,
-        IReadOnlyDictionary<(string, Platform), VersionRange> versions)
+        IReadOnlyDictionary<(string, Platform), string> versions)
     {
         var libs = cat.Libraries.Where(l => EffectiveTabs(cat, l).Contains(PlatformTab(platform))).ToList();
         if (libs.Count == 0) return;
@@ -121,7 +120,7 @@ public class MarkdownRenderer
         if (tableLibs.Count > 0)
         {
             sb.Append('\n');
-            sb.Append("| Library | NuGet package | Versions tested | Min agent version | Notes |\n");
+            sb.Append("| Library | NuGet package | Supported versions | Min agent version | Notes |\n");
             sb.Append("| --- | --- | --- | --- | --- |\n");
             foreach (var lib in tableLibs)
                 RenderLibraryRows(sb, lib, platform, versions);
@@ -132,7 +131,7 @@ public class MarkdownRenderer
     }
 
     private void RenderLibraryRows(StringBuilder sb, Library lib, Platform platform,
-        IReadOnlyDictionary<(string, Platform), VersionRange> versions)
+        IReadOnlyDictionary<(string, Platform), string> versions)
     {
         // Instrumented methods are a library-level property; fold them into the Notes
         // cell of the library's first row inside a collapsed <details> block so the long
@@ -159,18 +158,20 @@ public class MarkdownRenderer
     }
 
     private void RenderRow(StringBuilder sb, Library lib, Package pkg, Platform platform,
-        IReadOnlyDictionary<(string, Platform), VersionRange> versions, string methodsCell)
+        IReadOnlyDictionary<(string, Platform), string> versions, string methodsCell)
     {
-        string min = "—", latest = "—";
+        var tab = PlatformTab(platform);
+        var min = pkg.MinVersion?.For(tab);
+        min = string.IsNullOrEmpty(min) ? "—" : min;
+        string latest;
         if (pkg.VersionSource == "manual")
         {
-            min = pkg.MinVersion ?? "—";
-            latest = pkg.LatestVersion ?? "—";
+            var l = pkg.LatestVersion?.For(tab);
+            latest = string.IsNullOrEmpty(l) ? "—" : l;
         }
-        else if (versions.TryGetValue((pkg.Id.ToLowerInvariant(), platform), out var range))
+        else
         {
-            min = range.Min ?? "—";
-            latest = range.Latest ?? "—";
+            latest = versions.TryGetValue((pkg.Id.ToLowerInvariant(), platform), out var v) ? v : "—";
         }
 
         var pkgCell = string.IsNullOrEmpty(pkg.NugetUrl) ? pkg.Id : $"[{pkg.Id}]({pkg.NugetUrl})";
@@ -180,13 +181,17 @@ public class MarkdownRenderer
             RenderNotesCell(pkg.Notes.Concat(lib.Notes), methodsCell));
     }
 
-    // Collapses the separate min/latest values into a single "Versions tested" cell:
-    // a "min – latest" range, a single value when they match, or "—" when neither is known.
+    // Composes the "Supported versions" cell. The curated min is the floor; the latest is
+    // the derived (or curated, for manual) ceiling. When the ceiling is unknown we show the
+    // floor alone rather than "min – —"; when both match we show a single value.
     private static string VersionCell(string min, string latest)
     {
-        if (min == "—" && latest == "—") return "—";
-        if (min == latest) return min;
-        return $"{min} – {latest}";
+        var hasMin = min != "—";
+        var hasLatest = latest != "—";
+        if (!hasMin && !hasLatest) return "—";
+        if (hasMin && !hasLatest) return min;
+        if (!hasMin) return latest;
+        return min == latest ? min : $"{min} – {latest}";
     }
 
     // The Notes cell is an HTML bullet list of the notes (HTML lists, unlike markdown "- "

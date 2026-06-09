@@ -8,20 +8,20 @@ namespace CompatibilityDocs.Tests;
 public class VersionResolverTests
 {
     [Test]
-    public void Resolve_ComputesMinAndLatestPerPlatform()
+    public void Resolve_ComputesLatestPerPlatform()
     {
         var refs = new List<PackageRef>
         {
-            new("Elastic.Clients.Elasticsearch", "8.0.0", "net462"),   // Framework min
-            new("Elastic.Clients.Elasticsearch", "8.18.3", "net481"),  // Framework latest
-            new("Elastic.Clients.Elasticsearch", "8.0.0", "net8.0"),   // Core min
-            new("Elastic.Clients.Elasticsearch", "9.0.7", "net10.0"),  // Core latest
+            new("Elastic.Clients.Elasticsearch", "8.0.0", "net462"),
+            new("Elastic.Clients.Elasticsearch", "8.18.3", "net481"),
+            new("Elastic.Clients.Elasticsearch", "8.0.0", "net8.0"),
+            new("Elastic.Clients.Elasticsearch", "9.0.7", "net10.0"),
         };
 
         var index = new VersionResolver().BuildIndex(refs);
 
-        Assert.That(index[("elastic.clients.elasticsearch", Platform.Framework)], Is.EqualTo(new VersionRange("8.0.0", "8.18.3")));
-        Assert.That(index[("elastic.clients.elasticsearch", Platform.Core)], Is.EqualTo(new VersionRange("8.0.0", "9.0.7")));
+        Assert.That(index[("elastic.clients.elasticsearch", Platform.Framework)], Is.EqualTo("8.18.3"));
+        Assert.That(index[("elastic.clients.elasticsearch", Platform.Core)], Is.EqualTo("9.0.7"));
     }
 
     [Test]
@@ -30,8 +30,8 @@ public class VersionResolverTests
         var refs = new List<PackageRef> { new("Hangfire", "1.8.23", null) };
         var index = new VersionResolver().BuildIndex(refs);
 
-        Assert.That(index[("hangfire", Platform.Core)], Is.EqualTo(new VersionRange("1.8.23", "1.8.23")));
-        Assert.That(index[("hangfire", Platform.Framework)], Is.EqualTo(new VersionRange("1.8.23", "1.8.23")));
+        Assert.That(index[("hangfire", Platform.Core)], Is.EqualTo("1.8.23"));
+        Assert.That(index[("hangfire", Platform.Framework)], Is.EqualTo("1.8.23"));
     }
 
     [Test]
@@ -44,7 +44,7 @@ public class VersionResolverTests
         };
         var index = new VersionResolver().BuildIndex(refs);
 
-        Assert.That(index[("npgsql", Platform.Framework)], Is.EqualTo(new VersionRange("4.0.0", "7.0.7")));
+        Assert.That(index[("npgsql", Platform.Framework)], Is.EqualTo("7.0.7"));
     }
 
     [Test]
@@ -57,7 +57,7 @@ public class VersionResolverTests
         };
         var index = new VersionResolver().BuildIndex(refs);
 
-        Assert.That(index[("awssdk.bedrockruntime", Platform.Core)], Is.EqualTo(new VersionRange("3.7.200.0", "4.0.20.1")));
+        Assert.That(index[("awssdk.bedrockruntime", Platform.Core)], Is.EqualTo("4.0.20.1"));
     }
 
     [Test]

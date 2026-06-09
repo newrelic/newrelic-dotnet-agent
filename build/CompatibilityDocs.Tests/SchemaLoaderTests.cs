@@ -64,6 +64,6 @@ categories:
         var mongo = cat.Libraries.Single(l => l.Name == "MongoDB (legacy driver)");
         Assert.That(mongo.Tabs, Is.EquivalentTo(new[] { "framework" }));
         Assert.That(mongo.Packages[0].VersionSource, Is.EqualTo("manual"));
-        Assert.That(mongo.Packages[0].MinVersion, Is.EqualTo("1.10.0"));
+        Assert.That(mongo.Packages[0].MinVersion!.For("framework"), Is.EqualTo("1.10.0"));
     }
 }
