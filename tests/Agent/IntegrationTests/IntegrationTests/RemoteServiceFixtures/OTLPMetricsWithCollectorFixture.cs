@@ -55,8 +55,22 @@ public abstract class OtlpMetricsWithCollectorFixtureBase : MockNewRelicFixture
     public void ClearCollectedOTLPMetrics()
     {
         var address = $"https://localhost:{MockNewRelicApplication.Port}/v1/metrics/clear";
-        TestLogger?.WriteLine($"[MockNewRelicFixture] Clear collected OTLP Metrics via: {address}");
+        TestLogger?.WriteLine($"[OtlpMetricsWithCollectorFixtureBase] Clear collected OTLP Metrics via: {address}");
         GetJson<string>(address);
+        ClearOtlpFailures();
+    }
+
+    public void ConfigureOtlpFailures(int statusCode, int count)
+    {
+        var address = $"https://localhost:{MockNewRelicApplication.Port}/v1/metrics/configure-failures";
+        var payload = $"{{\"statusCode\":{statusCode},\"count\":{count}}}";
+        TestLogger?.WriteLine($"[OtlpMetricsWithCollectorFixtureBase] Configure OTLP failures: statusCode={statusCode}, count={count}");
+        PostJson(address, payload);
+    }
+
+    public void ClearOtlpFailures()
+    {
+        ConfigureOtlpFailures(0, 0);
     }
 }
 
