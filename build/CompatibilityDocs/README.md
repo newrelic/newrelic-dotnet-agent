@@ -105,6 +105,21 @@ notes:
     tabs: [framework]   # renders only under the framework tab
 ```
 
+### Library shapes
+
+A library declares its content one of four ways, which control how it renders:
+
+- **`packages`** — one table row per package (version range from `minVersion` +
+  derived/manual latest).
+- **`supportedVersions`** — a curated bullet list outside the table (free-text
+  version strings; no NuGet package or derivation).
+- **`methods`** — a single row with a collapsible instrumented-methods list.
+- **`notes` only** — a single table row with dashes for the package, versions, and
+  min-agent columns, carrying just the notes. Use this for libraries the agent
+  instruments generically with no NuGet package or version to report (e.g. IBM DB2,
+  matched by its `DB2Command` ADO.NET type). A library must define at least one of
+  these four.
+
 ## Regenerate
 
 ```

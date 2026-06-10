@@ -119,9 +119,6 @@ The .NET agent automatically instruments these application frameworks:
 
 The .NET agent automatically instruments the performance of .NET application calls to these datastores:
 
-- IBM DB2: (built-in driver)
-  - Supported on .NET Framework.
-
 | Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
 | Cosmos DB | [Microsoft.Azure.Cosmos](https://www.nuget.org/packages/Microsoft.Azure.Cosmos/) | 3.17.0 – 3.60.0 | 9.2.0 | <ul><li>Versions 3.35.0+ supported since agent v10.32.0.</li></ul> |
@@ -144,6 +141,7 @@ The .NET agent automatically instruments the performance of .NET application cal
 | Elasticsearch | [Elasticsearch.Net](https://www.nuget.org/packages/Elasticsearch.Net/) | 7.0.0 – 7.17.5 | — |  |
 | Memcached | [EnyimMemcachedCore](https://www.nuget.org/packages/EnyimMemcachedCore/) | 2.0.0 | — |  |
 | DynamoDB | [AWSSDK.DynamoDBv2](https://www.nuget.org/packages/AWSSDK.DynamoDBv2/) | 3.5.0 – 4.0.18.6 | 10.33.0 |  |
+| IBM DB2 | — | — | — | <ul><li>Instrumented via the built-in IBM DB2 ADO.NET provider (any client exposing a `DB2Command` type); no NuGet package required.</li></ul> |
 
 The .NET agent doesn't collect data about datastore server processes. It only collects data from datastore client library usage. To directly monitor datastore server processes, use the New Relic infrastructure agent with [on-host integrations](https://docs.newrelic.com/docs/infrastructure/host-integrations/get-started/introduction-host-integrations/).
 

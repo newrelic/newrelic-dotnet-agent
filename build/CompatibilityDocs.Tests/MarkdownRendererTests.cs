@@ -411,28 +411,24 @@ No server-process data is collected.
     }
 
     [Test]
-    public void Render_CuratedLibraryWithNotes_EmitsNotesAsNestedBullets()
+    public void Render_NotesOnlyLibrary_RendersSingleDashRowWithNotes()
     {
-        // A supportedVersions (bullet) library carrying notes: each note must render as a
-        // nested sub-bullet under the library bullet, with tab filtering applied.
+        // A library with no packages, supportedVersions, or methods — only notes (IBM DB2).
+        // It must render one table row with dashes for package/versions/min-agent and the
+        // note in the Notes cell.
         var model = new CompatibilityModel
         {
             Categories =
             {
                 new Category
                 {
-                    Key = "datastores", Title = "Datastores", Tabs = { "core", "framework" },
+                    Key = "datastores", Title = "Datastores", Tabs = { "framework" },
                     Libraries =
                     {
                         new Library
                         {
                             Name = "IBM DB2", Tabs = new() { "framework" },
-                            SupportedVersions = new() { "(built-in driver)" },
-                            Notes =
-                            {
-                                new Note { Type = "freeform", Text = "Supported on .NET Framework." },
-                                new Note { Type = "freeform", Text = "Core-only aside.", Tabs = new() { "core" } }
-                            }
+                            Notes = { new Note { Type = "freeform", Text = "Supported on .NET Framework." } }
                         }
                     }
                 }
@@ -443,10 +439,8 @@ No server-process data is collected.
             .Render(model, new Dictionary<(string, Platform), string>())
             .Replace("\r\n", "\n");
 
-        Assert.That(md, Does.Contain("- IBM DB2: (built-in driver)\n  - Supported on .NET Framework.\n"),
-            "Framework-tab note must render as a nested bullet under the library.");
-        Assert.That(md, Does.Not.Contain("Core-only aside."),
-            "A core-only note must not appear under a framework-only library.");
+        Assert.That(md, Does.Contain(
+            "| IBM DB2 | — | — | — | <ul><li>Supported on .NET Framework.</li></ul> |"));
     }
 
     [Test]

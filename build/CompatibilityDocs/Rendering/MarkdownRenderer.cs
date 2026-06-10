@@ -103,7 +103,8 @@ public class MarkdownRenderer
 
         var curated = libs.Where(l => l.SupportedVersions is { Count: > 0 }).ToList();
         var tableLibs = libs
-            .Where(l => l.SupportedVersions is not { Count: > 0 } && (l.Packages.Count > 0 || l.Methods.Count > 0))
+            .Where(l => l.SupportedVersions is not { Count: > 0 }
+                        && (l.Packages.Count > 0 || l.Methods.Count > 0 || l.Notes.Count > 0))
             .ToList();
 
         if (curated.Count > 0)
@@ -116,15 +117,6 @@ public class MarkdownRenderer
                 var agent = string.IsNullOrEmpty(agentVer) ? "" : $" (min agent v{agentVer})";
                 sb.Append("- ").Append(lib.Name).Append(": ")
                   .Append(string.Join(", ", lib.SupportedVersions!)).Append(agent).Append('\n');
-
-                // Curated (bullet) libraries can also carry notes — emit each as a nested
-                // sub-bullet, filtered by tab the same way the table's Notes cell is.
-                foreach (var note in lib.Notes.Where(n => n.Tabs is null || n.Tabs.Contains(tab)))
-                {
-                    var text = CollapseLines(_notes.Render(note).Trim());
-                    if (text.Length > 0)
-                        sb.Append("  - ").Append(text).Append('\n');
-                }
             }
         }
 
@@ -159,15 +151,17 @@ public class MarkdownRenderer
             for (var i = 0; i < packages.Count; i++)
                 RenderRow(sb, lib, packages[i], platform, versions, i == 0 ? methodsCell : "");
         }
-        else if (lib.Methods.Count > 0)
+        else if (lib.Packages.Count == 0)
         {
-            // Method-only library (no NuGet package), or one whose packages don't apply
-            // to this platform: a single row with a dash for the versions column.
+            // Library with no NuGet package at all — a method-only library (HttpClient) or a
+            // notes-only one (IBM DB2, instrumented generically with no package or version).
+            // Render a single row with dashes for package/versions, carrying methods and notes.
             var tab = PlatformTab(platform);
             var agentVer = lib.MinAgentVersion?.For(tab);
             var agent = string.IsNullOrEmpty(agentVer) ? "—" : agentVer;
             AppendRow(sb, lib.Name, "—", "—", agent, RenderNotesCell(lib.Notes, methodsCell, tab));
         }
+        // else: the library has packages, but none apply to this platform — render nothing.
     }
 
     private void RenderRow(StringBuilder sb, Library lib, Package pkg, Platform platform,
@@ -229,11 +223,6 @@ public class MarkdownRenderer
     // newlines and escape pipes.
     private static string Sanitize(string s) =>
         s.Replace("\r", " ").Replace("\n", " ").Replace("|", "\\|");
-
-    // Like Sanitize but for bullet (non-table) context: collapse newlines so the note stays
-    // on one line, but leave pipes alone — they don't need escaping outside a table cell.
-    private static string CollapseLines(string s) =>
-        s.Replace("\r", " ").Replace("\n", " ");
 
     private static void AppendRow(StringBuilder sb, string library, string pkgCell,
         string versions, string agent, string notesCell)

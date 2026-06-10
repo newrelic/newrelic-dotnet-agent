@@ -98,7 +98,8 @@
       "anyOf": [
         { "required": ["packages"] },
         { "required": ["supportedVersions"] },
-        { "required": ["methods"] }
+        { "required": ["methods"] },
+        { "required": ["notes"] }
       ]
     }
   }

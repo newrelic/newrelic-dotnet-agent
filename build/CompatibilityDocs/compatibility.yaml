@@ -248,9 +248,8 @@ categories:
 
       - name: IBM DB2
         tabs: [framework]
-        supportedVersions: ["(built-in driver)"]
         notes:
-          - { type: freeform, text: "Supported on .NET Framework." }
+          - { type: freeform, text: "Instrumented via the built-in IBM DB2 ADO.NET provider (any client exposing a `DB2Command` type); no NuGet package required." }
 
   - key: external-calls
     title: External call libraries

@@ -27,9 +27,12 @@ public class SchemaValidator
         var hasPackages = lib.Packages.Count > 0;
         var hasSupportedVersions = lib.SupportedVersions is { Count: > 0 };
         var hasMethods = lib.Methods.Count > 0;
-        if (!hasPackages && !hasSupportedVersions && !hasMethods)
+        var hasNotes = lib.Notes.Count > 0;
+        // A notes-only library is valid: it renders a single dash row carrying its notes
+        // (e.g. IBM DB2, instrumented generically with no NuGet package or version).
+        if (!hasPackages && !hasSupportedVersions && !hasMethods && !hasNotes)
             throw new SchemaValidationException(
-                $"{where}: must define at least one of 'packages', 'supportedVersions', or 'methods'.");
+                $"{where}: must define at least one of 'packages', 'supportedVersions', 'methods', or 'notes'.");
 
         if (lib.Tabs != null) RequireTabs(lib.Tabs, where);
 
