@@ -120,4 +120,32 @@ categories:
         Assert.That(lib.MinAgentVersion.For("core"), Is.EqualTo("10.0.0"));
         Assert.That(lib.MinAgentVersion.For("framework"), Is.EqualTo("9.7.0"));
     }
+
+    [Test]
+    public void Load_PackageMinAgentVersionMap_DeserializesAsVersionSpecMap()
+    {
+        const string yaml = """
+categories:
+  - key: datastores
+    title: Datastores
+    tabs: [core, framework]
+    libraries:
+      - name: System.Data.ODBC
+        packages:
+          - id: System.Data.Odbc
+            tabs: [core, framework]
+            minVersion: "8.0.0"
+            minAgentVersion:
+              core: "10.35.0"
+              framework: "10.36.0"
+""";
+
+        var model = new SchemaLoader().LoadFromString(yaml);
+        var pkg = model.Categories[0].Libraries[0].Packages[0];
+
+        Assert.That(pkg.MinAgentVersion, Is.Not.Null);
+        Assert.That(pkg.MinAgentVersion!.IsMap, Is.True);
+        Assert.That(pkg.MinAgentVersion.For("core"), Is.EqualTo("10.35.0"));
+        Assert.That(pkg.MinAgentVersion.For("framework"), Is.EqualTo("10.36.0"));
+    }
 }

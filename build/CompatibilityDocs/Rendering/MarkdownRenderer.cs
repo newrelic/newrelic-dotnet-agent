@@ -116,6 +116,15 @@ public class MarkdownRenderer
                 var agent = string.IsNullOrEmpty(agentVer) ? "" : $" (min agent v{agentVer})";
                 sb.Append("- ").Append(lib.Name).Append(": ")
                   .Append(string.Join(", ", lib.SupportedVersions!)).Append(agent).Append('\n');
+
+                // Curated (bullet) libraries can also carry notes — emit each as a nested
+                // sub-bullet, filtered by tab the same way the table's Notes cell is.
+                foreach (var note in lib.Notes.Where(n => n.Tabs is null || n.Tabs.Contains(tab)))
+                {
+                    var text = CollapseLines(_notes.Render(note).Trim());
+                    if (text.Length > 0)
+                        sb.Append("  - ").Append(text).Append('\n');
+                }
             }
         }
 
@@ -179,7 +188,7 @@ public class MarkdownRenderer
         }
 
         var pkgCell = string.IsNullOrEmpty(pkg.NugetUrl) ? pkg.Id : $"[{pkg.Id}]({pkg.NugetUrl})";
-        var agentVer = lib.MinAgentVersion?.For(tab);
+        var agentVer = (pkg.MinAgentVersion ?? lib.MinAgentVersion)?.For(tab);
         var agent = string.IsNullOrEmpty(agentVer) ? "—" : agentVer;
 
         AppendRow(sb, lib.Name, pkgCell, VersionCell(min, latest), agent,
@@ -220,6 +229,11 @@ public class MarkdownRenderer
     // newlines and escape pipes.
     private static string Sanitize(string s) =>
         s.Replace("\r", " ").Replace("\n", " ").Replace("|", "\\|");
+
+    // Like Sanitize but for bullet (non-table) context: collapse newlines so the note stays
+    // on one line, but leave pipes alone — they don't need escaping outside a table cell.
+    private static string CollapseLines(string s) =>
+        s.Replace("\r", " ").Replace("\n", " ");
 
     private static void AppendRow(StringBuilder sb, string library, string pkgCell,
         string versions, string agent, string notesCell)

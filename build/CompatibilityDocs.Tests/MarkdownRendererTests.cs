@@ -409,4 +409,100 @@ No server-process data is collected.
         Assert.That(fwSection, Does.Contain("| 3.0.0 – 9.0.0 | 9.7.0 |"),
             "Framework row must show 9.7.0 in the min-agent column.");
     }
+
+    [Test]
+    public void Render_CuratedLibraryWithNotes_EmitsNotesAsNestedBullets()
+    {
+        // A supportedVersions (bullet) library carrying notes: each note must render as a
+        // nested sub-bullet under the library bullet, with tab filtering applied.
+        var model = new CompatibilityModel
+        {
+            Categories =
+            {
+                new Category
+                {
+                    Key = "datastores", Title = "Datastores", Tabs = { "core", "framework" },
+                    Libraries =
+                    {
+                        new Library
+                        {
+                            Name = "IBM DB2", Tabs = new() { "framework" },
+                            SupportedVersions = new() { "(built-in driver)" },
+                            Notes =
+                            {
+                                new Note { Type = "freeform", Text = "Supported on .NET Framework." },
+                                new Note { Type = "freeform", Text = "Core-only aside.", Tabs = new() { "core" } }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var md = new MarkdownRenderer(new NoteRenderer())
+            .Render(model, new Dictionary<(string, Platform), string>())
+            .Replace("\r\n", "\n");
+
+        Assert.That(md, Does.Contain("- IBM DB2: (built-in driver)\n  - Supported on .NET Framework.\n"),
+            "Framework-tab note must render as a nested bullet under the library.");
+        Assert.That(md, Does.Not.Contain("Core-only aside."),
+            "A core-only note must not appear under a framework-only library.");
+    }
+
+    [Test]
+    public void Render_PackageMinAgentVersion_OverridesLibraryAndVariesPerRow()
+    {
+        // A two-package family: a built-in (framework-only) row with no min-agent, and a
+        // NuGet row carrying its own per-tab min-agent (core 10.35.0, framework 10.36.0).
+        // The package-level value must override the absent library-level one per row.
+        var model = new CompatibilityModel
+        {
+            Categories =
+            {
+                new Category
+                {
+                    Key = "datastores", Title = "Datastores", Tabs = { "core", "framework" },
+                    Libraries =
+                    {
+                        new Library
+                        {
+                            Name = "System.Data.ODBC",
+                            Packages =
+                            {
+                                new Package
+                                {
+                                    Id = "System.Data", Tabs = { "framework" }, VersionSource = "manual",
+                                    MinVersion = VersionSpec.Single("4.6.2"), LatestVersion = VersionSpec.Single("4.8")
+                                },
+                                new Package
+                                {
+                                    Id = "System.Data.Odbc", Tabs = { "core", "framework" },
+                                    MinVersion = VersionSpec.Single("8.0.0"),
+                                    MinAgentVersion = VersionSpec.Map(new Dictionary<string, string>
+                                        { ["core"] = "10.35.0", ["framework"] = "10.36.0" })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var versions = new Dictionary<(string, Platform), string>
+        {
+            { ("system.data.odbc", Platform.Core), "10.0.8" },
+            { ("system.data.odbc", Platform.Framework), "10.0.8" },
+        };
+
+        var md = new MarkdownRenderer(new NoteRenderer()).Render(model, versions).Replace("\r\n", "\n");
+
+        var coreSection = md[md.IndexOf("## .NET Core", StringComparison.Ordinal)..md.IndexOf("## .NET Framework", StringComparison.Ordinal)];
+        var fwSection = md[md.IndexOf("## .NET Framework", StringComparison.Ordinal)..];
+
+        // Core: only the NuGet package row, min-agent 10.35.0.
+        Assert.That(coreSection, Does.Contain("| System.Data.ODBC | System.Data.Odbc | 8.0.0 – 10.0.8 | 10.35.0 |"));
+        // Framework: built-in row has no min-agent; NuGet row has 10.36.0.
+        Assert.That(fwSection, Does.Contain("| System.Data.ODBC | System.Data | 4.6.2 – 4.8 | — |"));
+        Assert.That(fwSection, Does.Contain("| System.Data.ODBC | System.Data.Odbc | 8.0.0 – 10.0.8 | 10.36.0 |"));
+    }
 }

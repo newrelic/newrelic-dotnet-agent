@@ -51,6 +51,26 @@ minAgentVersion:
   framework: "10.0.0"
 ```
 
+`minAgentVersion` may also be set on an individual **package**, where it
+overrides the library-level value for that package's rows only. Use this when
+one package in a family needs a newer agent than its siblings — e.g. the ODBC
+NuGet package (`System.Data.Odbc`) requires a later agent than the built-in
+`System.Data` assembly, which has no minimum at all:
+
+```yaml
+- name: System.Data.ODBC
+  packages:
+    - id: System.Data           # built-in assembly — no min-agent
+      tabs: [framework]
+      versionSource: manual
+      minVersion: "4.6.2"
+      latestVersion: "4.8"
+    - id: System.Data.Odbc      # NuGet package — its own min-agent
+      tabs: [core, framework]
+      minVersion: "8.0.0"
+      minAgentVersion: "10.36.0"
+```
+
 ## Editing the schema
 
 Open `compatibility.yaml` in an editor with the YAML language server (the VS Code

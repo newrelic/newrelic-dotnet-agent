@@ -49,6 +49,7 @@ public class SchemaValidator
             if (pkg.VersionSource == "manual")
                 RequireResolvableVersion(pkg.LatestVersion, pkg, "latestVersion", pw);
 
+            ValidateMinAgentVersion(pkg.MinAgentVersion, pkg.Tabs, pw);
             ValidateNotes(pkg.Notes, pw, pkg.Tabs);
         }
     }
@@ -71,16 +72,17 @@ public class SchemaValidator
                     $"{pw}: {field} does not resolve a version for declared tab '{tab}'.");
     }
 
-    // minAgentVersion map keys must be a subset of the library's effective tabs.
-    // Partial coverage (a declared tab with no entry) is allowed — it just renders no suffix.
-    private static void ValidateMinAgentVersion(VersionSpec? spec, IEnumerable<string> effectiveTabs, string where)
+    // minAgentVersion map keys must be a subset of the enclosing scope's tabs (a library's
+    // effective tabs, or a package's declared tabs). Partial coverage (a tab with no entry)
+    // is allowed — it just renders no suffix.
+    private static void ValidateMinAgentVersion(VersionSpec? spec, IEnumerable<string> scopeTabs, string where)
     {
         if (spec == null || !spec.IsMap) return;
-        var declared = new HashSet<string>(effectiveTabs);
+        var declared = new HashSet<string>(scopeTabs);
         foreach (var tab in spec.Tabs)
             if (!declared.Contains(tab))
                 throw new SchemaValidationException(
-                    $"{where}: minAgentVersion has tab '{tab}' which is not in the library's effective tabs.");
+                    $"{where}: minAgentVersion has tab '{tab}' which is not in the declared tabs.");
     }
 
     private static void RequireTabs(List<string> tabs, string where)

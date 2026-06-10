@@ -24,12 +24,12 @@ The .NET agent automatically instruments the performance of .NET application cal
 | Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
 | Cosmos DB | [Microsoft.Azure.Cosmos](https://www.nuget.org/packages/Microsoft.Azure.Cosmos/) | 3.17.0 – 3.60.0 | 9.2.0 | <ul><li>Versions 3.35.0+ supported since agent v10.32.0.</li></ul> |
-| Couchbase | [CouchbaseNetClient](https://www.nuget.org/packages/CouchbaseNetClient/) | 3.2.0 – 3.6.6 | — | <ul><li>Instance details aren't available for Couchbase.</li><li>Versions 3.2.0+ supported since agent v10.40.0.</li></ul> |
+| Couchbase | [CouchbaseNetClient](https://www.nuget.org/packages/CouchbaseNetClient/) | 3.2.0 – 3.6.6 | 10.40.0 | <ul><li>Instance details aren't available for Couchbase.</li><li>Versions 3.2.0+ supported since agent v10.40.0.</li></ul> |
 | Microsoft SQL Server | [System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) | 4.4.0 – 4.8.6 | — |  |
 | Microsoft SQL Server | [Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) | 1.0.19239.1 – 7.0.1 | — |  |
-| System.Data.ODBC | [System.Data.Odbc](https://www.nuget.org/packages/System.Data.Odbc/) | 8.0.0 – 10.0.8 | 10.35.0 | <ul><li>On .NET 8+, the following ODBC operations are not instrumented (they are instrumented on .NET Framework via the built-in System.Data namespace): Connection `Open`/`OpenAsync` calls, SqlDataReader `Read`/`NextResult` calls, and slow SQL traces.</li></ul> |
+| System.Data.ODBC | [System.Data.Odbc](https://www.nuget.org/packages/System.Data.Odbc/) | 8.0.0 – 10.0.8 | 10.36.0 | <ul><li>On .NET 8+, the following ODBC operations are not instrumented (they are instrumented on .NET Framework via the built-in System.Data namespace): Connection `Open`/`OpenAsync` calls, SqlDataReader `Read`/`NextResult` calls, and slow SQL traces.</li></ul> |
 | MongoDB (modern driver) | [MongoDB.Driver](https://www.nuget.org/packages/MongoDB.Driver/) | 2.3.0 – 3.9.0 | — | <ul><li>Versions 3.0.0+ supported since agent v10.40.0.</li><li>Beginning in agent version 10.12.0, the following methods added in or after driver version 2.7 are instrumented: <br>`IMongoCollection.CountDocuments[Async]` <br>`IMongoCollection.EstimatedDocumentCount[Async]` <br>`IMongoCollection.AggregateToCollection[Async]` <br>`IMongoDatabase.ListCollectionNames[Async]` <br>`IMongoDatabase.Aggregate[Async]` <br>`IMongoDatabase.AggregateToCollection[Async]` <br>`IMongoDatabase.Watch[Async]`.</li></ul> |
-| MySQL | [MySql.Data](https://www.nuget.org/packages/MySql.Data/) | 6.10.7 – 9.7.0 | — | <ul><li>Versions 9.7.0+ supported since agent v10.52.0.</li></ul> |
+| MySQL | [MySql.Data](https://www.nuget.org/packages/MySql.Data/) | 6.10.7 – 9.7.0 | — | <ul><li>Versions 9.7.0+ supported since agent v10.51.1.</li></ul> |
 | MySQL | [MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) | 1.0.1 – 2.5.0 | — |  |
 | Oracle | [Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) | 23.4.0 – 23.26.200 | — | <ul><li>Older versions may be instrumented but are not tested or supported.</li></ul> |
 | PostgreSQL | [Npgsql](https://www.nuget.org/packages/Npgsql/) | 4.0.0 – 7.0.7 | — | <ul><li>Prior versions of Npgsql may also be instrumented, but duplicate and/or missing metrics are possible.</li></ul> |
@@ -62,9 +62,9 @@ The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net
 
 | Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
-| AWS Bedrock | [AWSSDK.BedrockRuntime](https://www.nuget.org/packages/AWSSDK.BedrockRuntime/) | 3.7.200.0 – 4.0.20.1 | — | <ul><li>Instrumented since agent v10.23.0 (`InvokeModelAsync`); v10.37.0 adds `ConverseAsync`.</li></ul> |
-| OpenAI | [OpenAI](https://www.nuget.org/packages/OpenAI/) | 2.0.0 – 2.8.0 | 10.37.0 | <ul><li>`CompleteChat` / `CompleteChatAsync` — only Text completions are supported.</li></ul> |
-| Azure OpenAI | [Azure.AI.OpenAI](https://www.nuget.org/packages/Azure.AI.OpenAI/) | 2.0.0 – 2.8.0-beta.1 | 10.37.0 | <ul><li>`CompleteChat` / `CompleteChatAsync` — only Text completions are supported.</li></ul> |
+| AWS Bedrock | [AWSSDK.BedrockRuntime](https://www.nuget.org/packages/AWSSDK.BedrockRuntime/) | 3.7.200.0 – 4.0.20.1 | 10.23.0 | <ul><li>`ConverseAsync` instrumented since agent v10.37.0.</li></ul><details><summary>Instrumented methods (2)</summary><ul><li><code>InvokeModelAsync</code></li><li><code>ConverseAsync</code></li></ul></details> |
+| OpenAI | [OpenAI](https://www.nuget.org/packages/OpenAI/) | 2.0.0 – 2.8.0 | 10.37.0 | <ul><li>only Text completions are supported.</li></ul><details><summary>Instrumented methods (2)</summary><ul><li><code>CompleteChat</code></li><li><code>CompleteChatAsync</code></li></ul></details> |
+| Azure OpenAI | [Azure.AI.OpenAI](https://www.nuget.org/packages/Azure.AI.OpenAI/) | 2.0.0 – 2.8.0-beta.1 | 10.37.0 | <ul><li>only Text completions are supported.</li></ul><details><summary>Instrumented methods (2)</summary><ul><li><code>CompleteChat</code></li><li><code>CompleteChatAsync</code></li></ul></details> |
 
 ### Logging frameworks
 
@@ -83,7 +83,7 @@ The agent automatically instruments these message systems:
 
 | Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
-| Confluent.Kafka | [Confluent.Kafka](https://www.nuget.org/packages/Confluent.Kafka/) | 1.4.0 – 2.14.0 | — | <ul><li>Produce and consume on topics.</li></ul><details><summary>Instrumented methods (3)</summary><ul><li><code>IProducer.Produce</code></li><li><code>IProducer.ProduceAsync</code></li><li><code>IConsumer.Consume</code></li></ul></details> |
+| Confluent.Kafka | [Confluent.Kafka](https://www.nuget.org/packages/Confluent.Kafka/) | 1.4.0 – 2.14.0 | — | <details><summary>Instrumented methods (3)</summary><ul><li><code>IProducer.Produce</code></li><li><code>IProducer.ProduceAsync</code></li><li><code>IConsumer.Consume</code></li></ul></details> |
 | NServiceBus | [NServiceBus](https://www.nuget.org/packages/NServiceBus/) | 5.0 – 10.2.4 | — | <ul><li>Puts and takes on messages.</li></ul> |
 | RabbitMQ | [RabbitMQ.Client](https://www.nuget.org/packages/RabbitMQ.Client/) | 3.5.2 – 7.1.2 | — | <ul><li>Puts and takes on messages and queue purge.</li><li>When receiving messages using an `IBasicConsumer`, the `EventingBasicConsumer` is the only implementation that is instrumented.</li><li>`BasicGet` is instrumented, but the agent does not support [distributed tracing](https://docs.newrelic.com/docs/apm/distributed-tracing/getting-started/introduction-distributed-tracing/) for `BasicGet`.</li><li>Versions later than 6.8.1 are supported only when [OpenTelemetry API support](https://docs.newrelic.com/docs/apm/agents/manage-apm-agents/opentelemetry-api-support/) is enabled.</li></ul><details><summary>Instrumented methods (5)</summary><ul><li><code>IModel.BasicGet</code></li><li><code>IModel.BasicPublish</code></li><li><code>IModel.BasicConsume</code></li><li><code>IModel.QueuePurge</code></li><li><code>EventingBasicConsumer.HandleBasicDeliver</code></li></ul></details> |
 | MassTransit | [MassTransit](https://www.nuget.org/packages/MassTransit/) | 7.1.0 – 8.5.7 | 10.19.0 | <ul><li>Message publish/send and consume.</li></ul> |
@@ -119,8 +119,8 @@ The .NET agent automatically instruments these application frameworks:
 
 The .NET agent automatically instruments the performance of .NET application calls to these datastores:
 
-- System.Data.ODBC (built-in): (built-in driver, all supported .NET Framework versions) (min agent v10.35.0)
 - IBM DB2: (built-in driver)
+  - Supported on .NET Framework.
 
 | Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
@@ -129,9 +129,11 @@ The .NET agent automatically instruments the performance of .NET application cal
 | Microsoft SQL Server | [System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) | 4.4.0 – 4.8.6 | — |  |
 | Microsoft SQL Server | [Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) | 1.0.19239.1 – 7.0.1 | — |  |
 | Microsoft SQL Server | System.Data | 4.6.2 – 4.8 | — | <ul><li>Built-in .NET Framework assembly; no NuGet package required.</li></ul> |
+| System.Data.ODBC | System.Data | 4.6.2 – 4.8 | — | <ul><li>Built-in .NET Framework assembly; no NuGet package required.</li></ul> |
+| System.Data.ODBC | [System.Data.Odbc](https://www.nuget.org/packages/System.Data.Odbc/) | 8.0.0 – 10.0.8 | 10.36.0 |  |
 | MongoDB (legacy driver) | [mongocsharpdriver](https://www.nuget.org/packages/mongocsharpdriver/) | 1.10.0 | — | <ul><li>Known incompatible versions: Instance details aren't available in version 2 and lower.</li></ul> |
 | MongoDB (modern driver) | [MongoDB.Driver](https://www.nuget.org/packages/MongoDB.Driver/) | 2.3.0 – 3.9.0 | — | <ul><li>Versions 3.0.0+ supported since agent v10.40.0.</li><li>Beginning in agent version 10.12.0, the following methods added in or after driver version 2.7 are instrumented: <br>`IMongoCollection.CountDocuments[Async]` <br>`IMongoCollection.EstimatedDocumentCount[Async]` <br>`IMongoCollection.AggregateToCollection[Async]` <br>`IMongoDatabase.ListCollectionNames[Async]` <br>`IMongoDatabase.Aggregate[Async]` <br>`IMongoDatabase.AggregateToCollection[Async]` <br>`IMongoDatabase.Watch[Async]`.</li></ul> |
-| MySQL | [MySql.Data](https://www.nuget.org/packages/MySql.Data/) | 6.10.7 – 9.7.0 | — | <ul><li>Versions 9.7.0+ supported since agent v10.52.0.</li></ul> |
+| MySQL | [MySql.Data](https://www.nuget.org/packages/MySql.Data/) | 6.10.7 – 9.7.0 | — | <ul><li>Versions 9.7.0+ supported since agent v10.51.1.</li></ul> |
 | MySQL | [MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) | 1.0.1 – 2.5.0 | — |  |
 | Oracle | [Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) | 12.1.2400 – 23.26.200 | — |  |
 | PostgreSQL | [Npgsql](https://www.nuget.org/packages/Npgsql/) | 4.0.0 – 7.0.7 | — | <ul><li>Prior versions of Npgsql may also be instrumented, but duplicate and/or missing metrics are possible.</li></ul> |
@@ -167,9 +169,9 @@ The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net
 
 | Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
-| AWS Bedrock | [AWSSDK.BedrockRuntime](https://www.nuget.org/packages/AWSSDK.BedrockRuntime/) | 3.7.200.0 – 4.0.20.1 | — | <ul><li>Instrumented since agent v10.23.0 (`InvokeModelAsync`); v10.37.0 adds `ConverseAsync`.</li></ul> |
-| OpenAI | [OpenAI](https://www.nuget.org/packages/OpenAI/) | 2.0.0 – 2.8.0 | 10.37.0 | <ul><li>`CompleteChat` / `CompleteChatAsync` — only Text completions are supported.</li></ul> |
-| Azure OpenAI | [Azure.AI.OpenAI](https://www.nuget.org/packages/Azure.AI.OpenAI/) | 2.0.0 – 2.8.0-beta.1 | 10.37.0 | <ul><li>`CompleteChat` / `CompleteChatAsync` — only Text completions are supported.</li></ul> |
+| AWS Bedrock | [AWSSDK.BedrockRuntime](https://www.nuget.org/packages/AWSSDK.BedrockRuntime/) | 3.7.200.0 – 4.0.20.1 | 10.23.0 | <ul><li>`ConverseAsync` instrumented since agent v10.37.0.</li></ul><details><summary>Instrumented methods (2)</summary><ul><li><code>InvokeModelAsync</code></li><li><code>ConverseAsync</code></li></ul></details> |
+| OpenAI | [OpenAI](https://www.nuget.org/packages/OpenAI/) | 2.0.0 – 2.8.0 | 10.37.0 | <ul><li>only Text completions are supported.</li></ul><details><summary>Instrumented methods (2)</summary><ul><li><code>CompleteChat</code></li><li><code>CompleteChatAsync</code></li></ul></details> |
+| Azure OpenAI | [Azure.AI.OpenAI](https://www.nuget.org/packages/Azure.AI.OpenAI/) | 2.0.0 – 2.8.0-beta.1 | 10.37.0 | <ul><li>only Text completions are supported.</li></ul><details><summary>Instrumented methods (2)</summary><ul><li><code>CompleteChat</code></li><li><code>CompleteChatAsync</code></li></ul></details> |
 
 ### Logging frameworks
 
@@ -188,7 +190,7 @@ The agent automatically instruments these message systems:
 
 | Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
-| Confluent.Kafka | [Confluent.Kafka](https://www.nuget.org/packages/Confluent.Kafka/) | 1.4.0 | — | <ul><li>Produce and consume on topics.</li></ul><details><summary>Instrumented methods (3)</summary><ul><li><code>IProducer.Produce</code></li><li><code>IProducer.ProduceAsync</code></li><li><code>IConsumer.Consume</code></li></ul></details> |
+| Confluent.Kafka | [Confluent.Kafka](https://www.nuget.org/packages/Confluent.Kafka/) | 1.4.0 | — | <details><summary>Instrumented methods (3)</summary><ul><li><code>IProducer.Produce</code></li><li><code>IProducer.ProduceAsync</code></li><li><code>IConsumer.Consume</code></li></ul></details> |
 | MSMQ | — | — | — | <details><summary>Instrumented methods (4)</summary><ul><li><code>Message.Send</code></li><li><code>Message.Receive</code></li><li><code>Queue.Peek</code></li><li><code>Queue.Purge</code></li></ul></details> |
 | NServiceBus | [NServiceBus](https://www.nuget.org/packages/NServiceBus/) | 5.0 – 8.2.4 | — | <ul><li>Puts and takes on messages.</li></ul> |
 | RabbitMQ | [RabbitMQ.Client](https://www.nuget.org/packages/RabbitMQ.Client/) | 3.5.2 – 6.8.1 | — | <ul><li>Puts and takes on messages and queue purge.</li><li>When receiving messages using an `IBasicConsumer`, the `EventingBasicConsumer` is the only implementation that is instrumented.</li><li>`BasicGet` is instrumented, but the agent does not support [distributed tracing](https://docs.newrelic.com/docs/apm/distributed-tracing/getting-started/introduction-distributed-tracing/) for `BasicGet`.</li><li>Versions later than 6.8.1 are supported only when [OpenTelemetry API support](https://docs.newrelic.com/docs/apm/agents/manage-apm-agents/opentelemetry-api-support/) is enabled.</li></ul><details><summary>Instrumented methods (5)</summary><ul><li><code>IModel.BasicGet</code></li><li><code>IModel.BasicPublish</code></li><li><code>IModel.BasicConsume</code></li><li><code>IModel.QueuePurge</code></li><li><code>EventingBasicConsumer.HandleBasicDeliver</code></li></ul></details> |

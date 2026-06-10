@@ -75,6 +75,7 @@
         "versionSource": { "enum": ["derived", "manual"] },
         "minVersion": { "$ref": "#/$defs/versionSpec" },
         "latestVersion": { "$ref": "#/$defs/versionSpec" },
+        "minAgentVersion": { "$ref": "#/$defs/versionSpec" },
         "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } }
       },
       "additionalProperties": false,

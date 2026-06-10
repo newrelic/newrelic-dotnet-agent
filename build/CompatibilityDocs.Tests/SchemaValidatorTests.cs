@@ -163,6 +163,28 @@ public class SchemaValidatorTests
     }
 
     [Test]
+    public void Validate_PackageMinAgentVersionMapWithUndeclaredTab_Throws()
+    {
+        // Package declares [core]; its minAgentVersion map has a [framework] key.
+        var model = ModelWith(new Library
+        {
+            Name = "Y",
+            Packages =
+            {
+                new Package
+                {
+                    Id = "P", Tabs = { "core" }, MinVersion = VersionSpec.Single("1.0.0"),
+                    MinAgentVersion = VersionSpec.Map(new Dictionary<string, string> { ["core"] = "10.35.0", ["framework"] = "10.36.0" })
+                }
+            }
+        });
+
+        var ex = Assert.Throws<SchemaValidationException>(() => new SchemaValidator().Validate(model));
+        Assert.That(ex!.Message, Does.Contain("framework"), "Error must name the undeclared tab.");
+        Assert.That(ex.Message, Does.Contain("P"), "Error must name the package.");
+    }
+
+    [Test]
     public void Validate_PackageNoteTabsWithUndeclaredTab_Throws()
     {
         var model = ModelWith(new Library

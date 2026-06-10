@@ -61,6 +61,8 @@ categories:
               - { type: addedInAgent, sinceVersion: "3.35.0", agentVersion: "10.32.0" }
 
       - name: Couchbase
+        minAgentVersion: 
+          core: "10.40.0"
         packages:
           - id: CouchbaseNetClient
             nugetUrl: https://www.nuget.org/packages/CouchbaseNetClient/
@@ -104,23 +106,26 @@ categories:
               - { type: freeform, text: "Built-in .NET Framework assembly; no NuGet package required." }
 
       - name: System.Data.ODBC
-        minAgentVersion: "10.35.0"
         packages:
+          - id: System.Data
+            tabs: [framework]
+            versionSource: manual
+            minVersion: "4.6.2"
+            latestVersion: "4.8"
+            notes:
+              - { type: freeform, text: "Built-in .NET Framework assembly; no NuGet package required." }
           - id: System.Data.Odbc
             nugetUrl: https://www.nuget.org/packages/System.Data.Odbc/
-            tabs: [core]
+            tabs: [core, framework]
             minVersion: "8.0.0"
+            minAgentVersion: "10.36.0"
         notes:
           - type: freeform
+            tabs: [core]
             text: >
               On .NET 8+, the following ODBC operations are not instrumented (they are
               instrumented on .NET Framework via the built-in System.Data namespace):
               Connection `Open`/`OpenAsync` calls, SqlDataReader `Read`/`NextResult` calls, and slow SQL traces.
-
-      - name: System.Data.ODBC (built-in)
-        tabs: [framework]
-        minAgentVersion: "10.35.0"
-        supportedVersions: ["(built-in driver, all supported .NET Framework versions)"]
 
       - name: MongoDB (legacy driver)
         packages:
@@ -161,7 +166,7 @@ categories:
             tabs: [core, framework]
             minVersion: "6.10.7"
             notes:
-              - { type: addedInAgent, sinceVersion: "9.7.0", agentVersion: "10.52.0" }
+              - { type: addedInAgent, sinceVersion: "9.7.0", agentVersion: "10.51.1" }
           - id: MySqlConnector
             nugetUrl: https://www.nuget.org/packages/MySqlConnector/
             tabs: [core, framework]
@@ -293,13 +298,17 @@ categories:
     intro: "The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#ai_monitoring) to automatically instrument these LLM frameworks:"
     libraries:
       - name: AWS Bedrock
+        minAgentVersion: "10.23.0"
         packages:
           - id: AWSSDK.BedrockRuntime
             nugetUrl: https://www.nuget.org/packages/AWSSDK.BedrockRuntime/
             tabs: [core, framework]
             minVersion: "3.7.200.0"
+        methods:
+          - InvokeModelAsync
+          - ConverseAsync
         notes:
-          - { type: freeform, text: "Instrumented since agent v10.23.0 (`InvokeModelAsync`); v10.37.0 adds `ConverseAsync`." }
+          - { type: freeform, text: "`ConverseAsync` instrumented since agent v10.37.0." }
 
       - name: OpenAI
         minAgentVersion: "10.37.0"
@@ -308,8 +317,11 @@ categories:
             nugetUrl: https://www.nuget.org/packages/OpenAI/
             tabs: [core, framework]
             minVersion: "2.0.0"
+        methods:
+          - CompleteChat
+          - CompleteChatAsync
         notes:
-          - { type: freeform, text: "`CompleteChat` / `CompleteChatAsync` — only Text completions are supported." }
+          - { type: freeform, text: "only Text completions are supported." }
 
       - name: Azure OpenAI
         minAgentVersion: "10.37.0"
@@ -318,8 +330,11 @@ categories:
             nugetUrl: https://www.nuget.org/packages/Azure.AI.OpenAI/
             tabs: [core, framework]
             minVersion: "2.0.0"
+        methods:
+          - CompleteChat
+          - CompleteChatAsync
         notes:
-          - { type: freeform, text: "`CompleteChat` / `CompleteChatAsync` — only Text completions are supported." }
+          - { type: freeform, text: "only Text completions are supported." }
 
   - key: logging
     title: Logging frameworks
@@ -381,8 +396,6 @@ categories:
           - IProducer.Produce
           - IProducer.ProduceAsync
           - IConsumer.Consume
-        notes:
-          - { type: freeform, text: "Produce and consume on topics." }
 
       - name: MSMQ
         tabs: [framework]
