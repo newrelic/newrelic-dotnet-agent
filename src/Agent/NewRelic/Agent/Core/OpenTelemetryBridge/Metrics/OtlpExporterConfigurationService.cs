@@ -146,7 +146,10 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
 #else
             var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = httpClientHandler };
 #endif
-            var httpClient = new HttpClient(auditHandler);
+            // Gzip is the outermost handler so each request is compressed once before the
+            // audit/retry handlers run; the audit log then observes the compressed payload.
+            var gzipHandler = new GzipCompressionHandler { InnerHandler = auditHandler };
+            var httpClient = new HttpClient(gzipHandler);
             httpClient.Timeout = TimeSpan.FromMilliseconds(_configurationService.Configuration.OpenTelemetryMetricsExportTimeoutMs);
             httpClient.DefaultRequestHeaders.Add("User-Agent", $"NewRelic-DotNet-Agent/{AgentInstallConfiguration.AgentVersion ?? "Unknown"}");
 
