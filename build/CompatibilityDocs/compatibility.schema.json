@@ -52,7 +52,8 @@
         "version": { "type": "string" },
         "aboveVersion": { "type": "string" },
         "text": { "type": "string" },
-        "versions": { "type": "array", "items": { "type": "string" } }
+        "versions": { "type": "array", "items": { "type": "string" } },
+        "tabs": { "$ref": "#/$defs/tabs" }
       },
       "additionalProperties": false,
       "allOf": [
@@ -88,7 +89,7 @@
         "tabs": { "$ref": "#/$defs/tabs" },
         "packages": { "type": "array", "items": { "$ref": "#/$defs/package" } },
         "supportedVersions": { "type": "array", "items": { "type": "string" } },
-        "minAgentVersion": { "type": "string" },
+        "minAgentVersion": { "$ref": "#/$defs/versionSpec" },
         "methods": { "type": "array", "items": { "type": "string" } },
         "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } }
       },

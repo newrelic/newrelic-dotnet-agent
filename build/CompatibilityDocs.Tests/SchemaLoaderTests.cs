@@ -66,4 +66,58 @@ categories:
         Assert.That(mongo.Packages[0].VersionSource, Is.EqualTo("manual"));
         Assert.That(mongo.Packages[0].MinVersion!.For("framework"), Is.EqualTo("1.10.0"));
     }
+
+    [Test]
+    public void Load_MinAgentVersionScalar_DeserializesAsVersionSpecSingle()
+    {
+        const string yaml = """
+categories:
+  - key: logging
+    title: Logging frameworks
+    tabs: [core, framework]
+    libraries:
+      - name: Microsoft.Extensions.Logging
+        minAgentVersion: "10.0.0"
+        packages:
+          - id: Microsoft.Extensions.Logging
+            tabs: [core, framework]
+            minVersion: "3.0.0"
+""";
+
+        var model = new SchemaLoader().LoadFromString(yaml);
+        var lib = model.Categories[0].Libraries[0];
+
+        Assert.That(lib.MinAgentVersion, Is.Not.Null);
+        Assert.That(lib.MinAgentVersion!.IsMap, Is.False);
+        Assert.That(lib.MinAgentVersion.For("core"), Is.EqualTo("10.0.0"));
+        Assert.That(lib.MinAgentVersion.For("framework"), Is.EqualTo("10.0.0"));
+    }
+
+    [Test]
+    public void Load_MinAgentVersionMap_DeserializesAsVersionSpecMap()
+    {
+        const string yaml = """
+categories:
+  - key: logging
+    title: Logging frameworks
+    tabs: [core, framework]
+    libraries:
+      - name: Microsoft.Extensions.Logging
+        minAgentVersion:
+          core: "10.0.0"
+          framework: "9.7.0"
+        packages:
+          - id: Microsoft.Extensions.Logging
+            tabs: [core, framework]
+            minVersion: "3.0.0"
+""";
+
+        var model = new SchemaLoader().LoadFromString(yaml);
+        var lib = model.Categories[0].Libraries[0];
+
+        Assert.That(lib.MinAgentVersion, Is.Not.Null);
+        Assert.That(lib.MinAgentVersion!.IsMap, Is.True);
+        Assert.That(lib.MinAgentVersion.For("core"), Is.EqualTo("10.0.0"));
+        Assert.That(lib.MinAgentVersion.For("framework"), Is.EqualTo("9.7.0"));
+    }
 }

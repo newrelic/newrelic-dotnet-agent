@@ -109,9 +109,11 @@ public class MarkdownRenderer
         if (curated.Count > 0)
         {
             sb.Append('\n');
+            var tab = PlatformTab(platform);
             foreach (var lib in curated)
             {
-                var agent = string.IsNullOrEmpty(lib.MinAgentVersion) ? "" : $" (min agent v{lib.MinAgentVersion})";
+                var agentVer = lib.MinAgentVersion?.For(tab);
+                var agent = string.IsNullOrEmpty(agentVer) ? "" : $" (min agent v{agentVer})";
                 sb.Append("- ").Append(lib.Name).Append(": ")
                   .Append(string.Join(", ", lib.SupportedVersions!)).Append(agent).Append('\n');
             }
@@ -152,8 +154,10 @@ public class MarkdownRenderer
         {
             // Method-only library (no NuGet package), or one whose packages don't apply
             // to this platform: a single row with a dash for the versions column.
-            var agent = string.IsNullOrEmpty(lib.MinAgentVersion) ? "—" : lib.MinAgentVersion;
-            AppendRow(sb, lib.Name, "—", "—", agent, RenderNotesCell(lib.Notes, methodsCell));
+            var tab = PlatformTab(platform);
+            var agentVer = lib.MinAgentVersion?.For(tab);
+            var agent = string.IsNullOrEmpty(agentVer) ? "—" : agentVer;
+            AppendRow(sb, lib.Name, "—", "—", agent, RenderNotesCell(lib.Notes, methodsCell, tab));
         }
     }
 
@@ -175,10 +179,11 @@ public class MarkdownRenderer
         }
 
         var pkgCell = string.IsNullOrEmpty(pkg.NugetUrl) ? pkg.Id : $"[{pkg.Id}]({pkg.NugetUrl})";
-        var agent = string.IsNullOrEmpty(lib.MinAgentVersion) ? "—" : lib.MinAgentVersion;
+        var agentVer = lib.MinAgentVersion?.For(tab);
+        var agent = string.IsNullOrEmpty(agentVer) ? "—" : agentVer;
 
         AppendRow(sb, lib.Name, pkgCell, VersionCell(min, latest), agent,
-            RenderNotesCell(pkg.Notes.Concat(lib.Notes), methodsCell));
+            RenderNotesCell(pkg.Notes.Concat(lib.Notes), methodsCell, tab));
     }
 
     // Composes the "Supported versions" cell. The curated min is the floor; the latest is
@@ -197,9 +202,10 @@ public class MarkdownRenderer
     // The Notes cell is an HTML bullet list of the notes (HTML lists, unlike markdown "- "
     // syntax, render inside a table cell), followed by the collapsible instrumented-methods
     // block — which sits after the list, not as a bullet itself. Returns "" when empty.
-    private string RenderNotesCell(IEnumerable<Note> notes, string methodsCell)
+    private string RenderNotesCell(IEnumerable<Note> notes, string methodsCell, string tab)
     {
         var items = notes
+            .Where(n => n.Tabs is null || n.Tabs.Contains(tab))
             .Select(n => Sanitize(_notes.Render(n).Trim()))
             .Where(s => s.Length > 0)
             .ToList();

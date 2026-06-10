@@ -70,8 +70,9 @@ categories:
               framework: "2.0.0"
             notes:
               - { type: freeform, text: "Instance details aren't available for Couchbase." }
-              - { type: knownIncompatibleVersions, versions: ["3.0.x", "3.1.x"] }
+              - { type: knownIncompatibleVersions, versions: ["3.0.x", "3.1.x"], tabs: [framework] }
               - type: freeform
+                tabs: [framework]
                 text: >
                   With CouchbaseNetClient 2.x, the following methods are not instrumented by default
                   in favor of their multi-document counterparts:
@@ -177,7 +178,7 @@ categories:
             tabs: [framework]
             minVersion: "12.1.2400"
         notes:
-          - { type: freeform, text: "Older versions may be instrumented but are not tested or supported." }
+          - { type: freeform, text: "Older versions may be instrumented but are not tested or supported.", tabs: [core] }
 
       - name: PostgreSQL
         packages:
@@ -356,14 +357,14 @@ categories:
               framework: "4.1.0"
 
       - name: Microsoft.Extensions.Logging
-        minAgentVersion: "10.0.0"
+        minAgentVersion:
+          core: "10.0.0"
+          framework: "9.7.0"
         packages:
           - id: Microsoft.Extensions.Logging
             nugetUrl: https://www.nuget.org/packages/Microsoft.Extensions.Logging/
             tabs: [core, framework]
             minVersion: "3.0.0"
-        notes:
-          - { type: freeform, text: "On .NET Framework, supported beginning with agent v9.7.0." }
 
   - key: messaging
     title: Message systems

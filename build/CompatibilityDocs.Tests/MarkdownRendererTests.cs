@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CompatibilityDocs.Rendering;
 using CompatibilityDocs.Schema;
@@ -35,7 +36,7 @@ public class MarkdownRendererTests
                     Key = "app-frameworks", Title = "App frameworks", Tabs = { "core" },
                     Libraries =
                     {
-                        new Library { Name = "ASP.NET Core MVC", SupportedVersions = new() { "6.0", "7.0", "8.0" }, MinAgentVersion = "10.0.0" }
+                        new Library { Name = "ASP.NET Core MVC", SupportedVersions = new() { "6.0", "7.0", "8.0" }, MinAgentVersion = VersionSpec.Single("10.0.0") }
                     }
                 }
             }
@@ -260,5 +261,152 @@ No server-process data is collected.
 
         Assert.That(md, Does.Contain("| Couchbase | CouchbaseNetClient | 3.2.0 – 3.6.6 |"));
         Assert.That(md, Does.Contain("| Couchbase | CouchbaseNetClient | 2.0.0 – 3.6.6 |"));
+    }
+
+    [Test]
+    public void Render_NoteWithFrameworkOnlyTabs_AppearsInFrameworkNotCore()
+    {
+        var model = new CompatibilityModel
+        {
+            Categories =
+            {
+                new Category
+                {
+                    Key = "datastores", Title = "Datastores", Tabs = { "core", "framework" },
+                    Libraries =
+                    {
+                        new Library
+                        {
+                            Name = "Couchbase",
+                            Packages =
+                            {
+                                new Package
+                                {
+                                    Id = "CouchbaseNetClient", Tabs = { "core", "framework" },
+                                    MinVersion = VersionSpec.Map(new Dictionary<string, string>
+                                        { ["core"] = "3.2.0", ["framework"] = "2.0.0" })
+                                }
+                            },
+                            Notes =
+                            {
+                                new Note { Type = "freeform", Text = "Framework-only note.", Tabs = new() { "framework" } }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var versions = new Dictionary<(string, Platform), string>
+        {
+            { ("couchbasenetclient", Platform.Core), "3.6.6" },
+            { ("couchbasenetclient", Platform.Framework), "3.6.6" },
+        };
+
+        var md = new MarkdownRenderer(new NoteRenderer()).Render(model, versions).Replace("\r\n", "\n");
+
+        var fwSection = md[md.IndexOf("## .NET Framework", StringComparison.Ordinal)..];
+        Assert.That(fwSection, Does.Contain("Framework-only note."),
+            "Framework-only note must appear in the Framework section.");
+
+        var coreSection = md[md.IndexOf("## .NET Core", StringComparison.Ordinal)..md.IndexOf("## .NET Framework", StringComparison.Ordinal)];
+        Assert.That(coreSection, Does.Not.Contain("Framework-only note."),
+            "Framework-only note must NOT appear in the Core section.");
+    }
+
+    [Test]
+    public void Render_NoteWithNullTabs_AppearsUnderBothTabs()
+    {
+        var model = new CompatibilityModel
+        {
+            Categories =
+            {
+                new Category
+                {
+                    Key = "datastores", Title = "Datastores", Tabs = { "core", "framework" },
+                    Libraries =
+                    {
+                        new Library
+                        {
+                            Name = "PostgreSQL",
+                            Packages =
+                            {
+                                new Package
+                                {
+                                    Id = "Npgsql", Tabs = { "core", "framework" },
+                                    MinVersion = VersionSpec.Single("4.0.0")
+                                }
+                            },
+                            Notes =
+                            {
+                                new Note { Type = "freeform", Text = "Shared note.", Tabs = null }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var versions = new Dictionary<(string, Platform), string>
+        {
+            { ("npgsql", Platform.Core), "7.0.7" },
+            { ("npgsql", Platform.Framework), "7.0.7" },
+        };
+
+        var md = new MarkdownRenderer(new NoteRenderer()).Render(model, versions).Replace("\r\n", "\n");
+
+        var fwSection = md[md.IndexOf("## .NET Framework", StringComparison.Ordinal)..];
+        var coreSection = md[md.IndexOf("## .NET Core", StringComparison.Ordinal)..md.IndexOf("## .NET Framework", StringComparison.Ordinal)];
+
+        Assert.That(coreSection, Does.Contain("Shared note."), "Null-tabs note must appear in Core section.");
+        Assert.That(fwSection, Does.Contain("Shared note."), "Null-tabs note must appear in Framework section.");
+    }
+
+    [Test]
+    public void Render_PerTabMinAgentVersion_RendersDifferentValuePerTab()
+    {
+        var model = new CompatibilityModel
+        {
+            Categories =
+            {
+                new Category
+                {
+                    Key = "logging", Title = "Logging frameworks", Tabs = { "core", "framework" },
+                    Libraries =
+                    {
+                        new Library
+                        {
+                            Name = "Microsoft.Extensions.Logging",
+                            MinAgentVersion = VersionSpec.Map(new Dictionary<string, string>
+                                { ["core"] = "10.0.0", ["framework"] = "9.7.0" }),
+                            Packages =
+                            {
+                                new Package
+                                {
+                                    Id = "Microsoft.Extensions.Logging", Tabs = { "core", "framework" },
+                                    MinVersion = VersionSpec.Single("3.0.0")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var versions = new Dictionary<(string, Platform), string>
+        {
+            { ("microsoft.extensions.logging", Platform.Core), "9.0.0" },
+            { ("microsoft.extensions.logging", Platform.Framework), "9.0.0" },
+        };
+
+        var md = new MarkdownRenderer(new NoteRenderer()).Render(model, versions).Replace("\r\n", "\n");
+
+        var fwSection = md[md.IndexOf("## .NET Framework", StringComparison.Ordinal)..];
+        var coreSection = md[md.IndexOf("## .NET Core", StringComparison.Ordinal)..md.IndexOf("## .NET Framework", StringComparison.Ordinal)];
+
+        Assert.That(coreSection, Does.Contain("| 3.0.0 – 9.0.0 | 10.0.0 |"),
+            "Core row must show 10.0.0 in the min-agent column.");
+        Assert.That(fwSection, Does.Contain("| 3.0.0 – 9.0.0 | 9.7.0 |"),
+            "Framework row must show 9.7.0 in the min-agent column.");
     }
 }

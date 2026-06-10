@@ -24,7 +24,7 @@ The .NET agent automatically instruments the performance of .NET application cal
 | Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
 | Cosmos DB | [Microsoft.Azure.Cosmos](https://www.nuget.org/packages/Microsoft.Azure.Cosmos/) | 3.17.0 – 3.60.0 | 9.2.0 | <ul><li>Versions 3.35.0+ supported since agent v10.32.0.</li></ul> |
-| Couchbase | [CouchbaseNetClient](https://www.nuget.org/packages/CouchbaseNetClient/) | 3.2.0 – 3.6.6 | — | <ul><li>Instance details aren't available for Couchbase.</li><li>Known incompatible versions: 3.0.x, 3.1.x.</li><li>With CouchbaseNetClient 2.x, the following methods are not instrumented by default in favor of their multi-document counterparts: <br>`Get(string key)` <br>`GetDocument(string key)` <br>`Remove(string key)` <br>`Remove(string key, ulong cas)` <br>`Upsert(string key, T value)`.</li><li>Versions 3.2.0+ supported since agent v10.40.0.</li></ul> |
+| Couchbase | [CouchbaseNetClient](https://www.nuget.org/packages/CouchbaseNetClient/) | 3.2.0 – 3.6.6 | — | <ul><li>Instance details aren't available for Couchbase.</li><li>Versions 3.2.0+ supported since agent v10.40.0.</li></ul> |
 | Microsoft SQL Server | [System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) | 4.4.0 – 4.8.6 | — |  |
 | Microsoft SQL Server | [Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) | 1.0.19239.1 – 7.0.1 | — |  |
 | System.Data.ODBC | [System.Data.Odbc](https://www.nuget.org/packages/System.Data.Odbc/) | 8.0.0 – 10.0.8 | 10.35.0 | <ul><li>On .NET 8+, the following ODBC operations are not instrumented (they are instrumented on .NET Framework via the built-in System.Data namespace): Connection `Open`/`OpenAsync` calls, SqlDataReader `Read`/`NextResult` calls, and slow SQL traces.</li></ul> |
@@ -75,7 +75,7 @@ The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net
 | Log4Net | [log4net](https://www.nuget.org/packages/log4net/) | 2.0.10 – 3.3.1 | 9.7.0 |  |
 | Serilog | [Serilog](https://www.nuget.org/packages/Serilog/) | 2.5.0 – 4.3.1 | 9.7.0 |  |
 | NLog | [NLog](https://www.nuget.org/packages/NLog/) | 4.5.0 – 6.1.3 | 9.7.0 |  |
-| Microsoft.Extensions.Logging | [Microsoft.Extensions.Logging](https://www.nuget.org/packages/Microsoft.Extensions.Logging/) | 3.0.0 – 10.0.8 | 10.0.0 | <ul><li>On .NET Framework, supported beginning with agent v9.7.0.</li></ul> |
+| Microsoft.Extensions.Logging | [Microsoft.Extensions.Logging](https://www.nuget.org/packages/Microsoft.Extensions.Logging/) | 3.0.0 – 10.0.8 | 10.0.0 |  |
 
 ### Message systems
 
@@ -133,7 +133,7 @@ The .NET agent automatically instruments the performance of .NET application cal
 | MongoDB (modern driver) | [MongoDB.Driver](https://www.nuget.org/packages/MongoDB.Driver/) | 2.3.0 – 3.9.0 | — | <ul><li>Versions 3.0.0+ supported since agent v10.40.0.</li><li>Beginning in agent version 10.12.0, the following methods added in or after driver version 2.7 are instrumented: <br>`IMongoCollection.CountDocuments[Async]` <br>`IMongoCollection.EstimatedDocumentCount[Async]` <br>`IMongoCollection.AggregateToCollection[Async]` <br>`IMongoDatabase.ListCollectionNames[Async]` <br>`IMongoDatabase.Aggregate[Async]` <br>`IMongoDatabase.AggregateToCollection[Async]` <br>`IMongoDatabase.Watch[Async]`.</li></ul> |
 | MySQL | [MySql.Data](https://www.nuget.org/packages/MySql.Data/) | 6.10.7 – 9.7.0 | — | <ul><li>Versions 9.7.0+ supported since agent v10.52.0.</li></ul> |
 | MySQL | [MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) | 1.0.1 – 2.5.0 | — |  |
-| Oracle | [Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) | 12.1.2400 – 23.26.200 | — | <ul><li>Older versions may be instrumented but are not tested or supported.</li></ul> |
+| Oracle | [Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) | 12.1.2400 – 23.26.200 | — |  |
 | PostgreSQL | [Npgsql](https://www.nuget.org/packages/Npgsql/) | 4.0.0 – 7.0.7 | — | <ul><li>Prior versions of Npgsql may also be instrumented, but duplicate and/or missing metrics are possible.</li></ul> |
 | ServiceStack.Redis | [ServiceStack.Redis](https://www.nuget.org/packages/ServiceStack.Redis/) | 4.0.40 | — | <ul><li>Known incompatible versions: 4.0.44 or higher.</li></ul> |
 | StackExchange.Redis | [StackExchange.Redis](https://www.nuget.org/packages/StackExchange.Redis/) | 1.0.488 – 2.13.17 | — |  |
@@ -180,7 +180,7 @@ The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net
 | Log4Net | [log4net](https://www.nuget.org/packages/log4net/) | 1.2.10 – 3.3.1 | 9.7.0 |  |
 | Serilog | [Serilog](https://www.nuget.org/packages/Serilog/) | 2.0.0 – 4.3.1 | 9.7.0 |  |
 | NLog | [NLog](https://www.nuget.org/packages/NLog/) | 4.1.0 – 6.1.3 | 9.7.0 |  |
-| Microsoft.Extensions.Logging | [Microsoft.Extensions.Logging](https://www.nuget.org/packages/Microsoft.Extensions.Logging/) | 3.0.0 – 10.0.8 | 10.0.0 | <ul><li>On .NET Framework, supported beginning with agent v9.7.0.</li></ul> |
+| Microsoft.Extensions.Logging | [Microsoft.Extensions.Logging](https://www.nuget.org/packages/Microsoft.Extensions.Logging/) | 3.0.0 – 10.0.8 | 9.7.0 |  |
 
 ### Message systems
 

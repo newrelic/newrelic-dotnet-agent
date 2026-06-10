@@ -101,4 +101,85 @@ public class SchemaValidatorTests
 
         Assert.DoesNotThrow(() => new SchemaValidator().Validate(model));
     }
+
+    [Test]
+    public void Validate_NoteTabsWithUndeclaredTab_Throws()
+    {
+        // Library effective tabs = [core] (from category). Note declares [framework] — not declared.
+        var model = ModelWith(new Library
+        {
+            Name = "X",
+            Packages = { new Package { Id = "P", Tabs = { "core" }, MinVersion = VersionSpec.Single("1.0.0") } },
+            Notes = { new Note { Type = "freeform", Text = "test.", Tabs = new() { "framework" } } }
+        });
+
+        var ex = Assert.Throws<SchemaValidationException>(() => new SchemaValidator().Validate(model));
+        Assert.That(ex!.Message, Does.Contain("framework"), "Error must name the offending tab.");
+        Assert.That(ex.Message, Does.Contain("X"), "Error must name the library.");
+    }
+
+    [Test]
+    public void Validate_MinAgentVersionMapWithUndeclaredTab_Throws()
+    {
+        // Library effective tabs = [core]. MinAgentVersion map has a [framework] key.
+        var model = ModelWith(new Library
+        {
+            Name = "Y",
+            Packages = { new Package { Id = "P", Tabs = { "core" }, MinVersion = VersionSpec.Single("1.0.0") } },
+            MinAgentVersion = VersionSpec.Map(new Dictionary<string, string> { ["core"] = "10.0.0", ["framework"] = "9.7.0" })
+        });
+
+        var ex = Assert.Throws<SchemaValidationException>(() => new SchemaValidator().Validate(model));
+        Assert.That(ex!.Message, Does.Contain("framework"), "Error must name the undeclared tab.");
+    }
+
+    [Test]
+    public void Validate_MinAgentVersionMapPartialCoverage_DoesNotThrow()
+    {
+        // Library effective tabs = [core, framework]. MinAgentVersion map covers only [core].
+        // Partial coverage is ALLOWED — a tab with no entry simply renders no min-agent suffix.
+        var model = new CompatibilityModel
+        {
+            Categories =
+            {
+                new Category
+                {
+                    Key = "datastores", Title = "Datastores", Tabs = { "core", "framework" },
+                    Libraries =
+                    {
+                        new Library
+                        {
+                            Name = "Z",
+                            Packages = { new Package { Id = "P", Tabs = { "core", "framework" },
+                                MinVersion = VersionSpec.Single("1.0.0") } },
+                            MinAgentVersion = VersionSpec.Map(new Dictionary<string, string> { ["core"] = "10.0.0" })
+                        }
+                    }
+                }
+            }
+        };
+
+        Assert.DoesNotThrow(() => new SchemaValidator().Validate(model));
+    }
+
+    [Test]
+    public void Validate_PackageNoteTabsWithUndeclaredTab_Throws()
+    {
+        var model = ModelWith(new Library
+        {
+            Name = "X",
+            Packages =
+            {
+                new Package
+                {
+                    Id = "P", Tabs = { "core" }, MinVersion = VersionSpec.Single("1.0.0"),
+                    Notes = { new Note { Type = "freeform", Text = "test.", Tabs = new() { "framework" } } }
+                }
+            }
+        });
+
+        var ex = Assert.Throws<SchemaValidationException>(() => new SchemaValidator().Validate(model));
+        Assert.That(ex!.Message, Does.Contain("framework"), "Error must name the offending tab.");
+        Assert.That(ex.Message, Does.Contain("P"), "Error must name the package.");
+    }
 }

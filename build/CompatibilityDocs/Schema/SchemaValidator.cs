@@ -32,7 +32,10 @@ public class SchemaValidator
                 $"{where}: must define at least one of 'packages', 'supportedVersions', or 'methods'.");
 
         if (lib.Tabs != null) RequireTabs(lib.Tabs, where);
-        ValidateNotes(lib.Notes, where);
+
+        var effectiveTabs = lib.Tabs is { Count: > 0 } ? (IEnumerable<string>)lib.Tabs : cat.Tabs;
+        ValidateNotes(lib.Notes, where, effectiveTabs);
+        ValidateMinAgentVersion(lib.MinAgentVersion, effectiveTabs, where);
 
         foreach (var pkg in lib.Packages)
         {
@@ -46,7 +49,7 @@ public class SchemaValidator
             if (pkg.VersionSource == "manual")
                 RequireResolvableVersion(pkg.LatestVersion, pkg, "latestVersion", pw);
 
-            ValidateNotes(pkg.Notes, pw);
+            ValidateNotes(pkg.Notes, pw, pkg.Tabs);
         }
     }
 
@@ -68,6 +71,18 @@ public class SchemaValidator
                     $"{pw}: {field} does not resolve a version for declared tab '{tab}'.");
     }
 
+    // minAgentVersion map keys must be a subset of the library's effective tabs.
+    // Partial coverage (a declared tab with no entry) is allowed — it just renders no suffix.
+    private static void ValidateMinAgentVersion(VersionSpec? spec, IEnumerable<string> effectiveTabs, string where)
+    {
+        if (spec == null || !spec.IsMap) return;
+        var declared = new HashSet<string>(effectiveTabs);
+        foreach (var tab in spec.Tabs)
+            if (!declared.Contains(tab))
+                throw new SchemaValidationException(
+                    $"{where}: minAgentVersion has tab '{tab}' which is not in the library's effective tabs.");
+    }
+
     private static void RequireTabs(List<string> tabs, string where)
     {
         if (tabs.Count == 0)
@@ -77,10 +92,23 @@ public class SchemaValidator
                 throw new SchemaValidationException($"{where}: tab '{t}' invalid. Allowed: {string.Join(", ", AllowedTabs)}.");
     }
 
-    private static void ValidateNotes(List<Note> notes, string where)
+    private static void ValidateNotes(List<Note> notes, string where, IEnumerable<string> declaredTabs)
     {
+        var declaredSet = new HashSet<string>(declaredTabs);
         foreach (var note in notes)
         {
+            if (note.Tabs != null)
+            {
+                if (note.Tabs.Count == 0)
+                    throw new SchemaValidationException($"{where}: note 'tabs' must list at least one tab when present.");
+                foreach (var t in note.Tabs)
+                    if (!AllowedTabs.Contains(t))
+                        throw new SchemaValidationException($"{where}: note tab '{t}' invalid. Allowed: {string.Join(", ", AllowedTabs)}.");
+                foreach (var t in note.Tabs)
+                    if (!declaredSet.Contains(t))
+                        throw new SchemaValidationException($"{where}: note tab '{t}' is not in the declared tabs.");
+            }
+
             if (!AllowedNoteTypes.Contains(note.Type))
                 throw new SchemaValidationException(
                     $"{where}: note type '{note.Type}' invalid. Allowed: {string.Join(", ", AllowedNoteTypes)}.");

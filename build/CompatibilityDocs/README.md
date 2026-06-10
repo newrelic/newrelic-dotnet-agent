@@ -34,6 +34,23 @@ minVersion:
   framework: "2.0.0"
 ```
 
+### `minAgentVersion` shape
+
+`minAgentVersion` accepts the same scalar-or-map shape as `minVersion` and
+`latestVersion`. A scalar applies to all tabs; a `{core, framework}` map can
+be **partial** — a tab with no entry simply renders no minimum-agent version.
+(This differs from `minVersion`, which must resolve for every declared tab.)
+
+```yaml
+# scalar — same minimum agent version for all tabs
+minAgentVersion: "10.29.0"
+
+# per-tab map — may be partial; omitted tabs render no min-agent version
+minAgentVersion:
+  core: "10.29.0"
+  framework: "10.0.0"
+```
+
 ## Editing the schema
 
 Open `compatibility.yaml` in an editor with the YAML language server (the VS Code
@@ -48,6 +65,25 @@ Quote version strings and any value ending in a colon (e.g. `version: "8.15.10"`
 the YAML parser. For typed notes (`addedInAgent`/`maxSupportedVersion`/
 `knownIncompatibleVersions`) the renderer adds the trailing period — do not end
 their `text` with a period (freeform notes are emitted verbatim, so keep theirs).
+
+### Per-note `tabs:` field
+
+By default a note is shared — it renders under every tab the enclosing library or
+package appears in. To restrict a note to a subset of those tabs, add a `tabs:`
+list. The list must be non-empty and contain only tabs the enclosing scope
+actually declares (package-level note → the package's own tabs; library-level note
+→ the library's effective tabs).
+
+```yaml
+notes:
+  - type: freeform
+    text: "Supported on all platforms."
+    # no tabs: field — renders under every tab
+
+  - type: freeform
+    text: "On .NET Framework, supported beginning with agent v9.7.0."
+    tabs: [framework]   # renders only under the framework tab
+```
 
 ## Regenerate
 
