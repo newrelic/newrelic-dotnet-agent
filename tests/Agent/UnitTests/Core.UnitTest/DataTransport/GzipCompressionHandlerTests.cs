@@ -1,8 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -47,8 +49,7 @@ public class GzipCompressionHandlerTests
 
         await _httpClient.SendAsync(request);
 
-        var contentEncoding = _innerHandler.RequestSent.Content.Headers.ContentEncoding;
-        Assert.That(contentEncoding, Does.Contain("gzip"));
+        Assert.That(_innerHandler.CapturedContentEncoding, Does.Contain("gzip"));
     }
 
     [Test]
@@ -62,8 +63,7 @@ public class GzipCompressionHandlerTests
 
         await _httpClient.SendAsync(request);
 
-        var sentBytes = await _innerHandler.RequestSent.Content.ReadAsByteArrayAsync();
-        var decompressed = GzipDecompress(sentBytes);
+        var decompressed = GzipDecompress(_innerHandler.CapturedContentBytes);
 
         Assert.That(decompressed, Is.EqualTo(originalBytes));
     }
@@ -79,7 +79,7 @@ public class GzipCompressionHandlerTests
 
         await _httpClient.SendAsync(request);
 
-        Assert.That(_innerHandler.RequestSent.Content.Headers.ContentType?.MediaType, Is.EqualTo("application/x-protobuf"));
+        Assert.That(_innerHandler.CapturedContentType?.MediaType, Is.EqualTo("application/x-protobuf"));
     }
 
     [Test]
@@ -92,7 +92,7 @@ public class GzipCompressionHandlerTests
         Assert.Multiple(() =>
         {
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-            Assert.That(_innerHandler.RequestSent.Content, Is.Null);
+            Assert.That(_innerHandler.ContentWasNull, Is.True);
         });
     }
 
@@ -105,19 +105,29 @@ public class GzipCompressionHandlerTests
         return output.ToArray();
     }
 
+    // Captures request content at send time. HttpClient disposes the request content
+    // once SendAsync completes (notably on .NET Framework), so the content cannot be
+    // read after the fact — everything the tests assert on is captured here instead.
     private class TestHttpMessageHandler : HttpMessageHandler
     {
-        public HttpRequestMessage RequestSent { get; private set; }
+        public byte[] CapturedContentBytes { get; private set; }
+        public ICollection<string> CapturedContentEncoding { get; private set; }
+        public MediaTypeHeaderValue CapturedContentType { get; private set; }
+        public bool ContentWasNull { get; private set; }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            // Buffer the content now so it remains readable after this handler returns.
             if (request.Content != null)
             {
-                await request.Content.LoadIntoBufferAsync();
+                CapturedContentBytes = await request.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                CapturedContentEncoding = request.Content.Headers.ContentEncoding.ToList();
+                CapturedContentType = request.Content.Headers.ContentType;
+            }
+            else
+            {
+                ContentWasNull = true;
             }
 
-            RequestSent = request;
             return new HttpResponseMessage(HttpStatusCode.OK);
         }
     }
