@@ -60,10 +60,16 @@ public class CustomRetryHandler : DelegatingHandler
                 // Dispose failed response if retrying
                 response.Dispose();
             }
-            catch (Exception ex) when (ShouldRetryException(ex, attempt, cancellationToken))
+            catch (Exception ex) when (IsRetryableException(ex, cancellationToken))
             {
                 lastException = ex;
                 LogExceptionRetry(attempt, ex);
+
+                if (attempt >= MaxRetries)
+                {
+                    _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.ExportFailure);
+                    throw;
+                }
             }
 
             // Wait before retry (except on final attempt)
@@ -74,8 +80,6 @@ public class CustomRetryHandler : DelegatingHandler
             }
         }
 
-        // All retries exhausted via exceptions
-        _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.ExportFailure);
         return HandleRetriesExhausted(lastException);
     }
 
@@ -116,11 +120,11 @@ public class CustomRetryHandler : DelegatingHandler
         return true;
     }
 
-    private static bool ShouldRetryException(Exception ex, int attempt, CancellationToken cancellationToken)
+    private static bool IsRetryableException(Exception ex, CancellationToken cancellationToken)
     {
-        return attempt < MaxRetries && ex switch
+        return ex switch
         {
-            // Timeout,but not user cancellation
+            // Timeout, but not user cancellation
             HttpRequestException => true,
             TaskCanceledException when !cancellationToken.IsCancellationRequested => true,
             _ => false

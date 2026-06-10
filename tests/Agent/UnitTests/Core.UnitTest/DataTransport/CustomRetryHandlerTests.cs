@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.UnitTest.DataTransport;
