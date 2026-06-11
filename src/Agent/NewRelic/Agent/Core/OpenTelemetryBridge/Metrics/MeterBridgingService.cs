@@ -283,7 +283,7 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
         var type = originalMeter.GetType();
         var name = type.GetProperty("Name")?.GetValue(originalMeter) as string ?? "Unknown";
         var version = type.GetProperty("Version")?.GetValue(originalMeter) as string;
-        var tags = GetInstrumentTags(originalMeter);
+        var tags = ApplyScopeTagLimits(GetInstrumentTags(originalMeter));
         var scope = GetMeterScope(originalMeter);
 
         Meter bridgedMeter;
@@ -521,10 +521,7 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
                     
                 var val = accessors.ValueAccessor != null ? (T)accessors.ValueAccessor(m) : default(T);
                 var tags = accessors.TagsAccessor?.Invoke(m);
-                    
-                // Filter out tags with null keys
-                var validTags = tags?.Where(tag => tag.Key != null);
-                    
+                var validTags = ApplyTagLimits(tags);
                 list.Add(new Measurement<T>(val, validTags));
             }
         }
@@ -631,32 +628,95 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
 
     #region Helper Methods
 
+    // NR OTLP ingest limits (REQ-015 / REQ-016)
+    private const int AttributeCountLimit = 64;
+    private const int AttributeKeyLengthLimit = 255;
+    private const int AttributeValueLengthLimit = 4095;
+    private const int ArrayLengthLimit = 64;
+    private const int ByteArrayLengthLimit = 128_000;
+    private const int ScopeAttributeCountLimit = 8;
+
     /// <summary>
-    /// Filters tags to remove entries with null keys, preventing NullReferenceExceptions.
-    /// Optimized to avoid double array allocation.
+    /// Filters tags to remove entries with null keys, enforces NR OTLP attribute count (64)
+    /// and string value length (4095) limits per data point.
     /// </summary>
     private static KeyValuePair<string, object>[] FilterValidTags(ReadOnlySpan<KeyValuePair<string, object>> tags)
     {
-        // Single-pass: count valid tags, allocate once, populate
+        // First pass: count valid tags up to the attribute count limit
         var count = 0;
-        for (var i = 0; i < tags.Length; i++)
-        {
-            if (tags[i].Key != null) count++;
-        }
-            
-        if (count == 0) return Array.Empty<KeyValuePair<string, object>>();
-        if (count == tags.Length) return tags.ToArray(); // All valid, direct copy
-            
-        var result = new KeyValuePair<string, object>[count];
-        var index = 0;
         for (var i = 0; i < tags.Length; i++)
         {
             if (tags[i].Key != null)
             {
-                result[index++] = tags[i];
+                count++;
+                if (count == AttributeCountLimit) break;
             }
         }
+
+        if (count == 0) return Array.Empty<KeyValuePair<string, object>>();
+
+        var result = new KeyValuePair<string, object>[count];
+        var index = 0;
+        for (var i = 0; i < tags.Length && index < count; i++)
+        {
+            if (tags[i].Key != null)
+                result[index++] = TruncateTagValue(tags[i]);
+        }
         return result;
+    }
+
+    private static KeyValuePair<string, object> TruncateTagValue(KeyValuePair<string, object> tag)
+    {
+        var key = tag.Key.Length > AttributeKeyLengthLimit
+            ? tag.Key.Substring(0, AttributeKeyLengthLimit)
+            : tag.Key;
+        var value = tag.Value;
+        if (value is string s && s.Length > AttributeValueLengthLimit)
+            value = s.Substring(0, AttributeValueLengthLimit);
+        else if (value is byte[] bytes && bytes.Length > ByteArrayLengthLimit)
+        {
+            var truncated = new byte[ByteArrayLengthLimit];
+            Array.Copy(bytes, truncated, ByteArrayLengthLimit);
+            value = truncated;
+        }
+        else if (value is Array arr && arr.Length > ArrayLengthLimit)
+            value = TruncateArray(arr);
+        return ReferenceEquals(key, tag.Key) && ReferenceEquals(value, tag.Value)
+            ? tag
+            : new KeyValuePair<string, object>(key, value);
+    }
+
+    private static object TruncateArray(Array arr)
+    {
+        var truncated = Array.CreateInstance(arr.GetType().GetElementType(), ArrayLengthLimit);
+        Array.Copy(arr, truncated, ArrayLengthLimit);
+        return truncated;
+    }
+
+    private static IEnumerable<KeyValuePair<string, object>> ApplyScopeTagLimits(IEnumerable<KeyValuePair<string, object>> tags)
+    {
+        if (tags == null) return null;
+        var result = new List<KeyValuePair<string, object>>();
+        foreach (var tag in tags)
+        {
+            if (tag.Key == null) continue;
+            if (result.Count >= ScopeAttributeCountLimit) break;
+            result.Add(TruncateTagValue(tag));
+        }
+        return result.Count > 0 ? result : null;
+    }
+
+    private static IEnumerable<KeyValuePair<string, object>> ApplyTagLimits(IEnumerable<KeyValuePair<string, object>> tags)
+    {
+        if (tags == null) return null;
+        var result = new List<KeyValuePair<string, object>>();
+        foreach (var tag in tags)
+        {
+            if (tag.Key == null) continue;
+            if (result.Count >= AttributeCountLimit) break;
+            result.Add(TruncateTagValue(tag));
+        }
+        return result.Count > 0 ? result : null;
     }
 
     /// <summary>
