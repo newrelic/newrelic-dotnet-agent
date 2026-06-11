@@ -27,7 +27,7 @@ public class GzipCompressionHandler : DelegatingHandler
             using var compressedStream = new MemoryStream();
             using (var gzipStream = new GZipStream(compressedStream, CompressionMode.Compress, leaveOpen: true))
             {
-                gzipStream.Write(originalBytes, 0, originalBytes.Length);
+                await gzipStream.WriteAsync(originalBytes, 0, originalBytes.Length, cancellationToken).ConfigureAwait(false);
             }
 
             var compressedContent = new ByteArrayContent(compressedStream.ToArray());
