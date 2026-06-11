@@ -114,8 +114,6 @@ categories:
             latestVersion: "4.8"
             notes:
               - { type: freeform, text: "Built-in .NET Framework assembly; no NuGet package required." }
-        notes:
-          - { type: freeform, text: "Microsoft Enterprise Library Data Access Application Block (`EnterpriseLibrary.Data`) is instrumented transitively through the underlying ADO.NET SQL provider.", tabs: [framework] }
 
       - name: System.Data.ODBC
         packages:
