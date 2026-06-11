@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -25,6 +26,13 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
     private readonly IOtelBridgeSupportabilityMetricCounters _supportabilityMetricCounters;
     private readonly IAgentHealthReporter _agentHealthReporter;
     private readonly MeterBridgeConfiguration _bridgeConfiguration;
+
+    // Reflection cache for setting the base-2 exponential histogram aggregation (see
+    // TrySetBase2ExponentialHistogramAggregation). Resolved once and reused across recreations.
+    private static PropertyInfo _defaultHistogramAggregationProperty;
+    private static object _base2ExponentialAggregationValue;
+    private static bool _histogramAggregationReflectionInitialized;
+
     private MeterProvider _meterProvider;
     private readonly object _meterProviderLock = new object();
     private HttpClient _httpClient;
@@ -118,11 +126,60 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
                 metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = config.OpenTelemetryMetricsExportIntervalMs;
                 metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportTimeoutMilliseconds = config.OpenTelemetryMetricsExportTimeoutMs;
                 metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
-                metricReaderOptions.DefaultHistogramAggregation = MetricReaderHistogramAggregation.Base2ExponentialBucketHistogram;
+                TrySetBase2ExponentialHistogramAggregation(metricReaderOptions);
             });
 
         _meterProvider = providerBuilder.Build();
         _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated);
+    }
+
+    /// <summary>
+    /// Sets the metric reader's default histogram aggregation to base-2 exponential bucket histograms,
+    /// which the NR OTLP ingest endpoint prefers over explicit-bucket histograms.
+    /// </summary>
+    /// <remarks>
+    /// In SDK 1.15.3 <c>MetricReaderOptions.DefaultHistogramAggregation</c> (a nullable
+    /// <c>MetricReaderHistogramAggregation</c>) and the enum itself are internal in every target framework
+    /// - the public surface is gated behind an experimental compile flag the shipped package does not set -
+    /// so the value is set via reflection. Customer <c>AddView</c> overrides still take precedence
+    /// (SDK-guaranteed). Failures are non-fatal: the SDK default (explicit bucket histogram) is used instead.
+    /// </remarks>
+    private static void TrySetBase2ExponentialHistogramAggregation(MetricReaderOptions metricReaderOptions)
+    {
+        try
+        {
+            if (!_histogramAggregationReflectionInitialized)
+            {
+                _histogramAggregationReflectionInitialized = true;
+
+                var property = typeof(MetricReaderOptions).GetProperty("DefaultHistogramAggregation",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (property != null)
+                {
+                    var enumType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                    if (enumType.IsEnum && Enum.IsDefined(enumType, "Base2ExponentialBucketHistogram"))
+                    {
+                        _base2ExponentialAggregationValue = Enum.Parse(enumType, "Base2ExponentialBucketHistogram");
+                        _defaultHistogramAggregationProperty = property;
+                    }
+                }
+
+                if (_defaultHistogramAggregationProperty == null)
+                {
+                    Log.Debug("Could not resolve MetricReaderOptions.DefaultHistogramAggregation via reflection; OTLP histogram instruments will use the SDK default (explicit bucket) aggregation.");
+                }
+                else
+                {
+                    Log.Debug("Successfully resolved MetricReaderOptions.DefaultHistogramAggregation via reflection; OTLP histogram instruments will use base-2 exponential bucket aggregation.");
+                }
+            }
+
+            _defaultHistogramAggregationProperty?.SetValue(metricReaderOptions, _base2ExponentialAggregationValue);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "Failed to set base-2 exponential histogram aggregation on OTLP metric reader options; falling back to SDK default.");
+        }
     }
 
     private HttpClient CreateHttpClientWithProxyAndRetry(IConnectionInfo connectionInfo)
