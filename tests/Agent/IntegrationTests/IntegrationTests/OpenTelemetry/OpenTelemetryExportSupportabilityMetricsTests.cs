@@ -13,8 +13,6 @@ namespace NewRelic.Agent.IntegrationTests.OpenTelemetry;
 // ---------------------------------------------------------------------------
 // Scenario 1: Happy path — mock always returns 200
 // Validates: export/success is recorded; retry and failure are absent.
-// .NET Core only — CustomRetryHandler (which emits these metrics) is
-// compiled only on NETSTANDARD2_0_OR_GREATER. Framework targets are deferred.
 // ---------------------------------------------------------------------------
 public abstract class OtlpExportSuccessMetricsTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
     where TFixture : OtlpMetricsWithCollectorFixtureBase
@@ -82,6 +80,11 @@ public class OtlpExportSuccessMetricsTestsCoreLatest : OtlpExportSuccessMetricsT
 public class OtlpExportSuccessMetricsTestsCoreNet8 : OtlpExportSuccessMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
 {
     public OtlpExportSuccessMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+}
+
+public class OtlpExportSuccessMetricsTestsFWLatest : OtlpExportSuccessMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
+{
+    public OtlpExportSuccessMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
 // ---------------------------------------------------------------------------
@@ -166,6 +169,11 @@ public class OtlpExportRetryMetricsTestsCoreNet8 : OtlpExportRetryMetricsTestsBa
     public OtlpExportRetryMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+public class OtlpExportRetryMetricsTestsFWLatest : OtlpExportRetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
+{
+    public OtlpExportRetryMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+}
+
 // ---------------------------------------------------------------------------
 // Scenario 3: Full exhaustion — mock always returns 503.
 // CustomRetryHandler exhausts all 3 attempts per export cycle, emitting
@@ -246,4 +254,9 @@ public class OtlpExportFailureMetricsTestsCoreLatest : OtlpExportFailureMetricsT
 public class OtlpExportFailureMetricsTestsCoreNet8 : OtlpExportFailureMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
 {
     public OtlpExportFailureMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+}
+
+public class OtlpExportFailureMetricsTestsFWLatest : OtlpExportFailureMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
+{
+    public OtlpExportFailureMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
