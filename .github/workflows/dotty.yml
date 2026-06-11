@@ -13,6 +13,10 @@ on:
         description: "If checked, no notification message will be sent to the team channel, nor will any Github issues be created."
         type: boolean
         default: false
+      generateCompatDoc:
+        description: "If checked, regenerate docs/net-agent-compatibility.md and include it in the PR so it stays in sync with the updated package versions."
+        type: boolean
+        default: true
 
 env:
   DOTNET_NOLOGO: true
@@ -78,6 +82,8 @@ jobs:
           NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
           DOTTY_LAST_RUN_TIMESTAMP: ${{ env.LAST_RUN_TIMESTAMP }}
           DOTTY_SEARCH_ROOT_PATH: ${{ github.workspace }}
+          # Defaults to true on scheduled runs (input is empty); honors the checkbox on manual runs.
+          DOTTY_GENERATE_COMPAT_DOC: ${{ github.event.inputs.generateCompatDoc || 'true' }}
 
         run: |
           if [ ${{ inputs.daysToSearch }} != "" ]; then
