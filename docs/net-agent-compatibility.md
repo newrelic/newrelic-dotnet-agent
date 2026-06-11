@@ -33,10 +33,11 @@ The .NET agent automatically instruments the performance of .NET application cal
 | MySQL | [MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) | 1.0.1 – 2.5.0 | — |  |
 | Oracle | [Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) | 23.4.0 – 23.26.200 | — | <ul><li>Older versions may be instrumented but are not tested or supported.</li></ul> |
 | PostgreSQL | [Npgsql](https://www.nuget.org/packages/Npgsql/) | 4.0.0 – 7.0.7 | — | <ul><li>Prior versions of Npgsql may also be instrumented, but duplicate and/or missing metrics are possible.</li></ul> |
-| StackExchange.Redis | [StackExchange.Redis](https://www.nuget.org/packages/StackExchange.Redis/) | 1.0.488 – 2.13.17 | — |  |
+| StackExchange.Redis | [StackExchange.Redis](https://www.nuget.org/packages/StackExchange.Redis/) | 1.0.488 – 2.13.17 | — | <ul><li>The strong-named `StackExchange.Redis.StrongName` package is also instrumented.</li></ul> |
 | Elasticsearch | [Elastic.Clients.Elasticsearch](https://www.nuget.org/packages/Elastic.Clients.Elasticsearch/) | 8.0.0 – 9.0.7 | — | <ul><li>Versions 8.10.0+ supported since agent v10.20.1.</li><li>Versions 8.12.1+ supported since agent v10.23.0.</li><li>Versions later than 8.15.10 are supported only when [OpenTelemetry API support](https://docs.newrelic.com/docs/apm/agents/manage-apm-agents/opentelemetry-api-support/) is enabled.</li></ul> |
 | Elasticsearch | [NEST](https://www.nuget.org/packages/NEST/) | 7.0.0 – 7.17.5 | — |  |
 | Elasticsearch | [Elasticsearch.Net](https://www.nuget.org/packages/Elasticsearch.Net/) | 7.0.0 – 7.17.5 | — |  |
+| OpenSearch | [OpenSearch.Client](https://www.nuget.org/packages/OpenSearch.Client/) | 1.0.0 – 1.8.0 | 10.36.0 |  |
 | Memcached | [EnyimMemcachedCore](https://www.nuget.org/packages/EnyimMemcachedCore/) | 2.0.0 – 3.5.1 | — |  |
 | DynamoDB | [AWSSDK.DynamoDBv2](https://www.nuget.org/packages/AWSSDK.DynamoDBv2/) | 3.5.0 – 4.0.18.6 | 10.33.0 |  |
 
@@ -55,6 +56,8 @@ The .NET agent automatically instruments these external call libraries:
 | Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
 | HttpClient | — | — | — | <details><summary>Instrumented methods (8)</summary><ul><li><code>SendAsync</code></li><li><code>GetAsync</code></li><li><code>PostAsync</code></li><li><code>PutAsync</code></li><li><code>DeleteAsync</code></li><li><code>GetStringAsync</code></li><li><code>GetStreamAsync</code></li><li><code>GetByteArrayAsync</code></li></ul></details> |
+| gRPC (grpc-dotnet) | [Grpc.Net.Client](https://www.nuget.org/packages/Grpc.Net.Client/) | 2.65.0 – 2.76.0 | 10.50.0 | <ul><li>Supported only when [OpenTelemetry API support](https://docs.newrelic.com/docs/apm/agents/manage-apm-agents/opentelemetry-api-support/) is enabled.</li><li>Instrumented as external calls via the OpenTelemetry bridge.</li></ul> |
+| AWSSDK.Lambda | [AWSSDK.Lambda](https://www.nuget.org/packages/AWSSDK.Lambda/) | 3.7.0 – 4.0.0.1 | 10.35.0 | <ul><li>Instruments invoking a Lambda function from the AWS SDK. To monitor a function running as an AWS Lambda, see [AWS Lambda monitoring](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/).</li></ul> |
 
 ### Large language model (LLM) libraries
 
@@ -65,6 +68,7 @@ The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net
 | AWS Bedrock | [AWSSDK.BedrockRuntime](https://www.nuget.org/packages/AWSSDK.BedrockRuntime/) | 3.7.200.0 – 4.0.20.1 | 10.23.0 | <ul><li>`ConverseAsync` instrumented since agent v10.37.0.</li></ul><details><summary>Instrumented methods (2)</summary><ul><li><code>InvokeModelAsync</code></li><li><code>ConverseAsync</code></li></ul></details> |
 | OpenAI | [OpenAI](https://www.nuget.org/packages/OpenAI/) | 2.0.0 – 2.8.0 | 10.37.0 | <ul><li>only Text completions are supported.</li></ul><details><summary>Instrumented methods (2)</summary><ul><li><code>CompleteChat</code></li><li><code>CompleteChatAsync</code></li></ul></details> |
 | Azure OpenAI | [Azure.AI.OpenAI](https://www.nuget.org/packages/Azure.AI.OpenAI/) | 2.0.0 – 2.8.0-beta.1 | 10.37.0 | <ul><li>only Text completions are supported.</li></ul><details><summary>Instrumented methods (2)</summary><ul><li><code>CompleteChat</code></li><li><code>CompleteChatAsync</code></li></ul></details> |
+| Microsoft.Extensions.AI | [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI/) | 10.3.0 | 10.50.0 | <ul><li>Supported only when [OpenTelemetry API support](https://docs.newrelic.com/docs/apm/agents/manage-apm-agents/opentelemetry-api-support/) is enabled.</li><li>Instrumented via the OpenTelemetry bridge.</li></ul> |
 
 ### Logging frameworks
 
@@ -115,6 +119,10 @@ The .NET agent automatically instruments these application frameworks:
 - [WCF](https://docs.newrelic.com/docs/apm/agents/net-agent/other-installation/install-net-agent-windows-communication-foundation-wcf/): (all supported .NET Framework versions)
 - Castle MonoRail: v2 (no longer supported in agent 10.0 or higher)
 
+| Library | NuGet package | Supported versions | Min agent version | Notes |
+| --- | --- | --- | --- | --- |
+| OpenRasta | [openrasta-core](https://www.nuget.org/packages/openrasta-core/) | 2.5.63 | — |  |
+
 ### Datastores
 
 The .NET agent automatically instruments the performance of .NET application calls to these datastores:
@@ -123,9 +131,9 @@ The .NET agent automatically instruments the performance of .NET application cal
 | --- | --- | --- | --- | --- |
 | Cosmos DB | [Microsoft.Azure.Cosmos](https://www.nuget.org/packages/Microsoft.Azure.Cosmos/) | 3.17.0 – 3.60.0 | 9.2.0 | <ul><li>Versions 3.35.0+ supported since agent v10.32.0.</li></ul> |
 | Couchbase | [CouchbaseNetClient](https://www.nuget.org/packages/CouchbaseNetClient/) | 2.0.0 – 3.6.6 | — | <ul><li>Instance details aren't available for Couchbase.</li><li>Known incompatible versions: 3.0.x, 3.1.x.</li><li>With CouchbaseNetClient 2.x, the following methods are not instrumented by default in favor of their multi-document counterparts: <br>`Get(string key)` <br>`GetDocument(string key)` <br>`Remove(string key)` <br>`Remove(string key, ulong cas)` <br>`Upsert(string key, T value)`.</li><li>Versions 3.2.0+ supported since agent v10.40.0.</li></ul> |
-| Microsoft SQL Server | [System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) | 4.4.0 – 4.8.6 | — |  |
-| Microsoft SQL Server | [Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) | 1.0.19239.1 – 7.0.1 | — |  |
-| Microsoft SQL Server | System.Data | 4.6.2 – 4.8 | — | <ul><li>Built-in .NET Framework assembly; no NuGet package required.</li></ul> |
+| Microsoft SQL Server | [System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) | 4.4.0 – 4.8.6 | — | <ul><li>Microsoft Enterprise Library Data Access Application Block (`EnterpriseLibrary.Data`) is instrumented transitively through the underlying ADO.NET SQL provider.</li></ul> |
+| Microsoft SQL Server | [Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) | 1.0.19239.1 – 7.0.1 | — | <ul><li>Microsoft Enterprise Library Data Access Application Block (`EnterpriseLibrary.Data`) is instrumented transitively through the underlying ADO.NET SQL provider.</li></ul> |
+| Microsoft SQL Server | System.Data | 4.6.2 – 4.8 | — | <ul><li>Built-in .NET Framework assembly; no NuGet package required.</li><li>Microsoft Enterprise Library Data Access Application Block (`EnterpriseLibrary.Data`) is instrumented transitively through the underlying ADO.NET SQL provider.</li></ul> |
 | System.Data.ODBC | System.Data | 4.6.2 – 4.8 | — | <ul><li>Built-in .NET Framework assembly; no NuGet package required.</li></ul> |
 | System.Data.ODBC | [System.Data.Odbc](https://www.nuget.org/packages/System.Data.Odbc/) | 8.0.0 – 10.0.8 | 10.36.0 |  |
 | MongoDB (legacy driver) | [mongocsharpdriver](https://www.nuget.org/packages/mongocsharpdriver/) | 1.10.0 | — | <ul><li>Known incompatible versions: Instance details aren't available in version 2 and lower.</li></ul> |
@@ -135,10 +143,11 @@ The .NET agent automatically instruments the performance of .NET application cal
 | Oracle | [Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) | 12.1.2400 – 23.26.200 | — |  |
 | PostgreSQL | [Npgsql](https://www.nuget.org/packages/Npgsql/) | 4.0.0 – 7.0.7 | — | <ul><li>Prior versions of Npgsql may also be instrumented, but duplicate and/or missing metrics are possible.</li></ul> |
 | ServiceStack.Redis | [ServiceStack.Redis](https://www.nuget.org/packages/ServiceStack.Redis/) | 4.0.40 | — | <ul><li>Known incompatible versions: 4.0.44 or higher.</li></ul> |
-| StackExchange.Redis | [StackExchange.Redis](https://www.nuget.org/packages/StackExchange.Redis/) | 1.0.488 – 2.13.17 | — |  |
+| StackExchange.Redis | [StackExchange.Redis](https://www.nuget.org/packages/StackExchange.Redis/) | 1.0.488 – 2.13.17 | — | <ul><li>The strong-named `StackExchange.Redis.StrongName` package is also instrumented.</li></ul> |
 | Elasticsearch | [Elastic.Clients.Elasticsearch](https://www.nuget.org/packages/Elastic.Clients.Elasticsearch/) | 8.0.0 – 8.18.3 | — | <ul><li>Versions 8.10.0+ supported since agent v10.20.1.</li><li>Versions 8.12.1+ supported since agent v10.23.0.</li><li>Versions later than 8.15.10 are supported only when [OpenTelemetry API support](https://docs.newrelic.com/docs/apm/agents/manage-apm-agents/opentelemetry-api-support/) is enabled.</li></ul> |
 | Elasticsearch | [NEST](https://www.nuget.org/packages/NEST/) | 7.0.0 – 7.17.5 | — |  |
 | Elasticsearch | [Elasticsearch.Net](https://www.nuget.org/packages/Elasticsearch.Net/) | 7.0.0 – 7.17.5 | — |  |
+| OpenSearch | [OpenSearch.Client](https://www.nuget.org/packages/OpenSearch.Client/) | 1.0.0 – 1.8.0 | 10.36.0 |  |
 | Memcached | [EnyimMemcachedCore](https://www.nuget.org/packages/EnyimMemcachedCore/) | 2.0.0 | — |  |
 | DynamoDB | [AWSSDK.DynamoDBv2](https://www.nuget.org/packages/AWSSDK.DynamoDBv2/) | 3.5.0 – 4.0.18.6 | 10.33.0 |  |
 | IBM DB2 | — | — | — | <ul><li>Instrumented via the built-in IBM DB2 ADO.NET provider (any client exposing a `DB2Command` type); no NuGet package required.</li></ul> |
@@ -160,6 +169,7 @@ The .NET agent automatically instruments these external call libraries:
 | HttpClient | — | — | — | <details><summary>Instrumented methods (8)</summary><ul><li><code>SendAsync</code></li><li><code>GetAsync</code></li><li><code>PostAsync</code></li><li><code>PutAsync</code></li><li><code>DeleteAsync</code></li><li><code>GetStringAsync</code></li><li><code>GetStreamAsync</code></li><li><code>GetByteArrayAsync</code></li></ul></details> |
 | RestSharp | [RestSharp](https://www.nuget.org/packages/RestSharp/) | 105.2.3 – 114.0.0 | — | <ul><li>Known incompatible versions: 106.8.0, 106.9.0, 106.10.0, 106.10.1.</li></ul><details><summary>Instrumented methods (7)</summary><ul><li><code>ExecuteTaskAsync</code></li><li><code>ExecuteGetTaskAsync</code></li><li><code>ExecutePostTaskAsync</code></li><li><code>Execute</code></li><li><code>ExecuteAsGet</code></li><li><code>ExecuteAsPost</code></li><li><code>DownloadData</code></li></ul></details> |
 | HttpWebRequest | — | — | — | <details><summary>Instrumented methods (1)</summary><ul><li><code>GetResponse</code></li></ul></details> |
+| AWSSDK.Lambda | [AWSSDK.Lambda](https://www.nuget.org/packages/AWSSDK.Lambda/) | 3.7.0 – 4.0.0.1 | 10.35.0 | <ul><li>Instruments invoking a Lambda function from the AWS SDK. To monitor a function running as an AWS Lambda, see [AWS Lambda monitoring](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/).</li></ul> |
 
 ### Large language model (LLM) libraries
 
@@ -178,6 +188,7 @@ The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net
 | Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
 | Log4Net | [log4net](https://www.nuget.org/packages/log4net/) | 1.2.10 – 3.3.1 | 9.7.0 |  |
+| Sitecore.Logging | [Sitecore.Logging](https://www.nuget.org/packages/Sitecore.Logging/) | 10.0.0 – 10.3.0 | 10.14.0 | <ul><li>`Sitecore.Logging` is a repackaged log4net; the agent instruments it through its log4net instrumentation.</li></ul> |
 | Serilog | [Serilog](https://www.nuget.org/packages/Serilog/) | 2.0.0 – 4.3.1 | 9.7.0 |  |
 | NLog | [NLog](https://www.nuget.org/packages/NLog/) | 4.1.0 – 6.1.3 | 9.7.0 |  |
 | Microsoft.Extensions.Logging | [Microsoft.Extensions.Logging](https://www.nuget.org/packages/Microsoft.Extensions.Logging/) | 3.0.0 – 10.0.8 | 9.7.0 |  |

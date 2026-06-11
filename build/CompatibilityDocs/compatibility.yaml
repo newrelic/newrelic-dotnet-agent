@@ -40,6 +40,16 @@ categories:
         tabs: [framework]
         supportedVersions: ["v2 (no longer supported in agent 10.0 or higher)"]
 
+      - name: OpenRasta
+        tabs: [framework]
+        packages:
+          - id: openrasta-core
+            nugetUrl: https://www.nuget.org/packages/openrasta-core/
+            tabs: [framework]
+            versionSource: manual
+            minVersion: "2.5.63"
+            latestVersion: "2.5.63"
+
   - key: datastores
     title: Datastores
     tabs: [core, framework]
@@ -104,6 +114,8 @@ categories:
             latestVersion: "4.8"
             notes:
               - { type: freeform, text: "Built-in .NET Framework assembly; no NuGet package required." }
+        notes:
+          - { type: freeform, text: "Microsoft Enterprise Library Data Access Application Block (`EnterpriseLibrary.Data`) is instrumented transitively through the underlying ADO.NET SQL provider.", tabs: [framework] }
 
       - name: System.Data.ODBC
         packages:
@@ -211,6 +223,8 @@ categories:
             nugetUrl: https://www.nuget.org/packages/StackExchange.Redis/
             tabs: [core, framework]
             minVersion: "1.0.488"
+        notes:
+          - { type: freeform, text: "The strong-named `StackExchange.Redis.StrongName` package is also instrumented." }
 
       - name: Elasticsearch
         packages:
@@ -230,6 +244,14 @@ categories:
             nugetUrl: https://www.nuget.org/packages/Elasticsearch.Net/
             tabs: [core, framework]
             minVersion: "7.0.0"
+
+      - name: OpenSearch
+        minAgentVersion: "10.36.0"
+        packages:
+          - id: OpenSearch.Client
+            nugetUrl: https://www.nuget.org/packages/OpenSearch.Client/
+            tabs: [core, framework]
+            minVersion: "1.0.0"
 
       - name: Memcached
         packages:
@@ -291,6 +313,28 @@ categories:
         methods:
           - GetResponse
 
+      - name: gRPC (grpc-dotnet)
+        tabs: [core]
+        minAgentVersion: "10.50.0"
+        packages:
+          - id: Grpc.Net.Client
+            nugetUrl: https://www.nuget.org/packages/Grpc.Net.Client/
+            tabs: [core]
+            minVersion: "2.65.0"
+        notes:
+          - { type: requiresHybridAgent }
+          - { type: freeform, text: "Instrumented as external calls via the OpenTelemetry bridge." }
+
+      - name: AWSSDK.Lambda
+        minAgentVersion: "10.35.0"
+        packages:
+          - id: AWSSDK.Lambda
+            nugetUrl: https://www.nuget.org/packages/AWSSDK.Lambda/
+            tabs: [core, framework]
+            minVersion: "3.7.0"
+        notes:
+          - { type: freeform, text: "Instruments invoking a Lambda function from the AWS SDK. To monitor a function running as an AWS Lambda, see [AWS Lambda monitoring](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/)." }
+
   - key: llm
     title: Large language model (LLM) libraries
     tabs: [core, framework]
@@ -335,6 +379,18 @@ categories:
         notes:
           - { type: freeform, text: "only Text completions are supported." }
 
+      - name: Microsoft.Extensions.AI
+        tabs: [core]
+        minAgentVersion: "10.50.0"
+        packages:
+          - id: Microsoft.Extensions.AI
+            nugetUrl: https://www.nuget.org/packages/Microsoft.Extensions.AI/
+            tabs: [core]
+            minVersion: "10.3.0"
+        notes:
+          - { type: requiresHybridAgent }
+          - { type: freeform, text: "Instrumented via the OpenTelemetry bridge." }
+
   - key: logging
     title: Logging frameworks
     tabs: [core, framework]
@@ -349,6 +405,16 @@ categories:
             minVersion:
               core: "2.0.10"
               framework: "1.2.10"
+
+      - name: Sitecore.Logging
+        minAgentVersion: "10.14.0"
+        packages:
+          - id: Sitecore.Logging
+            nugetUrl: https://www.nuget.org/packages/Sitecore.Logging/
+            tabs: [framework]
+            minVersion: "10.0.0"
+        notes:
+          - { type: freeform, text: "`Sitecore.Logging` is a repackaged log4net; the agent instruments it through its log4net instrumentation." }
 
       - name: Serilog
         minAgentVersion: "9.7.0"
