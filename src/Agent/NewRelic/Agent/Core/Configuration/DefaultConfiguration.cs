@@ -1767,6 +1767,10 @@ public class DefaultConfiguration : IConfiguration
 
     public virtual int TransactionTracerMaxStackTraces => _localConfiguration.transactionTracer.maxStackTrace;
 
+    public virtual bool TransactionTracerSqlMetadataCommentsEnabled =>
+        EnvironmentOverrides(_localConfiguration.transactionTracer.sqlMetadataCommentsEnabled,
+            "NEW_RELIC_TRANSACTION_TRACER_SQL_METADATA_COMMENTS_ENABLED");
+
     private IList<Regex> _requestPathExclusionList;
     public virtual IEnumerable<Regex> RequestPathExclusionList => _requestPathExclusionList ??= ReadUrlBlacklist(_localConfiguration);
 
@@ -2560,7 +2564,7 @@ public class DefaultConfiguration : IConfiguration
         var expectedStatusCodesArrayLocal = _localConfiguration.errorCollector.expectedStatusCodes?.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
         var expectedStatusCodesArrayServer = _serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes;
 
-        var expectedStatusCodesArray = EnvironmentOverrides(ServerOverrides(expectedStatusCodesArrayServer, expectedStatusCodesArrayLocal), "NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES");
+        var expectedStatusCodesArray = EnvironmentOverrides(ServerOverrides(expectedStatusCodesArrayServer, expectedStatusCodesArrayLocal), "NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES", "NEW_RELIC_ERROR_COLLECTOR_EXPECTED_STATUS_CODES");
 
         ExpectedStatusCodes = ParseExpectedStatusCodesArray(expectedStatusCodesArray);
         ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray ?? [];
@@ -2609,7 +2613,7 @@ public class DefaultConfiguration : IConfiguration
             }
         }
 
-        IEnumerable<string> ignoreStatusCodes = EnvironmentOverrides(_serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore, "NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES");
+        IEnumerable<string> ignoreStatusCodes = EnvironmentOverrides(_serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore, "NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES", "NEW_RELIC_ERROR_COLLECTOR_IGNORE_STATUS_CODES");
         if (ignoreStatusCodes == null)
         {
             ignoreStatusCodes = _localConfiguration.errorCollector.ignoreStatusCodes.code
