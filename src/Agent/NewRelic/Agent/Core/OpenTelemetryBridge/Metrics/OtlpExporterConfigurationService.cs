@@ -118,6 +118,7 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
                 metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = config.OpenTelemetryMetricsExportIntervalMs;
                 metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportTimeoutMilliseconds = config.OpenTelemetryMetricsExportTimeoutMs;
                 metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
+                metricReaderOptions.DefaultHistogramAggregation = MetricReaderHistogramAggregation.Base2ExponentialBucketHistogram;
             });
 
         _meterProvider = providerBuilder.Build();
