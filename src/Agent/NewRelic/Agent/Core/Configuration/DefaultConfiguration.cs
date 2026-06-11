@@ -2991,8 +2991,8 @@ public class DefaultConfiguration : IConfiguration
             intervalMs = DefaultOtelExportIntervalMs;
             timeoutMs = DefaultOtelExportTimeoutMs;
         }
-        // Validation: interval must be >= timeout
-        else if (intervalMs < timeoutMs)
+        // Validation: interval must be strictly greater than timeout
+        else if (intervalMs <= timeoutMs)
         {
             Log.Warn($"OpenTelemetry metrics export interval ({intervalMs} ms) is less than export timeout ({timeoutMs} ms). Reverting to defaults: interval={DefaultOtelExportIntervalMs} ms, timeout={DefaultOtelExportTimeoutMs} ms.");
             intervalMs = DefaultOtelExportIntervalMs;
