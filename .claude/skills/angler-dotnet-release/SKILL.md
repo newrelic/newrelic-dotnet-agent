@@ -103,7 +103,7 @@ with `  + `). Strip the leading `  + ` to get the bare metric name.
 **If candidates are found:** present the numbered list to the user and ask them
 to categorize each one:
 
-> The discovery tool found the following .NET supportability metrics that are
+> The discovery tool found the following supportability metrics that are
 > in the agent code but not yet in Angler:
 >
 > 1. <metric name>
