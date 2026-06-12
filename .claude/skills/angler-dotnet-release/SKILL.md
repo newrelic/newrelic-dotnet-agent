@@ -63,29 +63,103 @@ manual edit.
 
 To target a specific version instead of the latest release, add `--version X.Y.Z`.
 
-## Step 2: Ask about supportability metrics
+## Step 2: Discover new supportability metrics
 
-Some .NET agent releases also add new `Supportability/...` metrics that Angler
-needs alongside the version line. The agent team knows when this happened; the
-skill cannot reliably detect it (the names are partly composed at runtime). So
-ask the user before opening the PR:
+The discovery tool reflects over the compiled agent, so `FullAgent.sln` must
+be built before running it. Ask the user for permission before building:
 
-> Does this release also add new supportability metrics that need to go into
-> Angler, beyond the version line?
+Check whether `src/Agent/newrelichome_x64_coreclr/NewRelic.Agent.Core.dll`
+exists:
 
-- **No** -> open a normal, ready-for-review PR (Step 3 without `--draft`).
-- **Yes** -> open a **draft** PR so the extra metrics can be added by hand
-  first (Step 3 with `--draft`). The script prints a web-edit URL to the file on
-  the branch; relay it so the user can add the metrics and mark the PR ready.
+- **File is absent:** tell the user the agent has not been built and ask:
+  > `FullAgent.sln` has not been built yet. Build it now so the discovery
+  > tool can run? This may take a few minutes.
+- **File is present:** ask:
+  > `FullAgent.sln` was built previously. Rebuild now to make sure the
+  > discovery tool reflects the latest agent code? (Skip if you know the
+  > build is already current.)
+
+**If the user says yes (or the default):** run the build, then proceed:
+
+```bash
+dotnet build FullAgent.sln
+```
+
+**If the user says no and the DLL is absent:** skip discovery entirely and
+proceed to Step 3, opening the PR ready-for-review.
+
+**If the user says no and the DLL is present:** proceed with the existing
+build -- the discovery results may not reflect uncommitted changes.
+
+Once the build is confirmed, fetch the Angler file and run the tool:
+
+```bash
+# Fetch Angler file if not already on disk from Step 1
+gh api --hostname source.datanerd.us \
+  "repos/agents/angler/contents/src/main/resources/metric_names.txt?ref=master" \
+  --jq .content | base64 -d > /tmp/angler_current.txt
+
+dotnet run --project build/MetricNameDiscovery/MetricNameDiscovery.csproj \
+  -- --diff /tmp/angler_current.txt 2>/dev/null
+```
+
+Parse every line from the `=== Candidate additions ===` section (lines starting
+with `  + `). Strip the leading `  + ` to get the bare metric name.
+
+**If no candidates are found:** proceed to Step 3 and open ready-for-review.
+
+**If candidates are found:** present the numbered list to the user and ask them
+to categorize each one:
+
+> The discovery tool found the following .NET supportability metrics that are
+> in the agent code but not yet in Angler:
+>
+> 1. Supportability/Dotnet/NetFramework/net481
+> 2. Supportability/DotNET/AppDomainCaching/Disabled
+> ...
+>
+> For each metric, reply with one of:
+> - **A** -- add to Angler (include in this PR)
+> - **E** -- add to the exclusions list (creates a separate dotnet-agent PR)
+> - **S** -- skip for now (take no action)
+>
+> Example: "1=A, 2=E, 3=S"
+
+Wait for the user's reply, then proceed to Step 3 with the classified lists.
+
+### If any metrics are classified E (add to exclusions)
+
+Before opening the Angler PR, commit the exclusions to the dotnet-agent repo:
+
+1. Edit `build/MetricNameDiscovery/exclusions.txt` -- append each metric with
+   a `#` comment (ask the user for the reason if they did not provide one, or
+   use "triaged <date>" as a default).
+2. Create a branch (e.g. `chore/metric-discovery-exclusions-<version>`), commit
+   the file, and open a **draft** PR in the dotnet-agent repo:
+   - Title: `chore: Add metric discovery exclusions for v<version>`
+   - Body: list the excluded names
+3. Report the exclusions PR URL to the user before continuing.
+
+Then proceed to Step 3 for the Angler PR.
 
 ## Step 3: Open the PR
 
+Determine the flags:
+- Add one `--extra-metric "NAME"` for each metric the user classified **A** in
+  Step 2. Omit the flag entirely if none were classified A. Extra metrics are
+  inserted under the `// .NET MISC` section (not alongside the version line).
+- Add `--draft` only if there are no A metrics AND the user explicitly asked for
+  a draft. If any A metrics exist, the PR can be ready-for-review (the script
+  commits everything in one shot).
+
 ```bash
-# ready for review (no extra metrics)
+# No extra metrics -- ready for review
 bash .claude/skills/angler-dotnet-release/scripts/create_angler_pr.sh
 
-# draft (extra supportability metrics to be added by hand)
-bash .claude/skills/angler-dotnet-release/scripts/create_angler_pr.sh --draft
+# With extra metrics -- still ready for review (all lines committed by the script)
+bash .claude/skills/angler-dotnet-release/scripts/create_angler_pr.sh \
+  --extra-metric "Supportability/Dotnet/NetFramework/net481" \
+  --extra-metric "Supportability/DotNET/AppDomainCaching/Disabled"
 ```
 
 Pass the same `--version X.Y.Z` here if one was used in Step 1.

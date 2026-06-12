@@ -13,14 +13,17 @@
 # (awk, base64, grep) are required -- all ship with the Git Bash that runs gh.
 #
 # Usage:
-#   create_angler_pr.sh [--version X.Y.Z[.W]] [--draft] [--dry-run]
+#   create_angler_pr.sh [--version X.Y.Z[.W]] [--extra-metric NAME] [--draft] [--dry-run]
 #
-#   --version  Target a specific agent version instead of the latest release.
-#              A 3-part version gets a trailing ".0" (matching the file format).
-#   --draft    Open the PR as a draft and print a web-edit URL for the file on
-#              the branch. Use when the release also adds supportability metrics
-#              that must be added by hand before the PR is ready.
-#   --dry-run  Print the detected version and the diff without creating anything.
+#   --version       Target a specific agent version instead of the latest release.
+#                   A 3-part version gets a trailing ".0" (matching the file format).
+#   --extra-metric  Additional Supportability/* metric line to insert. Repeatable;
+#                   each call adds one metric. These go under "// .NET MISC",
+#                   separate from the version line.
+#   --draft         Open the PR as a draft and print a web-edit URL for the file on
+#                   the branch. Use when the release also adds supportability metrics
+#                   that must be added by hand before the PR is ready.
+#   --dry-run       Print the detected version and the diff without creating anything.
 
 set -e
 
@@ -33,11 +36,13 @@ AGENT_REPO="newrelic/newrelic-dotnet-agent"
 version=""
 draft="false"
 dryrun="false"
+extra_metrics=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --version) version="$2"; shift 2 ;;
     --version=*) version="${1#*=}"; shift ;;
+    --extra-metric) extra_metrics+=("$2"); shift 2 ;;
     --draft) draft="true"; shift ;;
     --dry-run) dryrun="true"; shift ;;
     -h|--help) grep '^# ' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -83,10 +88,23 @@ if grep -qxF "$line" "$work/metrics.txt"; then
 fi
 echo "status: ABSENT"
 
-# Insert the new line immediately after the section anchor (newest-first order).
-awk -v ins="$line" '
+# Build the extra-metrics block (newline-separated, may be empty).
+extras_block=""
+for m in "${extra_metrics[@]}"; do
+  if [ -z "$extras_block" ]; then
+    extras_block="$m"
+  else
+    extras_block="$extras_block"$'\n'"$m"
+  fi
+done
+
+# Two separate inserts:
+#   1. Version line -> top of "// .NET agent version metrics" (newest-first order)
+#   2. Extra metrics -> top of "// .NET MISC" (general catch-all section)
+awk -v ver="$line" -v extras="$extras_block" '
   {print}
-  /^\/\/ \.NET agent version metrics[[:space:]]*$/ && !done {print ins; done=1}
+  /^\/\/ \.NET agent version metrics[[:space:]]*$/ && !vdone {print ver; vdone=1}
+  /^\/\/ \.NET MISC[[:space:]]*$/ && !edone && extras != "" {print extras; edone=1}
 ' "$work/metrics.txt" > "$work/metrics_new.txt"
 
 # Guard against a missing/renamed anchor producing an unchanged file.
@@ -94,11 +112,21 @@ if ! grep -qxF "$line" "$work/metrics_new.txt"; then
   echo "ERROR: anchor '// .NET agent version metrics' not found; file unchanged." >&2
   exit 1
 fi
+if [ ${#extra_metrics[@]} -gt 0 ] && ! grep -qxF "${extra_metrics[0]}" "$work/metrics_new.txt"; then
+  echo "ERROR: anchor '// .NET MISC' not found; extra metrics were not inserted." >&2
+  exit 1
+fi
 
 echo
 echo "diff:"
 echo "  // .NET agent version metrics"
 echo "+ $line"
+if [ ${#extra_metrics[@]} -gt 0 ]; then
+  echo "  // .NET MISC"
+  for m in "${extra_metrics[@]}"; do
+    echo "+ $m"
+  done
+fi
 
 if [ "$dryrun" = "true" ]; then
   kind="PR"; [ "$draft" = "true" ] && kind="draft PR"
