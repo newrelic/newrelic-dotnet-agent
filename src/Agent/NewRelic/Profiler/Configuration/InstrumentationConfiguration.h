@@ -295,7 +295,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             instrumentationPoint->MetricName = GetAttributeOrEmptyString(tracerNode, _X("metricName"));
             instrumentationPoint->MetricType = GetAttributeOrEmptyString(tracerNode, _X("metric"));
             auto levelString = GetAttributeOrEmptyString(tracerNode, _X("level"));
-            auto suppressRecursiveCallsString = GetAttributeOrEmptyString(tracerNode, _X("level"));
+            auto suppressRecursiveCallsString = GetAttributeOrEmptyString(tracerNode, _X("suppressRecursiveCalls"));
             auto transactionTraceSegmentString = GetAttributeOrEmptyString(tracerNode, _X("transactionTraceSegment"));
             auto transactionNamingPriorityString = GetAttributeOrEmptyString(tracerNode, _X("transactionNamingPriority"));
             instrumentationPoint->AssemblyName = GetAttributeOrEmptyString(matchNode, _X("assemblyName"));
@@ -367,7 +367,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 instrumentationPoint->TracerFactoryArgs |= (level << 16);
             }
 
-            // suppress recusive call flag
+            // suppress recursive call flag
             if (!suppressRecursiveCallsString.empty())
             {
                 if (Strings::AreEqualCaseInsensitive(suppressRecursiveCallsString, _X("true"))) 
@@ -462,7 +462,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return instrumentationPoints;
         }
 
-        // given two instrumentationPoint->ClassName iterators (begin and end), return a new copy of insrtumentationPoint containing a ClassName of [begin, end)
+        // given two instrumentationPoint->ClassName iterators (begin and end), return a new copy of instrumentationPoint containing a ClassName of [begin, end)
         static InstrumentationPointPtr GetInstrumentationPointFromClassSplitIterators(InstrumentationPointPtr instrumentationPoint, xstring_t::const_iterator begin, xstring_t::const_iterator end)
         {
             // construct a new class name string from this section of the old class name split
