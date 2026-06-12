@@ -8,8 +8,10 @@ disable-model-invocation: true
 
 When a new .NET agent version ships, Angler needs a one-line addition to its
 `metric_names.txt` so the new `Supportability/AgentVersion/<version>` metric is
-recognized. This skill discovers the latest release, makes that edit, and opens
-the PR end-to-end via the GitHub API -- no local clone of Angler is needed.
+recognized. This skill discovers the latest release, makes that edit, opens the
+PR end-to-end via the GitHub API (no local clone of Angler is needed), and -- for
+a ready-for-review PR -- posts an approval request to the #dotnet-team Slack
+channel if a Slack tool is connected.
 
 Reference for the shape of the change: Angler PR #837
 (`https://source.datanerd.us/agents/angler/pull/837`) -- a single line added to
@@ -88,10 +90,39 @@ bash .claude/skills/angler-dotnet-release/scripts/create_angler_pr.sh --draft
 
 Pass the same `--version X.Y.Z` here if one was used in Step 1.
 
-## Step 4: Report the result
+## Step 4: Notify #dotnet-team on Slack
+
+A ready-for-review PR needs a teammate's approval, so let the team know. Do this
+only when the PR was opened **ready for review** -- a draft is not ready for
+approval yet, so skip this for a draft and notify once the PR is marked ready.
+
+First check whether a Slack send-message tool is available in this session
+(e.g. `slack_send_message`). The plugin that provides it may not be connected --
+that is fine and **not a failure**.
+
+- **Slack tool available** -> post to the private channel **#dotnet-team**.
+  Resolve its id by searching channels for `dotnet-team` with private channels
+  included, and pick the exact-name match (the public `#dotnet-agent` also
+  matches that search -- do not post there). Send a message like:
+
+  > An Angler PR for .NET Agent v<version> has been created and needs
+  > review/approval: <PR URL>
+
+  Do not use `@here` / `@channel` mentions unless the user asks for them. Then
+  report the link to the message you posted.
+
+- **Slack tool not available** -> not a failure. Tell the user to post to
+  #dotnet-team asking for approval, and give them ready-to-paste text:
+
+  > An Angler PR for .NET Agent v<version> has been created and needs
+  > review/approval: <PR URL>
+
+## Step 5: Report the result
 
 Relay what the script printed: the PR URL, and for a draft, the web-edit URL
-plus a reminder to add the extra metrics and mark the PR ready when done.
+plus a reminder to add the extra metrics and mark the PR ready when done. If you
+posted to Slack in Step 4, include the message link; if the Slack tool was
+unavailable, include the suggested text for the user to post manually.
 
 If the script fails, surface the message verbatim. Common causes: not
 authenticated to one of the two hosts, or a branch/PR from a prior attempt
