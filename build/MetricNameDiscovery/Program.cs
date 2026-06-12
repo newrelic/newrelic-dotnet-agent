@@ -172,11 +172,11 @@ if (diffFile != null)
         .ToHashSet(StringComparer.Ordinal);
 
     Console.WriteLine();
-    Console.WriteLine("=== Candidate additions (in code, .NET-named, absent from Angler file) ===");
+    Console.WriteLine("=== Candidate additions (in code, absent from Angler file) ===");
     bool any = false;
     foreach (var name in discovered)
     {
-        if (IsDotNetNamed(name) && !anglerLines.Contains(name) && !exclusions.Contains(name))
+        if (!anglerLines.Contains(name) && !exclusions.Contains(name))
         {
             Console.WriteLine($"  + {name}");
             any = true;
@@ -194,9 +194,6 @@ return 0;
 static bool IsSupport(string? s) =>
     s != null && s.StartsWith("Supportability", StringComparison.Ordinal) && !s.EndsWith('/');
 
-// Matches names the .NET agent owns by naming convention
-static bool IsDotNetNamed(string name) =>
-    name.Contains("/DotNet/") || name.Contains("/DotNET/") || name.Contains("/Dotnet/");
 
 static object[] GetValues(Type t)
 {

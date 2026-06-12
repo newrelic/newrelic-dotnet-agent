@@ -1,8 +1,101 @@
 # Metrics to exclude from Angler candidate suggestions.
 # One exact metric name per line. Blank lines and lines starting with '#' are ignored.
 # Add a comment above each entry explaining why it is excluded.
-#
-# Example:
-#   # Emitted only during agent startup, not useful for ongoing monitoring
-#   Supportability/DotNET/AgentLogging/Disabled
 
+# -----------------------------------------------------------------------
+# Cross-agent / non-.NET-specific metrics reviewed 2026-04-15.
+# Determined not useful for .NET-specific Angler tracking.
+# -----------------------------------------------------------------------
+
+# Reservoir lifecycle counters -- same shape emitted by all agents; not .NET-specific
+Supportability/AnalyticsEvents/TotalEventsCollected
+Supportability/AnalyticsEvents/TotalEventsRecollected
+Supportability/AnalyticsEvents/TryResizeReservoir
+Supportability/Events/Customer/TotalEventsCollected
+Supportability/Events/Customer/TotalEventsRecollected
+Supportability/Events/Customer/TryResizeReservoir
+
+# Trace/error/SQL lifecycle counters -- same shape emitted by all agents
+Supportability/Errors/TotalErrorsCollected
+Supportability/Errors/TotalErrorsRecollected
+Supportability/Errors/TotalErrorsSent
+Supportability/SqlTraces/TotalSqlTracesCollected
+Supportability/SqlTraces/TotalSqlTracesRecollected
+Supportability/SqlTraces/TotalSqlTracesSent
+
+# Metric harvest heartbeat -- emitted by all agents, not .NET-specific
+Supportability/MetricHarvest/transmit
+
+# RUM injection counters -- not .NET-specific
+Supportability/RUM/Footer
+Supportability/RUM/Header
+Supportability/RUM/HtmlPage
+
+# Thread profiling sample counter -- not .NET-specific
+Supportability/ThreadProfiling/SampleCount
+
+# Transaction builder GC counter -- not .NET-specific
+Supportability/TransactionBuilderGarbageCollected/all
+
+# DT late-header counter -- not .NET-specific
+Supportability/DistributedTrace/HeadersAcceptedLate
+
+# Top-level OTel bridge flags (no /DotNet/ segment) -- not .NET-specific
+Supportability/OpenTelemetryBridge/disabled
+Supportability/OpenTelemetryBridge/enabled
+
+# Custom instrumentation count -- not .NET-specific
+Supportability/CustomInst/Count
+
+# Utilization error for kubernetes -- not .NET-specific (other utilization errors already in Angler)
+Supportability/utilization/kubernetes/error
+
+# -----------------------------------------------------------------------
+# Collector HTTP error codes -- cross-agent, open-ended set, not
+# useful to track per-agent. Only the subset currently missing from
+# Angler is listed; if Angler adds more, those will pass through
+# unfiltered until reviewed.
+# -----------------------------------------------------------------------
+Supportability/Agent/Collector/HTTPError/100
+Supportability/Agent/Collector/HTTPError/101
+Supportability/Agent/Collector/HTTPError/102
+Supportability/Agent/Collector/HTTPError/103
+Supportability/Agent/Collector/HTTPError/203
+Supportability/Agent/Collector/HTTPError/204
+Supportability/Agent/Collector/HTTPError/205
+Supportability/Agent/Collector/HTTPError/206
+Supportability/Agent/Collector/HTTPError/207
+Supportability/Agent/Collector/HTTPError/208
+Supportability/Agent/Collector/HTTPError/226
+Supportability/Agent/Collector/HTTPError/300
+Supportability/Agent/Collector/HTTPError/301
+Supportability/Agent/Collector/HTTPError/302
+Supportability/Agent/Collector/HTTPError/303
+Supportability/Agent/Collector/HTTPError/304
+Supportability/Agent/Collector/HTTPError/305
+Supportability/Agent/Collector/HTTPError/306
+Supportability/Agent/Collector/HTTPError/307
+Supportability/Agent/Collector/HTTPError/308
+Supportability/Agent/Collector/HTTPError/451
+Supportability/Agent/Collector/HTTPError/504
+Supportability/Agent/Collector/HTTPError/505
+Supportability/Agent/Collector/HTTPError/506
+Supportability/Agent/Collector/HTTPError/507
+Supportability/Agent/Collector/HTTPError/508
+Supportability/Agent/Collector/HTTPError/510
+Supportability/Agent/Collector/HTTPError/511
+
+# -----------------------------------------------------------------------
+# .NET-named metrics triaged 2026-06-12 -- present in agent code but
+# not appropriate for Angler tracking.
+# -----------------------------------------------------------------------
+
+# AWS Account ID config metric -- internal config signal, not a runtime health metric
+Supportability/Dotnet/AwsAccountId/Config
+
+# OTel bridge internal counters -- high-frequency instrumentation signals,
+# not suitable for cross-account supportability tracking
+Supportability/Metrics/DotNet/OpenTelemetryBridge/EntityGuidChanged
+Supportability/Metrics/DotNet/OpenTelemetryBridge/InstrumentCreated
+Supportability/Metrics/DotNet/OpenTelemetryBridge/MeasurementRecorded
+Supportability/Metrics/DotNet/OpenTelemetryBridge/MeterProviderRecreated
