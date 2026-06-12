@@ -34,10 +34,6 @@ Supportability/AgentVersion/10.51.1.0   <- inserted
 Supportability/AgentVersion/10.51.0.0
 ```
 
-Functionally, placement does not matter -- Angler's `MetricLoader` strips
-comments/blank lines and hashes each remaining line independently, so the file
-is an unordered set. The newest-first slotting is purely for human tidiness.
-
 The PR targets `master` and is titled `Add .NET Agent v<version> to Angler`.
 It is opened **ready for review** by default, or as a **draft** when the release
 also adds supportability metrics that must be added by hand (see Step 2).
@@ -54,12 +50,8 @@ If either is missing, stop and tell the user which host needs auth.
 bash .claude/skills/angler-dotnet-release/scripts/create_angler_pr.sh --dry-run
 ```
 
-This prints the detected version, whether its line is already present, and the
-diff -- without creating anything. If it reports `status: PRESENT`, Angler is
-already up to date for this version; stop and report that (a normal outcome, not
-an error). Note: if the version line is already present but the user has extra
-supportability metrics to add, this skill makes no PR -- those need a separate
-manual edit.
+If it reports `status: PRESENT`, Angler is already up to date; stop and report
+that (a normal outcome, not an error).
 
 To target a specific version instead of the latest release, add `--version X.Y.Z`.
 
@@ -114,8 +106,8 @@ to categorize each one:
 > The discovery tool found the following .NET supportability metrics that are
 > in the agent code but not yet in Angler:
 >
-> 1. Supportability/Dotnet/NetFramework/net481
-> 2. Supportability/DotNET/AppDomainCaching/Disabled
+> 1. <metric name>
+> 2. <metric name>
 > ...
 >
 > For each metric, reply with one of:
@@ -124,8 +116,6 @@ to categorize each one:
 > - **S** -- skip for now (take no action)
 >
 > Example: "1=A, 2=E, 3=S"
-
-Wait for the user's reply, then proceed to Step 3 with the classified lists.
 
 ### If any metrics are classified E (add to exclusions)
 
@@ -174,22 +164,19 @@ First check whether a Slack send-message tool is available in this session
 (e.g. `slack_send_message`). The plugin that provides it may not be connected --
 that is fine and **not a failure**.
 
+In both cases the message is:
+
+> An Angler PR for .NET Agent v<version> has been created and needs
+> review/approval: <PR URL>
+
 - **Slack tool available** -> post to the private channel **#dotnet-team**.
   Resolve its id by searching channels for `dotnet-team` with private channels
   included, and pick the exact-name match (the public `#dotnet-agent` also
-  matches that search -- do not post there). Send a message like:
+  matches that search -- do not post there). Do not use `@here` / `@channel`
+  unless the user asks. Report the link to the message you posted.
 
-  > An Angler PR for .NET Agent v<version> has been created and needs
-  > review/approval: <PR URL>
-
-  Do not use `@here` / `@channel` mentions unless the user asks for them. Then
-  report the link to the message you posted.
-
-- **Slack tool not available** -> not a failure. Tell the user to post to
-  #dotnet-team asking for approval, and give them ready-to-paste text:
-
-  > An Angler PR for .NET Agent v<version> has been created and needs
-  > review/approval: <PR URL>
+- **Slack tool not available** -> not a failure. Give the user the message
+  text above to post manually.
 
 ## Step 5: Report the result
 
