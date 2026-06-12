@@ -20,7 +20,7 @@ dotnet run --project build/MetricNameDiscovery/MetricNameDiscovery.csproj -- [op
 | Option | Description |
 |---|---|
 | `--agent-home <path>` | Path to an agent home directory containing `NewRelic.Agent.Core.dll`. Defaults to `src/Agent/newrelichome_x64_coreclr` relative to the repo root. |
-| `--diff <angler-file>` | Path to a local copy of Angler's `metric_names.txt`. Adds a `=== Candidate additions ===` section listing `.NET`-named metrics present in code but absent from the file. |
+| `--diff <angler-file>` | Path to a local copy of Angler's `metric_names.txt`. Adds a `=== Candidate additions ===` section listing all metrics present in code but absent from the file and not in the exclusions list. |
 | `--exclusions <path>` | Path to an exclusions file. Defaults to `build/MetricNameDiscovery/exclusions.txt` if it exists. |
 
 ## Output sections
@@ -30,8 +30,8 @@ dotnet run --project build/MetricNameDiscovery/MetricNameDiscovery.csproj -- [op
 - **Methods not enumerated** - methods whose parameters include free-form
   strings (shapes C/D); these cannot be enumerated without runtime data and
   are listed for manual review.
-- **Candidate additions** (diff mode only) - `.NET`-named metrics in code
-  that are absent from the Angler file and not in the exclusions list.
+- **Candidate additions** (diff mode only) - all metrics in code that are
+  absent from the Angler file and not in the exclusions list.
 
 ## Exclusions file
 
