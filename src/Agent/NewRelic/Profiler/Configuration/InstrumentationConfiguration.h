@@ -43,7 +43,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                     }
                     else
                     {
-                        LogDebug(L"Parsing instrumentation file '", instrumentationXml.first);
+                        LogDebug(L"Parsing instrumentation file '", instrumentationXml.first, L"'");
                         GetInstrumentationPoints(instrumentationXml.second);
                     }                    
                 }
@@ -426,7 +426,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             }
         }
 
-        // the class name field of an instrumentation point may have multiple clasess listed (comma separated), we have to build instrumentation points for each
+        // the class name field of an instrumentation point may have multiple classes listed (comma separated), we have to build instrumentation points for each
         static std::set<InstrumentationPointPtr> SplitInstrumentationPointsOnClassNames(InstrumentationPointPtr instrumentationPoint)
         {
             std::set<InstrumentationPointPtr> instrumentationPoints;
