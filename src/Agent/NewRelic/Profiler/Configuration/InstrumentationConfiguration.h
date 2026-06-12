@@ -266,7 +266,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             {
                 return;
             }
-            auto name = GetAttributeOrEmptyString(tracerFactoryNode, _X("name"));
 
             // get the instrumentation points for every match node in this tracer factory
             for (auto matchNode = tracerFactoryNode->first_node(_X("match"), 0, false); matchNode; matchNode = matchNode->next_sibling(_X("match"), 0, false))
