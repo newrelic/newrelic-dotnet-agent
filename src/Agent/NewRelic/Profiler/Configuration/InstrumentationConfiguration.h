@@ -305,12 +305,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             instrumentationPoint->MethodName = GetAttributeOrEmptyString(matcherNode, _X("methodName"));
             instrumentationPoint->Parameters = NormalizeParameters(TryGetAttribute(matcherNode, _X("parameters")));
 
-            if (instrumentationPoint->TracerFactoryName == _X("NewRelic.Agent.Core.Tracer.Factories.BackgroundThreadTracerFactory"))
-            {
-                // Log custom instrumentation details
-                LogDebug(L"Custom instrumentation with metric name ", instrumentationPoint->MetricName, L" found for assemblyName=", instrumentationPoint->AssemblyName, L", className=", instrumentationPoint->ClassName, L", methodName=", instrumentationPoint->MethodName);
-            }
-
             // sdaubin : I'm sure we could allow some mscorlib methods to be instrumented because we're able to 
             // append methods onto an mscorlib exception class.  But we'd need to do something like we do for those
             // exception helper methods and remove the `mscorlib` lookups.  Right now we try to find a reference
@@ -327,6 +321,21 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             {
                 instrumentationPoint->TracerFactoryName = _X("NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory");
             }
+
+            // Attempt by ahemsath on 2026-06-12 to add logging of customer CI values
+            if (instrumentationPoint->TracerFactoryName == _X("NewRelic.Agent.Core.Tracer.Factories.BackgroundThreadTracerFactory"))
+            {
+                LogDebug(L"Custom instrumentation to create a transaction found for assemblyName=", instrumentationPoint->AssemblyName, L", className=", instrumentationPoint->ClassName, L", methodName=", instrumentationPoint->MethodName, L", metricName=", instrumentationPoint->MetricName);
+            }
+            if (instrumentationPoint->TracerFactoryName == _X("NewRelic.Agent.Core.Tracer.Factories.IgnoreTransactionTracerFactory"))
+            {
+                LogDebug(L"Custom instrumentation to ignore a transaction found for assemblyName=", instrumentationPoint->AssemblyName, L", className=", instrumentationPoint->ClassName, L", methodName=", instrumentationPoint->MethodName);
+            }
+            // There are a lot of other custom tracer factories that it would be nice to log here, but it would get out of hand to log them all.
+            // In particular, we would want to log any use of DefaultTracerFactory for CI without a tracer factory specified, but this would also end up logging
+            // some of our own built-in instrumentation points (e.g. HttpClient and StackExchangeRedis) that do not specify a tracer factory.
+            // Implementing this feature this way would require all of our built-in instrumentation to specify a tracer factory,
+            // which I am not sure is possible or worth the effort to add this supportability feature. 
 
             // populate the TracerFactoryArgs
             instrumentationPoint->TracerFactoryArgs = 0;
