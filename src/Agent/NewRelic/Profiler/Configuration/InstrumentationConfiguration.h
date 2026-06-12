@@ -266,6 +266,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             {
                 return;
             }
+            auto name = GetAttributeOrEmptyString(tracerFactoryNode, _X("name"));
 
             // get the instrumentation points for every match node in this tracer factory
             for (auto matchNode = tracerFactoryNode->first_node(_X("match"), 0, false); matchNode; matchNode = matchNode->next_sibling(_X("match"), 0, false))
@@ -304,6 +305,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             instrumentationPoint->ClassName = GetAttributeOrEmptyString(matchNode, _X("className"));
             instrumentationPoint->MethodName = GetAttributeOrEmptyString(matcherNode, _X("methodName"));
             instrumentationPoint->Parameters = NormalizeParameters(TryGetAttribute(matcherNode, _X("parameters")));
+
+            if (instrumentationPoint->TracerFactoryName == _X("NewRelic.Agent.Core.Tracer.Factories.BackgroundThreadTracerFactory"))
+            {
+                // Log custom instrumentation details
+                LogDebug(L"Custom instrumentation with metric name ", instrumentationPoint->MetricName, L" found for assemblyName=", instrumentationPoint->AssemblyName, L", className=", instrumentationPoint->ClassName, L", methodName=", instrumentationPoint->MethodName);
+            }
 
             // sdaubin : I'm sure we could allow some mscorlib methods to be instrumented because we're able to 
             // append methods onto an mscorlib exception class.  But we'd need to do something like we do for those
@@ -367,7 +374,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 instrumentationPoint->TracerFactoryArgs |= (level << 16);
             }
 
-            // suppress recusive call flag
+            // suppress recursive call flag
             if (!suppressRecursiveCallsString.empty())
             {
                 if (Strings::AreEqualCaseInsensitive(suppressRecursiveCallsString, _X("true"))) 
@@ -462,7 +469,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return instrumentationPoints;
         }
 
-        // given two instrumentationPoint->ClassName iterators (begin and end), return a new copy of insrtumentationPoint containing a ClassName of [begin, end)
+        // given two instrumentationPoint->ClassName iterators (begin and end), return a new copy of instrumentationPoint containing a ClassName of [begin, end)
         static InstrumentationPointPtr GetInstrumentationPointFromClassSplitIterators(InstrumentationPointPtr instrumentationPoint, xstring_t::const_iterator begin, xstring_t::const_iterator end)
         {
             // construct a new class name string from this section of the old class name split
