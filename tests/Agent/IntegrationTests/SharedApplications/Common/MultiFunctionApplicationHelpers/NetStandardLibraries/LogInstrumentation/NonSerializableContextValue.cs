@@ -10,7 +10,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 // log_event_data payload would be unambiguously invalid JSON.
 public class NonSerializableContextValue
 {
-    public const string ToStringValue = "Packing.Api.Controllers.FeatureController.IsEnabled (Packing.Api)";
+    public const string ToStringValue = "Sample.App.Controllers.WidgetController.IsEnabled (Sample.App)";
 
     public NonSerializableContextValue Self { get; }
 

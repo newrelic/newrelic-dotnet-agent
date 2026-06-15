@@ -27,7 +27,7 @@ public abstract class ContextDataNonSerializableTestsBase<TFixture> : NewRelicIn
 
     // Must match NonSerializableContextValue.ToStringValue in the shared application
     // (the test project does not reference the shared app, so the value is duplicated here).
-    private const string NonSerializableToStringValue = "Packing.Api.Controllers.FeatureController.IsEnabled (Packing.Api)";
+    private const string NonSerializableToStringValue = "Sample.App.Controllers.WidgetController.IsEnabled (Sample.App)";
 
     protected ContextDataNonSerializableTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework) : base(fixture)
     {
