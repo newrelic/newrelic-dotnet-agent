@@ -190,6 +190,21 @@ public class LoggingTester
         _logs[logger.ToUpper()].InfoWithContextDictionary(message, contextDict);
     }
 
+    // Logs a message whose context data contains a value that Newtonsoft.Json cannot
+    // serialize (a self-referencing object, like an ASP.NET Core Endpoint). This exercises
+    // the agent's context-data serialization fallback and verifies the resulting
+    // log_event_data payload is still valid JSON. See ContextDataNonSerializableTests.
+    [LibraryMethod]
+    public static void CreateSingleLogMessageWithNonSerializableContext(string logger, string message)
+    {
+        var contextDict = new Dictionary<string, object>
+        {
+            { "normalkey", "normalvalue" },
+            { "nonserializable", new NonSerializableContextValue() },
+        };
+        _logs[logger.ToUpper()].InfoWithContextDictionary(message, contextDict);
+    }
+
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]

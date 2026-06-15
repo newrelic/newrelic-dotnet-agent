@@ -556,6 +556,16 @@ public abstract class AgentLogBase
             .SelectMany(x => x.Logs);
     }
 
+    // Returns the raw, unparsed log_event_data payload strings exactly as the agent logged
+    // them. Useful for asserting the payload is well-formed JSON (GetLogEventData parses the
+    // JSON and would throw on a malformed payload before a test could inspect it).
+    public IEnumerable<string> GetLogEventDataPayloads()
+    {
+        return TryGetLogLines(LogDataLogLineRegex)
+            .Select(match => TryExtractJson(match, 1))
+            .Where(json => json != null);
+    }
+
     #endregion LogData
 
     #region UpdateLoadedModules
