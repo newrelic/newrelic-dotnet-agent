@@ -80,6 +80,18 @@ public class ContainerApplication : RemoteApplication
     {
         CopyNewRelicHomeCoreClrLinuxDirectoryToRemote(_agentArch);
 
+        // Alpine is musl-based. The build-output default symlink points to the glibc variant
+        // (linux-{arch}/libNewRelicProfiler.so), which Alpine arm64 cannot load (no glibc compat).
+        // Redirect to the musl-native binary so the profiler attaches correctly.
+        if (_distroTag.Contains("alpine", StringComparison.OrdinalIgnoreCase))
+        {
+            var symlinkPath = Path.Combine(DestinationNewRelicHomeDirectoryPath, "libNewRelicProfiler.so");
+            var muslTarget = Path.Combine($"linux-musl-{_agentArch}", "libNewRelicProfiler.so");
+            if (Path.Exists(symlinkPath))
+                File.Delete(symlinkPath);
+            File.CreateSymbolicLink(symlinkPath, muslTarget);
+        }
+
         ModifyNewRelicConfig();
     }
 
