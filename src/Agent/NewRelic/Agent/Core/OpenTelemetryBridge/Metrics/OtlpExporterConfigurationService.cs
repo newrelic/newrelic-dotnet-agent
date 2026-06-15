@@ -112,6 +112,7 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
             {
                 exporterOptions.Endpoint = endpoint;
                 exporterOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
+                exporterOptions.Compression = OtlpExportCompression.GZip;
                 exporterOptions.Headers = $"api-key={config.AgentLicenseKey}";
                 exporterOptions.HttpClientFactory = () => _httpClient;
 
@@ -146,10 +147,7 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
 #else
             var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = httpClientHandler };
 #endif
-            // Gzip is the outermost handler so each request is compressed once before the
-            // audit/retry handlers run; the audit log then observes the compressed payload.
-            var gzipHandler = new GzipCompressionHandler { InnerHandler = auditHandler };
-            var httpClient = new HttpClient(gzipHandler);
+            var httpClient = new HttpClient(auditHandler);
             httpClient.Timeout = TimeSpan.FromMilliseconds(_configurationService.Configuration.OpenTelemetryMetricsExportTimeoutMs);
             httpClient.DefaultRequestHeaders.Add("User-Agent", $"NewRelic-DotNet-Agent/{AgentInstallConfiguration.AgentVersion ?? "Unknown"}");
 
