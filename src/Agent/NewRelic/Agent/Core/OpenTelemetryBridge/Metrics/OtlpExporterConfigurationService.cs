@@ -112,6 +112,7 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
             {
                 exporterOptions.Endpoint = endpoint;
                 exporterOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
+                exporterOptions.Compression = OtlpExportCompression.GZip;
                 exporterOptions.Headers = $"api-key={config.AgentLicenseKey}";
                 exporterOptions.HttpClientFactory = () => _httpClient;
 
