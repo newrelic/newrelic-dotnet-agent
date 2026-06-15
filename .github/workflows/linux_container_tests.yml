@@ -79,6 +79,9 @@ jobs:
           - arch: arm64
             distro: Fedora
             runner: ubuntu-24.04-arm
+          - arch: arm64
+            distro: Alpine
+            runner: ubuntu-24.04-arm
 
     env:
       test_results_path: tests/TestResults
