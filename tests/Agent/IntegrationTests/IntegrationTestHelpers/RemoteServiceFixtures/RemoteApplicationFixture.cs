@@ -730,9 +730,20 @@ public abstract class RemoteApplicationFixture : IDisposable
         {
             try
             {
-                // JToken.Parse rather than JObject.Parse: several payloads (e.g. metric_data and
+                // JToken rather than JObject: several payloads (e.g. metric_data and
                 // analytic_event_data) are top-level JSON arrays, not objects.
-                JToken.Parse(payload.Value);
+                //
+                // A hand-built JsonTextReader rather than JToken.Parse: JToken.Parse uses Newtonsoft's
+                // default MaxDepth of 64, which rejects legitimately deep payloads. profile_data is a
+                // recursive thread-profile call tree that nests one array level per stack frame and
+                // routinely exceeds 64 levels - that is valid JSON, not a corrupt payload. MaxDepth =
+                // null removes the limit; the trailing Read() loop preserves JToken.Parse's rejection
+                // of additional content after the root token.
+                using (var jsonReader = new JsonTextReader(new StringReader(payload.Value)) { MaxDepth = null })
+                {
+                    JToken.ReadFrom(jsonReader);
+                    while (jsonReader.Read()) { }
+                }
             }
             catch (Exception ex)
             {
