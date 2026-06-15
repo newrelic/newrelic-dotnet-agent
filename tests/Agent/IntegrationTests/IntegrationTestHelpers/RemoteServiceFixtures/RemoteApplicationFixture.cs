@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Threading;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -20,6 +21,13 @@ public abstract class RemoteApplicationFixture : IDisposable
     public virtual string TestSettingCategory { get { return "Default"; } }
 
     public int? BaselinePayloadBytes { get; set; }
+
+    /// <summary>
+    /// When true (the default), the fixture asserts after the application exits that every payload
+    /// the agent sent to the collector is well-formed JSON. Override and return false for tests
+    /// that intentionally produce malformed payloads.
+    /// </summary>
+    protected virtual bool ValidateCollectorPayloadJson => true;
 
     private Action _setupConfiguration;
     private Action _exerciseApplication;
@@ -411,6 +419,11 @@ public abstract class RemoteApplicationFixture : IDisposable
                     if (!applicationHadNonZeroExitCode)
                     {
                         TestForKnownProblems();
+
+                        if (ValidateCollectorPayloadJson)
+                        {
+                            ValidateAllCollectorPayloadsAreValidJson();
+                        }
                     }
                 }
 
@@ -693,5 +706,75 @@ public abstract class RemoteApplicationFixture : IDisposable
         }
 
         TestLogger?.WriteLine("Finished known problems check.");
+    }
+
+    /// <summary>
+    /// Asserts that every payload the agent sent to the collector is well-formed JSON. Runs
+    /// automatically for every integration test via the Initialize() teardown path, so a
+    /// regression that corrupts any outgoing payload (see GitHub issue #3641, where an
+    /// unserializable log context value produced invalid log_event_data) fails the test that
+    /// produced it - no per-test assertion required.
+    /// </summary>
+    private void ValidateAllCollectorPayloadsAreValidJson()
+    {
+        // Using AgentLog when the file doesn't exist results in a 3 minute wait - manually checking is faster.
+        if (!Directory.Exists(DestinationNewRelicLogFileDirectoryPath) ||
+            !File.Exists(AgentLog.FilePath))
+        {
+            return;
+        }
+
+        var invalidPayloads = new List<string>();
+
+        foreach (var payload in AgentLog.GetCollectorPayloads())
+        {
+            try
+            {
+                // JToken.Parse rather than JObject.Parse: several payloads (e.g. metric_data and
+                // analytic_event_data) are top-level JSON arrays, not objects.
+                JToken.Parse(payload.Value);
+            }
+            catch (Exception ex)
+            {
+                invalidPayloads.Add($"  {payload.Key} ({payload.Value.Length} chars): {ex.Message}{Environment.NewLine}    Payload: {BuildPayloadPreview(payload.Value, ex)}");
+            }
+        }
+
+        if (invalidPayloads.Count > 0)
+        {
+            TestLogger?.WriteLine("WARNING: Found one or more collector payloads that are not valid JSON!");
+            Assert.Fail($"{invalidPayloads.Count} collector payload(s) were not valid JSON:{Environment.NewLine}" + string.Join(Environment.NewLine, invalidPayloads));
+        }
+
+        TestLogger?.WriteLine("Finished collector payload JSON validation.");
+    }
+
+    /// <summary>
+    /// Builds a bounded preview of a payload that failed JSON validation. For payloads larger than
+    /// the window, the preview is centered on the parse failure position so the offending region is
+    /// visible rather than truncated away; the head of the payload is used when no position is known.
+    /// </summary>
+    private static string BuildPayloadPreview(string payload, Exception parseException)
+    {
+        const int windowRadius = 250;
+
+        if (payload.Length <= 2 * windowRadius)
+        {
+            return payload;
+        }
+
+        // For single-line JSON payloads the reader's LinePosition is effectively the character
+        // offset of the failure, so center the window there. Defaults to 0 (head of payload) for a
+        // non-reader exception or when no position is available.
+        var errorPosition = (parseException as JsonReaderException)?.LinePosition ?? 0;
+        errorPosition = Math.Max(0, Math.Min(errorPosition, payload.Length));
+
+        var start = Math.Max(0, errorPosition - windowRadius);
+        var length = Math.Min(2 * windowRadius, payload.Length - start);
+
+        var prefix = start > 0 ? "..." : "";
+        var suffix = start + length < payload.Length ? "..." : "";
+
+        return $"{prefix}{payload.Substring(start, length)}{suffix}";
     }
 }
