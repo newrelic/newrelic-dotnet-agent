@@ -184,6 +184,7 @@ public interface IConfiguration
     int DiagnosticsCaptureAgentTimingFrequency { get; }
     bool UseResourceBasedNamingForWCFEnabled { get; }
     bool EventListenerSamplersEnabled { get; set; }
+    bool KafkaInternalMetricsEnabled { get; }
     int? SamplingTarget { get; }
     int SpanEventsMaxSamplesStored { get; }
     int? SamplingTargetPeriodInSeconds { get; }

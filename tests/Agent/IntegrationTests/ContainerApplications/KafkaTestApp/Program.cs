@@ -122,10 +122,11 @@ public class Program
 
     private static string GenerateTopic()
     {
-        var providedTopic = Environment.GetEnvironmentVariable("NEW_RELIC_KAFKA_TOPIC");
-        if (!string.IsNullOrEmpty(providedTopic))
+        var topic = Environment.GetEnvironmentVariable("NEW_RELIC_KAFKA_TOPIC");
+        if (!string.IsNullOrEmpty(topic))
         {
-            return providedTopic;
+            Console.WriteLine("Using provided topic name " + topic);
+            return topic;
         }
 
         var builder = new StringBuilder();
@@ -135,6 +136,8 @@ public class Program
             var shifter = Convert.ToInt32(Math.Floor(25 * rnd.NextDouble()));
             builder.Append(Convert.ToChar(shifter + 65));
         }
-        return builder.ToString();
+        topic = builder.ToString();
+        Console.WriteLine("No topic name provided; using auto-generated topic name " + topic);
+        return topic;
     }
 }

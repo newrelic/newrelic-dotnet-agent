@@ -1061,6 +1061,12 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
             return BuildMetric(_metricNameService, metricName, null, data);
         }
 
+        public MetricWireModel TryBuildGaugeMetric(string metricName, float value)
+        {
+            var data = MetricDataWireModel.BuildGaugeValue(value);
+            return BuildMetric(_metricNameService, metricName, null, data);
+        }
+
         #endregion
     }
 }
