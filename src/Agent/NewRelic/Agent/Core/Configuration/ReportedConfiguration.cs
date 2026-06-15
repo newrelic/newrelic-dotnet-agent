@@ -599,6 +599,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("agent.event_listener_samplers_enabled")]
     public bool EventListenerSamplersEnabled { get => _configuration.EventListenerSamplersEnabled; set { /* nothx */ } }
 
+    [JsonProperty("agent.kafka_internal_metrics_enabled")]
+    public bool KafkaInternalMetricsEnabled => _configuration.KafkaInternalMetricsEnabled;
+
     [JsonProperty("agent.sampling_target")]
     public int? SamplingTarget => _configuration.SamplingTarget;
 

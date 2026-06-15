@@ -210,6 +210,7 @@ public interface IMetricBuilder
 
     MetricWireModel TryBuildCountMetric(string metricName, long count);
     MetricWireModel TryBuildByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null);
+    MetricWireModel TryBuildGaugeMetric(string metricName, float value);
 
     MetricWireModel TryBuildDistributedTraceHeadersAcceptedLate(int acceptedLateCount);
 }

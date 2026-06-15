@@ -301,6 +301,7 @@ public class AgentSettingsTests
                                         "diagnostics.capture_agent_timing_frequency": 1234,
                                         "agent.use_resource_based_naming_for_wcf_enabled": true,
                                         "agent.event_listener_samplers_enabled": true,
+                                        "agent.kafka_internal_metrics_enabled": true,
                                         "agent.sampling_target": 1234,
                                         "span_events.max_samples_stored": 4321,
                                         "agent.sampling_target_period_in_seconds": 1234,

@@ -90,26 +90,32 @@ public class OpenTelemetryMetricsExportConfigurationInvalidIntervalLessThanTimeo
     }
 }
 
-public class OpenTelemetryMetricsExportConfigurationValidIntervalEqualsTimeoutTests : OpenTelemetryMetricsExportConfigurationTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
+public class OpenTelemetryMetricsExportConfigurationInvalidIntervalEqualsTimeoutTests : OpenTelemetryMetricsExportConfigurationTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
 {
-    public OpenTelemetryMetricsExportConfigurationValidIntervalEqualsTimeoutTests(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) 
+    public OpenTelemetryMetricsExportConfigurationInvalidIntervalEqualsTimeoutTests(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper)
         : base(fixture, outputHelper)
     {
-        // Setup with interval == timeout (currently valid per implementation)
-        SetupValidConfiguration(intervalMs: 15000, timeoutMs: 15000);
+        // Setup with interval == timeout (invalid per spec REQ-012: interval must be strictly greater than timeout)
+        SetupInvalidConfiguration(intervalMs: 15000, timeoutMs: 15000);
     }
 
     [Fact]
-    public void ValidConfig_IntervalEqualsTimeout_NoWarning()
+    public void InvalidConfig_IntervalEqualsTimeout_LogsWarning()
     {
         var logLines = _fixture.AgentLog.GetFileLines().ToList();
 
         var warningLogLine = logLines.FirstOrDefault(line =>
             line.Contains("WARN") &&
             line.Contains("OpenTelemetry metrics export interval") &&
-            line.Contains("is less than export timeout"));
+            line.Contains("is less than export timeout") &&
+            line.Contains("Reverting to defaults"));
 
-        Assert.Null(warningLogLine);
+        NrAssert.Multiple(
+            () => Assert.NotNull(warningLogLine),
+            () => Assert.Contains("15000 ms", warningLogLine),
+            () => Assert.Contains("interval=60000 ms", warningLogLine),
+            () => Assert.Contains("timeout=10000 ms", warningLogLine)
+        );
     }
 }
 

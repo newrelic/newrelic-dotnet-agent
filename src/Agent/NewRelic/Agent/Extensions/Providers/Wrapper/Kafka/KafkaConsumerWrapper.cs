@@ -9,6 +9,7 @@ using System.Threading;
 using Confluent.Kafka;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -37,6 +38,8 @@ public class KafkaConsumerWrapper : IWrapper
 
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
+        Log.Finest("KafkaConsumerWrapper: BeforeWrappedMethod called, starting segment with 'unknown' topic");
+
         var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, MessageBrokerVendorConstants.Kafka, "unknown");
 
         // if the overload that takes a CancellationToken was used, then we want to make this a leaf segment
@@ -51,21 +54,34 @@ public class KafkaConsumerWrapper : IWrapper
             try
             {
                 // null is a valid return value, so we have to handle it.
-                if (resultAsObject == null) 
+                if (resultAsObject == null)
                 {
+                    Log.Finest("KafkaConsumerWrapper: Result is null, keeping 'unknown' topic");
                     return;
                 }
 
                 // result is actually ConsumeResult<TKey, TValue> - but, because of the generic parameters,
                 // we have to reference it as object so we can use VisibilityBypasser on it
                 var type = resultAsObject.GetType();
+                Log.Finest("KafkaConsumerWrapper: Processing result of type: {0}", type.Name);
 
                 // get the topic
-                var topicAccessor = TopicAccessorDictionary.GetOrAdd(type, GetTopicAccessorFunc);
-                string topic = topicAccessor(resultAsObject);
+                string topic = null;
+                try
+                {
+                    var topicAccessor = TopicAccessorDictionary.GetOrAdd(type, GetTopicAccessorFunc);
+                    topic = topicAccessor(resultAsObject);
+                    Log.Finest("KafkaConsumerWrapper: Extracted topic name: '{0}'", topic);
+                }
+                catch (Exception ex)
+                {
+                    Log.Finest("KafkaConsumerWrapper: Failed to extract topic name: {0}", ex.Message);
+                    topic = "unknown"; // fallback
+                }
 
                 // set the segment name now that we have the topic
                 segment.SetMessageBrokerDestination(topic);
+                Log.Finest("KafkaConsumerWrapper: Updated segment destination to: '{0}'", topic);
 
                 if (KafkaHelper.TryGetBootstrapServersFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var bootstrapServers))
                 {

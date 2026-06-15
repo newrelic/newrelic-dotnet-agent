@@ -413,6 +413,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
 
     public bool EventListenerSamplersEnabled { get => true; set { /* nothx */ } }
 
+    public bool KafkaInternalMetricsEnabled => true;
+
     public int? SamplingTarget => 1234;
 
     public int SpanEventsMaxSamplesStored => 4321;

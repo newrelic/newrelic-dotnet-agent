@@ -116,6 +116,7 @@ public class DefaultConfiguration : IConfiguration
         UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
 
         EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
+        KafkaInternalMetricsEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.KafkaInternalMetricsEnabled", true);
 
         ParseExpectedErrorConfigurations();
         ParseIgnoreErrorConfigurations();
@@ -2991,8 +2992,8 @@ public class DefaultConfiguration : IConfiguration
             intervalMs = DefaultOtelExportIntervalMs;
             timeoutMs = DefaultOtelExportTimeoutMs;
         }
-        // Validation: interval must be >= timeout
-        else if (intervalMs < timeoutMs)
+        // Validation: interval must be strictly greater than timeout
+        else if (intervalMs <= timeoutMs)
         {
             Log.Warn($"OpenTelemetry metrics export interval ({intervalMs} ms) is less than export timeout ({timeoutMs} ms). Reverting to defaults: interval={DefaultOtelExportIntervalMs} ms, timeout={DefaultOtelExportTimeoutMs} ms.");
             intervalMs = DefaultOtelExportIntervalMs;
@@ -3026,6 +3027,8 @@ public class DefaultConfiguration : IConfiguration
         set => field = value;
     }
     #endregion
+
+    public bool KafkaInternalMetricsEnabled { get; private set; }
 
     public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", false), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");
 
