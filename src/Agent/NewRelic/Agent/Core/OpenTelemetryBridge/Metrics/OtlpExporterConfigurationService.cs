@@ -141,12 +141,8 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
                 httpClientHandler.UseProxy = false;
             }
 
-#if NETSTANDARD2_0_OR_GREATER
-                var retryHandler = new CustomRetryHandler { InnerHandler = httpClientHandler };
-                var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = retryHandler };
-#else
-            var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = httpClientHandler };
-#endif
+            var retryHandler = new CustomRetryHandler(_supportabilityMetricCounters) { InnerHandler = httpClientHandler };
+            var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = retryHandler };
             var httpClient = new HttpClient(auditHandler);
             httpClient.Timeout = TimeSpan.FromMilliseconds(_configurationService.Configuration.OpenTelemetryMetricsExportTimeoutMs);
             httpClient.DefaultRequestHeaders.Add("User-Agent", $"NewRelic-DotNet-Agent/{AgentInstallConfiguration.AgentVersion ?? "Unknown"}");

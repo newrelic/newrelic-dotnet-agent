@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.UnitTest.DataTransport;
@@ -469,6 +472,127 @@ public class CustomRetryHandlerTests
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         // The failed response should be disposed during retry
+    }
+
+    #endregion
+
+    #region Supportability Metric Tests
+
+    [Test]
+    public async Task SendAsync_OnSuccess_RecordsExportSuccess()
+    {
+        // Arrange
+        var counters = new FakeMetricCounters();
+        using var retryHandler = new CustomRetryHandler(counters) { InnerHandler = _innerHandler };
+        using var client = new HttpClient(retryHandler);
+        _innerHandler.SetResponse(new HttpResponseMessage(HttpStatusCode.OK));
+
+        // Act
+        await client.GetAsync("http://test.com");
+
+        // Assert
+        Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportSuccess));
+        Assert.That(counters.Recorded, Does.Not.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
+        Assert.That(counters.Recorded, Does.Not.Contain(OtelBridgeSupportabilityMetric.ExportRetry));
+    }
+
+    [Test]
+    public async Task SendAsync_OnRetry_RecordsExportRetryAndSuccess()
+    {
+        // Arrange
+        var counters = new FakeMetricCounters();
+        using var retryHandler = new CustomRetryHandler(counters) { InnerHandler = _innerHandler };
+        using var client = new HttpClient(retryHandler);
+        _innerHandler.SetSequence(
+            new HttpResponseMessage(HttpStatusCode.InternalServerError),
+            new HttpResponseMessage(HttpStatusCode.OK));
+
+        // Act
+        await client.GetAsync("http://test.com");
+
+        // Assert
+        Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportRetry));
+        Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportSuccess));
+        Assert.That(counters.Recorded, Does.Not.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
+    }
+
+    [Test]
+    public async Task SendAsync_OnTransientFailureExhaustion_RecordsExportFailure()
+    {
+        // Arrange
+        var counters = new FakeMetricCounters();
+        using var retryHandler = new CustomRetryHandler(counters) { InnerHandler = _innerHandler };
+        using var client = new HttpClient(retryHandler);
+        _innerHandler.SetResponse(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+
+        // Act
+        await client.GetAsync("http://test.com");
+
+        // Assert
+        Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
+        Assert.That(counters.Recorded, Does.Not.Contain(OtelBridgeSupportabilityMetric.ExportSuccess));
+    }
+
+    [Test]
+    public async Task SendAsync_OnExceptionExhaustion_RecordsExportFailure()
+    {
+        // Arrange
+        var counters = new FakeMetricCounters();
+        using var retryHandler = new CustomRetryHandler(counters) { InnerHandler = _innerHandler };
+        using var client = new HttpClient(retryHandler);
+        _innerHandler.SetException(new HttpRequestException("Network error"));
+
+        // Act & Assert
+        Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetAsync("http://test.com"));
+        Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
+        Assert.That(counters.Recorded, Does.Not.Contain(OtelBridgeSupportabilityMetric.ExportSuccess));
+    }
+
+    [Test]
+    public async Task SendAsync_OnNonTransientFailure_RecordsNoExportMetrics()
+    {
+        // Arrange
+        var counters = new FakeMetricCounters();
+        using var retryHandler = new CustomRetryHandler(counters) { InnerHandler = _innerHandler };
+        using var client = new HttpClient(retryHandler);
+        _innerHandler.SetResponse(new HttpResponseMessage(HttpStatusCode.BadRequest));
+
+        // Act
+        await client.GetAsync("http://test.com");
+
+        // Assert
+        Assert.That(counters.Recorded, Does.Not.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
+        Assert.That(counters.Recorded, Does.Not.Contain(OtelBridgeSupportabilityMetric.ExportSuccess));
+        Assert.That(counters.Recorded, Does.Not.Contain(OtelBridgeSupportabilityMetric.ExportRetry));
+    }
+
+    [Test]
+    public async Task SendAsync_TwoRetries_RecordsTwoExportRetries()
+    {
+        // Arrange
+        var counters = new FakeMetricCounters();
+        using var retryHandler = new CustomRetryHandler(counters) { InnerHandler = _innerHandler };
+        using var client = new HttpClient(retryHandler);
+        _innerHandler.SetSequence(
+            new HttpResponseMessage(HttpStatusCode.ServiceUnavailable),
+            new HttpResponseMessage(HttpStatusCode.ServiceUnavailable),
+            new HttpResponseMessage(HttpStatusCode.OK));
+
+        // Act
+        await client.GetAsync("http://test.com");
+
+        // Assert — two retries before final success
+        Assert.That(counters.Recorded.FindAll(m => m == OtelBridgeSupportabilityMetric.ExportRetry), Has.Count.EqualTo(2));
+        Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportSuccess));
+    }
+
+    private class FakeMetricCounters : IOtelBridgeSupportabilityMetricCounters
+    {
+        public List<OtelBridgeSupportabilityMetric> Recorded { get; } = new();
+
+        public void Record(OtelBridgeSupportabilityMetric metric) => Recorded.Add(metric);
+        public void CollectMetrics() { }
+        public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate) { }
     }
 
     #endregion
