@@ -77,8 +77,8 @@ public class MongoDBLegacyTests : NewRelicIntegrationTest<ConsoleDynamicMethodFi
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/allOther", callCount = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
 
             new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/CreateCollection", metricScope = $"{TransactionRoot}/SetupClient" },
             new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/Insert", metricScope = $"{TransactionRoot}/Insert" },
