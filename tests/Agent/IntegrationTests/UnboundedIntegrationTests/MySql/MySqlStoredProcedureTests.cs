@@ -38,6 +38,7 @@ public abstract class MySqlStoredProcedureTestsBase<TFixture> : NewRelicIntegrat
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionEventsHarvestCycle(10);
                 configModifier.ConfigureFasterSqlTracesHarvestCycle(10);
 
                 configModifier.ForceTransactionTraces();
@@ -53,6 +54,7 @@ public abstract class MySqlStoredProcedureTestsBase<TFixture> : NewRelicIntegrat
                 // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)); // must be 2 minutes since this can take a while.
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
 

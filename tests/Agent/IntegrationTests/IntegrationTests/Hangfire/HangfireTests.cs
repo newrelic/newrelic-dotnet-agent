@@ -39,15 +39,19 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             {
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                 configModifier.ForceTransactionTraces().SetLogLevel("finest");
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionEventsHarvestCycle(10);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+                configModifier.ConfigureFasterErrorEventsHarvestCycle(10);
+                configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
             },
             exerciseApplication: () =>
             {
-                // Reduce the wait times as we check for different payloads.
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorEventDataLogLineRegex, TimeSpan.FromSeconds(30));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromSeconds(15));
-                
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
 

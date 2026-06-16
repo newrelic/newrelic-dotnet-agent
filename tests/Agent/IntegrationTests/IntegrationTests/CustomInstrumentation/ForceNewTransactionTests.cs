@@ -70,10 +70,12 @@ public abstract class GloballyForceNewTransactionTests<TFixture> : NewRelicInteg
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
             },
             exerciseApplication: () =>
             {
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(10));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
 

@@ -57,6 +57,7 @@ public abstract class MySqlConnectorTestBase<TFixture> : NewRelicIntegrationTest
                 configModifier
                     .ConfigureFasterMetricsHarvestCycle(30)
                     .ConfigureFasterTransactionTracesHarvestCycle(30)
+                    .ConfigureFasterTransactionEventsHarvestCycle(30)
                     .ConfigureFasterSqlTracesHarvestCycle(30)
                     .ForceTransactionTraces()
                     .SetLogLevel("finest");
@@ -75,6 +76,7 @@ public abstract class MySqlConnectorTestBase<TFixture> : NewRelicIntegrationTest
                 // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
 

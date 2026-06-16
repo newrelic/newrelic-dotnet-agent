@@ -438,6 +438,12 @@ public class NewRelicConfigModifier
         return this;
     }
 
+    public NewRelicConfigModifier ConfigureFasterErrorEventsHarvestCycle(int seconds)
+    {
+        CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideErrorEventsHarvestCycle", seconds.ToString(), "urn:newrelic-config");
+        return this;
+    }
+
     public NewRelicConfigModifier ConfigureFasterGetAgentCommandsCycle(int seconds)
     {
         CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideGetAgentCommandsCycle", seconds.ToString(), "urn:newrelic-config");

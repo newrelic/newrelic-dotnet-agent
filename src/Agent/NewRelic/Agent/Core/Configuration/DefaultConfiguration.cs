@@ -1226,10 +1226,22 @@ public class DefaultConfiguration : IConfiguration
         }
     }
 
+    private TimeSpan? _errorEventsHarvestCycleOverride = null;
     public TimeSpan ErrorEventsHarvestCycle
     {
         get
         {
+            if (_errorEventsHarvestCycleOverride.HasValue)
+                return _errorEventsHarvestCycleOverride.Value;
+            if (_newRelicAppSettings.TryGetValue("OverrideErrorEventsHarvestCycle", out var harvestCycle))
+            {
+                if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                {
+                    Log.Info("Error events harvest cycle overridden to " + parsedHarvestCycle + " seconds.");
+                    _errorEventsHarvestCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                    return _errorEventsHarvestCycleOverride.Value;
+                }
+            }
             return ServerOverrides(_serverConfiguration.EventHarvestConfig?.ErrorEventHarvestCycle(), TimeSpan.FromMinutes(1));
         }
     }
