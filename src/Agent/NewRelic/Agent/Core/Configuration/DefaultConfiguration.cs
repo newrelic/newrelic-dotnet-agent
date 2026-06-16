@@ -1226,25 +1226,7 @@ public class DefaultConfiguration : IConfiguration
         }
     }
 
-    private TimeSpan? _errorEventsHarvestCycleOverride = null;
-    public TimeSpan ErrorEventsHarvestCycle
-    {
-        get
-        {
-            if (_errorEventsHarvestCycleOverride.HasValue)
-                return _errorEventsHarvestCycleOverride.Value;
-            if (_newRelicAppSettings.TryGetValue("OverrideErrorEventsHarvestCycle", out var harvestCycle))
-            {
-                if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
-                {
-                    Log.Info("Error events harvest cycle overridden to " + parsedHarvestCycle + " seconds.");
-                    _errorEventsHarvestCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
-                    return _errorEventsHarvestCycleOverride.Value;
-                }
-            }
-            return ServerOverrides(_serverConfiguration.EventHarvestConfig?.ErrorEventHarvestCycle(), TimeSpan.FromMinutes(1));
-        }
-    }
+    public TimeSpan ErrorEventsHarvestCycle => ServerOverrides(_serverConfiguration.EventHarvestConfig?.ErrorEventHarvestCycle(), TimeSpan.FromMinutes(1));
 
     public virtual uint ErrorsMaximumPerPeriod { get { return 20; } }
 
@@ -1684,29 +1666,7 @@ public class DefaultConfiguration : IConfiguration
         }
     }
 
-    private TimeSpan? _transactionEventsHarvestCycleOverride = null;
-    public TimeSpan TransactionEventsHarvestCycle
-    {
-        get
-        {
-            if (_transactionEventsHarvestCycleOverride.HasValue)
-            {
-                return _transactionEventsHarvestCycleOverride.Value;
-            }
-
-            if (_newRelicAppSettings.TryGetValue("OverrideTransactionEventsHarvestCycle", out var harvestCycle))
-            {
-                if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
-                {
-                    Log.Info("Transaction events harvest cycle overridden to " + parsedHarvestCycle + " seconds.");
-                    _transactionEventsHarvestCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
-                    return _transactionEventsHarvestCycleOverride.Value;
-                }
-            }
-
-            return ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestCycle(), TimeSpan.FromMinutes(1));
-        }
-    }
+    public TimeSpan TransactionEventsHarvestCycle => ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestCycle(), TimeSpan.FromMinutes(1));
 
     public virtual bool TransactionEventsTransactionsEnabled => _localConfiguration.transactionEvents.transactions.enabledSpecified ? _localConfiguration.transactionEvents.transactions.enabled : TransactionEventsTransactionsEnabledDefault;
 

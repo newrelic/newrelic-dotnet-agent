@@ -41,7 +41,6 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
                 configModifier.ForceTransactionTraces().SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
-                configModifier.ConfigureFasterErrorEventsHarvestCycle(10);
                 configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
             },
             exerciseApplication: () =>
