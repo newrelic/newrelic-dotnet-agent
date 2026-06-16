@@ -378,6 +378,69 @@ public class OtlpAuditHandlerAdditionalTests
     }
 
     [Test]
+    public async Task SendAsync_WithPayloadExceeding1MB_DropsRequestAndReportsSupportability()
+    {
+        // Arrange
+        var mockAgentHealthReporter = Mock.Create<IAgentHealthReporter>();
+        string reportedEndpoint = null;
+        Mock.Arrange(() => mockAgentHealthReporter.ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(Arg.IsAny<string>()))
+            .DoInstead((string endpoint) => reportedEndpoint = endpoint);
+
+        using var auditHandler = new OtlpAuditHandler(mockAgentHealthReporter);
+        var mockInnerHandler = new TestHttpMessageHandler();
+        auditHandler.InnerHandler = mockInnerHandler;
+
+        var httpClient = new HttpClient(auditHandler);
+        var oversizedContent = new ByteArrayContent(new byte[1_000_001]);
+        oversizedContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-protobuf");
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.newrelic.com/v1/metrics")
+        {
+            Content = oversizedContent
+        };
+
+        // Act
+        var response = await httpClient.SendAsync(request);
+
+        // Assert - inner handler never called, 413 returned, supportability metric recorded
+        Assert.That(response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.RequestEntityTooLarge));
+        Assert.That(mockInnerHandler.RequestSent, Is.Null);
+        Assert.That(reportedEndpoint, Is.Not.Null);
+
+        httpClient.Dispose();
+        mockInnerHandler.Dispose();
+    }
+
+    [Test]
+    public async Task SendAsync_WithPayloadAt1MB_SendsNormally()
+    {
+        // Arrange - exactly 1_000_000 bytes should pass through
+        using var auditHandler = new OtlpAuditHandler(null);
+        var mockInnerHandler = new TestHttpMessageHandler
+        {
+            Response = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        };
+        auditHandler.InnerHandler = mockInnerHandler;
+
+        var httpClient = new HttpClient(auditHandler);
+        var content = new ByteArrayContent(new byte[1_000_000]);
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-protobuf");
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://otlp.newrelic.com/v1/metrics")
+        {
+            Content = content
+        };
+
+        // Act
+        var response = await httpClient.SendAsync(request);
+
+        // Assert - exactly at the limit passes through
+        Assert.That(response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.OK));
+        Assert.That(mockInnerHandler.RequestSent, Is.Not.Null);
+
+        httpClient.Dispose();
+        mockInnerHandler.Dispose();
+    }
+
+    [Test]
     public async Task SendAsync_WithNullAgentHealthReporter_DoesNotThrow()
     {
         // Arrange - No agent health reporter
