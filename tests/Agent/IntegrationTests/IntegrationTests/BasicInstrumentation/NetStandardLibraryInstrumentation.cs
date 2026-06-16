@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -71,9 +72,22 @@ public abstract class NetStandardLibraryInstrumentation<TFixture>
                 _fixture.RemoteApplication.NewRelicConfig.ForceTransactionTraces();
                 _fixture.RemoteApplication.NewRelicConfig.SetOrDeleteDistributedTraceEnabled(true);
                 _fixture.RemoteApplication.NewRelicConfig.SetCATEnabled(false);
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionEventsHarvestCycle(10);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
 
                 _fixture.AddCommand("AssemblyHelper LoadAssemblyFromFile NetStandardTestLibrary.dll");
                 _fixture.AddCommand($"NetStandardTestLibUtil Test {COUNT_ITERATIONS}");
+            }
+        );
+
+        _fixture.AddActions
+        (
+            exerciseApplication: () =>
+            {
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
         _fixture.Initialize();

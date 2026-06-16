@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
@@ -26,10 +27,11 @@ public class OtherTransactionResponseTimeTestsConsole : NewRelicIntegrationTest<
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                 configModifier.SetLogLevel("Finest");
                 configModifier.ForceTransactionTraces();
+                configModifier.ConfigureFasterTransactionEventsHarvestCycle(10);
             },
             exerciseApplication: () =>
             {
-
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(2));
             }
         );
 

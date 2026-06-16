@@ -1672,7 +1672,29 @@ public class DefaultConfiguration : IConfiguration
         }
     }
 
-    public TimeSpan TransactionEventsHarvestCycle => ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestCycle(), TimeSpan.FromMinutes(1));
+    private TimeSpan? _transactionEventsHarvestCycleOverride = null;
+    public TimeSpan TransactionEventsHarvestCycle
+    {
+        get
+        {
+            if (_transactionEventsHarvestCycleOverride.HasValue)
+            {
+                return _transactionEventsHarvestCycleOverride.Value;
+            }
+
+            if (_newRelicAppSettings.TryGetValue("OverrideTransactionEventsHarvestCycle", out var harvestCycle))
+            {
+                if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                {
+                    Log.Info("Transaction events harvest cycle overridden to " + parsedHarvestCycle + " seconds.");
+                    _transactionEventsHarvestCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                    return _transactionEventsHarvestCycleOverride.Value;
+                }
+            }
+
+            return ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestCycle(), TimeSpan.FromMinutes(1));
+        }
+    }
 
     public virtual bool TransactionEventsTransactionsEnabled => _localConfiguration.transactionEvents.transactions.enabledSpecified ? _localConfiguration.transactionEvents.transactions.enabled : TransactionEventsTransactionsEnabledDefault;
 

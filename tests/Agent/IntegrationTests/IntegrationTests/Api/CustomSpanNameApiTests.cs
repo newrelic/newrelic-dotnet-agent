@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -46,6 +47,20 @@ public abstract class CustomSpanNameApiTests<TFixture> : NewRelicIntegrationTest
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces();
                 configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
+                configModifier.SetLogLevel("finest");
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+            }
+        );
+
+        _fixture.AddActions
+        (
+            exerciseApplication: () =>
+            {
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
 
