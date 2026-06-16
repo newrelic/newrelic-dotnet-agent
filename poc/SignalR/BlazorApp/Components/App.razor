@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <title>SignalR POC - Blazor</title>
+    <HeadOutlet @rendermode="InteractiveServer" />
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+        input { font-size: 1rem; padding: .5rem; width: 100%; box-sizing: border-box; }
+        ul { padding-left: 1.25rem; }
+        .meta { color: #666; font-size: .9rem; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <Routes @rendermode="InteractiveServer" />
+    <script src="_framework/blazor.web.js"></script>
+</body>
+</html>

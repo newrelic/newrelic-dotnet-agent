@@ -10,8 +10,9 @@ hybrid bridge. See the spike for context:
 
 | Path | Purpose |
 | --- | --- |
-| `Server/` | ASP.NET Core 10 SignalR sample with one `ChatHub` exposing regular invoke, error, streaming, and `OnConnected`/`OnDisconnected` overrides |
-| `Client/` | .NET 10 console app driving the hub to exercise acceptance criteria 1–6 |
+| `Server/` | ASP.NET Core 10 SignalR sample with one `ChatHub` exposing regular invoke, error, streaming, autocomplete-shape `Search`, and `OnConnected`/`OnDisconnected` overrides |
+| `Client/` | .NET 10 console app driving the hub to exercise acceptance criteria 1–6, with a `--burst` mode for autocomplete-shaped load tests |
+| `BlazorApp/` | Blazor Server (.NET 10) interactive autocomplete page — every keystroke traverses the Blazor circuit's SignalR connection. Used to verify that bridged SignalR coverage interacts cleanly with existing ASP.NET Core auto-instrumentation and does not produce long-duration or unexpected transactions |
 
 Plus the only production-code change required for the POC:
 **`src/Agent/NewRelic/Agent/Core/Configuration/DefaultConfiguration.cs`** —
@@ -139,6 +140,62 @@ Ideally `uniqueCount(name)` stays at 1 per hub method (no leakage of the
 search prefix into the transaction name), and the transaction count matches
 the client-side invocation count.
 
+### Blazor Server interaction test
+
+`BlazorApp/` is an ASP.NET Core 10 Blazor Server app with a single
+autocomplete page. Each keystroke fires `@oninput`, which Blazor marshals
+over the circuit's SignalR connection to the server-side component — so
+every keystroke is a hub invocation on the framework's `ComponentHub`.
+
+This app's job is to surface anything weird about combining bridged SignalR
+coverage with the agent's existing ASP.NET Core auto-instrumentation:
+long-duration transactions from the `/_blazor` host request, doubled-up
+transactions per UI event, runaway transaction-name cardinality from the
+component hub's many internal methods, etc.
+
+```powershell
+$home_dir = "$((Resolve-Path .).Path)\src\Agent\newrelichome_x64_coreclr"
+$env:CORECLR_ENABLE_PROFILING = "1"
+$env:CORECLR_PROFILER         = "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
+$env:CORECLR_PROFILER_PATH    = "$home_dir\NewRelic.Profiler.dll"
+$env:CORECLR_NEW_RELIC_HOME   = "$home_dir"
+$env:NEW_RELIC_LICENSE_KEY    = "<staging-key>"
+$env:NEW_RELIC_APP_NAME       = "SignalR-POC-Blazor"
+$env:NEW_RELIC_LOG_LEVEL      = "debug"
+$env:NEW_RELIC_OPENTELEMETRY_ENABLED         = "true"
+$env:NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED  = "true"
+$env:NEW_RELIC_OPENTELEMETRY_METRICS_ENABLED = "true"
+
+dotnet run --project poc/SignalR/BlazorApp/SignalRPocBlazor.csproj
+```
+
+Open `http://localhost:5070` in a browser and type into the input. Then
+check NRDB:
+
+```sql
+FROM Transaction
+SELECT count(*), uniqueCount(name), max(duration), percentile(duration, 50, 95, 99)
+WHERE appName = 'SignalR-POC-Blazor'
+FACET name
+SINCE 10 minutes ago
+```
+
+Things to look for (record any of these as POC findings):
+
+- **Long-duration transactions** — there should be no transaction with
+  `duration` close to the time the page was open. The `/_blazor` host
+  WebSocket request is filtered by the AspNetCore6Plus middleware
+  (`InstrumentAspNetCore6PlusWebsockets=false` by default), so it should
+  not appear as a transaction at all.
+- **Transaction-name cardinality** — `ComponentHub` has multiple internal
+  methods (`BeginInvokeDotNet`, `EndInvokeJSFromDotNet`,
+  `DispatchBrowserEvent`, etc.). They are stable identifiers so cardinality
+  should be small and bounded.
+- **Doubled-up transactions per event** — make sure the same UI event does
+  not produce both a SignalR.Server-bridged transaction *and* something
+  from the existing AspNetCore wrapper.
+- **Errors** — typing should never produce a transaction error.
+
 ## Acceptance criteria → how to verify
 
 | # | Criterion | NRQL / verification |
@@ -171,3 +228,34 @@ in NR-232592 as comments.
    is still in the exclusion list (`DefaultConfiguration.cs:2837`). Out of
    scope for this POC; revisit during MVP per
    [aspnetcore #62254](https://github.com/dotnet/aspnetcore/issues/62254).
+5. **Blazor circuit transactions are not customer-recognizable** *(POC finding
+   from `BlazorApp/`)*. Bridging `Microsoft.AspNetCore.SignalR.Server` picks up
+   Blazor's framework `ComponentHub`, so every UI event becomes a transaction
+   named `WebTransaction/Microsoft.AspNetCore.SignalR.Server/Microsoft.AspNetCore.Components.Server.ComponentHub/<MethodName>`
+   where `<MethodName>` is a Blazor implementation detail
+   (`StartCircuit`, `DispatchBrowserEvent`, `BeginInvokeDotNetFromJS`,
+   `OnRenderCompleted`, …). Which method wraps a given event is **not stable**
+   across event sources — `@oninput` on an `<input>`, for example, may surface
+   as `BeginInvokeDotNetFromJS` rather than `DispatchBrowserEvent`. A Blazor
+   developer landing on this view sees framework plumbing, not their own code.
+
+   **Recommendation: defer Blazor-aware support to a future iteration.** For
+   v1, ship the bridge as-is and document the pattern: Blazor customers who
+   want their own work attributed should decorate their services and event
+   handlers with `[Trace]` or `[Transaction]` (as `BlazorApp/Services/SearchService.cs`
+   demonstrates) and query NRDB on the **segment name**, not the parent
+   transaction:
+
+   ```sql
+   FROM Span SELECT *
+   WHERE appName = '<your-app>' AND name = 'DotNet/SearchService/FindAsync'
+   ```
+
+   (`[Trace]` segments are named `DotNet/<ClassName>/<MethodName>` — verified
+   against `tests/.../CustomInstrumentation/AttributeInstrumentationTests.cs`.)
+
+   A future iteration could add a Blazor-aware naming pass in the bridge that
+   rewrites `ComponentHub` transactions to a customer-recognizable shape
+   (e.g. derived from the active `@page` route and event-handler name), but
+   that requires the bridge to inspect render-tree state and is well beyond
+   v1 scope.

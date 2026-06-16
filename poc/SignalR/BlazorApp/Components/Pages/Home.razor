@@ -1,0 +1,69 @@
+@page "/"
+@rendermode InteractiveServer
+@inject NewRelic.SignalRPoc.Blazor.Services.ISearchService Search
+@implements IDisposable
+
+<h1>SignalR POC - Blazor autocomplete</h1>
+
+<p>
+    Type below. Each keystroke fires <code>@@oninput</code>, which Blazor Server
+    marshals over the SignalR circuit. The lookup runs in
+    <code>SearchService.FindAsync</code> (decorated with <code>[Trace]</code>),
+    which surfaces in NRDB as a segment under the bridged Blazor circuit
+    transaction.
+</p>
+
+<input @oninput="OnPrefixChangedAsync" placeholder="Type a prefix..." autofocus />
+
+@if (string.IsNullOrEmpty(_prefix))
+{
+    <p class="meta">Start typing to see matches.</p>
+}
+else if (_matches.Count == 0)
+{
+    <p class="meta">No matches for &ldquo;@_prefix&rdquo;.</p>
+}
+else
+{
+    <ul>
+        @foreach (var match in _matches)
+        {
+            <li>@match</li>
+        }
+    </ul>
+    <p class="meta">@_matches.Count match(es) for &ldquo;@_prefix&rdquo;.</p>
+}
+
+@code {
+    private string _prefix = string.Empty;
+    private IReadOnlyList<string> _matches = Array.Empty<string>();
+    private CancellationTokenSource? _cts;
+
+    private async Task OnPrefixChangedAsync(ChangeEventArgs args)
+    {
+        _prefix = args.Value?.ToString() ?? string.Empty;
+
+        // A new keystroke arrived - cancel any in-flight lookup so a slow
+        // earlier query can't overwrite a fresher result. Real autocomplete
+        // implementations all do something like this.
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        var ct = _cts.Token;
+
+        try
+        {
+            _matches = await Search.FindAsync(_prefix, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a later keystroke; the next render belongs to it.
+        }
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}

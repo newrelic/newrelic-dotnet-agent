@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <RootNamespace>NewRelic.SignalRPoc.Blazor</RootNamespace>
+    <AssemblyName>SignalRPocBlazor</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Required so SearchService.FindAsync can carry [Trace] and surface
+         as a segment under the bridged Blazor circuit transaction. -->
+    <PackageReference Include="NewRelic.Agent.Api" Version="10.51.0" />
+  </ItemGroup>
+
+</Project>
