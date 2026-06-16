@@ -1,0 +1,574 @@
+# yaml-language-server: $schema=./compatibility.schema.json
+# Curated compatibility data for the .NET agent. Version numbers for
+# versionSource: derived packages are computed from the integration-test
+# .csproj files at generation time — do not add them here.
+categories:
+  - key: app-frameworks
+    title: App frameworks
+    tabs: [core, framework]
+    intro: "The .NET agent automatically instruments these application frameworks:"
+    libraries:
+      - name: ASP.NET Core MVC (includes Web API)
+        tabs: [core]
+        supportedVersions: ["2.0", "2.1", "2.2", "3.0", "3.1", "5.0", "6.0", "7.0", "8.0", "9.0", "10.0"]
+      - name: ASP.NET Core Razor Pages
+        tabs: [core]
+        supportedVersions: ["6.0", "7.0", "8.0", "9.0", "10.0"]
+        minAgentVersion: "10.19.0"
+      - name: ASP.NET MVC
+        tabs: [framework]
+        supportedVersions: ["2", "3", "4", "5"]
+      - name: ASP.NET Web API
+        tabs: [framework]
+        supportedVersions: ["2"]
+      - name: ASP.NET Core MVC (on .NET Framework)
+        tabs: [framework]
+        supportedVersions: ["2.0", "2.1", "2.2"]
+      - name: ASP.NET Web Forms
+        tabs: [framework]
+        supportedVersions: ["(all supported .NET Framework versions)"]
+      - name: OWIN-hosted Web API
+        tabs: [framework]
+        supportedVersions: ["Microsoft.Owin.Host.HttpListener 2.x, 3.x, 4.x"]
+      - name: SOAP-based web services
+        tabs: [framework]
+        supportedVersions: ["(all supported .NET Framework versions)"]
+      - name: "[WCF](https://docs.newrelic.com/docs/apm/agents/net-agent/other-installation/install-net-agent-windows-communication-foundation-wcf/)"
+        tabs: [framework]
+        supportedVersions: ["(all supported .NET Framework versions)"]
+      - name: Castle MonoRail
+        tabs: [framework]
+        supportedVersions: ["v2 (no longer supported in agent 10.0 or higher)"]
+
+      - name: OpenRasta
+        tabs: [framework]
+        packages:
+          - id: openrasta-core
+            nugetUrl: https://www.nuget.org/packages/openrasta-core/
+            tabs: [framework]
+            versionSource: manual
+            minVersion: "2.5.63"
+            latestVersion: "2.5.63"
+
+  - key: datastores
+    title: Datastores
+    tabs: [core, framework]
+    intro: "The .NET agent automatically instruments the performance of .NET application calls to these datastores:"
+    footnotes:
+      - "The .NET agent doesn't collect data about datastore server processes. It only collects data from datastore client library usage. To directly monitor datastore server processes, use the New Relic infrastructure agent with [on-host integrations](https://docs.newrelic.com/docs/infrastructure/host-integrations/get-started/introduction-host-integrations/)."
+      - "By default, the .NET agent doesn't capture SQL parameters for stored procedures or parameterized queries in a query trace. To see these SQL parameters, you must enable the collection feature in the [agent configuration](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#datastore-tracer-query-parameters)."
+      - "All datastores listed above provide [instance details](https://docs.newrelic.com/docs/apm/applications-menu/features/analyze-database-instance-level-performance-issues) except where noted, and collection is enabled by default. To request instance-level information from datastores not currently listed, get support at [support.newrelic.com](https://support.newrelic.com)."
+      - "If your datastore isn't listed here, you can add custom instrumentation using the `RecordDatastoreSegment` method in the [.NET agent API](https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/net-agent-api/#ITransaction)."
+    libraries:
+      - name: Cosmos DB
+        minAgentVersion: "9.2.0"
+        packages:
+          - id: Microsoft.Azure.Cosmos
+            nugetUrl: https://www.nuget.org/packages/Microsoft.Azure.Cosmos/
+            tabs: [core, framework]
+            minVersion: "3.17.0"
+            notes:
+              - { type: addedInAgent, sinceVersion: "3.35.0", agentVersion: "10.32.0" }
+
+      - name: Couchbase
+        minAgentVersion: 
+          core: "10.40.0"
+        packages:
+          - id: CouchbaseNetClient
+            nugetUrl: https://www.nuget.org/packages/CouchbaseNetClient/
+            tabs: [core, framework]
+            minVersion:
+              core: "3.2.0"
+              framework: "2.0.0"
+            notes:
+              - { type: freeform, text: "Instance details aren't available for Couchbase." }
+              - { type: knownIncompatibleVersions, versions: ["3.0.x", "3.1.x"], tabs: [framework] }
+              - type: freeform
+                tabs: [framework]
+                text: >
+                  With CouchbaseNetClient 2.x, the following methods are not instrumented by default
+                  in favor of their multi-document counterparts:
+                  <br>`Get(string key)`
+                  <br>`GetDocument(string key)`
+                  <br>`Remove(string key)`
+                  <br>`Remove(string key, ulong cas)`
+                  <br>`Upsert(string key, T value)`.
+              - { type: addedInAgent, sinceVersion: "3.2.0", agentVersion: "10.40.0" }
+
+      - name: Microsoft SQL Server
+        packages:
+          - id: System.Data.SqlClient
+            nugetUrl: https://www.nuget.org/packages/System.Data.SqlClient/
+            tabs: [core, framework]
+            versionSource: manual
+            minVersion: "4.4.0"
+            latestVersion: "4.8.6"
+          - id: Microsoft.Data.SqlClient
+            nugetUrl: https://www.nuget.org/packages/Microsoft.Data.SqlClient/
+            tabs: [core, framework]
+            minVersion: "1.0.19239.1"
+          - id: System.Data
+            tabs: [framework]
+            versionSource: manual
+            minVersion: "4.6.2"
+            latestVersion: "4.8"
+            notes:
+              - { type: freeform, text: "Built-in .NET Framework assembly; no NuGet package required." }
+
+      - name: System.Data.ODBC
+        packages:
+          - id: System.Data
+            tabs: [framework]
+            versionSource: manual
+            minVersion: "4.6.2"
+            latestVersion: "4.8"
+            notes:
+              - { type: freeform, text: "Built-in .NET Framework assembly; no NuGet package required." }
+          - id: System.Data.Odbc
+            nugetUrl: https://www.nuget.org/packages/System.Data.Odbc/
+            tabs: [core, framework]
+            minVersion: "8.0.0"
+            minAgentVersion: "10.36.0"
+        notes:
+          - type: freeform
+            tabs: [core]
+            text: >
+              On .NET 8+, the following ODBC operations are not instrumented (they are
+              instrumented on .NET Framework via the built-in System.Data namespace):
+              Connection `Open`/`OpenAsync` calls, SqlDataReader `Read`/`NextResult` calls, and slow SQL traces.
+
+      - name: MongoDB (legacy driver)
+        packages:
+          - id: mongocsharpdriver
+            nugetUrl: https://www.nuget.org/packages/mongocsharpdriver/
+            tabs: [framework]
+            versionSource: manual
+            minVersion: "1.10.0"
+            latestVersion: "1.10.0"
+            notes:
+              - { type: knownIncompatibleVersions, text: "Instance details aren't available in version 2 and lower" }
+
+      - name: MongoDB (modern driver)
+        packages:
+          - id: MongoDB.Driver
+            nugetUrl: https://www.nuget.org/packages/MongoDB.Driver/
+            tabs: [core, framework]
+            minVersion: "2.3.0"
+            notes:
+              - { type: addedInAgent, sinceVersion: "3.0.0", agentVersion: "10.40.0" }
+        notes:
+          - type: freeform
+            text: >
+              Beginning in agent version 10.12.0, the following methods added in or after
+              driver version 2.7 are instrumented:
+              <br>`IMongoCollection.CountDocuments[Async]`
+              <br>`IMongoCollection.EstimatedDocumentCount[Async]`
+              <br>`IMongoCollection.AggregateToCollection[Async]`
+              <br>`IMongoDatabase.ListCollectionNames[Async]`
+              <br>`IMongoDatabase.Aggregate[Async]`
+              <br>`IMongoDatabase.AggregateToCollection[Async]`
+              <br>`IMongoDatabase.Watch[Async]`.
+
+      - name: MySQL
+        packages:
+          - id: MySql.Data
+            nugetUrl: https://www.nuget.org/packages/MySql.Data/
+            tabs: [core, framework]
+            minVersion: "6.10.7"
+            notes:
+              - { type: addedInAgent, sinceVersion: "9.7.0", agentVersion: "10.51.1" }
+          - id: MySqlConnector
+            nugetUrl: https://www.nuget.org/packages/MySqlConnector/
+            tabs: [core, framework]
+            minVersion: "1.0.1"
+
+      - name: Oracle
+        packages:
+          - id: Oracle.ManagedDataAccess.Core
+            nugetUrl: https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/
+            tabs: [core]
+            minVersion: "23.4.0"
+          - id: Oracle.ManagedDataAccess
+            nugetUrl: https://www.nuget.org/packages/Oracle.ManagedDataAccess/
+            tabs: [framework]
+            minVersion: "12.1.2400"
+        notes:
+          - { type: freeform, text: "Older versions may be instrumented but are not tested or supported.", tabs: [core] }
+
+      - name: PostgreSQL
+        packages:
+          - id: Npgsql
+            nugetUrl: https://www.nuget.org/packages/Npgsql/
+            tabs: [core, framework]
+            minVersion: "4.0.0"
+        notes:
+          - { type: freeform, text: "Prior versions of Npgsql may also be instrumented, but duplicate and/or missing metrics are possible." }
+
+      - name: ServiceStack.Redis
+        packages:
+          - id: ServiceStack.Redis
+            nugetUrl: https://www.nuget.org/packages/ServiceStack.Redis/
+            tabs: [framework]
+            versionSource: manual
+            minVersion: "4.0.40"
+            latestVersion: "4.0.40"
+            notes:
+              - { type: knownIncompatibleVersions, text: "4.0.44 or higher" }
+
+      - name: StackExchange.Redis
+        packages:
+          - id: StackExchange.Redis
+            nugetUrl: https://www.nuget.org/packages/StackExchange.Redis/
+            tabs: [core, framework]
+            minVersion: "1.0.488"
+        notes:
+          - { type: freeform, text: "The strong-named `StackExchange.Redis.StrongName` package is also instrumented." }
+
+      - name: Elasticsearch
+        packages:
+          - id: Elastic.Clients.Elasticsearch
+            nugetUrl: https://www.nuget.org/packages/Elastic.Clients.Elasticsearch/
+            tabs: [core, framework]
+            minVersion: "8.0.0"
+            notes:
+              - { type: addedInAgent, sinceVersion: "8.10.0", agentVersion: "10.20.1" }
+              - { type: addedInAgent, sinceVersion: "8.12.1", agentVersion: "10.23.0" }
+              - { type: requiresHybridAgent, aboveVersion: "8.15.10" }
+          - id: NEST
+            nugetUrl: https://www.nuget.org/packages/NEST/
+            tabs: [core, framework]
+            minVersion: "7.0.0"
+          - id: Elasticsearch.Net
+            nugetUrl: https://www.nuget.org/packages/Elasticsearch.Net/
+            tabs: [core, framework]
+            minVersion: "7.0.0"
+
+      - name: OpenSearch
+        minAgentVersion: "10.36.0"
+        packages:
+          - id: OpenSearch.Client
+            nugetUrl: https://www.nuget.org/packages/OpenSearch.Client/
+            tabs: [core, framework]
+            minVersion: "1.0.0"
+
+      - name: Memcached
+        packages:
+          - id: EnyimMemcachedCore
+            nugetUrl: https://www.nuget.org/packages/EnyimMemcachedCore/
+            tabs: [core, framework]
+            minVersion: "2.0.0"
+
+      - name: DynamoDB
+        minAgentVersion: "10.33.0"
+        packages:
+          - id: AWSSDK.DynamoDBv2
+            nugetUrl: https://www.nuget.org/packages/AWSSDK.DynamoDBv2/
+            tabs: [core, framework]
+            minVersion: "3.5.0"
+
+      - name: IBM DB2
+        tabs: [framework]
+        notes:
+          - { type: freeform, text: "Instrumented via the built-in IBM DB2 ADO.NET provider (any client exposing a `DB2Command` type); no NuGet package required." }
+
+  - key: external-calls
+    title: External call libraries
+    tabs: [core, framework]
+    intro: "The .NET agent automatically instruments these external call libraries:"
+    libraries:
+      - name: HttpClient
+        tabs: [core, framework]
+        methods:
+          - SendAsync
+          - GetAsync
+          - PostAsync
+          - PutAsync
+          - DeleteAsync
+          - GetStringAsync
+          - GetStreamAsync
+          - GetByteArrayAsync
+
+      - name: RestSharp
+        tabs: [framework]
+        packages:
+          - id: RestSharp
+            nugetUrl: https://www.nuget.org/packages/RestSharp/
+            tabs: [framework]
+            minVersion: "105.2.3"
+        methods:
+          - ExecuteTaskAsync
+          - ExecuteGetTaskAsync
+          - ExecutePostTaskAsync
+          - Execute
+          - ExecuteAsGet
+          - ExecuteAsPost
+          - DownloadData
+        notes:
+          - { type: knownIncompatibleVersions, versions: ["106.8.0", "106.9.0", "106.10.0", "106.10.1"] }
+
+      - name: HttpWebRequest
+        tabs: [framework]
+        methods:
+          - GetResponse
+
+      - name: gRPC (grpc-dotnet)
+        tabs: [core]
+        minAgentVersion: "10.50.0"
+        packages:
+          - id: Grpc.Net.Client
+            nugetUrl: https://www.nuget.org/packages/Grpc.Net.Client/
+            tabs: [core]
+            minVersion: "2.65.0"
+        notes:
+          - { type: requiresHybridAgent }
+          - { type: freeform, text: "Instrumented as external calls via the OpenTelemetry bridge." }
+
+      - name: AWSSDK.Lambda
+        minAgentVersion: "10.35.0"
+        packages:
+          - id: AWSSDK.Lambda
+            nugetUrl: https://www.nuget.org/packages/AWSSDK.Lambda/
+            tabs: [core, framework]
+            minVersion: "3.7.0"
+        notes:
+          - { type: freeform, text: "Instruments invoking a Lambda function from the AWS SDK. To monitor a function running as an AWS Lambda, see [AWS Lambda monitoring](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/)." }
+
+  - key: llm
+    title: Large language model (LLM) libraries
+    tabs: [core, framework]
+    intro: "The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#ai_monitoring) to automatically instrument these LLM frameworks:"
+    libraries:
+      - name: AWS Bedrock
+        minAgentVersion: "10.23.0"
+        packages:
+          - id: AWSSDK.BedrockRuntime
+            nugetUrl: https://www.nuget.org/packages/AWSSDK.BedrockRuntime/
+            tabs: [core, framework]
+            minVersion: "3.7.200.0"
+        methods:
+          - InvokeModelAsync
+          - ConverseAsync
+        notes:
+          - { type: freeform, text: "`ConverseAsync` instrumented since agent v10.37.0." }
+
+      - name: OpenAI
+        minAgentVersion: "10.37.0"
+        packages:
+          - id: OpenAI
+            nugetUrl: https://www.nuget.org/packages/OpenAI/
+            tabs: [core, framework]
+            minVersion: "2.0.0"
+        methods:
+          - CompleteChat
+          - CompleteChatAsync
+        notes:
+          - { type: freeform, text: "only Text completions are supported." }
+
+      - name: Azure OpenAI
+        minAgentVersion: "10.37.0"
+        packages:
+          - id: Azure.AI.OpenAI
+            nugetUrl: https://www.nuget.org/packages/Azure.AI.OpenAI/
+            tabs: [core, framework]
+            minVersion: "2.0.0"
+        methods:
+          - CompleteChat
+          - CompleteChatAsync
+        notes:
+          - { type: freeform, text: "only Text completions are supported." }
+
+      - name: Microsoft.Extensions.AI
+        tabs: [core]
+        minAgentVersion: "10.50.0"
+        packages:
+          - id: Microsoft.Extensions.AI
+            nugetUrl: https://www.nuget.org/packages/Microsoft.Extensions.AI/
+            tabs: [core]
+            minVersion: "10.3.0"
+        notes:
+          - { type: requiresHybridAgent }
+          - { type: freeform, text: "Instrumented via the OpenTelemetry bridge." }
+
+  - key: logging
+    title: Logging frameworks
+    tabs: [core, framework]
+    intro: "The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#application_logging) to automatically instrument these logging frameworks for automatic logs-in-context with [agent forwarding](https://docs.newrelic.com/docs/logs/logs-context/net-configure-logs-context-all/#1-agent) and [local log decoration](https://docs.newrelic.com/docs/logs/logs-context/net-configure-logs-context-all/#2-decorate):"
+    libraries:
+      - name: Log4Net
+        minAgentVersion: "9.7.0"
+        packages:
+          - id: log4net
+            nugetUrl: https://www.nuget.org/packages/log4net/
+            tabs: [core, framework]
+            minVersion:
+              core: "2.0.10"
+              framework: "1.2.10"
+
+      - name: Sitecore.Logging
+        minAgentVersion: "10.14.0"
+        packages:
+          - id: Sitecore.Logging
+            nugetUrl: https://www.nuget.org/packages/Sitecore.Logging/
+            tabs: [framework]
+            minVersion: "10.0.0"
+        notes:
+          - { type: freeform, text: "`Sitecore.Logging` is a repackaged log4net; the agent instruments it through its log4net instrumentation." }
+
+      - name: Serilog
+        minAgentVersion: "9.7.0"
+        packages:
+          - id: Serilog
+            nugetUrl: https://www.nuget.org/packages/Serilog/
+            tabs: [core, framework]
+            minVersion:
+              core: "2.5.0"
+              framework: "2.0.0"
+
+      - name: NLog
+        minAgentVersion: "9.7.0"
+        packages:
+          - id: NLog
+            nugetUrl: https://www.nuget.org/packages/NLog/
+            tabs: [core, framework]
+            minVersion:
+              core: "4.5.0"
+              framework: "4.1.0"
+
+      - name: Microsoft.Extensions.Logging
+        minAgentVersion:
+          core: "10.0.0"
+          framework: "9.7.0"
+        packages:
+          - id: Microsoft.Extensions.Logging
+            nugetUrl: https://www.nuget.org/packages/Microsoft.Extensions.Logging/
+            tabs: [core, framework]
+            minVersion: "3.0.0"
+
+  - key: messaging
+    title: Message systems
+    tabs: [core, framework]
+    intro: "The agent automatically instruments these message systems:"
+    libraries:
+      - name: Confluent.Kafka
+        packages:
+          - id: Confluent.Kafka
+            nugetUrl: https://www.nuget.org/packages/Confluent.Kafka/
+            tabs: [core, framework]
+            minVersion: "1.4.0"
+        methods:
+          - IProducer.Produce
+          - IProducer.ProduceAsync
+          - IConsumer.Consume
+
+      - name: MSMQ
+        tabs: [framework]
+        methods:
+          - Message.Send
+          - Message.Receive
+          - Queue.Peek
+          - Queue.Purge
+
+      - name: NServiceBus
+        packages:
+          - id: NServiceBus
+            nugetUrl: https://www.nuget.org/packages/NServiceBus/
+            tabs: [core, framework]
+            minVersion: "5.0"
+        notes:
+          - { type: freeform, text: "Puts and takes on messages." }
+
+      - name: RabbitMQ
+        packages:
+          - id: RabbitMQ.Client
+            nugetUrl: https://www.nuget.org/packages/RabbitMQ.Client/
+            tabs: [core, framework]
+            minVersion: "3.5.2"
+        methods:
+          - IModel.BasicGet
+          - IModel.BasicPublish
+          - IModel.BasicConsume
+          - IModel.QueuePurge
+          - EventingBasicConsumer.HandleBasicDeliver
+        notes:
+          - { type: freeform, text: "Puts and takes on messages and queue purge." }
+          - { type: freeform, text: "When receiving messages using an `IBasicConsumer`, the `EventingBasicConsumer` is the only implementation that is instrumented." }
+          - { type: freeform, text: "`BasicGet` is instrumented, but the agent does not support [distributed tracing](https://docs.newrelic.com/docs/apm/distributed-tracing/getting-started/introduction-distributed-tracing/) for `BasicGet`." }
+          - { type: requiresHybridAgent, aboveVersion: "6.8.1" }
+
+      - name: MassTransit
+        minAgentVersion: "10.19.0"
+        packages:
+          - id: MassTransit
+            nugetUrl: https://www.nuget.org/packages/MassTransit/
+            tabs: [core, framework]
+            minVersion: "7.1.0"
+        notes:
+          - { type: freeform, text: "Message publish/send and consume." }
+
+      - name: AWSSDK.SQS
+        minAgentVersion: "10.27.0"
+        packages:
+          - id: AWSSDK.SQS
+            nugetUrl: https://www.nuget.org/packages/AWSSDK.SQS/
+            tabs: [core, framework]
+            minVersion: "3.7.0"
+        notes:
+          - { type: freeform, text: "Message send and receive." }
+
+      - name: AWSSDK.Kinesis
+        minAgentVersion: "10.40.0"
+        packages:
+          - id: AWSSDK.Kinesis
+            nugetUrl: https://www.nuget.org/packages/AWSSDK.Kinesis/
+            tabs: [core, framework]
+            minVersion: "3.7.0"
+        notes:
+          - { type: freeform, text: "`PutRecord(s)Async` and `GetRecordsAsync` are instrumented as message broker operations; other operations as basic method calls." }
+
+      - name: AWSSDK.KinesisFirehose
+        minAgentVersion: "10.40.0"
+        packages:
+          - id: AWSSDK.KinesisFirehose
+            nugetUrl: https://www.nuget.org/packages/AWSSDK.KinesisFirehose/
+            tabs: [core, framework]
+            minVersion: "3.7.0"
+        notes:
+          - { type: freeform, text: "All Kinesis Firehose operations are instrumented as basic method calls." }
+
+      - name: Azure Service Bus
+        minAgentVersion: "10.42.0"
+        packages:
+          - id: Azure.Messaging.ServiceBus
+            nugetUrl: https://www.nuget.org/packages/Azure.Messaging.ServiceBus/
+            tabs: [core, framework]
+            minVersion: "7.11.0"
+        methods:
+          - ReceiverManager.ProcessOneMessageWithinScopeAsync
+          - ServiceBusProcessor.OnProcessMessageAsync
+          - ServiceBusSender.SendMessagesAsync
+          - ServiceBusSender.ScheduleMessagesAsync
+          - ServiceBusSender.CancelScheduledMessagesAsync
+          - ServiceBusReceiver.ReceiveMessagesAsync
+          - ServiceBusReceiver.ReceiveDeferredMessagesAsync
+          - ServiceBusReceiver.PeekMessagesInternalAsync
+          - ServiceBusReceiver.CompleteMessageAsync
+          - ServiceBusReceiver.AbandonMessageAsync
+          - ServiceBusReceiver.DeadLetterInternalAsync
+          - ServiceBusReceiver.DeferMessageAsync
+          - ServiceBusReceiver.RenewMessageLockAsync
+        notes:
+          - { type: freeform, text: "Message send and receive." }
+          - { type: freeform, text: "Supports Processor mode." }
+
+  - key: background-jobs
+    title: Background jobs and workflows
+    tabs: [core, framework]
+    intro: "The .NET agent automatically instruments the performance of .NET application calls to these background job and workflow libraries:"
+    libraries:
+      - name: Hangfire
+        minAgentVersion: "10.51.0"
+        packages:
+          - id: Hangfire
+            nugetUrl: https://www.nuget.org/packages/Hangfire/
+            tabs: [core, framework]
+            minVersion: "1.7.0"

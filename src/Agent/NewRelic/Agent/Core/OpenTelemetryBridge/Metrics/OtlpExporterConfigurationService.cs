@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Net.Http;
 using NewRelic.Agent.Configuration;
@@ -108,6 +109,15 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
                 .AddTelemetrySdk()
                 .AddAttributes(new[] { new KeyValuePair<string, object>("entity.guid", _lastEntityGuid ?? config.EntityGuid) }))
             .AddMeter("*")
+            // Default histogram instruments to base-2 exponential bucket aggregation, which the NR OTLP
+            // ingest endpoint prefers over explicit-bucket histograms (higher fidelity, fewer buckets).
+            // A null return leaves non-histogram instruments on their default aggregation, and explicit
+            // customer AddView overrides registered elsewhere still take precedence (SDK-guaranteed).
+            .AddView(instrument =>
+                instrument.GetType().IsGenericType
+                && instrument.GetType().GetGenericTypeDefinition() == typeof(Histogram<>)
+                    ? new Base2ExponentialBucketHistogramConfiguration()
+                    : null)
             .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
             {
                 exporterOptions.Endpoint = endpoint;
@@ -141,12 +151,8 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
                 httpClientHandler.UseProxy = false;
             }
 
-#if NETSTANDARD2_0_OR_GREATER
-                var retryHandler = new CustomRetryHandler { InnerHandler = httpClientHandler };
-                var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = retryHandler };
-#else
-            var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = httpClientHandler };
-#endif
+            var retryHandler = new CustomRetryHandler(_supportabilityMetricCounters) { InnerHandler = httpClientHandler };
+            var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = retryHandler };
             var httpClient = new HttpClient(auditHandler);
             httpClient.Timeout = TimeSpan.FromMilliseconds(_configurationService.Configuration.OpenTelemetryMetricsExportTimeoutMs);
             httpClient.DefaultRequestHeaders.Add("User-Agent", $"NewRelic-DotNet-Agent/{AgentInstallConfiguration.AgentVersion ?? "Unknown"}");
