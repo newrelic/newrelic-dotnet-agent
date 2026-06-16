@@ -1226,7 +1226,13 @@ public class DefaultConfiguration : IConfiguration
         }
     }
 
-    public TimeSpan ErrorEventsHarvestCycle => ServerOverrides(_serverConfiguration.EventHarvestConfig?.ErrorEventHarvestCycle(), TimeSpan.FromMinutes(1));
+    public TimeSpan ErrorEventsHarvestCycle
+    {
+        get
+        {
+            return ServerOverrides(_serverConfiguration.EventHarvestConfig?.ErrorEventHarvestCycle(), TimeSpan.FromMinutes(1));
+        }
+    }
 
     public virtual uint ErrorsMaximumPerPeriod { get { return 20; } }
 
