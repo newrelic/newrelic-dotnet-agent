@@ -37,7 +37,6 @@ public abstract class NServiceBus5ReceiveTestsBase<TFixture> : NewRelicIntegrati
                 configModifier.ForceTransactionTraces();
                 configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                configModifier.ConfigureFasterTransactionEventsHarvestCycle(10);
             },
             exerciseApplication: () =>
             {

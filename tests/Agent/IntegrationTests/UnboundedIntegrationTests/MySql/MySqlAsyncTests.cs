@@ -34,7 +34,6 @@ public abstract class MySqlAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TF
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
-                configModifier.ConfigureFasterTransactionEventsHarvestCycle(10);
                 configModifier.ConfigureFasterSqlTracesHarvestCycle(10);
 
                 configModifier.ForceTransactionTraces()

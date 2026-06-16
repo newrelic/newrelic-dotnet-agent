@@ -73,7 +73,6 @@ public abstract class NetStandardLibraryInstrumentation<TFixture>
                 _fixture.RemoteApplication.NewRelicConfig.SetOrDeleteDistributedTraceEnabled(true);
                 _fixture.RemoteApplication.NewRelicConfig.SetCATEnabled(false);
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                configModifier.ConfigureFasterTransactionEventsHarvestCycle(10);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
 
                 _fixture.AddCommand("AssemblyHelper LoadAssemblyFromFile NetStandardTestLibrary.dll");

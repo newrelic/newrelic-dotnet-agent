@@ -170,6 +170,19 @@ in for the collector locally. If you're writing a new test, default to
 the staging collector unless you specifically need to simulate
 collector-side behavior.
 
+**Staging collector harvest cycles:** the connect response from staging
+includes `event_harvest_config.report_period_ms=5000` with
+`analytic_event_data` (transaction events), `log_event_data`,
+`error_event_data`, and `custom_event_data` all present in
+`harvest_limits`. This means transaction events, log events, error events,
+and custom events already harvest every **5 seconds** by default in
+integration tests -- no override needed. `ConfigureFasterMetricsHarvestCycle`
+is still required for metric-based tests (metrics use a separate 60s cycle
+not overridden by the staging event harvest config). Span events use their
+own `span_event_harvest_config` with `report_period_ms=60000`, so
+`ConfigureFasterSpanEventsHarvestCycle` remains useful when a test asserts
+on span data.
+
 **Always use `NewRelicConfigModifier`** (in `IntegrationTestHelpers/`) to
 tweak `newrelic.config` for a test. **Never manipulate the XML directly**
 from a test class. If the setting you need doesn't already have a method

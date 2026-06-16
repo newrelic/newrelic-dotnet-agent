@@ -57,7 +57,6 @@ public abstract class MySqlConnectorTestBase<TFixture> : NewRelicIntegrationTest
                 configModifier
                     .ConfigureFasterMetricsHarvestCycle(30)
                     .ConfigureFasterTransactionTracesHarvestCycle(30)
-                    .ConfigureFasterTransactionEventsHarvestCycle(30)
                     .ConfigureFasterSqlTracesHarvestCycle(30)
                     .ForceTransactionTraces()
                     .SetLogLevel("finest");

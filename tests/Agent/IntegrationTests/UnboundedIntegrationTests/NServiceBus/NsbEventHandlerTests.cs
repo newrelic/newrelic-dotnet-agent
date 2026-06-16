@@ -37,7 +37,6 @@ public abstract class NsbEventHandlerTestsBase<TFixture> : NewRelicIntegrationTe
                 configModifier.SetLogLevel("finest");
                 configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                configModifier.ConfigureFasterTransactionEventsHarvestCycle(10);
             },
             exerciseApplication: () =>
             {

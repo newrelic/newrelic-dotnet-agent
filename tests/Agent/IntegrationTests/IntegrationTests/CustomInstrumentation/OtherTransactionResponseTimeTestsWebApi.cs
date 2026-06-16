@@ -27,7 +27,6 @@ public class OtherTransactionResponseTimeTestsWebApi : NewRelicIntegrationTest<R
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                 configModifier.SetLogLevel("Finest");
                 configModifier.ForceTransactionTraces();
-                configModifier.ConfigureFasterTransactionEventsHarvestCycle(10);
             },
             exerciseApplication: () =>
             {

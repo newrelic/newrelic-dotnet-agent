@@ -420,12 +420,6 @@ public class NewRelicConfigModifier
         return this;
     }
 
-    public NewRelicConfigModifier ConfigureFasterTransactionEventsHarvestCycle(int seconds)
-    {
-        CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideTransactionEventsHarvestCycle", seconds.ToString(), "urn:newrelic-config");
-        return this;
-    }
-
     public NewRelicConfigModifier ConfigureFasterSpanEventsHarvestCycle(int seconds)
     {
         CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideSpanEventsHarvestCycle", seconds.ToString(), "urn:newrelic-config");

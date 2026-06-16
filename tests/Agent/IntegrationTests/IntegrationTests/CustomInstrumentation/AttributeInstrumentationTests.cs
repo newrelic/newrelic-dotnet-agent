@@ -67,7 +67,6 @@ public abstract class AttributeInstrumentationTests<TFixture> : NewRelicIntegrat
                 configModifier.ForceTransactionTraces();
                 configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                configModifier.ConfigureFasterTransactionEventsHarvestCycle(10);
             }
         );
 
