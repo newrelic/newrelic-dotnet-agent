@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +18,8 @@ namespace NewRelic.Agent.Core.DataTransport;
 /// </summary>
 public class OtlpAuditHandler : DelegatingHandler
 {
+    private const long MaxPayloadSizeBytes = 1_000_000;
+
     private readonly IAgentHealthReporter _agentHealthReporter;
 
     public OtlpAuditHandler(IAgentHealthReporter agentHealthReporter = null)
@@ -36,6 +39,13 @@ public class OtlpAuditHandler : DelegatingHandler
             
         // Audit log the outgoing request and capture size - single read for both audit log and metrics
         var bytesSent = await LogOtlpRequest(request).ConfigureAwait(false);
+
+        if (bytesSent > MaxPayloadSizeBytes)
+        {
+            Log.Warn("OTLP metrics payload ({BytesSent} bytes) exceeds 1MB; dropping this export cycle.", bytesSent);
+            _agentHealthReporter?.ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(request.RequestUri?.ToString() ?? "unknown");
+            return new HttpResponseMessage(HttpStatusCode.RequestEntityTooLarge);
+        }
 
         HttpResponseMessage response = null;
         try
