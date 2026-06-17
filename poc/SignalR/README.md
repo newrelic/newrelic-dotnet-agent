@@ -14,12 +14,20 @@ hybrid bridge. See the spike for context:
 | `Client/` | .NET 10 console app driving the hub to exercise acceptance criteria 1–6, with a `--burst` mode for autocomplete-shaped load tests |
 | `BlazorApp/` | Blazor Server (.NET 10) interactive autocomplete page — every keystroke traverses the Blazor circuit's SignalR connection. Used to verify that bridged SignalR coverage interacts cleanly with existing ASP.NET Core auto-instrumentation and does not produce long-duration or unexpected transactions |
 
-Plus the only production-code change required for the POC:
-**`src/Agent/NewRelic/Agent/Core/Configuration/DefaultConfiguration.cs`** —
-`"Microsoft.AspNetCore.SignalR.Server"` removed from
-`OpenTelemetryTracingExcludedActivitySources`. Without this change the bridge
-silently drops every SignalR activity. The matching `Microsoft.AspNetCore.SignalR.Client`
-source is already absent from the exclusion list.
+Plus two production-code changes:
+
+1. **`src/Agent/NewRelic/Agent/Core/Configuration/DefaultConfiguration.cs`** —
+   `"Microsoft.AspNetCore.SignalR.Server"` removed from
+   `OpenTelemetryTracingExcludedActivitySources`. Without this change the bridge
+   silently drops every SignalR activity. The matching `Microsoft.AspNetCore.SignalR.Client`
+   source is already absent from the exclusion list.
+
+2. **`src/Agent/NewRelic/Agent/Core/OpenTelemetryBridge/Tracing/ActivityBridgeSegmentHelpers.cs`** —
+   SignalR-specific RPC handling (Finding C below). The bridge's RPC path was
+   hard-coded to gRPC; it now builds the scheme/library from `rpc.system`, so
+   SignalR renders as `signalr://...` / `External/{host}/SignalR/{method}`
+   instead of a malformed gRPC URI. **This change must carry over to the real
+   (non-POC) implementation.**
 
 The sample app does **not** reference the OpenTelemetry SDK packages. The
 agent's `ActivityBridge` (`src/Agent/NewRelic/Agent/Core/OpenTelemetryBridge/Tracing/ActivityBridge.cs`)
@@ -259,3 +267,29 @@ in NR-232592 as comments.
    (e.g. derived from the active `@page` route and event-handler name), but
    that requires the bridge to inspect render-tree state and is well beyond
    v1 scope.
+
+6. **RPC handling assumed `rpc == gRPC` (Finding C) -- FIXED in this POC, must
+   carry to the real implementation.** The bridge's RPC tag processing
+   (`ActivityBridgeSegmentHelpers`) hard-coded the gRPC scheme, a `grpc://`
+   authority of `unknown:0` when no peer address was present, and
+   `ExternalGrpcSegmentData` (so the segment was named `gRPC/<Method>`). A
+   tag-extraction collision (`rpc.method` consumed twice) also dropped the
+   method, yielding a trailing-slash URI. SignalR carries `rpc.system="signalr"`
+   and no peer-address/status-code tags, so it tripped all of these.
+
+   The fix makes the path/scheme and segment label derive from `rpc.system`:
+   - **Server transaction:** `request.uri = signalr:///<HubFullName>/<Method>`,
+     `request.method = <Method>` (no fake authority, method preserved).
+   - **Client segment:** named `External/{host}/SignalR/{Method}` with
+     `component = signalr`, built from the base `ExternalSegmentData`.
+   - **gRPC is unchanged:** still `ExternalGrpcSegmentData` with the
+     status-code-to-exception mapping; `grpc://` URIs and `gRPC/<Method>`
+     names are byte-for-byte identical to before.
+
+   This is the second production-code change listed above. The real
+   implementation will need the same `rpc.system`-aware handling -- a SignalR
+   library label (`GetRpcLibraryName`), a scheme/authority built from
+   `rpc.system` rather than gRPC, and the gRPC-only status/exception path
+   gated behind `rpc.system == "grpc"`. New unit coverage lives in
+   `tests/Agent/UnitTests/Core.UnitTest/OpenTelemetryBridge/ActivityBridgeSegmentHelpersTests.cs`
+   (first tests for this path -- it was previously untested).
