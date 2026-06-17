@@ -65,15 +65,24 @@ public abstract class GrpcUnaryWrapper<TRequest, TResponse> : IGrpcUnaryWrapper<
     {
         response = default;
 
+        // The channel can be torn down by a concurrent Shutdown/restart between the worker's
+        // IsConnected check and this call. Treat "nothing to send on" as not-sent (return false) so
+        // the caller re-queues the items and lets the reconnect logic recover, rather than surfacing
+        // it as a gRPC error.
+        if (cancellationToken.IsCancellationRequested || !IsConnected)
+        {
+            return false;
+        }
+
         try
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return false;
-            }
-
             response = SendDataImpl(_channel, item, headers, sendTimeoutMs, cancellationToken);
             return true;
+        }
+        catch (GrpcWrapperChannelNotAvailableException)
+        {
+            // Channel went away mid-send (e.g., a concurrent shutdown). Not a gRPC-level error.
+            return false;
         }
         catch (Exception ex)
         {

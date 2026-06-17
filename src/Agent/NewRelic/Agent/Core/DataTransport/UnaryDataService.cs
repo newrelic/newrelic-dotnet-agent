@@ -534,11 +534,9 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            var shouldRetryImmediately = false;
-
             try
             {
-                shouldRetryImmediately = SendRequests(collection, cancellationToken);
+                SendRequests(collection, cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -551,9 +549,8 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                var delayInMs = shouldRetryImmediately ? 0 : _delayBetweenRpcCallsMs;
-                LogMessage(LogLevel.Finest, "Delay " + delayInMs);
-                _delayer.Delay(delayInMs, cancellationToken);
+                LogMessage(LogLevel.Finest, "Delay " + _delayBetweenRpcCallsMs);
+                _delayer.Delay(_delayBetweenRpcCallsMs, cancellationToken);
             }
         }
     }
@@ -601,7 +598,7 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
         }
     }
 
-    private bool SendRequests(PartitionedBlockingCollection<TRequest> collection, CancellationToken serviceCancellationToken)
+    private void SendRequests(PartitionedBlockingCollection<TRequest> collection, CancellationToken serviceCancellationToken)
     {
         var consumerId = _consumerId.Increment();
 
@@ -611,7 +608,7 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
         {
             if (!DequeueItems(collection, BatchSizeConfigValue, serviceCancellationToken, out var items))
             {
-                return false;
+                return;
             }
 
             if (items == null || items.Count == 0)
@@ -629,13 +626,11 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
             if (trySendStatus != TrySendStatus.Success)
             {
                 ProcessFailedItems(items, collection);
-                return trySendStatus == TrySendStatus.ErrorWithImmediateRetry;
+                return;
             }
 
             IsSending = true;
         }
-
-        return false;
     }
 
     private TrySendStatus TrySend(int consumerId, IList<TRequest> items, CancellationToken cancellationToken)
@@ -668,7 +663,9 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
                 return TrySendStatus.Success;
             }
 
-            // TrySendData only returns false (without throwing) when cancellation was requested before the send.
+            // TrySendData returns false (without throwing) when the batch could not be sent at all -
+            // cancellation was requested, or the channel was unavailable (e.g., during shutdown/restart).
+            // Re-queue the items; the reconnect logic will recover.
             return TrySendStatus.CancellationRequested;
         }
         catch (GrpcWrapperException grpcEx) when (!string.IsNullOrWhiteSpace(grpcEx.Status))
@@ -732,7 +729,6 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
     {
         Success,
         CancellationRequested,
-        Error,
-        ErrorWithImmediateRetry
+        Error
     }
 }
