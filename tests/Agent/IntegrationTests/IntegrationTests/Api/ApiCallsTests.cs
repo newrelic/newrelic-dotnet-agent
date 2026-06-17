@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -55,6 +56,15 @@ public abstract class ApiCallsTests<TFixture> : NewRelicIntegrationTest<TFixture
                 configModifier.SetOrDeleteDistributedTraceEnabled(true);
                 configModifier.SetLogLevel("finest");
                 configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+            }
+        );
+
+        Fixture.AddActions
+        (
+            exerciseApplication: () =>
+            {
+                Fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
             }
         );
 

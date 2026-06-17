@@ -58,12 +58,13 @@ public class MongoDBLegacyTests : NewRelicIntegrationTest<ConsoleDynamicMethodFi
             {
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
-                configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
             },
             exerciseApplication: () =>
             {
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1), 2);
             }
         );
         _fixture.Initialize();
@@ -76,8 +77,8 @@ public class MongoDBLegacyTests : NewRelicIntegrationTest<ConsoleDynamicMethodFi
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/allOther", callCount = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
 
             new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/CreateCollection", metricScope = $"{TransactionRoot}/SetupClient" },
             new Assertions.ExpectedMetric { metricName = $@"{StatementRoot}/Insert", metricScope = $"{TransactionRoot}/Insert" },

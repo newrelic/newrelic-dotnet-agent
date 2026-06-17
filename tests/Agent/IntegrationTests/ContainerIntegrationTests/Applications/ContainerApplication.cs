@@ -267,7 +267,9 @@ public class ContainerApplication : RemoteApplication
 
         // Retry if compose exited quickly (often due to transient Docker network issues
         // where the daemon hasn't fully released resources from a prior compose project).
-        const int maxRetries = 2;
+        // On loaded CI runners network creation can fail multiple times; 15s between
+        // retries gives the Docker daemon time to recover before the next attempt.
+        const int maxRetries = 3;
         if (RemoteProcess.HasExited && _startupAttempts < maxRetries)
         {
             _startupAttempts++;
@@ -276,7 +278,7 @@ public class ContainerApplication : RemoteApplication
             CleanupContainer();
 
             // Give Docker time to fully release network resources before retrying
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            Thread.Sleep(TimeSpan.FromSeconds(15));
 
             try
             {
