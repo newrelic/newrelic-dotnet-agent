@@ -162,50 +162,68 @@ public static class ActivityBridgeSegmentHelpers
         tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address", ActivityBridge.NewRelicServerAddress], out var host);
         tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port", ActivityBridge.NewRelicServerPort], out var port);
 
-        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, cleanGrpcMethod);
+        var path = BuildRpcPath(rpcSystem, host, port, service, method, cleanGrpcMethod);
         Uri uri = new Uri(path);
-        var externalSegmentData = new ExternalGrpcSegmentData(uri: uri, method: method ?? cleanGrpcMethod, componentOverride: rpcSystem);
+        var operation = method ?? cleanGrpcMethod;
 
-        if (statusCode.HasValue)
-            externalSegmentData.SetGrpcStatus(statusCode.Value);
+        // gRPC carries a status code that needs its own span attribute, so it uses the gRPC-specific
+        // segment. Other RPC systems (e.g. SignalR) have no such attribute and use the base external
+        // segment with a system-specific library/component - no dedicated subclass is warranted.
+        var isGrpc = string.Equals(rpcSystem, "grpc", StringComparison.OrdinalIgnoreCase);
 
-        Log.Finest($"{activityLogPrefix} Created ExternalGrpcSegmentData.");
+        ExternalSegmentData externalSegmentData;
+        if (isGrpc)
+        {
+            var grpcSegmentData = new ExternalGrpcSegmentData(uri: uri, method: operation, componentOverride: rpcSystem);
+            if (statusCode.HasValue)
+                grpcSegmentData.SetGrpcStatus(statusCode.Value);
+            externalSegmentData = grpcSegmentData;
+            Log.Finest($"{activityLogPrefix} Created ExternalGrpcSegmentData.");
+        }
+        else
+        {
+            externalSegmentData = new ExternalSegmentData(uri: uri, method: operation, library: GetRpcLibraryName(rpcSystem), componentOverride: rpcSystem);
+            Log.Finest($"{activityLogPrefix} Created ExternalSegmentData for rpc.system '{rpcSystem}'.");
+        }
 
         segment.GetExperimentalApi().SetSegmentData(externalSegmentData)
             .MakeLeaf();
 
-        // per spec, a non-zero status code must be recorded as an exception.
+        // per spec, a non-zero gRPC status code must be recorded as an exception.
         // TODO: This behavior is supposed to be configurable by the customer but currently is not
-        if (statusCode.HasValue && statusCode.Value != 0)
+        if (isGrpc && statusCode.HasValue && statusCode.Value != 0)
         {
             RecordGrpcException(segment, agent, errorService, statusCode.Value, path, activityLogPrefix);
         }
     }
 
-    // TODO: RPC Server implementation is very preliminary; unable to test currently because asp.net core grpc server doesn't create activities with the expected tags
+    /// <summary>
+    /// Maps an OpenTelemetry <c>rpc.system</c> value to the library/label used in external segment
+    /// names (<c>External/{host}/{library}/{method}</c>). Known systems get a display-cased name;
+    /// unknown systems fall back to the raw value. Used for non-gRPC RPC systems.
+    /// </summary>
+    public static string GetRpcLibraryName(string rpcSystem)
+    {
+        return rpcSystem?.ToLowerInvariant() switch
+        {
+            "grpc" => "gRPC",
+            "signalr" => "SignalR",
+            null or "" => "gRPC", // preserve the historical default when the system is unknown
+            _ => rpcSystem
+        };
+    }
+
     private static void ProcessRpcServerTags(ISegment segment, IAgent agent, IErrorService errorService, Dictionary<string, object> tags, string activityLogPrefix)
     {
-        tags.TryGetAndRemoveTag<string>(["rpc.system"], out var rpcSystem); // may not exist
-
-        tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code"], out var statusCode);
-
-        tags.TryGetAndRemoveTag<string>(["rpc.method", "grpc.method"], out var grpcMethod);
-        tags.TryGetAndRemoveTag<string>(["rpc.method", "rpc.method"], out var method);
-        tags.TryGetAndRemoveTag<string>(["rpc.service", "rpc.service"], out var service);
-
-        tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address"], out var host);
-        tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
-
-        // TODO: Otel tracing spec says "component" should be set to the rpc system, but the grpc spec makes no mention of it.
-        // TODO: ExternalSegmentData currently sets Component as an Intrinsic attribute on the span, with a value of either ExternalSegmentData.ComponentOverride if used or _segmentData.TypeName (which ends up being `NewRelic.Agent.Core.OpenTelemetryBridge.ActivityBridge`).
-        //segment.AddCustomAttribute("component", rpcSystem);
-
         var transaction = ((IHybridAgentSegment)segment).GetTransactionFromSegment();
 
-        var path = BuildRpcPath(host ?? "unknown", port ?? 0, service, method, grpcMethod);
+        var path = BuildRpcServerPath(tags, out var requestMethod);
         transaction.SetUri(path);
+        transaction.SetRequestMethod(requestMethod);
 
-        transaction.SetRequestMethod(method ?? grpcMethod ?? "Unknown");
+        // rpc.grpc.status_code is a gRPC-specific tag; other RPC systems (e.g. SignalR) do not emit it,
+        // so this status/exception mapping is naturally a no-op for them.
+        tags.TryGetAndRemoveTag<int?>(["rpc.grpc.status_code"], out var statusCode);
         if (statusCode.HasValue)
             transaction.SetHttpResponseStatusCode(statusCode.Value);
 
@@ -217,11 +235,54 @@ public static class ActivityBridgeSegmentHelpers
         }
     }
 
-    private static string BuildRpcPath(string host, int? port, string service, string method, string grpcMethod)
+    /// <summary>
+    /// Extracts the RPC service/method tags from a server activity and builds the request path.
+    /// Public for unit testing; pure aside from removing the tags it consumes (matching the other
+    /// tag-processing helpers). Mirrors the client-side extraction so <c>rpc.method</c> and
+    /// <c>grpc.method</c> are read into distinct values rather than colliding.
+    /// </summary>
+    public static string BuildRpcServerPath(Dictionary<string, object> tags, out string requestMethod)
     {
-        // construct the path according to gRPC spec
-        // if service is missing, grpcMethod is the full path
-        return !string.IsNullOrEmpty(service) ? $"grpc://{host}:{port}/{service}/{method}" : $"grpc://{host}:{port}/{grpcMethod}";
+        tags.TryGetAndRemoveTag<string>(["rpc.system"], out var rpcSystem); // may not exist (e.g. grpc.method only)
+        tags.TryGetAndRemoveTag<string>(["rpc.method"], out var method);
+        tags.TryGetAndRemoveTag<string>(["rpc.service"], out var service);
+        tags.TryGetAndRemoveTag<string>(["grpc.method"], out var grpcMethod);
+        var cleanGrpcMethod = grpcMethod?.TrimStart('/'); // per spec, strip leading slashes
+
+        tags.TryGetAndRemoveTag<string>(["server.address", "network.peer.address"], out var host);
+        tags.TryGetAndRemoveTag<int?>(["server.port", "network.peer.port"], out var port);
+
+        requestMethod = method ?? cleanGrpcMethod ?? "Unknown";
+        return BuildRpcPath(rpcSystem, host, port, service, method, cleanGrpcMethod);
+    }
+
+    /// <summary>
+    /// Builds an RPC path for a segment/transaction URI. The scheme reflects the RPC system
+    /// (<c>rpc.system</c>) rather than always being gRPC - e.g. SignalR yields <c>signalr://</c>.
+    /// The authority is only emitted when a peer address is actually known; otherwise it is left
+    /// empty rather than emitting a misleading <c>unknown:0</c>. The service/method are kept in the
+    /// path (not the authority) so their casing is preserved.
+    /// </summary>
+    public static string BuildRpcPath(string rpcSystem, string host, int? port, string service, string method, string grpcMethod)
+    {
+        var scheme = !string.IsNullOrEmpty(rpcSystem)
+            ? rpcSystem
+            : (!string.IsNullOrEmpty(grpcMethod) ? "grpc" : "rpc");
+
+        var authority = !string.IsNullOrEmpty(host) ? $"{host}:{port ?? 0}" : string.Empty;
+
+        // if service is present, the canonical form is {service}/{method}; otherwise grpcMethod is the full path
+        string pathPart;
+        if (!string.IsNullOrEmpty(service))
+        {
+            pathPart = !string.IsNullOrEmpty(method) ? $"{service}/{method}" : service;
+        }
+        else
+        {
+            pathPart = grpcMethod ?? string.Empty;
+        }
+
+        return $"{scheme}://{authority}/{pathPart}";
     }
 
     private static void RecordGrpcException(ISegment segment, IAgent agent, IErrorService errorService, int statusCode, string path, string activityLogPrefix)
