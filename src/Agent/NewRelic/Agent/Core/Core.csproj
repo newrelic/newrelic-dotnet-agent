@@ -77,6 +77,26 @@
     <PackageReference Include="System.ValueTuple" Version="4.6.2" />
   </ItemGroup>
 
+  <!-- The unary Infinite Tracing classes are Grpc.Net.Client-only and are not part of the
+       .NET Framework build, which still uses the legacy Grpc.Core streaming path. They are
+       removed from compilation for net462, but re-added as <None> so they remain visible in
+       the Visual Studio Solution Explorer (which projects the tree against the first-listed
+       target framework, net462). This does not compile them for net462. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+    <Compile Remove="DataTransport\IGrpcUnaryWrapper.cs" />
+    <Compile Remove="DataTransport\GrpcUnaryWrapper.cs" />
+    <Compile Remove="DataTransport\SpanUnaryGrpcWrapper.cs" />
+    <Compile Remove="DataTransport\IUnaryDataService.cs" />
+    <Compile Remove="DataTransport\UnaryDataService.cs" />
+    <Compile Remove="DataTransport\SpanUnaryService.cs" />
+    <None Include="DataTransport\IGrpcUnaryWrapper.cs" />
+    <None Include="DataTransport\GrpcUnaryWrapper.cs" />
+    <None Include="DataTransport\SpanUnaryGrpcWrapper.cs" />
+    <None Include="DataTransport\IUnaryDataService.cs" />
+    <None Include="DataTransport\UnaryDataService.cs" />
+    <None Include="DataTransport\SpanUnaryService.cs" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="Grpc.Net.Client" Version="2.80.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />

@@ -165,6 +165,12 @@ public static class AgentServices
         container.Register<IGrpcWrapper<SpanBatch, RecordStatus>, SpanBatchGrpcWrapper>();
         container.Register<IDelayer, Delayer>();
         container.Register<IDataStreamingService<Span, SpanBatch, RecordStatus>, SpanStreamingService>();
+#if !NETFRAMEWORK
+        // Unary Infinite Tracing transport (modern Grpc.Net.Client only). Registered but not yet
+        // consumed by the aggregator; it replaces the streaming service in a later change.
+        container.Register<IGrpcUnaryWrapper<SpanBatch, RecordStatus>, SpanBatchUnaryGrpcWrapper>();
+        container.Register<IUnaryDataService<Span, SpanBatch, RecordStatus>, SpanUnaryService>();
+#endif
         container.Register<ISpanEventMaker, SpanEventMaker>();
         container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
         container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();

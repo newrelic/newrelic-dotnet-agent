@@ -1,4 +1,4 @@
-﻿syntax = "proto3";
+syntax = "proto3";
 
 package com.newrelic.trace.v1;
 option csharp_namespace = "NewRelic.Agent.Core.Segments";
@@ -12,6 +12,13 @@ service IngestService {
   // stream of RecordStatus messages. This endpoint can be used to improve
   // throughput when Span messages are small
   rpc RecordSpanBatch(stream SpanBatch) returns (stream RecordStatus) {}
+
+  // --- UNARY METHODS ---
+  // Accepts a single Span message and returns a single RecordStatus.
+  rpc RecordSpanUnary(Span) returns (RecordStatus) {}
+
+  // Accepts a single SpanBatch message and returns a single RecordStatus.
+  rpc RecordSpanBatchUnary(SpanBatch) returns (RecordStatus) {}
 }
 
 message SpanBatch {
