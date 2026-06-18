@@ -3,6 +3,7 @@
 
 #if NET10_0_OR_GREATER || NET481_OR_GREATER || NET8_0 || NET462
 
+using System;
 using System.Threading;
 using Hangfire;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
@@ -20,7 +21,8 @@ public class HangfireExerciser
         NewRelic.Api.Agent.NewRelic.StartAgent();
         var options = new BackgroundJobServerOptions
         {
-            Queues = new[] { "alpha", "default" }
+            Queues = new[] { "alpha", "default" },
+            SchedulePollingInterval = TimeSpan.FromSeconds(2)
         };
 
 #if NET10_0_OR_GREATER || NET481_OR_GREATER
