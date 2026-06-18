@@ -188,7 +188,7 @@ The .NET agent [can be configured](https://docs.newrelic.com/docs/apm/agents/net
 | Library | NuGet package | Supported versions | Min agent version | Notes |
 | --- | --- | --- | --- | --- |
 | Log4Net | [log4net](https://www.nuget.org/packages/log4net/) | 1.2.10 – 3.3.1 | 9.7.0 |  |
-| Sitecore.Logging | [Sitecore.Logging](https://www.nuget.org/packages/Sitecore.Logging/) | 10.0.0 – 10.3.0 | 10.14.0 | <ul><li>`Sitecore.Logging` is a repackaged log4net; the agent instruments it through its log4net instrumentation.</li></ul> |
+| Sitecore.Logging | Sitecore.Logging | 10.0.0 – 10.3.0 | 10.14.0 | <ul><li>`Sitecore.Logging` is a repackaged log4net; the agent instruments it through its log4net instrumentation.</li></ul> |
 | Serilog | [Serilog](https://www.nuget.org/packages/Serilog/) | 2.0.0 – 4.3.1 | 9.7.0 |  |
 | NLog | [NLog](https://www.nuget.org/packages/NLog/) | 4.1.0 – 6.1.3 | 9.7.0 |  |
 | Microsoft.Extensions.Logging | [Microsoft.Extensions.Logging](https://www.nuget.org/packages/Microsoft.Extensions.Logging/) | 3.0.0 – 10.0.8 | 9.7.0 |  |
