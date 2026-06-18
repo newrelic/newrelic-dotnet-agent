@@ -42,14 +42,14 @@ public static class TestJobs
 
     private static void DoWork()
     {
-        _httpClient.GetAsync("https://httpbin.org/delay/1").Wait();
-        Thread.Sleep(_random.Next(25, 100));
+        _httpClient.GetAsync("http://www.google.com").Wait();
+        Thread.Sleep(1000 + _random.Next(25, 100));
     }
 
     private static async Task DoWorkAsync()
     {
-        await _httpClient.GetAsync("https://httpbin.org/delay/1");
-        await Task.Delay(_random.Next(25, 100));
+        await _httpClient.GetAsync("http://www.google.com");
+        await Task.Delay(1000 + _random.Next(25, 100));
     }
 }
 
