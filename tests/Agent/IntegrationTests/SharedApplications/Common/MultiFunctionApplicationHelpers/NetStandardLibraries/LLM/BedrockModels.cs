@@ -11,6 +11,10 @@ using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Amazon.Util;
 using NewRelic.Agent.IntegrationTests.Shared;
+#if NET481 || NET10_0
+using System.Collections.Generic;
+using Amazon.Runtime.Documents;
+#endif
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM;
 
@@ -309,12 +313,9 @@ internal class BedrockModels
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static async Task<ConverseResponse> Converse(string model, string payload)
     {
-
-        // Create a request with the model ID, the user message, and an inference configuration.
         var request = new ConverseRequest
         {
             ModelId = model,
-
             Messages =
             [
                 new Message { Role = ConversationRole.User, Content = [new ContentBlock { Text = payload }] }
@@ -328,6 +329,193 @@ internal class BedrockModels
         };
 
         return await _amazonBedrockRuntimeClient.ConverseAsync(request);
+    }
+
+    // Exercises the extended-thinking path: Content[0] in the response is ReasoningContent,
+    // Content[1] is the Text block. Used to verify the agent captures events even when the
+    // first content block is non-text.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static async Task<string> ConverseClaudeExtendedThinking(string prompt, bool generateError)
+    {
+        string responseText = "";
+        try
+        {
+            // Model ID stored in a variable to avoid the SDK's compile-time pattern analyzer (BedrockRuntime1002)
+            // which only checks string literals assigned directly to ModelId.
+            var modelId = "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
+            var request = new ConverseRequest
+            {
+                ModelId = modelId,
+                Messages =
+                [
+                    new Message { Role = ConversationRole.User, Content = [new ContentBlock { Text = prompt }] }
+                ],
+                InferenceConfig = new InferenceConfiguration
+                {
+                    MaxTokens = 2048
+                },
+                AdditionalModelRequestFields = new Document(
+                    new Dictionary<string, Document>
+                    {
+                        ["thinking"] = new Document(
+                            new Dictionary<string, Document>
+                            {
+                                ["type"] = "enabled",
+                                ["budget_tokens"] = 1024L
+                            })
+                    })
+            };
+
+            var response = await _amazonBedrockRuntimeClient.ConverseAsync(request);
+
+            var content = response?.Output?.Message?.Content;
+            for (int i = 0; i < content?.Count; i++)
+            {
+                var text = content[i].Text;
+                if (text != null)
+                {
+                    responseText = text;
+                    break;
+                }
+            }
+        }
+        catch (AmazonBedrockRuntimeException e)
+        {
+            Console.WriteLine(e);
+        }
+        return responseText;
+    }
+
+    // Exercises the response-emittable content block types using the natural two-turn tool flow with
+    // extended thinking enabled:
+    //   Turn 1 request:  [Text]                       Turn 1 response: [ReasoningContent, ToolUse]  (stopReason=tool_use)
+    //   Turn 2 request:  [..., ToolResult]            Turn 2 response: [(ReasoningContent,) Text]
+    // Across the two instrumented ConverseAsync calls the wrapper walks Text, ReasoningContent and ToolUse
+    // (response side) plus ToolResult (request side). A single call cannot return all block types, so this
+    // is the most complete real-model coverage of the response-emittable set.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static async Task<string> ConverseClaudeToolUseWithThinking(string prompt, bool generateError)
+    {
+        string responseText = "";
+        try
+        {
+            // Model ID stored in a variable to avoid the SDK's compile-time pattern analyzer (BedrockRuntime1002).
+            var modelId = "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
+
+            var toolConfig = new ToolConfiguration
+            {
+                Tools =
+                [
+                    new Tool
+                    {
+                        ToolSpec = new ToolSpecification
+                        {
+                            Name = "get_weather",
+                            Description = "Get the current weather for a given city.",
+                            InputSchema = new ToolInputSchema
+                            {
+                                Json = new Document(new Dictionary<string, Document>
+                                {
+                                    ["type"] = "object",
+                                    ["properties"] = new Document(new Dictionary<string, Document>
+                                    {
+                                        ["city"] = new Document(new Dictionary<string, Document>
+                                        {
+                                            ["type"] = "string",
+                                            ["description"] = "The city name"
+                                        })
+                                    }),
+                                    ["required"] = new Document(new List<Document> { "city" })
+                                })
+                            }
+                        }
+                    }
+                ]
+            };
+
+            // Reused across both turns; thinking blocks (with signatures) must be preserved in the
+            // conversation history when continuing a tool-use exchange with extended thinking enabled.
+            var thinking = new Document(new Dictionary<string, Document>
+            {
+                ["thinking"] = new Document(new Dictionary<string, Document>
+                {
+                    ["type"] = "enabled",
+                    ["budget_tokens"] = 1024L
+                })
+            });
+
+            var messages = new List<Message>
+            {
+                new Message { Role = ConversationRole.User, Content = [new ContentBlock { Text = prompt }] }
+            };
+
+            // Turn 1: expect ReasoningContent + ToolUse.
+            var first = await _amazonBedrockRuntimeClient.ConverseAsync(new ConverseRequest
+            {
+                ModelId = modelId,
+                Messages = messages,
+                ToolConfig = toolConfig,
+                InferenceConfig = new InferenceConfiguration { MaxTokens = 2048 },
+                AdditionalModelRequestFields = thinking
+            });
+
+            // Carry the assistant's turn (reasoning + toolUse) forward in the conversation.
+            messages.Add(first.Output.Message);
+
+            ToolUseBlock toolUse = null;
+            foreach (var block in first.Output.Message.Content)
+            {
+                if (block.ToolUse != null)
+                {
+                    toolUse = block.ToolUse;
+                    break;
+                }
+            }
+
+            if (toolUse != null)
+            {
+                // Supply a (stubbed) tool result so the model can produce a final text answer.
+                messages.Add(new Message
+                {
+                    Role = ConversationRole.User,
+                    Content =
+                    [
+                        new ContentBlock
+                        {
+                            ToolResult = new ToolResultBlock
+                            {
+                                ToolUseId = toolUse.ToolUseId,
+                                Content = [new ToolResultContentBlock { Text = "{\"tempF\":58,\"conditions\":\"cloudy\"}" }]
+                            }
+                        }
+                    ]
+                });
+
+                // Turn 2: expect a Text block (often preceded by ReasoningContent).
+                var second = await _amazonBedrockRuntimeClient.ConverseAsync(new ConverseRequest
+                {
+                    ModelId = modelId,
+                    Messages = messages,
+                    ToolConfig = toolConfig,
+                    InferenceConfig = new InferenceConfiguration { MaxTokens = 2048 },
+                    AdditionalModelRequestFields = thinking
+                });
+
+                foreach (var block in second.Output.Message.Content)
+                {
+                    if (block.Text != null)
+                    {
+                        responseText = block.Text;
+                        break;
+                    }
+                }
+            }
+        }
+        catch (AmazonBedrockRuntimeException e)
+        {
+            Console.WriteLine(e);
+        }
+        return responseText;
     }
 #endif
 }
