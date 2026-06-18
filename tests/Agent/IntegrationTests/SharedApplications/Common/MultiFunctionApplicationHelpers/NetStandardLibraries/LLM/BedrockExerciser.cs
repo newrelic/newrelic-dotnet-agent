@@ -162,5 +162,27 @@ public class BedrockExerciser
             throw new ArgumentException("converse is not a valid model");
         }
     }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public async Task ConverseWithExtendedThinking(string base64Prompt)
+    {
+        var bytes = Convert.FromBase64String(base64Prompt);
+        var prompt = Encoding.UTF8.GetString(bytes);
+        var response = await BedrockModels.ConverseClaudeExtendedThinking(prompt, false);
+        Console.WriteLine(response);
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public async Task ConverseWithToolUseAndThinking(string base64Prompt)
+    {
+        var bytes = Convert.FromBase64String(base64Prompt);
+        var prompt = Encoding.UTF8.GetString(bytes);
+        var response = await BedrockModels.ConverseClaudeToolUseWithThinking(prompt, false);
+        Console.WriteLine(response);
+    }
 #endif
 }
