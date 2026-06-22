@@ -38,15 +38,12 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest;
 public class GetResponseAsyncWrapper : IWrapper
 {
     private const string BeginMethodName = "BeginGetResponse";
-    private const string EndMethodName = "EndGetResponse";
-    private static readonly string[] ResponseMethods = { BeginMethodName, EndMethodName };
 
     public bool IsTransactionRequired => true;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        var canWrap = methodInfo.Method.MatchesAny(assemblyName: "System", typeName: "System.Net.HttpWebRequest", methodNames: ResponseMethods);
-        return new CanWrapResponse(canWrap);
+        return new CanWrapResponse(methodInfo.RequestedWrapperName == nameof(GetResponseAsyncWrapper));
     }
 
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

@@ -12,13 +12,12 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest;
 
 public class GetResponseWrapper : IWrapper
 {
-    private static readonly string[] ResponseMethods = { "GetResponse" };
-
     public bool IsTransactionRequired => true;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        var canWrap = methodInfo.Method.MatchesAny(assemblyName: "System", typeName: "System.Net.HttpWebRequest", methodNames: ResponseMethods);
+        var method = methodInfo.Method;
+        var canWrap = method.MatchesAny(assemblyName: "System", typeName: "System.Net.HttpWebRequest", methodName: "GetResponse");
         return new CanWrapResponse(canWrap);
     }
 

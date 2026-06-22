@@ -28,14 +28,11 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest;
 // instrumentation owns the segment and header injection, so this wrapper does nothing.
 public class GetRequestStreamWrapper : IWrapper
 {
-    private static readonly string[] RequestStreamMethods = { "GetRequestStream", "BeginGetRequestStream", "GetRequestStreamAsync" };
-
     public bool IsTransactionRequired => true;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        var canWrap = methodInfo.Method.MatchesAny(assemblyName: "System", typeName: "System.Net.HttpWebRequest", methodNames: RequestStreamMethods);
-        return new CanWrapResponse(canWrap);
+        return new CanWrapResponse(methodInfo.RequestedWrapperName == nameof(GetRequestStreamWrapper));
     }
 
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
