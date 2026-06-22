@@ -408,7 +408,6 @@ categories:
         minAgentVersion: "10.14.0"
         packages:
           - id: Sitecore.Logging
-            nugetUrl: https://www.nuget.org/packages/Sitecore.Logging/
             tabs: [framework]
             minVersion: "10.0.0"
         notes:
