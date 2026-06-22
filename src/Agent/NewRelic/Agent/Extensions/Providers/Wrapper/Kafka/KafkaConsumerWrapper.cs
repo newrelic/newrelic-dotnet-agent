@@ -19,7 +19,7 @@ public class KafkaConsumerWrapper : IWrapper
 {
     private const string WrapperName = "KafkaConsumerWrapper";
 
-    public bool IsTransactionRequired => true;
+    public bool IsTransactionRequired => false;
 
     private static readonly ConcurrentDictionary<Type, Func<object, string>> TopicAccessorDictionary =
         new ConcurrentDictionary<Type, Func<object, string>>();
@@ -38,6 +38,10 @@ public class KafkaConsumerWrapper : IWrapper
 
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
+        // Replicate the IsLeaf guard that WrapperService normally applies when IsTransactionRequired=true.
+        if (transaction.IsValid && transaction.CurrentSegment.IsLeaf)
+            return Delegates.NoOp;
+
         Log.Finest("KafkaConsumerWrapper: BeforeWrappedMethod called, starting segment with 'unknown' topic");
 
         var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, MessageBrokerVendorConstants.Kafka, "unknown");
@@ -86,6 +90,11 @@ public class KafkaConsumerWrapper : IWrapper
                 if (KafkaHelper.TryGetBootstrapServersFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var bootstrapServers))
                 {
                     KafkaHelper.RecordKafkaNodeMetrics(agent, topic, bootstrapServers, false);
+                }
+
+                if (KafkaHelper.TryGetClusterIdFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var clusterId))
+                {
+                    agent.RecordCountMetric($"MessageBroker/Kafka/Cluster/{clusterId}/Topic/{topic}/Consume");
                 }
 
                 // get the Message.Headers property and process distributed trace headers
