@@ -20,6 +20,13 @@ SPDX-License-Identifier: Apache-2.0
 			</match>
 		</tracerFactory>
 
+		<tracerFactory>
+			<match assemblyName="System" className="System.Net.HttpWebRequest">
+				<exactMethodMatcher methodName="BeginGetResponse" />
+				<exactMethodMatcher methodName="EndGetResponse" />
+			</match>
+		</tracerFactory>
+
 		<tracerFactory name="NewRelic.Agent.Core.Tracer.Factories.Net.HttpWebRequestTracerFactory">
 			<match assemblyName="System" className="System.Net.HttpWebRequest">
 				<exactMethodMatcher methodName="GetResponse" />

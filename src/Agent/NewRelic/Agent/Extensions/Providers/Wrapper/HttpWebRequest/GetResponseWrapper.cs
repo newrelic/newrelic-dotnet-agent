@@ -12,12 +12,13 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest;
 
 public class GetResponseWrapper : IWrapper
 {
+    private static readonly string[] ResponseMethods = { "GetResponse" };
+
     public bool IsTransactionRequired => true;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        var method = methodInfo.Method;
-        var canWrap = method.MatchesAny(assemblyName: "System", typeName: "System.Net.HttpWebRequest", methodName: "GetResponse");
+        var canWrap = methodInfo.Method.MatchesAny(assemblyName: "System", typeName: "System.Net.HttpWebRequest", methodNames: ResponseMethods);
         return new CanWrapResponse(canWrap);
     }
 
@@ -33,12 +34,25 @@ public class GetResponseWrapper : IWrapper
 
         var method = httpWebRequest.Method ?? "<unknown>";
 
-        var transactionExperimental = transaction.GetExperimentalApi();
+        ISegment segment;
+        IExternalSegmentData externalSegmentData;
 
-        var externalSegmentData = transactionExperimental.CreateExternalSegmentData(uri, method);
-        var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
-        segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
-        segment.MakeCombinable();
+        // On a POST/PUT, GetRequestStreamWrapper already created the external segment and injected
+        // the DT headers (on the calling thread, with that segment current). Reuse and end it here.
+        // On a bodyless GET there is no pending segment, so create one now.
+        if (HttpWebRequestSegmentState.TryTake(httpWebRequest, out var pendingSegment))
+        {
+            segment = pendingSegment.Segment;
+            externalSegmentData = pendingSegment.ExternalSegmentData;
+        }
+        else
+        {
+            var transactionExperimental = transaction.GetExperimentalApi();
+            externalSegmentData = transactionExperimental.CreateExternalSegmentData(uri, method);
+            segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
+            segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
+            segment.MakeCombinable();
+        }
 
         return Delegates.GetDelegateFor<HttpWebResponse>(
             onSuccess: response =>
@@ -57,22 +71,16 @@ public class GetResponseWrapper : IWrapper
     private static void TryProcessResponse(WebResponse response, ITransaction transaction, ISegment segment, IExternalSegmentData externalSegmentData)
     {
         if (segment == null)
-        {
             return;
-        }
 
         var httpWebResponse = response as HttpWebResponse;
         var statusCode = httpWebResponse?.StatusCode;
         if (statusCode.HasValue)
-        {
             externalSegmentData.SetHttpStatus((int)statusCode.Value);
-        }
 
         var headers = response?.Headers?.ToDictionary();
         if (headers == null)
-        {
             return;
-        }
 
         transaction.ProcessInboundResponse(headers, segment);
     }
