@@ -15,6 +15,8 @@ SPDX-License-Identifier: Apache-2.0
 		<tracerFactory>
 			<match assemblyName="System" className="System.Net.HttpWebRequest">
 				<exactMethodMatcher methodName="GetRequestStream" />
+				<exactMethodMatcher methodName="BeginGetRequestStream" />
+				<exactMethodMatcher methodName="GetRequestStreamAsync" />
 			</match>
 		</tracerFactory>
 

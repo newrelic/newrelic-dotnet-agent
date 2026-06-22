@@ -8,12 +8,20 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 namespace NewRelic.Providers.Wrapper.HttpWebRequest;
 
 // On a request that sends a body (POST/PUT), HttpWebRequest serializes the request headers
-// during GetRequestStream() - before GetResponse() creates the external segment. At that point
-// SerializeHeadersWrapper skips injection (no external segment is current), so the distributed-
-// trace headers never go out and the callee records the request with no caller identity.
+// when the application obtains the request stream - before GetResponse() creates the external
+// segment. At that point SerializeHeadersWrapper skips injection (no external segment is
+// current), so the distributed-trace headers never go out and the callee records the request
+// with no caller identity.
 //
-// Injecting the headers here - before the underlying GetRequestStream serializes them - fixes
-// that. GetResponse still creates the external segment for timing/metrics, exactly as before.
+// Injecting the headers here - before the underlying call serializes them - fixes that.
+// GetResponse still creates the external segment for timing/metrics, exactly as before.
+//
+// All three ways of obtaining the request stream are covered: the synchronous GetRequestStream,
+// the APM-pattern BeginGetRequestStream, and the TAP-pattern GetRequestStreamAsync. On .NET
+// Framework GetRequestStreamAsync is layered over BeginGetRequestStream, so a call may match
+// more than one of these; re-injecting is harmless because the headers are written with Set
+// (overwrite), not Add. The injection runs synchronously in BeforeWrappedMethod on the calling
+// thread, inside the transaction, before any async work begins.
 //
 // When an external segment is already the current segment, another instrumentation (WCF,
 // HttpClient, RestSharp, ...) created it and is using HttpWebRequest internally; that
@@ -21,11 +29,13 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest;
 // nothing to avoid double-injecting.
 public class GetRequestStreamWrapper : IWrapper
 {
+    private static readonly string[] RequestStreamMethods = { "GetRequestStream", "BeginGetRequestStream", "GetRequestStreamAsync" };
+
     public bool IsTransactionRequired => true;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
-        var canWrap = methodInfo.Method.MatchesAny(assemblyName: "System", typeName: "System.Net.HttpWebRequest", methodName: "GetRequestStream");
+        var canWrap = methodInfo.Method.MatchesAny(assemblyName: "System", typeName: "System.Net.HttpWebRequest", methodNames: RequestStreamMethods);
         return new CanWrapResponse(canWrap);
     }
 
