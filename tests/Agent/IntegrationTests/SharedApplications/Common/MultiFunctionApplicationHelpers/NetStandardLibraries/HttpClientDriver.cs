@@ -67,4 +67,36 @@ internal static class HttpClientDriver
         }
         catch { }
     }
+
+    // Sends a request body via HttpClient. On .NET Framework HttpClient's handler is layered over
+    // HttpWebRequest, so the body goes out through HttpWebRequest.GetRequestStream and the response
+    // through GetResponse - the methods the HttpWebRequest body wrappers instrument. HttpClient owns
+    // the external segment and distributed-trace header injection, so those wrappers must defer and
+    // not create a duplicate segment. The instrumentation tests assert exactly one external segment
+    // per call, which catches any such double-instrumentation.
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void Post(string uri)
+    {
+        try
+        {
+            using (var client = new HttpClient())
+                client.PostAsync(uri, new StringContent("request-body")).Wait();
+        }
+        catch { }
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static void Put(string uri)
+    {
+        try
+        {
+            using (var client = new HttpClient())
+                client.PutAsync(uri, new StringContent("request-body")).Wait();
+        }
+        catch { }
+    }
 }
