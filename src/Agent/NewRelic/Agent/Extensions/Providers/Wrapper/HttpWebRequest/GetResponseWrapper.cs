@@ -33,7 +33,7 @@ public class GetResponseWrapper : IWrapper
             case GetResponseMethod:
                 return BeforeGetResponse(instrumentedMethodCall, httpWebRequest, transaction);
             case BeginGetResponseMethod:
-                return BeforeBeginGetResponse(httpWebRequest, transaction);
+                return BeforeBeginGetResponse(instrumentedMethodCall, agent, httpWebRequest, transaction);
             default:
                 return BeforeEndGetResponse(httpWebRequest, transaction);
         }
@@ -87,43 +87,98 @@ public class GetResponseWrapper : IWrapper
     // classic APM pair BeginGetResponse/EndGetResponse is what actually runs (both for an explicit
     // Begin/End caller and underneath GetResponseAsync), so that is what we instrument.
     //
-    // These handlers act ONLY on the external segment handed off by GetRequestStreamWrapper through
-    // HttpWebRequestSegmentState (a bare POST/PUT/Begin-End body request, where the DT headers were
-    // already injected on the request-stream thread). The presence of that handoff entry is the
-    // reliable signal that the request is ours. Other instrumentation that uses HttpWebRequest
-    // internally - WCF, HttpClient (whose .NET Framework handler is layered over HttpWebRequest), and
-    // RestSharp - owns its own external segment and never populates the table, so we never double
-    // create a segment or double-inject headers for it. Inspecting the current segment instead would
-    // be unreliable here, because the owner's segment is often not the current segment on the thread
-    // where BeginGetResponse runs across the async boundary.
+    // Two cases reach BeginGetResponse:
+    //  1. A body request (POST/PUT) whose external segment was already created and DT-injected on
+    //     the request-stream thread by GetRequestStreamWrapper, and handed off through
+    //     HttpWebRequestSegmentState. We reuse that segment.
+    //  2. A bodyless request (e.g. await GetResponseAsync() on a GET) with no request-stream call,
+    //     so no handoff entry exists. Here we create the external segment and inject the DT headers
+    //     ourselves, the same way GetRequestStreamWrapper does for the body case.
     //
-    // The handed-off segment is held across the async gap and ended in EndGetResponse, which also
-    // processes the inbound response. The transaction is held open between Begin and End so it does
-    // not finalize while the request is in flight.
+    // In both cases the request is ours only if no external segment is already current. Other
+    // instrumentation that uses HttpWebRequest internally - WCF, HttpClient (whose .NET Framework
+    // handler is layered over HttpWebRequest), and RestSharp - creates its own external segment
+    // first, so when its internal HttpWebRequest reaches BeginGetResponse that segment is current
+    // (IsExternal). We skip those, exactly as GetRequestStreamWrapper does, so we never double
+    // create a segment or double-inject headers.
+    //
+    // The segment (reused or created) is held across the async gap and ended in EndGetResponse,
+    // which also processes the inbound response. The transaction is held open between Begin and End
+    // so it does not finalize while the request is in flight.
     //
     // Known limitation: if the transaction context does not flow to EndGetResponse (e.g. a caller that
     // blocks on IAsyncResult.AsyncWaitHandle or polls IsCompleted and then calls EndGetResponse on an
     // unrelated thread), the EndGetResponse wrapper is skipped and the Hold is only released when the
     // transaction is finalized. The common shapes - await GetResponseAsync, or an AsyncCallback passed
     // to BeginGetResponse - flow the captured execution context and release normally.
-    private static AfterWrappedMethodDelegate BeforeBeginGetResponse(System.Net.HttpWebRequest httpWebRequest, ITransaction transaction)
+    private static AfterWrappedMethodDelegate BeforeBeginGetResponse(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, System.Net.HttpWebRequest httpWebRequest, ITransaction transaction)
     {
-        // Act only on a segment we handed off from the request-stream path. No entry => a bodyless
-        // request or a call owned by other instrumentation (WCF/HttpClient/RestSharp); do nothing.
-        if (!HttpWebRequestSegmentState.TryTake(httpWebRequest, out var pendingSegment))
+        ISegment segment;
+        IExternalSegmentData externalSegmentData;
+
+        if (HttpWebRequestSegmentState.TryTake(httpWebRequest, out var pendingSegment))
         {
-            return Delegates.NoOp;
+            // Body request: reuse the segment handed off from GetRequestStreamWrapper (DT headers
+            // were already injected there, on the request-stream thread).
+            segment = pendingSegment.Segment;
+            externalSegmentData = pendingSegment.ExternalSegmentData;
+
+            // EndGetResponse can run on a different thread (the I/O completion). Move the
+            // transaction into async storage now - before BeginGetResponse captures the execution
+            // context for its completion callback - so it flows to EndGetResponse.
+            transaction.AttachToAsync();
+        }
+        else
+        {
+            // No handoff => a bodyless async request. If an external segment is already current,
+            // other instrumentation (WCF/HttpClient/RestSharp) owns this call and injects its own
+            // headers; do nothing.
+            if (transaction.CurrentSegment.IsExternal)
+            {
+                return Delegates.NoOp;
+            }
+
+            var uri = httpWebRequest.RequestUri;
+            if (uri == null)
+            {
+                return Delegates.NoOp;
+            }
+
+            // Move into async storage before creating the segment (mirrors GetRequestStreamWrapper's
+            // TAP path) so the external segment is current in the async logical context when the
+            // headers are injected and so the transaction context flows to EndGetResponse.
+            transaction.AttachToAsync();
+
+            var method = httpWebRequest.Method ?? "<unknown>";
+            var transactionExperimental = transaction.GetExperimentalApi();
+            externalSegmentData = transactionExperimental.CreateExternalSegmentData(uri, method);
+            segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
+            segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
+            segment.MakeCombinable();
+
+            // Inject directly on this thread, with the external segment current (so the downstream
+            // parent is the external client span). SerializeHeaders runs off the async logical
+            // context after AttachToAsync and would see a non-external current segment and skip, so
+            // the GET would otherwise go out untraced. Headers.Set is idempotent, so a later
+            // SerializeHeaders re-injection is harmless.
+            var setHeaders = new Action<System.Net.HttpWebRequest, string, string>((carrier, key, value) =>
+            {
+                carrier.Headers?.Set(key, value);
+            });
+
+            try
+            {
+                transaction.InsertDistributedTraceHeaders(httpWebRequest, setHeaders);
+            }
+            catch (Exception ex)
+            {
+                agent.HandleWrapperException(ex);
+            }
         }
 
-        var segment = pendingSegment.Segment;
-        var externalSegmentData = pendingSegment.ExternalSegmentData;
-
-        // EndGetResponse can run on a different thread (the I/O completion). Move the transaction
-        // into async storage now - before BeginGetResponse captures the execution context for its
-        // completion callback - so it flows to EndGetResponse, and hold it open while the request
-        // is in flight. Re-store the segment (keyed by the request instance, the invocation target
-        // of both BeginGetResponse and EndGetResponse) so EndGetResponse can take it.
-        transaction.AttachToAsync();
+        // Hold the transaction open while the request is in flight, and re-store the segment (keyed
+        // by the request instance, the invocation target of both BeginGetResponse and
+        // EndGetResponse) so EndGetResponse can take it.
         transaction.Hold();
         HttpWebRequestSegmentState.Set(httpWebRequest, segment, externalSegmentData);
 
