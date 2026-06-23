@@ -141,6 +141,29 @@ cd tests/Agent/IntegrationTests/UnboundedServices
 docker compose up -d
 ```
 
+## Analyzing agent and integration-test logs
+
+Agent logs and integration-test `.testlog` files are huge (hundreds of KB) with
+single lines tens of KB wide -- the `connect`/`agent_settings` payloads and the
+`span_event_data` / `transaction_sample_data` / `metric_data` /
+`analytic_event_data` harvests are base64 blobs and full JSON. Never raw-read,
+`tail`, or wide-grep them; the bytes land in context and get re-billed every
+later turn. Instead:
+
+- Strip the payload noise into a slim file first, then work from it:
+  `grep -avE 'span_event_data|transaction_sample_data|metric_data|analytic_event_data' big.testlog > /tmp/slim.log`
+- Counts before content: `grep -c`, `grep -o` (matched token only),
+  `sort | uniq -c`. Much is learnable without a full line -- skip-line count,
+  wrapper-selection counts, `TraceContext/Accept/Success` presence.
+- Cap line width on anything that may print a payload: pipe through `cut -c1-200`.
+- Mind log level before concluding a line's absence means the event did not
+  happen. The sender/SUT app is often at `debug` while the receiver is at
+  `all`/finest, so finest-only lines ("Skipping HttpWebRequest header injection",
+  `Segment start`) show for one app but not the other. Check `Log level set to`
+  per pid first.
+- When you only need a conclusion, hand the whole log to a subagent with a
+  specific question rather than reading it in the main thread.
+
 ## Testing conventions
 
 - Unit tests: `tests/Agent/UnitTests/` (NUnit primary, xUnit used in some
