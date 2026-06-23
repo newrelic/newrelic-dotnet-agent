@@ -7,10 +7,12 @@ using NewRelic.Agent.Api.Experimental;
 
 namespace NewRelic.Providers.Wrapper.HttpWebRequest;
 
-// Shares the external segment created on the request-stream path (POST/PUT) with the response
-// path, so a single external segment spans the whole request/response and the distributed-trace
-// headers are injected by SerializeHeaders while that segment is the current segment - which
-// makes the downstream parent the external client span rather than the calling segment.
+// Hands the external segment created for an HttpWebRequest between the wrappers that span its
+// lifecycle, so a single external segment covers the whole request/response. Two flows use it:
+// GetRequestStreamWrapper -> GetResponseWrapper for body (POST/PUT) requests, and within
+// GetResponseWrapper from BeginGetResponse -> EndGetResponse for async requests. The wrapper that
+// creates the segment injects the distributed-trace headers directly, on the calling thread with
+// the external segment current, so the downstream parent is the external client span.
 //
 // Keyed weakly by the HttpWebRequest instance: parallel requests use distinct instances, so they
 // never collide, and an abandoned request (one where the response is never obtained) cannot leak
