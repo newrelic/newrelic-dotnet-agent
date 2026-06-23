@@ -242,4 +242,58 @@ public class DefaultController : Controller
 
         return "Worked";
     }
+
+    // Bodyless asynchronous GET via GetResponseAsync. On .NET Framework GetResponseAsync is
+    // implemented on the base WebRequest as BeginGetResponse/EndGetResponse, and there is no
+    // request stream - so there is no request-stream handoff for the response wrapper to reuse.
+    public async Task<string> ChainedWebRequestAsync(string chainedServerName, string chainedPortNumber, string chainedAction)
+    {
+        var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
+        var httpWebRequest = (HttpWebRequest)WebRequest.Create(address);
+        using (await httpWebRequest.GetResponseAsync())
+        {
+        }
+#pragma warning restore SYSLIB0014
+
+        return "Worked";
+    }
+
+    // Sends a POST body to an endpoint that returns 500. HttpWebRequest throws WebException on a
+    // 4xx/5xx response, which exercises the external segment's onFailure path (HTTP-status capture
+    // and inbound-response processing from WebException.Response). The request still carries the
+    // distributed-trace headers, so the receiver records the trace.
+    public string ChainedWebRequestBodyErrorSync(string chainedServerName, string chainedPortNumber, string chainedAction)
+    {
+        var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
+        var body = Encoding.UTF8.GetBytes("chained-request-body");
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
+        var httpWebRequest = (HttpWebRequest)WebRequest.Create(address);
+        httpWebRequest.Method = "POST";
+        httpWebRequest.ContentType = "text/plain";
+        using (var requestStream = httpWebRequest.GetRequestStream())
+        {
+            requestStream.Write(body, 0, body.Length);
+        }
+
+        try
+        {
+            httpWebRequest.GetResponse();
+        }
+        catch (WebException)
+        {
+            // Expected: the receiver returns 500, so GetResponse throws. The onFailure delegate runs.
+        }
+#pragma warning restore SYSLIB0014
+
+        return "Worked";
+    }
+
+    // Receiver endpoint that returns HTTP 500 (used by the failure-path test above). The agent
+    // still starts a transaction and accepts the inbound distributed-trace headers.
+    public ActionResult ReturnServerError()
+    {
+        Response.StatusCode = 500;
+        return Content("server error");
+    }
 }

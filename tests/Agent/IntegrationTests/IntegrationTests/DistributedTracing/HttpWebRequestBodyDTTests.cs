@@ -127,3 +127,30 @@ public class HttpWebRequestPostBeginEndDTTests : HttpWebRequestBodyDTTestsBase
     protected override void ExerciseApplication(FrameworkTracingChainFixture fixture) =>
         fixture.ExecuteTraceRequestChainHttpWebRequestBodyAsync("POST", "apm");
 }
+
+// Bodyless asynchronous GET via GetResponseAsync. Unlike the body cases, there is no request
+// stream and therefore no handoff for the response wrapper to reuse, so this exercises whether the
+// async GET path injects distributed-trace headers at all. Asserts the same receiver-side outcome
+// as the body cases (Accept/Success + parentId).
+public class HttpWebRequestGetAsyncDTTests : HttpWebRequestBodyDTTestsBase
+{
+    public HttpWebRequestGetAsyncDTTests(FrameworkTracingChainFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+
+    protected override void ExerciseApplication(FrameworkTracingChainFixture fixture) =>
+        fixture.ExecuteTraceRequestChainHttpWebRequestAsync();
+}
+
+// POST body request whose response is an HTTP 500, so GetResponse throws WebException and the
+// external segment's onFailure path runs. The request still carries the distributed-trace headers,
+// so the receiver records the trace (Accept/Success + parentId).
+public class HttpWebRequestBodyErrorDTTests : HttpWebRequestBodyDTTestsBase
+{
+    public HttpWebRequestBodyErrorDTTests(FrameworkTracingChainFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+
+    protected override void ExerciseApplication(FrameworkTracingChainFixture fixture) =>
+        fixture.ExecuteTraceRequestChainHttpWebRequestBodyError();
+}

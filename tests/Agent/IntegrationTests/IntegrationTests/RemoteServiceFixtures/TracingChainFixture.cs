@@ -148,6 +148,26 @@ public class TracingChainFixture : RemoteApplicationFixture
         GetStringAndAssertContains(address, "Worked");
     }
 
+    public void ExecuteTraceRequestChainHttpWebRequestAsync()
+    {
+        const string action = "Index";
+        var queryString = $"?chainedServerName={DestinationServerName}&chainedPortNumber={ReceiverApplication.Port}&chainedAction={action}";
+
+        var address = $"http://{DestinationServerName}:{Port}/Default/ChainedWebRequestAsync{queryString}";
+
+        GetStringAndAssertContains(address, "Worked");
+    }
+
+    public void ExecuteTraceRequestChainHttpWebRequestBodyError()
+    {
+        const string action = "ReturnServerError";
+        var queryString = $"?chainedServerName={DestinationServerName}&chainedPortNumber={ReceiverApplication.Port}&chainedAction={action}";
+
+        var address = $"http://{DestinationServerName}:{Port}/Default/ChainedWebRequestBodyErrorSync{queryString}";
+
+        GetStringAndAssertContains(address, "Worked");
+    }
+
     public void ExecuteTraceRequestChainHttpClient(IEnumerable<KeyValuePair<string, string>> headers = null)
     {
         // the test calls the senderUrl, passing in the receiverUrl as a parameter
