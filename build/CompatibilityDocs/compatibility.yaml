@@ -310,6 +310,13 @@ categories:
         tabs: [framework]
         methods:
           - GetResponse
+          - BeginGetResponse
+          - EndGetResponse
+          - GetRequestStream
+          - BeginGetRequestStream
+          - GetRequestStreamAsync
+        notes:
+          - { type: freeform, text: "`BeginGetResponse`, `EndGetResponse`, `GetRequestStream`, `BeginGetRequestStream`, and `GetRequestStreamAsync` are supported in agent v10.52.0 and later. `GetResponse` is supported in all agent versions." }
 
       - name: gRPC (grpc-dotnet)
         tabs: [core]
