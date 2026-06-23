@@ -3,7 +3,6 @@
 
 using System;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.HttpWebRequest;
@@ -70,11 +69,7 @@ public class GetRequestStreamWrapper : IWrapper
 
         var method = httpWebRequest.Method ?? "<unknown>";
 
-        var transactionExperimental = transaction.GetExperimentalApi();
-        var externalSegmentData = transactionExperimental.CreateExternalSegmentData(uri, method);
-        var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
-        segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
-        segment.MakeCombinable();
+        var segment = HttpWebRequestExternalSegment.Create(transaction, instrumentedMethodCall, uri, method, out var externalSegmentData);
 
         // Inject the distributed-trace headers here, on the calling thread, with the external
         // segment current (so the downstream parent is the external client span). We cannot rely on
@@ -83,19 +78,7 @@ public class GetRequestStreamWrapper : IWrapper
         // off this logical context, so SerializeHeaders sees a non-external current segment and
         // skips injection - the POST/PUT would go out untraced. Headers.Set is idempotent, so a
         // later SerializeHeaders re-injection (sync/APM paths) is harmless.
-        var setHeaders = new Action<System.Net.HttpWebRequest, string, string>((carrier, key, value) =>
-        {
-            carrier.Headers?.Set(key, value);
-        });
-
-        try
-        {
-            transaction.InsertDistributedTraceHeaders(httpWebRequest, setHeaders);
-        }
-        catch (Exception ex)
-        {
-            agent.HandleWrapperException(ex);
-        }
+        HttpWebRequestExternalSegment.InjectDistributedTraceHeaders(transaction, agent, httpWebRequest);
 
         // The external call is not complete until the response is obtained, so do not end the
         // segment here - hand it off to GetResponseWrapper, which processes the response and ends it.

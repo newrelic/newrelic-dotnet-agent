@@ -26,7 +26,9 @@ public class GetResponseWrapper : IWrapper
     {
         var httpWebRequest = instrumentedMethodCall.MethodCall.InvocationTarget as System.Net.HttpWebRequest;
         if (httpWebRequest == null)
+        {
             throw new NullReferenceException(nameof(httpWebRequest));
+        }
 
         switch (instrumentedMethodCall.MethodCall.Method.MethodName)
         {
@@ -43,9 +45,9 @@ public class GetResponseWrapper : IWrapper
     {
         var uri = httpWebRequest.RequestUri;
         if (uri == null)
+        {
             return Delegates.NoOp;
-
-        var method = httpWebRequest.Method ?? "<unknown>";
+        }
 
         ISegment segment;
         IExternalSegmentData externalSegmentData;
@@ -60,11 +62,8 @@ public class GetResponseWrapper : IWrapper
         }
         else
         {
-            var transactionExperimental = transaction.GetExperimentalApi();
-            externalSegmentData = transactionExperimental.CreateExternalSegmentData(uri, method);
-            segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
-            segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
-            segment.MakeCombinable();
+            var method = httpWebRequest.Method ?? "<unknown>";
+            segment = HttpWebRequestExternalSegment.Create(transaction, instrumentedMethodCall, uri, method, out externalSegmentData);
         }
 
         return Delegates.GetDelegateFor<HttpWebResponse>(
@@ -150,30 +149,14 @@ public class GetResponseWrapper : IWrapper
             transaction.AttachToAsync();
 
             var method = httpWebRequest.Method ?? "<unknown>";
-            var transactionExperimental = transaction.GetExperimentalApi();
-            externalSegmentData = transactionExperimental.CreateExternalSegmentData(uri, method);
-            segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
-            segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
-            segment.MakeCombinable();
+            segment = HttpWebRequestExternalSegment.Create(transaction, instrumentedMethodCall, uri, method, out externalSegmentData);
 
             // Inject directly on this thread, with the external segment current (so the downstream
             // parent is the external client span). SerializeHeaders runs off the async logical
             // context after AttachToAsync and would see a non-external current segment and skip, so
             // the GET would otherwise go out untraced. Headers.Set is idempotent, so a later
             // SerializeHeaders re-injection is harmless.
-            var setHeaders = new Action<System.Net.HttpWebRequest, string, string>((carrier, key, value) =>
-            {
-                carrier.Headers?.Set(key, value);
-            });
-
-            try
-            {
-                transaction.InsertDistributedTraceHeaders(httpWebRequest, setHeaders);
-            }
-            catch (Exception ex)
-            {
-                agent.HandleWrapperException(ex);
-            }
+            HttpWebRequestExternalSegment.InjectDistributedTraceHeaders(transaction, agent, httpWebRequest);
         }
 
         // Hold the transaction open while the request is in flight, and re-store the segment (keyed
@@ -229,16 +212,22 @@ public class GetResponseWrapper : IWrapper
     private static void TryProcessResponse(WebResponse response, ITransaction transaction, ISegment segment, IExternalSegmentData externalSegmentData)
     {
         if (segment == null)
+        {
             return;
+        }
 
         var httpWebResponse = response as HttpWebResponse;
         var statusCode = httpWebResponse?.StatusCode;
         if (statusCode.HasValue)
+        {
             externalSegmentData.SetHttpStatus((int)statusCode.Value);
+        }
 
         var headers = response?.Headers?.ToDictionary();
         if (headers == null)
+        {
             return;
+        }
 
         transaction.ProcessInboundResponse(headers, segment);
     }
