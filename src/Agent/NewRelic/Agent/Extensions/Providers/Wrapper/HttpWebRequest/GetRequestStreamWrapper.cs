@@ -48,9 +48,12 @@ public class GetRequestStreamWrapper : IWrapper
             return Delegates.NoOp;
         }
 
-        // An external segment is already current => WCF/HttpClient/etc. owns this call and will
-        // create/end its own segment and inject the headers. Do nothing here.
-        if (transaction.CurrentSegment.IsExternal)
+        // Another instrumentation already owns this call => do nothing. CurrentSegment.IsExternal
+        // catches the common case, but it is not reliable across an async/thread boundary, so also
+        // check the request itself: if it already carries NR distributed-trace or CAT headers,
+        // WCF/HttpClient/RestSharp already traced and injected and we must not create a duplicate.
+        if (transaction.CurrentSegment.IsExternal
+            || TracingHeaderExistence.ContainsTracingHeader(httpWebRequest.Headers?.AllKeys))
         {
             return Delegates.NoOp;
         }

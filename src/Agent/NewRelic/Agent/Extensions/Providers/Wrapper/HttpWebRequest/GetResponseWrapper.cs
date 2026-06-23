@@ -129,10 +129,15 @@ public class GetResponseWrapper : IWrapper
         }
         else
         {
-            // No handoff => a bodyless async request. If an external segment is already current,
-            // other instrumentation (WCF/HttpClient/RestSharp) owns this call and injects its own
-            // headers; do nothing.
-            if (transaction.CurrentSegment.IsExternal)
+            // No handoff => a bodyless async request. We must not create a second segment if another
+            // instrumentation already owns this call. CurrentSegment.IsExternal is not reliable here:
+            // across an async/thread boundary (e.g. HttpClient's sync-over-async path under ASP.NET)
+            // the owner's external segment may not be the current segment when BeginGetResponse runs.
+            // The authoritative, request-scoped signal is the request itself - if it already carries
+            // NR distributed-trace or CAT headers, WCF/HttpClient/RestSharp already traced and
+            // injected, so skip. Only a genuinely untraced application request reaches creation.
+            if (transaction.CurrentSegment.IsExternal
+                || TracingHeaderExistence.ContainsTracingHeader(httpWebRequest.Headers?.AllKeys))
             {
                 return Delegates.NoOp;
             }
