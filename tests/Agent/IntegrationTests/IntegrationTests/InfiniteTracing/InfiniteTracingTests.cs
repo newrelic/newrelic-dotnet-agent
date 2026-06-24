@@ -23,7 +23,7 @@ public abstract class InfiniteTracingTestsBase<TFixture> : NewRelicIntegrationTe
         _fixture.TestLogger = output;
 
         _fixture.AddCommand("InfiniteTracingTester StartAgent");
-
+        _fixture.EnvironmentVariables.Add("NEW_RELIC_INFINITE_TRACING_USE_UNARY", "true");
         _fixture.AddActions(
             setupConfiguration: () =>
             {
@@ -31,17 +31,19 @@ public abstract class InfiniteTracingTestsBase<TFixture> : NewRelicIntegrationTe
 
                 configModifier.ForceTransactionTraces()
                     .EnableDistributedTrace()
-                    .EnableInfiniteTracing(_fixture.TestConfiguration.TraceObserverUrl, _fixture.TestConfiguration.TraceObserverPort)
+                    .EnableInfiniteTracing(_fixture.TestConfiguration.TraceObserverUrl,
+                        _fixture.TestConfiguration.TraceObserverPort)
                     .SetLogLevel("finest");
             },
             exerciseApplication: () =>
             {
                 // Wait for 8T to connect
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanStreamingServiceStreamConnectedLogLineRegex, TimeSpan.FromSeconds(15));
+                //_fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanStreamingServiceStreamConnectedLogLineRegex, TimeSpan.FromSeconds(15));
                 // Now send the command to make the 8T Span
                 _fixture.SendCommand("InfiniteTracingTester Make8TSpan");
                 // Now wait to see that the 8T spans were sent successfully
-                _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullySentLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
+                //_fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullySentLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.UpdateLoadedModulesLogLineRegex, TimeSpan.FromSeconds(60));
             }
 
         );

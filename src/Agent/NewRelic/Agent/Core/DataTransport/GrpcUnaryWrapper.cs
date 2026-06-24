@@ -71,16 +71,19 @@ public abstract class GrpcUnaryWrapper<TRequest, TResponse> : IGrpcUnaryWrapper<
         // it as a gRPC error.
         if (cancellationToken.IsCancellationRequested || !IsConnected)
         {
+            Log.Finest("{0}: Cancellation requested or channel not connected", this.GetType().Name);  // TODO: REMOVE ME
             return false;
         }
 
         try
         {
             response = SendDataImpl(_channel, item, headers, sendTimeoutMs, cancellationToken);
+            Log.Finest("{0}: Successfully sent unary gRPC data", this.GetType().Name);  // TODO: REMOVE ME
             return true;
         }
         catch (GrpcWrapperChannelNotAvailableException)
         {
+            Log.Finest("{0}: Channel not available", this.GetType().Name);  // TODO: REMOVE ME
             // Channel went away mid-send (e.g., a concurrent shutdown). Not a gRPC-level error.
             return false;
         }
@@ -91,9 +94,11 @@ public abstract class GrpcUnaryWrapper<TRequest, TResponse> : IGrpcUnaryWrapper<
             var grpcEx = ex as RpcException ?? ex.InnerException as RpcException;
             if (grpcEx != null)
             {
+                Log.Finest("{0}: gRPC error encountered - {1}", this.GetType().Name, grpcEx.Status);  // TODO: REMOVE ME
                 throw new GrpcWrapperException(grpcEx.StatusCode, errorMessage, grpcEx);
             }
 
+            Log.Finest("{0}: Unknown error encountered", this.GetType().Name);  // TODO: REMOVE ME
             throw new GrpcWrapperException(errorMessage, ex);
         }
     }

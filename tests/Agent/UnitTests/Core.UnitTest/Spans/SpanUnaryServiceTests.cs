@@ -1243,4 +1243,44 @@ internal class SpanUnaryServiceTests
     }
 }
 
+[TestFixture]
+internal class UnaryToStreamingServiceAdapterTests
+{
+    [TestCase(true)]
+    [TestCase(false)]
+    public void IsStreamingReflectsTheUnaryServiceIsSending(bool isSending)
+    {
+        var unaryService = Mock.Create<IUnaryDataService<Span, SpanBatch, RecordStatus>>();
+        Mock.Arrange(() => unaryService.IsSending).Returns(isSending);
+
+        var adapter = new UnaryToStreamingServiceAdapter(unaryService);
+
+        Assert.That(adapter.IsStreaming, Is.EqualTo(isSending));
+    }
+
+    [Test]
+    public void DelegatesCallsToTheUnaryService()
+    {
+        var unaryService = Mock.Create<IUnaryDataService<Span, SpanBatch, RecordStatus>>();
+        Mock.Arrange(() => unaryService.IsServiceEnabled).Returns(true);
+        Mock.Arrange(() => unaryService.IsServiceAvailable).Returns(true);
+
+        var collection = new PartitionedBlockingCollection<Span>(10, 1);
+        var adapter = new UnaryToStreamingServiceAdapter(unaryService);
+
+        adapter.StartConsumingCollection(collection);
+        adapter.Shutdown(true);
+        adapter.Wait(5);
+
+        NrAssert.Multiple
+        (
+            () => Assert.That(adapter.IsServiceEnabled, Is.True, "IsServiceEnabled should delegate"),
+            () => Assert.That(adapter.IsServiceAvailable, Is.True, "IsServiceAvailable should delegate"),
+            () => Mock.Assert(() => unaryService.StartConsumingCollection(collection), Occurs.Once()),
+            () => Mock.Assert(() => unaryService.Shutdown(true), Occurs.Once()),
+            () => Mock.Assert(() => unaryService.Wait(5), Occurs.Once())
+        );
+    }
+}
+
 #endif

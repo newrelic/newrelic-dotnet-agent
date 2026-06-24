@@ -164,13 +164,40 @@ public static class AgentServices
         container.Register<ILogContextDataFilter, LogContextDataFilter>();
         container.Register<IGrpcWrapper<SpanBatch, RecordStatus>, SpanBatchGrpcWrapper>();
         container.Register<IDelayer, Delayer>();
-        container.Register<IDataStreamingService<Span, SpanBatch, RecordStatus>, SpanStreamingService>();
+        container.Register<SpanStreamingService, SpanStreamingService>();
 #if !NETFRAMEWORK
-        // Unary Infinite Tracing transport (modern Grpc.Net.Client only). Registered but not yet
-        // consumed by the aggregator; it replaces the streaming service in a later change.
+        // Unary Infinite Tracing transport (modern Grpc.Net.Client only).
         container.Register<IGrpcUnaryWrapper<SpanBatch, RecordStatus>, SpanBatchUnaryGrpcWrapper>();
         container.Register<IUnaryDataService<Span, SpanBatch, RecordStatus>, SpanUnaryService>();
 #endif
+        // TEMPORARY feature toggle for the streaming->unary Infinite Tracing migration. When
+        // NEW_RELIC_INFINITE_TRACING_USE_UNARY is truthy (and on the modern runtime), the span
+        // transport resolves to the unary service adapted to IDataStreamingService; otherwise the
+        // existing streaming service is used. Resolved once and memoized so the aggregator always
+        // gets the same instance.
+        // Remove this factory and restore the direct
+        // `container.Register<IDataStreamingService<Span, SpanBatch, RecordStatus>, SpanStreamingService>()`
+        // registration at the end of the feature work.
+        IDataStreamingService<Span, SpanBatch, RecordStatus> spanDataStreamingService = null;
+        container.RegisterFactory<IDataStreamingService<Span, SpanBatch, RecordStatus>>(() =>
+        {
+            if (spanDataStreamingService != null)
+            {
+                return spanDataStreamingService;
+            }
+#if !NETFRAMEWORK
+            var environment = container.Resolve<IEnvironment>();
+            var useUnaryValue = environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_USE_UNARY");
+            var useUnary = "1".Equals(useUnaryValue) || "true".Equals(useUnaryValue, StringComparison.OrdinalIgnoreCase);
+            if (useUnary)
+            {
+                spanDataStreamingService = new UnaryToStreamingServiceAdapter(container.Resolve<IUnaryDataService<Span, SpanBatch, RecordStatus>>());
+                return spanDataStreamingService;
+            }
+#endif
+            spanDataStreamingService = container.Resolve<SpanStreamingService>();
+            return spanDataStreamingService;
+        });
         container.Register<ISpanEventMaker, SpanEventMaker>();
         container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
         container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();

@@ -89,12 +89,14 @@
     <Compile Remove="DataTransport\IUnaryDataService.cs" />
     <Compile Remove="DataTransport\UnaryDataService.cs" />
     <Compile Remove="DataTransport\SpanUnaryService.cs" />
+    <Compile Remove="DataTransport\UnaryToStreamingServiceAdapter.cs" />
     <None Include="DataTransport\IGrpcUnaryWrapper.cs" />
     <None Include="DataTransport\GrpcUnaryWrapper.cs" />
     <None Include="DataTransport\SpanUnaryGrpcWrapper.cs" />
     <None Include="DataTransport\IUnaryDataService.cs" />
     <None Include="DataTransport\UnaryDataService.cs" />
     <None Include="DataTransport\SpanUnaryService.cs" />
+    <None Include="DataTransport\UnaryToStreamingServiceAdapter.cs" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
