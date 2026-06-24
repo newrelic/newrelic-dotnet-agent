@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 #if NETFRAMEWORK
@@ -15,6 +16,12 @@ namespace NewRelic.Agent.Core.DataTransport.Client;
 public static class HttpResponseHeaderFormatter
 {
     private const string NoHeaders = "(none)";
+    private const string Redacted = "[REDACTED]";
+
+    private static bool IsSensitive(string headerName) =>
+        headerName.IndexOf("auth", StringComparison.OrdinalIgnoreCase) >= 0 ||
+        headerName.IndexOf("token", StringComparison.OrdinalIgnoreCase) >= 0 ||
+        headerName.IndexOf("key", StringComparison.OrdinalIgnoreCase) >= 0;
 
     public static string Format(IEnumerable<KeyValuePair<string, IEnumerable<string>>> headers)
     {
@@ -24,7 +31,9 @@ public static class HttpResponseHeaderFormatter
         }
 
         var formatted = headers
-            .Select(header => $"{header.Key}=[{string.Join(", ", header.Value)}]")
+            .Select(header => IsSensitive(header.Key)
+                ? $"{header.Key}={Redacted}"
+                : $"{header.Key}=[{string.Join(", ", header.Value)}]")
             .ToList();
 
         return formatted.Count == 0 ? NoHeaders : string.Join("; ", formatted);

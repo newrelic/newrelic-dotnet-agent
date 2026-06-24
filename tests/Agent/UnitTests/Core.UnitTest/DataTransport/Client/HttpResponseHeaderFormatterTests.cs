@@ -65,6 +65,45 @@ public class HttpResponseHeaderFormatterTests
         Assert.That(result, Is.EqualTo("cf-ray=[abc123-DFW]; x-request-id=[id-1]"));
     }
 
+    [TestCase("WWW-Authenticate")]
+    [TestCase("Authorization")]
+    [TestCase("X-Auth-Token")]
+    [TestCase("x-auth-token")]
+    [TestCase("X-Api-Key")]
+    [TestCase("x-api-key")]
+    [TestCase("access-token")]
+    [TestCase("refresh_token")]
+    public void Format_RedactsValue_ForSensitiveHeaderName(string headerName)
+    {
+        var headers = new List<KeyValuePair<string, IEnumerable<string>>>
+        {
+            new(headerName, new[] { "super-secret-value" })
+        };
+
+        var result = HttpResponseHeaderFormatter.Format(headers);
+
+        Assert.That(result, Does.Contain($"{headerName}=[REDACTED]"));
+        Assert.That(result, Does.Not.Contain("super-secret-value"));
+    }
+
+    [Test]
+    public void Format_OnlyRedactsSensitiveHeaders_LeavingOthersIntact()
+    {
+        var headers = new List<KeyValuePair<string, IEnumerable<string>>>
+        {
+            new("cf-ray", new[] { "abc123-DFW" }),
+            new("WWW-Authenticate", new[] { "Bearer realm=\"collector\"" }),
+            new("x-request-id", new[] { "id-1" })
+        };
+
+        var result = HttpResponseHeaderFormatter.Format(headers);
+
+        Assert.That(result, Does.Contain("cf-ray=[abc123-DFW]"));
+        Assert.That(result, Does.Contain("WWW-Authenticate=[REDACTED]"));
+        Assert.That(result, Does.Contain("x-request-id=[id-1]"));
+        Assert.That(result, Does.Not.Contain("Bearer"));
+    }
+
 #if NETFRAMEWORK
     [Test]
     public void Format_WebHeaderCollection_FormatsHeaders()
