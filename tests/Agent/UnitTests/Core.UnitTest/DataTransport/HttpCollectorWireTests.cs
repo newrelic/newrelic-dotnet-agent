@@ -22,6 +22,7 @@ public class HttpCollectorWireTests
     private IAgentHealthReporter _agentHealthReporter;
     private IHttpClientFactory _httpClientFactory;
     private ILogger _mockILogger;
+    private global::NewRelic.Agent.Extensions.Logging.ILogger _nrLogger;
 
     [SetUp]
     public void SetUp()
@@ -32,6 +33,16 @@ public class HttpCollectorWireTests
 
         _mockILogger = Mock.Create<ILogger>();
         Log.Logger = _mockILogger;
+
+        // The agent's Log facade is independent of Serilog's static logger; initialize it so IsDebugEnabled is controllable.
+        _nrLogger = Mock.Create<global::NewRelic.Agent.Extensions.Logging.ILogger>();
+        global::NewRelic.Agent.Extensions.Logging.Log.Initialize(_nrLogger);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        global::NewRelic.Agent.Extensions.Logging.Log.Initialize(new global::NewRelic.Agent.Extensions.Logging.NoOpLogger());
     }
 
     private HttpCollectorWire CreateHttpCollectorWire(Dictionary<string, string> requestHeadersMap = null)
@@ -206,5 +217,90 @@ public class HttpCollectorWireTests
 
         // Assert
         Mock.Assert(() => mockForContextLogger.Fatal(Arg.AnyString), isEnabled ? Occurs.Exactly(3) : Occurs.Never());
+    }
+
+    [Test]
+    public void SendData_LogsResponseHeaders_OnSuccess_WhenDebugEnabled()
+    {
+        // Arrange
+        Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
+        Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
+        Mock.Arrange(() => _nrLogger.IsDebugEnabled).Returns(true);
+
+        var connectionInfo = new ConnectionInfo(_configuration);
+
+        var mockHttpResponse = Mock.Create<IHttpResponse>();
+        Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
+        Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
+        Mock.Arrange(() => mockHttpResponse.GetContent()).Returns("{}");
+        Mock.Arrange(() => mockHttpResponse.GetHeaders()).Returns("cf-ray=[abc123-DFW]");
+
+        var mockHttpClient = Mock.Create<IHttpClient>();
+        Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
+        Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
+
+        var collectorWire = CreateHttpCollectorWire();
+
+        // Act
+        _ = collectorWire.SendData("test_method", connectionInfo, "{ \"key\": \"value\" }", Guid.NewGuid());
+
+        // Assert
+        Mock.Assert(() => mockHttpResponse.GetHeaders(), Occurs.Once());
+    }
+
+    [Test]
+    public void SendData_LogsResponseHeaders_OnError_WhenDebugEnabled()
+    {
+        // Arrange
+        Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
+        Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
+        Mock.Arrange(() => _nrLogger.IsDebugEnabled).Returns(true);
+
+        var connectionInfo = new ConnectionInfo(_configuration);
+
+        var mockHttpResponse = Mock.Create<IHttpResponse>();
+        Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.InternalServerError);
+        Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(false);
+        Mock.Arrange(() => mockHttpResponse.GetContent()).Returns("{}");
+        Mock.Arrange(() => mockHttpResponse.GetHeaders()).Returns("cf-ray=[err-DFW]");
+
+        var mockHttpClient = Mock.Create<IHttpClient>();
+        Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
+        Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
+
+        var collectorWire = CreateHttpCollectorWire();
+
+        // Act and Assert
+        Assert.Throws<HttpException>(() => collectorWire.SendData("test_method", connectionInfo, "invalidjson", Guid.NewGuid()));
+        Mock.Assert(() => mockHttpResponse.GetHeaders(), Occurs.Once());
+    }
+
+    [Test]
+    public void SendData_DoesNotReadResponseHeaders_WhenDebugDisabled()
+    {
+        // Arrange
+        Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
+        Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
+        Mock.Arrange(() => _nrLogger.IsDebugEnabled).Returns(false);
+
+        var connectionInfo = new ConnectionInfo(_configuration);
+
+        var mockHttpResponse = Mock.Create<IHttpResponse>();
+        Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
+        Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
+        Mock.Arrange(() => mockHttpResponse.GetContent()).Returns("{}");
+        Mock.Arrange(() => mockHttpResponse.GetHeaders()).Returns("cf-ray=[abc123-DFW]");
+
+        var mockHttpClient = Mock.Create<IHttpClient>();
+        Mock.Arrange(() => mockHttpClient.Send(Arg.IsAny<IHttpRequest>())).Returns(mockHttpResponse);
+        Mock.Arrange(() => _httpClientFactory.GetOrCreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
+
+        var collectorWire = CreateHttpCollectorWire();
+
+        // Act
+        _ = collectorWire.SendData("test_method", connectionInfo, "{ \"key\": \"value\" }", Guid.NewGuid());
+
+        // Assert
+        Mock.Assert(() => mockHttpResponse.GetHeaders(), Occurs.Never());
     }
 }

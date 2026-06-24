@@ -102,5 +102,20 @@ public class HttpResponseTests
 
         Assert.That(result, Is.EqualTo(HttpStatusCode.OK));
     }
+
+    [Test]
+    public void GetHeaders_ReturnsFormattedHeaders()
+    {
+        var headers = new List<KeyValuePair<string, IEnumerable<string>>>
+        {
+            new("cf-ray", new[] { "abc123-DFW" }),
+            new("x-request-id", new[] { "id-1" })
+        };
+        _mockHttpResponseMessage.Arrange(message => message.Headers).Returns(headers);
+
+        var result = _httpResponse.GetHeaders();
+
+        Assert.That(result, Is.EqualTo("cf-ray=[abc123-DFW]; x-request-id=[id-1]"));
+    }
 }
 #endif
