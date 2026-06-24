@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.52.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.51.1...v10.52.0) (2026-06-24)
+
+
+### New features
+
+* Add alternative environment variables for expected and ignored error codes. ([#3626](https://github.com/newrelic/newrelic-dotnet-agent/issues/3626)) ([c29f037](https://github.com/newrelic/newrelic-dotnet-agent/commit/c29f037c08c949a58ec2e8e83471c8025843b048))
+* Add Kafka internal metrics ([#3555](https://github.com/newrelic/newrelic-dotnet-agent/issues/3555)) ([1102c0b](https://github.com/newrelic/newrelic-dotnet-agent/commit/1102c0bed0e263fa044c184f6971e5832cc49a54))
+* Add SQL metadata comments to enable APM to DB Query Performance Monitoring correlation ([#3582](https://github.com/newrelic/newrelic-dotnet-agent/issues/3582)) ([04599b5](https://github.com/newrelic/newrelic-dotnet-agent/commit/04599b54f98e97f97708e9a1f53426a4c644b2ef))
+
+
+### Fixes
+
+* Bedrock Converse no longer drops events when first content block is non-text ([#3649](https://github.com/newrelic/newrelic-dotnet-agent/issues/3649)) ([8813077](https://github.com/newrelic/newrelic-dotnet-agent/commit/8813077600b61712b3d1f09d4fbb4f5310858806))
+* Distributed tracing for HttpWebRequest body and async requests ([#3652](https://github.com/newrelic/newrelic-dotnet-agent/issues/3652)) ([8f8928d](https://github.com/newrelic/newrelic-dotnet-agent/commit/8f8928d85b3bd5071f98c8cf28d2ff7db7fcf773))
+* Prevent malformed log_event_data JSON for non-serializable context values ([#3642](https://github.com/newrelic/newrelic-dotnet-agent/issues/3642)) ([a7108cb](https://github.com/newrelic/newrelic-dotnet-agent/commit/a7108cb193a83ad2c23fbd0de80e05d0be68d617))
+
 ## [10.51.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.51.0...v10.51.1) (2026-06-03)
 
 
