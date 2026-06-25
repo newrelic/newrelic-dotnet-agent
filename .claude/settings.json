@@ -21,10 +21,11 @@
       "Bash(git reset --hard *)",
       "Bash(git release *)",
       "Bash(git tag *)",
-      "Bash(gh release *)",
-      "Bash(gh tag *)",
-      "Bash(gh push --force *)",
-      "Bash(gh reset --hard *)"
+      "Bash(gh release create *)",
+      "Bash(gh release delete *)",
+      "Bash(gh release delete-asset *)",
+      "Bash(gh release edit *)",
+      "Bash(gh release upload *)"
     ]
   },
     "enabledPlugins": {
