@@ -64,12 +64,32 @@ public class AgentLogFile : AgentLogBase
             yield break;
 
         string line;
-        using (var fileStream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        using (var fileStream = OpenLogFileWithRetry())
         using (var streamReader = new StreamReader(fileStream))
             while ((line = streamReader.ReadLine()) != null)
             {
                 yield return line;
             }
+    }
+
+    // The agent writes to this log concurrently. Even though we open for shared read/write, the
+    // writer can momentarily hold the file with an incompatible share mode, causing a transient
+    // IOException on open ("being used by another process"). Retry the open briefly so a read
+    // that races a write doesn't abort the caller (e.g. WaitForLogLines mid-exercise).
+    private FileStream OpenLogFileWithRetry()
+    {
+        const int maxAttempts = 10;
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            }
+            catch (IOException) when (attempt < maxAttempts)
+            {
+                Thread.Sleep(100);
+            }
+        }
     }
 
     public string GetFullLogAsString()

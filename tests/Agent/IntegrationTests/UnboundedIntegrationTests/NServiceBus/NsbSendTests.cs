@@ -37,10 +37,12 @@ public abstract class NsbSendTestsBase<TFixture> : NewRelicIntegrationTest<TFixt
                 configModifier.SetLogLevel("finest");
                 configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
             },
             exerciseApplication: () =>
             {
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 _fixture.SendCommand("NServiceBusDriver StopNServiceBus");
             }
