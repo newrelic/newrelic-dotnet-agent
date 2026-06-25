@@ -5,9 +5,9 @@ A native C++ profiler injects IL into JIT-compiled methods; the managed agent
 core collects telemetry and ships it to the collector.
 
 Sub-docs (read when working in that area):
-- [src/claude-source.md](src/claude-source.md) — agent/profiler/extensions internals
-- [build/claude-build.md](build/claude-build.md) — build, packaging, release
-- [tests/claude-tests.md](tests/claude-tests.md) — unit + integration test layout
+- [src/CLAUDE.md](src/CLAUDE.md) — agent/profiler/extensions internals
+- [build/CLAUDE.md](build/CLAUDE.md) — build, packaging, release
+- [tests/CLAUDE.md](tests/CLAUDE.md) — unit + integration test layout
 
 ## Solutions
 
@@ -99,7 +99,7 @@ Precedence: env vars > `newrelic.config` > server-side config > defaults.
 **Editing `Configuration.xsd`** requires regenerating `Configuration.cs`
 via `xsd2code` and restoring the license header — never hand-edit the
 generated file. Exact command and caveats in
-[src/claude-source.md](src/claude-source.md) under Configuration.
+[src/CLAUDE.md](src/CLAUDE.md) under Configuration.
 
 ## Building and testing from the CLI
 
@@ -180,7 +180,7 @@ later turn. Instead:
   wrapper. That keeps the interesting logic unit-testable while the
   wrapper itself stays thin (match, create segment, delegate, finish).
 - Integration tests: `tests/Agent/IntegrationTests/` — see
-  [tests/claude-tests.md](tests/claude-tests.md).
+  [tests/CLAUDE.md](tests/CLAUDE.md).
 - **Never use `InternalsVisibleTo`** in any production or test assembly.
   If a test needs to reach non-public code, refactor the production type to
   expose what's needed through a proper surface (interface, public helper,
