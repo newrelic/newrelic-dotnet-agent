@@ -193,7 +193,6 @@ public interface IConfiguration
     int DatabaseStatementCacheCapacity { get; }
     bool ForceSynchronousTimingCalculationHttpClient { get; }
 
-    /// <summary>Undocumented switch: set appSettings key "UseHeaderBasedRequestQueueTime" to "false" to revert classic ASP.NET queue time to HttpWorkerRequest internal timing.</summary>
     bool UseHeaderBasedRequestQueueTime { get; }
 
     bool EnableAspNetCore6PlusBrowserInjection { get; }

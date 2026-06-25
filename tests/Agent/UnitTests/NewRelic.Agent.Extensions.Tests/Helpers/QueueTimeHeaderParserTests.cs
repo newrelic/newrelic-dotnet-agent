@@ -228,4 +228,35 @@ public class QueueTimeHeaderParserTests
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value, Is.EqualTo(TimeSpan.Zero));
     }
+
+    [Test]
+    public void TPrefix_WithTrailingData_ParsesCorrectly()
+    {
+        // "t=<ms>, h=hostname" -- trailing data after the t= token must not prevent parsing.
+        var startTime = NowUtc.AddSeconds(-4);
+        var headers = new Dictionary<string, string>
+        {
+            ["X-Request-Start"] = $"t={ToMs(startTime)}, h=hostname"
+        };
+
+        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(4000.0).Within(1.0));
+    }
+
+    [Test]
+    public void BareValue_WithTrailingJunk_ReturnsNull()
+    {
+        // No "t=" prefix, so the whole value must be numeric. Trailing non-whitespace means invalid.
+        var startTime = NowUtc.AddSeconds(-4);
+        var headers = new Dictionary<string, string>
+        {
+            ["X-Request-Start"] = $"{ToMs(startTime)} garbage"
+        };
+
+        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+
+        Assert.That(result, Is.Null);
+    }
 }
