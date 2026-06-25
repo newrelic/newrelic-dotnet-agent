@@ -623,6 +623,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("agent.force_synchronous_timing_calculation_for_http_client")]
     public bool ForceSynchronousTimingCalculationHttpClient => _configuration.ForceSynchronousTimingCalculationHttpClient;
 
+    [JsonProperty("agent.use_header_based_request_queue_time")]
+    public bool UseHeaderBasedRequestQueueTime => _configuration.UseHeaderBasedRequestQueueTime;
+
     [JsonProperty("agent.enable_asp_net_core_6plus_browser_injection")]
     public bool EnableAspNetCore6PlusBrowserInjection => _configuration.EnableAspNetCore6PlusBrowserInjection;
 

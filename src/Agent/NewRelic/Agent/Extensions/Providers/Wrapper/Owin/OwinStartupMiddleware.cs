@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Owin;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.Owin;
@@ -95,6 +96,8 @@ internal class OwinStartupMiddleware : OwinMiddleware
 
             transaction.SetRequestParameters(parameters);
         }
+
+        transaction.TrySetQueueTimeFromHeaders(n => request.Headers[n]);
 
         return transaction;
     }

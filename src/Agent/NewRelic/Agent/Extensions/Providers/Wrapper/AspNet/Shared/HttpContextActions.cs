@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -69,6 +70,12 @@ public static class HttpContextActions
     private static void StoreQueueTime(IAgent agent, HttpContext httpContext)
     {
         var now = DateTime.UtcNow;
+
+        if (agent.Configuration.UseHeaderBasedRequestQueueTime &&
+            agent.CurrentTransaction.TrySetQueueTimeFromHeaders(n => httpContext.Request.Headers[n]))
+        {
+            return;
+        }
 
         var service = (httpContext as IServiceProvider).GetService(typeof(HttpWorkerRequest));
         var workerRequest = service as HttpWorkerRequest;

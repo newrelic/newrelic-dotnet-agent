@@ -109,6 +109,22 @@ public class AspNetCoreMvcBasicRequestsFixture : RemoteApplicationFixture
         GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
     }
 
+    public void GetWithCustomHeaders(Dictionary<string, string> headers)
+    {
+        var address = $"http://{DestinationServerName}:{Port}/";
+
+        using (var request = new HttpRequestMessage(HttpMethod.Get, address))
+        {
+            foreach (var pair in headers)
+                request.Headers.Add(pair.Key, pair.Value);
+
+            using (var response = _httpClient.SendAsync(request).Result)
+            {
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+        }
+    }
+
     public void GetWithData(string requestParameter)
     {
         var address = $"http://{DestinationServerName}:{Port}/Home/Query?data={requestParameter}";
