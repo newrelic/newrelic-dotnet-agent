@@ -140,6 +140,26 @@ public class WebRequestClientResponseTests
         Assert.That(webRequestClientResponse.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 
+    [Test]
+    public void GetHeaders_ShouldReturnFormattedHeaders()
+    {
+        // Arrange
+        var headers = new WebHeaderCollection
+        {
+            { "cf-ray", "abc123-DFW" },
+            { "x-request-id", "id-1" }
+        };
+        Mock.Arrange(() => _response.Headers).Returns(headers);
+        var webRequestClientResponse = new WebRequestClientResponse(_requestGuid, _response);
+
+        // Act
+        var result = webRequestClientResponse.GetHeaders();
+
+        // Assert
+        Assert.That(result, Does.Contain("cf-ray=[abc123-DFW]"));
+        Assert.That(result, Does.Contain("x-request-id=[id-1]"));
+    }
+
     private byte[] CompressString(string text)
     {
         var bytes = Encoding.UTF8.GetBytes(text);
