@@ -296,11 +296,25 @@ public class MySqlConnectorExerciser
     {
         var parameters = string.Join(", ", DbParameterData.MySqlParameters.Select(x => $"{x.ParameterName} {x.DbTypeName}"));
         var statement = string.Format(CreateProcedureStatement, MySqlTestConfiguration.MySqlDbName, procedureName, parameters);
-        using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
-        using (var command = new MySqlCommand(statement, connection))
+        var dropStatement = $"DROP PROCEDURE IF EXISTS `{MySqlTestConfiguration.MySqlDbName}`.`{procedureName}`;";
+
+        // Setup-only operation: retry on transient MySQL connection/packet-read faults with a fresh connection.
+        // DROP IF EXISTS first so a retry is safe even if a prior attempt created the procedure server-side
+        // before the client lost the response.
+        MySqlRetryHelper.ExecuteWithRetry(() =>
         {
-            connection.Open();
-            command.ExecuteNonQuery();
-        }
+            using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
+            {
+                connection.Open();
+                using (var dropCommand = new MySqlCommand(dropStatement, connection))
+                {
+                    dropCommand.ExecuteNonQuery();
+                }
+                using (var command = new MySqlCommand(statement, connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+            }
+        });
     }
 }

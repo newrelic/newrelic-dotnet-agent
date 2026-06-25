@@ -61,7 +61,7 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
 
                 configModifier.SetLogLevel("finest");
 
-                configModifier.ConfigureFasterMetricsHarvestCycle(30);
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
                 configModifier.ConfigureFasterSqlTracesHarvestCycle(10);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
