@@ -259,4 +259,38 @@ public class QueueTimeHeaderParserTests
 
         Assert.That(result, Is.Null);
     }
+
+    [Test]
+    public void NginxMsecFormat_TPrefixFractionalSeconds_ReturnsCorrectQueueTime()
+    {
+        // nginx New Relic docs: proxy_set_header X-Queue-Start "t=${msec}000";
+        // $msec is seconds-with-millisecond-fraction, so the real header looks like "t=1767225593.877000".
+        var startTime = NowUtc.AddMilliseconds(-6123);
+        var secWithFraction = (startTime - Epoch).TotalSeconds;
+        var headers = new Dictionary<string, string>
+        {
+            ["X-Queue-Start"] = $"t={secWithFraction:F3}000"
+        };
+
+        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(6123.0).Within(2.0));
+    }
+
+    [Test]
+    public void HerokuFormat_BareIntegerMilliseconds_ReturnsCorrectQueueTime()
+    {
+        // Heroku router emits X-Request-Start as a bare unix-millisecond integer (no "t=").
+        var startTime = NowUtc.AddMilliseconds(-1500);
+        var headers = new Dictionary<string, string>
+        {
+            ["X-Request-Start"] = $"{ToMs(startTime)}"
+        };
+
+        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(1500.0).Within(1.0));
+    }
 }
