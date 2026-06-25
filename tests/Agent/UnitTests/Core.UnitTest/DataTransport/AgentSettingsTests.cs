@@ -309,6 +309,7 @@ public class AgentSettingsTests
                                         "agent.process_host_display_name": "ProcessHostDisplayName",
                                         "transaction_tracer.database_statement_cache_capacity": 1234,
                                         "agent.force_synchronous_timing_calculation_for_http_client": true,
+                                        "agent.use_header_based_request_queue_time": true,
                                         "agent.enable_asp_net_core_6plus_browser_injection": true,
                                         "agent.instrument_asp_net_core_6plus_websockets": false,
                                         "agent.exclude_new_relic_header": true,
