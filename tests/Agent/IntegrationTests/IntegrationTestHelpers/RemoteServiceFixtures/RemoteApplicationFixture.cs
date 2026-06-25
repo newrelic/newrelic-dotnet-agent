@@ -290,21 +290,22 @@ public abstract class RemoteApplicationFixture : IDisposable
                     var captureStandardOutput = RemoteApplication.CaptureStandardOutput;
 
                     var timer = new ExecutionTimer();
-                    timer.Aggregate(() =>
-                    {
-                        RemoteApplication.DeleteWorkingSpace();
-
-                        RemoteApplication.CopyToRemote();
-
-                        SetupConfiguration();
-
-                        RemoteApplication.Start(CommandLineArguments, EnvironmentVariables, captureStandardOutput);
-                    });
-
-                    TestLogger?.WriteLine($"Remote application build/startup time: {timer.Total:N4} seconds");
 
                     try
                     {
+                        timer.Aggregate(() =>
+                        {
+                            RemoteApplication.DeleteWorkingSpace();
+
+                            RemoteApplication.CopyToRemote();
+
+                            SetupConfiguration();
+
+                            RemoteApplication.Start(CommandLineArguments, EnvironmentVariables, captureStandardOutput);
+                        });
+
+                        TestLogger?.WriteLine($"Remote application build/startup time: {timer.Total:N4} seconds");
+
                         timer = new ExecutionTimer();
                         timer.Aggregate(ExerciseApplication);
                         TestLogger?.WriteLine($"ExerciseApplication execution time: {timer.Total:N4} seconds");
