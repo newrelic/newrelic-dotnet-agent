@@ -334,7 +334,19 @@ public abstract class RemoteApplicationFixture : IDisposable
                                 // hosted tests, unfortunately, we just punt that.
                                 if (RemoteApplication.ValidateHostedWebCoreOutput)
                                 {
-                                    SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
+                                    try
+                                    {
+                                        SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
+                                    }
+                                    catch (Exception hwcEx)
+                                    {
+                                        // If the HWC process hung on shutdown, WaitForOutput() times out and
+                                        // StandardOutput is empty, causing spurious "file ended early" failures.
+                                        // Convert to a retryable condition instead of an immediate test failure.
+                                        TestLogger?.WriteLine($"HostedWebCore log validation failed: {hwcEx.Message}. Will retry if attempts remain.");
+                                        retryTest = true;
+                                        retryMessage = "HostedWebCore log validation failed.";
+                                    }
                                 }
                                 else
                                 {
@@ -344,6 +356,14 @@ public abstract class RemoteApplicationFixture : IDisposable
                             else
                             {
                                 TestLogger?.WriteLine("Note: child process application does not redirect output because _remoteApplication.CaptureStandardOutput = false. HostedWebCore validation cannot take place without the standard output. This is common for non-web and self-hosted applications.");
+                            }
+
+                            // If the process is still running (e.g. hung on graceful shutdown), force-kill it
+                            // so that WaitForExit() returns promptly and the port is free for any retry.
+                            if (RemoteApplication.IsRunning)
+                            {
+                                TestLogger?.WriteLine("Remote application is still running after output capture; force killing.");
+                                RemoteApplication.Shutdown(force: true);
                             }
 
                             RemoteApplication.WaitForExit();
