@@ -143,18 +143,48 @@ public class QueueTimeHeaderParserTests
     }
 
     [Test]
-    public void Pre2000Timestamp_ReturnsNull()
+    public void StaleTimestamp_BeyondMaxQueueTime_ReturnsNull()
     {
-        // 1999-12-31 in milliseconds
-        var pre2000 = new DateTime(1999, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+        // A valid but very old timestamp (e.g. from a misdetected unit or garbage) decodes to
+        // a real date but an implausibly large queue time, which the sanity cap rejects.
+        var stale = new DateTime(1999, 12, 31, 0, 0, 0, DateTimeKind.Utc);
         var headers = new Dictionary<string, string>
         {
-            ["X-Request-Start"] = $"t={ToMs(pre2000)}"
+            ["X-Request-Start"] = $"t={ToMs(stale)}"
         };
 
         var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
 
         Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public void QueueTime_JustOverCap_ReturnsNull()
+    {
+        var startTime = NowUtc.AddMinutes(-11); // cap is 10 minutes
+        var headers = new Dictionary<string, string>
+        {
+            ["X-Request-Start"] = $"t={ToMs(startTime)}"
+        };
+
+        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+
+        Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public void QueueTime_JustUnderCap_ReturnsValue()
+    {
+        var startTime = NowUtc.AddMinutes(-9); // cap is 10 minutes
+        var headers = new Dictionary<string, string>
+        {
+            ["X-Request-Start"] = $"t={ToMs(startTime)}"
+        };
+
+        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Value.TotalMinutes, Is.EqualTo(9.0).Within(0.01));
     }
 
     [Test]

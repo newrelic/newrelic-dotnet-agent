@@ -10,7 +10,8 @@ namespace NewRelic.Agent.Extensions.Helpers;
 /// Parses request-queue-time headers set by upstream load balancers or ingress controllers
 /// (X-Request-Start, X-Queue-Start) and returns the time the request spent queued before
 /// reaching the application. Unit auto-detection handles ns/us/ms/s epoch timestamps.
-/// Values earlier than 2000-01-01 are rejected. Future timestamps (clock skew) yield null.
+/// Future timestamps (clock skew) yield null, as do queue times beyond a sanity cap
+/// (a misdetected unit or a stale/garbage timestamp produces an implausibly large delta).
 /// Parsing avoids regex and per-call allocations because it runs on every web request.
 /// </summary>
 public static class QueueTimeHeaderParser
@@ -19,14 +20,18 @@ public static class QueueTimeHeaderParser
     private const string HeaderQueueStart = "X-Queue-Start";
 
     private static readonly DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-    private static readonly DateTime _floor = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    // Upper bound on a plausible front-end queue (load balancer + network + host accept).
+    // A genuine wait is seconds, not minutes; a larger delta means the timestamp was
+    // misdetected, stale, or garbage, so we omit rather than report a bogus queue time.
+    private static readonly TimeSpan _maxQueueTime = TimeSpan.FromMinutes(10);
 
     /// <summary>
     /// Reads X-Request-Start and X-Queue-Start headers via <paramref name="getHeader"/>,
     /// parses Unix-epoch timestamps (auto-detects ns/us/ms/s by magnitude), and returns
     /// the queue time as <c>nowUtc - earliestStartTime</c>. Returns null when no valid
-    /// header is found, all candidates predate 2000-01-01, or the start time is in the
-    /// future relative to <paramref name="nowUtc"/> (clock skew guard).
+    /// header is found, the start time is in the future relative to <paramref name="nowUtc"/>
+    /// (clock skew guard), or the computed queue time exceeds the sanity cap.
     /// </summary>
     /// <param name="getHeader">Delegate that returns a header value by name, or null/empty if absent.</param>
     /// <param name="nowUtc">The current UTC time used to compute elapsed queue time.</param>
@@ -38,7 +43,11 @@ public static class QueueTimeHeaderParser
         if (earliest == null || earliest.Value > nowUtc)
             return null;
 
-        return nowUtc - earliest.Value;
+        var queueTime = nowUtc - earliest.Value;
+        if (queueTime > _maxQueueTime)
+            return null;
+
+        return queueTime;
     }
 
     private static DateTime? SelectEarlier(DateTime? current, string raw)
@@ -76,15 +85,19 @@ public static class QueueTimeHeaderParser
         if (double.IsNaN(value) || double.IsInfinity(value))
             return null;
 
+        // Auto-detect the timestamp unit by magnitude and normalize to seconds. A current
+        // Unix epoch is ~1.7e9 in seconds (10 digits), ~1.7e12 in ms (13), ~1.7e15 in us (16),
+        // and ~1.7e18 in ns (19). Each threshold sits an order of magnitude below its bucket
+        // so the correct unit wins; values below 1e12 are taken as already being in seconds.
         double seconds;
         if (value >= 1e18)
-            seconds = value / 1e9;
+            seconds = value / 1e9; // nanoseconds -> seconds
         else if (value >= 1e15)
-            seconds = value / 1e6;
+            seconds = value / 1e6; // microseconds -> seconds
         else if (value >= 1e12)
-            seconds = value / 1e3;
+            seconds = value / 1e3; // milliseconds -> seconds
         else
-            seconds = value;
+            seconds = value;       // already seconds
 
         DateTime startTime;
         try
@@ -95,9 +108,6 @@ public static class QueueTimeHeaderParser
         {
             return null;
         }
-
-        if (startTime < _floor)
-            return null;
 
         return startTime;
     }
