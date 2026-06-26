@@ -1,6 +1,6 @@
 # Source Code Architecture
 
-Orientation map for `src/`. See the [root claude.md](../claude.md) for how
+Orientation map for `src/`. See the [root claude.md](../CLAUDE.md) for how
 instrumentation works end-to-end and for coding standards.
 
 ## Layout
@@ -37,7 +37,7 @@ build.ps1 -Platform x64 -Configuration Debug    # Windows x64
 build.ps1 -Platform linux                       # Linux (requires Docker)
 ```
 
-Profiler GUIDs are documented in the [root claude.md](../claude.md).
+Profiler GUIDs are documented in the [root claude.md](../CLAUDE.md).
 
 ## Agent Core (`Agent/NewRelic/Agent/Core/`)
 
@@ -152,14 +152,14 @@ Wrappers that *start* transactions must return `false`.
 `maxVersion` in instrumentation XML is **exclusive**. Prefer
 `VisibilityBypasser` over reflection / `dynamic` when reaching into
 instrumented types; cache generated delegates per type. Both conventions
-are detailed in the [root claude.md](../claude.md).
+are detailed in the [root claude.md](../CLAUDE.md).
 
 Wrapper projects have **no unit tests** — they're covered by integration
 and unbounded test solutions. Only `NewRelic.Agent.Extensions` (shared
 helpers like `SqsHelper`) is unit tested. When adding non-trivial logic
 to a wrapper, lift it into a helper in `NewRelic.Agent.Extensions` so it
 can be unit tested — keep the wrapper itself thin. The same rule is
-covered in the [root claude.md](../claude.md) testing conventions.
+covered in the [root claude.md](../CLAUDE.md) testing conventions.
 
 ## Public API (`NewRelic.Api.Agent/`)
 
@@ -174,7 +174,7 @@ an explicit baseline update.
 
 ## Configuration
 
-Runtime config precedence is in the [root claude.md](../claude.md).
+Runtime config precedence is in the [root claude.md](../CLAUDE.md).
 
 The canonical schema is `src/Agent/NewRelic/Agent/Core/Config/Configuration.xsd`
 and it generates `Configuration.cs` in the same directory.
