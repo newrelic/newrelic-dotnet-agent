@@ -2117,8 +2117,8 @@ public class DefaultConfiguration : IConfiguration
     private bool? _forceSynchronousTimingCalculationHttpClient;
     public bool ForceSynchronousTimingCalculationHttpClient => _forceSynchronousTimingCalculationHttpClient ??= TryGetAppSettingAsBoolWithDefault("ForceSynchronousTimingCalculation.HttpClient", false);
 
-    private bool? _useHeaderBasedRequestQueueTime;
-    public bool UseHeaderBasedRequestQueueTime => _useHeaderBasedRequestQueueTime ??= TryGetAppSettingAsBoolWithDefault("UseHeaderBasedRequestQueueTime", true);
+    private bool? _useHeaderBasedRequestQueueTimeForClassicAspNet;
+    public bool UseHeaderBasedRequestQueueTimeForClassicAspNet => _useHeaderBasedRequestQueueTimeForClassicAspNet ??= TryGetAppSettingAsBoolWithDefault("UseHeaderBasedRequestQueueTimeForClassicAspNet", true);
 
     private bool? _enableAspNetCore6PlusBrowserInjection;
     public bool EnableAspNetCore6PlusBrowserInjection =>

@@ -12,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
 /// <summary>
 /// Tests that WebFrontend/QueueTime is produced when X-Request-Start is sent to a classic ASP.NET/IIS app.
-/// The UseHeaderBasedRequestQueueTime appSettings key (default true) controls whether header-based or
+/// The UseHeaderBasedRequestQueueTimeForClassicAspNet appSettings key (default true) controls whether header-based or
 /// IIS-internal (HttpWorkerRequest) queue time is used. Both paths call SetQueueTime, so the metric
 /// and queueDuration intrinsic are present either way; the difference is the source of the measurement.
 /// These tests run against the BasicMvcApplication under IIS -- skip locally if IIS is not configured.
@@ -35,7 +35,7 @@ public class BasicMvcRequestQueueTimeDefaultTests : NewRelicIntegrationTest<Remo
                 configModifier.ForceTransactionTraces();
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
-                // UseHeaderBasedRequestQueueTime defaults to true -- no override needed here.
+                // UseHeaderBasedRequestQueueTimeForClassicAspNet defaults to true -- no override needed here.
             },
             exerciseApplication: () =>
             {
@@ -48,6 +48,9 @@ public class BasicMvcRequestQueueTimeDefaultTests : NewRelicIntegrationTest<Remo
                 _fixture.GetWithHeaders(headers);
 
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                // Transaction events harvest on their own cycle (server-overridden fast in CI, else 60s);
+                // wait for the analytic_event_data harvest so the transaction event is available.
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(2));
             }
         );
         _fixture.Initialize();
@@ -76,7 +79,7 @@ public class BasicMvcRequestQueueTimeDefaultTests : NewRelicIntegrationTest<Remo
 }
 
 /// <summary>
-/// Tests that with UseHeaderBasedRequestQueueTime=false, IIS internal queue time is still reported
+/// Tests that with UseHeaderBasedRequestQueueTimeForClassicAspNet=false, IIS internal queue time is still reported
 /// (via HttpWorkerRequest), so WebFrontend/QueueTime and queueDuration are still present.
 /// The X-Request-Start header is present but must be ignored for the measurement source.
 /// </summary>
@@ -99,7 +102,7 @@ public class BasicMvcRequestQueueTimeSwitchOffTests : NewRelicIntegrationTest<Re
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
                 // Disable header-based path; IIS internal HttpWorkerRequest timing takes over.
-                CommonUtils.SetConfigAppSetting(configPath, "UseHeaderBasedRequestQueueTime", "false", "urn:newrelic-config");
+                CommonUtils.SetConfigAppSetting(configPath, "UseHeaderBasedRequestQueueTimeForClassicAspNet", "false", "urn:newrelic-config");
             },
             exerciseApplication: () =>
             {
@@ -111,6 +114,9 @@ public class BasicMvcRequestQueueTimeSwitchOffTests : NewRelicIntegrationTest<Re
                 _fixture.GetWithHeaders(headers);
 
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                // Transaction events harvest on their own cycle (server-overridden fast in CI, else 60s);
+                // wait for the analytic_event_data harvest so the transaction event is available.
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(2));
             }
         );
         _fixture.Initialize();
@@ -135,7 +141,7 @@ public class BasicMvcRequestQueueTimeSwitchOffTests : NewRelicIntegrationTest<Re
             () => Assert.NotNull(transactionEvent),
             () => Assert.True(
                 transactionEvent.IntrinsicAttributes.ContainsKey("queueDuration"),
-                "Expected queueDuration intrinsic attribute on the transaction event even when UseHeaderBasedRequestQueueTime=false.")
+                "Expected queueDuration intrinsic attribute on the transaction event even when UseHeaderBasedRequestQueueTimeForClassicAspNet=false.")
         );
     }
 }

@@ -15,10 +15,8 @@ public class QueueTimeHeaderParserTests
     private static readonly DateTime NowUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    private static Func<string, string> MakeGetter(Dictionary<string, string> headers)
-    {
-        return name => headers.TryGetValue(name, out var v) ? v : null;
-    }
+    private static readonly Func<Dictionary<string, string>, string, string> GetHeader =
+        (headers, name) => headers.TryGetValue(name, out var v) ? v : null;
 
     private static long ToMs(DateTime utc) => (long)(utc - Epoch).TotalMilliseconds;
     private static long ToSec(DateTime utc) => (long)(utc - Epoch).TotalSeconds;
@@ -34,7 +32,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"t={ToMs(startTime)}"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(5000.0).Within(1.0));
@@ -50,7 +48,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"{secValue:F3}"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(10000.0).Within(1.0));
@@ -65,7 +63,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"web01 t={ToMs(startTime)}"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(3000.0).Within(1.0));
@@ -94,10 +92,10 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"t={ToNs(startTime)}"
         };
 
-        var secResult = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(secHeaders), NowUtc);
-        var msResult = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(msHeaders), NowUtc);
-        var usResult = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(usHeaders), NowUtc);
-        var nsResult = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(nsHeaders), NowUtc);
+        var secResult = QueueTimeHeaderParser.TryGetQueueTime(secHeaders, GetHeader, NowUtc);
+        var msResult = QueueTimeHeaderParser.TryGetQueueTime(msHeaders, GetHeader, NowUtc);
+        var usResult = QueueTimeHeaderParser.TryGetQueueTime(usHeaders, GetHeader, NowUtc);
+        var nsResult = QueueTimeHeaderParser.TryGetQueueTime(nsHeaders, GetHeader, NowUtc);
 
         Assert.That(secResult, Is.Not.Null);
         Assert.That(msResult, Is.Not.Null);
@@ -121,7 +119,7 @@ public class QueueTimeHeaderParserTests
             ["X-Queue-Start"] = $"t={ToMs(earlier)}"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(20000.0).Within(1.0));
@@ -136,7 +134,7 @@ public class QueueTimeHeaderParserTests
             ["X-Queue-Start"] = $"t={ToMs(startTime)}"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(8000.0).Within(1.0));
@@ -153,7 +151,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"t={ToMs(stale)}"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Null);
     }
@@ -167,7 +165,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"t={ToMs(startTime)}"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Null);
     }
@@ -181,7 +179,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"t={ToMs(startTime)}"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value.TotalMinutes, Is.EqualTo(9.0).Within(0.01));
@@ -196,7 +194,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"t={ToMs(future)}"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Null);
     }
@@ -206,7 +204,7 @@ public class QueueTimeHeaderParserTests
     {
         var headers = new Dictionary<string, string>();
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Null);
     }
@@ -219,7 +217,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = "   "
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Null);
     }
@@ -232,7 +230,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = "not-a-timestamp-at-all"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Null);
     }
@@ -240,7 +238,7 @@ public class QueueTimeHeaderParserTests
     [Test]
     public void NullHeaderDelegate_ReturnsNull()
     {
-        var result = QueueTimeHeaderParser.TryGetQueueTime(_ => null, NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime<object>(null, (_, __) => null, NowUtc);
 
         Assert.That(result, Is.Null);
     }
@@ -253,7 +251,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"t={ToMs(NowUtc)}"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value, Is.EqualTo(TimeSpan.Zero));
@@ -269,7 +267,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"t={ToMs(startTime)}, h=hostname"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(4000.0).Within(1.0));
@@ -285,7 +283,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"{ToMs(startTime)} garbage"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Null);
     }
@@ -302,7 +300,7 @@ public class QueueTimeHeaderParserTests
             ["X-Queue-Start"] = $"t={secWithFraction:F3}000"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(6123.0).Within(2.0));
@@ -318,7 +316,7 @@ public class QueueTimeHeaderParserTests
             ["X-Request-Start"] = $"{ToMs(startTime)}"
         };
 
-        var result = QueueTimeHeaderParser.TryGetQueueTime(MakeGetter(headers), NowUtc);
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(1500.0).Within(1.0));

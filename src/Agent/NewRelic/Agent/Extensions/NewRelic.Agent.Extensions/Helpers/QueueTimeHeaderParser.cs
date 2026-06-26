@@ -12,7 +12,9 @@ namespace NewRelic.Agent.Extensions.Helpers;
 /// reaching the application. Unit auto-detection handles ns/us/ms/s epoch timestamps.
 /// Future timestamps (clock skew) yield null, as do queue times beyond a sanity cap
 /// (a misdetected unit or a stale/garbage timestamp produces an implausibly large delta).
-/// Parsing avoids regex and per-call allocations because it runs on every web request.
+/// Parsing avoids regex and is allocation-free when the headers are absent (the common
+/// case); a header value is threaded in via a state object and a static delegate so the
+/// hot path allocates no closure. This matters because it runs on every web request.
 /// </summary>
 public static class QueueTimeHeaderParser
 {
@@ -33,12 +35,14 @@ public static class QueueTimeHeaderParser
     /// header is found, the start time is in the future relative to <paramref name="nowUtc"/>
     /// (clock skew guard), or the computed queue time exceeds the sanity cap.
     /// </summary>
-    /// <param name="getHeader">Delegate that returns a header value by name, or null/empty if absent.</param>
+    /// <typeparam name="TState">Type carrying the header source (e.g. the request), passed to <paramref name="getHeader"/> so the call site can use a non-capturing static delegate.</typeparam>
+    /// <param name="state">The header source forwarded to <paramref name="getHeader"/>.</param>
+    /// <param name="getHeader">Delegate that returns a header value by name from <paramref name="state"/>, or null/empty if absent.</param>
     /// <param name="nowUtc">The current UTC time used to compute elapsed queue time.</param>
-    public static TimeSpan? TryGetQueueTime(Func<string, string> getHeader, DateTime nowUtc)
+    public static TimeSpan? TryGetQueueTime<TState>(TState state, Func<TState, string, string> getHeader, DateTime nowUtc)
     {
-        var earliest = SelectEarlier(null, getHeader(HeaderRequestStart));
-        earliest = SelectEarlier(earliest, getHeader(HeaderQueueStart));
+        var earliest = SelectEarlier(null, getHeader(state, HeaderRequestStart));
+        earliest = SelectEarlier(earliest, getHeader(state, HeaderQueueStart));
 
         if (earliest == null || earliest.Value > nowUtc)
             return null;

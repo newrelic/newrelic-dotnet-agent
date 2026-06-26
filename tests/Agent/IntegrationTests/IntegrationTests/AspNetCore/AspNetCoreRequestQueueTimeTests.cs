@@ -45,6 +45,9 @@ public class AspNetCoreRequestQueueTimeTests : NewRelicIntegrationTest<RemoteSer
                 });
 
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                // Transaction events harvest on their own cycle (server-overridden fast in CI, else 60s);
+                // wait for the analytic_event_data harvest so GetTransactionEvents() is not timing-dependent.
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(2));
             }
         );
         _fixture.Initialize();

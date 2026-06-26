@@ -97,7 +97,7 @@ internal class OwinStartupMiddleware : OwinMiddleware
             transaction.SetRequestParameters(parameters);
         }
 
-        transaction.TrySetQueueTimeFromHeaders(n => request.Headers[n]);
+        transaction.TrySetQueueTimeFromHeaders(request, static (r, n) => r.Headers[n]);
 
         return transaction;
     }

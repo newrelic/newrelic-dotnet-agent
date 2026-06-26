@@ -69,10 +69,8 @@ public static class HttpContextActions
 
     private static void StoreQueueTime(IAgent agent, HttpContext httpContext)
     {
-        var now = DateTime.UtcNow;
-
-        if (agent.Configuration.UseHeaderBasedRequestQueueTime &&
-            agent.CurrentTransaction.TrySetQueueTimeFromHeaders(n => httpContext.Request.Headers[n]))
+        if (agent.Configuration.UseHeaderBasedRequestQueueTimeForClassicAspNet &&
+            agent.CurrentTransaction.TrySetQueueTimeFromHeaders(httpContext, static (ctx, n) => ctx.Request.Headers[n]))
         {
             return;
         }
@@ -83,7 +81,7 @@ public static class HttpContextActions
             return;
 
         var workerRequestStartTime = GetStartTime(workerRequest);
-        var inQueueTimeSpan = now - workerRequestStartTime;
+        var inQueueTimeSpan = DateTime.UtcNow - workerRequestStartTime;
         agent.CurrentTransaction.SetQueueTime(inQueueTimeSpan);
     }
 

@@ -193,7 +193,7 @@ public interface IConfiguration
     int DatabaseStatementCacheCapacity { get; }
     bool ForceSynchronousTimingCalculationHttpClient { get; }
 
-    bool UseHeaderBasedRequestQueueTime { get; }
+    bool UseHeaderBasedRequestQueueTimeForClassicAspNet { get; }
 
     bool EnableAspNetCore6PlusBrowserInjection { get; }
 

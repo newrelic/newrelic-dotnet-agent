@@ -18,13 +18,15 @@ public static class TransactionQueueTimeExtensions
     /// Returns <c>true</c> when queue time was set; <c>false</c> when no valid header was present
     /// or an exception occurred (logged at finest level).
     /// </summary>
+    /// <typeparam name="TState">Type carrying the header source (e.g. the request), passed to <paramref name="getHeader"/> so the call site can use a non-capturing static delegate.</typeparam>
     /// <param name="transaction">The current transaction.</param>
-    /// <param name="getHeader">Delegate that returns a header value by name, or null/empty if absent.</param>
-    public static bool TrySetQueueTimeFromHeaders(this ITransaction transaction, Func<string, string> getHeader)
+    /// <param name="state">The header source forwarded to <paramref name="getHeader"/>.</param>
+    /// <param name="getHeader">Delegate that returns a header value by name from <paramref name="state"/>, or null/empty if absent.</param>
+    public static bool TrySetQueueTimeFromHeaders<TState>(this ITransaction transaction, TState state, Func<TState, string, string> getHeader)
     {
         try
         {
-            var queueTime = QueueTimeHeaderParser.TryGetQueueTime(getHeader, DateTime.UtcNow);
+            var queueTime = QueueTimeHeaderParser.TryGetQueueTime(state, getHeader, DateTime.UtcNow);
             if (queueTime.HasValue)
             {
                 transaction.SetQueueTime(queueTime.Value);

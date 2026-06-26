@@ -182,7 +182,7 @@ internal class WrapPipelineMiddleware
             transaction.SetRequestParameters(parameters);
         }
 
-        transaction.TrySetQueueTimeFromHeaders(n => request.Headers[n].ToString());
+        transaction.TrySetQueueTimeFromHeaders(request, static (r, n) => r.Headers[n].ToString());
 
         return transaction;
     }
