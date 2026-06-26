@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
@@ -36,22 +37,23 @@ public class KafkaBuilderWrapper : IWrapper
         dynamic configuration = configGetter(builder);
 
         string bootstrapServers = null;
+        var fullConfig = new Dictionary<string, string>();
 
         foreach (var kvp in configuration)
         {
             var key = kvp.Key as string;
+            var value = kvp.Value as string;
+            if (key != null && value != null)
+                fullConfig[key] = value;
             if (key == BootstrapServersKey)
-            {
-                bootstrapServers = kvp.Value as string;
-                break;
-            }
+                bootstrapServers = value;
         }
 
         if (!string.IsNullOrEmpty(bootstrapServers))
             return Delegates.GetDelegateFor<object>(onSuccess: (builtObject) =>
             {
                 KafkaHelper.AddBootstrapServersToCache(builtObject, bootstrapServers);
-                KafkaHelper.ScheduleClusterIdFetch(builtObject, bootstrapServers);
+                KafkaHelper.ScheduleClusterIdFetch(builtObject, bootstrapServers, fullConfig);
             });
 
         return Delegates.NoOp;
