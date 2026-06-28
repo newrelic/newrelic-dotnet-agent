@@ -15,7 +15,7 @@ public class KafkaProducerWrapper : IWrapper
 {
     private const string WrapperName = "KafkaProducerWrapper";
 
-    public bool IsTransactionRequired => true;
+    public bool IsTransactionRequired => false;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {

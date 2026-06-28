@@ -64,6 +64,11 @@ internal static class KafkaHelper
     {
         if (string.IsNullOrEmpty(bootstrapServers)) return;
 
+        // Normalize ordering so "b:9092,a:9092" and "a:9092,b:9092" hit the same cache slot.
+        var parts = bootstrapServers.Split(',');
+        Array.Sort(parts);
+        bootstrapServers = string.Join(",", parts);
+
         _bootstrapEntryByInstance.GetValue(producerOrConsumerInstance, _ => new BootstrapEntry { BootstrapServers = bootstrapServers });
         _configByBootstrap.TryAdd(bootstrapServers, fullConfig);
 
