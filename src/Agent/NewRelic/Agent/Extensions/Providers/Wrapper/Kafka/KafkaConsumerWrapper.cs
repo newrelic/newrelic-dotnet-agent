@@ -134,6 +134,8 @@ public class KafkaConsumerWrapper : IWrapper
 
     private static void ReportSizeMetrics(IAgent agent, ITransaction transaction, string topic, long headersSize, object messageAsObject)
     {
+        if (messageAsObject == null) return;
+
         // get the message Key and Value properties so we can try to get their size
         var messageType = messageAsObject.GetType();
         var keyAccessor = KeyAccessorDictionary.GetOrAdd(messageType, GetKeyAccessorFunc);
