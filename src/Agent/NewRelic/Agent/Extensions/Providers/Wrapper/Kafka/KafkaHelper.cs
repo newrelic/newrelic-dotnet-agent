@@ -46,7 +46,7 @@ internal static class KafkaHelper
     private sealed class ClusterIdEntry
     {
         public string ClusterId;
-        public long StoredMs; // Environment.TickCount64
+        public long StoredMs; // DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
     }
 
     private sealed class BootstrapEntry { public string BootstrapServers; }
@@ -99,7 +99,7 @@ internal static class KafkaHelper
                     var clusterId = result?.ClusterId;
                     if (!string.IsNullOrEmpty(clusterId))
                     {
-                        _clusterIdByBootstrap[bootstrapServers] = new ClusterIdEntry { ClusterId = clusterId, StoredMs = Environment.TickCount64 };
+                        _clusterIdByBootstrap[bootstrapServers] = new ClusterIdEntry { ClusterId = clusterId, StoredMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
                         _fetchScheduled.TryRemove(bootstrapServers, out _);
                         return;
                     }
@@ -126,7 +126,7 @@ internal static class KafkaHelper
         }
 
         // TTL check — kick off a background re-fetch; return stale value while it's in progress.
-        if (Environment.TickCount64 - cacheEntry.StoredMs > ClusterIdTtlMs)
+        if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - cacheEntry.StoredMs > ClusterIdTtlMs)
         {
             if (_configByBootstrap.TryGetValue(entry.BootstrapServers, out var savedConfig) &&
                 _fetchScheduled.TryAdd(entry.BootstrapServers, 1))
