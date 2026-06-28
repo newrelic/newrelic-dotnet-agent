@@ -41,7 +41,7 @@ internal static class KafkaHelper
         }
     }
 
-    private const long ClusterIdTtlMs = 30L * 60 * 1000;
+    private const long ClusterIdTtlMs = 60L * 60 * 1000;
 
     private sealed class ClusterIdEntry
     {
