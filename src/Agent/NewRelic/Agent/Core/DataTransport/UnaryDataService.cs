@@ -333,14 +333,11 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
         //Check to make sure that we actually connected to the grpcService
         if (!_grpcWrapper.IsConnected)
         {
-            LogMessage(LogLevel.Info, "StartConsumers: gRPC service is not connected. Cannot start consumers."); // TODO: REMOVE ME
+            LogMessage(LogLevel.Debug, "gRPC service is not connected; cannot start consumers.");
             return;
         }
 
-        LogMessage(LogLevel.Info, "StartConsumers: gRPC service is connected."); // TODO: REMOVE ME
-
         //Start up the workers
-        LogMessage(LogLevel.Info, $"Starting {_configuration.InfiniteTracingTraceCountConsumers} consumers."); // TODO: REMOVE ME
         for (var i = 0; i < _configuration.InfiniteTracingTraceCountConsumers; i++)
         {
             Task.Run(() => ExecuteConsumer(_collection));
@@ -369,7 +366,6 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
 
         _cancellationTokenSource = new CancellationTokenSource();
 
-        LogMessage(LogLevel.Info, "StartService: Calling CreateChannel"); // TODO: REMOVE ME
         return CreateChannel(_cancellationTokenSource.Token);
     }
 
@@ -400,7 +396,6 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
                 var createdChannel = false;
                 using (_agentTimerService.StartNew(_timerEventNameForChannel))
                 {
-                    LogMessage(LogLevel.Info, "CreateChannel: Creating gRPC channel..."); // TODO: REMOVE ME
                     createdChannel = _grpcWrapper.CreateChannel(EndpointHost, EndpointPort, EndpointSsl, TimeoutConnectMs, cancellationToken);
                 }
 
@@ -412,7 +407,6 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
 
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    LogMessage(LogLevel.Info, "CreateChannel: Cancellation requested."); // TODO: REMOVE ME
                     break;
                 }
 
@@ -527,7 +521,6 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
 
         Task.Run(() =>
         {
-            LogMessage(LogLevel.Info, "StartConsumingCollection: Calling Restart."); // TODO: REMOVE ME
             Restart(collection);
         });
     }
@@ -538,7 +531,6 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
     /// </summary>
     private void ExecuteConsumer(PartitionedBlockingCollection<TRequest> collection)
     {
-        LogMessage(LogLevel.Info, "ExecuteConsumer: Entered."); // TODO: REMOVE ME
         var cancellationToken = CancellationToken;
 
         while (!cancellationToken.IsCancellationRequested)
@@ -569,13 +561,11 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
         items = null;
         if (!collection.Take(out var firstItem, cancellationToken))
         {
-            LogMessage(LogLevel.Info, "DequeueItems: No items available to take from the collection."); // TODO: REMOVE ME
             return false;
         }
 
         if (cancellationToken.IsCancellationRequested)
         {
-            LogMessage(LogLevel.Info, "DequeueItems: Early Cancellation requested."); // TODO: REMOVE ME
             return false;
         }
 
@@ -589,12 +579,10 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
 
         if (cancellationToken.IsCancellationRequested)
         {
-            LogMessage(LogLevel.Info, "DequeueItems: Late Cancellation requested."); // TODO: REMOVE ME
             ProcessFailedItems(items, collection);
             return false;
         }
 
-        LogMessage(LogLevel.Info, "DequeueItems: Successfully dequeued items."); // TODO: REMOVE ME
         return true;
     }
 
@@ -602,7 +590,7 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
 
     private void ProcessFailedItems(IList<TRequest> items, PartitionedBlockingCollection<TRequest> collection)
     {
-        LogMessage(LogLevel.Info, $"ProcessFailedItems: Processing failed {items.Count} items."); // TODO: REMOVE ME
+        LogMessage(LogLevel.Finest, $"Re-queueing {items.Count} item(s) that could not be sent.");
         foreach (var item in items)
         {
             if (!collection.TryAdd(item))
@@ -614,7 +602,6 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
 
     private void SendRequests(PartitionedBlockingCollection<TRequest> collection, CancellationToken serviceCancellationToken)
     {
-        LogMessage(LogLevel.Info, "SendRequests: Entered."); // TODO: REMOVE ME
         var consumerId = _consumerId.Increment();
 
         _hasAnyWorkerStarted = true;
@@ -623,7 +610,6 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
         {
             if (!DequeueItems(collection, BatchSizeConfigValue, serviceCancellationToken, out var items))
             {
-                LogMessage(LogLevel.Info, "SendRequests: No items dequeued."); // TODO: REMOVE ME 
                 return;
             }
 
@@ -633,18 +619,14 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
                 continue;
             }
 
-            LogMessage(LogLevel.Info, "SendRequests: Successfully dequeued items."); // TODO: REMOVE ME
-
             _workCounter.Increment();
 
-            LogMessage(LogLevel.Info, "SendRequests: Attempting to send items."); // TODO: REMOVE ME
             var trySendStatus = TrySend(consumerId, items, serviceCancellationToken);
 
             _workCounter.Decrement();
 
             if (trySendStatus != TrySendStatus.Success)
             {
-                LogMessage(LogLevel.Info, "SendRequests: Failed to send items."); // TODO: REMOVE ME
                 ProcessFailedItems(items, collection);
                 return;
             }
@@ -655,18 +637,14 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
 
     private TrySendStatus TrySend(int consumerId, IList<TRequest> items, CancellationToken cancellationToken)
     {
-        LogMessage(LogLevel.Info, "TrySend: Entered."); // TODO: REMOVE ME
-
         //If cancellation has been requested, return
         if (cancellationToken.IsCancellationRequested)
         {
-            LogMessage(LogLevel.Info, "TrySend: Cancellation requested."); // TODO: REMOVE ME
             return TrySendStatus.CancellationRequested;
         }
 
         LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s).");
 
-        LogMessage(LogLevel.Info, "TrySend: Creating batch."); // TODO: REMOVE ME
         var batch = CreateBatch(items);
 
         try
@@ -675,13 +653,11 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
             TResponse response;
             using (_agentTimerService.StartNew(_timerEventNameForSend))
             {
-                LogMessage(LogLevel.Info, "TrySend: Sending batch."); // TODO: REMOVE ME
                 sentData = _grpcWrapper.TrySendData(batch, MetadataHeaders, TimeoutSendDataMs, cancellationToken, out response);
             }
 
             if (sentData)
             {
-                LogMessage(LogLevel.Info, "TrySend: Successfully sent batch."); // TODO: REMOVE ME
                 LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Success");
                 RecordSuccessfulSend(items.Count);
                 HandleServerResponse(response, consumerId);
@@ -692,7 +668,7 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
             // TrySendData returns false (without throwing) when the batch could not be sent at all -
             // cancellation was requested, or the channel was unavailable (e.g., during shutdown/restart).
             // Re-queue the items; the reconnect logic will recover.
-            LogMessage(LogLevel.Info, "TrySend: Failed to send batch, setting cancellation requested."); // TODO: REMOVE ME
+            LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Not sent (channel unavailable or cancelled), will retry.");
             return TrySendStatus.CancellationRequested;
         }
         catch (GrpcWrapperException grpcEx) when (!string.IsNullOrWhiteSpace(grpcEx.Status))

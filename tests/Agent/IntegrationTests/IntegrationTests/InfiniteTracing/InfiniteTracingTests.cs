@@ -32,6 +32,7 @@ public abstract class InfiniteTracingTestsBase<TFixture> : NewRelicIntegrationTe
                 configModifier.ForceTransactionTraces()
                     .EnableDistributedTrace()
                     .EnableInfiniteTracing(_fixture.TestConfiguration.TraceObserverUrl,
+                    //.EnableInfiniteTracing("nr-internal-mtb-use2-stg-bum-rush.aws-us-east-2.tracing.staging-edge.nr-data.net",
                         _fixture.TestConfiguration.TraceObserverPort)
                     .SetLogLevel("finest");
             },

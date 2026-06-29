@@ -6,7 +6,6 @@ using System.Threading;
 using Grpc.Core;
 using Grpc.Net.Client;
 using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport;
 
@@ -62,15 +61,9 @@ public class SpanUnaryGrpcWrapper : IngestServiceUnaryGrpcWrapper<Span, RecordSt
 {
     protected override RecordStatus SendDataImpl(GrpcChannel channel, Span item, Metadata headers, int sendTimeoutMs, CancellationToken cancellationToken)
     {
-        Log.Finest("{0}: Sending unary gRPC data", this.GetType().Name);  // TODO: REMOVE ME
         var client = GetClient(channel);
-        Log.Finest("{0}: Obtained gRPC client", this.GetType().Name);  // TODO: REMOVE ME
         var deadline = DateTime.UtcNow.AddMilliseconds(sendTimeoutMs);
-        Log.Finest("{0}: Status of cancellation token is {1}", this.GetType().Name, cancellationToken.IsCancellationRequested);  // TODO: REMOVE ME
-        // TODO: return client.RecordSpanUnary(item, headers: headers, deadline: deadline, cancellationToken: cancellationToken);
-        var lame = client.RecordSpanUnary(item, headers: headers, deadline: deadline, cancellationToken: cancellationToken);
-        Log.Finest("{0}: Probably successfully sent unary gRPC data", this.GetType().Name);  // TODO: REMOVE ME
-        return lame;
+        return client.RecordSpanUnary(item, headers: headers, deadline: deadline, cancellationToken: cancellationToken);
     }
 }
 
@@ -78,14 +71,8 @@ public class SpanBatchUnaryGrpcWrapper : IngestServiceUnaryGrpcWrapper<SpanBatch
 {
     protected override RecordStatus SendDataImpl(GrpcChannel channel, SpanBatch item, Metadata headers, int sendTimeoutMs, CancellationToken cancellationToken)
     {
-        Log.Finest("{0}: Sending unary gRPC data", this.GetType().Name);  // TODO: REMOVE ME
         var client = GetClient(channel);
-        Log.Finest("{0}: Obtained gRPC client", this.GetType().Name);  // TODO: REMOVE ME
         var deadline = DateTime.UtcNow.AddMilliseconds(sendTimeoutMs);
-        Log.Finest("{0}: Status of cancellation token is {1}", this.GetType().Name, cancellationToken.IsCancellationRequested);  // TODO: REMOVE ME
-        // TODO: return client.RecordSpanBatchUnary(item, headers: headers, deadline: deadline, cancellationToken: cancellationToken);
-        var lame = client.RecordSpanBatchUnary(item, headers: headers, deadline: deadline, cancellationToken: cancellationToken);
-        Log.Finest("{0}: Probably successfully sent unary gRPC data", this.GetType().Name);  // TODO: REMOVE ME
-        return lame;
+        return client.RecordSpanBatchUnary(item, headers: headers, deadline: deadline, cancellationToken: cancellationToken);
     }
 }
