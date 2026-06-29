@@ -4203,6 +4203,76 @@ public class DefaultConfigurationTests
     }
     #endregion
 
+    #region AI Monitoring server-side config (NR-538711)
+
+    // ai_monitoring.enabled: local x collect_ai x agent_config x HSM
+    [TestCase(false, null, null, false, ExpectedResult = false)] // 1: default baseline
+    [TestCase(true, null, null, false, ExpectedResult = true)]   // 2: local enables
+    [TestCase(false, null, true, false, ExpectedResult = true)]  // 4: SSC enables over local-disabled
+    [TestCase(true, null, false, false, ExpectedResult = false)] // 5: SSC disables over local-enabled
+    [TestCase(true, false, null, false, ExpectedResult = false)] // collect_ai disables (no agent_config)
+    [TestCase(true, false, true, false, ExpectedResult = true)]  // agent_config overrides collect_ai=false
+    [TestCase(true, null, true, true, ExpectedResult = false)]   // 7: HSM ignores SSC
+    public bool AiMonitoringEnabled_resolves_with_correct_precedence(bool local, bool? collectAi, bool? agentConfig, bool hsm)
+    {
+        _localConfig.aiMonitoring.enabled = local;
+        _serverConfig.AICollectionEnabled = collectAi;
+        _serverConfig.RpmConfig.AiMonitoringEnabled = agentConfig;
+        _localConfig.highSecurity.enabled = hsm;
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        return _defaultConfig.AiMonitoringEnabled;
+    }
+
+    [Test]
+    public void AiMonitoringEnabled_server_overrides_env_var()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_AI_MONITORING_ENABLED")).Returns("true");
+        _localConfig.aiMonitoring.enabled = true;
+        _serverConfig.RpmConfig.AiMonitoringEnabled = false; // server disables despite env+local true
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.AiMonitoringEnabled, Is.False);
+    }
+
+    // streaming.enabled: gated behind master; agent_config overrides local both directions
+    [TestCase(true, true, null, ExpectedResult = true)]   // master on, local true, no SSC
+    [TestCase(true, true, false, ExpectedResult = false)] // 5: SSC disables sub over local-true
+    [TestCase(true, false, true, ExpectedResult = true)]  // 4: SSC enables sub over local-false
+    [TestCase(false, true, true, ExpectedResult = false)] // master off -> sub off regardless
+    public bool AiMonitoringStreamingEnabled_resolves_with_correct_precedence(bool master, bool localStreaming, bool? agentConfigStreaming)
+    {
+        _localConfig.aiMonitoring.enabled = master;
+        _serverConfig.RpmConfig.AiMonitoringEnabled = master; // ensure resolved master matches intent
+        _localConfig.aiMonitoring.streaming.enabled = localStreaming;
+        _serverConfig.RpmConfig.AiMonitoringStreamingEnabled = agentConfigStreaming;
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        return _defaultConfig.AiMonitoringStreamingEnabled;
+    }
+
+    // record_content.enabled: gated behind master; agent_config overrides local both directions
+    [TestCase(true, true, null, ExpectedResult = true)]
+    [TestCase(true, true, false, ExpectedResult = false)] // SSC disables content over local-true
+    [TestCase(true, false, true, ExpectedResult = true)]  // SSC enables content over local-false
+    [TestCase(false, true, true, ExpectedResult = false)] // master off -> content off regardless
+    public bool AiMonitoringRecordContentEnabled_resolves_with_correct_precedence(bool master, bool localRecord, bool? agentConfigRecord)
+    {
+        _localConfig.aiMonitoring.enabled = master;
+        _serverConfig.RpmConfig.AiMonitoringEnabled = master;
+        _localConfig.aiMonitoring.recordContent.enabled = localRecord;
+        _serverConfig.RpmConfig.AiMonitoringRecordContentEnabled = agentConfigRecord;
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        return _defaultConfig.AiMonitoringRecordContentEnabled;
+    }
+
+    #endregion
+
     #region Agent Logs
 
     [TestCase(null, true, ExpectedResult = true)]
