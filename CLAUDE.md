@@ -166,6 +166,11 @@ later turn. Instead:
 
 ## Testing conventions
 
+- **New/changed code in `Core` and `NewRelic.Agent.Extensions` must ship with
+  unit tests in the same change (unprompted), targeting 100% reachable
+  coverage.** Enforced by the `dotnet-unit-test-coverage` skill
+  (`.claude/skills/`), which also tells plan-writing to bake this in. Wrapper
+  projects are exempt (see below).
 - Unit tests: `tests/Agent/UnitTests/` (NUnit primary, xUnit used in some
   places). Mocking is **JustMock Lite** (free tier) — interfaces and virtual
   members only. No sealed / static / non-virtual mocking. Design new code
