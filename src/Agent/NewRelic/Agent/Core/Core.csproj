@@ -70,34 +70,18 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-    <!-- .NET Framework needs to use the legacy gRPC library -->
+    <!-- .NET Framework needs the legacy gRPC library for the streaming transport. -->
     <PackageReference Include="Grpc" Version="2.46.6" />
     <PackageReference Include="Grpc.Core" Version="2.46.6" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
     <PackageReference Include="System.ValueTuple" Version="4.6.2" />
+    <!-- The hand-rolled unary transport uses WinHttpHandler for HTTP/2 on .NET Framework
+         (the default HttpClientHandler is HTTP/1.1 only). -->
+    <PackageReference Include="System.Net.Http.WinHttpHandler" Version="8.0.0" />
   </ItemGroup>
 
-  <!-- The unary Infinite Tracing classes are Grpc.Net.Client-only and are not part of the
-       .NET Framework build, which still uses the legacy Grpc.Core streaming path. They are
-       removed from compilation for net462, but re-added as <None> so they remain visible in
-       the Visual Studio Solution Explorer (which projects the tree against the first-listed
-       target framework, net462). This does not compile them for net462. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-    <Compile Remove="DataTransport\IGrpcUnaryWrapper.cs" />
-    <Compile Remove="DataTransport\GrpcUnaryWrapper.cs" />
-    <Compile Remove="DataTransport\SpanUnaryGrpcWrapper.cs" />
-    <Compile Remove="DataTransport\IUnaryDataService.cs" />
-    <Compile Remove="DataTransport\UnaryDataService.cs" />
-    <Compile Remove="DataTransport\SpanUnaryService.cs" />
-    <Compile Remove="DataTransport\UnaryToStreamingServiceAdapter.cs" />
-    <None Include="DataTransport\IGrpcUnaryWrapper.cs" />
-    <None Include="DataTransport\GrpcUnaryWrapper.cs" />
-    <None Include="DataTransport\SpanUnaryGrpcWrapper.cs" />
-    <None Include="DataTransport\IUnaryDataService.cs" />
-    <None Include="DataTransport\UnaryDataService.cs" />
-    <None Include="DataTransport\SpanUnaryService.cs" />
-    <None Include="DataTransport\UnaryToStreamingServiceAdapter.cs" />
-  </ItemGroup>
+  <!-- The unary Infinite Tracing transport now uses a hand-rolled HttpClient gRPC client (no
+       grpc-dotnet), so it compiles for BOTH net462 and netstandard2.0; no per-TFM exclusion. -->
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="Grpc.Net.Client" Version="2.80.0" />
@@ -162,6 +146,8 @@
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Grpc.Core'" />
+      <!-- WinHttpHandler provides HTTP/2 for the hand-rolled unary transport on .NET Framework. -->
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Net.Http.WinHttpHandler'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Buffers'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Memory'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Runtime.CompilerServices.Unsafe'" />
@@ -187,7 +173,7 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">37</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">38</ILRepackIncludeCount>
       <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">40</ILRepackIncludeCount>
     </PropertyGroup>
 

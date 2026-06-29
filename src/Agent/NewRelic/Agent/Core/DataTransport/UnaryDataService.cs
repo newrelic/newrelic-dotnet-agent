@@ -675,6 +675,10 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
         {
             // **Status -> action mapping.** Unary differs from streaming: there is no "OK = rebalance"
             // case, and DEADLINE_EXCEEDED is new (we set a per-call deadline). Refine as needed.
+            // NOTE: this branch only fires when a grpc-status is available - i.e. on .NET Core, where the
+            // hand-rolled transport reads the HTTP/2 trailer. On .NET Framework the trailer is unreadable,
+            // so Status is empty and these cases (UNIMPLEMENTED -> shutdown, FAILED_PRECONDITION -> restart)
+            // do NOT fire; failures fall through to the generic handler below and are retried/backed off.
             RecordResponseError();
             RecordGrpcError(grpcEx.Status);
             var rpcEx = grpcEx.InnerException as RpcException;
