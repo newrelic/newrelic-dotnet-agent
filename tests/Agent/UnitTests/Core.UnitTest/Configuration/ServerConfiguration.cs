@@ -86,6 +86,41 @@ public class Method_FromDeserializedReturnValue
         Assert.Throws(Is.InstanceOf<Exception>(), () => ServerConfiguration.FromDeserializedReturnValue(new Dictionary<string, object> { { "agent_run_id", 0 }, { "apdex_t", "not a double" } }));
     }
 
+    [Test]
+    public void ai_monitoring_agent_config_keys_deserialize_correctly()
+    {
+        var agentConfig = new Dictionary<string, object>
+        {
+            { "ai_monitoring.enabled", true },
+            { "ai_monitoring.streaming.enabled", false },
+            { "ai_monitoring.record_content.enabled", false }
+        };
+
+        var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(
+            new Dictionary<string, object> { { "agent_run_id", 0 }, { "agent_config", agentConfig } });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(serverConfiguration.RpmConfig.AiMonitoringEnabled, Is.True);
+            Assert.That(serverConfiguration.RpmConfig.AiMonitoringStreamingEnabled, Is.False);
+            Assert.That(serverConfiguration.RpmConfig.AiMonitoringRecordContentEnabled, Is.False);
+        });
+    }
+
+    [Test]
+    public void ai_monitoring_agent_config_keys_are_null_when_absent()
+    {
+        var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(
+            new Dictionary<string, object> { { "agent_run_id", 0 } });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(serverConfiguration.RpmConfig.AiMonitoringEnabled, Is.Null);
+            Assert.That(serverConfiguration.RpmConfig.AiMonitoringStreamingEnabled, Is.Null);
+            Assert.That(serverConfiguration.RpmConfig.AiMonitoringRecordContentEnabled, Is.Null);
+        });
+    }
+
 }
 
 [TestFixture, Category("Configuration")]
