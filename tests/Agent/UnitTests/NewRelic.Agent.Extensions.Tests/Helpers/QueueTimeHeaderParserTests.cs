@@ -321,4 +321,68 @@ public class QueueTimeHeaderParserTests
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(1500.0).Within(1.0));
     }
+
+    [Test]
+    public void EarliestWins_FirstHeaderEarlier_KeepsFirst()
+    {
+        // X-Request-Start is read first; when X-Queue-Start is later it must NOT replace it.
+        // Exercises the "candidate is not earlier than current -> keep current" branch.
+        var earlier = NowUtc.AddSeconds(-20);
+        var later = NowUtc.AddSeconds(-5);
+        var headers = new Dictionary<string, string>
+        {
+            ["X-Request-Start"] = $"t={ToMs(earlier)}",
+            ["X-Queue-Start"] = $"t={ToMs(later)}"
+        };
+
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Value.TotalMilliseconds, Is.EqualTo(20000.0).Within(1.0));
+    }
+
+    [Test]
+    public void DotOnlyValue_ReturnsNull()
+    {
+        // A token that is only "." has no digits and must be rejected.
+        var headers = new Dictionary<string, string>
+        {
+            ["X-Request-Start"] = "."
+        };
+
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
+
+        Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public void OverflowingValue_DecodesBeyondDateTimeRange_ReturnsNull()
+    {
+        // A finite but enormous seconds value pushes _epoch.AddSeconds past DateTime.MaxValue,
+        // which throws ArgumentOutOfRangeException internally; the parser must swallow it and
+        // return null. 3e11 seconds (< 1e12, so taken as seconds) lands near year 11476.
+        var headers = new Dictionary<string, string>
+        {
+            ["X-Request-Start"] = "300000000000"
+        };
+
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
+
+        Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public void NonFiniteValue_HugeDigitString_ReturnsNull()
+    {
+        // A digits-only string too large for a double parses to +Infinity, which the
+        // IsNaN/IsInfinity guard rejects before any date math.
+        var headers = new Dictionary<string, string>
+        {
+            ["X-Request-Start"] = "t=" + new string('9', 400)
+        };
+
+        var result = QueueTimeHeaderParser.TryGetQueueTime(headers, GetHeader, NowUtc);
+
+        Assert.That(result, Is.Null);
+    }
 }
