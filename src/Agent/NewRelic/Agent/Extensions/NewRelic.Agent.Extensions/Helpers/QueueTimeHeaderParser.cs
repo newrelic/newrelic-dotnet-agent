@@ -21,8 +21,6 @@ public static class QueueTimeHeaderParser
     private const string HeaderRequestStart = "X-Request-Start";
     private const string HeaderQueueStart = "X-Queue-Start";
 
-    private static readonly DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
     // Upper bound on a plausible front-end queue (load balancer + network + host accept).
     // A genuine wait is seconds, not minutes; a larger delta means the timestamp was
     // misdetected, stale, or garbage, so we omit rather than report a bogus queue time.
@@ -106,7 +104,7 @@ public static class QueueTimeHeaderParser
         DateTime startTime;
         try
         {
-            startTime = _epoch.AddSeconds(seconds);
+            startTime = UnixTime.FromSeconds(seconds);
         }
         catch (ArgumentOutOfRangeException)
         {
