@@ -19,7 +19,7 @@ editing tests, and when adding or changing production code.
   tests by design (covered by the Integration / Unbounded / Container test
   solutions). When adding non-trivial logic to a wrapper, lift it into a helper
   in `NewRelic.Agent.Extensions` and unit-test the helper -- see the wrapper
-  guidance in `tests/claude-tests.md` and the top-level `CLAUDE.md`.
+  guidance in `tests/CLAUDE.md` and the top-level `CLAUDE.md`.
 
 ## Rule 1: New testable code gets unit tests in the same change
 
@@ -64,5 +64,16 @@ Test layout, frameworks (NUnit + JustMock Lite, interfaces/virtual only), the
 `SolutionDir` build caveat, and the "run against the built DLL for
 `NewRelic.Agent.Extensions.Tests`" caveat are in the top-level `CLAUDE.md`
 ("Building and testing from the CLI", "Testing conventions") and
-`tests/claude-tests.md`. Never use `InternalsVisibleTo` to reach non-public
-code -- expose a proper testable surface instead.
+`tests/CLAUDE.md`.
+
+## Achieving coverage without piercing encapsulation
+
+JustMock Lite mocks only interfaces and virtual members -- no sealed, static,
+or non-virtual mocking -- and `InternalsVisibleTo` is banned in every
+production and test assembly. So when in-scope code is hard to reach from a
+test, do NOT widen visibility or expose internals to the test assembly. Make
+the code coverable by refactoring the production type to expose a proper seam:
+extract an interface, make the member virtual, inject a mockable dependency,
+or lift the logic into a public helper. If a line is only reachable by mocking
+a private/sealed/static member or via `InternalsVisibleTo`, the design -- not
+the test -- is what must change.
