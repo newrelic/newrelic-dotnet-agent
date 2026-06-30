@@ -146,11 +146,3 @@ public class PostgresSqlStoredProcedureAsyncTestsCoreOldest : PostgresSqlStoredP
 
     }
 }
-
-public class PostgresSqlStoredProcedureAsyncTestsCoreLatest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-{
-    public PostgresSqlStoredProcedureAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}

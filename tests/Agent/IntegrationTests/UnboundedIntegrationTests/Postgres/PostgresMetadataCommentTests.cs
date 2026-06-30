@@ -134,10 +134,3 @@ public class PostgresMetadataCommentTestsCoreOldest : PostgresMetadataCommentTes
     {
     }
 }
-
-public class PostgresMetadataCommentTestsCoreLatest : PostgresMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-{
-    public PostgresMetadataCommentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-    }
-}

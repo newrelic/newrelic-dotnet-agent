@@ -149,13 +149,18 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteXmlReader"/>
       </match>
 
-      <!-- Postgres SQL Driver-->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand">
+      <!-- Postgres SQL Driver. Native instrumentation is capped at maxVersion="9" (exclusive).
+           Npgsql 9.x+ dropped the netstandard2.0 target (it is .NET-only) and is handled by the
+           OpenTelemetry "hybrid agent" bridge, which consumes Npgsql's built-in "Npgsql"
+           ActivitySource. "Npgsql" is on the bridge's default-excluded source list, so for < 9
+           the native wrapper wins (its leaf datastore segment suppresses the nested activity) and
+           for >= 9 the customer opts in by including the "Npgsql" source. -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand" maxVersion="9">
         <exactMethodMatcher methodName="ExecuteDbDataReader" parameters="System.Data.CommandBehavior"/>
         <exactMethodMatcher methodName="ExecuteNonQuery" />
         <exactMethodMatcher methodName="ExecuteScalar" />
       </match>
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand" minVersion="4.1">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand" minVersion="4.1" maxVersion="9">
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
       </match>
     </tracerFactory>
@@ -220,13 +225,13 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
       </match>
 
-      <!-- Postgres SQL Driver-->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand">
+      <!-- Postgres SQL Driver. Native capped at maxVersion="9"; 9.x+ handled by the OpenTelemetry bridge (see SqlCommandTracer above). -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand" maxVersion="9">
         <exactMethodMatcher methodName="ExecuteDbDataReaderAsync"/>
         <exactMethodMatcher methodName="ExecuteNonQueryAsync"/>
         <exactMethodMatcher methodName="ExecuteScalarAsync"/>
       </match>
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand" minVersion="4.1">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand" minVersion="4.1" maxVersion="9">
         <exactMethodMatcher methodName="ExecuteReaderAsync"/>
       </match>
 
@@ -340,8 +345,8 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
         <exactMethodMatcher methodName="TryFastRead" />
       </match>
-      <!-- Npgsql 8.0 renamed the fast-read method TryFastRead() to TryRead(). The public Read() fast path routes through it, so it must be instrumented for Iterate metrics. -->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="8">
+      <!-- Npgsql 8.0 renamed the fast-read method TryFastRead() to TryRead(). The public Read() fast path routes through it, so it must be instrumented for Iterate metrics. Capped at maxVersion="9" (9.x+ handled by the OpenTelemetry bridge). -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="8" maxVersion="9">
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
         <exactMethodMatcher methodName="TryRead" />
@@ -404,8 +409,8 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="Read" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="TryFastRead" />
       </match>
-      <!-- Npgsql 8.0 renamed the fast-read method TryFastRead() to TryRead(). -->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="8">
+      <!-- Npgsql 8.0 renamed the fast-read method TryFastRead() to TryRead(). Capped at maxVersion="9" (9.x+ handled by the OpenTelemetry bridge). -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="8" maxVersion="9">
         <exactMethodMatcher methodName="NextResult" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="Read" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="TryRead" />
@@ -483,8 +488,8 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="Open"/>
       </match>
 
-      <!-- Npgsql Postgres data provider -->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlConnection">
+      <!-- Npgsql Postgres data provider. Native capped at maxVersion="9"; 9.x+ handled by the OpenTelemetry bridge. -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlConnection" maxVersion="9">
         <exactMethodMatcher methodName="Open" parameters="System.Boolean,System.Threading.CancellationToken"/>
       </match>
     </tracerFactory>
@@ -526,8 +531,8 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="OpenAsync" parameters="System.Nullable`1[MySqlConnector.Protocol.Serialization.IOBehavior],System.Threading.CancellationToken" />
       </match>
 
-      <!-- Npgsql Postgres data provider -->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlConnection">
+      <!-- Npgsql Postgres data provider. Native capped at maxVersion="9"; 9.x+ handled by the OpenTelemetry bridge. -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlConnection" maxVersion="9">
         <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken"/>
       </match>
     </tracerFactory>

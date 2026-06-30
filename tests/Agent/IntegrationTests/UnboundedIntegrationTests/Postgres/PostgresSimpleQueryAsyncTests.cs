@@ -161,11 +161,3 @@ public class PostgresSqlSimpleQueryAsyncTestsCoreOldest : PostgresSqlSimpleQuery
 
     }
 }
-
-public class PostgresSqlSimpleQueryAsyncTestsCoreLatest : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-{
-    public PostgresSqlSimpleQueryAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}

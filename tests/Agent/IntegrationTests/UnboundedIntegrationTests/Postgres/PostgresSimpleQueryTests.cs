@@ -159,11 +159,3 @@ public class PostgresSqlSimpleQueryTestsCoreOldest : PostgresSqlSimpleQueryTests
 
     }
 }
-
-public class PostgresSqlSimpleQueryTestsCoreLatest : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-{
-    public PostgresSqlSimpleQueryTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}

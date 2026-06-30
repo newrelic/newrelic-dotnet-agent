@@ -161,11 +161,3 @@ public class PostgresSqlExecuteScalarTestsCoreOldest : PostgresSqlExecuteScalarT
 
     }
 }
-
-public class PostgresSqlExecuteScalarTestsCoreLatest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-{
-    public PostgresSqlExecuteScalarTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}

@@ -137,11 +137,3 @@ public class PostgresSqlIteratorTestsCoreOldest : PostgresSqlIteratorTestsBase<C
 
     }
 }
-
-public class PostgresSqlIteratorTestsCoreLatest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-{
-    public PostgresSqlIteratorTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}

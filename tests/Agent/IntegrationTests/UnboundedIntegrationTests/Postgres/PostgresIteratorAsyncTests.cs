@@ -144,14 +144,3 @@ public class PostgresSqlIteratorAsyncTestsCoreOldest : PostgresSqlIteratorAsyncT
 
     }
 }
-
-public class PostgresSqlIteratorAsyncTestsCoreLatest : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-{
-    // Npgsql 8.x async read path yields 2 Iterate rollups instead of 3 (see base class).
-    protected override int ExpectedIterationCount => 2;
-
-    public PostgresSqlIteratorAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
