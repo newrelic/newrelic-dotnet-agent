@@ -21,7 +21,7 @@ public abstract class PostgresSqlIteratorAsyncTestsBase<TFixture> : NewRelicInte
     // Iterate metrics roll up from NpgsqlDataReader Read/NextResult calls. Through Npgsql 7 the async read
     // loop over a single-row result yields 3 (read row, internal NextResult, final read returning false).
     // Npgsql 8 refactored the async path so the result-set teardown no longer surfaces through an instrumented
-    // method, yielding 2; the Latest fixtures (which pin Npgsql 8.x) override this.
+    // method, yielding 2; fixtures that pin Npgsql 8.x or later override this.
     protected virtual int ExpectedIterationCount => 3;
 
     public PostgresSqlIteratorAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
@@ -110,22 +110,6 @@ public class PostgresSqlIteratorAsyncTestsFW462 : PostgresSqlIteratorAsyncTestsB
     }
 }
 
-public class PostgresSqlIteratorAsyncTestsFW471 : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlIteratorAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlIteratorAsyncTestsFW48 : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlIteratorAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
 public class PostgresSqlIteratorAsyncTestsFWLatest : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     // Npgsql 8.x async read path yields 2 Iterate rollups instead of 3 (see base class).
@@ -139,6 +123,9 @@ public class PostgresSqlIteratorAsyncTestsFWLatest : PostgresSqlIteratorAsyncTes
 
 public class PostgresSqlIteratorAsyncTestsCoreOldest : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
+    // Npgsql 8.x async read path yields 2 Iterate rollups instead of 3 (see base class).
+    protected override int ExpectedIterationCount => 2;
+
     public PostgresSqlIteratorAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
     {
 

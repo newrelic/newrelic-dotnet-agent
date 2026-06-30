@@ -161,6 +161,11 @@
         "packageName": "nlog.extensions.logging"
     },
     {
+        "packageName": "npgsql",
+        "ignoreTFMs": "net481",
+        "ignoreReason": "net481 (.NET Framework) is capped at npgsql 8.x; npgsql 9+ dropped .NET Framework support."
+    },
+    {
         "packageName": "nservicebus",
         "ignoreTFMs": "net481",
         "ignoreReason": "net481 doesn't support v9.x"

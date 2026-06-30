@@ -115,22 +115,6 @@ public class PostgresSqlStoredProcedureAsyncTestsFW462 : PostgresSqlStoredProced
     }
 }
 
-public class PostgresSqlStoredProcedureAsyncTestsFW471 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlStoredProcedureAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlStoredProcedureAsyncTestsFW48 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlStoredProcedureAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
 public class PostgresSqlStoredProcedureAsyncTestsFWLatest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlStoredProcedureAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

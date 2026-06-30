@@ -203,6 +203,7 @@ categories:
             minVersion: "4.0.0"
         notes:
           - { type: freeform, text: "Prior versions of Npgsql may also be instrumented, but duplicate and/or missing metrics are possible." }
+          - { type: freeform, text: "Npgsql 9.0 and later dropped .NET Framework support; on .NET Framework the agent supports Npgsql 8.x and earlier.", tabs: [framework] }
 
       - name: ServiceStack.Redis
         packages:

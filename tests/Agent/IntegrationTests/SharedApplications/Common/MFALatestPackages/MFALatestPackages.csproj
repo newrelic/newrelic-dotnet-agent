@@ -60,9 +60,9 @@
     <PackageReference Include="NLog" Version="6.1.3" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="NLog.Extensions.Logging" Version="6.1.3" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="NLog.Extensions.Logging" Version="6.1.3" Condition="'$(TargetFramework)' == 'net10.0'" />
-    <!-- npgsql 8.x is the last major with a netstandard2.0 target, so it is usable from both net481 and net10.0. v9+ dropped .NET Framework support. -->
+    <!-- net481 (.NET Framework) is capped at npgsql 8.x, the last major with a netstandard2.0 target; npgsql 9+ dropped .NET Framework support. net10.0 tests the latest 10.x. -->
     <PackageReference Include="npgsql" Version="8.0.9" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="npgsql" Version="8.0.9" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="npgsql" Version="10.0.3" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- NServiceBus v9+ only supports .NET8+, so constrain FW target to the latest 8.x version -->
     <PackageReference Include="NServiceBus" Version="8.2.4" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="NServiceBus" Version="10.2.5" Condition="'$(TargetFramework)' == 'net10.0'" />

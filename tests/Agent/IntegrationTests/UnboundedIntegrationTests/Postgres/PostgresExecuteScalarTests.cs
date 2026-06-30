@@ -130,22 +130,6 @@ public class PostgresSqlExecuteScalarTestsFW462 : PostgresSqlExecuteScalarTestsB
     }
 }
 
-public class PostgresSqlExecuteScalarTestsFW471 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlExecuteScalarTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlExecuteScalarTestsFW48 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlExecuteScalarTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
 public class PostgresSqlExecuteScalarTestsFWLatest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlExecuteScalarTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
