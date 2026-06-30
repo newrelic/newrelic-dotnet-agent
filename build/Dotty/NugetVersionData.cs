@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Dotty;
 
@@ -11,9 +12,10 @@ public class NugetVersionData
     public string Url { get; set; }
     public DateTime PublishDate { get; set; }
     public string IgnoreTfMs { get; }
+    public Dictionary<string, string> TfmTargetVersions { get; }
 
     public NugetVersionData(string packageName, string oldVersion, string newVersion, string url,
-        DateTime publishDate, string ignoreTfMs)
+        DateTime publishDate, string ignoreTfMs, Dictionary<string, string> tfmTargetVersions = null)
     {
         PackageName = packageName;
         OldVersion = oldVersion;
@@ -22,5 +24,6 @@ public class NugetVersionData
         Url = url;
         PublishDate = publishDate;
         IgnoreTfMs = ignoreTfMs;
+        TfmTargetVersions = tfmTargetVersions;
     }
 }

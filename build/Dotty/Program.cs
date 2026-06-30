@@ -192,6 +192,45 @@ public class Program
         // get the second most recent version of the package (if there is one)
         var previous = metaData.Skip(1).FirstOrDefault();
 
+        // per-TFM major-version ceiling path (mutually exclusive with ignorePatch/Minor/Major)
+        if (package.TfmMaxMajorVersion != null && package.TfmMaxMajorVersion.Count > 0)
+        {
+            var tfmTargets = new Dictionary<string, string>();
+            var anyCappedAdvanced = false;
+
+            foreach (var (tfm, cap) in package.TfmMaxMajorVersion)
+            {
+                var capped = metaData.FirstOrDefault(v => v.Identity.Version.Major <= cap);
+                if (capped != null)
+                {
+                    var cappedVersionStr = capped.Identity.Version.ToNormalizedString();
+                    tfmTargets[tfm] = cappedVersionStr;
+                    Log.Information($"Package {packageName}: TFM {tfm} capped at major {cap}, resolved to {cappedVersionStr}.");
+                    if (capped.Published >= searchTime)
+                        anyCappedAdvanced = true;
+                }
+                else
+                {
+                    Log.Warning($"Package {packageName}: TFM {tfm} capped at major {cap}, but no matching version found. Leaving pinned.");
+                    tfmTargets[tfm] = null;
+                }
+            }
+
+            var globalAdvanced = latest.Published >= searchTime;
+
+            if (!globalAdvanced && !anyCappedAdvanced)
+            {
+                Log.Information($"Package {packageName} has NOT been updated.");
+                return;
+            }
+
+            var previousVersionDescription = previous?.Identity.Version.ToNormalizedString() ?? "Unknown";
+            var latestVersionDescription = latest.Identity.Version.ToNormalizedString();
+            Log.Information($"Package {packageName} global latest is {latestVersionDescription}; per-TFM targets resolved.");
+            _newVersions.Add(new NugetVersionData(packageName, previousVersionDescription, latestVersionDescription, latest.PackageDetailsUrl.ToString(), (latest.Published?.Date ?? DateTime.UtcNow.Date), package.IgnoreTFMs, tfmTargets));
+            return;
+        }
+
         // check publish date
         if (latest.Published >= searchTime)
         {

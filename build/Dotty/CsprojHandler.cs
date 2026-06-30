@@ -33,7 +33,7 @@ public class CsprojHandler
                 {
                     // check whether packageReferences contains the package
                     var matchingPackages =
-                        packageReferences.Where(p => p.Include == versionData.PackageName).ToList();
+                        packageReferences.Where(p => string.Equals(p.Include, versionData.PackageName, StringComparison.OrdinalIgnoreCase)).ToList();
                     if (matchingPackages.Count == 0)
                     {
                         //Log.Warning($"No matching packages found in csproj file for {versionData.PackageName}");
@@ -50,7 +50,26 @@ public class CsprojHandler
                         if (condition?.StartsWith("'$(TargetFramework)'") ?? false)
                             tfm = condition?.Split("==").LastOrDefault()?.Trim('\'', ' ', ';');
 
-                        if (version.AsVersion() < versionData.NewVersion.AsVersion() &&
+                        // resolve per-TFM target if available, otherwise fall back to global latest
+                        string targetVersion;
+                        if (!string.IsNullOrEmpty(tfm) &&
+                            versionData.TfmTargetVersions != null &&
+                            versionData.TfmTargetVersions.ContainsKey(tfm))
+                        {
+                            var cappedValue = versionData.TfmTargetVersions[tfm];
+                            if (cappedValue == null)
+                            {
+                                Log.Warning($"Not updating {packageReference.Include} for {tfm}; no version within the configured major ceiling. Leaving pinned.");
+                                continue;
+                            }
+                            targetVersion = cappedValue;
+                        }
+                        else
+                        {
+                            targetVersion = versionData.NewVersion;
+                        }
+
+                        if (version.AsVersion() < targetVersion.AsVersion() &&
                             !string.IsNullOrEmpty(versionData.IgnoreTfMs) &&
                             versionData.IgnoreTfMs.Split(",").Contains(tfm))
                         {
@@ -58,15 +77,15 @@ public class CsprojHandler
                             continue;
                         }
 
-                        if (version.AsVersion() < versionData.NewVersion.AsVersion())
+                        if (version.AsVersion() < targetVersion.AsVersion())
                         {
-                            Log.Information($"{Path.GetFileName(csprojPath)}: Updating {packageReference.Include}{(!string.IsNullOrEmpty(tfm) ? $" for {tfm}" : "")} from {version} to {versionData.NewVersion}");
+                            Log.Information($"{Path.GetFileName(csprojPath)}: Updating {packageReference.Include}{(!string.IsNullOrEmpty(tfm) ? $" for {tfm}" : "")} from {version} to {targetVersion}");
 
-                            packageReference.Metadata.FirstOrDefault(m => m.Name == "Version")!.Value = versionData.NewVersion;
+                            packageReference.Metadata.FirstOrDefault(m => m.Name == "Version")!.Value = targetVersion;
 
                             updatedCsProj = true;
 
-                            updateLog.Add($"- Package [{versionData.PackageName}]({versionData.Url}){(!string.IsNullOrEmpty(tfm) ? $" for {tfm}" : "")} was updated from {version} to {versionData.NewVersion}.");
+                            updateLog.Add($"- Package [{versionData.PackageName}]({versionData.Url}){(!string.IsNullOrEmpty(tfm) ? $" for {tfm}" : "")} was updated from {version} to {targetVersion}.");
                         }
                     }
                 }

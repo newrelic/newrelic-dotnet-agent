@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Dotty;
@@ -16,4 +17,6 @@ public class PackageInfo
     public string IgnoreReason {get; set;}
     [JsonPropertyName("ignoreTFMs")]
     public string IgnoreTFMs { get; set; }
+    [JsonPropertyName("tfmMaxMajorVersion")]
+    public Dictionary<string, int> TfmMaxMajorVersion { get; set; }
 }
