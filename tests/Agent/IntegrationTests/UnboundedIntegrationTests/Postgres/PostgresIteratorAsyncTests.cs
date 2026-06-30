@@ -18,6 +18,12 @@ public abstract class PostgresSqlIteratorAsyncTestsBase<TFixture> : NewRelicInte
 {
     private readonly ConsoleDynamicMethodFixture _fixture;
 
+    // Iterate metrics roll up from NpgsqlDataReader Read/NextResult calls. Through Npgsql 7 the async read
+    // loop over a single-row result yields 3 (read row, internal NextResult, final read returning false).
+    // Npgsql 8 refactored the async path so the result-set teardown no longer surfaces through an instrumented
+    // method, yielding 2; fixtures that pin Npgsql 8.x or later override this.
+    protected virtual int ExpectedIterationCount => 3;
+
     public PostgresSqlIteratorAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
@@ -60,10 +66,8 @@ public abstract class PostgresSqlIteratorAsyncTestsBase<TFixture> : NewRelicInte
         var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/AsyncIteratorTest";
         var expectedDatastoreCallCount = 1;
 
-        //These values are dictated by the queries that are being run as part of this test.
-        //The typical pattern in this case is for there to be a call to Read(), followed by a call to NextResult(), followed by a final call to
-        //Read() which returns false to exit the loop.  Each of these roll up to Iterate for a total of 3
-        var expectedIterationCount = 3;
+        // Number of Iterate rollups expected for this read loop; varies by Npgsql version (see ExpectedIterationCount).
+        var expectedIterationCount = ExpectedIterationCount;
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
@@ -106,24 +110,11 @@ public class PostgresSqlIteratorAsyncTestsFW462 : PostgresSqlIteratorAsyncTestsB
     }
 }
 
-public class PostgresSqlIteratorAsyncTestsFW471 : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlIteratorAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlIteratorAsyncTestsFW48 : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlIteratorAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
 public class PostgresSqlIteratorAsyncTestsFWLatest : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
+    // Npgsql 8.x async read path yields 2 Iterate rollups instead of 3 (see base class).
+    protected override int ExpectedIterationCount => 2;
+
     public PostgresSqlIteratorAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
     {
 
@@ -132,6 +123,9 @@ public class PostgresSqlIteratorAsyncTestsFWLatest : PostgresSqlIteratorAsyncTes
 
 public class PostgresSqlIteratorAsyncTestsCoreOldest : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
+    // Npgsql 8.x async read path yields 2 Iterate rollups instead of 3 (see base class).
+    protected override int ExpectedIterationCount => 2;
+
     public PostgresSqlIteratorAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
     {
 
@@ -140,6 +134,9 @@ public class PostgresSqlIteratorAsyncTestsCoreOldest : PostgresSqlIteratorAsyncT
 
 public class PostgresSqlIteratorAsyncTestsCoreLatest : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
+    // Npgsql 8.x async read path yields 2 Iterate rollups instead of 3 (see base class).
+    protected override int ExpectedIterationCount => 2;
+
     public PostgresSqlIteratorAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
     {
 

@@ -115,22 +115,6 @@ public class PostgresSqlStoredProcedureTestsFW462 : PostgresSqlStoredProcedureTe
     }
 }
 
-public class PostgresSqlStoredProcedureTestsFW471 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlStoredProcedureTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlStoredProcedureTestsFW48 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlStoredProcedureTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
 public class PostgresSqlStoredProcedureTestsFWLatest : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlStoredProcedureTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

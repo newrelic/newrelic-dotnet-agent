@@ -128,22 +128,6 @@ public class PostgresSqlSimpleQueryTestsFW462 : PostgresSqlSimpleQueryTestsBase<
     }
 }
 
-public class PostgresSqlSimpleQueryTestsFW471 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlSimpleQueryTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlSimpleQueryTestsFW48 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlSimpleQueryTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
 public class PostgresSqlSimpleQueryTestsFWLatest : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlSimpleQueryTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

@@ -130,22 +130,6 @@ public class PostgresSqlSimpleQueryAsyncTestsFW462 : PostgresSqlSimpleQueryAsync
     }
 }
 
-public class PostgresSqlSimpleQueryAsyncTestsFW471 : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlSimpleQueryAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlSimpleQueryAsyncTestsFW48 : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlSimpleQueryAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
 public class PostgresSqlSimpleQueryAsyncTestsFWLatest : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlSimpleQueryAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

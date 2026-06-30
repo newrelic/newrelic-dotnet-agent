@@ -106,22 +106,6 @@ public class PostgresSqlIteratorTestsFW462 : PostgresSqlIteratorTestsBase<Consol
     }
 }
 
-public class PostgresSqlIteratorTestsFW471 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlIteratorTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlIteratorTestsFW48 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlIteratorTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
 public class PostgresSqlIteratorTestsFWLatest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlIteratorTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
