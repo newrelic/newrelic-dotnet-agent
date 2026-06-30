@@ -335,10 +335,16 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
         <exactMethodMatcher methodName="TryFastRead" />
       </match>
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="5">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="5" maxVersion="8">
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
         <exactMethodMatcher methodName="TryFastRead" />
+      </match>
+      <!-- Npgsql 8.0 renamed the fast-read method TryFastRead() to TryRead(). The public Read() fast path routes through it, so it must be instrumented for Iterate metrics. -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="8">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
+        <exactMethodMatcher methodName="TryRead" />
       </match>
     </tracerFactory>
 
@@ -393,10 +399,16 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="Read" parameters="System.Boolean"/>
         <exactMethodMatcher methodName="TryFastRead" />
       </match>
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="5">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="5" maxVersion="8">
         <exactMethodMatcher methodName="NextResult" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="Read" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="TryFastRead" />
+      </match>
+      <!-- Npgsql 8.0 renamed the fast-read method TryFastRead() to TryRead(). -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="8">
+        <exactMethodMatcher methodName="NextResult" parameters="System.Boolean,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="TryRead" />
       </match>
       
       <!-- Oracle vendor driver for ManagedDataAccess.Core packages targeting net6.0 and later -->
