@@ -144,44 +144,44 @@ public abstract class WCFServiceTestBase : WCFLegacyTestBase
             new Assertions.ExpectedMetric(){ CallCountAllHarvests = expectedTrxCount, metricName = "WebTransaction" },
             new Assertions.ExpectedMetric(){ CallCountAllHarvests = _countServiceInvocationMethodsToTest * 2, metricName="Supportability/Events/TransactionError/Seen"},
 
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
             new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
 
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
             new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
 
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
 
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncGetData" },
 
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncThrowExceptionAtEnd" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncThrowExceptionAtEnd" },
 
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
             new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException" },
 
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
             new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException" },
 
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
             new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException"  },
 
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
 
             new Assertions.ExpectedMetric(){ CallCountAllHarvests =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart" },
 
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncThrowExceptionAtEnd", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncThrowExceptionAtEnd", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
 
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = "External/www.google.com/Stream/GET", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = "External/www.google.com/Stream/GET", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" }
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = "External/www.google.com/Stream/GET", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = "External/www.google.com/Stream/GET", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" }
         };
 
         Assertions.MetricsExist(expectedMetrics, LogHelpers.MetricValues);
@@ -462,11 +462,11 @@ public abstract class WCFServiceTestBase : WCFLegacyTestBase
         var bindingName = $"{_bindingToTest}Binding";
         if (SystemBindingNames.Contains(bindingName))
         {
-            expectedMetrics.Add(new Assertions.ExpectedMetric() { metricName = $"Supportability/WCFService/BindingType/{bindingName}", callCount = 1 });
+            expectedMetrics.Add(new Assertions.ExpectedMetric() { metricName = $"Supportability/WCFService/BindingType/{bindingName}", CallCountAllHarvests = 1 });
         }
         else
         {
-            expectedMetrics.Add(new Assertions.ExpectedMetric() { metricName = $"Supportability/WCFService/BindingType/CustomBinding", callCount = 1 });
+            expectedMetrics.Add(new Assertions.ExpectedMetric() { metricName = $"Supportability/WCFService/BindingType/CustomBinding", CallCountAllHarvests = 1 });
 
             if (_bindingToTest != WCFBindingType.Custom)
             {

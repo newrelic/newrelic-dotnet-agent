@@ -52,8 +52,8 @@ public abstract class MsmqPeekTestsBase<TFixture> : NewRelicIntegrationTest<TFix
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = metricName, callCount = 1},
-            new Assertions.ExpectedMetric { metricName = metricName, callCount = 1, metricScope = transactionName}
+            new Assertions.ExpectedMetric { metricName = metricName, CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = metricName, CallCountAllHarvests = 1, metricScope = transactionName}
         };
         var expectedTransactionTraceSegments = new List<string>
         {

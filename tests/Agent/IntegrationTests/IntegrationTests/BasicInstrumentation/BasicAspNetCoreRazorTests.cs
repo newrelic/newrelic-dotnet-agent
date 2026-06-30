@@ -44,15 +44,15 @@ public class BasicAspNetCoreRazorTests : NewRelicIntegrationTest<RemoteServiceFi
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Razor/Pages/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/Razor/Pages/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Pages_Index/OnGet", metricScope = @"WebTransaction/Razor/Pages/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/Razor/Pages/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Razor/Pages/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/Razor/Pages/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Pages_Index/OnGet", metricScope = @"WebTransaction/Razor/Pages/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/Razor/Pages/Index", CallCountAllHarvests = 1 },
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
@@ -60,8 +60,8 @@ public class BasicAspNetCoreRazorTests : NewRelicIntegrationTest<RemoteServiceFi
             new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
 
             // The .NET agent does not have the information needed to generate this metric
-            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/Razor/Pages/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/Razor/Pages/Index", CallCountAllHarvests = 1 },
         };
 
         var expectedTransactionTraceSegments = new List<string>

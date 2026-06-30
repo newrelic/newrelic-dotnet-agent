@@ -56,17 +56,17 @@ public abstract class HttpClientInstrumentationTestsBase<TFixture> : NewRelicInt
         {
             new Assertions.ExpectedMetric { metricName = @"External/all", CallCountAllHarvests = 3 },
             new Assertions.ExpectedMetric { metricName = @"External/allOther", CallCountAllHarvests = 3 },
-            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/Get", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/Get", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"External/newrelic.com/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"External/newrelic.com/Stream/GET", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"External/newrelic.com/Stream/GET", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/CancelledGetOperation", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/newrelic.com/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/newrelic.com/Stream/GET", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/newrelic.com/Stream/GET", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/CancelledGetOperation", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/Stream/GET", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/Stream/GET", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/FactoryGet", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/Stream/GET", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/Stream/GET", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/FactoryGet", CallCountAllHarvests = 1 },
 
             new Assertions.ExpectedMetric { metricName = @"Supportability/SpanEvent/TotalEventsSeen", CallCountAllHarvests = 9 }
         };

@@ -323,7 +323,7 @@ public abstract class WCFLegacyTestBase : NewRelicIntegrationTest<ConsoleDynamic
     {
         var expectedMetrics = _serviceInvocationMethodsToTest
             .Select(invocType => SupMetricNames_Service_InvocationType[invocType]).Distinct()
-            .Select(metricNM => new Assertions.ExpectedMetric() { metricName = metricNM, callCount = 1 })
+            .Select(metricNM => new Assertions.ExpectedMetric() { metricName = metricNM, CallCountAllHarvests = 1 })
             .ToArray();
 
         var unexpectedMetrics = WCFInvocationMethods_All
@@ -344,7 +344,7 @@ public abstract class WCFLegacyTestBase : NewRelicIntegrationTest<ConsoleDynamic
     {
         var expectedMetrics = _clientInvocationMethodsToTest
             .Select(invocType => SupMetricNames_Client_InvocationType[invocType]).Distinct()
-            .Select(metricNM => new Assertions.ExpectedMetric() { metricName = metricNM, callCount = 1 })
+            .Select(metricNM => new Assertions.ExpectedMetric() { metricName = metricNM, CallCountAllHarvests = 1 })
             .ToArray();
 
         var unexpectedMetrics = WCFInvocationMethods_All

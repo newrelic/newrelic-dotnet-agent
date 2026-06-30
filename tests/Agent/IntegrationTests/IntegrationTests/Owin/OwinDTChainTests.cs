@@ -86,15 +86,15 @@ public class OwinDTChainTests : NewRelicIntegrationTest<OwinTracingChainFixture>
 
         var senderExpectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", CallCountAllHarvests = 1 },
 
             new Assertions.ExpectedMetric { metricName = @"Supportability/SpanEvent/TotalEventsSeen", CallCountAllHarvests = 4 },
 
-            new Assertions.ExpectedMetric { metricName = @"DurationByCaller/Unknown/Unknown/Unknown/HTTP/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DurationByCaller/Unknown/Unknown/Unknown/HTTP/allWeb", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"TransportDuration/Unknown/Unknown/Unknown/HTTP/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"TransportDuration/Unknown/Unknown/Unknown/HTTP/allWeb", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DurationByCaller/Unknown/Unknown/Unknown/HTTP/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DurationByCaller/Unknown/Unknown/Unknown/HTTP/allWeb", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"TransportDuration/Unknown/Unknown/Unknown/HTTP/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"TransportDuration/Unknown/Unknown/Unknown/HTTP/allWeb", CallCountAllHarvests = 1 },
         };
 
         var acctId = _fixture.AgentLog.GetAccountId();
@@ -102,13 +102,13 @@ public class OwinDTChainTests : NewRelicIntegrationTest<OwinTracingChainFixture>
 
         var receiverExpectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric { metricName = @"Supportability/SpanEvent/TotalEventsSeen", CallCountAllHarvests = 3 },
 
-            new Assertions.ExpectedMetric { metricName = $"DurationByCaller/App/{acctId}/{appId}/HTTP/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"DurationByCaller/App/{acctId}/{appId}/HTTP/allWeb", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"TransportDuration/App/{acctId}/{appId}/HTTP/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"TransportDuration/App/{acctId}/{appId}/HTTP/allWeb", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"DurationByCaller/App/{acctId}/{appId}/HTTP/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"DurationByCaller/App/{acctId}/{appId}/HTTP/allWeb", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"TransportDuration/App/{acctId}/{appId}/HTTP/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"TransportDuration/App/{acctId}/{appId}/HTTP/allWeb", CallCountAllHarvests = 1 },
         };
 
         var senderActualMetrics = _fixture.AgentLog.GetMetrics();

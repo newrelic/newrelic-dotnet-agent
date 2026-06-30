@@ -67,10 +67,10 @@ public class RemoveIgnoredInstrumentation : NewRelicIntegrationTest<AspNetFramew
             // From initialize and first call to TestAddFile while the ignore list is present
             new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/{controller}/{action}/{id}", CallCountAllHarvests = 2 },
             // From the call after the ignore list removed
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 1 },
             // Supportability metric indicating that the managed code successfully parsed the ignored instrumentation settings
             // This is only sent on the first metric harvest
-            new Assertions.ExpectedMetric { metricName = @"Supportability/Dotnet/IgnoredInstrumentation", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"Supportability/Dotnet/IgnoredInstrumentation", CallCountAllHarvests = 1 }
         };
 
         var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);

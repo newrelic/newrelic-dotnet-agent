@@ -34,10 +34,10 @@ public abstract class WCFServiceExternalCallsTestsBase : WCFEmptyTestBase<Consol
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransactionTotalTime/WCF/NewRelic.Agent.IntegrationTests.Shared.Wcf.IWcfService.TAPMakeExternalCalls" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"External/google.com/Stream/GET" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"External/bing.com/Stream/GET" },
-            new Assertions.ExpectedMetric(){ callCount =1, metricName = $"External/yahoo.com/Stream/GET" }
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"WebTransactionTotalTime/WCF/NewRelic.Agent.IntegrationTests.Shared.Wcf.IWcfService.TAPMakeExternalCalls" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"External/google.com/Stream/GET" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"External/bing.com/Stream/GET" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests =1, metricName = $"External/yahoo.com/Stream/GET" }
         };
 
         Assertions.MetricsExist(expectedMetrics, _logHelpers.MetricValues);

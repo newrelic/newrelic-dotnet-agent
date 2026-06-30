@@ -69,25 +69,25 @@ public abstract class MySqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixtur
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1, metricScope = transactionName},
-            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = transactionName}
+            new Assertions.ExpectedMetric { metricName = @"Datastore/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", CallCountAllHarvests = 1, metricScope = transactionName},
+            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", CallCountAllHarvests = expectedIterateCallCount },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", CallCountAllHarvests = expectedIterateCallCount, metricScope = transactionName}
 
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
             // The datastore operation happened inside a console app so there should be no allWeb metrics
-            new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1, metricScope = transactionName }
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", CallCountAllHarvests = 1, metricScope = transactionName }
         };
         var expectedTransactionTraceSegments = new List<string>
         {

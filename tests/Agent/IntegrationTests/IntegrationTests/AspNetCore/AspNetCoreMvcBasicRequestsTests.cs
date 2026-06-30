@@ -103,7 +103,7 @@ public class AspNetCoreMvcBasicRequestsTests : NewRelicIntegrationTest<RemoteSer
 
     private readonly List<Assertions.ExpectedMetric> _generalMetrics = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"Supportability/OS/Linux", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Supportability/OS/Linux", CallCountAllHarvests = 1 },
         new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = ExpectedTransactionCount },
         new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = ExpectedTransactionCount },
         new Assertions.ExpectedMetric { metricName = @"Apdex"},
@@ -118,30 +118,30 @@ public class AspNetCoreMvcBasicRequestsTests : NewRelicIntegrationTest<RemoteSer
     private readonly List<Assertions.ExpectedMetric> _indexMetrics = new List<Assertions.ExpectedMetric>
     {
         new Assertions.ExpectedMetric { metricName = @"Apdex/MVC/Home/Index"},
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/Home/Index", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/Home/Index", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = @"WebTransaction/MVC/Home/Index", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/Home/Index", callCount = 1 }
+        new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = @"WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 }
     };
 
     private readonly List<Assertions.ExpectedMetric> _throwMetrics = new List<Assertions.ExpectedMetric>
     {
         new Assertions.ExpectedMetric { metricName = @"Apdex/MVC/Home/ThrowException"},
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/ThrowException", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/Home/ThrowException", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/ThrowException", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/Home/ThrowException", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/ThrowException", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/ThrowException", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/ThrowException", metricScope = @"WebTransaction/MVC/Home/ThrowException", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/Home/ThrowException", callCount = 1 }
+        new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/ThrowException", metricScope = @"WebTransaction/MVC/Home/ThrowException", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/Home/ThrowException", CallCountAllHarvests = 1 }
     };
 
     private readonly List<Assertions.ExpectedMetric> _unexpectedMetrics = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric {metricName = @"WebTransaction/ASP/Home/About", callCount = 1},
+        new Assertions.ExpectedMetric {metricName = @"WebTransaction/ASP/Home/About", CallCountAllHarvests = 1},
     };
 
 }

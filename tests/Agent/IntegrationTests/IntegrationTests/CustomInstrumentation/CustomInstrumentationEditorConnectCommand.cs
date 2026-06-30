@@ -47,10 +47,10 @@ public class CustomInstrumentationEditorConnectCommand : NewRelicIntegrationTest
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             // Unscoped
-            new Assertions.ExpectedMetric { metricName = @"Custom/Live/CustomMethodDefaultTracer", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/Live/CustomMethodDefaultTracer", CallCountAllHarvests = 1 },
 				
             // Scoped
-            new Assertions.ExpectedMetric { metricName = @"Custom/Live/CustomMethodDefaultTracer", metricScope = "WebTransaction/MVC/CustomInstrumentationController/Get", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"Custom/Live/CustomMethodDefaultTracer", metricScope = "WebTransaction/MVC/CustomInstrumentationController/Get", CallCountAllHarvests = 1 }
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();

@@ -72,10 +72,10 @@ public abstract class CosmosDBTestsBase<TFixture> : NewRelicIntegrationTest<TFix
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadFeedDatabase", metricScope = expectedTransactionName, callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadFeedDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
         };
         var expectedAgentAttributes = new List<string>
         {
@@ -109,12 +109,12 @@ public abstract class CosmosDBTestsBase<TFixture> : NewRelicIntegrationTest<TFix
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/DeleteCollection", metricScope = expectedTransactionName, callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/DeleteCollection", metricScope = expectedTransactionName, CallCountAllHarvests = 1 }
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
@@ -131,23 +131,23 @@ public abstract class CosmosDBTestsBase<TFixture> : NewRelicIntegrationTest<TFix
         var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateAndReadItems";
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
 
             //From calling Container.CreateItemStreamAsync() and Container.CreateItemAsync()
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/CreateDocument", metricScope = expectedTransactionName, callCount = 2 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/CreateDocument", metricScope = expectedTransactionName, CallCountAllHarvests = 2 },
 
             //From calling Container.UpsertItemStreamAsync() and Container.UpsertItemAsync()
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/UpsertDocument", metricScope = expectedTransactionName, callCount = 2 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/UpsertDocument", metricScope = expectedTransactionName, CallCountAllHarvests = 2 },
 
             //From calling FeedIterator.ReadNextAsync()
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadFeedDocument", metricScope = expectedTransactionName, callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadFeedDocument", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
 
             //From calling Container.ReadManyItemsStreamAsync() and Container.ReadManyItemsAsync()
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/QueryDocument", metricScope = expectedTransactionName, callCount = 2 }
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/QueryDocument", metricScope = expectedTransactionName, CallCountAllHarvests = 2 }
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
@@ -165,20 +165,20 @@ public abstract class CosmosDBTestsBase<TFixture> : NewRelicIntegrationTest<TFix
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
 
             //From calling Container.CreateItemStreamAsync() and Container.CreateItemAsync()
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/CreateDocument", metricScope = expectedTransactionName, callCount = 2 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/CreateDocument", metricScope = expectedTransactionName, CallCountAllHarvests = 2 },
 
             //From calling Container.UpsertItemStreamAsync() and Container.UpsertItemAsync()
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/UpsertDocument", metricScope = expectedTransactionName, callCount = 2 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/UpsertDocument", metricScope = expectedTransactionName, CallCountAllHarvests = 2 },
 
             //From calling Container.GetItemQueryIterator() and Container.GetItemQueryStreamIterator()
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/QueryDocument", metricScope = expectedTransactionName, callCount = 2 }
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/QueryDocument", metricScope = expectedTransactionName, CallCountAllHarvests = 2 }
         };
 
         var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
@@ -207,10 +207,10 @@ public abstract class CosmosDBTestsBase<TFixture> : NewRelicIntegrationTest<TFix
         var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateItemsConcurrentlyAsync";
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
@@ -225,16 +225,16 @@ public abstract class CosmosDBTestsBase<TFixture> : NewRelicIntegrationTest<TFix
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
 
             //From calling Scripts.CreateStoredProcedureAsync()
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/CreateStoredProcedure", metricScope = expectedTransactionName, callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/CreateStoredProcedure", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
 
             //From calling Scripts.ExecuteStoredProcedureAsync()
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ExecuteJavaScriptStoredProcedure", metricScope = expectedTransactionName, callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ExecuteJavaScriptStoredProcedure", metricScope = expectedTransactionName, CallCountAllHarvests = 1 }
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();

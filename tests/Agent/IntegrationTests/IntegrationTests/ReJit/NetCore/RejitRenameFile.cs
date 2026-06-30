@@ -61,16 +61,16 @@ public abstract class RejitRenameFileBase<TFixture> : NewRelicIntegrationTest<TF
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             //transactions
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomRenameMetricName", CallCountAllHarvests = 2 },
 
             // Unscoped
-            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenameMetricName", CallCountAllHarvests = 2 },
             new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetRenameFile", CallCountAllHarvests = 2},
 
             // Scoped
-            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenameMetricName", metricScope = "WebTransaction/Custom/MyCustomRenameMetricName", CallCountAllHarvests = 2 }
         };
 

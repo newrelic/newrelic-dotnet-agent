@@ -56,9 +56,9 @@ public abstract class ErrorGroupCallbackTestsBase<TFixture> : NewRelicIntegratio
 
         var apiMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/SetErrorGroupCallback"},
-            new Assertions.ExpectedMetric() { callCount = 1, metricName = "Supportability/AgentTiming/ErrorEventMakerSetErrorGroup" },
-            new Assertions.ExpectedMetric() { callCount = 1, metricName = "Supportability/AgentTiming/ErrorTraceMakerSetErrorGroup" }
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Supportability/ApiInvocation/SetErrorGroupCallback"},
+            new Assertions.ExpectedMetric() { CallCountAllHarvests = 1, metricName = "Supportability/AgentTiming/ErrorEventMakerSetErrorGroup" },
+            new Assertions.ExpectedMetric() { CallCountAllHarvests = 1, metricName = "Supportability/AgentTiming/ErrorTraceMakerSetErrorGroup" }
         };
 
         var expectedAgentAttributes = new Dictionary<string, string>

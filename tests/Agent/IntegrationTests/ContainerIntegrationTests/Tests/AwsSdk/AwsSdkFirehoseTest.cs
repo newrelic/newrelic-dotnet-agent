@@ -72,16 +72,16 @@ public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehos
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = $"DotNet/Firehose/CreateDeliveryStream/{_streamName}", callCount = 1},
-            new() { metricName = $"DotNet/Firehose/CreateDeliveryStream/{_streamName}", callCount = 1, metricScope = createDeliveryStreamScope},
-            new() { metricName = $"DotNet/Firehose/ListDeliveryStreams", callCount = 1},
-            new() { metricName = $"DotNet/Firehose/ListDeliveryStreams", callCount = 1, metricScope = listDeliveryStreamsScope},
-            new() { metricName = $"DotNet/Firehose/PutRecord/{_streamName}", callCount = 1},
-            new() { metricName = $"DotNet/Firehose/PutRecord/{_streamName}", callCount = 1, metricScope = putRecordScope},
-            new() { metricName = $"DotNet/Firehose/PutRecordBatch/{_streamName}", callCount = 1},
-            new() { metricName = $"DotNet/Firehose/PutRecordBatch/{_streamName}", callCount = 1, metricScope = putRecordBatchScope},
-            new() { metricName = $"DotNet/Firehose/DeleteDeliveryStream/{_streamName}", callCount = 1},
-            new() { metricName = $"DotNet/Firehose/DeleteDeliveryStream/{_streamName}", callCount = 1, metricScope = deleteDeliveryStreamScope},
+            new() { metricName = $"DotNet/Firehose/CreateDeliveryStream/{_streamName}", CallCountAllHarvests = 1},
+            new() { metricName = $"DotNet/Firehose/CreateDeliveryStream/{_streamName}", CallCountAllHarvests = 1, metricScope = createDeliveryStreamScope},
+            new() { metricName = $"DotNet/Firehose/ListDeliveryStreams", CallCountAllHarvests = 1},
+            new() { metricName = $"DotNet/Firehose/ListDeliveryStreams", CallCountAllHarvests = 1, metricScope = listDeliveryStreamsScope},
+            new() { metricName = $"DotNet/Firehose/PutRecord/{_streamName}", CallCountAllHarvests = 1},
+            new() { metricName = $"DotNet/Firehose/PutRecord/{_streamName}", CallCountAllHarvests = 1, metricScope = putRecordScope},
+            new() { metricName = $"DotNet/Firehose/PutRecordBatch/{_streamName}", CallCountAllHarvests = 1},
+            new() { metricName = $"DotNet/Firehose/PutRecordBatch/{_streamName}", CallCountAllHarvests = 1, metricScope = putRecordBatchScope},
+            new() { metricName = $"DotNet/Firehose/DeleteDeliveryStream/{_streamName}", CallCountAllHarvests = 1},
+            new() { metricName = $"DotNet/Firehose/DeleteDeliveryStream/{_streamName}", CallCountAllHarvests = 1, metricScope = deleteDeliveryStreamScope},
 
         };
 

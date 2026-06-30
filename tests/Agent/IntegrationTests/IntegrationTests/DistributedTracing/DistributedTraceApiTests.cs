@@ -21,11 +21,11 @@ public class DistributedTracingApiTests_W3C : DtApiTestBase
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/InsertDistributedTraceHeaders", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/AcceptDistributedTraceHeaders", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/InsertDistributedTraceHeaders", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/AcceptDistributedTraceHeaders", CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/CurrentTransaction", CallCountAllHarvests = 2 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", CallCountAllHarvests = 1 },
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();

@@ -46,30 +46,30 @@ public class ErrorTraceMvc : NewRelicIntegrationTest<RemoteServiceFixtures.Basic
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             // error metrics
-            new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/MVC/DefaultController/ThrowException", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = @"Errors/all", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1},
 
             // other
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/DefaultController/ThrowException", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/DefaultController/ThrowException", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1 },
         };
 
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
             // These metrics won't get generated because of the exception
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", CallCountAllHarvests = 1 },
 
             new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Integrated Pipeline" },
             new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Default/Ignored" },

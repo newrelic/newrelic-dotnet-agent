@@ -67,25 +67,25 @@ public abstract class OracleSyncTestsBase<TFixture> : NewRelicIntegrationTest<TF
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = @"Datastore/all", callCount = expectedDatastoreCallCount },
-            new() { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
-            new() { metricName = @"Datastore/Oracle/all", callCount = expectedDatastoreCallCount },
-            new() { metricName = @"Datastore/Oracle/allOther", callCount = expectedDatastoreCallCount },
-            new() { metricName = $@"Datastore/instance/Oracle/{OracleConfiguration.OracleServer}/{OracleConfiguration.OraclePort}", callCount = expectedDatastoreCallCount},
-            new() { metricName = @"Datastore/operation/Oracle/select", callCount = 2 },
-            new() { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1 },
-            new() { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
-            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/select", callCount = 1 },
-            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/select", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
-            new() { metricName = @"Datastore/operation/Oracle/insert", callCount = 1 },
-            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/insert", callCount = 1 },
-            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/insert", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
-            new() { metricName = @"Datastore/operation/Oracle/delete", callCount = 1 },
-            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/delete", callCount = 1 },
-            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/delete", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
+            new() { metricName = @"Datastore/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new() { metricName = @"Datastore/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
+            new() { metricName = @"Datastore/Oracle/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new() { metricName = @"Datastore/Oracle/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
+            new() { metricName = $@"Datastore/instance/Oracle/{OracleConfiguration.OracleServer}/{OracleConfiguration.OraclePort}", CallCountAllHarvests = expectedDatastoreCallCount},
+            new() { metricName = @"Datastore/operation/Oracle/select", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/statement/Oracle/user_tables/select", CallCountAllHarvests = 1 },
+            new() { metricName = @"Datastore/statement/Oracle/user_tables/select", CallCountAllHarvests = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
+            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/select", CallCountAllHarvests = 1 },
+            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/select", CallCountAllHarvests = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
+            new() { metricName = @"Datastore/operation/Oracle/insert", CallCountAllHarvests = 1 },
+            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/insert", CallCountAllHarvests = 1 },
+            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/insert", CallCountAllHarvests = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
+            new() { metricName = @"Datastore/operation/Oracle/delete", CallCountAllHarvests = 1 },
+            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/delete", CallCountAllHarvests = 1 },
+            new() { metricName = $@"Datastore/statement/Oracle/{_tableName}/delete", CallCountAllHarvests = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"},
 
-            new() { metricName = @"DotNet/DatabaseResult/Iterate" , callCount = expectedIterateCallCount },
-            new() { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"}
+            new() { metricName = @"DotNet/DatabaseResult/Iterate" , CallCountAllHarvests = expectedIterateCallCount },
+            new() { metricName = @"DotNet/DatabaseResult/Iterate", CallCountAllHarvests = expectedIterateCallCount, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync"}
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {

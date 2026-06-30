@@ -91,110 +91,110 @@ public abstract class OwinWebApiAsyncTestsBase<TFixture> : NewRelicIntegrationTe
 
         var ioBoundNoSpecialAsyncMetrics = new List<Assertions.ExpectedMetric> {
             new Assertions.ExpectedMetric { metricName = @"Apdex/WebAPI/AsyncAwait/IoBoundNoSpecialAsync"},
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/IoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync1", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync2", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync3", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync1", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync2", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync3", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/IoBoundNoSpecialAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync1", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync2", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync3", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/IoBoundNoSpecialAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync1", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync2", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync3", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 }
         };
 
         var customMiddlewareIoBoundNoSpecialAsyncMetrics = new List<Assertions.ExpectedMetric> {
             new Assertions.ExpectedMetric { metricName = @"Apdex/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync"},
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"DotNet/{AssemblyName}.CustomMiddleware/Invoke", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"DotNet/{AssemblyName}.CustomMiddleware/MiddlewareMethodAsync", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"DotNet/{AssemblyName}.CustomMiddleware/Invoke", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"DotNet/{AssemblyName}.CustomMiddleware/MiddlewareMethodAsync", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"DotNet/{AssemblyName}.CustomMiddleware/Invoke", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"DotNet/{AssemblyName}.CustomMiddleware/MiddlewareMethodAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"DotNet/{AssemblyName}.CustomMiddleware/Invoke", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"DotNet/{AssemblyName}.CustomMiddleware/MiddlewareMethodAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync", CallCountAllHarvests = 1 }
         };
 
         var ioBoundConfigureAwaitFalseAsyncMetrics = new List<Assertions.ExpectedMetric> {
             new Assertions.ExpectedMetric { metricName = @"Apdex/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync"},
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/IoBoundConfigureAwaitFalseAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitFalseExampleAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitSubMethodAsync2", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitFalseExampleAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitSubMethodAsync2", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/IoBoundConfigureAwaitFalseAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitFalseExampleAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitSubMethodAsync2", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/IoBoundConfigureAwaitFalseAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitFalseExampleAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitSubMethodAsync2", metricScope = @"WebTransaction/WebAPI/AsyncAwait/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 }
         };
 
         var cpuBoundTasksAsyncMetrics = new List<Assertions.ExpectedMetric> {
             new Assertions.ExpectedMetric { metricName = @"Apdex/WebAPI/AsyncAwait/CpuBoundTasksAsync"},
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/AsyncAwait/CpuBoundTasksAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/AsyncAwait/CpuBoundTasksAsync", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/AsyncAwait/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/AsyncAwait/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/CpuBoundTasksAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBackgroundMethod", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBackgroundMethod", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBackgroundMethod", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBackgroundMethod", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/CpuBoundTasksAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CpuBoundTasksAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CpuBoundTasksAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBackgroundMethod", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CpuBoundTasksAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBackgroundMethod", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CpuBoundTasksAsync", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwait/CpuBoundTasksAsync", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBackgroundMethod", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBackgroundMethod", metricScope = @"WebTransaction/WebAPI/AsyncAwait/CpuBoundTasksAsync", CallCountAllHarvests = 1 }
         };
 
         var errorReponse = new List<Assertions.ExpectedMetric>
         {
             new Assertions.ExpectedMetric { metricName = @"Apdex/WebAPI/AsyncAwait/ErrorResponse"},
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/AsyncAwait/ErrorResponse", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/AsyncAwait/ErrorResponse", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/AsyncAwait/ErrorResponse", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/AsyncAwait/ErrorResponse", CallCountAllHarvests = 1 },
         };
 
         var manualTaskRunBlockedMetrics = new List<Assertions.ExpectedMetric> {
             new Assertions.ExpectedMetric { metricName = @"Apdex/WebAPI/ManualAsync/TaskRunBlocked"},
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/ManualAsync/TaskRunBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/ManualAsync/TaskRunBlocked", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/ManualAsync/TaskRunBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/ManualAsync/TaskRunBlocked", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/TaskRunBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/ManualTaskRunBackgroundMethod", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/TaskRunBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/ManualTaskRunBackgroundMethod", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/TaskRunBlocked", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskRunBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskRunBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/ManualTaskRunBackgroundMethod", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskRunBlocked", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/TaskRunBlocked", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskRunBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskRunBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/ManualTaskRunBackgroundMethod", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskRunBlocked", CallCountAllHarvests = 1 },
         };
 
         var manualTaskFactoryStartNewMetrics = new List<Assertions.ExpectedMetric> {
             new Assertions.ExpectedMetric { metricName = @"Apdex/WebAPI/ManualAsync/TaskFactoryStartNewBlocked"},
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/ManualAsync/TaskFactoryStartNewBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/ManualAsync/TaskFactoryStartNewBlocked", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/ManualAsync/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/ManualAsync/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/TaskFactoryStartNewBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/ManualTaskFactoryStartNewBackgroundMethod", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/ManualTaskFactoryStartNewBackgroundMethod", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/TaskFactoryStartNewBlocked", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskFactoryStartNewBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskFactoryStartNewBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/ManualTaskFactoryStartNewBackgroundMethod", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskFactoryStartNewBlocked", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/TaskFactoryStartNewBlocked", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/ManualTaskFactoryStartNewBackgroundMethod", metricScope = @"WebTransaction/WebAPI/ManualAsync/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
         };
 
         var manualNewThreadStartBlocked = new List<Assertions.ExpectedMetric> {
             new Assertions.ExpectedMetric { metricName = @"Apdex/WebAPI/ManualAsync/NewThreadStartBlocked"},
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/ManualAsync/NewThreadStartBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/ManualAsync/NewThreadStartBlocked", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/WebAPI/ManualAsync/NewThreadStartBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/WebAPI/ManualAsync/NewThreadStartBlocked", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/NewThreadStartBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/ManualThreadStartBackgroundMethod", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/NewThreadStartBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/ManualThreadStartBackgroundMethod", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/NewThreadStartBlocked", metricScope = @"WebTransaction/WebAPI/ManualAsync/NewThreadStartBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/ManualAsync/NewThreadStartBlocked", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/ManualThreadStartBackgroundMethod", metricScope = @"WebTransaction/WebAPI/ManualAsync/NewThreadStartBlocked", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ManualAsync/NewThreadStartBlocked", metricScope = @"WebTransaction/WebAPI/ManualAsync/NewThreadStartBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Owin Middleware Pipeline", metricScope = @"WebTransaction/WebAPI/ManualAsync/NewThreadStartBlocked", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/ManualThreadStartBackgroundMethod", metricScope = @"WebTransaction/WebAPI/ManualAsync/NewThreadStartBlocked", CallCountAllHarvests = 1 }
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();

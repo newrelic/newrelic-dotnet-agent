@@ -51,9 +51,9 @@ public abstract class RabbitMqLegacyDistributedTracingTestsBase<TFixture> : NewR
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = "Supportability/DistributedTrace/CreatePayload/Success", callCount = 3 },
-            new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Create/Success", callCount = 3 },
-            new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 },
+            new Assertions.ExpectedMetric { metricName = "Supportability/DistributedTrace/CreatePayload/Success", CallCountAllHarvests = 3 },
+            new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 3 },
+            new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 2 },
             new Assertions.ExpectedMetric { metricName = "DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ.RabbitMQLegacyExerciser/InstrumentedChildMethod"} ,
             new Assertions.ExpectedMetric { metricName = "DotNet/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ.RabbitMQLegacyExerciser/InstrumentedChildMethod", metricScope = "OtherTransaction/Message/RabbitMQ/Queue/Named/integrationTestQueue.*", IsRegexScope = true}
         };

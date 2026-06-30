@@ -68,10 +68,10 @@ public abstract class MySqlStoredProcedureTestsBase<TFixture> : NewRelicIntegrat
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWith.ToLower()}/ExecuteProcedure", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWith.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = transactionName},
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWithout.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = transactionName}
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWith.ToLower()}/ExecuteProcedure", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWith.ToLower()}/ExecuteProcedure", CallCountAllHarvests = 1, metricScope = transactionName},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWithout.ToLower()}/ExecuteProcedure", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procNameWithout.ToLower()}/ExecuteProcedure", CallCountAllHarvests = 1, metricScope = transactionName}
         };
 
         var expectedTransactionTraceSegments = new List<string>

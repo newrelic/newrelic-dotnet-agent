@@ -470,11 +470,6 @@ public static class Assertions
             {
                 if (expectedMetric.CallCountAllHarvests.HasValue)
                 {
-                    if (expectedMetric.callCount.HasValue)
-                    {
-                        throw new Exception($"Cannot validate both callCount (single harvest) and CallCountAllHarvests for a single metric. Please choose one. ExpectedMetric: {expectedMetric}");
-                    }
-
                     var matchedMetrics = TryFindMetrics(expectedMetric, actualMetrics);
                     if (matchedMetrics.Count == 0)
                     {
@@ -521,16 +516,6 @@ public static class Assertions
                         continue;
                     }
 
-                    if (expectedMetric.callCount.HasValue && matchedMetric.Values.CallCount != expectedMetric.callCount)
-                    {
-                        builder.AppendFormat("Metric named {0} scoped to {1} had an unexpected count of {2} (Expected {3})",
-                            matchedMetric.MetricSpec.Name, matchedMetric.MetricSpec.Scope ?? "nothing",
-                            matchedMetric.Values.CallCount, expectedMetric.callCount);
-                        builder.AppendLine();
-                        builder.AppendLine();
-
-                        succeeded = false;
-                    }
                 }
             }
         }
@@ -1208,14 +1193,13 @@ public static class Assertions
     {
         public string metricName = null;
         public string metricScope = null;
-        public decimal? callCount = null;
         public decimal? CallCountAllHarvests = null;
         public bool IsRegexName = false;
         public bool IsRegexScope = false;
 
         public override string ToString()
         {
-            return $"{{ metricName: {metricName} metricScope: {metricScope}, IsRegexName: {IsRegexName}, IsRegexScope: {IsRegexScope}, callCount: {callCount}, CallCountAllHarvests: {CallCountAllHarvests} }}";
+            return $"{{ metricName: {metricName} metricScope: {metricScope}, IsRegexName: {IsRegexName}, IsRegexScope: {IsRegexScope}, CallCountAllHarvests: {CallCountAllHarvests} }}";
         }
     }
 

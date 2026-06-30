@@ -91,19 +91,19 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
             new()
             {
                 metricName = $"{_processMetricNameBase}/{_queueOrTopicName}",
-                callCount = 2,
+                CallCountAllHarvests = 2,
                 metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
             },
             new()
             {
                 metricName = _onProcessMessageMethodSegmentMetricName,
-                callCount = 2,
+                CallCountAllHarvests = 2,
                 metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
             },
             new()
             {
                 metricName = $"{_settleMetricNameBase}/{_queueOrTopicName}",
-                callCount = 2,
+                CallCountAllHarvests = 2,
                 metricScope = $"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}"
             },
             new() { metricName = "Supportability/TraceContext/Accept/Success"},

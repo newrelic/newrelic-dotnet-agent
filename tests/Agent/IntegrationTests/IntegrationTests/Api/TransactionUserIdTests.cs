@@ -49,7 +49,7 @@ public abstract class TransactionUserIdTests<TFixture> : NewRelicIntegrationTest
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/SetUserId"}
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Supportability/ApiInvocation/SetUserId"}
         };
 
         var actualMetrics = Fixture.AgentLog.GetMetrics().ToList();

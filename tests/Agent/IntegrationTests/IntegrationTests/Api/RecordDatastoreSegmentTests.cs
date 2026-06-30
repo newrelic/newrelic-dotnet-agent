@@ -96,15 +96,15 @@ public abstract class RecordDatastoreSegmentTests<TFixture> : NewRelicIntegratio
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/StartDatastoreSegment" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/statement/MyVendor/MyModel/MyOperation" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/operation/MyVendor/MyOperation" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/all" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/allOther" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/MyVendor/all" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/MyVendor/allOther" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = _allOptions ? "Datastore/instance/MyVendor/MyHost/MyPath" : "Datastore/instance/MyVendor/unknown/unknown" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Datastore/statement/MyVendor/MyModel/MyOperation", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.Libraries.ApiCalls/RecordDatastoreSegment" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Supportability/ApiInvocation/StartDatastoreSegment" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Datastore/statement/MyVendor/MyModel/MyOperation" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Datastore/operation/MyVendor/MyOperation" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Datastore/all" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Datastore/allOther" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Datastore/MyVendor/all" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Datastore/MyVendor/allOther" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = _allOptions ? "Datastore/instance/MyVendor/MyHost/MyPath" : "Datastore/instance/MyVendor/unknown/unknown" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Datastore/statement/MyVendor/MyModel/MyOperation", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.Libraries.ApiCalls/RecordDatastoreSegment" },
         };
 
         // this will not exist if command text is missing.

@@ -60,31 +60,31 @@ public abstract class RejitAddAttributeBase<TFixture> : NewRelicIntegrationTest<
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             //transactions
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddAfterMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Rejit/GetAddAttribute", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddAfterMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Rejit/GetAddAttribute", CallCountAllHarvests = 1 },
 
             // Unscoped
-            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddAfterMetricName", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddAfterMetricName", CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddAttribute", CallCountAllHarvests = 2 },
 
             // Scoped
-            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddAfterMetricName", metricScope = "WebTransaction/Custom/MyCustomAddAfterMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddAttribute", metricScope = "WebTransaction/MVC/Rejit/GetAddAttribute", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddAfterMetricName", metricScope = "WebTransaction/Custom/MyCustomAddAfterMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddAttribute", metricScope = "WebTransaction/MVC/Rejit/GetAddAttribute", CallCountAllHarvests = 1 }
         };
 
         var notExpcetedMetrics = new List<Assertions.ExpectedMetric>
         {
             //transactions
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddBeforeMetricName", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddBeforeMetricName", CallCountAllHarvests = 1 },
 
             // Unscoped
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddBeforeMetricName", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddBeforeMetricName", CallCountAllHarvests = 1 },
 
             // Scoped
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddBeforeMetricName", metricScope = "WebTransaction/Custom/MyCustomAddBeforeMetricName", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddBeforeMetricName", metricScope = "WebTransaction/Custom/MyCustomAddBeforeMetricName", CallCountAllHarvests = 1 }
         };
 
         var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);
