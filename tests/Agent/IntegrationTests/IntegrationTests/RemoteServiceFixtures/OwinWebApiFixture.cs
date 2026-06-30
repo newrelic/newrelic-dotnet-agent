@@ -176,6 +176,22 @@ public class OwinWebApiFixture : RemoteApplicationFixture
         GetAndAssertStatusCode(address, HttpStatusCode.NotFound, GetHeaders());
     }
 
+    public void GetWithCustomHeaders(IEnumerable<KeyValuePair<string, string>> customHeaders)
+    {
+        var address = $"http://{DestinationServerName}:{Port}/api/Values";
+
+        using (var request = new HttpRequestMessage(HttpMethod.Get, address))
+        {
+            foreach (var header in customHeaders)
+                request.Headers.Add(header.Key, header.Value);
+
+            using (var response = _httpClient.SendAsync(request).Result)
+            {
+                Assert.NotNull(response);
+            }
+        }
+    }
+
     public IEnumerable<KeyValuePair<string, string>> GetHeaders()
     {
         return new List<KeyValuePair<string, string>>()

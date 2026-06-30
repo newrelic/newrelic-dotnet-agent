@@ -429,6 +429,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
 
     public bool ForceSynchronousTimingCalculationHttpClient => true;
 
+    public bool UseHeaderBasedRequestQueueTimeForClassicAspNet => true;
+
     public bool EnableAspNetCore6PlusBrowserInjection => true;
 
     public bool InstrumentAspNetCore6PlusWebsockets => false;
