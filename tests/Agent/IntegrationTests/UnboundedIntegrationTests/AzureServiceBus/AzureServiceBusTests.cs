@@ -71,7 +71,7 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
         {
             new()
             {
-                metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}", callCount = _destinationType == "Queue" ? 4 : 3
+                metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}", CallCountAllHarvests = _destinationType == "Queue" ? 4 : 3
             },
             new()
             {
@@ -95,7 +95,7 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
-                callCount = _destinationType == "Queue" ? 6 : 5
+                CallCountAllHarvests = _destinationType == "Queue" ? 6 : 5
             },
             new()
             {
@@ -113,7 +113,7 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Peek/Named/{_queueOrTopicName}",
-                callCount = 1
+                CallCountAllHarvests = 1
             },
             new()
             {
@@ -125,7 +125,7 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
-                callCount = _destinationType == "Queue" ? 5 : 4
+                CallCountAllHarvests = _destinationType == "Queue" ? 5 : 4
             },
             new()
             {
@@ -169,7 +169,7 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
                 new()
                 {
                     metricName = $"MessageBroker/ServiceBus/{_destinationType}/Cancel/Named/{_queueOrTopicName}",
-                    callCount = 1
+                    CallCountAllHarvests = 1
                 });
             expectedMetrics.Add(
                 new()
