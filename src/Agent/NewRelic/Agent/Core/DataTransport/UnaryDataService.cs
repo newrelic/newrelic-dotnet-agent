@@ -105,7 +105,12 @@ public abstract class UnaryDataService<TRequest, TRequestBatch, TResponse> : IUn
 
         if (CompressionEnabled)
         {
-            headers.Add("grpc-internal-encoding-request", "gzip");
+            // Real gRPC wire headers. The hand-rolled unary transport gzips the frame and sets the
+            // compression flag when it sees grpc-encoding=gzip, and the server reads grpc-encoding to
+            // decode. (grpc-internal-encoding-request was a grpc-dotnet call-option marker - inert on the
+            // wire, so it never actually compressed anything once we dropped the grpc-dotnet client.)
+            headers.Add("grpc-encoding", "gzip");
+            headers.Add("grpc-accept-encoding", "identity,gzip");
         }
 
         if (Log.IsFinestEnabled)

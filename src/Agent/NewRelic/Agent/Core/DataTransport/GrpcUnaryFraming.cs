@@ -20,14 +20,47 @@ public static class GrpcUnaryFraming
     /// </summary>
     public static byte[] Frame(byte[] payload)
     {
+        return Frame(payload, false);
+    }
+
+    /// <summary>
+    /// Wraps a serialized protobuf payload in a gRPC data frame. When <paramref name="compress"/> is true and
+    /// the payload is non-empty, the payload is gzip-compressed and the frame's compression flag is set to 1;
+    /// the declared length is the compressed length. An empty payload is always sent uncompressed (flag 0) -
+    /// gRPC permits a per-message uncompressed send, and there is nothing to gain by compressing zero bytes.
+    /// The caller is responsible for also sending the <c>grpc-encoding</c> header on the wire whenever a frame
+    /// is compressed; a set compression flag without a matching non-identity grpc-encoding makes the server
+    /// fail the call with INTERNAL.
+    /// </summary>
+    public static byte[] Frame(byte[] payload, bool compress)
+    {
+        var compressed = false;
+        if (compress && payload.Length > 0)
+        {
+            payload = GzipCompress(payload);
+            compressed = true;
+        }
+
         var framed = new byte[FrameHeaderSize + payload.Length];
-        framed[0] = 0; // not compressed
+        framed[0] = (byte)(compressed ? 1 : 0);
         framed[1] = (byte)((payload.Length >> 24) & 0xFF);
         framed[2] = (byte)((payload.Length >> 16) & 0xFF);
         framed[3] = (byte)((payload.Length >> 8) & 0xFF);
         framed[4] = (byte)(payload.Length & 0xFF);
         Buffer.BlockCopy(payload, 0, framed, FrameHeaderSize, payload.Length);
         return framed;
+    }
+
+    private static byte[] GzipCompress(byte[] data)
+    {
+        using (var output = new MemoryStream())
+        {
+            using (var gzip = new GZipStream(output, CompressionMode.Compress, leaveOpen: true))
+            {
+                gzip.Write(data, 0, data.Length);
+            }
+            return output.ToArray();
+        }
     }
 
     /// <summary>

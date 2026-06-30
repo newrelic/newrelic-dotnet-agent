@@ -90,7 +90,11 @@ public abstract class GrpcUnaryWrapper<TRequest, TResponse> : IGrpcUnaryWrapper<
 
     private TResponse SendUnary(HttpClient httpClient, TRequest item, Metadata headers, int sendTimeoutMs, CancellationToken cancellationToken)
     {
-        var framed = GrpcUnaryFraming.Frame(item.ToByteArray());
+        // Compress when the outgoing metadata declares gzip (grpc-encoding). grpc-dotnet did this implicitly
+        // from the call options; the hand-rolled transport must gzip the frame and set the flag itself, and
+        // the same grpc-encoding header is forwarded to the wire below so the flag and header stay consistent.
+        var compress = WantsGzip(headers);
+        var framed = GrpcUnaryFraming.Frame(item.ToByteArray(), compress);
 
         using (var request = new HttpRequestMessage(HttpMethod.Post, _baseAddress + MethodPath))
         {
@@ -163,6 +167,26 @@ public abstract class GrpcUnaryWrapper<TRequest, TResponse> : IGrpcUnaryWrapper<
         }
 
         return ResponseParser.ParseFrom(message);
+    }
+
+    private static bool WantsGzip(Metadata headers)
+    {
+        if (headers == null)
+        {
+            return false;
+        }
+
+        foreach (var entry in headers)
+        {
+            if (!entry.IsBinary
+                && string.Equals(entry.Key, "grpc-encoding", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(entry.Value, "gzip", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static int? TryReadGrpcStatus(HttpResponseMessage response)

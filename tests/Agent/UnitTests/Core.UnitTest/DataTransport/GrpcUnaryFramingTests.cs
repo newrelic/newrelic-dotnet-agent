@@ -84,4 +84,46 @@ public class GrpcUnaryFramingTests
         // Header says 100 bytes but only 2 follow.
         Assert.That(GrpcUnaryFraming.TryGetMessage(new byte[] { 0, 0, 0, 0, 100, 1, 2 }), Is.Null);
     }
+
+    [Test]
+    public void Frame_SetsCompressionFlag_AndGzipsPayload_WhenCompressTrue()
+    {
+        var payload = Encoding.UTF8.GetBytes(new string('a', 500));
+
+        var framed = GrpcUnaryFraming.Frame(payload, true);
+
+        Assert.That(framed[0], Is.EqualTo(1), "compression flag should be 1 (compressed)");
+
+        var declaredLength = (framed[1] << 24) | (framed[2] << 16) | (framed[3] << 8) | framed[4];
+        Assert.That(declaredLength, Is.EqualTo(framed.Length - GrpcUnaryFraming.FrameHeaderSize), "length header must match the compressed body length");
+        Assert.That(declaredLength, Is.LessThan(payload.Length), "compressed body should be smaller than the original");
+
+        // The framed body must be valid gzip of the payload (TryGetMessage decompresses flag-1 frames).
+        Assert.That(GrpcUnaryFraming.TryGetMessage(framed), Is.EqualTo(payload), "round-trips back to the original");
+    }
+
+    [Test]
+    public void Frame_DoesNotCompress_WhenCompressFalse()
+    {
+        var payload = Encoding.UTF8.GetBytes(new string('a', 500));
+
+        var framed = GrpcUnaryFraming.Frame(payload, false);
+
+        Assert.That(framed[0], Is.EqualTo(0), "compression flag should be 0 (uncompressed)");
+        Assert.That(framed.Length, Is.EqualTo(GrpcUnaryFraming.FrameHeaderSize + payload.Length));
+
+        var body = new byte[payload.Length];
+        System.Buffer.BlockCopy(framed, GrpcUnaryFraming.FrameHeaderSize, body, 0, payload.Length);
+        Assert.That(body, Is.EqualTo(payload));
+    }
+
+    [Test]
+    public void Frame_LeavesEmptyPayloadUncompressed_EvenWhenCompressTrue()
+    {
+        var framed = GrpcUnaryFraming.Frame(new byte[0], true);
+
+        Assert.That(framed.Length, Is.EqualTo(GrpcUnaryFraming.FrameHeaderSize), "header only, no body");
+        Assert.That(framed[0], Is.EqualTo(0), "empty message must stay uncompressed (flag 0)");
+        Assert.That(new[] { framed[1], framed[2], framed[3], framed[4] }, Is.EqualTo(new byte[] { 0, 0, 0, 0 }));
+    }
 }
