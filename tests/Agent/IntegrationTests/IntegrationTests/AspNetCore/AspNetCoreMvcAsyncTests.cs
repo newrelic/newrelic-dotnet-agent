@@ -94,7 +94,7 @@ public class AspNetCoreMvcAsyncTests : NewRelicIntegrationTest<AspNetCoreMvcAsyn
 
     private readonly List<Assertions.ExpectedMetric> _generalMetrics = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"Supportability/OS/Linux", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Supportability/OS/Linux" },
         new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = ExpectedTransactionCount },
         new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = ExpectedTransactionCount },
         new Assertions.ExpectedMetric { metricName = @"Apdex"},

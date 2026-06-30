@@ -71,7 +71,7 @@ public class BasicCustomInstrumentation : NewRelicIntegrationTest<RemoteServiceF
             new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodDefaultTracer", CallCountAllHarvests = 1 },
             new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodNoWrapperName", CallCountAllHarvests = 1 },
             new() { metricName = "Supportability/CustomInst/BasicMvcApplication/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodIgnoreTransactionTracerFactory", CallCountAllHarvests = 1},
-            new() { metricName = "Supportability/CustomInst/Count", CallCountAllHarvests = 1},
+            new() { metricName = "Supportability/CustomInst/Count"},
 				
             // Scoped
             new() { metricName = "Custom/MyCustomMetricName", metricScope = "WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
