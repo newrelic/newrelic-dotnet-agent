@@ -144,7 +144,7 @@ public abstract class OpenSearchTestsTestsBase<TFixture> : NewRelicIntegrationTe
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/OpenSearch/{expectedIndexName}/{expectedOperationName}", metricScope = expectedTransactionName, callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"Datastore/statement/OpenSearch/{expectedIndexName}/{expectedOperationName}", metricScope = expectedTransactionName, CallCountAllHarvests = 1 },
         };
         var expectedAgentAttributes = new List<string>
         {

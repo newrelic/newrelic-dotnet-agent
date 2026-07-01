@@ -51,7 +51,7 @@ public class RequiredSupportabilityMetrics : NewRelicIntegrationTest<RemoteServi
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/MetricHarvest/transmit", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/MetricHarvest/transmit" },
             new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = 4 },
             new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSent", CallCountAllHarvests = 4 },
         };

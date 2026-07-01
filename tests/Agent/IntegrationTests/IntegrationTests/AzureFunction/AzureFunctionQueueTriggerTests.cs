@@ -65,9 +65,9 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
         var transactionName = "OtherTransaction/AzureFunction/QueueTriggerFunction";
         var expectedMetrics = new List<Assertions.ExpectedMetric>()
         {
-            new() {metricName = "DotNet/QueueTriggerFunction", callCount = 1},
-            new() {metricName = "DotNet/QueueTriggerFunction", metricScope = transactionName, callCount = 1},
-            new() {metricName = transactionName, callCount = 1},
+            new() {metricName = "DotNet/QueueTriggerFunction", CallCountAllHarvests = 1},
+            new() {metricName = "DotNet/QueueTriggerFunction", metricScope = transactionName, CallCountAllHarvests = 1},
+            new() {metricName = transactionName, CallCountAllHarvests = 1},
         };
 
         var transactionSample = _fixture.AgentLog.TryGetTransactionSample(transactionName);

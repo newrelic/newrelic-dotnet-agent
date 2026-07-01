@@ -53,7 +53,7 @@ public abstract class OwinRequestQueueTimeTestsBase<TFixture> : NewRelicIntegrat
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = "WebFrontend/QueueTime", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = "WebFrontend/QueueTime", CallCountAllHarvests = 1 }
         };
 
         NrAssert.Multiple(

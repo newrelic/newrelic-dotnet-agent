@@ -230,7 +230,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         var pipelineExpectedMetrics = new List<Assertions.ExpectedMetric>() { new() { metricName = "DotNet/HttpTriggerFunctionUsingAspNetCorePipeline", CallCountAllHarvests = 2 }, new() { metricName = "DotNet/HttpTriggerFunctionUsingAspNetCorePipeline", metricScope = pipelineTransactionName, CallCountAllHarvests = 2 }, new() { metricName = pipelineTransactionName, CallCountAllHarvests = 2 }, };
 
         var simpleTransactionName = "WebTransaction/AzureFunction/HttpTriggerFunctionUsingSimpleInvocation";
-        var simpleExpectedMetrics = new List<Assertions.ExpectedMetric>() { new() { metricName = "DotNet/HttpTriggerFunctionUsingSimpleInvocation", callCount = 1 }, new() { metricName = "DotNet/HttpTriggerFunctionUsingSimpleInvocation", metricScope = simpleTransactionName, callCount = 1 }, new() { metricName = simpleTransactionName, callCount = 1 }, };
+        var simpleExpectedMetrics = new List<Assertions.ExpectedMetric>() { new() { metricName = "DotNet/HttpTriggerFunctionUsingSimpleInvocation", CallCountAllHarvests = 1 }, new() { metricName = "DotNet/HttpTriggerFunctionUsingSimpleInvocation", metricScope = simpleTransactionName, CallCountAllHarvests = 1 }, new() { metricName = simpleTransactionName, CallCountAllHarvests = 1 }, };
 
         var transactionSample = _fixture.AgentLog.TryGetTransactionSample(pipelineTransactionName);
 

@@ -70,7 +70,7 @@ public abstract class CustomSpanNameApiTests<TFixture> : NewRelicIntegrationTest
     [Fact]
     public void SupportabilityMetricExists()
     {
-        var expectedMetric = new Assertions.ExpectedMetric { metricName = $"Supportability/ApiInvocation/SpanSetName", callCount = 1 };
+        var expectedMetric = new Assertions.ExpectedMetric { metricName = $"Supportability/ApiInvocation/SpanSetName", CallCountAllHarvests = 1 };
         Assertions.MetricExists(expectedMetric, _fixture.AgentLog.GetMetrics());
     }
 
@@ -79,8 +79,8 @@ public abstract class CustomSpanNameApiTests<TFixture> : NewRelicIntegrationTest
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"DotNet/CustomSpanName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"DotNet/CustomSpanName", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.AttributeInstrumentation/TransactionWithCustomSpanName", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = $"DotNet/CustomSpanName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"DotNet/CustomSpanName", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.AttributeInstrumentation/TransactionWithCustomSpanName", CallCountAllHarvests = 1 }
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();

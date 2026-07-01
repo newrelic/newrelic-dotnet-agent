@@ -56,8 +56,8 @@ public abstract class NsbSendTestsBase<TFixture> : NewRelicIntegrationTest<TFixt
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.NServiceBusDriver/SendCommandInTransaction"}
+            new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command", CallCountAllHarvests = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.NServiceBusDriver/SendCommandInTransaction"}
         };
         var expectedTransactionTraceSegments = new List<string>
         {

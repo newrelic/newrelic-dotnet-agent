@@ -94,10 +94,10 @@ public abstract class W3CTestBase<T> : NewRelicIntegrationTest<T> where T : Trac
     List<Assertions.ExpectedMetric> SenderExpectedMetrics =
         new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", CallCountAllHarvests = 1 }
         };
 
 
@@ -108,19 +108,19 @@ public abstract class W3CTestBase<T> : NewRelicIntegrationTest<T> where T : Trac
 
         return new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"DurationByCaller/App/{accountId}/{appId}/HTTP/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"DurationByCaller/App/{accountId}/{appId}/HTTP/allWeb", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"TransportDuration/App/{accountId}/{appId}/HTTP/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"TransportDuration/App/{accountId}/{appId}/HTTP/allWeb", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"DurationByCaller/App/{accountId}/{appId}/HTTP/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"DurationByCaller/App/{accountId}/{appId}/HTTP/allWeb", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"TransportDuration/App/{accountId}/{appId}/HTTP/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"TransportDuration/App/{accountId}/{appId}/HTTP/allWeb", CallCountAllHarvests = 1 }
         };
     }
 
     List<Assertions.ExpectedMetric> ReceiverUnexpectedMetrics =
         new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", CallCountAllHarvests = 1 }
         };
 
     [Fact]

@@ -63,7 +63,7 @@ public class BasicMvcRequestQueueTimeDefaultTests : NewRelicIntegrationTest<Remo
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = "WebFrontend/QueueTime", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = "WebFrontend/QueueTime", CallCountAllHarvests = 1 }
         };
 
         var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(RemoteServiceFixtures.BasicMvcApplicationTestFixture.ExpectedTransactionName);
@@ -131,7 +131,7 @@ public class BasicMvcRequestQueueTimeSwitchOffTests : NewRelicIntegrationTest<Re
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = "WebFrontend/QueueTime", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = "WebFrontend/QueueTime", CallCountAllHarvests = 1 }
         };
 
         var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(RemoteServiceFixtures.BasicMvcApplicationTestFixture.ExpectedTransactionName);

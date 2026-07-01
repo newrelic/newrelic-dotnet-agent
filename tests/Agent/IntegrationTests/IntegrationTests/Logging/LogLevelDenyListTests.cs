@@ -60,13 +60,13 @@ public abstract class LogLevelDenyListTestsBase<TFixture> : NewRelicIntegrationT
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "WARN"), callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "WARN"), CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), CallCountAllHarvests = 1 },
 
             new Assertions.ExpectedMetric { metricName = "Logging/lines", CallCountAllHarvests = 2 },
 
-            new Assertions.ExpectedMetric { metricName = "Logging/denied/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = "Logging/denied/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = "Logging/denied/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = "Logging/denied/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), CallCountAllHarvests = 1 },
 
             new Assertions.ExpectedMetric { metricName = "Logging/denied", CallCountAllHarvests = 2 },
         };

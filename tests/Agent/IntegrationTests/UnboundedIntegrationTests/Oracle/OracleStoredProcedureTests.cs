@@ -62,8 +62,8 @@ public abstract class OracleStoredProcedureTestsBase<TFixture> : NewRelicIntegra
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = $@"Datastore/statement/Oracle/{_storedProcedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
-            new() { metricName = $@"Datastore/statement/Oracle/{_storedProcedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseStoredProcedure"}
+            new() { metricName = $@"Datastore/statement/Oracle/{_storedProcedureName.ToLower()}/ExecuteProcedure", CallCountAllHarvests = 1 },
+            new() { metricName = $@"Datastore/statement/Oracle/{_storedProcedureName.ToLower()}/ExecuteProcedure", CallCountAllHarvests = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseStoredProcedure"}
         };
 
         var expectedTransactionTraceSegments = new List<string>

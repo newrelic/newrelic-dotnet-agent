@@ -64,38 +64,38 @@ public class BasicCustomInstrumentation : NewRelicIntegrationTest<RemoteServiceF
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
+            new() { metricName = "WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
 
             // Unscoped
-            new() { metricName = "Custom/MyCustomMetricName", callCount = 1 },
-            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodDefaultTracer", callCount = 1 },
-            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodNoWrapperName", callCount = 1 },
-            new() { metricName = "Supportability/CustomInst/BasicMvcApplication/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodIgnoreTransactionTracerFactory", callCount = 1},
-            new() { metricName = "Supportability/CustomInst/Count", callCount = 1},
+            new() { metricName = "Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
+            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodDefaultTracer", CallCountAllHarvests = 1 },
+            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodNoWrapperName", CallCountAllHarvests = 1 },
+            new() { metricName = "Supportability/CustomInst/BasicMvcApplication/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodIgnoreTransactionTracerFactory", CallCountAllHarvests = 1},
+            new() { metricName = "Supportability/CustomInst/Count"},
 				
             // Scoped
-            new() { metricName = "Custom/MyCustomMetricName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
-            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodDefaultTracer", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
-            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodNoWrapperName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
+            new() { metricName = "Custom/MyCustomMetricName", metricScope = "WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
+            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodDefaultTracer", metricScope = "WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
+            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodNoWrapperName", metricScope = "WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
 
-            new() { metricName = "Custom/CustomSegmentName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
-            new() { metricName = "Custom/AlternateCustomSegmentName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
-            new() { metricName = "Custom/CustomSegmentNameFromTracer", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 }
+            new() { metricName = "Custom/CustomSegmentName", metricScope = "WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
+            new() { metricName = "Custom/AlternateCustomSegmentName", metricScope = "WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
+            new() { metricName = "Custom/CustomSegmentNameFromTracer", metricScope = "WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 }
 
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
             // An unrecognized wrapperName will result in no tracer being selected.
             // Unscoped
-            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodUnknownWrapperName", callCount = 1 },
+            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodUnknownWrapperName", CallCountAllHarvests = 1 },
 
             // Scoped
-            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodUnknownWrapperName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
+            new() { metricName = "DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodUnknownWrapperName", metricScope = "WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
 
             // Ignored transactions
-            new() { metricName = "WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionWrapper", callCount = 1 },
-            new() { metricName = "WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionTracerFactory", callCount = 1 },
-            new() { metricName = "WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionWrapperAsync", callCount = 1 }
+            new() { metricName = "WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionWrapper", CallCountAllHarvests = 1 },
+            new() { metricName = "WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionTracerFactory", CallCountAllHarvests = 1 },
+            new() { metricName = "WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionWrapperAsync", CallCountAllHarvests = 1 }
         };
         var expectedTransactionTraceSegments = new List<string>
         {

@@ -80,34 +80,34 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName1}", callCount = 2}, // SendMessage and SendMessageBatch
-            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName1}", callCount = 2, metricScope = _metricScope1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName1}", callCount = 2},
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName1}", callCount = 2, metricScope = _metricScope1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName1}", callCount = 1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName1}", callCount = 1, metricScope = _metricScope1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName1}", CallCountAllHarvests = 2}, // SendMessage and SendMessageBatch
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName1}", CallCountAllHarvests = 2, metricScope = _metricScope1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName1}", CallCountAllHarvests = 2},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName1}", CallCountAllHarvests = 2, metricScope = _metricScope1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName1}", CallCountAllHarvests = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Purge/Named/{_testQueueName1}", CallCountAllHarvests = 1, metricScope = _metricScope1},
 
-            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName2}", callCount = 1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName2}", callCount = 1, metricScope = _metricScope2},
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName2}", callCount = 1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName2}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName2}", CallCountAllHarvests = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName2}", CallCountAllHarvests = 1, metricScope = _metricScope2},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName2}", CallCountAllHarvests = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName2}", CallCountAllHarvests = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
 
             // Only consume metrics for queue 3
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName3}", callCount = 1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName3}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName3}", CallCountAllHarvests = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName3}", CallCountAllHarvests = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
 
             // Queue 4: send with pre-existing DT headers (verifies agent replaces them)
-            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName4}", callCount = 1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName4}", callCount = 1, metricScope = _metricScope4},
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName4}", callCount = 1},
-            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName4}", callCount = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName4}", CallCountAllHarvests = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Produce/Named/{_testQueueName4}", CallCountAllHarvests = 1, metricScope = _metricScope4},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName4}", CallCountAllHarvests = 1},
+            new() { metricName = $"MessageBroker/SQS/Queue/Consume/Named/{_testQueueName4}", CallCountAllHarvests = 1, metricScope = "OtherTransaction/Custom/AwsSdkTestApp.SQSBackgroundService.SQSReceiverService/ProcessRequestAsync"},
         };
 
         // If the AWS SDK is configured to NOT initialize empty collections, trace headers will not be accepted
         if (_initCollections)
         {
             // 2 accept successes: one for queue 2 (normal) and one for queue 4 (with pre-existing DT headers replaced by agent)
-            expectedMetrics.Add(new() { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 });
+            expectedMetrics.Add(new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 2 });
         }
 
         var sendReceivePurgeTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_metricScope1);

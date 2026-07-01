@@ -50,49 +50,49 @@ public abstract class StackExchangeRedisTestsBase<TFixture> : NewRelicIntegratio
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = @"Datastore/all", callCount = 66 },
-            new() { metricName = @"Datastore/allOther", callCount = 66 },
-            new() { metricName = @"Datastore/Redis/all", callCount = 66 },
-            new() { metricName = @"Datastore/Redis/allOther", callCount = 66 },
-            new() { metricName = $@"Datastore/instance/Redis/{CommonUtils.NormalizeHostname(StackExchangeRedisConfiguration.StackExchangeRedisServer)}/{StackExchangeRedisConfiguration.StackExchangeRedisPort}", callCount = 66},
-            new() { metricName = @"Datastore/operation/Redis/SET", callCount = 4 },
-            new() { metricName = @"Datastore/operation/Redis/GET", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/APPEND", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/GETRANGE", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/SETRANGE", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/STRLEN", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/DECR", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/INCR", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/HMSET", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/HINCRBY", callCount = 4 }, // increment and decrement
-            new() { metricName = @"Datastore/operation/Redis/HEXISTS", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/HLEN", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/HVALS", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/HLEN", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/EXISTS", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/RANDOMKEY", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/RENAME", callCount = 2 },
+            new() { metricName = @"Datastore/all", CallCountAllHarvests = 66 },
+            new() { metricName = @"Datastore/allOther", CallCountAllHarvests = 66 },
+            new() { metricName = @"Datastore/Redis/all", CallCountAllHarvests = 66 },
+            new() { metricName = @"Datastore/Redis/allOther", CallCountAllHarvests = 66 },
+            new() { metricName = $@"Datastore/instance/Redis/{CommonUtils.NormalizeHostname(StackExchangeRedisConfiguration.StackExchangeRedisServer)}/{StackExchangeRedisConfiguration.StackExchangeRedisPort}", CallCountAllHarvests = 66},
+            new() { metricName = @"Datastore/operation/Redis/SET", CallCountAllHarvests = 4 },
+            new() { metricName = @"Datastore/operation/Redis/GET", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/APPEND", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/GETRANGE", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/SETRANGE", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/STRLEN", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/DECR", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/INCR", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/HMSET", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/HINCRBY", CallCountAllHarvests = 4 }, // increment and decrement
+            new() { metricName = @"Datastore/operation/Redis/HEXISTS", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/HLEN", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/HVALS", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/HLEN", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/EXISTS", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/RANDOMKEY", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/RENAME", CallCountAllHarvests = 2 },
             // Delete can resolve to DEL or UNLINK depending on Redis version
-            new() { metricName = @"Datastore/operation/Redis/(DEL|UNLINK)", IsRegexName = true, callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/PING", callCount = 4 }, //ping and identifyendpoint
-            new() { metricName = @"Datastore/operation/Redis/SADD", callCount = 4 },
-            new() { metricName = @"Datastore/operation/Redis/SUNION", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/SISMEMBER", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/SCARD", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/SMEMBERS", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/SMOVE", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/SRANDMEMBER", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/SPOP", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/SREM", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/PUBLISH", callCount = 2 },
-            new() { metricName = @"Datastore/operation/Redis/EXEC", callCount = 2}
+            new() { metricName = @"Datastore/operation/Redis/(DEL|UNLINK)", IsRegexName = true, CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/PING", CallCountAllHarvests = 4 }, //ping and identifyendpoint
+            new() { metricName = @"Datastore/operation/Redis/SADD", CallCountAllHarvests = 4 },
+            new() { metricName = @"Datastore/operation/Redis/SUNION", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/SISMEMBER", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/SCARD", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/SMEMBERS", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/SMOVE", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/SRANDMEMBER", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/SPOP", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/SREM", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/PUBLISH", CallCountAllHarvests = 2 },
+            new() { metricName = @"Datastore/operation/Redis/EXEC", CallCountAllHarvests = 2}
         };
 
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
             // The datastore operation happened inside a console app so there should be no allWeb metrics
-            new() {metricName = @"Datastore/allWeb", callCount = 1},
-            new() {metricName = @"Datastore/Redis/allWeb", callCount = 1}
+            new() {metricName = @"Datastore/allWeb", CallCountAllHarvests = 1},
+            new() {metricName = @"Datastore/Redis/allWeb", CallCountAllHarvests = 1}
         };
 
         var expectedTransactionEventIntrinsicAttributes = new List<string>

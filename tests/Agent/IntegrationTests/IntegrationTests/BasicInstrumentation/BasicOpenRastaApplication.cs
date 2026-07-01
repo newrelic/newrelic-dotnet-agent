@@ -41,22 +41,22 @@ public class BasicOpenRastaApplication : NewRelicIntegrationTest<RemoteServiceFi
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/OpenRasta/home/get", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/OpenRasta/home/get", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/OpenRasta/home/get", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/OpenRasta/home/get", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/OpenRasta/home/get", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/OpenRasta/home/get", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/OpenRasta/home/get", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/OpenRasta/home/get", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/OpenRasta/home/get", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/OpenRasta/home/get", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/OpenRasta/home/get", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/OpenRasta/home/get", CallCountAllHarvests = 1 },
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {

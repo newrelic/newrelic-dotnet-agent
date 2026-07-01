@@ -46,23 +46,23 @@ public class CallStackFallbackMvc : NewRelicIntegrationTest<RemoteServiceFixture
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/DefaultController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
@@ -72,8 +72,8 @@ public class CallStackFallbackMvc : NewRelicIntegrationTest<RemoteServiceFixture
             new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
 
             // The .NET agent does not have the information needed to generate this metric
-            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DefaultController/Index", CallCountAllHarvests = 1 },
         };
 
         var expectedLogLineRegexes = new List<string>

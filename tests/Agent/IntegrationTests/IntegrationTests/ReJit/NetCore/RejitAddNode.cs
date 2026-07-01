@@ -62,19 +62,19 @@ public abstract class RejitAddNodeBase<TFixture> : NewRelicIntegrationTest<TFixt
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             //transactions
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 2 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Rejit/GetAddNode/{id}", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Rejit/GetAddNode/{id}", CallCountAllHarvests = 1 },
 
             // Unscoped
-            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", CallCountAllHarvests = 2 },
             new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddNode", CallCountAllHarvests = 3 },
 
             // Scoped
-            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", metricScope = "WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 2 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddNode", metricScope = "WebTransaction/MVC/Rejit/GetAddNode/{id}", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddNode", metricScope = "WebTransaction/MVC/Rejit/GetAddNode/{id}", CallCountAllHarvests = 1 }
         };
 
         var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);

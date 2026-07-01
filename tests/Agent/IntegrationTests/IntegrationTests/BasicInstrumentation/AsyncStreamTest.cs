@@ -47,11 +47,11 @@ public class AsyncStreamTests : NewRelicIntegrationTest<RemoteServiceFixtures.As
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncStreamController/Get", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.AsyncStreamController/GetNumbers", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.AsyncStreamController/DoSomethingAsync", callCount = 10 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncStreamController/Get", metricScope = "WebTransaction/MVC/AsyncStream/Get", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.AsyncStreamController/GetNumbers", metricScope = "WebTransaction/MVC/AsyncStream/Get", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.AsyncStreamController/DoSomethingAsync", metricScope = "WebTransaction/MVC/AsyncStream/Get", callCount = 10 }
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncStreamController/Get", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.AsyncStreamController/GetNumbers", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.AsyncStreamController/DoSomethingAsync", CallCountAllHarvests = 10 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncStreamController/Get", metricScope = "WebTransaction/MVC/AsyncStream/Get", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.AsyncStreamController/GetNumbers", metricScope = "WebTransaction/MVC/AsyncStream/Get", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.AsyncStreamController/DoSomethingAsync", metricScope = "WebTransaction/MVC/AsyncStream/Get", CallCountAllHarvests = 10 }
     };
 }

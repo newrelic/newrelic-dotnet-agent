@@ -66,30 +66,30 @@ public abstract class MySqlAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TF
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
 
-            new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1, metricScope = transactionName },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", CallCountAllHarvests = 1, metricScope = transactionName },
         };
 
-        expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/MySql.Data.MySqlClient.MySqlConnection/OpenAsync", callCount = 1 });
+        expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/MySql.Data.MySqlClient.MySqlConnection/OpenAsync", CallCountAllHarvests = 1 });
 
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
             // The datastore operation happened inside a console app so there should be no allWeb metrics
-            new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", CallCountAllHarvests = 1 },
 
             // The operation metric should not be scoped because the statement metric is scoped instead
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1, metricScope = transactionName }
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", CallCountAllHarvests = 1, metricScope = transactionName }
         };
 
         // Don't double count the Open
-        unexpectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/MySql.Data.MySqlClient.MySqlConnection/Open", callCount = 1 });
+        unexpectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/MySql.Data.MySqlClient.MySqlConnection/Open", CallCountAllHarvests = 1 });
 
         var expectedTransactionTraceSegments = new List<string>
         {

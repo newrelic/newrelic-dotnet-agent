@@ -83,22 +83,22 @@ public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoD
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/create_table", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/create_table", callCount = 1, metricScope = createTableScope},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/put_item", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/put_item", callCount = 1, metricScope = putItemScope},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/get_item", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/get_item", callCount = 1, metricScope = getItemScope},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/update_item", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/update_item", callCount = 1, metricScope = updateItemScope},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_item", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_item", callCount = 1, metricScope = deleteItemScope},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/query", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/query", callCount = 1, metricScope = queryScope},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/scan", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/scan", callCount = 1, metricScope = scanScope},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_table", callCount = 1},
-            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_table", callCount = 1, metricScope = deleteTableScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/create_table", CallCountAllHarvests = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/create_table", CallCountAllHarvests = 1, metricScope = createTableScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/put_item", CallCountAllHarvests = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/put_item", CallCountAllHarvests = 1, metricScope = putItemScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/get_item", CallCountAllHarvests = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/get_item", CallCountAllHarvests = 1, metricScope = getItemScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/update_item", CallCountAllHarvests = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/update_item", CallCountAllHarvests = 1, metricScope = updateItemScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_item", CallCountAllHarvests = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_item", CallCountAllHarvests = 1, metricScope = deleteItemScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/query", CallCountAllHarvests = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/query", CallCountAllHarvests = 1, metricScope = queryScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/scan", CallCountAllHarvests = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/scan", CallCountAllHarvests = 1, metricScope = scanScope},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_table", CallCountAllHarvests = 1},
+            new() { metricName = $"Datastore/statement/DynamoDB/{_tableName}/delete_table", CallCountAllHarvests = 1, metricScope = deleteTableScope},
 
         };
 

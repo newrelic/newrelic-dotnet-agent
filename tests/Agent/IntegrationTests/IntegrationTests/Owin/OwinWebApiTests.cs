@@ -57,15 +57,15 @@ public abstract class OwinWebApiTestsBase<TFixture> : NewRelicIntegrationTest<TF
             new Assertions.ExpectedMetric {metricName = @"DotNet/Owin Middleware Pipeline", CallCountAllHarvests = 5},
             new Assertions.ExpectedMetric {metricName = @"WebTransaction", CallCountAllHarvests = 5},
             new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebAPI/Values/Get", CallCountAllHarvests = 3},
-            new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebAPI/Values/Post", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebAPI/Values/Get404", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebAPI/Values/Post", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebAPI/Values/Get404", CallCountAllHarvests = 1},
             new Assertions.ExpectedMetric {metricName = @"DotNet/Values/Get", CallCountAllHarvests = 3},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/Values/Post", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/Values/Get404", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"External/all", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"External/allWeb", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"External/www.google.com/all", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"External/www.google.com/Stream/GET", callCount = 1}
+            new Assertions.ExpectedMetric {metricName = @"DotNet/Values/Post", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/Values/Get404", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"External/all", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"External/allWeb", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"External/www.google.com/all", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"External/www.google.com/Stream/GET", CallCountAllHarvests = 1}
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {

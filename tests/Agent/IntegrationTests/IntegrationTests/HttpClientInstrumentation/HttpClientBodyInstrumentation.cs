@@ -67,13 +67,13 @@ public abstract class HttpClientBodyInstrumentationTestsBase<TFixture> : NewReli
             new Assertions.ExpectedMetric { metricName = @"External/all", CallCountAllHarvests = 2 },
             new Assertions.ExpectedMetric { metricName = @"External/allOther", CallCountAllHarvests = 2 },
 
-            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/POST", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/POST", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/Post", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/POST", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/POST", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/Post", CallCountAllHarvests = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/Stream/PUT", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/Stream/PUT", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/Put", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/Stream/PUT", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/Stream/PUT", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/Put", CallCountAllHarvests = 1 },
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();

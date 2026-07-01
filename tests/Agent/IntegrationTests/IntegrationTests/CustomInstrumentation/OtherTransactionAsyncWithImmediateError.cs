@@ -43,9 +43,9 @@ public class OtherTransactionAsyncWithError : NewRelicIntegrationTest<RemoteServ
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", metricScope = "OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", metricScope = "OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", CallCountAllHarvests = 1 }
         };
 
         var expectedTransactionTraceSegments = new List<string>

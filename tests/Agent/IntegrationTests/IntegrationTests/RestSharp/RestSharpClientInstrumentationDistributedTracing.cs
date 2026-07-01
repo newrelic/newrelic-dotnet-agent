@@ -59,14 +59,14 @@ public abstract class RestSharpInstrumentationDistributedTracingBase<TFixture> :
         {
             new Assertions.ExpectedMetric { metricName = "External/all", CallCountAllHarvests = 5 },
             new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", CallCountAllHarvests = 2 },
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/PUT", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/POST", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/DELETE", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", metricScope = cancelledTrasnsactionName, callCount = 1},
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", metricScope = callerTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/PUT", metricScope = callerTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/POST", metricScope = callerTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/DELETE", metricScope = callerTransactionName, callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/PUT", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/POST", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/DELETE", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", metricScope = cancelledTrasnsactionName, CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", metricScope = callerTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/PUT", metricScope = callerTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/POST", metricScope = callerTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/DELETE", metricScope = callerTransactionName, CallCountAllHarvests = 1 },
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();

@@ -62,7 +62,7 @@ public abstract class OwinWebApiStatusCodeRollupTestsBase<TFixture> : NewRelicIn
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>();
         foreach (var bogusPath in bogusPaths)
         {
-            unexpectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $@"WebTransaction/Custom/{bogusPath}", callCount = 1 });
+            unexpectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $@"WebTransaction/Custom/{bogusPath}", CallCountAllHarvests = 1 });
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();

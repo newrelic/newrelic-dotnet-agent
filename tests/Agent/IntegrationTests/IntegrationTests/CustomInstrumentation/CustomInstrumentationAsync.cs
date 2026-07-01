@@ -46,14 +46,14 @@ public class CustomInstrumentationAsync : NewRelicIntegrationTest<RemoteServiceF
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentNameAlternate", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentNameAlternate", CallCountAllHarvests = 1 },
 
             // Scoped
-            new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentNameAlternate", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentName", metricScope = "WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentNameAlternate", metricScope = "WebTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 }
         };
 
         var expectedTransactionTraceSegments = new List<string>

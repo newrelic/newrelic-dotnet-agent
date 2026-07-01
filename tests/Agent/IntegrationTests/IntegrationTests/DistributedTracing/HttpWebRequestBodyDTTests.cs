@@ -66,7 +66,7 @@ public abstract class HttpWebRequestBodyDTTestsBase : NewRelicIntegrationTest<Fr
 
         var receiverExpectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = @"Supportability/TraceContext/Accept/Success", callCount = 1 },
+            new() { metricName = @"Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 1 },
         };
 
         Assertions.MetricsExist(receiverExpectedMetrics, receiverMetrics);

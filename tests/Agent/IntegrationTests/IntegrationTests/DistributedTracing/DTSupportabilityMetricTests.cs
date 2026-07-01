@@ -47,13 +47,13 @@ public class DTSupportabilityMetricTests : NewRelicIntegrationTest<RemoteService
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/Ignored/MajorVersion", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/Ignored/Null", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/ParseException", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/Ignored/MajorVersion", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/Ignored/Null", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/ParseException", CallCountAllHarvests = 1 },
             // The methods for GenerateAcceptSuccessMetric and GenerateCreateSuccessMetric result in AcceptPayload/Success metrics so we should look for two.
             new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/Success", CallCountAllHarvests = 2 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/Ignored/UntrustedAccount", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/AcceptPayload/Ignored/UntrustedAccount", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", CallCountAllHarvests = 1 },
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();

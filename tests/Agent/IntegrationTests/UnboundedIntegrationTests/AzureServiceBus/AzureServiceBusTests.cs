@@ -76,20 +76,20 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
-                callCount = 1,
+                CallCountAllHarvests = 1,
                 metricScope =
                     $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
-                callCount = 1,
+                CallCountAllHarvests = 1,
                 metricScope = $"{_metricScopeBase}/ScheduleAndCancelAMessage"
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
-                callCount = 1,
+                CallCountAllHarvests = 1,
                 metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessageFor{_destinationType}"
             },
             new()
@@ -100,14 +100,14 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
-                callCount = 3,
+                CallCountAllHarvests = 3,
                 metricScope =
                     $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
-                callCount = 2,
+                CallCountAllHarvests = 2,
                 metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessageFor{_destinationType}"
             },
             new()
@@ -118,7 +118,7 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Peek/Named/{_queueOrTopicName}",
-                callCount = 1,
+                CallCountAllHarvests = 1,
                 metricScope =
                     $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
             },
@@ -130,14 +130,14 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
-                callCount = 2,
+                CallCountAllHarvests = 2,
                 metricScope =
                     $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
-                callCount = 2,
+                CallCountAllHarvests = 2,
                 metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessageFor{_destinationType}"
             },
         };
@@ -148,21 +148,21 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
                 new()
                 {
                     metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
-                    callCount = 1,
+                    CallCountAllHarvests = 1,
                     metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessageFor{_destinationType}"
                 });
             expectedMetrics.Add(
                 new()
                 {
                     metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
-                    callCount = 1,
+                    CallCountAllHarvests = 1,
                     metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessageFor{_destinationType}"
                 });
             expectedMetrics.Add(
                 new()
                 {
                     metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
-                    callCount = 1,
+                    CallCountAllHarvests = 1,
                     metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessageFor{_destinationType}"
                 });
             expectedMetrics.Add(
@@ -175,7 +175,7 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
                 new()
                 {
                     metricName = $"MessageBroker/ServiceBus/{_destinationType}/Cancel/Named/{_queueOrTopicName}",
-                    callCount = 1,
+                    CallCountAllHarvests = 1,
                     metricScope = $"{_metricScopeBase}/ScheduleAndCancelAMessage"
                 });
         }
