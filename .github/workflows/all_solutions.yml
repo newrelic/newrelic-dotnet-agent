@@ -1340,6 +1340,9 @@ jobs:
           disable-sudo: true
           egress-policy: audit
 
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
       - name: Download combined integration payload log
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -1469,6 +1472,20 @@ jobs:
           name: final-payload-summary
           path: final_payload_summary.json
           if-no-files-found: warn
+
+      - name: Report payload metrics to New Relic (staging)
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
+        continue-on-error: true
+        env:
+          PAYLOAD_SUMMARY_FILE: final_payload_summary.json
+          NR_METRIC_API_URL: https://staging-metric-api.newrelic.com/metric/v1
+          NR_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+          CI_BRANCH: ${{ github.ref_name }}
+          CI_COMMIT: ${{ github.sha }}
+          CI_RUN_ID: ${{ github.run_id }}
+          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash build/Scripts/report-payload-metrics.sh
+        shell: bash
 
       - name: Delete combined payload artifacts
         run: |
