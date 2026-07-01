@@ -44,10 +44,8 @@ public abstract class AzureServiceBusW3CTestsBase<TFixture> : NewRelicIntegratio
                 configModifier
                     .SetLogLevel("finest")
                     .EnableDistributedTrace()
-                    .ForceTransactionTraces()
                     .ConfigureFasterMetricsHarvestCycle(20)
-                    .ConfigureFasterSpanEventsHarvestCycle(20)
-                    .ConfigureFasterTransactionTracesHarvestCycle(25);
+                    .ConfigureFasterSpanEventsHarvestCycle(20);
             },
             exerciseApplication: () =>
             {
@@ -251,10 +249,8 @@ public abstract class AzureServiceBusW3CDTHeaderReplacementTestsBase<TFixture> :
                 configModifier
                     .SetLogLevel("finest")
                     .EnableDistributedTrace()
-                    .ForceTransactionTraces()
                     .ConfigureFasterMetricsHarvestCycle(20)
-                    .ConfigureFasterSpanEventsHarvestCycle(20)
-                    .ConfigureFasterTransactionTracesHarvestCycle(25);
+                    .ConfigureFasterSpanEventsHarvestCycle(20);
             },
             exerciseApplication: () =>
             {
