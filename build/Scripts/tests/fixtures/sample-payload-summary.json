@@ -2,6 +2,7 @@
   "integrationTests": {
     "generatedAt": "2026-07-01T00:00:00Z",
     "bytes": 300,
+    "byType": {"connect": 120, "metric_data": 180},
     "details": [
       {"className": "AlphaTests", "bytes": 100},
       {"className": "BetaTests", "bytes": 50},
@@ -11,9 +12,11 @@
   "unboundedTests": {
     "generatedAt": "2026-07-01T00:00:00Z",
     "bytes": 25,
+    "byType": {"connect": 25},
     "details": [
       {"className": "GammaTests", "bytes": 25}
     ]
   },
+  "byType": {"connect": 145, "metric_data": 180},
   "bytes": 325
 }

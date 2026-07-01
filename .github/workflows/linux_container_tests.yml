@@ -152,42 +152,23 @@ jobs:
             echo "Found TRX files:"
             echo "$TRX_FILES"
 
-            # Extract payload lines from all TRX files and build JSON
-            echo "{" > "$PAYLOAD_LOG"
-            first=true
+            rows="$(mktemp)"
+            while IFS= read -r trx_file; do
+              [ -n "$trx_file" ] || continue
+              grep -hoE '[A-Za-z0-9_]+:[[:space:]]+[a-z0-9_]+:[[:space:]]+[0-9]+[[:space:]]+bytes' "$trx_file" \
+                | sed -E 's/^([A-Za-z0-9_]+):[[:space:]]+([a-z0-9_]+):[[:space:]]+([0-9]+)[[:space:]]+bytes/\1 \2 \3/' >> "$rows" || true
+            done <<< "$TRX_FILES"
+            jq -Rn '[inputs | split(" ") | {c:.[0], cat:.[1], b:(.[2]|tonumber)}]
+              | reduce .[] as $r ({}; .[$r.c][$r.cat] = ((.[$r.c][$r.cat]//0) + $r.b))' "$rows" > "$PAYLOAD_LOG"
+            rm -f "$rows"
 
-            for trx_file in $TRX_FILES; do
-              echo "Processing: $trx_file"
-              # Extract payload lines from StdOut elements (including test class name prefix)
-              while IFS= read -r line; do
-                if [[ "$line" =~ ^([A-Za-z0-9_]+):\ Total\ payload\ bytes\ sent:\ ([0-9]+) ]]; then
-                  className="${BASH_REMATCH[1]}"
-                  byteCount="${BASH_REMATCH[2]}"
-                  echo "Found: $className = $byteCount bytes"
-
-                  if [ "$first" = true ]; then
-                    first=false
-                  else
-                    echo "," >> "$PAYLOAD_LOG"
-                  fi
-                  echo "  \"$className\": $byteCount" >> "$PAYLOAD_LOG"
-                fi
-              done < <(grep -E '[A-Za-z0-9_]+: Total payload bytes sent: [0-9]+' "$trx_file" || true)
-            done
-
-            echo "" >> "$PAYLOAD_LOG"
-            echo "}" >> "$PAYLOAD_LOG"
-
-            # Check if we found any payload entries
-            content=$(cat "$PAYLOAD_LOG")
-            if [[ "$content" != "{}" && "$content" != $'{\n}' ]]; then
-              echo "Extracted payload log entries"
-              echo "Content:"
-              cat "$PAYLOAD_LOG"
+            if [ "$(cat "$PAYLOAD_LOG")" = "{}" ]; then
+              echo "No matching payload byte lines found in TRX files"
             else
-              echo "No payload byte logs found in TRX files"
-              echo "{}" > "$PAYLOAD_LOG"
+              echo "Extracted payload log entries"
             fi
+            echo "Content:"
+            cat "$PAYLOAD_LOG"
           fi
         shell: bash
 
@@ -231,60 +212,30 @@ jobs:
       - name: Combine payload logs
         run: |
           mkdir -p combined-logs
+          IN_DIR="payload-logs/linux-container"
+          PREFIX="linux_container"
+          LABEL="Linux Container Tests"
+          OUT="combined-logs/${PREFIX}_payload_bytes_combined.json"
+          NOW="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-          if [ -d "payload-logs/linux-container" ]; then
-            echo "["  > combined-logs/linux_container_payload_bytes_combined.json
-            first=true
-            grand_total=0
-
-            # Process JSON files and merge into array
-            while IFS= read -r file; do
-              echo "Processing: $(basename "$file")"
-
-              # Read JSON and extract key-value pairs
-              while IFS= read -r line; do
-                # Skip lines that are just braces or empty
-                if [[ "$line" =~ ^[[:space:]]*\{[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*$ ]] || [[ -z "$line" ]]; then
-                  continue
-                fi
-
-                # Extract class name and byte count from JSON property
-                if [[ "$line" =~ \"([^\"]+)\":[[:space:]]*([0-9]+) ]]; then
-                  className="${BASH_REMATCH[1]}"
-                  byteCount="${BASH_REMATCH[2]}"
-                  grand_total=$((grand_total + byteCount))
-
-                  if [ "$first" = true ]; then
-                    first=false
-                  else
-                    echo "," >> combined-logs/linux_container_payload_bytes_combined.json
-                  fi
-                  echo "  {\"className\": \"$className\", \"payloadBytes\": $byteCount}" >> combined-logs/linux_container_payload_bytes_combined.json
-                fi
-              done < "$file"
-            done < <(find payload-logs/linux-container -name "*_payload_bytes.json" -type f | sort)
-
-            echo "" >> combined-logs/linux_container_payload_bytes_combined.json
-            echo "]" >> combined-logs/linux_container_payload_bytes_combined.json
-
-            # Create summary metadata file
-            echo "{" > combined-logs/linux_container_payload_bytes_summary.json
-            echo "  \"testType\": \"Linux Container Tests\"," >> combined-logs/linux_container_payload_bytes_summary.json
-            echo "  \"generatedAt\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"," >> combined-logs/linux_container_payload_bytes_summary.json
-            echo "  \"grandTotalBytes\": $grand_total" >> combined-logs/linux_container_payload_bytes_summary.json
-            echo "}" >> combined-logs/linux_container_payload_bytes_summary.json
-
-            echo "Combined payload JSON created with grand total: $grand_total bytes"
-            echo "Payload data:"
-            cat combined-logs/linux_container_payload_bytes_combined.json
-            echo ""
-            echo "Summary:"
-            cat combined-logs/linux_container_payload_bytes_summary.json
+          if [ -d "$IN_DIR" ] && find "$IN_DIR" -name "*_payload_bytes.json" -type f | grep -q .; then
+            find "$IN_DIR" -name "*_payload_bytes.json" -type f -print0 \
+              | xargs -0 jq -s --arg tt "$LABEL" --arg now "$NOW" '
+                (reduce .[] as $ns ({};
+                   reduce ($ns|to_entries[]) as $c (.;
+                     reduce ($c.value|to_entries[]) as $cat (.;
+                       .[$c.key][$cat.key] = ((.[$c.key][$cat.key]//0) + $cat.value) )))) as $m
+                | { testType: $tt, generatedAt: $now,
+                    grandTotalBytes: ([$m[][]] | add // 0),
+                    details: [ $m | to_entries[] | {className:.key, bytes:([.value[]]|add // 0)} ],
+                    byType: (reduce ($m|to_entries[]) as $c ({};
+                               reduce ($c.value|to_entries[]) as $cat (.;
+                                 .[$cat.key] = ((.[$cat.key]//0)+$cat.value)))) }' > "$OUT"
           else
-            echo "No Linux container payload logs found"
-            echo "[]" > combined-logs/linux_container_payload_bytes_combined.json
-            echo "{\"testType\": \"Linux Container Tests\", \"grandTotalBytes\": 0}" > combined-logs/linux_container_payload_bytes_summary.json
+            jq -n --arg tt "$LABEL" --arg now "$NOW" \
+              '{testType:$tt, generatedAt:$now, grandTotalBytes:0, details:[], byType:{}}' > "$OUT"
           fi
+          cat "$OUT"
         shell: bash
 
       - name: Upload combined Linux container payload log

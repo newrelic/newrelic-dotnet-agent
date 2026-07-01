@@ -40,7 +40,7 @@ build_body() {
     --arg commit "${CI_COMMIT:-unknown}" \
     --arg runId "${CI_RUN_ID:-unknown}" \
     --arg runUrl "${CI_RUN_URL:-unknown}" '
-    ([ to_entries[] | select(.value|type=="object") ]) as $types
+    ([ to_entries[] | select(.value|type=="object" and has("details")) ]) as $types
     | [ {
         common: { timestamp: ($ts|tonumber),
                   attributes: { source:"dotnet-agent-ci", "ci.branch":$branch,
@@ -54,6 +54,12 @@ build_body() {
                value:.value.bytes, attributes:{testType:.key}} ]
           + [ {name:"newrelic.dotnet.ci.payload.total.bytes", type:"gauge",
                value:(.bytes // 0), attributes:{testType:"all"}} ]
+          + [ $types[] | .key as $t | (.value.byType // {}) | to_entries[]
+            | {name:"newrelic.dotnet.ci.payload.by_type.bytes", type:"gauge",
+               value:.value, attributes:{testType:$t, payloadType:.key}} ]
+          + [ (.byType // {}) | to_entries[]
+            | {name:"newrelic.dotnet.ci.payload.by_type.bytes", type:"gauge",
+               value:.value, attributes:{testType:"all", payloadType:.key}} ]
         )
       } ]
   ' "$SUMMARY_FILE"

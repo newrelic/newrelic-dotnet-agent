@@ -686,19 +686,25 @@ jobs:
 
             $payloadData = @{}
             foreach ($message in $messageElements) {
-              $text = $message.InnerText
-              if ($text -match "^(.+?):\s*Total payload bytes sent:\s*(\d+)") {
-                $className = $Matches[1].Trim()
-                $byteCount = [int]$Matches[2]
-                $payloadData[$className] = $byteCount
-                Write-Host "Found: $className = $byteCount bytes"
+              foreach ($line in ($message.InnerText -split "\r?\n")) {
+                if ($line -match '^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$') {
+                  $className = $Matches[1].Trim()
+                  $category  = $Matches[2]
+                  $byteCount = [int]$Matches[3]
+                  if (-not $payloadData.ContainsKey($className)) { $payloadData[$className] = @{} }
+                  if ($payloadData[$className].ContainsKey($category)) {
+                    $payloadData[$className][$category] += $byteCount
+                  } else {
+                    $payloadData[$className][$category] = $byteCount
+                  }
+                }
               }
             }
 
             Write-Host "Found $($payloadData.Count) payload log entries"
 
             if ($payloadData.Count -gt 0) {
-              $payloadData | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+              $payloadData | ConvertTo-Json -Depth 5 | Out-File -FilePath $payloadLog -Encoding UTF8
               Write-Host "Extracted payload logs to $payloadLog"
               Write-Host "Content:"
               Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
@@ -873,19 +879,25 @@ jobs:
 
             $payloadData = @{}
             foreach ($message in $messageElements) {
-              $text = $message.InnerText
-              if ($text -match "^(.+?):\s*Total payload bytes sent:\s*(\d+)") {
-                $className = $Matches[1].Trim()
-                $byteCount = [int]$Matches[2]
-                $payloadData[$className] = $byteCount
-                Write-Host "Found: $className = $byteCount bytes"
+              foreach ($line in ($message.InnerText -split "\r?\n")) {
+                if ($line -match '^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$') {
+                  $className = $Matches[1].Trim()
+                  $category  = $Matches[2]
+                  $byteCount = [int]$Matches[3]
+                  if (-not $payloadData.ContainsKey($className)) { $payloadData[$className] = @{} }
+                  if ($payloadData[$className].ContainsKey($category)) {
+                    $payloadData[$className][$category] += $byteCount
+                  } else {
+                    $payloadData[$className][$category] = $byteCount
+                  }
+                }
               }
             }
 
             Write-Host "Found $($payloadData.Count) payload log entries"
 
             if ($payloadData.Count -gt 0) {
-              $payloadData | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+              $payloadData | ConvertTo-Json -Depth 5 | Out-File -FilePath $payloadLog -Encoding UTF8
               Write-Host "Extracted payload logs to $payloadLog"
               Write-Host "Content:"
               Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
@@ -1142,60 +1154,30 @@ jobs:
       - name: Combine payload logs
         run: |
           mkdir -p combined-logs
+          IN_DIR="payload-logs/integration"
+          PREFIX="integration"
+          LABEL="Integration Tests"
+          OUT="combined-logs/${PREFIX}_payload_bytes_combined.json"
+          NOW="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-          if [ -d "payload-logs/integration" ]; then
-            echo "["  > combined-logs/integration_payload_bytes_combined.json
-            first=true
-            grand_total=0
-
-            # Process JSON files and merge into array
-            while IFS= read -r file; do
-              echo "Processing: $(basename "$file")"
-
-              # Read JSON and extract key-value pairs
-              while IFS= read -r line; do
-                # Skip lines that are just braces or empty
-                if [[ "$line" =~ ^[[:space:]]*\{[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*$ ]] || [[ -z "$line" ]]; then
-                  continue
-                fi
-
-                # Extract class name and byte count from JSON property
-                if [[ "$line" =~ \"([^\"]+)\":[[:space:]]*([0-9]+) ]]; then
-                  className="${BASH_REMATCH[1]}"
-                  byteCount="${BASH_REMATCH[2]}"
-                  grand_total=$((grand_total + byteCount))
-
-                  if [ "$first" = true ]; then
-                    first=false
-                  else
-                    echo "," >> combined-logs/integration_payload_bytes_combined.json
-                  fi
-                  echo "  {\"className\": \"$className\", \"payloadBytes\": $byteCount}" >> combined-logs/integration_payload_bytes_combined.json
-                fi
-              done < "$file"
-            done < <(find payload-logs/integration -name "*_payload_bytes.json" -type f | sort)
-
-            echo "" >> combined-logs/integration_payload_bytes_combined.json
-            echo "]" >> combined-logs/integration_payload_bytes_combined.json
-
-            # Create summary metadata file
-            echo "{" > combined-logs/integration_payload_bytes_summary.json
-            echo "  \"testType\": \"Integration Tests\"," >> combined-logs/integration_payload_bytes_summary.json
-            echo "  \"generatedAt\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"," >> combined-logs/integration_payload_bytes_summary.json
-            echo "  \"grandTotalBytes\": $grand_total" >> combined-logs/integration_payload_bytes_summary.json
-            echo "}" >> combined-logs/integration_payload_bytes_summary.json
-
-            echo "Combined payload JSON created with grand total: $grand_total bytes"
-            echo "Payload data:"
-            cat combined-logs/integration_payload_bytes_combined.json
-            echo ""
-            echo "Summary:"
-            cat combined-logs/integration_payload_bytes_summary.json
+          if [ -d "$IN_DIR" ] && find "$IN_DIR" -name "*_payload_bytes.json" -type f | grep -q .; then
+            find "$IN_DIR" -name "*_payload_bytes.json" -type f -print0 \
+              | xargs -0 jq -s --arg tt "$LABEL" --arg now "$NOW" '
+                (reduce .[] as $ns ({};
+                   reduce ($ns|to_entries[]) as $c (.;
+                     reduce ($c.value|to_entries[]) as $cat (.;
+                       .[$c.key][$cat.key] = ((.[$c.key][$cat.key]//0) + $cat.value) )))) as $m
+                | { testType: $tt, generatedAt: $now,
+                    grandTotalBytes: ([$m[][]] | add // 0),
+                    details: [ $m | to_entries[] | {className:.key, bytes:([.value[]]|add // 0)} ],
+                    byType: (reduce ($m|to_entries[]) as $c ({};
+                               reduce ($c.value|to_entries[]) as $cat (.;
+                                 .[$cat.key] = ((.[$cat.key]//0)+$cat.value)))) }' > "$OUT"
           else
-            echo "No integration payload logs found"
-            echo "[]" > combined-logs/integration_payload_bytes_combined.json
-            echo "{\"testType\": \"Integration Tests\", \"grandTotalBytes\": 0}" > combined-logs/integration_payload_bytes_summary.json
+            jq -n --arg tt "$LABEL" --arg now "$NOW" \
+              '{testType:$tt, generatedAt:$now, grandTotalBytes:0, details:[], byType:{}}' > "$OUT"
           fi
+          cat "$OUT"
         shell: bash
 
       - name: Upload combined integration payload log
@@ -1246,60 +1228,30 @@ jobs:
       - name: Combine payload logs
         run: |
           mkdir -p combined-logs
+          IN_DIR="payload-logs/unbounded"
+          PREFIX="unbounded"
+          LABEL="Unbounded Integration Tests"
+          OUT="combined-logs/${PREFIX}_payload_bytes_combined.json"
+          NOW="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-          if [ -d "payload-logs/unbounded" ]; then
-            echo "["  > combined-logs/unbounded_payload_bytes_combined.json
-            first=true
-            grand_total=0
-
-            # Process JSON files and merge into array
-            while IFS= read -r file; do
-              echo "Processing: $(basename "$file")"
-
-              # Read JSON and extract key-value pairs
-              while IFS= read -r line; do
-                # Skip lines that are just braces or empty
-                if [[ "$line" =~ ^[[:space:]]*\{[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*$ ]] || [[ -z "$line" ]]; then
-                  continue
-                fi
-
-                # Extract class name and byte count from JSON property
-                if [[ "$line" =~ \"([^\"]+)\":[[:space:]]*([0-9]+) ]]; then
-                  className="${BASH_REMATCH[1]}"
-                  byteCount="${BASH_REMATCH[2]}"
-                  grand_total=$((grand_total + byteCount))
-
-                  if [ "$first" = true ]; then
-                    first=false
-                  else
-                    echo "," >> combined-logs/unbounded_payload_bytes_combined.json
-                  fi
-                  echo "  {\"className\": \"$className\", \"payloadBytes\": $byteCount}" >> combined-logs/unbounded_payload_bytes_combined.json
-                fi
-              done < "$file"
-            done < <(find payload-logs/unbounded -name "*_payload_bytes.json" -type f | sort)
-
-            echo "" >> combined-logs/unbounded_payload_bytes_combined.json
-            echo "]" >> combined-logs/unbounded_payload_bytes_combined.json
-
-            # Create summary metadata file
-            echo "{" > combined-logs/unbounded_payload_bytes_summary.json
-            echo "  \"testType\": \"Unbounded Integration Tests\"," >> combined-logs/unbounded_payload_bytes_summary.json
-            echo "  \"generatedAt\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"," >> combined-logs/unbounded_payload_bytes_summary.json
-            echo "  \"grandTotalBytes\": $grand_total" >> combined-logs/unbounded_payload_bytes_summary.json
-            echo "}" >> combined-logs/unbounded_payload_bytes_summary.json
-
-            echo "Combined payload JSON created with grand total: $grand_total bytes"
-            echo "Payload data:"
-            cat combined-logs/unbounded_payload_bytes_combined.json
-            echo ""
-            echo "Summary:"
-            cat combined-logs/unbounded_payload_bytes_summary.json
+          if [ -d "$IN_DIR" ] && find "$IN_DIR" -name "*_payload_bytes.json" -type f | grep -q .; then
+            find "$IN_DIR" -name "*_payload_bytes.json" -type f -print0 \
+              | xargs -0 jq -s --arg tt "$LABEL" --arg now "$NOW" '
+                (reduce .[] as $ns ({};
+                   reduce ($ns|to_entries[]) as $c (.;
+                     reduce ($c.value|to_entries[]) as $cat (.;
+                       .[$c.key][$cat.key] = ((.[$c.key][$cat.key]//0) + $cat.value) )))) as $m
+                | { testType: $tt, generatedAt: $now,
+                    grandTotalBytes: ([$m[][]] | add // 0),
+                    details: [ $m | to_entries[] | {className:.key, bytes:([.value[]]|add // 0)} ],
+                    byType: (reduce ($m|to_entries[]) as $c ({};
+                               reduce ($c.value|to_entries[]) as $cat (.;
+                                 .[$cat.key] = ((.[$cat.key]//0)+$cat.value)))) }' > "$OUT"
           else
-            echo "No unbounded payload logs found"
-            echo "[]" > combined-logs/unbounded_payload_bytes_combined.json
-            echo "{\"testType\": \"Unbounded Integration Tests\", \"grandTotalBytes\": 0}" > combined-logs/unbounded_payload_bytes_summary.json
+            jq -n --arg tt "$LABEL" --arg now "$NOW" \
+              '{testType:$tt, generatedAt:$now, grandTotalBytes:0, details:[], byType:{}}' > "$OUT"
           fi
+          cat "$OUT"
         shell: bash
 
       - name: Upload combined unbounded payload log
@@ -1366,104 +1318,27 @@ jobs:
 
       - name: Create consolidated JSON output
         run: |
-          if [ -d "payload-summaries" ]; then
-            echo "{"  > final_payload_summary.json
-
-            first_type=true
-            overall_total=0
-
-            # Process each test type's combined data
-            for data_file in payload-summaries/*_combined.json; do
-              if [ -f "$data_file" ]; then
-                filename=$(basename "$data_file" _payload_bytes_combined.json)
-
-                # Determine test type name
-                case "$filename" in
-                  integration)
-                    test_type="integrationTests"
-                    ;;
-                  unbounded)
-                    test_type="unboundedTests"
-                    ;;
-                  linux_container)
-                    test_type="containerTests"
-                    ;;
-                  *)
-                    test_type="$filename"
-                    ;;
-                esac
-
-                # Get corresponding summary file for grand total and timestamp
-                summary_file="payload-summaries/${filename}_payload_bytes_summary.json"
-                grand_total=0
-                generated_at=""
-                if [ -f "$summary_file" ]; then
-                  if grep -q "grandTotalBytes" "$summary_file"; then
-                    grand_total=$(grep -oP '"grandTotalBytes":\s*\K\d+' "$summary_file")
-                    overall_total=$((overall_total + grand_total))
-                  fi
-                  if grep -q "generatedAt" "$summary_file"; then
-                    generated_at=$(grep -oP '"generatedAt":\s*"\K[^"]+' "$summary_file")
-                  fi
-                fi
-
-                # Add comma separator if not first entry
-                if [ "$first_type" = false ]; then
-                  echo "," >> final_payload_summary.json
-                fi
-                first_type=false
-
-                # Add test type section
-                echo "  \"$test_type\": {" >> final_payload_summary.json
-                echo "    \"generatedAt\": \"$generated_at\"," >> final_payload_summary.json
-                echo "    \"bytes\": $grand_total," >> final_payload_summary.json
-                echo "    \"details\": [" >> final_payload_summary.json
-
-                # Read and merge test class data from combined file, converting payloadBytes to bytes
-                first_test=true
-                while IFS= read -r line; do
-                  # Skip array brackets and empty lines
-                  if [[ "$line" =~ ^[[:space:]]*\[[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\][[:space:]]*$ ]] || [[ -z "$line" ]]; then
-                    continue
-                  fi
-
-                  # Extract className and payloadBytes, convert to new format
-                  if [[ "$line" =~ \"className\":[[:space:]]*\"([^\"]+)\".*\"payloadBytes\":[[:space:]]*([0-9]+) ]]; then
-                    className="${BASH_REMATCH[1]}"
-                    byteCount="${BASH_REMATCH[2]}"
-
-                    # Add comma separator if not first test entry
-                    if [ "$first_test" = false ]; then
-                      echo "," >> final_payload_summary.json
-                    fi
-                    first_test=false
-
-                    echo "      {\"className\": \"$className\", \"bytes\": $byteCount}" >> final_payload_summary.json
-                  fi
-                done < "$data_file"
-
-                echo "" >> final_payload_summary.json
-                echo "    ]" >> final_payload_summary.json
-                echo -n "  }" >> final_payload_summary.json
-              fi
+          if ls payload-summaries/*_combined.json >/dev/null 2>&1; then
+            final="$(jq -n '{bytes:0, byType:{}}')"
+            for f in payload-summaries/*_combined.json; do
+              base="$(basename "$f" _payload_bytes_combined.json)"
+              case "$base" in
+                integration)    key="integrationTests";;
+                unbounded)      key="unboundedTests";;
+                linux_container) key="containerTests";;
+                *)              key="$base";;
+              esac
+              final="$(jq --arg key "$key" --slurpfile c "$f" '
+                .[$key] = {generatedAt:$c[0].generatedAt, bytes:$c[0].grandTotalBytes, byType:$c[0].byType, details:$c[0].details}
+                | .bytes += $c[0].grandTotalBytes
+                | .byType = (reduce ($c[0].byType|to_entries[]) as $cat (.byType; .[$cat.key]=((.[$cat.key]//0)+$cat.value)))
+              ' <<<"$final")"
             done
-
-            echo "," >> final_payload_summary.json
-            echo "  \"bytes\": $overall_total" >> final_payload_summary.json
-            echo "}" >> final_payload_summary.json
-
-            echo "=========================================="
-            echo "FINAL CONSOLIDATED PAYLOAD SUMMARY"
-            echo "=========================================="
-            cat final_payload_summary.json
-            echo ""
-            echo "=========================================="
-            echo "OVERALL TOTAL: $overall_total bytes"
-            echo "=========================================="
+            echo "$final" > final_payload_summary.json
           else
-            echo "No payload summary files found"
-            echo '{"bytes": 0}' > final_payload_summary.json
+            echo '{"bytes": 0, "byType": {}}' > final_payload_summary.json
           fi
+          echo "FINAL CONSOLIDATED PAYLOAD SUMMARY"; cat final_payload_summary.json
         shell: bash
 
       - name: Upload final consolidated summary

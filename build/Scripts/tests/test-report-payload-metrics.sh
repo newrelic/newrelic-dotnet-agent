@@ -14,8 +14,8 @@ OUT="$(PAYLOAD_SUMMARY_FILE="$FIXTURE" DRY_RUN=1 bash "$SCRIPT")"
 
 echo "$OUT" | jq -e . >/dev/null 2>&1 || fail "dry-run output is not valid JSON"
 
-COUNT="$(echo "$OUT" | jq '.[0].metrics | length')"
-[ "$COUNT" = "6" ] || fail "expected 6 metrics, got $COUNT"
+BASE_COUNT="$(echo "$OUT" | jq '[.[0].metrics[] | select(.name=="newrelic.dotnet.ci.payload.bytes" or .name=="newrelic.dotnet.ci.payload.total.bytes")] | length')"
+[ "$BASE_COUNT" = "6" ] || fail "expected 6 per-class/total metrics, got $BASE_COUNT"
 
 ALPHA="$(echo "$OUT" | jq -r '.[0].metrics[]
   | select(.name=="newrelic.dotnet.ci.payload.bytes" and .attributes.className=="AlphaTests")
@@ -32,4 +32,20 @@ ALL="$(echo "$OUT" | jq -r '.[0].metrics[]
   | .value')"
 [ "$ALL" = "325" ] || fail "expected overall total 325, got $ALL"
 
-echo "PASS: all assertions passed ($COUNT metrics)"
+BYTYPE_COUNT="$(echo "$OUT" | jq '[.[0].metrics[]|select(.name=="newrelic.dotnet.ci.payload.by_type.bytes")]|length')"
+[ "$BYTYPE_COUNT" = "5" ] || fail "expected 5 by_type metrics, got $BYTYPE_COUNT"
+
+ALL_CONNECT="$(echo "$OUT" | jq -r '.[0].metrics[]
+  | select(.name=="newrelic.dotnet.ci.payload.by_type.bytes" and .attributes.testType=="all" and .attributes.payloadType=="connect")
+  | .value')"
+[ "$ALL_CONNECT" = "145" ] || fail "expected all/connect by_type 145, got $ALL_CONNECT"
+
+INT_CONNECT="$(echo "$OUT" | jq -r '.[0].metrics[]
+  | select(.name=="newrelic.dotnet.ci.payload.by_type.bytes" and .attributes.testType=="integrationTests" and .attributes.payloadType=="connect")
+  | .value')"
+[ "$INT_CONNECT" = "120" ] || fail "expected integrationTests/connect by_type 120, got $INT_CONNECT"
+
+TOTAL_COUNT="$(echo "$OUT" | jq '.[0].metrics|length')"
+[ "$TOTAL_COUNT" = "11" ] || fail "expected 11 metrics total, got $TOTAL_COUNT"
+
+echo "PASS: all assertions passed ($TOTAL_COUNT metrics)"
