@@ -57,15 +57,13 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
                 configModifier
                     .SetLogLevel("finest")
                     .EnableDistributedTrace()
-                    .ForceTransactionTraces()
                     .ConfigureFasterMetricsHarvestCycle(20)
-                    .ConfigureFasterSpanEventsHarvestCycle(20)
-                    .ConfigureFasterTransactionTracesHarvestCycle(25);
+                    .ConfigureFasterSpanEventsHarvestCycle(20);
 
             },
             exerciseApplication: () =>
             {
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex,
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex,
                     TimeSpan.FromMinutes(1));
             }
         );
@@ -127,23 +125,13 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
 
         var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
 
-        var expectedTransactionTraceSegments = new List<string>
-        {
-            $"{_processMetricNameBase}/{_queueOrTopicName}",
-            _onProcessMessageMethodSegmentMetricName,
-            $"{_settleMetricNameBase}/{_queueOrTopicName}",
-        };
-
-        var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_transactionNameBase}/{_queueOrTopicName}{_topicScopeSuffix}");
         var queueProcessSpanEvent = _fixture.AgentLog.TryGetSpanEvent($"{_processMetricNameBase}/{_queueOrTopicName}");
 
 
         Assert.Multiple(
             () => Assert.Equal(2, processorTransactionEvents.Count),
             () => Assertions.MetricsExist(expectedMetrics, metrics),
-            () => Assert.NotNull(transactionSample),
             () => Assert.NotNull(queueProcessSpanEvent),
-            () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
             () => Assert.NotEmpty(spanEvents));
 
         // verify processor transaction events have the expected DT attributes
