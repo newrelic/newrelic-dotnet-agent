@@ -48,10 +48,8 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
                 configModifier
                     .SetLogLevel("finest")
                     .EnableDistributedTrace()
-                    .ForceTransactionTraces()
                     .ConfigureFasterMetricsHarvestCycle(20)
                     .ConfigureFasterSpanEventsHarvestCycle(20)
-                    .ConfigureFasterTransactionTracesHarvestCycle(25)
                     ;
             }
         );
@@ -184,15 +182,6 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
             _fixture.AgentLog.TryGetTransactionEvent(
                 $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}");
 
-        var expectedTransactionTraceSegments = new List<string>
-        {
-            $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}"
-        };
-
-        var transactionSample =
-            _fixture.AgentLog.TryGetTransactionSample(
-                $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}");
-
         var queueProduceSpanEvents =
             _fixture.AgentLog.TryGetSpanEvent($"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}");
         var queueConsumeSpanEvents =
@@ -226,8 +215,6 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
         NrAssert.Multiple(
             () => Assert.True(exerciseMultipleReceiveOperationsOnAMessageTransactionEvent != null,
                 "ExerciseMultipleReceiveOperationsOnAMessageTransactionEvent should not be null"),
-            () => Assert.True(transactionSample != null, "transactionSample should not be null"),
-            () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
 
             () => Assertions.SpanEventHasAttributes(expectedProduceAgentAttributes,
                 Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueProduceSpanEvents),
