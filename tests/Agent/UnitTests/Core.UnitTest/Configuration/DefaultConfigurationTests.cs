@@ -3622,6 +3622,22 @@ public class DefaultConfigurationTests
     [TestCase("not a bool", ExpectedResult = true)]
     [TestCase("false", ExpectedResult = false)]
     [TestCase("true", ExpectedResult = true)]
+    public bool UseHeaderBasedRequestQueueTimeForClassicAspNetTests(string localConfigValue)
+    {
+        if (localConfigValue != null)
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "UseHeaderBasedRequestQueueTimeForClassicAspNet", value = localConfigValue });
+        }
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        return defaultConfig.UseHeaderBasedRequestQueueTimeForClassicAspNet;
+    }
+
+    [TestCase(null, ExpectedResult = true)]
+    [TestCase("not a bool", ExpectedResult = true)]
+    [TestCase("false", ExpectedResult = false)]
+    [TestCase("true", ExpectedResult = true)]
     public bool AspNetCore6PlusBrowserInjectionTests(string localConfigValue)
     {
         _localConfig.appSettings.Add(new configurationAdd { key = "EnableAspNetCore6PlusBrowserInjection", value = localConfigValue });

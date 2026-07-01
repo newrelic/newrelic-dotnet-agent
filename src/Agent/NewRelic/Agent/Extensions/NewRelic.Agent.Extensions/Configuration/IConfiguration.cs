@@ -192,6 +192,9 @@ public interface IConfiguration
     string ProcessHostDisplayName { get; }
     int DatabaseStatementCacheCapacity { get; }
     bool ForceSynchronousTimingCalculationHttpClient { get; }
+
+    bool UseHeaderBasedRequestQueueTimeForClassicAspNet { get; }
+
     bool EnableAspNetCore6PlusBrowserInjection { get; }
 
     bool InstrumentAspNetCore6PlusWebsockets { get; }

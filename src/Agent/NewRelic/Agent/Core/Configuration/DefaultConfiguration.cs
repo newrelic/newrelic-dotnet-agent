@@ -2117,6 +2117,9 @@ public class DefaultConfiguration : IConfiguration
     private bool? _forceSynchronousTimingCalculationHttpClient;
     public bool ForceSynchronousTimingCalculationHttpClient => _forceSynchronousTimingCalculationHttpClient ??= TryGetAppSettingAsBoolWithDefault("ForceSynchronousTimingCalculation.HttpClient", false);
 
+    private bool? _useHeaderBasedRequestQueueTimeForClassicAspNet;
+    public bool UseHeaderBasedRequestQueueTimeForClassicAspNet => _useHeaderBasedRequestQueueTimeForClassicAspNet ??= TryGetAppSettingAsBoolWithDefault("UseHeaderBasedRequestQueueTimeForClassicAspNet", true);
+
     private bool? _enableAspNetCore6PlusBrowserInjection;
     public bool EnableAspNetCore6PlusBrowserInjection =>
         _enableAspNetCore6PlusBrowserInjection ??= EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("EnableAspNetCore6PlusBrowserInjection", true), "NEW_RELIC_ENABLE_ASPNETCORE6PLUS_BROWSER_INJECTION");

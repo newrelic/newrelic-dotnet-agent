@@ -93,3 +93,6 @@ build/Linux/keys
 
 # Superpowers working docs (local only)
 /docs/superpowers/
+
+# Codegraph database (local only)
+.codegraph
