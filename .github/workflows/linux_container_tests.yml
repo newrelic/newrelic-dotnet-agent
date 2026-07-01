@@ -219,6 +219,8 @@ jobs:
           NOW="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
           if [ -d "$IN_DIR" ] && find "$IN_DIR" -name "*_payload_bytes.json" -type f | grep -q .; then
+            # strip any UTF-8 BOM so jq -s can parse the concatenated stream (defensive; container files are BOM-free)
+            find "$IN_DIR" -name "*_payload_bytes.json" -type f -exec sed -i '1s/^\xEF\xBB\xBF//' {} +
             find "$IN_DIR" -name "*_payload_bytes.json" -type f -print0 \
               | xargs -0 jq -s --arg tt "$LABEL" --arg now "$NOW" '
                 (reduce .[] as $ns ({};
