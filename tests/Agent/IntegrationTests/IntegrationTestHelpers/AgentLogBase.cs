@@ -40,6 +40,7 @@ public abstract class AgentLogBase
     public const string ThreadProfileDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""profile_data"" with : (.*)";
     public const string UpdateLoadedModulesLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""update_loaded_modules"" with : (.*)";
     public const string CustomEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""custom_event_data"" with : (.*)";
+    public const string AgentSettingsLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""agent_settings"" with : (.*)";
 
     // Collector responses
     public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":(.*)";
@@ -490,6 +491,19 @@ public abstract class AgentLogBase
     public ConnectResponseData GetConnectResponseData()
     {
         return GetConnectResponseDatas().FirstOrDefault();
+    }
+
+    public bool? GetReportedAiMonitoringSetting(string jsonKey)
+    {
+        var match = TryGetLogLine(AgentSettingsLogLineRegex);
+        if (match == null || !match.Success)
+        {
+            return null;
+        }
+
+        var payload = match.Groups[1].Value;
+        var valueMatch = System.Text.RegularExpressions.Regex.Match(payload, "\"" + System.Text.RegularExpressions.Regex.Escape(jsonKey) + "\":(true|false)");
+        return valueMatch.Success ? bool.Parse(valueMatch.Groups[1].Value) : (bool?)null;
     }
 
     public IEnumerable<ConnectResponseData> GetConnectResponseDatas()

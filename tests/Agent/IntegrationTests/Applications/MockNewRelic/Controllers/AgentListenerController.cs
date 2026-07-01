@@ -36,6 +36,8 @@ public class AgentListenerController : Controller
         "</extension>";
 
     private static bool _setLiveInstrumentationOnConnect = false;
+    private static Dictionary<string, object> _aiMonitoringAgentConfigOnConnect = null;
+    private static bool? _collectAiOnConnect = null;
     private static HeaderValidationData _headerValidationData = new HeaderValidationData();
 
     [HttpGet]
@@ -90,6 +92,16 @@ public class AgentListenerController : Controller
                     };
 
                     serverConfig["instrumentation"] = instrumentations;
+                }
+
+                if (_aiMonitoringAgentConfigOnConnect != null)
+                {
+                    serverConfig["agent_config"] = _aiMonitoringAgentConfigOnConnect;
+                }
+
+                if (_collectAiOnConnect != null)
+                {
+                    serverConfig["collect_ai"] = _collectAiOnConnect.Value;
                 }
 
                 serverConfig["request_headers_map"] = _requestHeaderMap;
@@ -194,6 +206,21 @@ public class AgentListenerController : Controller
     {
         _setLiveInstrumentationOnConnect = true;
         return "_setLiveInstrumentationOnConnect was enabled";
+    }
+
+    [HttpGet]
+    [Route("SetAiMonitoringServerConfigOnConnect")]
+    public string SetAiMonitoringServerConfigOnConnect(string enabled = null, string streaming = null, string recordContent = null, string collectAi = null)
+    {
+        var agentConfig = new Dictionary<string, object>();
+        if (enabled != null) agentConfig["ai_monitoring.enabled"] = bool.Parse(enabled);
+        if (streaming != null) agentConfig["ai_monitoring.streaming.enabled"] = bool.Parse(streaming);
+        if (recordContent != null) agentConfig["ai_monitoring.record_content.enabled"] = bool.Parse(recordContent);
+
+        _aiMonitoringAgentConfigOnConnect = agentConfig.Count > 0 ? agentConfig : null;
+        _collectAiOnConnect = collectAi != null ? bool.Parse(collectAi) : (bool?)null;
+
+        return "AI Monitoring server config set for next connect";
     }
 
     [HttpGet]

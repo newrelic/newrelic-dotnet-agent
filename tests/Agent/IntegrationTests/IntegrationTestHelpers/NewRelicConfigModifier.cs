@@ -505,6 +505,26 @@ public class NewRelicConfigModifier
         return this;
     }
 
+    public NewRelicConfigModifier EnableAiMonitoringStreaming(bool enabled = true)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(
+            _configFilePath,
+            new[] { "configuration", "aiMonitoring", "streaming" },
+            "enabled",
+            enabled.ToString().ToLower());
+        return this;
+    }
+
+    public NewRelicConfigModifier EnableAiMonitoringRecordContent(bool enabled = true)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(
+            _configFilePath,
+            new[] { "configuration", "aiMonitoring", "recordContent" },
+            "enabled",
+            enabled.ToString().ToLower());
+        return this;
+    }
+
     public void SetCompleteTransactionsOnThread(bool enable)
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" },
