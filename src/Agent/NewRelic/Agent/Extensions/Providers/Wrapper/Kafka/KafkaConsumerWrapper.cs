@@ -19,7 +19,7 @@ public class KafkaConsumerWrapper : IWrapper
 {
     private const string WrapperName = "KafkaConsumerWrapper";
 
-    public bool IsTransactionRequired => true;
+    public bool IsTransactionRequired => false;
 
     private static readonly ConcurrentDictionary<Type, Func<object, string>> TopicAccessorDictionary =
         new ConcurrentDictionary<Type, Func<object, string>>();
@@ -38,6 +38,10 @@ public class KafkaConsumerWrapper : IWrapper
 
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
+        // Replicate the IsLeaf guard that WrapperService normally applies when IsTransactionRequired=true.
+        if (transaction.IsValid && transaction.CurrentSegment.IsLeaf)
+            return Delegates.NoOp;
+
         Log.Finest("KafkaConsumerWrapper: BeforeWrappedMethod called, starting segment with 'unknown' topic");
 
         var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, MessageBrokerVendorConstants.Kafka, "unknown");
@@ -88,6 +92,11 @@ public class KafkaConsumerWrapper : IWrapper
                     KafkaHelper.RecordKafkaNodeMetrics(agent, topic, bootstrapServers, false);
                 }
 
+                if (KafkaHelper.TryGetClusterIdFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var clusterId))
+                {
+                    agent.RecordCountMetric($"MessageBroker/Kafka/Cluster/{clusterId}/Topic/{topic}/Consume");
+                }
+
                 // get the Message.Headers property and process distributed trace headers
                 var messageAccessor = MessageAccessorDictionary.GetOrAdd(type, GetMessageAccessorFunc);
                 var messageAsObject = messageAccessor(resultAsObject);
@@ -125,6 +134,8 @@ public class KafkaConsumerWrapper : IWrapper
 
     private static void ReportSizeMetrics(IAgent agent, ITransaction transaction, string topic, long headersSize, object messageAsObject)
     {
+        if (messageAsObject == null) return;
+
         // get the message Key and Value properties so we can try to get their size
         var messageType = messageAsObject.GetType();
         var keyAccessor = KeyAccessorDictionary.GetOrAdd(messageType, GetKeyAccessorFunc);
