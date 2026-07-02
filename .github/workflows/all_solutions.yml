@@ -1352,6 +1352,11 @@ jobs:
           path: final_payload_summary.json
           if-no-files-found: warn
 
+      - name: Guard against empty payload data
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
+        run: bash build/Scripts/check-payload-not-empty.sh final_payload_summary.json
+        shell: bash
+
       - name: Report payload metrics to New Relic (staging)
         if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
         continue-on-error: true
