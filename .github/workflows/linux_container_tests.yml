@@ -202,6 +202,9 @@ jobs:
           disable-sudo: true
           egress-policy: audit
 
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
       - name: Download all Linux container payload artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -210,34 +213,7 @@ jobs:
           merge-multiple: true
 
       - name: Combine payload logs
-        run: |
-          mkdir -p combined-logs
-          IN_DIR="payload-logs/linux-container"
-          PREFIX="linux_container"
-          LABEL="Linux Container Tests"
-          OUT="combined-logs/${PREFIX}_payload_bytes_combined.json"
-          NOW="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-
-          if [ -d "$IN_DIR" ] && find "$IN_DIR" -name "*_payload_bytes.json" -type f | grep -q .; then
-            # strip any UTF-8 BOM so jq -s can parse the concatenated stream (defensive; container files are BOM-free)
-            find "$IN_DIR" -name "*_payload_bytes.json" -type f -exec sed -i '1s/^\xEF\xBB\xBF//' {} +
-            find "$IN_DIR" -name "*_payload_bytes.json" -type f -print0 \
-              | xargs -0 jq -s --arg tt "$LABEL" --arg now "$NOW" '
-                (reduce .[] as $ns ({};
-                   reduce ($ns|to_entries[]) as $c (.;
-                     reduce ($c.value|to_entries[]) as $cat (.;
-                       .[$c.key][$cat.key] = ((.[$c.key][$cat.key]//0) + $cat.value) )))) as $m
-                | { testType: $tt, generatedAt: $now,
-                    grandTotalBytes: ([$m[][]] | add // 0),
-                    details: [ $m | to_entries[] | {className:.key, bytes:([.value[]]|add // 0)} ],
-                    byType: (reduce ($m|to_entries[]) as $c ({};
-                               reduce ($c.value|to_entries[]) as $cat (.;
-                                 .[$cat.key] = ((.[$cat.key]//0)+$cat.value)))) }' > "$OUT"
-          else
-            jq -n --arg tt "$LABEL" --arg now "$NOW" \
-              '{testType:$tt, generatedAt:$now, grandTotalBytes:0, details:[], byType:{}}' > "$OUT"
-          fi
-          cat "$OUT"
+        run: bash build/Scripts/combine-payload-logs.sh payload-logs/linux-container "Linux Container Tests" combined-logs/linux_container_payload_bytes_combined.json
         shell: bash
 
       - name: Upload combined Linux container payload log
