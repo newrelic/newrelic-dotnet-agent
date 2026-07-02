@@ -161,6 +161,29 @@ public abstract class AgentLogBase
         throw new Exception(message);
     }
 
+    public IEnumerable<Metric> WaitForMetricAggregateCallCount(string metricName, int minimumCallCount, TimeSpan timeout)
+    {
+        var deadline = DateTime.Now + timeout;
+        while (DateTime.Now < deadline)
+        {
+            var matches = GetMetrics().Where(m => m.MetricSpec.Name == metricName).ToList();
+            decimal totalCallCount = 0;
+            foreach (var match in matches)
+            {
+                totalCallCount += match.Values.CallCount;
+            }
+
+            if (totalCallCount >= minimumCallCount)
+            {
+                return matches;
+            }
+
+            Thread.Sleep(500);
+        }
+
+        throw new Exception($"Metric '{metricName}' did not reach an aggregate CallCount of {minimumCallCount} within {timeout.TotalSeconds:N0} seconds.");
+    }
+
     public IEnumerable<Match> WaitForLogLines(string regularExpression, TimeSpan? timeoutOrZero = null)
     {
         return WaitForLogLines(regularExpression, timeoutOrZero, 1);
