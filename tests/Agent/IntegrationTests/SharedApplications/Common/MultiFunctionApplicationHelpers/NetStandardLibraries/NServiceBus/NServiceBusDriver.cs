@@ -19,6 +19,15 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus;
 [Library]
 class NServiceBusDriver
 {
+    // A queue this endpoint does not consume. SendCommandInTransaction routes the command here
+    // (instead of SendLocal) so the produce-side instrumentation is exercised without also
+    // producing an incidental no-handler "Consume" transaction on this same endpoint. That
+    // incidental transaction has a variable duration and competes with the Send transaction for
+    // the single slowest-trace slot per harvest window, which made NsbSendTests flaky. The
+    // asserted Produce metric is named from the message type, not the destination queue, so
+    // routing the command elsewhere leaves all NsbSendTests assertions unchanged.
+    private const string UnconsumedDestinationQueue = "NsbSendTestsUnconsumedQueue";
+
     // NServiceBus 10.2 deprecated the self-hosting API (IEndpointInstance, Endpoint.Start/Stop) in favor
     // of an IHostApplicationBuilder-based host with IServiceCollection.AddNServiceBusEndpoint. These MFA
     // console apps have no generic host and only start an endpoint on demand when a test exercises
@@ -140,7 +149,9 @@ class NServiceBusDriver
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task SendCommandInTransaction()
     {
-        await SendCommand();
+        var command = new Command();
+        ConsoleMFLogger.Info($"Sending NServiceBus Command with Id: {command.Id} to {UnconsumedDestinationQueue}");
+        await _endpoint.Send(UnconsumedDestinationQueue, command);
     }
 
     [LibraryMethod]
