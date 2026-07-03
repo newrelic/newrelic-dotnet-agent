@@ -90,7 +90,8 @@ public class KafkaBuilderWrapper : IWrapper
             if (!string.IsNullOrEmpty(bootstrapServers))
             {
                 KafkaHelper.AddBootstrapServersToCache(clientAsObject, bootstrapServers);
-                KafkaHelper.ScheduleClusterIdFetch(clientAsObject, bootstrapServers, fullConfig);
+                if (agent.Configuration.KafkaClusterMetricsEnabled)
+                    KafkaHelper.ScheduleClusterIdFetch(clientAsObject, bootstrapServers, fullConfig);
             }
         });
     }

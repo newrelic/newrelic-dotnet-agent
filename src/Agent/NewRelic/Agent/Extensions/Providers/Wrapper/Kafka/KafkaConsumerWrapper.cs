@@ -92,7 +92,8 @@ public class KafkaConsumerWrapper : IWrapper
                     KafkaHelper.RecordKafkaNodeMetrics(agent, topic, bootstrapServers, false);
                 }
 
-                if (KafkaHelper.TryGetClusterIdFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var clusterId))
+                if (agent.Configuration.KafkaClusterMetricsEnabled &&
+                    KafkaHelper.TryGetClusterIdFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var clusterId))
                 {
                     agent.RecordCountMetric($"MessageBroker/Kafka/Cluster/{clusterId}/Topic/{topic}/Consume");
                 }
