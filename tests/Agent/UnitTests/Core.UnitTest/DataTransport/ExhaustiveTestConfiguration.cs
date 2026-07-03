@@ -415,6 +415,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
 
     public bool KafkaInternalMetricsEnabled => true;
 
+    public bool KafkaClusterMetricsEnabled => false;
+
     public int? SamplingTarget => 1234;
 
     public int SpanEventsMaxSamplesStored => 4321;
