@@ -5,7 +5,8 @@
     <NoWarn>
       VSTHRD200, <!-- Use `Async` suffix for async methods -->
       VSTHRD105, <!-- Avoid method overloads that assume `TaskScheduler.Current` -->
-      VSTHRD002 <!-- Avoid problematic synchronous waits -->
+      VSTHRD002, <!-- Avoid problematic synchronous waits -->
+      NETSDK1198 <!-- SDK-style test apps have no classic LocalDeploy MSDeploy profile; PublishProfile is applied solution-wide -->
     </NoWarn>
     <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
