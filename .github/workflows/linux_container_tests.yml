@@ -128,13 +128,38 @@ jobs:
       - name: Build & Run Linux Container Integration Tests
         env:
           BUILD_ARCH: ${{ matrix.arch }}
-        run: >-
-          dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj
-          --framework net10.0
-          --filter "Architecture=${{ matrix.arch }}&Distro=${{ matrix.distro }}"
-          --logger "console;verbosity=detailed"
-          --logger "trx;verbosity=detailed"
-          --results-directory ${{ env.test_results_path }}
+        run: |
+          # Retry once on failure to absorb transient infrastructure blips (e.g. container
+          # image pulls, Docker networking, or service-container startup races) that can
+          # surface as a spurious failure while the code under test is healthy. A
+          # retried-but-passing job still emits a ::warning:: so genuine regressions /
+          # flake churn stay visible in the UI.
+          max_attempts=2
+          attempt=1
+          while true; do
+            set +e
+            dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj \
+              --framework net10.0 \
+              --filter "Architecture=${{ matrix.arch }}&Distro=${{ matrix.distro }}" \
+              --logger "console;verbosity=detailed" \
+              --logger "trx;verbosity=detailed" \
+              --results-directory ${{ env.test_results_path }}
+            exit_code=$?
+            set -e
+            if [ $exit_code -eq 0 ]; then
+              if [ $attempt -gt 1 ]; then
+                echo "::warning::Container tests for ${{ matrix.arch }}/${{ matrix.distro }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
+              fi
+              break
+            fi
+            if [ $attempt -ge $max_attempts ]; then
+              echo "Container tests for ${{ matrix.arch }}/${{ matrix.distro }} failed after $attempt attempt(s) (exit code $exit_code)."
+              exit $exit_code
+            fi
+            echo "Container tests for ${{ matrix.arch }}/${{ matrix.distro }} failed on attempt $attempt (exit code $exit_code); retrying once to absorb a possible transient blip..."
+            attempt=$((attempt + 1))
+            sleep 10
+          done
 
       - name: Extract payload bytes log from TRX
         if: inputs.aggregate_payload_data == true

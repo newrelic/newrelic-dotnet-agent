@@ -10,15 +10,15 @@ EXPOSE 80
 FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-${DISTRO_TAG} AS build 
 ARG TARGET_ARCH
 WORKDIR /src
+COPY ["AwsSdkTestApp/AwsSdkTestApp.csproj", "AwsSdkTestApp/"]
+RUN dotnet restore "AwsSdkTestApp/AwsSdkTestApp.csproj" -a ${TARGET_ARCH}
 
-COPY ./AwsSdkTestApp ./ContainerApplications/AwsSdkTestApp
-RUN dotnet restore "ContainerApplications/AwsSdkTestApp/AwsSdkTestApp.csproj"  -a ${TARGET_ARCH}
-
-WORKDIR "/src/ContainerApplications/AwsSdkTestApp"
-RUN dotnet build "AwsSdkTestApp.csproj" -c Release -o /app/build --os linux -a ${TARGET_ARCH}
+COPY . .
+WORKDIR "/src/AwsSdkTestApp"
+RUN dotnet build "AwsSdkTestApp.csproj" -c Release -o /app/build --os linux -a ${TARGET_ARCH} --no-restore
 
 FROM build AS publish
-RUN dotnet publish "AwsSdkTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false --os linux -a ${TARGET_ARCH}
+RUN dotnet publish "AwsSdkTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false --os linux -a ${TARGET_ARCH} --no-restore
 
 FROM base AS final
 

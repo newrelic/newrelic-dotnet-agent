@@ -125,10 +125,14 @@ public class Producer
                     throw new InvalidOperationException("Kafka metadata returned zero brokers.");
                 }
 
+                // Deliberate synchronous wait: CreateTopic is synchronous startup setup and
+                // Confluent.Kafka's AdminClient only exposes CreateTopicsAsync.
+#pragma warning disable VSTHRD002
                 adminClient.CreateTopicsAsync(new TopicSpecification[] {
                     new TopicSpecification { Name = _topic, ReplicationFactor = 1, NumPartitions = 1 },
                     new TopicSpecification { Name = _burstTopic, ReplicationFactor = 1, NumPartitions = 1 }
                 }).GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
 
                 _logger.LogInformation("Created topics '{Topic}' and '{BurstTopic}' on attempt {Attempt}.",
                     _topic, _burstTopic, attempt);

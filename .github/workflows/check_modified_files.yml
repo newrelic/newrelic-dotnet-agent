@@ -35,7 +35,11 @@ jobs:
             uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
             id: filter
             with:
-              base: ${{ github.ref }}
+              # 'base' is ignored (and warns) on pull_request events, where the action
+              # auto-detects the PR base branch; only pass it for push/schedule/etc.
+              # Note: the '!=' form avoids the GitHub Actions ternary pitfall where an
+              # empty-string middle operand is falsy and falls through to github.ref.
+              base: ${{ github.event_name != 'pull_request' && github.ref || '' }}
               # Look for source files that were modified, excluding workflow files and unbounded services
               predicate-quantifier: 'every'             
               filters: |

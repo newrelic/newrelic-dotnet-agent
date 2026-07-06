@@ -1,0 +1,19 @@
+<Project>
+  <!-- Host builds: chain to the IntegrationTests/root Directory.Build.props so
+       these projects keep TreatWarningsAsErrors, the shared NoWarn set, etc.
+       Inside the container the Docker build context is only this folder, so
+       GetPathOfFileAbove finds nothing above /src and the import is skipped.
+       The path is resolved into a property first because nesting the
+       GetPathOfFileAbove call (with its quoted args) directly inside an Import
+       Condition trips the MSBuild condition parser (MSB4092). -->
+  <PropertyGroup>
+    <_ParentDirectoryBuildProps>$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..'))</_ParentDirectoryBuildProps>
+  </PropertyGroup>
+  <Import Project="$(_ParentDirectoryBuildProps)" Condition="'$(_ParentDirectoryBuildProps)' != ''" />
+  <PropertyGroup>
+    <!-- Container apps compile inside an isolated Docker context that never sees the
+         IntegrationTests Directory.Build.props, so restate the naming-convention
+         suppression here. VSTHRD002 is handled per call site with pragmas instead. -->
+    <NoWarn>$(NoWarn);VSTHRD200</NoWarn>
+  </PropertyGroup>
+</Project>
