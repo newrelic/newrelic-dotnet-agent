@@ -61,6 +61,7 @@ public abstract class MsSqlQueryParamTestsBase<TFixture> : NewRelicIntegrationTe
             {
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForMetricAggregateCallCount("Datastore/all", 2, TimeSpan.FromMinutes(2));
             }
         );
 
