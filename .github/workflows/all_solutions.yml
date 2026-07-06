@@ -657,7 +657,30 @@ jobs:
           $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
           $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
-          ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          # Retry once on failure to absorb transient infrastructure blips (e.g. port
+          # contention, SSL cert / tooling startup races, or a flaky test-app launch) that
+          # can surface as a spurious failure while the code under test is healthy. A
+          # retried-but-passing job still emits a ::warning:: so genuine regressions /
+          # flake churn stay visible in the UI.
+          $maxAttempts = 2
+          $attempt = 1
+          while ($true) {
+            & "${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe" -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+            $exitCode = $LASTEXITCODE
+            if ($exitCode -eq 0) {
+              if ($attempt -gt 1) {
+                Write-Host "::warning::Integration tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
+              }
+              break
+            }
+            if ($attempt -ge $maxAttempts) {
+              Write-Host "Integration tests for ${{ matrix.namespace }} failed after $attempt attempt(s) (exit code $exitCode)."
+              exit $exitCode
+            }
+            Write-Host "Integration tests for ${{ matrix.namespace }} failed on attempt $attempt (exit code $exitCode); retrying once to absorb a possible transient blip..."
+            $attempt++
+            Start-Sleep -Seconds 10
+          }
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
@@ -850,7 +873,29 @@ jobs:
           $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
           $json | ConvertTo-Json | Out-File "${{ env.unbounded_tests_path }}/xunit.runner.json"
 
-          ${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          # Retry once on failure to absorb transient WAN/infra blips between the GitHub-hosted
+          # runner and the Azure-hosted unbounded services (e.g. brief packet loss surfacing as a
+          # client command timeout while the service itself is healthy). A retried-but-passing job
+          # still emits a ::warning:: so genuine regressions / flake churn stay visible in the UI.
+          $maxAttempts = 2
+          $attempt = 1
+          while ($true) {
+            & "${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe" -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+            $exitCode = $LASTEXITCODE
+            if ($exitCode -eq 0) {
+              if ($attempt -gt 1) {
+                Write-Host "::warning::Unbounded tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
+              }
+              break
+            }
+            if ($attempt -ge $maxAttempts) {
+              Write-Host "Unbounded tests for ${{ matrix.namespace }} failed after $attempt attempt(s) (exit code $exitCode)."
+              exit $exitCode
+            }
+            Write-Host "Unbounded tests for ${{ matrix.namespace }} failed on attempt $attempt (exit code $exitCode); retrying once to absorb a possible transient blip..."
+            $attempt++
+            Start-Sleep -Seconds 10
+          }
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
