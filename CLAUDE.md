@@ -234,3 +234,21 @@ only when no suitable overload exists *and* the call is not on a hot path.
 - Compact namespaces: `namespace NewRelic::Profiler::Logger { ... }`.
 - `.clang-format` at the profiler solution root is authoritative.
 
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in Jira (New Relic, project `NR`) via the Atlassian MCP;
+the GitHub repo is a public code/PR mirror. External PRs are not a triage
+surface. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical role strings used as-is as Jira labels. See
+`docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See
+`docs/agents/domain.md`.
+
