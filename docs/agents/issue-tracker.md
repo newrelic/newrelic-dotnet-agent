@@ -17,13 +17,36 @@ with a proper ADF (Atlassian Document Format) JSON body, even for plain text.
 Follow the `nr:jira-adf-format` skill. Passing raw markdown/plain strings is
 the most common mistake.
 
+## Team assignment (mandatory)
+
+`NR` is a single Jira project shared by dozens of teams -- there is no
+per-team project. An issue with no **Team** set never appears in the .NET
+Agent backlog, so **every** issue you create must set it (unless the user
+names a different team).
+
+- Field key: `customfield_10001` -- the platform "Team" field (schema type
+  `team`, operations `["set"]`; verified from the `NR` create metadata). This
+  is the field key; `ea229518-...-188` below is the team *value*, not the
+  field.
+- Value: the team ID as a **plain string**, not an object:
+  `ea229518-a006-4d09-b8c0-223a885aeff7-188` ("APM+ -> .NET Agent").
+- `createJiraIssue` exposes no dedicated team parameter; pass it through
+  `additional_fields`:
+
+  ```json
+  "additional_fields": { "customfield_10001": "ea229518-a006-4d09-b8c0-223a885aeff7-188" }
+  ```
+
+Set the same field via `editJiraIssue` to move a mis-filed existing issue onto
+the team.
+
 ## Conventions
 
 - **Create an issue**: `createJiraIssue` with `projectKey: NR`, an
   `issueTypeName` (`Task`, `Bug`, `Story`), a `summary`, and a `description`.
-  New issues are assigned to the "APM+ -> .NET Agent" team (team field ID
-  `ea229518-a006-4d09-b8c0-223a885aeff7-188`) via `additional_fields` unless
-  told otherwise.
+  You **must** also set the team via `additional_fields` -- see "Team
+  assignment (mandatory)" above; an issue with no team is invisible in the
+  .NET Agent backlog.
 - **Read an issue**: `getJiraIssue` with the issue key (e.g. `NR-574460`).
   Include `comment` in `fields` (or fetch `*all`) to get comments.
 - **List / search issues**: `searchJiraIssuesUsingJql`, e.g.
