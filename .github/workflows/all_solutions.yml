@@ -634,6 +634,13 @@ jobs:
           dotnet-quality: 'ga'
 
       - name: Run Integration Tests
+        env:
+          NR_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+          CI_BRANCH: ${{ github.ref_name }}
+          CI_COMMIT: ${{ github.sha }}
+          CI_RUN_ID: ${{ github.run_id }}
+          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CI_TRIGGER: ${{ github.event_name }}
         run: |
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "List ports in use"
@@ -670,6 +677,10 @@ jobs:
             if ($exitCode -eq 0) {
               if ($attempt -gt 1) {
                 Write-Host "::warning::Integration tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
+                # Best-effort flaky-retry telemetry (never fails the job).
+                $env:RETRY_TEST_TYPE = "integrationTests"
+                $env:RETRY_TEST_GROUP = "${{ matrix.namespace }}"
+                & bash build/Scripts/report-flaky-retry.sh
               }
               break
             }
@@ -696,8 +707,11 @@ jobs:
         run: |
           $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
+          $countLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_test_count.json"
 
           Write-Host "Checking for TRX file at: $trxFile"
+
+          $executedTests = 0
 
           if (Test-Path $trxFile) {
             $fileSize = (Get-Item $trxFile).Length
@@ -735,10 +749,19 @@ jobs:
               Write-Host "No payload byte logs found in TRX file"
               @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
             }
+
+            # Extract the executed-test count from the TRX ResultSummary/Counters (VSTest
+            # schema, emitted by the xUnit v3 runner). 'executed' counts tests that ran
+            # (any outcome), excluding skipped / not-executed.
+            $counters = $trxContent.SelectSingleNode("//*[local-name()='ResultSummary']/*[local-name()='Counters']")
+            if ($counters -ne $null -and $counters.executed) { $executedTests = [int]$counters.executed }
           } else {
             Write-Host "TRX file not found"
             @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
           }
+
+          Write-Host "Executed test count: $executedTests"
+          @{ executedTests = $executedTests } | ConvertTo-Json | Out-File -FilePath $countLog -Encoding UTF8
         shell: powershell
 
       - name: Upload payload bytes log
@@ -746,7 +769,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: integration-payload-bytes-${{ matrix.namespace }}
-          path: C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
+          path: |
+            C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
+            C:\IntegrationTestWorkingDirectory\TestResults\*_test_count.json
           if-no-files-found: warn
 
       - name: Archive integration test results on failure
@@ -855,6 +880,13 @@ jobs:
           dotnet-quality: 'ga'
   
       - name: Run Unbounded Integration Tests
+        env:
+          NR_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+          CI_BRANCH: ${{ github.ref_name }}
+          CI_COMMIT: ${{ github.sha }}
+          CI_RUN_ID: ${{ github.run_id }}
+          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CI_TRIGGER: ${{ github.event_name }}
         run: |
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "List ports in use"
@@ -885,6 +917,10 @@ jobs:
             if ($exitCode -eq 0) {
               if ($attempt -gt 1) {
                 Write-Host "::warning::Unbounded tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
+                # Best-effort flaky-retry telemetry (never fails the job).
+                $env:RETRY_TEST_TYPE = "unboundedTests"
+                $env:RETRY_TEST_GROUP = "${{ matrix.namespace }}"
+                & bash build/Scripts/report-flaky-retry.sh
               }
               break
             }
@@ -911,8 +947,11 @@ jobs:
         run: |
           $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
+          $countLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_test_count.json"
 
           Write-Host "Checking for TRX file at: $trxFile"
+
+          $executedTests = 0
 
           if (Test-Path $trxFile) {
             $fileSize = (Get-Item $trxFile).Length
@@ -950,10 +989,19 @@ jobs:
               Write-Host "No payload byte logs found in TRX file"
               @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
             }
+
+            # Extract the executed-test count from the TRX ResultSummary/Counters (VSTest
+            # schema, emitted by the xUnit v3 runner). 'executed' counts tests that ran
+            # (any outcome), excluding skipped / not-executed.
+            $counters = $trxContent.SelectSingleNode("//*[local-name()='ResultSummary']/*[local-name()='Counters']")
+            if ($counters -ne $null -and $counters.executed) { $executedTests = [int]$counters.executed }
           } else {
             Write-Host "TRX file not found"
             @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
           }
+
+          Write-Host "Executed test count: $executedTests"
+          @{ executedTests = $executedTests } | ConvertTo-Json | Out-File -FilePath $countLog -Encoding UTF8
         shell: powershell
 
       - name: Upload payload bytes log
@@ -961,7 +1009,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: unbounded-payload-bytes-${{ matrix.namespace }}
-          path: C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
+          path: |
+            C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
+            C:\IntegrationTestWorkingDirectory\TestResults\*_test_count.json
           if-no-files-found: warn
 
       - name: Archive unbounded test results on failure
@@ -1320,7 +1370,7 @@ jobs:
       - name: Create consolidated JSON output
         run: |
           if ls payload-summaries/*_combined.json >/dev/null 2>&1; then
-            final="$(jq -n '{bytes:0, byType:{}}')"
+            final="$(jq -n '{bytes:0, byType:{}, executedTests:0}')"
             for f in payload-summaries/*_combined.json; do
               base="$(basename "$f" _payload_bytes_combined.json)"
               case "$base" in
@@ -1330,14 +1380,15 @@ jobs:
                 *)              key="$base";;
               esac
               final="$(jq --arg key "$key" --slurpfile c "$f" '
-                .[$key] = {generatedAt:$c[0].generatedAt, bytes:$c[0].grandTotalBytes, byType:$c[0].byType, details:$c[0].details}
+                .[$key] = {generatedAt:$c[0].generatedAt, bytes:$c[0].grandTotalBytes, executedTests:($c[0].executedTests // 0), byType:$c[0].byType, details:$c[0].details}
                 | .bytes += $c[0].grandTotalBytes
+                | .executedTests += ($c[0].executedTests // 0)
                 | .byType = (reduce ($c[0].byType|to_entries[]) as $cat (.byType; .[$cat.key]=((.[$cat.key]//0)+$cat.value)))
               ' <<<"$final")"
             done
             echo "$final" > final_payload_summary.json
           else
-            echo '{"bytes": 0, "byType": {}}' > final_payload_summary.json
+            echo '{"bytes": 0, "byType": {}, "executedTests": 0}' > final_payload_summary.json
           fi
           echo "FINAL CONSOLIDATED PAYLOAD SUMMARY"; cat final_payload_summary.json
         shell: bash

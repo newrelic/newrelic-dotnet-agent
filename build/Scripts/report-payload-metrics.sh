@@ -60,6 +60,10 @@ build_body() {
           + [ (.byType // {}) | to_entries[]
             | {name:"newrelic.dotnet.ci.payload.by_type.bytes", type:"gauge",
                value:.value, attributes:{testType:"all", payloadType:.key}} ]
+          + [ $types[] | {name:"newrelic.dotnet.ci.tests.count", type:"gauge",
+               value:(.value.executedTests // 0), attributes:{testType:.key}} ]
+          + [ {name:"newrelic.dotnet.ci.tests.count", type:"gauge",
+               value:(.executedTests // 0), attributes:{testType:"all"}} ]
         )
       } ]
   ' "$SUMMARY_FILE"
