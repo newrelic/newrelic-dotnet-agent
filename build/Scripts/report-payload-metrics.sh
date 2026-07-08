@@ -89,6 +89,11 @@ if [ -n "${NR_TEST_SECRETS:-}" ]; then
   LICENSE_KEY="$(printf '%s' "$NR_TEST_SECRETS" | sed '1s/^\xEF\xBB\xBF//' \
     | jq -r '.IntegrationTestConfiguration.DefaultSetting.LicenseKey // empty')"
 fi
+
+# Mask the extracted license key in CI logs. GitHub Actions only auto-masks the
+# exact TEST_SECRETS blob, not this jq-extracted substring. No-op outside Actions.
+[ -n "$LICENSE_KEY" ] && echo "::add-mask::$LICENSE_KEY"
+
 if [ -z "$LICENSE_KEY" ]; then
   echo "WARNING: no New Relic license key available; skipping." >&2
   exit 0
