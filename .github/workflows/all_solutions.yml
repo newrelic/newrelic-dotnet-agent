@@ -82,7 +82,9 @@ jobs:
       - shellcheck
     # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
     # run this job if source files were modified, or if triggered by a release, a manual execution or schedule
-    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    # !cancelled() is required because check-modified-files is skipped on non-PR events; without it,
+    # the skipped dependency would implicitly skip this job even when the schedule/release/dispatch clauses match.
+    if: ${{ !cancelled() && github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') }}
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
@@ -197,7 +199,9 @@ jobs:
   get-test-namespaces:
     name: Get Test Namespaces
     needs: check-modified-files
-    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    # !cancelled() is required because check-modified-files is skipped on non-PR events; without it,
+    # the skipped dependency would implicitly skip this job even when the schedule/release/dispatch clauses match.
+    if: ${{ !cancelled() && github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') }}
     runs-on: ubuntu-latest
     outputs:
       integration-namespaces: ${{ steps.compute.outputs.integration }}
