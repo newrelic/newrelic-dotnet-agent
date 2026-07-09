@@ -53,6 +53,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Mask license key in logs
+      if: inputs.attach-agent == 'true' && inputs.license-key != ''
+      shell: bash
+      env:
+        LICENSE_KEY: ${{ inputs.license-key }}
+      run: echo "::add-mask::$LICENSE_KEY"
+
     - name: Create agent-home directory
       shell: bash
       run: mkdir -p "${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
