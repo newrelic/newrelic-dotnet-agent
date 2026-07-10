@@ -41,12 +41,8 @@ env:
 jobs:
   check-modified-files:
     name: Check if source files were modified, skip remaining jobs if not
-    # Only run on pull_request: this is the only event where source-files-changed is
-    # consumed (all other events force a full build via the downstream job conditions).
-    # Running it on release/workflow_dispatch/schedule does useless work and makes
-    # dorny/paths-filter warn about a missing 'before' field (no diff baseline exists
-    # off a PR). Also skip if the PR source branch starts with "release-please".
-    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please')
+    # skip if the PR source branch starts with "release-please"
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release-please')
     uses: ./.github/workflows/check_modified_files.yml
     secrets: inherit
     permissions:
@@ -56,9 +52,6 @@ jobs:
   shellcheck:
     name: Validate shell scripts
     needs: check-modified-files
-    # check-modified-files is skipped on non-PR events; !cancelled() keeps shellcheck
-    # running there (a skipped dependency would otherwise cascade-skip this job).
-    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -82,9 +75,7 @@ jobs:
       - shellcheck
     # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
     # run this job if source files were modified, or if triggered by a release, a manual execution or schedule
-    # !cancelled() is required because check-modified-files is skipped on non-PR events; without it,
-    # the skipped dependency would implicitly skip this job even when the schedule/release/dispatch clauses match.
-    if: ${{ !cancelled() && github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') }}
+    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
@@ -199,9 +190,7 @@ jobs:
   get-test-namespaces:
     name: Get Test Namespaces
     needs: check-modified-files
-    # !cancelled() is required because check-modified-files is skipped on non-PR events; without it,
-    # the skipped dependency would implicitly skip this job even when the schedule/release/dispatch clauses match.
-    if: ${{ !cancelled() && github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') }}
+    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     runs-on: ubuntu-latest
     outputs:
       integration-namespaces: ${{ steps.compute.outputs.integration }}
