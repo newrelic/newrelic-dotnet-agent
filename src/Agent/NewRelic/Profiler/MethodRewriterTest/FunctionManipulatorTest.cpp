@@ -22,13 +22,13 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         TEST_METHOD(construction)
         {
             auto function = std::make_shared<MockFunction>();
-            FunctionManipulator manipulator(function);
+            FunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
         }
 
         TEST_METHOD(instrument_minimal_method)
         {
             auto function = std::make_shared<MockFunction>();
-            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, L""));
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, L""), false, AgentCallStyle::Strategy::AppDomainFallbackCache);
 
             auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
             manipulator.InstrumentDefault(instrumentationPoint);
@@ -139,7 +139,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 capturedBytes = bytes;
             };
 
-            HelperFunctionManipulator manipulator(function);
+            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
             manipulator.InstrumentHelper();
 
             // capturedBytes = 1-byte tiny header + IL body
@@ -158,7 +158,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 capturedBytes = bytes;
             };
 
-            HelperFunctionManipulator manipulator(function);
+            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
             manipulator.InstrumentHelper();
 
             // capturedBytes = 1-byte tiny header + IL body
@@ -177,13 +177,127 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 capturedBytes = bytes;
             };
 
-            HelperFunctionManipulator manipulator(function);
+            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
             manipulator.InstrumentHelper();
 
             // capturedBytes = 1-byte tiny header + IL body
             // expected IL size: 30 bytes; first IL byte: CEE_LDSFLD (0x7E)
             Assert::AreEqual((size_t)31, capturedBytes.size());
             Assert::AreEqual((uint8_t)0x7E, capturedBytes[1]);
+        }
+
+        TEST_METHOD(helper_method_cctor)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X(".cctor");
+
+            ByteVector capturedBytes;
+            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
+                capturedBytes = bytes;
+            };
+
+            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            manipulator.InstrumentHelper();
+
+            // capturedBytes = 1-byte tiny header + IL body
+            // expected IL size: 1 byte; first IL byte: CEE_RET (0x2A)
+            Assert::AreEqual((size_t)2, capturedBytes.size());
+            Assert::AreEqual((uint8_t)0x2A, capturedBytes[1]);
+        }
+
+        TEST_METHOD(helper_method_EnsureInitialized)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("EnsureInitialized");
+
+            ByteVector capturedBytes;
+            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
+                capturedBytes = bytes;
+            };
+
+            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            manipulator.InstrumentHelper();
+
+            // capturedBytes = 1-byte tiny header + IL body
+            // expected IL size: 23 bytes; first IL byte: CEE_CALL (0x28)
+            Assert::AreEqual((size_t)24, capturedBytes.size());
+            Assert::AreEqual((uint8_t)0x28, capturedBytes[1]);
+        }
+
+        TEST_METHOD(helper_method_GetAgentMethodInvokerObject)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("GetAgentMethodInvokerObject");
+
+            ByteVector capturedBytes;
+            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
+                capturedBytes = bytes;
+            };
+
+            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            manipulator.InstrumentHelper();
+
+            // capturedBytes = 1-byte tiny header + IL body
+            // expected IL size: 45 bytes; first IL byte: CEE_LDSFLD (0x7E)
+            Assert::AreEqual((size_t)46, capturedBytes.size());
+            Assert::AreEqual((uint8_t)0x7E, capturedBytes[1]);
+        }
+
+        TEST_METHOD(helper_method_StoreAgentMethodInvokerFunc)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("StoreAgentMethodInvokerFunc");
+
+            ByteVector capturedBytes;
+            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
+                capturedBytes = bytes;
+            };
+
+            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            manipulator.InstrumentHelper();
+
+            // capturedBytes = 1-byte tiny header + IL body
+            // expected IL size: 41 bytes; first IL byte: CEE_LDARG_0 (0x02)
+            Assert::AreEqual((size_t)42, capturedBytes.size());
+            Assert::AreEqual((uint8_t)0x02, capturedBytes[1]);
+        }
+
+        TEST_METHOD(helper_method_InvokeAgentMethodInvokerFunc_AppDomainFallbackCache)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("InvokeAgentMethodInvokerFunc");
+
+            ByteVector capturedBytes;
+            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
+                capturedBytes = bytes;
+            };
+
+            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            manipulator.InstrumentHelper();
+
+            // capturedBytes = 1-byte tiny header + IL body
+            // expected IL size: 25 bytes; first IL byte: CEE_CALL (0x28)
+            Assert::AreEqual((size_t)26, capturedBytes.size());
+            Assert::AreEqual((uint8_t)0x28, capturedBytes[1]);
+        }
+
+        TEST_METHOD(helper_method_InvokeAgentMethodInvokerFunc_Reflection)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("InvokeAgentMethodInvokerFunc");
+
+            ByteVector capturedBytes;
+            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
+                capturedBytes = bytes;
+            };
+
+            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::Reflection);
+            manipulator.InstrumentHelper();
+
+            // capturedBytes = 1-byte tiny header + IL body
+            // expected IL size: 31 bytes; first IL byte: CEE_LDARG_0 (0x02)
+            Assert::AreEqual((size_t)32, capturedBytes.size());
+            Assert::AreEqual((uint8_t)0x02, capturedBytes[1]);
         }
 
     private:

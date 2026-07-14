@@ -9,6 +9,7 @@
 #include "../Configuration/Configuration.h"
 #include "../Configuration/InstrumentationConfiguration.h"
 #include "../Logging/Logger.h"
+#include "../MethodRewriter/AgentCallStyle.h"
 #include "../MethodRewriter/CustomInstrumentation.h"
 #include "../MethodRewriter/MethodRewriter.h"
 #include "../SignatureParser/Exceptions.h"
@@ -259,7 +260,7 @@ namespace NewRelic { namespace Profiler {
 
                 auto instrumentationConfiguration = InitializeInstrumentationConfig(configuration->GetIgnoreInstrumentationList());
                 instrumentationConfiguration->CheckForEnvironmentInstrumentationPoint();
-                auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath);
+                auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath, _isCoreClr);
                 this->SetMethodRewriter(methodRewriter);
 
                 LogTrace("Checking to see if we should instrument this process.");
@@ -275,11 +276,14 @@ namespace NewRelic { namespace Profiler {
 
                 _functionResolver = std::make_shared<FunctionResolver>(_corProfilerInfo4);
 
+                MethodRewriter::AgentCallStyle agentCallStyle(_systemCalls);
+                _agentCallStrategy = agentCallStyle.GetConfiguredCallingStrategy();
+
                 ConfigureEventMask(pICorProfilerInfoUnk);
 
                 LogRuntimeInfo(runtimeInfo);
 
-                LogMessageIfAppDomainCachingIsDisabled();
+                LogMessageAboutConfiguredAgentCallStyle();
 
                 LogInfo(L"Profiler initialized");
                 return S_OK;
@@ -549,7 +553,7 @@ namespace NewRelic { namespace Profiler {
 
             try {
                 // instrument the method
-                methodRewriter->Instrument(function);
+                methodRewriter->Instrument(function, _agentCallStrategy);
             } catch (NewRelic::Profiler::SignatureParser::SignatureParserException exception) {
                 // Dont call function->ToString() since that might cause Signature to be parsed again
                 // Printing the FunctionName should be enough to provide enough debugging context
@@ -665,7 +669,7 @@ namespace NewRelic { namespace Profiler {
 
             auto oldInstrumentationPoints = oldMethodRewriter->GetInstrumentationConfiguration()->GetInstrumentationPoints();
 
-            SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath));
+            SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath, _isCoreClr));
 
             auto oldInstrumentationByAssembly = GroupByAssemblyName(oldInstrumentationPoints);
             auto newInstrumentationByAssembly = GroupByAssemblyName(instrumentationConfiguration->GetInstrumentationPoints());
@@ -891,6 +895,7 @@ namespace NewRelic { namespace Profiler {
         xstring_t _agentCoreDllPath = _X("");
 
         bool _isCoreClr = false;
+        MethodRewriter::AgentCallStyle::Strategy _agentCallStrategy = MethodRewriter::AgentCallStyle::Strategy::AppDomainFallbackCache;
 
         MethodRewriter::MethodRewriterPtr GetMethodRewriter()
         {
@@ -1179,12 +1184,9 @@ namespace NewRelic { namespace Profiler {
             return S_OK;
         }
 
-        void LogMessageIfAppDomainCachingIsDisabled()
+        void LogMessageAboutConfiguredAgentCallStyle()
         {
-            if (_systemCalls->GetIsAppDomainCachingDisabled())
-            {
-                LogInfo("The use of AppDomain for method information caching is disabled via the 'NEW_RELIC_DISABLE_APPDOMAIN_CACHING' environment variable.");
-            }
+            LogInfo(_X("Calls to the managed agent will use the calling strategy - "), MethodRewriter::AgentCallStyle::ToString(_agentCallStrategy));
         }
 
         std::unique_ptr<xstring_t> GetAgentCoreDllPath()
