@@ -276,8 +276,13 @@ namespace NewRelic { namespace Profiler {
 
                 _functionResolver = std::make_shared<FunctionResolver>(_corProfilerInfo4);
 
+                // On CoreCLR, ModuleLoadFinished does not inject the AppDomain-cache helper stubs
+                // into System.Private.CoreLib, so the AppDomainFallbackCache strategy has no target
+                // to call into. Force Reflection on Core; the configured strategy only applies to FW.
                 MethodRewriter::AgentCallStyle agentCallStyle(_systemCalls);
-                _agentCallStrategy = agentCallStyle.GetConfiguredCallingStrategy();
+                _agentCallStrategy = _isCoreClr
+                    ? MethodRewriter::AgentCallStyle::Strategy::Reflection
+                    : agentCallStyle.GetConfiguredCallingStrategy();
 
                 ConfigureEventMask(pICorProfilerInfoUnk);
 
