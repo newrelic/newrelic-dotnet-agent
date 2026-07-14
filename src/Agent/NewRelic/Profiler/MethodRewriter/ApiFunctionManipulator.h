@@ -14,8 +14,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     class ApiFunctionManipulator : FunctionManipulator
     {
     public:
-        ApiFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) :
-            FunctionManipulator(function),
+        ApiFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) :
+            FunctionManipulator(function, isCoreClr, agentCallStrategy),
             _instrumentationSettings(instrumentationSettings)
         {
             Initialize();
@@ -46,12 +46,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 [&]()
                 {
                     // delegate = System.CannotUnloadAppDomainException.GetMethodFromAppDomainStorageOrReflectionOrThrow("NewRelic_Delegate_API_<function name><function signature>", "C:\path\to\NewRelic.Agent.Core", "NewRelic.Core.AgentApi", "<function name>", new object[] { <method parameter types> })
-                    LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentApi"), _function->GetFunctionName(), _function->GetFunctionId(), GetArrayOfTypeParametersLamdba(), !_function->IsCoreClr());
+                    LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentApi"), _function->GetFunctionName(), _function->GetFunctionId(), GetArrayOfTypeParametersLamdba());
                     
                     _instructions->Append(_X("ldnull"));
                     BuildObjectArrayOfParameters();
 
-                    _instructions->Append(_X("call   instance object [mscorlib]System.Reflection.MethodBase::Invoke(object, object[])"));
+                    _instructions->Append(_X("call   instance object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodBase::Invoke(object, object[])"));
 
                     if (_methodSignature->_returnType->_kind == SignatureParser::ReturnType::Kind::VOID_RETURN_TYPE)
                     {

@@ -152,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AgentCallStyle.h" />
     <ClInclude Include="ApiFunctionManipulator.h" />
     <ClInclude Include="CustomInstrumentation.h" />
     <ClInclude Include="ExceptionHandlerManipulator.h" />
