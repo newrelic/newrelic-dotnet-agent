@@ -20,6 +20,7 @@ namespace sicily {
                     kCLASS,
                     kGENERICCLASS,
                     kGENERICPARAM,
+                    kFIELD,
                 };
 
                 Type(Kind kind);

@@ -217,6 +217,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             {
                 Append(CEE_RETHROW);
             }
+            else if (instruction == _X("ldsfld"))
+            {
+                Append(CEE_LDSFLD, details);
+            }
+            else if (instruction == _X("stsfld"))
+            {
+                Append(CEE_STSFLD, details);
+            }
             else
             {
                 LogError(L"Encountered unsupported instruction while attempting to generate byte code. Instruction: ", instruction);

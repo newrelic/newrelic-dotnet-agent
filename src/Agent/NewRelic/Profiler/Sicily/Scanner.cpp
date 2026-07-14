@@ -232,6 +232,12 @@ namespace sicily {
         else if (sem.id_ == _X("uint32")) {
             return TOK_UINT32;
         }
+        else if (sem.id_ == _X("int32")) {
+            return TOK_INT32;
+        }
+        else if (sem.id_ == _X("modreq")) {
+            return TOK_MODREQ;
+        }
         else {
             return TOK_ID;
         }

@@ -63,6 +63,21 @@ namespace sicily
                     Assert::AreEqual(expectedSignature, methodSignature);
                 }
 
+                TEST_METHOD(TestField)
+                {
+                    // turn a CIL field into a token
+                    std::wstring fieldString(L"int32 MyNamespace.MyClass::MyField");
+                    codegen::RealisticTokenizerPtr tokenizer(new codegen::RealisticTokenizer());
+                    auto memberToken = GetMethodToken(fieldString, tokenizer);
+
+                    // use the token to lookup the parts in the tokenizer
+                    auto fieldDef = tokenizer->GetFieldDef(memberToken);
+                    auto fieldName = std::get<1>(fieldDef);
+
+                    // make sure the stuff in the tokenizer lines up with what we expect from the field string
+                    Assert::AreEqual(std::wstring(L"MyField"), fieldName);
+                }
+
                 TEST_METHOD(TestComplexMethod1)
                 {
                     std::wstring methodString(L"class [mscorlib]System.Tuple`2<!!0,!!1> [mscorlib]System.Tuple::Create<class [mscorlib]System.Action`1<object[]>,class [mscorlib]System.Action`1<object[]>>(!!0, !!1)");

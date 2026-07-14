@@ -45,6 +45,10 @@ namespace sicily { namespace codegen
                 {
                     return TypeToTokenSpecific(std::dynamic_pointer_cast<ast::MethodType>(type));
                 }
+                case ast::Type::Kind::kFIELD:
+                {
+                    return TypeToTokenSpecific(std::dynamic_pointer_cast<ast::FieldType>(type));
+                }
                 case ast::Type::Kind::kCLASS:
                 {
                     return TypeToTokenSpecific(std::dynamic_pointer_cast<ast::ClassType, ast::Type>(type));
@@ -79,6 +83,10 @@ namespace sicily { namespace codegen
                 case ast::Type::Kind::kMETHOD:
                 {
                     return TypeToBytesSpecific(std::dynamic_pointer_cast<ast::MethodType>(type));
+                }
+                case ast::Type::Kind::kFIELD:
+                {
+                    return TypeToBytesSpecific(std::dynamic_pointer_cast<ast::FieldType>(type));
                 }
                 case ast::Type::Kind::kCLASS:
                 {
@@ -251,7 +259,7 @@ namespace sicily { namespace codegen
 
             // BOOLEAN | CHAR | I1 | U1 | I2 | U2 | I4 | U4 | I8 | U8 | R4 | R8 | I | U
             bytes.push_back((unsigned char)(type->GetPrimitiveKind()));
-            
+
             return bytes;
         }
 
@@ -367,6 +375,39 @@ namespace sicily { namespace codegen
             return bytes;
         }
 
+        ByteVector TypeToBytesSpecific(ast::FieldTypePtr type)
+        {
+            ByteVector bytes;
+
+            // return type
+            auto returnType = type->GetReturnType();
+            auto returnBytes = TypeToBytes(returnType);
+            bytes.insert(bytes.end(), returnBytes.begin(), returnBytes.end());
+
+            auto requiredModifierType = type->GetRequiredModifierType();
+            if (requiredModifierType != nullptr)
+            {
+                auto requiredModifierBytes = TypeToRequiredModifierBytesSpecific(std::dynamic_pointer_cast<ast::ClassType, ast::Type>(requiredModifierType));
+                bytes.insert(bytes.end(), requiredModifierBytes.begin(), requiredModifierBytes.end());
+            }
+
+            return bytes;
+        }
+
+        ByteVector TypeToRequiredModifierBytesSpecific(ast::ClassTypePtr type)
+        {
+            ByteVector bytes;
+
+            // modreq
+            bytes.push_back(0x1f);
+            // TypeDefOrRefOrSpecEncoded
+            auto typeToken = TypeToTokenSpecific(type);
+            auto compressedTypeToken = CorSigCompressToken(typeToken);
+            bytes.insert(bytes.end(), compressedTypeToken.begin(), compressedTypeToken.end());
+
+            return bytes;
+        }
+
         uint32_t TypeToTokenSpecific(ast::MethodTypePtr type)
         {
             auto signatureBytes = TypeToBytes(type);
@@ -379,6 +420,14 @@ namespace sicily { namespace codegen
             }
 
             return methodToken;
+        }
+
+        uint32_t TypeToTokenSpecific(ast::FieldTypePtr type)
+        {
+            auto targetTypeToken = TypeToToken(type->GetTargetType());
+            auto fieldToken = tokenizer->GetFieldDefinitionToken(targetTypeToken, type->GetFieldName());
+
+            return fieldToken;
         }
 
         uint32_t TypeToTokenSpecific(ast::ClassTypePtr type)

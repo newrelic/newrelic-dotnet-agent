@@ -153,6 +153,7 @@
     <ClCompile Include="ast\PrimitiveType.cpp" />
     <ClCompile Include="ast\Type.cpp" />
     <ClCompile Include="ast\TypeList.cpp" />
+    <ClCompile Include="ast\FieldType.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Scanner.cpp" />
   </ItemGroup>
@@ -165,6 +166,7 @@
     <ClInclude Include="ast\PrimitiveType.h" />
     <ClInclude Include="ast\Type.h" />
     <ClInclude Include="ast\TypeList.h" />
+    <ClInclude Include="ast\FieldType.h" />
     <ClInclude Include="ast\Types.h" />
     <ClInclude Include="codegen\ByteCodeGenerator.h" />
     <ClInclude Include="codegen\ITokenizer.h" />

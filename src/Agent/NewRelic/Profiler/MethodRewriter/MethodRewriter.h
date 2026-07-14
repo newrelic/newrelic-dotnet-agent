@@ -51,6 +51,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _instrumentedFunctionNames->emplace(_X("GetTypeViaReflectionOrThrow"));
             _instrumentedFunctionNames->emplace(_X("LoadAssemblyOrThrow"));
             _instrumentedFunctionNames->emplace(_X("StoreMethodInAppDomainStorageOrThrow"));
+            _instrumentedFunctionNames->emplace(_X("GetAgentShimFinishTracerDelegateFunc"));
+            _instrumentedFunctionNames->emplace(_X("StoreAgentShimFinishTracerDelegateFunc"));
+            _instrumentedFunctionNames->emplace(_X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"));
 
             auto instrumentationPoints = _instrumentationConfiguration->GetInstrumentationPoints();
 
@@ -96,6 +99,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         {
             return InSet(_instrumentedFunctionNames, functionName);
         }
+
+        // Returns the count of times HelperInstrumentor has dispatched.
+        // Proxy for AppDomainFallbackCache engagement -- see Instrumentors.h.
+        uint64_t GetHelperFireCount() const { return _helperInstrumentor->GetHelperFireCount(); }
 
         // instrument the provided method (if necessary)
         void Instrument(IFunctionPtr function)

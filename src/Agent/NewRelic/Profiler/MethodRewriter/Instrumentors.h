@@ -116,11 +116,20 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     // An instrumentor for the methods we inject into mscorlib
     struct HelperInstrumentor : public IInstrumentor
     {
+        // Proxy engagement counter: counts total HelperInstrumentor dispatch events.
+        // A nonzero value proves the mscorlib helper injection code path is engaged.
+        // Used by CorProfilerCallbackImpl to log AppDomainFallbackCache engagement.
+        // See AppDomainFallbackCache design in HelperFunctionManipulator.h.
+        // Note: this counter resets to 0 if MethodRewriter is re-instantiated during
+        // an instrumentation refresh; it is a per-MethodRewriter-instance count,
+        // not a process-lifetime count.
+        uint64_t GetHelperFireCount() const { return _helperFireCount.load(); }
+
         bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr) override
         {
             if (!Strings::EndsWith(function->GetModuleName(), _X("mscorlib.dll")))
                 return false;
-            
+
             if (function->GetTypeName() != _X("System.CannotUnloadAppDomainException"))
                 return false;
 
@@ -133,13 +142,20 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 function->GetFunctionName() != _X("GetMethodViaReflectionOrThrow") &&
                 function->GetFunctionName() != _X("GetMethodFromAppDomainStorage") &&
                 function->GetFunctionName() != _X("GetMethodFromAppDomainStorageOrReflectionOrThrow") &&
-                function->GetFunctionName() != _X("StoreMethodInAppDomainStorageOrThrow"))
+                function->GetFunctionName() != _X("StoreMethodInAppDomainStorageOrThrow") &&
+                function->GetFunctionName() != _X("GetAgentShimFinishTracerDelegateFunc") &&
+                function->GetFunctionName() != _X("StoreAgentShimFinishTracerDelegateFunc") &&
+                function->GetFunctionName() != _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"))
                 return false;
 
+            ++_helperFireCount;
             LogInfo(L"Instrumenting helper method: ", function->ToString());
             HelperFunctionManipulator manipulator(function);
             manipulator.InstrumentHelper();
             return false;
         }
+
+    private:
+        std::atomic<uint64_t> _helperFireCount{0};
     };
 }}}
