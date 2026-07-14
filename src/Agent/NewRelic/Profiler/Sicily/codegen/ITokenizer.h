@@ -25,6 +25,7 @@ namespace sicily
             virtual uint32_t GetTypeSpecToken(const ByteVector& instantiationSignature) = 0;
             virtual uint32_t GetMemberRefOrDefToken(uint32_t parent, const xstring_t& methodName, const ByteVector& signature) = 0;
             virtual uint32_t GetMethodDefinitionToken(const uint32_t& typeDefinitionToken, const xstring_t& name, const ByteVector& signature) = 0;
+            virtual uint32_t GetFieldDefinitionToken(const uint32_t& typeDefinitionToken, const xstring_t& name) = 0;
             virtual uint32_t GetMethodSpecToken(uint32_t methodDefOrRefOrSpecToken, const ByteVector& instantiationSignature) = 0;
             virtual uint32_t GetStringToken(const xstring_t& string) = 0;
             virtual ~ITokenizer() {}
