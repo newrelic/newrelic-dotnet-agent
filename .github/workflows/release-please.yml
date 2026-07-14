@@ -24,8 +24,37 @@ jobs:
           disable-sudo: true
           egress-policy: audit
 
-      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+      - id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           token: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
           config-file: release-please/release-please-config.json
           manifest-file: release-please/.release-please-manifest.json
+
+      # config-schema has skip-github-release: true in release-please-config.json,
+      # so release-please never creates its tag. Without the tag it re-proposes the
+      # same commits on every run. Create the lightweight tag here after each release.
+      # Note: paths_released never contains skip-github-release paths (confirmed from
+      # release-please v17 source); we gate on releases_created (root released) and
+      # read the manifest directly to get the current config-schema version.
+      - name: Tag config-schema release (skip-github-release workaround)
+        if: steps.release.outputs.releases_created == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
+        shell: bash
+        run: |
+          CONFIG_VERSION=$(gh api /repos/${{ github.repository }}/contents/release-please/.release-please-manifest.json \
+            --jq '.content' | base64 -d | jq -r '."src/Agent/NewRelic/Agent/Core/Config"')
+          if [ -z "$CONFIG_VERSION" ] || [ "$CONFIG_VERSION" = "null" ]; then
+            echo "Could not read config-schema version from manifest, skipping"
+            exit 0
+          fi
+          TAG="config-schema-${CONFIG_VERSION}"
+          if gh api /repos/${{ github.repository }}/git/ref/tags/${TAG} &>/dev/null; then
+            echo "Tag ${TAG} already exists, skipping"
+          else
+            gh api --method POST /repos/${{ github.repository }}/git/refs \
+              -f "ref=refs/tags/${TAG}" \
+              -f "sha=${{ github.sha }}"
+            echo "Created tag ${TAG} at ${{ github.sha }}"
+          fi
