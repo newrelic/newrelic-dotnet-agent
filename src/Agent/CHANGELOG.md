@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.53.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.52.0...v10.53.0) (2026-07-14)
+
+
+### New features
+
+* Report request queue time from X-Request-Start/X-Queue-Start headers across all web hosts ([#3659](https://github.com/newrelic/newrelic-dotnet-agent/issues/3659)) ([05a1d00](https://github.com/newrelic/newrelic-dotnet-agent/commit/05a1d00ced2f479240c49231e6b5fb410086ab08))
+* Support server-side configuration for AI Monitoring settings ([#3664](https://github.com/newrelic/newrelic-dotnet-agent/issues/3664)) ([eacc013](https://github.com/newrelic/newrelic-dotnet-agent/commit/eacc013e649697084c953ab38492d47f8b3867dc))
+
+
+### Fixes
+
+* Update Npgsql instrumentation to support v8.x and newer ([#3667](https://github.com/newrelic/newrelic-dotnet-agent/issues/3667)) ([2890d96](https://github.com/newrelic/newrelic-dotnet-agent/commit/2890d96ac42457ba13588273210ad448a736de0f))
+
 ## [10.52.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.51.1...v10.52.0) (2026-06-24)
 
 
