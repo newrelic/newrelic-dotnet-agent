@@ -71,6 +71,13 @@ namespace NewRelic { namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
+        // Proxy engagement counter: total JIT compilation events seen by this callback.
+        // Logged every 5000 events alongside helper_invocations to confirm
+        // AppDomainFallbackCache injection code path is engaged. See Section 6 of the
+        // NR-184027 spike doc. A nonzero helper_invocations confirms helper IL injection
+        // fired during JIT; zero means injection has not yet occurred or MethodRewriter
+        // was refreshed after injection (see Instrumentors.h note on refresh-reset).
+        std::atomic<uint64_t> _totalJitCount{0};
 
 #ifndef PAL_STDCPP_COMPAT
         std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
@@ -533,6 +540,11 @@ namespace NewRelic { namespace Profiler {
             } catch (...) {
                 LogError(L"An exception was thrown while getting details about a function.");
                 return E_FAIL;
+            }
+
+            auto jitCount = ++_totalJitCount;
+            if (jitCount % 5000 == 0) {
+                LogInfo(_X("AppDomainFallbackCache proxy engagement: helper_invocations="), methodRewriter->GetHelperFireCount(), _X(" total_jit_calls="), jitCount);
             }
 
             try {

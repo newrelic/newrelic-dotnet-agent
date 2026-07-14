@@ -9,5 +9,6 @@
 #include "GenericParamType.h"
 #include "GenericType.h"
 #include "MethodType.h"
+#include "FieldType.h"
 #include "PrimitiveType.h"
 #include "TypeList.h"

@@ -7,6 +7,7 @@
 #include <functional>
 #include "CppUnitTest.h"
 #include "../MethodRewriter/InstructionSet.h"
+#include "MockTokenizer.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -65,6 +66,46 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 0xDE,
                 0xEB,
                 0XBE
+            );
+            auto actualBytes = instructionSet.GetBytes();
+
+            VerifyBytes(expectedBytes, actualBytes);
+        }
+
+        TEST_METHOD(append_ldsfld)
+        {
+            auto tokenizer = std::make_shared<MockTokenizer>();
+            tokenizer->_fieldDefinitionToken = 0xDEADBEEF;
+            auto instructionSet = InstructionSet(tokenizer, nullptr);
+
+            instructionSet.Append(_X("ldsfld object __NRInitializer__::_agentShimMethodInfo"));
+
+            BYTEVECTOR(expectedBytes,
+                CEE_LDSFLD,
+                0xEF,
+                0xBE,
+                0xAD,
+                0xDE
+            );
+            auto actualBytes = instructionSet.GetBytes();
+
+            VerifyBytes(expectedBytes, actualBytes);
+        }
+
+        TEST_METHOD(append_stsfld)
+        {
+            auto tokenizer = std::make_shared<MockTokenizer>();
+            tokenizer->_fieldDefinitionToken = 0x01020304;
+            auto instructionSet = InstructionSet(tokenizer, nullptr);
+
+            instructionSet.Append(_X("stsfld object __NRInitializer__::_agentShimFunc"));
+
+            BYTEVECTOR(expectedBytes,
+                CEE_STSFLD,
+                0x04,
+                0x03,
+                0x02,
+                0x01
             );
             auto actualBytes = instructionSet.GetBytes();
 

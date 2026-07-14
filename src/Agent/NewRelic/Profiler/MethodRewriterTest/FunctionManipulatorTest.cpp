@@ -10,6 +10,7 @@
 #include "MockFunction.h"
 #include "../MethodRewriter/FunctionManipulator.h"
 #include "../MethodRewriter/InstrumentFunctionManipulator.h"
+#include "../MethodRewriter/HelperFunctionManipulator.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -127,6 +128,63 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         //{
         //    Assert::Fail(L"Test not implemented.");
         //}
+
+        TEST_METHOD(helper_method_GetAgentShimFinishTracerDelegateFunc)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("GetAgentShimFinishTracerDelegateFunc");
+
+            ByteVector capturedBytes;
+            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
+                capturedBytes = bytes;
+            };
+
+            HelperFunctionManipulator manipulator(function);
+            manipulator.InstrumentHelper();
+
+            // capturedBytes = 1-byte tiny header + IL body
+            // expected IL size: 45 bytes; first IL byte: CEE_LDSFLD (0x7E)
+            Assert::AreEqual((size_t)46, capturedBytes.size());
+            Assert::AreEqual((uint8_t)0x7E, capturedBytes[1]);
+        }
+
+        TEST_METHOD(helper_method_StoreAgentShimFinishTracerDelegateFunc)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("StoreAgentShimFinishTracerDelegateFunc");
+
+            ByteVector capturedBytes;
+            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
+                capturedBytes = bytes;
+            };
+
+            HelperFunctionManipulator manipulator(function);
+            manipulator.InstrumentHelper();
+
+            // capturedBytes = 1-byte tiny header + IL body
+            // expected IL size: 41 bytes; first IL byte: CEE_LDARG_0 (0x02)
+            Assert::AreEqual((size_t)42, capturedBytes.size());
+            Assert::AreEqual((uint8_t)0x02, capturedBytes[1]);
+        }
+
+        TEST_METHOD(helper_method_GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow");
+
+            ByteVector capturedBytes;
+            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
+                capturedBytes = bytes;
+            };
+
+            HelperFunctionManipulator manipulator(function);
+            manipulator.InstrumentHelper();
+
+            // capturedBytes = 1-byte tiny header + IL body
+            // expected IL size: 30 bytes; first IL byte: CEE_LDSFLD (0x7E)
+            Assert::AreEqual((size_t)31, capturedBytes.size());
+            Assert::AreEqual((uint8_t)0x7E, capturedBytes[1]);
+        }
 
     private:
         Configuration::InstrumentationPointPtr CreateInstrumentationPointThatMatchesFunction(IFunctionPtr function)
