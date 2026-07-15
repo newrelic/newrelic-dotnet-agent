@@ -8,12 +8,17 @@ SPDX-License-Identifier: Apache-2.0
     <tracerFactory name="SerilogDispatchWrapper">
       <!-- For Serilog 1.x -->
       <match assemblyName="Serilog" className="Serilog.Core.Pipeline.Logger">
-        <exactMethodMatcher methodName="Dispatch" />
+        <exactMethodMatcher methodName="Dispatch" maxVersion="2.0.0"/>
       </match>
 
       <!-- For Serilog 2.x and above -->
       <match assemblyName="Serilog" className="Serilog.Core.Logger">
-        <exactMethodMatcher methodName="Dispatch" />
+        <exactMethodMatcher methodName="Dispatch" minVersion="2.0.0" maxVersion="4.4.0" />
+      </match>
+
+      <!-- For Serilog 4.4.0 and above -->
+      <match assemblyName="Serilog" className="Serilog.Core.Logger">
+        <exactMethodMatcher methodName="PostLevelCheckEmit" minVersion="4.4.0" />
       </match>
     </tracerFactory>
     
