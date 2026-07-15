@@ -189,6 +189,7 @@
     <ClInclude Include="UnreferencedFunctions.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AgentCallStyleTests.cpp" />
     <ClCompile Include="CustomInstrumentationTest.cpp" />
     <ClCompile Include="ExceptionHandlerManipulatorTest.cpp" />
     <ClCompile Include="InstantiatedGenericTypeTest.cpp" />
@@ -201,6 +202,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="FunctionManipulatorTest.cpp" />
+    <ClCompile Include="InstrumentorsTest.cpp" />
     <ClCompile Include="SystemCallsTest.cpp" />
     <ClCompile Include="TestModuleAttributes.cpp" />
   </ItemGroup>

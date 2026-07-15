@@ -14,11 +14,13 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
 {
     private readonly TFixture _fixture;
     private bool _appDomainCachingDisabled;
+    private readonly string _expectedCallingStrategy;
 
-    public AppDomainCachingTestsBase(TFixture fixture, ITestOutputHelper output, bool appDomainCachingDisabled) : base(fixture)
+    public AppDomainCachingTestsBase(TFixture fixture, ITestOutputHelper output, bool appDomainCachingDisabled, string expectedCallingStrategy) : base(fixture)
     {
         _fixture = fixture;
         _appDomainCachingDisabled = appDomainCachingDisabled;
+        _expectedCallingStrategy = expectedCallingStrategy;
         _fixture.SetTimeout(TimeSpan.FromMinutes(2));
         _fixture.TestLogger = output;
 
@@ -52,14 +54,14 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
     [Fact]
     public void ProfilerObservesEnvironmentVariable()
     {
-        if( _appDomainCachingDisabled)
-        {
-            Assert.Contains("The use of AppDomain for method information caching is disabled", _fixture.ProfilerLog.GetFullLogAsString());
-        }
-        else
-        {
-            Assert.DoesNotContain("The use of AppDomain for method information caching is disabled", _fixture.ProfilerLog.GetFullLogAsString());
-        }
+        // The profiler logs the resolved managed-agent calling strategy at startup.
+        // NOTE: Today the profiler forces the Reflection strategy on CoreCLR regardless of
+        // NEW_RELIC_DISABLE_APPDOMAIN_CACHING, because ModuleLoadFinished does not inject the
+        // AppDomain-cache helper stubs into System.Private.CoreLib. That is why the .NET (Core)
+        // "enabled" variant below expects "Reflection" rather than "AppDomain Fallback Cache".
+        // FUTURE: when Core gains AppDomain-fallback support (NR-184027 Milestone B), update the
+        // expected strategy for the Core "enabled" case to "AppDomain Fallback Cache".
+        Assert.Contains($"Calls to the managed agent will use the calling strategy - {_expectedCallingStrategy}", _fixture.ProfilerLog.GetFullLogAsString());
     }
 
     [Fact]
@@ -81,7 +83,7 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
 public class AppDomainCachingEnabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AppDomainCachingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-        : base(fixture, output, false)
+        : base(fixture, output, false, "AppDomain Fallback Cache")
     {
     }
 }
@@ -89,7 +91,7 @@ public class AppDomainCachingEnabledTestsFWLatestTests : AppDomainCachingTestsBa
 public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AppDomainCachingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-        : base(fixture, output, false)
+        : base(fixture, output, false, "Reflection")
     {
     }
 }
@@ -99,7 +101,7 @@ public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTe
 public class AppDomainCachingDisabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AppDomainCachingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-        : base(fixture, output, true)
+        : base(fixture, output, true, "Reflection")
     {
     }
 }
@@ -107,7 +109,7 @@ public class AppDomainCachingDisabledTestsFWLatestTests : AppDomainCachingTestsB
 public class AppDomainCachingDisabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AppDomainCachingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-        : base(fixture, output, true)
+        : base(fixture, output, true, "Reflection")
     {
     }
 }
