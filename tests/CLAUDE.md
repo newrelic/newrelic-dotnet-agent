@@ -111,6 +111,48 @@ Staging's connect response sets `event_harvest_config.report_period_ms=5000`, so
 
 The repo-root `test.runsettings` holds only NUnit naming settings and is auto-applied to **unit-test** projects via `RunSettingsFilePath` in their csproj (don't pass `--settings` by hand). It is **not** wired into integration projects, and CI runs those via the built exe (`NewRelic.Agent.IntegrationTests.exe -namespace ...`), so no run-settings file applies there.
 
+### Container test mechanics (ContainerIntegrationTests)
+
+How the Linux-agent container tests actually wire up (rediscovered often -- captured here):
+
+- **Harness chain:** `ContainerTestFixtureBase : RemoteApplicationFixture` wraps
+  `ContainerApplication : RemoteApplication`. `ContainerApplication` runs
+  `docker compose -f <composeFile> -p <name> up --build --abort-on-container-exit ...`
+  against service `LinuxSmokeTestApp`. Ctor:
+  `ContainerApplication(distroTag, arch, dotnetVersion, dockerfile, dockerComposeFile = "docker-compose.yml", serviceName = "LinuxSmokeTestApp")`.
+- **Compose files** live in `tests/Agent/IntegrationTests/ContainerApplications/`. `docker-compose.yml`
+  extends `docker-compose-base.yml`'s `base-app`, which declares build `args:` (DISTRO_TAG, TARGET_ARCH,
+  BUILD_ARCH, NEW_RELIC_LICENSE_KEY/APP_NAME/HOST, DOTNET_VERSION, ...), `ports: ${PORT}:80`, and two bind
+  mounts: `${AGENT_PATH}:/usr/local/newrelic-dotnet-agent` (the agent home) and `${LOG_PATH}:/app/logs` (logs).
+  The base has **no `environment:` block**.
+- **Which Dockerfile:** the fixture picks it via the `dockerfile` field (e.g. `SmokeTestApp/Dockerfile`,
+  `.centos`, `.amazon`, `.fedora`), passed to compose as `TEST_DOCKERFILE`. `SmokeTestApp` is a plain ASP.NET
+  Core app exposing `GET /weatherforecast`; its Dockerfile bakes in `CORECLR_ENABLE_PROFILING`,
+  `CORECLR_PROFILER`, `CORECLR_NEW_RELIC_HOME=/usr/local/newrelic-dotnet-agent`, `CORECLR_PROFILER_PATH`, and
+  `NEW_RELIC_LOG_DIRECTORY=/app/logs`. The agent attaches on boot and logs its startup lines with no app code.
+- **Passing a per-test container env var** (e.g. `NEW_RELIC_DISABLE_APPDOMAIN_CACHING`): `RemoteApplicationFixture
+  .SetAdditionalEnvironmentVariable(k,v)` lands the var in the `docker compose up` **host process** env only --
+  compose forwards it into the container **only if** a compose file references it via `${VAR}` in an
+  `environment:` entry. The base compose has none, so add a small compose override file that `extends` `base-app`
+  and adds `environment: - VAR=${VAR:-}` (pattern: `docker-compose-awssdk.yml` uses `- DEBUG=${DEBUG:-0}`), then
+  point the fixture's `dockerComposeFile` at it. Fixtures that need a custom compose file extend
+  `RemoteApplicationFixture` directly and thread `dockerComposeFile` through the `ContainerApplication` ctor
+  (pattern: `KafkaTestFixtureBase`) -- `ContainerTestFixtureBase` hardcodes the default `docker-compose.yml`.
+- **Reading logs / assertions:** `LOG_PATH` = `RemoteApplication.DefaultLogFileDirectoryPath` (host), bind-mounted
+  to `/app/logs`, so `_fixture.AgentLog` (`AgentLogFile`) and `_fixture.ProfilerLog` (`ProfilerLogFile`,
+  `GetFullLogAsString()`) read the container's logs on the host with no container/host distinction. Set
+  `ProfilerLogExpected = true` in the fixture ctor when asserting on the profiler log. The profiler startup line
+  `Calls to the managed agent will use the calling strategy - <X>` is visible here, same as the host tests.
+- **Templates:** simplest fixture+test pair to copy = `Fixtures/LinuxUnicodeLogFileTestFixture.cs` +
+  `Tests/LinuxUnicodeLogFileTest.cs` (asserts on `ProfilerLog`). `Tests/LinuxContainerTests.cs` shows the
+  per-distro `[Trait("Architecture",...)] [Trait("Distro",...)]` class fan-out and the
+  `Actions(setupConfiguration, exerciseApplication)` -> `Initialize()` flow.
+- **glibc vs musl:** `build.ps1 -Platform linux` and the `homefolders` CI artifact only carry the **glibc**
+  `.so` (`newrelichome_{x64,arm64}_coreclr_linux`); `CopyNewRelicHomeCoreClrLinuxDirectoryToRemote` copies that
+  same glibc home for **every** distro fixture including Alpine (the separate musl profiler artifacts from
+  `build_profiler.yml` are not wired into `homefolders`). Target **glibc distros (Ubuntu "noble")** for new
+  functional tests; avoid Alpine unless specifically validating musl.
+
 ## Performance tests
 
 Agent-overhead harness under `tests/Agent/PerformanceTests/` -- Python-orchestrated, not `dotnet test`. Components: `PerformanceTestApp/` (ASP.NET Core workload), `TrafficDriver/` (Locust, enforces <1% error rate), `ReportGenerator/` (ScottPlot charts + `summary.md`), `run-perf-test.py` (single run), `run-perf-comparison.py` (multiple configs from `compare.yml`). The runner bind-mounts an agent-home dir into the container at `/usr/local/newrelic-dotnet-agent` and sets `CORECLR_ENABLE_PROFILING` (0 for the no-agent baseline); `agent-home/` is repopulated and cleared between runs. Needs Docker Desktop (Linux containers), Python 3, `pip install pyyaml`. Full reference: [PerformanceTests/README.md](Agent/PerformanceTests/README.md).

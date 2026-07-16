@@ -9,6 +9,7 @@
 #include "../Configuration/Configuration.h"
 #include "../Configuration/InstrumentationConfiguration.h"
 #include "../Logging/Logger.h"
+#include "../MethodRewriter/AgentCallStyle.h"
 #include "../MethodRewriter/CustomInstrumentation.h"
 #include "../MethodRewriter/MethodRewriter.h"
 #include "../SignatureParser/Exceptions.h"
@@ -26,11 +27,12 @@
 #include <utility>
 #include <codecvt>
 
+#include "../ModuleInjector/ModuleInjector.h"
+#include "Module.h"
+
 #ifdef PAL_STDCPP_COMPAT
 #include "UnixSystemCalls.h"
 #else
-#include "../ModuleInjector/ModuleInjector.h"
-#include "Module.h"
 #include "SystemCalls.h"
 #include <shellapi.h>
 #endif
@@ -71,10 +73,16 @@ namespace NewRelic { namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
+        // Proxy engagement counter: total JIT compilation events seen by this callback.
+        // Logged every 5000 events alongside helper_invocations to confirm
+        // AppDomainFallbackCache injection code path is engaged. See Section 6 of the
+        // NR-184027 spike doc. A nonzero helper_invocations confirms helper IL injection
+        // fired during JIT; zero means injection has not yet occurred or MethodRewriter
+        // was refreshed after injection (see Instrumentors.h note on refresh-reset).
+        std::atomic<uint64_t> _totalJitCount{0};
 
-#ifndef PAL_STDCPP_COMPAT
-        std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
-#endif
+        // (F) counts corelib injection-failure downgrades to Reflection (native signal; no managed metric).
+        std::atomic<uint64_t> _injectionDowngradeCount{0};
 
     public:
         CorProfilerCallbackImpl()
@@ -252,7 +260,7 @@ namespace NewRelic { namespace Profiler {
 
                 auto instrumentationConfiguration = InitializeInstrumentationConfig(configuration->GetIgnoreInstrumentationList());
                 instrumentationConfiguration->CheckForEnvironmentInstrumentationPoint();
-                auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath);
+                auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath, _isCoreClr);
                 this->SetMethodRewriter(methodRewriter);
 
                 LogTrace("Checking to see if we should instrument this process.");
@@ -268,11 +276,14 @@ namespace NewRelic { namespace Profiler {
 
                 _functionResolver = std::make_shared<FunctionResolver>(_corProfilerInfo4);
 
+                MethodRewriter::AgentCallStyle agentCallStyle(_systemCalls);
+                _agentCallStrategy = agentCallStyle.GetConfiguredCallingStrategy();
+
                 ConfigureEventMask(pICorProfilerInfoUnk);
 
                 LogRuntimeInfo(runtimeInfo);
 
-                LogMessageIfAppDomainCachingIsDisabled();
+                LogMessageAboutConfiguredAgentCallStyle();
 
                 LogInfo(L"Profiler initialized");
                 return S_OK;
@@ -285,81 +296,90 @@ namespace NewRelic { namespace Profiler {
 
         virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus) override
         {
+            if (FAILED(hrStatus))
+            {
+                return hrStatus;
+            }
+
+            // Core retains its ReJIT enumeration of app methods, in ADDITION to injection below.
             if (_isCoreClr)
             {
-                if (SUCCEEDED(hrStatus)) {
-                    try {
-                        auto assemblyName = GetAssemblyName(moduleId);
-
-                        if (GetMethodRewriter()->ShouldInstrumentAssembly(assemblyName)) {
-                            LogTrace("Assembly module loaded: ", assemblyName);
-
-                            auto instrumentationPoints = std::make_shared<Configuration::InstrumentationPointSet>(GetMethodRewriter()->GetAssemblyInstrumentation(assemblyName));
-                            auto methodDefs = GetMethodDefs(moduleId, instrumentationPoints);
-
-                            if (methodDefs != nullptr) {
-                                RejitModuleFunctions(moduleId, methodDefs);
-                            }
+                try
+                {
+                    auto assemblyName = GetAssemblyName(moduleId);
+                    if (GetMethodRewriter()->ShouldInstrumentAssembly(assemblyName))
+                    {
+                        LogTrace("Assembly module loaded: ", assemblyName);
+                        auto instrumentationPoints = std::make_shared<Configuration::InstrumentationPointSet>(GetMethodRewriter()->GetAssemblyInstrumentation(assemblyName));
+                        auto methodDefs = GetMethodDefs(moduleId, instrumentationPoints);
+                        if (methodDefs != nullptr)
+                        {
+                            RejitModuleFunctions(moduleId, methodDefs);
                         }
                     }
-                    catch (...) {
-                    }
                 }
-                return S_OK;
+                catch (...)
+                {
+                }
             }
-            else
+
+            // Injection is only needed for the AppDomainFallbackCache strategy; Reflection IL is
+            // self-contained and needs no injected corelib helpers.
+            if (_agentCallStrategy == MethodRewriter::AgentCallStyle::Strategy::Reflection)
             {
-#ifndef PAL_STDCPP_COMPAT
-
-                // if the module did not load correctly then we don't want to mess with it
-                if (FAILED(hrStatus))
-                {
-                    return hrStatus;
-                }
-
-                LogTrace("Module Injection Started. ", moduleId);
-
-                ModuleInjector::IModulePtr module;
-                try
-                {
-                    module = std::make_shared<Module>(_corProfilerInfo4, moduleId);
-                }
-                catch (const NewRelic::Profiler::MessageException& exception)
-                {
-                    (void)exception;
-                    return S_OK;
-                }
-                catch (...)
-                {
-                    LogError(L"An exception was thrown while getting details about a module.");
-                    return E_FAIL;
-                }
-
-                try
-                {
-                    _moduleInjector->InjectIntoModule(*module);
-                }
-                catch (...)
-                {
-                    LogError(L"An exception was thrown while attempting to inject into a module.");
-                    return E_FAIL;
-                }
-
-                LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
-#endif
                 return S_OK;
             }
-        }
 
+            LogTrace("Module Injection Started. ", moduleId);
+
+            ModuleInjector::IModulePtr module;
+            try
+            {
+                module = std::make_shared<Module>(_corProfilerInfo4, moduleId, _isCoreClr);
+            }
+            catch (const NewRelic::Profiler::MessageException&)
+            {
+                return S_OK;
+            }
+            catch (...)
+            {
+                LogError(L"An exception was thrown while getting details about a module.");
+                return E_FAIL;
+            }
+
+            try
+            {
+                ModuleInjector::ModuleInjector::InjectIntoModule(*module, _isCoreClr);
+            }
+            catch (...)
+            {
+                LogError(L"An exception was thrown while attempting to inject into a module.");
+                return E_FAIL;
+            }
+
+            // (F) safety net: after injecting into the core library, confirm the helper type actually
+            // took. If not, downgrade the whole process to Reflection (the corelib is the first module
+            // loaded, so this precedes essentially every app-method JIT). Runtime-agnostic seam decides.
+            if (module->GetIsThisTheCoreLibAssembly())
+            {
+                const bool injected = module->VerifyNRHelperTypeInjected();
+                const auto effective = MethodRewriter::AgentCallStyle::ResolveEffectiveStrategy(_agentCallStrategy, injected);
+                if (effective != _agentCallStrategy)
+                {
+                    ++_injectionDowngradeCount;
+                    LogError(L"__NRInitializer__ helper type was not defined into the core library; "
+                             L"downgrading the managed-agent calling strategy to Reflection for this process. "
+                             L"injection_downgrades=", _injectionDowngradeCount.load());
+                }
+                _agentCallStrategy = effective;
+            }
+
+            LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
+            return S_OK;
+        }
 
         virtual DWORD OverrideEventMask(DWORD eventMask)
         {
-#ifndef PAL_STDCPP_COMPAT
-            if (!_isCoreClr)
-            {
-                _moduleInjector.reset(new ModuleInjector::ModuleInjector());
-            }
-#endif
             return eventMask;
         }
 
@@ -535,9 +555,14 @@ namespace NewRelic { namespace Profiler {
                 return E_FAIL;
             }
 
+            auto jitCount = ++_totalJitCount;
+            if (jitCount % 5000 == 0) {
+                LogInfo(_X("AppDomainFallbackCache proxy engagement: helper_invocations="), methodRewriter->GetHelperFireCount(), _X(" total_jit_calls="), jitCount);
+            }
+
             try {
                 // instrument the method
-                methodRewriter->Instrument(function);
+                methodRewriter->Instrument(function, _agentCallStrategy);
             } catch (NewRelic::Profiler::SignatureParser::SignatureParserException exception) {
                 // Dont call function->ToString() since that might cause Signature to be parsed again
                 // Printing the FunctionName should be enough to provide enough debugging context
@@ -653,7 +678,7 @@ namespace NewRelic { namespace Profiler {
 
             auto oldInstrumentationPoints = oldMethodRewriter->GetInstrumentationConfiguration()->GetInstrumentationPoints();
 
-            SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath));
+            SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath, _isCoreClr));
 
             auto oldInstrumentationByAssembly = GroupByAssemblyName(oldInstrumentationPoints);
             auto newInstrumentationByAssembly = GroupByAssemblyName(instrumentationConfiguration->GetInstrumentationPoints());
@@ -879,6 +904,7 @@ namespace NewRelic { namespace Profiler {
         xstring_t _agentCoreDllPath = _X("");
 
         bool _isCoreClr = false;
+        MethodRewriter::AgentCallStyle::Strategy _agentCallStrategy = MethodRewriter::AgentCallStyle::Strategy::AppDomainFallbackCache;
 
         MethodRewriter::MethodRewriterPtr GetMethodRewriter()
         {
@@ -1167,12 +1193,9 @@ namespace NewRelic { namespace Profiler {
             return S_OK;
         }
 
-        void LogMessageIfAppDomainCachingIsDisabled()
+        void LogMessageAboutConfiguredAgentCallStyle()
         {
-            if (_systemCalls->GetIsAppDomainCachingDisabled())
-            {
-                LogInfo("The use of AppDomain for method information caching is disabled via the 'NEW_RELIC_DISABLE_APPDOMAIN_CACHING' environment variable.");
-            }
+            LogInfo(L"Calls to the managed agent will use the calling strategy - ", MethodRewriter::AgentCallStyle::ToString(_agentCallStrategy));
         }
 
         std::unique_ptr<xstring_t> GetAgentCoreDllPath()

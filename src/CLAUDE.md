@@ -39,6 +39,31 @@ build.ps1 -Platform linux                       # Linux (requires Docker)
 
 Profiler GUIDs are documented in the [root claude.md](../CLAUDE.md).
 
+**Injected CoreLib helper methods must stay "tiny" (hard, unguarded
+constraint).** The cache getter/store helpers the profiler injects into
+CoreLib/mscorlib (`MethodRewriter/HelperFunctionManipulator.h`, the `Build*`
+methods) are emitted via `HelperFunctionManipulator::InstrumentHelper` ->
+`FunctionManipulator::InstrumentTiny`, which ALWAYS writes an ECMA-335 tiny
+method header. This path is tiny-only: no size check, no fat-header fallback
+(the fat-upgrade path `FunctionManipulator::ExtractHeaderBodyAndExtra` exists
+but is not on the helper call path). A tiny method is limited to: IL code
+size < 64 bytes (6-bit field), maxstack <= 8 (fixed, never written), no
+locals, no exception-handling clauses (see
+`externals/coreclr-headers/src/inc/corhdr.h` and `corhlpr.h`). Exceeding any
+limit does NOT fail loudly: `InstrumentTiny` sets
+`Flags_CodeSize = (uint8_t)((codeSize << 2) | 0x2)` and silently truncates to
+one byte, so a >= 64-byte body encodes a wrong (smaller) size and the CLR
+then reads a malformed method (InvalidProgramException / JIT failure /
+crash). Nothing asserts or tests this (the tiny/fat boundary tests in
+`MethodRewriterTest/FunctionManipulatorTest.cpp` are disabled) -- it is
+enforced by convention only. Rule: keep every injected helper minimal; when
+adding IL to a `Build*` helper, budget the bytes (single-byte opcodes 1 B;
+short-form branch 2 B; `call`/`callvirt`/`ldsfld`/`stsfld`/`castclass`/
+`ldstr`/`newobj` with a 4-byte token 5 B), keep live stack <= 8, add no
+locals. Verify empirically in a debug build by logging
+`_instructions->GetBytes().size()` before `InstrumentTiny()`; do not trust it
+to fail safely.
+
 ## Agent Core (`Agent/NewRelic/Agent/Core/`)
 
 ```
