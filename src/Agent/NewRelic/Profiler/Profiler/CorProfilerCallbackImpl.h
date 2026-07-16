@@ -1195,7 +1195,7 @@ namespace NewRelic { namespace Profiler {
 
         void LogMessageAboutConfiguredAgentCallStyle()
         {
-            LogInfo(_X("Calls to the managed agent will use the calling strategy - "), MethodRewriter::AgentCallStyle::ToString(_agentCallStrategy));
+            LogInfo(L"Calls to the managed agent will use the calling strategy - ", MethodRewriter::AgentCallStyle::ToString(_agentCallStrategy));
         }
 
         std::unique_ptr<xstring_t> GetAgentCoreDllPath()
