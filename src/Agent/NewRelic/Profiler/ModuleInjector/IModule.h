@@ -31,6 +31,11 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
         virtual bool NeedsReferenceToCoreLib() = 0;
         virtual bool GetIsThisTheCoreLibAssembly() = 0;
 
+        // (F) After InjectIntoModule runs on the core library, re-read metadata to confirm the
+        // __NRInitializer__ helper type was actually defined. Used to decide whether to keep the
+        // AppDomainFallbackCache strategy or downgrade the process to Reflection.
+        virtual bool VerifyNRHelperTypeInjected() = 0;
+
         virtual sicily::codegen::ITokenizerPtr GetTokenizer() = 0;
     };
 

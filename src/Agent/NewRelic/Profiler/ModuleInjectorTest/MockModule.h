@@ -88,6 +88,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return _isThisTheCoreLibAssembly;
         }
 
+        bool _nrHelperTypeInjected = true;
+        virtual bool VerifyNRHelperTypeInjected() override
+        {
+            return _nrHelperTypeInjected;
+        }
+
         sicily::codegen::ITokenizerPtr _tokenizer;
         virtual sicily::codegen::ITokenizerPtr GetTokenizer() override
         {
