@@ -40,20 +40,20 @@ public class MongoCollectionBaseWrapper : IWrapper
         // example cluster hostname: docdb-sandbox.cluster-cokpc3aw6fev.us-west-2.docdb.amazonaws.com
         // The customer will need to supply their AWS account ID for this to work since it's not available anywhere in the connection
 
-        if (connectionInfo.Host.EndsWith("docdb.amazonaws.com") && !string.IsNullOrEmpty(agent.Configuration.AwsAccountId))
-        {
-            var hostParts = connectionInfo.Host.Split('.');
-            // Get the cluster id and region from the hostname
-            var clusterId = hostParts[0];
-            var region = hostParts[2];
-            // construct the ARN
-            var arn = $"arn:aws:rds:{region}:{agent.Configuration.AwsAccountId}:cluster:{clusterId}";
-            // Add the necessary attributes to the datastore segment
-            segment.AddCloudSdkAttribute("cloud.resource_id", arn);
-            segment.AddCloudSdkAttribute("aws.operation", operation);
-            segment.AddCloudSdkAttribute("aws.region", region);
-            agent.Logger.Info($"Added cloud.resource_id (arn) to datastore segment: {arn}");
-        }
+        //if (connectionInfo.Host.EndsWith("docdb.amazonaws.com") && !string.IsNullOrEmpty(agent.Configuration.AwsAccountId))
+        //{
+        //    var hostParts = connectionInfo.Host.Split('.');
+        //    // Get the cluster id and region from the hostname
+        //    var clusterId = hostParts[0];
+        //    var region = hostParts[2];
+        //    // construct the ARN
+        //    var arn = $"arn:aws:rds:{region}:{agent.Configuration.AwsAccountId}:cluster:{clusterId}";
+        //    // Add the necessary attributes to the datastore segment
+        //    segment.AddCloudSdkAttribute("cloud.resource_id", arn);
+        //    segment.AddCloudSdkAttribute("aws.operation", operation);
+        //    segment.AddCloudSdkAttribute("aws.region", region);
+        //    agent.Logger.Info($"Added cloud.resource_id (arn) to datastore segment: {arn}");
+        //}
 
         if (!operation.EndsWith("Async", StringComparison.OrdinalIgnoreCase))
         {

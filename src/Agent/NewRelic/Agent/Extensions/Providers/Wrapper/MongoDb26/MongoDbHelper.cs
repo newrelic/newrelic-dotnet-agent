@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Net;
 using NewRelic.Agent.Extensions.Helpers;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NewRelic.Reflection;
@@ -141,12 +142,19 @@ public static class MongoDbHelper
     public static ConnectionInfo GetConnectionInfoFromDatabase(object database, string utilizationHostName)
     {
         var databaseName = GetDatabaseNameFromDatabase(database);
-        var servers = GetServersFromDatabase(database);
+        GetServersFromDatabase(database, out var servers, out var isCluster);
 
         int port = -1;
         string host = null;
 
-        if (servers.Count == 1)
+        if (isCluster)
+        {
+            Log.Info("Found cluster in database object.  Using the first server for connection info.");
+            GetHostAndPortFromClusterServer(servers[0], out var rawHost, out var rawPort);
+            port = rawPort;
+            host = ConnectionStringParserHelper.NormalizeHostname(rawHost, utilizationHostName);
+        }
+        else if (servers.Count == 1)
         {
             GetHostAndPortFromServer(servers[0], out var rawHost, out var rawPort);
             port = rawPort;
@@ -156,7 +164,7 @@ public static class MongoDbHelper
         return new ConnectionInfo(host, port, databaseName);
     }
 
-    private static IList GetServersFromDatabase(object database)
+    private static void GetServersFromDatabase(object database, out IList servers, out bool isCluster)
     {
         _version ??= Version.Parse(VersionHelpers.GetLibraryVersion(database.GetType().AssemblyQualifiedName));
         var clientGetter = _version >= _mongo3Version ? GetClientFromDatabaseV3(database) : GetClientFromDatabaseV2(database);
@@ -165,7 +173,35 @@ public static class MongoDbHelper
 
         var client = clientGetter(database);
         var settings = settingsGetter(client);
-        return serversGetter(settings);
+
+        // default return values, will be overwritten depending on what happens below with trying to get the cluster servers
+        servers = serversGetter(settings);
+        isCluster = false;
+
+        // POC to get cluster and individual server names from cluster
+        var clusterGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoClient", "Cluster");
+        var clusterServersGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<IList>("MongoDB.Driver", "MongoDB.Driver.Core.Clusters.MultiServerCluster", "_servers");
+
+        var cluster = clusterGetter(client);
+        if (cluster == null)
+        {
+            Log.Info("cluster is null");
+            return;
+        }
+        var clusterType = cluster.GetType().Name;
+        if (clusterType != "MultiServerCluster")
+        {
+            Log.Info($"cluster type is {clusterType}, not MultiServerCluster, defaulting to server in settings");
+            return;
+        }
+        var clusterServers = clusterServersGetter(cluster);
+        if (clusterServers == null)
+        {
+            Log.Info("clusterServers is null");
+            return;
+        }
+        servers = clusterServers;
+        isCluster = true;
     }
 
     private static void GetHostAndPortFromServer(object server, out string host, out int port)
@@ -175,6 +211,16 @@ public static class MongoDbHelper
 
         host = hostGetter(server);
         port = portGetter(server);
+    }
+    private static void GetHostAndPortFromClusterServer(object server, out string host, out int port)
+    {
+        var endPointGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.Core.Servers.DefaultServer", "EndPoint");
+        //var hostGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver", "MongoDB.Driver.MongoServerAddress", "Host");
+        //var portGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<int>("MongoDB.Driver", "MongoDB.Driver.MongoServerAddress", "Port");
+
+        dynamic endPoint = endPointGetter(server);
+        host = endPoint.Host;
+        port = endPoint.Port;
     }
 
 
