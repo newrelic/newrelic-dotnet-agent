@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Logging;
@@ -180,7 +181,6 @@ public static class MongoDbHelper
 
         // POC to get cluster and individual server names from cluster
         var clusterGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoClient", "Cluster");
-        var clusterServersGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<IList>("MongoDB.Driver", "MongoDB.Driver.Core.Clusters.MultiServerCluster", "_servers");
 
         var cluster = clusterGetter(client);
         if (cluster == null)
@@ -189,12 +189,24 @@ public static class MongoDbHelper
             return;
         }
         var clusterType = cluster.GetType().Name;
-        if (clusterType != "MultiServerCluster")
+        IList clusterServers = null;
+        if (clusterType == "MultiServerCluster")
         {
-            Log.Info($"cluster type is {clusterType}, not MultiServerCluster, defaulting to server in settings");
+            // In my AWS test scenario this works to get the hostname of the DB instance server (not the cluster hostname)
+            var multiServerClusterServersGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<IList>("MongoDB.Driver", "MongoDB.Driver.Core.Clusters.MultiServerCluster", "_servers");
+            clusterServers = multiServerClusterServersGetter(cluster);
+        }
+        else if (clusterType == "SingleServerCluster")
+        {
+            // This works (as in it doesn't throw exceptions) in my AWS test scenario, but it still doesn't get the instance hostname as intended
+            var singleServerClusterServerGetter = VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>("MongoDB.Driver", "MongoDB.Driver.Core.Clusters.SingleServerCluster", "_server");
+            clusterServers = new List<object> { singleServerClusterServerGetter(cluster) };
+        }
+        else
+        {
+            Log.Info($"Unknown cluster type {clusterType}, defaulting to servers in settings");
             return;
         }
-        var clusterServers = clusterServersGetter(cluster);
         if (clusterServers == null)
         {
             Log.Info("clusterServers is null");
