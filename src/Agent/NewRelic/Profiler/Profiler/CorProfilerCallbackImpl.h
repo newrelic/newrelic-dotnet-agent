@@ -27,11 +27,12 @@
 #include <utility>
 #include <codecvt>
 
+#include "../ModuleInjector/ModuleInjector.h"
+#include "Module.h"
+
 #ifdef PAL_STDCPP_COMPAT
 #include "UnixSystemCalls.h"
 #else
-#include "../ModuleInjector/ModuleInjector.h"
-#include "Module.h"
 #include "SystemCalls.h"
 #include <shellapi.h>
 #endif
@@ -80,9 +81,8 @@ namespace NewRelic { namespace Profiler {
         // was refreshed after injection (see Instrumentors.h note on refresh-reset).
         std::atomic<uint64_t> _totalJitCount{0};
 
-#ifndef PAL_STDCPP_COMPAT
-        std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
-#endif
+        // (F) counts corelib injection-failure downgrades to Reflection (native signal; no managed metric).
+        std::atomic<uint64_t> _injectionDowngradeCount{0};
 
     public:
         CorProfilerCallbackImpl()
@@ -276,13 +276,8 @@ namespace NewRelic { namespace Profiler {
 
                 _functionResolver = std::make_shared<FunctionResolver>(_corProfilerInfo4);
 
-                // On CoreCLR, ModuleLoadFinished does not inject the AppDomain-cache helper stubs
-                // into System.Private.CoreLib, so the AppDomainFallbackCache strategy has no target
-                // to call into. Force Reflection on Core; the configured strategy only applies to FW.
                 MethodRewriter::AgentCallStyle agentCallStyle(_systemCalls);
-                _agentCallStrategy = _isCoreClr
-                    ? MethodRewriter::AgentCallStyle::Strategy::Reflection
-                    : agentCallStyle.GetConfiguredCallingStrategy();
+                _agentCallStrategy = agentCallStyle.GetConfiguredCallingStrategy();
 
                 ConfigureEventMask(pICorProfilerInfoUnk);
 
@@ -301,81 +296,90 @@ namespace NewRelic { namespace Profiler {
 
         virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus) override
         {
+            if (FAILED(hrStatus))
+            {
+                return hrStatus;
+            }
+
+            // Core retains its ReJIT enumeration of app methods, in ADDITION to injection below.
             if (_isCoreClr)
             {
-                if (SUCCEEDED(hrStatus)) {
-                    try {
-                        auto assemblyName = GetAssemblyName(moduleId);
-
-                        if (GetMethodRewriter()->ShouldInstrumentAssembly(assemblyName)) {
-                            LogTrace("Assembly module loaded: ", assemblyName);
-
-                            auto instrumentationPoints = std::make_shared<Configuration::InstrumentationPointSet>(GetMethodRewriter()->GetAssemblyInstrumentation(assemblyName));
-                            auto methodDefs = GetMethodDefs(moduleId, instrumentationPoints);
-
-                            if (methodDefs != nullptr) {
-                                RejitModuleFunctions(moduleId, methodDefs);
-                            }
+                try
+                {
+                    auto assemblyName = GetAssemblyName(moduleId);
+                    if (GetMethodRewriter()->ShouldInstrumentAssembly(assemblyName))
+                    {
+                        LogTrace("Assembly module loaded: ", assemblyName);
+                        auto instrumentationPoints = std::make_shared<Configuration::InstrumentationPointSet>(GetMethodRewriter()->GetAssemblyInstrumentation(assemblyName));
+                        auto methodDefs = GetMethodDefs(moduleId, instrumentationPoints);
+                        if (methodDefs != nullptr)
+                        {
+                            RejitModuleFunctions(moduleId, methodDefs);
                         }
                     }
-                    catch (...) {
-                    }
                 }
-                return S_OK;
+                catch (...)
+                {
+                }
             }
-            else
+
+            // Injection is only needed for the AppDomainFallbackCache strategy; Reflection IL is
+            // self-contained and needs no injected corelib helpers.
+            if (_agentCallStrategy == MethodRewriter::AgentCallStyle::Strategy::Reflection)
             {
-#ifndef PAL_STDCPP_COMPAT
-
-                // if the module did not load correctly then we don't want to mess with it
-                if (FAILED(hrStatus))
-                {
-                    return hrStatus;
-                }
-
-                LogTrace("Module Injection Started. ", moduleId);
-
-                ModuleInjector::IModulePtr module;
-                try
-                {
-                    module = std::make_shared<Module>(_corProfilerInfo4, moduleId);
-                }
-                catch (const NewRelic::Profiler::MessageException& exception)
-                {
-                    (void)exception;
-                    return S_OK;
-                }
-                catch (...)
-                {
-                    LogError(L"An exception was thrown while getting details about a module.");
-                    return E_FAIL;
-                }
-
-                try
-                {
-                    _moduleInjector->InjectIntoModule(*module);
-                }
-                catch (...)
-                {
-                    LogError(L"An exception was thrown while attempting to inject into a module.");
-                    return E_FAIL;
-                }
-
-                LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
-#endif
                 return S_OK;
             }
-        }
 
+            LogTrace("Module Injection Started. ", moduleId);
+
+            ModuleInjector::IModulePtr module;
+            try
+            {
+                module = std::make_shared<Module>(_corProfilerInfo4, moduleId, _isCoreClr);
+            }
+            catch (const NewRelic::Profiler::MessageException&)
+            {
+                return S_OK;
+            }
+            catch (...)
+            {
+                LogError(L"An exception was thrown while getting details about a module.");
+                return E_FAIL;
+            }
+
+            try
+            {
+                ModuleInjector::ModuleInjector::InjectIntoModule(*module, _isCoreClr);
+            }
+            catch (...)
+            {
+                LogError(L"An exception was thrown while attempting to inject into a module.");
+                return E_FAIL;
+            }
+
+            // (F) safety net: after injecting into the core library, confirm the helper type actually
+            // took. If not, downgrade the whole process to Reflection (the corelib is the first module
+            // loaded, so this precedes essentially every app-method JIT). Runtime-agnostic seam decides.
+            if (module->GetIsThisTheCoreLibAssembly())
+            {
+                const bool injected = module->VerifyNRHelperTypeInjected();
+                const auto effective = MethodRewriter::AgentCallStyle::ResolveEffectiveStrategy(_agentCallStrategy, injected);
+                if (effective != _agentCallStrategy)
+                {
+                    ++_injectionDowngradeCount;
+                    LogError(L"__NRInitializer__ helper type was not defined into the core library; "
+                             L"downgrading the managed-agent calling strategy to Reflection for this process. "
+                             L"injection_downgrades=", _injectionDowngradeCount.load());
+                }
+                _agentCallStrategy = effective;
+            }
+
+            LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
+            return S_OK;
+        }
 
         virtual DWORD OverrideEventMask(DWORD eventMask)
         {
-#ifndef PAL_STDCPP_COMPAT
-            if (!_isCoreClr)
-            {
-                _moduleInjector.reset(new ModuleInjector::ModuleInjector());
-            }
-#endif
             return eventMask;
         }
 
@@ -1191,7 +1195,7 @@ namespace NewRelic { namespace Profiler {
 
         void LogMessageAboutConfiguredAgentCallStyle()
         {
-            LogInfo(_X("Calls to the managed agent will use the calling strategy - "), MethodRewriter::AgentCallStyle::ToString(_agentCallStrategy));
+            LogInfo(L"Calls to the managed agent will use the calling strategy - ", MethodRewriter::AgentCallStyle::ToString(_agentCallStrategy));
         }
 
         std::unique_ptr<xstring_t> GetAgentCoreDllPath()

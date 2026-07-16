@@ -137,6 +137,13 @@ namespace NewRelic { namespace Profiler
             //ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_isInitialized"), dataFieldAttributes, intFieldSignature.data(), (uint32_t)intFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
         }
 
+        virtual bool VerifyNRHelperTypeInjected() override
+        {
+            mdTypeDef typeToken = mdTypeDefNil;
+            HRESULT hr = _metaDataImport->FindTypeDefByName(_X("__NRInitializer__"), mdTypeDefNil, &typeToken);
+            return SUCCEEDED(hr) && typeToken != mdTypeDefNil;
+        }
+
         virtual void InjectCoreLibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override
         {
             auto typeReferenceOrDefinitionToken = GetOrCreateTypeReferenceToken(_coreLibAssemblyRefToken, className);

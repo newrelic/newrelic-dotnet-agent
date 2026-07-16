@@ -324,6 +324,28 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsTrue(instrumentationPoint == nullptr);
         }
 
+        TEST_METHOD(system_private_corelib_instrumentation_is_skipped)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"System.Private.CoreLib\" className=\"MyNamespace.MyClass\">\
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet, nullptr);
+            auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
+            function->_assemblyName = L"System.Private.CoreLib";
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(function);
+            Assert::IsTrue(instrumentationPoint == nullptr);
+        }
+
         TEST_METHOD(no_class_match)
         {
             InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());

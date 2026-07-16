@@ -56,5 +56,26 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             const xstring_t expected = _X("Reflection");
             Assert::AreEqual(expected, AgentCallStyle::ToString(AgentCallStyle::Strategy::Reflection));
         }
+
+        TEST_METHOD(ResolveEffectiveStrategy_FallbackCache_InjectionFailed_DowngradesToReflection)
+        {
+            Assert::IsTrue(AgentCallStyle::ResolveEffectiveStrategy(
+                AgentCallStyle::Strategy::AppDomainFallbackCache, false) == AgentCallStyle::Strategy::Reflection);
+        }
+        TEST_METHOD(ResolveEffectiveStrategy_FallbackCache_InjectionSucceeded_StaysFallbackCache)
+        {
+            Assert::IsTrue(AgentCallStyle::ResolveEffectiveStrategy(
+                AgentCallStyle::Strategy::AppDomainFallbackCache, true) == AgentCallStyle::Strategy::AppDomainFallbackCache);
+        }
+        TEST_METHOD(ResolveEffectiveStrategy_Reflection_InjectionFailed_StaysReflection)
+        {
+            Assert::IsTrue(AgentCallStyle::ResolveEffectiveStrategy(
+                AgentCallStyle::Strategy::Reflection, false) == AgentCallStyle::Strategy::Reflection);
+        }
+        TEST_METHOD(ResolveEffectiveStrategy_Reflection_InjectionSucceeded_StaysReflection)
+        {
+            Assert::IsTrue(AgentCallStyle::ResolveEffectiveStrategy(
+                AgentCallStyle::Strategy::Reflection, true) == AgentCallStyle::Strategy::Reflection);
+        }
     };
 }}}}

@@ -54,13 +54,9 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
     [Fact]
     public void ProfilerObservesEnvironmentVariable()
     {
-        // The profiler logs the resolved managed-agent calling strategy at startup.
-        // NOTE: Today the profiler forces the Reflection strategy on CoreCLR regardless of
-        // NEW_RELIC_DISABLE_APPDOMAIN_CACHING, because ModuleLoadFinished does not inject the
-        // AppDomain-cache helper stubs into System.Private.CoreLib. That is why the .NET (Core)
-        // "enabled" variant below expects "Reflection" rather than "AppDomain Fallback Cache".
-        // FUTURE: when Core gains AppDomain-fallback support (NR-184027 Milestone B), update the
-        // expected strategy for the Core "enabled" case to "AppDomain Fallback Cache".
+        // The profiler logs the resolved managed-agent calling strategy at startup. Core now honors
+        // NEW_RELIC_DISABLE_APPDOMAIN_CACHING like .NET Framework: default (unset) => AppDomain Fallback Cache,
+        // opt-out (true) => Reflection.
         Assert.Contains($"Calls to the managed agent will use the calling strategy - {_expectedCallingStrategy}", _fixture.ProfilerLog.GetFullLogAsString());
     }
 
@@ -91,7 +87,7 @@ public class AppDomainCachingEnabledTestsFWLatestTests : AppDomainCachingTestsBa
 public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AppDomainCachingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-        : base(fixture, output, false, "Reflection")
+        : base(fixture, output, false, "AppDomain Fallback Cache")
     {
     }
 }
