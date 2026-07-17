@@ -23,8 +23,8 @@
     <PackageVersion Include="NUnit3TestAdapter" Version="5.2.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="Nito.AsyncEx.Context" Version="5.1.2" />
-    <PackageVersion Include="OpenTelemetry" Version="1.16.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.16.0" />
+    <PackageVersion Include="OpenTelemetry" Version="1.17.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
     <PackageVersion Include="PublicApiGenerator" Version="11.4.6" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
@@ -37,7 +37,7 @@
     <PackageVersion Include="System.Collections.Immutable" Version="1.5.0" />
     <PackageVersion Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <PackageVersion Include="System.Data.SqlClient" Version="4.8.6" />
-    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="10.0.9" />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="10.0.10" />
     <PackageVersion Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
     <PackageVersion Include="System.ValueTuple" Version="4.6.2" />
