@@ -7,17 +7,17 @@ instrumentation works end-to-end and for coding standards.
 
 ```
 src/Agent/
-├── NewRelic/
-│   ├── Agent/
-│   │   ├── Core/        # Managed agent core (C#)
-│   │   └── Extensions/  # Instrumentation framework + per-framework wrappers
-│   ├── Profiler/        # Native profiler (C++)
-│   └── Home/            # Home-directory layout project (assembles newrelichome_*)
-├── NewRelic.Api.Agent/  # Public API consumed by customer code
-├── Configuration/       # XSD / config surface (see note below)
-├── MsiInstaller/        # Windows MSI
-├── newrelichome_*/      # Built agent homes (FullAgent.sln output)
-└── Scripts/             # Misc maintenance scripts (e.g. flush_dotnet_temp.cmd)
+|-- NewRelic/
+|   |-- Agent/
+|   |   |-- Core/        # Managed agent core (C#)
+|   |   `-- Extensions/  # Instrumentation framework + per-framework wrappers
+|   |-- Profiler/        # Native profiler (C++)
+|   `-- Home/            # Home-directory layout project (assembles newrelichome_*)
+|-- NewRelic.Api.Agent/  # Public API consumed by customer code
+|-- Configuration/       # XSD / config surface (see note below)
+|-- MsiInstaller/        # Windows MSI
+|-- newrelichome_*/      # Built agent homes (FullAgent.sln output)
+`-- Scripts/             # Misc maintenance scripts (e.g. flush_dotnet_temp.cmd)
 ```
 
 ## Profiler (`Agent/NewRelic/Profiler/`)
@@ -27,9 +27,9 @@ against instrumentation XML, requests ReJIT, and wraps the bytecode with
 `try/catch/finally` IL that calls into `AgentShim`.
 
 **Entry points worth knowing:**
-- `Profiler/CorProfilerCallbackImpl.h` — main profiler callbacks
-- `MethodRewriter/InstrumentFunctionManipulator.h` — bytecode injection
-- `MethodRewriter/FunctionManipulator.h` — low-level IL manipulation
+- `Profiler/CorProfilerCallbackImpl.h` -- main profiler callbacks
+- `MethodRewriter/InstrumentFunctionManipulator.h` -- bytecode injection
+- `MethodRewriter/FunctionManipulator.h` -- low-level IL manipulation
 
 **Build:** `src/Agent/NewRelic/Profiler/build/build.ps1`
 ```powershell
@@ -68,23 +68,23 @@ to fail safely.
 
 ```
 Core/
-├── AgentHealth/          Aggregators/         Api/
-├── Attributes/           BrowserMonitoring/   CallStack/
-├── Commands/             Configuration/       DataTransport/
-├── DependencyInjection/  DistributedTracing/  Errors/
-├── Events/               Instrumentation/     Metrics/
-├── Samplers/             Segments/            Spans/
-├── ThreadProfiling/      Transactions/        TransactionTraces/
-├── Transformers/         Utilities/           Utilization/
-├── WireModels/           Wrapper/
+|-- AgentHealth/          Aggregators/         Api/
+|-- Attributes/           BrowserMonitoring/   CallStack/
+|-- Commands/             Configuration/       DataTransport/
+|-- DependencyInjection/  DistributedTracing/  Errors/
+|-- Events/               Instrumentation/     Metrics/
+|-- Samplers/             Segments/            Spans/
+|-- ThreadProfiling/      Transactions/        TransactionTraces/
+|-- Transformers/         Utilities/           Utilization/
+|-- WireModels/           Wrapper/
 ```
 
 **Notable classes / entry points:**
 - **Transactions:** `Transaction`, `ImmutableTransaction` (snapshot handed
   to the pipeline when the transaction ends), `TransactionName`,
   `TransactionMetricNameMaker`. Lifecycle: created by framework
-  instrumentation → segments added as operations run → custom attributes
-  collected → finished → transformed → aggregated into metrics, traces,
+  instrumentation -> segments added as operations run -> custom attributes
+  collected -> finished -> transformed -> aggregated into metrics, traces,
   events, and spans.
 - **Segments:** `Segment` plus `*SegmentData` variants that carry the
   per-category metadata. Segment categories: **external** (HTTP client
@@ -108,18 +108,18 @@ Core/
 
 **Data pipeline:**
 ```
-method → tracer/wrapper → segment/transaction → ImmutableTransaction
-      → transformers → aggregators → DataTransport → collector
+method -> tracer/wrapper -> segment/transaction -> ImmutableTransaction
+      -> transformers -> aggregators -> DataTransport -> collector
 ```
 
 ## Extensions (`Agent/NewRelic/Agent/Extensions/`)
 
 ```
 Extensions/NewRelic.Agent.Extensions/
-└── Providers/
-    ├── Storage/   Async-context storage (AsyncLocal, CallContext, HttpContext,
-    │             OperationContext, HybridHttpContext)
-    └── Wrapper/   Per-framework instrumentation wrappers (40+ projects —
+`-- Providers/
+    |-- Storage/   Async-context storage (AsyncLocal, CallContext, HttpContext,
+    |             OperationContext, HybridHttpContext)
+    `-- Wrapper/   Per-framework instrumentation wrappers (40+ projects --
                    one subfolder per instrumented library; ls to enumerate)
 ```
 
@@ -170,7 +170,7 @@ public class MyFrameworkWrapper : IWrapper
 **Debugging tip:** if a wrapper seems not to fire, check
 `IsTransactionRequired`. A `true` wrapper on a method that runs outside
 any transaction (e.g. a background poller, a message consumer invoked by
-an SDK thread before a transaction exists) will be silently skipped —
+an SDK thread before a transaction exists) will be silently skipped --
 `transaction` would be null, so the agent bypasses the wrapper entirely.
 Wrappers that *start* transactions must return `false`.
 
@@ -179,11 +179,11 @@ Wrappers that *start* transactions must return `false`.
 instrumented types; cache generated delegates per type. Both conventions
 are detailed in the [root claude.md](../CLAUDE.md).
 
-Wrapper projects have **no unit tests** — they're covered by integration
+Wrapper projects have **no unit tests** -- they're covered by integration
 and unbounded test solutions. Only `NewRelic.Agent.Extensions` (shared
 helpers like `SqsHelper`) is unit tested. When adding non-trivial logic
 to a wrapper, lift it into a helper in `NewRelic.Agent.Extensions` so it
-can be unit tested — keep the wrapper itself thin. The same rule is
+can be unit tested -- keep the wrapper itself thin. The same rule is
 covered in the [root claude.md](../CLAUDE.md) testing conventions.
 
 ## Public API (`NewRelic.Api.Agent/`)
@@ -194,7 +194,7 @@ Customer-facing surface:
   `NoticeError`, `SetTransactionName`, `GetAgent`, `StartAgent`)
 - Attributes: `[Transaction]`, `[Trace]` for custom instrumentation
 
-Changes here are gated by `PublicApiChangeTests` — intentional breaks need
+Changes here are gated by `PublicApiChangeTests` -- intentional breaks need
 an explicit baseline update.
 
 ## Configuration
@@ -208,7 +208,7 @@ artifacts.
 
 ### Regenerating `Configuration.cs` after editing the XSD
 
-`Configuration.cs` is **auto-generated — never hand-edit it.** After
+`Configuration.cs` is **auto-generated -- never hand-edit it.** After
 changing `Configuration.xsd`, regenerate by running the following from
 the repo root:
 
@@ -242,12 +242,12 @@ taxes customer apps. When writing or modifying agent code, honor these:
   boxing in these paths.
 - **Cache reflection.** Any `Type.GetMethod` / `PropertyInfo` / generated
   delegate must be cached per type (typically in a
-  `ConcurrentDictionary<Type, …>`). In wrapper projects, use
-  `VisibilityBypasser` — it both caches and compiles to IL (see root
+  `ConcurrentDictionary<Type, ...>`). In wrapper projects, use
+  `VisibilityBypasser` -- it both caches and compiles to IL (see root
   claude.md).
 - **Keep the non-instrumented fast path cheap.** When a method isn't
   matched by any wrapper, the agent code in its path should do as little
-  as possible — ideally a single guard check.
+  as possible -- ideally a single guard check.
 - **Lazy initialization** for anything not needed at agent startup.
 - **Favor immutable + snapshot handoffs** (see `ImmutableTransaction`)
   over locking shared mutable state; use lock-free structures where
@@ -260,7 +260,7 @@ taxes customer apps. When writing or modifying agent code, honor these:
 - Span events: sampled by priority.
 - Custom events: reservoir sampling.
 
-Respect these when adding new telemetry — unsampled firehoses are not an
+Respect these when adding new telemetry -- unsampled firehoses are not an
 option.
 
 ## Agent initialization order
@@ -278,10 +278,14 @@ option.
 ## Debugging signals
 
 When an agent appears attached but does nothing:
-- Check the agent log (`<home>/logs/`) for a **"Profiler attached"** line —
-  absence means the profiler never loaded.
+- Check the profiler log (`<home>/logs/NewRelic.Profiler.<pid>.log`) for a
+  **"Profiler initialized"** line (emitted by `CorProfilerCallbackImpl` at
+  load) -- absence means the profiler never loaded. There is no "Profiler
+  attached" line; that string does not exist in the code. The managed agent
+  log is a separate file, `newrelic_agent_<name>.log` (or the name pinned by
+  the `NEW_RELIC_LOG` env var).
 - If the log itself is missing, the profiler failed to load. Check the
-  Windows **Event Viewer** (Applications and Services Logs → Application)
-  for profiler DLL load errors — GUID mismatch, bitness mismatch, or
+  Windows **Event Viewer** (Applications and Services Logs -> Application)
+  for profiler DLL load errors -- GUID mismatch, bitness mismatch, or
   missing dependencies all surface here.
 - Turn up verbosity with `NEWRELIC_LOG_LEVEL=debug` for the managed side.
