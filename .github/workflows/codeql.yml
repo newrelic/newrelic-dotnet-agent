@@ -57,13 +57,13 @@ jobs:
         restore-keys: ${{ runner.os }}-nuget-
 
     - name: Install latest .NET 10 SDK
-      uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
         dotnet-version: '10.0.x'
         dotnet-quality: 'ga'
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+      uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
       with:
         languages: csharp
         config-file: ./.github/codeql/codeql-config.yml
@@ -74,7 +74,7 @@ jobs:
       shell: powershell
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+      uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
       with:
         category: "/language:csharp"
         
@@ -100,7 +100,7 @@ jobs:
         filter: blob:none
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+      uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
       with:
         languages: c-cpp
         config-file: ./.github/codeql/codeql-config.yml
@@ -117,6 +117,6 @@ jobs:
       shell: powershell
    
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+      uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
       with:
         category: "/language:c-cpp"
