@@ -24,7 +24,13 @@ updates:
 #        patterns:
 #          - "*"
 
-  # Update all NuGet packages used by core agent projects
+  # Update all NuGet packages used by core agent projects. Under CPM, dependabot
+  # updates the central Directory.Packages.props via any in-scope project that
+  # references its packages, so the narrow directory list below is sufficient
+  # and, more importantly, keeps wrapper/integration/perf/MSI/profiler pins
+  # (which intentionally reference old library versions) out of scope. Root '/'
+  # is NOT scanned here because that would pull FullAgent.sln's full project
+  # graph including the Providers/Wrapper/* projects.
   - package-ecosystem: nuget
     directories: # not recursive - only the specified directory will be scanned for .csproj or .sln files
       - /src/Agent/NewRelic/Agent/Core # Core.csproj
@@ -32,19 +38,21 @@ updates:
       - /src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions # NewRelic.Agent.Extensions.csproj
       # Do not scan the /src/Agent/NewRelic/Agent/Extensions/Providers folder, as those projects intentionally reference old versions of the Nuget packages they instrument.
       # Do not scan the src/Agent/MsiInstaller folder. We are not updating Wix packages to v6.x currently and there are no non-Wix packages referenced there.
+      # Do not scan the src/Agent/NewRelic/Home folder. Its only PackageReference, NewRelic.Agent.Internal.Profiler, has its Version= rewritten by the profiler's update-nuget-reference CI job.
     schedule:
       interval: weekly
     commit-message:
       prefix: "chore(deps):"
-    groups: 
+    groups:
       nuget-agent:
         patterns:
           - "*"
     ignore:
       - dependency-name: "Autofac" # v6+ doesn't support .NET Framework; we could upgerade to v5.x but there's no good reason for it
       - dependency-name: "Microsoft.Extensions.Configuration*"
+      - dependency-name: "NewRelic.Agent.Internal.Profiler" # version owned by the profiler's own update-nuget-reference CI job (Home.csproj); defensive - Home is out of scope above
       - dependency-name: "SharpZipLib" # we can't upgrade beyond 1.3.3
-      - dependency-name: "System.Diagnostics.DiagnosticSource" 
+      - dependency-name: "System.Diagnostics.DiagnosticSource"
         update-types: ["version-update:semver-major"] # not ready to upgrade to v9 yet
 
   # Update all NuGet packages used by build/release tool projects
@@ -60,7 +68,12 @@ updates:
         patterns:
           - "*"
 
-  # Update a specific set of packages for unit and integration tests
+  # Update a specific set of packages for unit and integration tests.
+  # Root '/' picks up FullAgent.sln (which contains the unit tests); the
+  # allow-list restricts updates to test-framework packages so wrapper
+  # subtree pins (intentionally old) are never touched. Under CPM the
+  # unit-test-framework versions live in the central Directory.Packages.props,
+  # which is what these updates land on for the sln-graph scan.
   - package-ecosystem: nuget
     directories: # not recursive - only the specified directory will be scanned for .csproj or .sln files
       - /tests/Agent/IntegrationTests # will pick up container, integration and unbounded test solutions

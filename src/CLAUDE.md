@@ -20,6 +20,49 @@ src/Agent/
 └── Scripts/             # Misc maintenance scripts (e.g. flush_dotnet_temp.cmd)
 ```
 
+## Central Package Management (CPM)
+
+`FullAgent.sln` projects use .NET Central Package Management. Package
+versions live in the root `Directory.Packages.props` as
+`<PackageVersion Include="X" Version="Y" />`; add new package versions
+there and reference packages in `.csproj` files with no `Version=`
+attribute.
+
+The enabling flag (`ManagePackageVersionsCentrally=true`) is set as a
+conditional default in the root `Directory.Build.props`, **not** in
+`Directory.Packages.props` -- deliberately, so subtree opt-outs can
+override it. The SDK imports `Directory.Packages.props` after the
+`Directory.Build.props` chain, so a flag set there would clobber subtree
+opt-outs.
+
+**Opt-outs** (`ManagePackageVersionsCentrally=false` in a
+`Directory.Build.props`, because they intentionally pin specific/old
+versions):
+- `Agent/NewRelic/Agent/Extensions/Providers/Wrapper/` (wrapper subtree)
+- `Agent/NewRelic/Profiler/` (profiler solution's managed projects)
+- `Agent/MsiInstaller/` (MSI/Wix)
+- `tests/Agent/IntegrationTests/` (integration / MFA compat apps)
+- `tests/Agent/PerformanceTests/`
+- `build/` (build tools)
+
+`Home.csproj` opts out at the project level and keeps
+`NewRelic.Agent.Internal.Profiler` pinned inline with a `Version=`
+attribute, because the profiler's `update-nuget-reference` job in
+`build_profiler.yml` rewrites that attribute -- it would break if the
+attribute were gone under CPM.
+
+`StyleCop.Analyzers` is shared across the CPM boundary (imported via
+`build/StyleCop.props` by both in-scope and opted-out projects). It is
+centrally versioned: `build/StyleCop.props` sets a `_UsesStyleCop` marker,
+and the root `Directory.Build.targets` adds the reference gated on that
+marker (versionless under CPM, inline `1.1.118` for opt-outs). This lives
+in `Directory.Build.targets` because it's auto-imported last, once the
+final CPM flag value is known.
+
+For a one-off in-scope version exception, use `VersionOverride=` (e.g.
+`SharpZipLib` in `tests/Agent/Shared/TestSerializationHelpers` overrides
+to `1.4.2` while the central version is `1.3.3`).
+
 ## Profiler (`Agent/NewRelic/Profiler/`)
 
 Native C++ implementing the CLR Profiling API. On JIT, matches methods
