@@ -9,5 +9,6 @@
       NETSDK1198 <!-- SDK-style test apps have no classic LocalDeploy MSDeploy profile; PublishProfile is applied solution-wide -->
     </NoWarn>
     <NuGetAudit>false</NuGetAudit>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
   </PropertyGroup>
 </Project>

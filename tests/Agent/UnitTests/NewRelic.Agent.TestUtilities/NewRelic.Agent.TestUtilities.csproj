@@ -5,18 +5,18 @@
     <AssemblyName>NewRelic.Agent.TestUtilities</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.4">
+    <PackageReference Include="coverlet.collector">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NUnit" Version="4.4.0" />
-    <PackageReference Include="NUnit.Analyzers" Version="4.10.0">
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit.Analyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Serilog" Version="4.4.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.Debug" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Core\Core.csproj" />

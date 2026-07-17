@@ -11,4 +11,7 @@
   <PropertyGroup>
     <NativeToolset Condition="'$(NativeToolset)'==''">v145</NativeToolset>
   </PropertyGroup>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
 </Project>
