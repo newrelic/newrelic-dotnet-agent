@@ -15,7 +15,7 @@ public class KafkaProducerWrapper : IWrapper
 {
     private const string WrapperName = "KafkaProducerWrapper";
 
-    public bool IsTransactionRequired => true;
+    public bool IsTransactionRequired => false;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
@@ -38,7 +38,26 @@ public class KafkaProducerWrapper : IWrapper
             KafkaHelper.RecordKafkaNodeMetrics(agent, topicPartition.Topic, bootstrapServers, true);
         }
 
-        return instrumentedMethodCall.MethodCall.Method.MethodName == "Produce" ? Delegates.GetDelegateFor(segment) : Delegates.GetAsyncDelegateFor<Task>(agent, segment);
+        KafkaHelper.TryGetClusterIdFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var clusterId);
+        var topic = topicPartition.Topic;
+
+        if (instrumentedMethodCall.MethodCall.Method.MethodName == "Produce")
+        {
+            return Delegates.GetDelegateFor<object>(
+                onSuccess: (_) =>
+                {
+                    segment.End();
+                    if (agent.Configuration.KafkaClusterMetricsEnabled && !string.IsNullOrEmpty(clusterId))
+                        agent.RecordCountMetric($"MessageBroker/Kafka/Cluster/{clusterId}/Topic/{topic}/Produce");
+                },
+                onFailure: (ex) => segment.End(ex));
+        }
+
+        return Delegates.GetAsyncDelegateFor<Task>(agent, segment, false, (task) =>
+        {
+            if (task.Status == TaskStatus.RanToCompletion && agent.Configuration.KafkaClusterMetricsEnabled && !string.IsNullOrEmpty(clusterId))
+                agent.RecordCountMetric($"MessageBroker/Kafka/Cluster/{clusterId}/Topic/{topic}/Produce");
+        });
     }
 
     private static void DistributedTraceHeadersSetter(MessageMetadata carrier, string key, string value)

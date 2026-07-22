@@ -117,6 +117,7 @@ public class DefaultConfiguration : IConfiguration
 
         EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
         KafkaInternalMetricsEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.KafkaInternalMetricsEnabled", true);
+        KafkaClusterMetricsEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.KafkaClusterMetricsEnabled", false);
 
         ParseExpectedErrorConfigurations();
         ParseIgnoreErrorConfigurations();
@@ -3038,6 +3039,7 @@ public class DefaultConfiguration : IConfiguration
     #endregion
 
     public bool KafkaInternalMetricsEnabled { get; private set; }
+    public bool KafkaClusterMetricsEnabled { get; private set; }
 
     public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", false), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");
 
