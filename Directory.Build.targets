@@ -2,10 +2,17 @@
   <Import Project="$(MSBuildThisFileDirectory)\build\Versioning.targets" Condition="Exists('$(MSBuildThisFileDirectory)\build\Versioning.targets')" />
 
   <!-- StyleCop.Analyzers added here so Directory.Build.targets (auto-imported last) sees the final
-       ManagePackageVersionsCentrally value: versionless under CPM (central pins it), inline for opt-outs.
-       Gated on the _UsesStyleCop marker set by build/StyleCop.props so only StyleCop consumers get it. -->
+       ManagePackageVersionsCentrally value: versionless under CPM (central pins it), inline otherwise.
+       Gated on the _UsesStyleCop marker set by build/StyleCop.props so only StyleCop consumers get it.
+
+       The versionless (CPM) branch is additionally gated on UsingMicrosoftNETSdk. Legacy non-SDK
+       projects (the integration-test .NET Framework apps) always take the inline-version branch,
+       even if ManagePackageVersionsCentrally reads 'true'. This is intrinsic to the project format,
+       so it survives VS's IDE restore, which for those legacy projects evaluates this item condition
+       as CPM-on (emitting a versionless reference) but then resolves the project as non-CPM, failing
+       with NU1015. Those projects are never genuinely CPM, so inline versioning is always correct. -->
   <ItemGroup Condition="'$(_UsesStyleCop)' == 'true'">
-    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" Condition="'$(ManagePackageVersionsCentrally)' != 'true'" />
+    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" Condition="'$(ManagePackageVersionsCentrally)' == 'true' and '$(UsingMicrosoftNETSdk)' == 'true'" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" Condition="'$(ManagePackageVersionsCentrally)' != 'true' or '$(UsingMicrosoftNETSdk)' != 'true'" />
   </ItemGroup>
 </Project>
