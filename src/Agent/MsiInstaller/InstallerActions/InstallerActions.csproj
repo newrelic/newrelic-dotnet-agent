@@ -7,7 +7,6 @@
     <AssemblyName>InstallerActions</AssemblyName>
     <IntermediateOutputPath>$(SolutionDir)..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)</IntermediateOutputPath>
     <OutputPath>$(SolutionDir)..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)</OutputPath>
-    <CodeAnalysisRuleSet>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'FullAgent.sln'))\build\Common.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Platforms>x64;x86</Platforms>
   </PropertyGroup>
