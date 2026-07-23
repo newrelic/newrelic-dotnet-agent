@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.53.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.53.0...v10.53.1) (2026-07-23)
+
+
+### Fixes
+
+* Instrument new method for local log decoration in Serilog 4.4.0+ ([#3705](https://github.com/newrelic/newrelic-dotnet-agent/issues/3705)) ([426f711](https://github.com/newrelic/newrelic-dotnet-agent/commit/426f7114ced333e508e168179b28837f8d42fbe4))
+
 ## [10.53.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.52.0...v10.53.0) (2026-07-14)
 
 
