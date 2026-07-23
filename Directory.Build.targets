@@ -1,11 +1,3 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)\build\Versioning.targets" Condition="Exists('$(MSBuildThisFileDirectory)\build\Versioning.targets')" />
-
-  <!-- StyleCop.Analyzers added here so Directory.Build.targets (auto-imported last) sees the final
-       ManagePackageVersionsCentrally value: versionless under CPM (central pins it), inline for opt-outs.
-       Gated on the _UsesStyleCop marker set by build/StyleCop.props so only StyleCop consumers get it. -->
-  <ItemGroup Condition="'$(_UsesStyleCop)' == 'true'">
-    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" Condition="'$(ManagePackageVersionsCentrally)' != 'true'" />
-  </ItemGroup>
 </Project>
