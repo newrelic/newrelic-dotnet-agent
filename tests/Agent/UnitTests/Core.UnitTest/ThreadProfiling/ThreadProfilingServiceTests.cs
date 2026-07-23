@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DataTransport;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -42,6 +43,51 @@ public class ThreadProfilingServiceTests
         var result = _threadProfilingService.StartThreadProfilingSession(profileSessionId, frequencyInMsec, durationInMsec);
 
         Assert.That(result, Is.True);
+    }
+
+    [Test]
+    public void StartThreadProfilingSession_ReturnsFalse_WhenContinuousProfilingActive()
+    {
+        var cpControl = Mock.Create<IContinuousProfilingSessionControl>();
+        Mock.Arrange(() => cpControl.IsActive).Returns(true);
+        var service = new ThreadProfilingService(_dataTransportService, _nativeMethods, continuousProfilingSessionControl: cpControl);
+
+        var result = service.StartThreadProfilingSession(1, 100, 1000);
+
+        Assert.That(result, Is.False);
+    }
+
+    [Test]
+    public void StartThreadProfilingSession_StartsNormally_WhenContinuousProfilingInactive()
+    {
+        var cpControl = Mock.Create<IContinuousProfilingSessionControl>();
+        Mock.Arrange(() => cpControl.IsActive).Returns(false);
+        var service = new ThreadProfilingService(_dataTransportService, _nativeMethods, continuousProfilingSessionControl: cpControl);
+
+        var result = service.StartThreadProfilingSession(1, 100, 1000);
+
+        Assert.That(result, Is.True);
+    }
+
+    [Test]
+    public void StartThreadProfilingSession_StartsNormally_WhenNoContinuousProfilingControl()
+    {
+        // The default-constructed service (no CP control wired) must behave exactly as before.
+        var result = _threadProfilingService.StartThreadProfilingSession(1, 100, 1000);
+
+        Assert.That(result, Is.True);
+    }
+
+    [Test]
+    public void IsThreadProfilingActive_ReflectsRunningSession()
+    {
+        Assert.That(((IThreadProfilingStatus)_threadProfilingService).IsThreadProfilingActive, Is.False);
+
+        _threadProfilingService.StartThreadProfilingSession(1, 100, 1000);
+        Assert.That(((IThreadProfilingStatus)_threadProfilingService).IsThreadProfilingActive, Is.True);
+
+        _threadProfilingService.StopThreadProfilingSession(1);
+        Assert.That(((IThreadProfilingStatus)_threadProfilingService).IsThreadProfilingActive, Is.False);
     }
 
     [Test]
@@ -239,7 +285,7 @@ public class ThreadProfilingServiceTests
         var node2 = new ProfileNode((UIntPtr)2, 10, 0);
         var node3 = new ProfileNode((UIntPtr)3, 5, 0);
 
-        var threadProfilingService = new ThreadProfilingService(_dataTransportService, _nativeMethods, 1);
+        var threadProfilingService = new ThreadProfilingService(_dataTransportService, _nativeMethods, maxAggregatedNodes: 1);
 
         threadProfilingService.AddNodeToPruningList(node1);
         threadProfilingService.AddNodeToPruningList(node2);

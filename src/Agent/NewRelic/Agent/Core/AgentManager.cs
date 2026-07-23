@@ -12,6 +12,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
@@ -19,6 +20,7 @@ using NewRelic.Agent.Core.Instrumentation;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.ThreadProfiling;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
@@ -88,6 +90,7 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
     private IConfiguration Configuration { get { return _configurationSubscription.Configuration; } }
     private ThreadProfilingService _threadProfilingService;
+    private ContinuousProfilingService _continuousProfilingService;
     private readonly IWrapperService _wrapperService;
     private readonly IAgentHealthReporter _agentHealthReporter;
 
@@ -216,6 +219,28 @@ public sealed class AgentManager : IAgentManager, IDisposable
         var instrumentationService = _container.Resolve<IInstrumentationService>();
 
         _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
+
+        // Continuous profiling (config-driven; inert while disabled). Plan B wires the native sampler-backed
+        // source, which both drives the native lifecycle (INativeContinuousProfiler) and drains its buffers
+        // (ISampleSource) -- one object, passed for both seams. NoOpSampleSource remains for tests/fallback.
+        // Constructed here mirroring ThreadProfilingService.
+        //
+        // The OTLP/HTTP dispatch is wired REAL (region-aware endpoint + api-key protobuf POST); the
+        // transport's no-send guard has been removed, so every drain POSTs the built profile.
+        var profilesEndpoint = ProfilesEndpointResolver.Resolve(Configuration, new SharedInterfaces.Environment().GetEnvironmentVariable);
+        var profilesDispatcher = new OtlpProfilesHttpDispatcher(Configuration);
+        var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, profilesEndpoint);
+        var continuousProfilerSampleSource = new NativeContinuousProfilerSampleSource(nativeMethods);
+        _continuousProfilingService = new ContinuousProfilingService(continuousProfilerSampleSource, continuousProfilerSampleSource, profilesTransport, _container.Resolve<IScheduler>(), _agentHealthReporter);
+
+        // Mutually exclude the two profilers. The references point both ways, so we wire them here,
+        // post-construction, rather than through constructors -- mutual constructor injection would be a
+        // construction cycle. The thread profiler refuses to start while continuous profiling is active;
+        // continuous profiling defers its start while a thread-profiling session is in-flight.
+        _threadProfilingService.SetContinuousProfilingSessionControl(_continuousProfilingService);
+        _continuousProfilingService.ThreadProfilingStatus = _threadProfilingService;
+
+        _continuousProfilingService.StartIfEnabled();
 
         if (!serverlessModeEnabled)
         {
@@ -350,6 +375,7 @@ public sealed class AgentManager : IAgentManager, IDisposable
     private void StopServices()
     {
         _threadProfilingService?.Stop();
+        _continuousProfilingService?.Dispose();
     }
 
     /// <summary>

@@ -17,4 +17,11 @@ public interface INativeMethods
     int ReloadConfiguration();
     int AddCustomInstrumentation(string fileName, string xml);
     int ApplyCustomInstrumentation();
+
+    void ContinuousProfilerStart(int intervalMs);
+    void ContinuousProfilerStop();
+    int ContinuousProfilerReadThreadSamples(int len, byte[] buffer);
+    void ContinuousProfilerSetTraceContext(long traceIdHigh, long traceIdLow, long spanId);
+    void ContinuousProfilerResetTraceContext();
+    void ContinuousProfilerShutdown();
 }

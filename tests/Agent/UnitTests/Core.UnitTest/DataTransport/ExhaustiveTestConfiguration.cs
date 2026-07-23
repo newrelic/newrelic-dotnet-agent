@@ -545,4 +545,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
     public int OpenTelemetryMetricsExportTimeoutMs => 10000;
 
     public bool HybridHttpContextStorageEnabled => false;
+
+    public bool ContinuousProfilingEnabled => true;
+    public int ContinuousProfilingSamplingIntervalMs => 30000;
+    public bool ContinuousProfilingIncludeAgentCode => true;
 }

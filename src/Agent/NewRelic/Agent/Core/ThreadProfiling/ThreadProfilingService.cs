@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
@@ -16,11 +17,15 @@ using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.ThreadProfiling;
 
-public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilingSessionControl, IThreadProfilingProcessing, ISampleSink
+public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilingSessionControl, IThreadProfilingProcessing, ISampleSink, IThreadProfilingStatus
 {
     private const int InvalidSessionId = 0;
     private readonly INativeMethods _nativeMethods;
     private readonly IDataTransportService _dataTransportService;
+
+    // Set (optionally via ctor, otherwise post-construction by AgentManager) so the thread profiler can
+    // refuse to start while continuous profiling is active. Nullable: no reference wired == no guard.
+    private IContinuousProfilingSessionControl _continuousProfilingSessionControl;
     private ThreadProfilingSampler _sampler;
     private int _profileSessionId;
     private DateTime _startSessionTime;
@@ -68,15 +73,32 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
 
     #region Construction and Initializations
 
-    public ThreadProfilingService(IDataTransportService dataTransportService, INativeMethods nativeMethods, int maxAggregatedNodes = 20000)
+    public ThreadProfilingService(IDataTransportService dataTransportService, INativeMethods nativeMethods, int maxAggregatedNodes = 20000, IContinuousProfilingSessionControl continuousProfilingSessionControl = null)
     {
         _dataTransportService = dataTransportService;
         _maxAggregatedNodes = maxAggregatedNodes;
         _nativeMethods = nativeMethods;
+        _continuousProfilingSessionControl = continuousProfilingSessionControl;
 
         _threadProfilingBucket = new ThreadProfilingBucket(this);
         PruningList = new ArrayList();
     }
+
+    /// <summary>
+    /// Wires the continuous-profiling session control after construction. Both services are constructed
+    /// manually in <c>AgentManager.Initialize</c>; because the thread profiler is built first, this seam
+    /// lets the continuous-profiling reference be set once that service exists, avoiding a constructor cycle.
+    /// </summary>
+    public void SetContinuousProfilingSessionControl(IContinuousProfilingSessionControl continuousProfilingSessionControl)
+    {
+        _continuousProfilingSessionControl = continuousProfilingSessionControl;
+    }
+
+    /// <summary>
+    /// True while a thread-profiling session is in-flight. Read by the continuous-profiling service so it
+    /// can defer its own start rather than run concurrently.
+    /// </summary>
+    public bool IsThreadProfilingActive => _profileSessionId != InvalidSessionId;
 
     #endregion
 
@@ -125,6 +147,19 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     /// <returns>true if a new thread profiling session is started. false if one already exists.</returns>
     public bool StartThreadProfilingSession(int profileSessionId, uint frequencyInMsec, uint durationInMsec)
     {
+        // Forward mutual-exclusion guard: refuse to start while continuous profiling is active. This
+        // check and ContinuousProfilingService's reverse guard (ThreadProfilingStatus.IsThreadProfilingActive)
+        // are read/written under different locks (no explicit lock here vs. that service's
+        // _lifecycleLock), so a narrow concurrent-start window exists. Accepted for the prototype: there
+        // is no shared native suspend path yet, so a concurrent start is harmless today. When Plan B
+        // lands a SHARED NATIVE SINGLE-SUSPEND SAMPLER, that shared resource becomes the real enforcement
+        // point and MUST get proper cross-service locking then.
+        if (_continuousProfilingSessionControl?.IsActive == true)
+        {
+            Log.Info("Thread profiling start refused: continuous profiling is active.");
+            return false;
+        }
+
         Log.Info($"Starting a thread profiling session {{ SessionId: {profileSessionId}, SamplePeriodMs: {frequencyInMsec}, DurationMs: {durationInMsec} }}");
         var startedNewSession = false;
 
