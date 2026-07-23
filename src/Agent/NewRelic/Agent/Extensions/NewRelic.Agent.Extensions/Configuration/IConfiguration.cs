@@ -290,4 +290,22 @@ public interface IConfiguration
     #endregion
 
     bool HybridHttpContextStorageEnabled { get; }
+
+    /// <summary>
+    /// Gets whether continuous profiling is enabled. Defaults to false.
+    /// </summary>
+    bool ContinuousProfilingEnabled { get; }
+
+    /// <summary>
+    /// Gets the continuous profiling sampling interval in milliseconds, clamped to [1000, 60000]. Defaults to 10000.
+    /// </summary>
+    int ContinuousProfilingSamplingIntervalMs { get; }
+
+    /// <summary>
+    /// Gets whether continuous profiling includes New Relic agent code (samples whose stack is the agent's own
+    /// threads/frames). Defaults to false, so agent-internal samples are dropped from the profile. Enabled via
+    /// the undocumented appSettings key "NewRelic.ContinuousProfilingIncludeAgentCode" (deliberately NOT in the
+    /// XSD). Temporary stand-in until the CP UI ships a self-frames filter (like the thread profiler's).
+    /// </summary>
+    bool ContinuousProfilingIncludeAgentCode { get; }
 }

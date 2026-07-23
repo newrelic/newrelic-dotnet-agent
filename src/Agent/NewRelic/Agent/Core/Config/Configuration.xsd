@@ -2228,6 +2228,32 @@
                     </xs:complexType>
                 </xs:element>
 
+                <xs:element name="continuousProfiling" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Controls the continuous profiling feature.
+                        </xs:documentation>
+                    </xs:annotation>
+
+                    <xs:complexType>
+                        <xs:attribute name="enabled" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Set this to "true" to enable continuous profiling. The default is false.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                        <xs:attribute name="samplingIntervalMs" type="xs:int" default="10000">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    The interval, in milliseconds, between continuous profiling samples.
+                                    The value is clamped to the range [1000, 60000]. The default is 10000.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                    </xs:complexType>
+                </xs:element>
+
                 <xs:element name="cloud" minOccurs="0" maxOccurs="1">
                     <xs:annotation>
                         <xs:documentation>

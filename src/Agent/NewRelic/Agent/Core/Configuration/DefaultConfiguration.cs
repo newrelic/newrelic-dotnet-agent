@@ -3035,6 +3035,40 @@ public class DefaultConfiguration : IConfiguration
 
     public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", false), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");
 
+    private const int MinContinuousProfilingSamplingIntervalMs = 1000;
+    private const int MaxContinuousProfilingSamplingIntervalMs = 60000;
+
+    private bool? _continuousProfilingEnabled;
+    // Precedence: env var > newrelic.config <appSettings> key > local <continuousProfiling enabled> element.
+    // The appSettings layer keeps this setting consistent with sibling toggles that also honor it.
+    public bool ContinuousProfilingEnabled => _continuousProfilingEnabled ??= EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingEnabled", _localConfiguration.continuousProfiling.enabled), "NEW_RELIC_CONTINUOUS_PROFILING_ENABLED");
+
+    private int? _continuousProfilingSamplingIntervalMs;
+    public int ContinuousProfilingSamplingIntervalMs
+    {
+        get
+        {
+            if (_continuousProfilingSamplingIntervalMs.HasValue)
+                return _continuousProfilingSamplingIntervalMs.Value;
+
+            // Same env > appSettings > element precedence as ContinuousProfilingEnabled; the clamp is applied
+            // last. EnvironmentOverrides falls back to the (non-null) appSettings-or-element value, so the
+            // result is never null -- GetValueOrDefault() just unwraps it.
+            var configured = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("NewRelic.ContinuousProfilingSamplingIntervalMs", _localConfiguration.continuousProfiling.samplingIntervalMs), "NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")
+                .GetValueOrDefault();
+
+            var clamped = Math.Min(MaxContinuousProfilingSamplingIntervalMs, Math.Max(MinContinuousProfilingSamplingIntervalMs, configured));
+            _continuousProfilingSamplingIntervalMs = clamped;
+            return clamped;
+        }
+    }
+
+    // Undocumented, appSettings-only (deliberately NOT in the XSD): capture the agent's own threads/frames in
+    // the profile. Default false so agent-internal samples are dropped. No env-var override -- this is an
+    // internal toggle, not a customer-facing setting.
+    public bool ContinuousProfilingIncludeAgentCode =>
+        TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingIncludeAgentCode", false);
+
     public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
     {
         return EnvironmentOverrides(environment, localLogConfiguration.enabled, "NEW_RELIC_LOG_ENABLED");

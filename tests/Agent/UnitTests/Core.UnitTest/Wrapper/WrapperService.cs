@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.ContinuousProfiling;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
@@ -284,6 +286,191 @@ public class Class_WrapperService
             });
         }
     }
+
+    #region Continuous profiling trace-context push
+
+    [TearDown]
+    public void TearDown()
+    {
+        // Reset the process-wide seam so one test's enabled context can't leak into another.
+        ContinuousProfilingContext.Instance = new ContinuousProfilingContext();
+    }
+
+    [Test]
+    public void BeforeWrappedMethod_pushes_trace_context_to_continuous_profiler_when_enabled()
+    {
+        var wrapper = Mock.Create<IWrapper>();
+        Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).Returns((_, __) => { });
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
+
+        var transaction = Mock.Create<IInternalTransaction>();
+        var segment = Mock.Create<ISegment>();
+        Mock.Arrange(() => transaction.IsValid).Returns(true);
+        Mock.Arrange(() => transaction.IsFinished).Returns(false);
+        Mock.Arrange(() => transaction.TraceId).Returns("0123456789abcdeffedcba9876543210");
+        Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+        Mock.Arrange(() => segment.SpanId).Returns("1122334455667788");
+        Mock.Arrange(() => segment.IsLeaf).Returns(false);
+        Mock.Arrange(() => segment.IsValid).Returns(true);
+        Mock.Arrange(() => _agent.CurrentTransaction).Returns(transaction);
+
+        var context = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => context.IsEnabled).Returns(true);
+        ContinuousProfilingContext.Instance = context;
+
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
+
+        Mock.Assert(() => context.PushTraceContext("0123456789abcdeffedcba9876543210", "1122334455667788"), Occurs.Once());
+
+        afterWrappedMethod(null, null);
+    }
+
+    [Test]
+    public void AfterWrappedMethod_repushes_current_trace_context_when_enabled()
+    {
+        var wrapper = Mock.Create<IWrapper>();
+        Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).Returns((_, __) => { });
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
+
+        var transaction = Mock.Create<IInternalTransaction>();
+        var segment = Mock.Create<ISegment>();
+        Mock.Arrange(() => transaction.IsValid).Returns(true);
+        Mock.Arrange(() => transaction.IsFinished).Returns(false);
+        Mock.Arrange(() => transaction.TraceId).Returns("0123456789abcdeffedcba9876543210");
+        Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+        Mock.Arrange(() => segment.SpanId).Returns("1122334455667788");
+        Mock.Arrange(() => segment.IsLeaf).Returns(false);
+        Mock.Arrange(() => segment.IsValid).Returns(true);
+        Mock.Arrange(() => _agent.CurrentTransaction).Returns(transaction);
+
+        var context = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => context.IsEnabled).Returns(true);
+        ContinuousProfilingContext.Instance = context;
+
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
+        afterWrappedMethod(null, null);
+
+        // Enter push + exit re-push (the exit re-reads the now-current segment so the native TLS keeps tracking it).
+        Mock.Assert(() => context.PushTraceContext("0123456789abcdeffedcba9876543210", "1122334455667788"), Occurs.Exactly(2));
+    }
+
+    [Test]
+    public void BeforeWrappedMethod_does_not_touch_continuous_profiler_when_disabled()
+    {
+        var wrapper = Mock.Create<IWrapper>();
+        Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).Returns((_, __) => { });
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
+
+        var context = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => context.IsEnabled).Returns(false);
+        ContinuousProfilingContext.Instance = context;
+
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
+        afterWrappedMethod(null, null);
+
+        Mock.Assert(() => context.PushTraceContext(Arg.AnyString, Arg.AnyString), Occurs.Never());
+        Mock.Assert(() => context.ResetTraceContext(), Occurs.Never());
+    }
+
+    [Test]
+    public void AfterWrappedMethod_does_not_look_up_CurrentTransaction_when_disabled()
+    {
+        // The exit-path re-push (finally block) evaluates _agent.CurrentTransaction as a method argument, which
+        // happens before PushContinuousProfilingContext's internal IsEnabled guard can short-circuit it. The call
+        // site itself must gate on IsEnabled so the lookup (context-storage read) never runs when CP is off -
+        // otherwise every instrumented method completion pays for it, even with the feature disabled.
+        var wrapper = Mock.Create<IWrapper>();
+        Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).Returns((_, __) => { });
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
+
+        var transaction = Mock.Create<IInternalTransaction>();
+        var segment = Mock.Create<ISegment>();
+        Mock.Arrange(() => transaction.IsValid).Returns(true);
+        Mock.Arrange(() => transaction.IsFinished).Returns(false);
+        Mock.Arrange(() => transaction.TraceId).Returns("0123456789abcdeffedcba9876543210");
+        Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+        Mock.Arrange(() => segment.SpanId).Returns("1122334455667788");
+        Mock.Arrange(() => segment.IsLeaf).Returns(false);
+        Mock.Arrange(() => segment.IsValid).Returns(true);
+        Mock.Arrange(() => _agent.CurrentTransaction).Returns(transaction);
+
+        var context = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => context.IsEnabled).Returns(false);
+        ContinuousProfilingContext.Instance = context;
+
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
+
+        // The enter path reuses the already-fetched "transaction" local (one lookup, done to service the call
+        // regardless of CP), so reset the recorded occurrence count before exercising the exit path.
+        Mock.Assert(() => _agent.CurrentTransaction, Occurs.Once());
+
+        afterWrappedMethod(null, null);
+
+        // No additional CurrentTransaction access from the exit path while CP is disabled.
+        Mock.Assert(() => _agent.CurrentTransaction, Occurs.Once());
+        Mock.Assert(() => context.PushTraceContext(Arg.AnyString, Arg.AnyString), Occurs.Never());
+    }
+
+    [Test]
+    public void AfterWrappedMethod_looks_up_CurrentTransaction_when_enabled()
+    {
+        var wrapper = Mock.Create<IWrapper>();
+        Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).Returns((_, __) => { });
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
+
+        var transaction = Mock.Create<IInternalTransaction>();
+        var segment = Mock.Create<ISegment>();
+        Mock.Arrange(() => transaction.IsValid).Returns(true);
+        Mock.Arrange(() => transaction.IsFinished).Returns(false);
+        Mock.Arrange(() => transaction.TraceId).Returns("0123456789abcdeffedcba9876543210");
+        Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+        Mock.Arrange(() => segment.SpanId).Returns("1122334455667788");
+        Mock.Arrange(() => segment.IsLeaf).Returns(false);
+        Mock.Arrange(() => segment.IsValid).Returns(true);
+        Mock.Arrange(() => _agent.CurrentTransaction).Returns(transaction);
+
+        var context = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => context.IsEnabled).Returns(true);
+        ContinuousProfilingContext.Instance = context;
+
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
+        afterWrappedMethod(null, null);
+
+        // Enter path (one lookup) + exit path (one more lookup, since CP is enabled) = two accesses total.
+        Mock.Assert(() => _agent.CurrentTransaction, Occurs.Exactly(2));
+    }
+
+    [Test]
+    public void BeforeWrappedMethod_pushing_trace_context_never_throws_into_the_app()
+    {
+        var wrapper = Mock.Create<IWrapper>();
+        Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).Returns((_, __) => { });
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
+
+        var transaction = Mock.Create<IInternalTransaction>();
+        var segment = Mock.Create<ISegment>();
+        Mock.Arrange(() => transaction.IsValid).Returns(true);
+        Mock.Arrange(() => transaction.IsFinished).Returns(false);
+        Mock.Arrange(() => transaction.TraceId).Returns("0123456789abcdeffedcba9876543210");
+        Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+        Mock.Arrange(() => segment.SpanId).Returns("1122334455667788");
+        Mock.Arrange(() => segment.IsLeaf).Returns(false);
+        Mock.Arrange(() => segment.IsValid).Returns(true);
+        Mock.Arrange(() => _agent.CurrentTransaction).Returns(transaction);
+
+        var context = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => context.IsEnabled).Returns(true);
+        Mock.Arrange(() => context.PushTraceContext(Arg.AnyString, Arg.AnyString)).Throws(new InvalidOperationException("boom"));
+        ContinuousProfilingContext.Instance = context;
+
+        Assert.DoesNotThrow(() =>
+        {
+            var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
+            afterWrappedMethod(null, null);
+        });
+    }
+
+    #endregion
 
     private class ValueTaskTestClass
     {

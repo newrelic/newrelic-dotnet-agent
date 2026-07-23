@@ -65,7 +65,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="**/*.proto" GrpcServices="Client">
+    <!-- Exclude the vendored OTLP profiles protos from the wildcard: they only need
+         message serialization (GrpcServices="None"). Handled by the dedicated item below. -->
+    <Protobuf Include="**/*.proto" Exclude="ContinuousProfiling/**/*.proto" GrpcServices="Client">
+    </Protobuf>
+    <!-- Vendored OpenTelemetry profiles (v1development) protos, pinned to a specific
+         opentelemetry-proto commit. Serialization only, no gRPC client generated. Files live
+         flat in ContinuousProfiling/ with bare-filename imports; ProtoRoot resolves them. -->
+    <Protobuf Include="ContinuousProfiling/*.proto" GrpcServices="None" ProtoRoot="ContinuousProfiling">
     </Protobuf>
   </ItemGroup>
 

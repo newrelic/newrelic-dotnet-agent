@@ -13,7 +13,8 @@
       "Bash(find *)",
       "Bash(echo *)",
       "Bash(pwd)",
-      "Bash(xsd2code *)"
+      "Bash(xsd2code *)",
+      "mcp__codegraph__*"
     ],
     "deny": [
       "Bash(rm -rf *)",
@@ -28,12 +29,24 @@
       "Bash(gh release upload *)"
     ]
   },
-    "enabledPlugins": {
-        "nr@claude-plugin-marketplace": true,
-        "superpowers@claude-plugins-official": true,
-        "claude-md-management@claude-plugins-official": true,
-        "code-review@claude-plugins-official": true,
-        "document-skills@claude-plugins-official": true,
-        "skill-creator@claude-plugins-official": true
-    }
+  "enabledPlugins": {
+    "nr@claude-plugin-marketplace": true,
+    "superpowers@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "document-skills@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codegraph prompt-hook"
+          }
+        ]
+      }
+    ]
+  }
 }
