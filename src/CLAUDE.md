@@ -51,13 +51,13 @@ attribute, because the profiler's `update-nuget-reference` job in
 `build_profiler.yml` rewrites that attribute -- it would break if the
 attribute were gone under CPM.
 
-`StyleCop.Analyzers` is shared across the CPM boundary (imported via
-`build/StyleCop.props` by both in-scope and opted-out projects). It is
-centrally versioned: `build/StyleCop.props` sets a `_UsesStyleCop` marker,
-and the root `Directory.Build.targets` adds the reference gated on that
-marker (versionless under CPM, inline `1.1.118` for opt-outs). This lives
-in `Directory.Build.targets` because it's auto-imported last, once the
-final CPM flag value is known.
+Copyright-header enforcement uses the built-in Roslyn analyzer **IDE0073**
+(no NuGet package). It reads `file_header_template` from the root
+`.editorconfig` and is set to `error` there; the root `Directory.Build.props`
+already enables `EnforceCodeStyleInBuild`, so it fails the build in CI. The
+Profiler subtree's `Directory.Build.props` does **not** chain to the root
+props, so it sets `EnforceCodeStyleInBuild=true` itself to keep IDE0073
+active for the profiler's managed projects.
 
 For a one-off in-scope version exception, use `VersionOverride=` (e.g.
 `SharpZipLib` in `tests/Agent/Shared/TestSerializationHelpers` overrides

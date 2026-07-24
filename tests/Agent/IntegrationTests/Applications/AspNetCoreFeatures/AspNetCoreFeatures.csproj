@@ -17,8 +17,5 @@
     <ProjectReference Include="..\..\ApplicationHelperLibraries\NetCore3Collectible\NetCore3Collectible.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="StyleCop.Analyzers" Version="1.1.118" />
-  </ItemGroup>
 
 </Project>

@@ -1,9 +1,5 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..'))" />
-  <!-- Enforce the New Relic copyright header (SA1633 et al. via Common.ruleset) on the build-tools
-       projects, matching src/ and tests/. StyleCop.props sets the _UsesStyleCop marker that the root
-       Directory.Build.targets keys off to add the StyleCop.Analyzers reference. -->
-  <Import Project="$(MSBuildThisFileDirectory)StyleCop.props" />
   <PropertyGroup>
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
   </PropertyGroup>
