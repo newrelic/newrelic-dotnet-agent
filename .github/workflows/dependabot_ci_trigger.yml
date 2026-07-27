@@ -34,4 +34,4 @@ jobs:
           echo "Dependabot pull request #${{ github.event.pull_request.number }}"
           echo "Head branch: ${{ github.event.pull_request.head.ref }}"
           echo "Head SHA: ${{ github.event.pull_request.head.sha }}"
-          echo "Dependabot Full CI Dispatch will launch All Solutions Build for this branch."
+          echo "Dependabot Full CI Dispatch will launch All Solutions Build and Unit Tests for this branch."

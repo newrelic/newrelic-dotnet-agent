@@ -1,11 +1,11 @@
 # Runs the full CI suite for Dependabot pull requests.
 #
 # Dependabot-triggered `pull_request` runs get a read-only GITHUB_TOKEN and no
-# Actions secrets, so All Solutions Build (which needs signing and test
-# secrets) skips itself for Dependabot. `workflow_run` is not subject to those
-# restrictions: it executes the workflow definition from the default branch
-# with normal Actions secrets, so it can relaunch the suite via
-# workflow_dispatch against the Dependabot branch.
+# Actions secrets, so both All Solutions Build (which needs signing and test
+# secrets) and Unit Tests and Code Coverage skip themselves for Dependabot.
+# `workflow_run` is not subject to those restrictions: it executes the workflow
+# definition from the default branch with normal Actions secrets, so it can
+# relaunch both workflows via workflow_dispatch against the Dependabot branch.
 #
 # Security notes:
 #   - This workflow never checks out the pull request branch. It reads event
@@ -49,7 +49,7 @@ jobs:
           disable-sudo: true
           egress-policy: audit
 
-      - name: Dispatch All Solutions Build
+      - name: Dispatch CI workflows
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Passed through the environment rather than interpolated into the
@@ -57,5 +57,19 @@ jobs:
           BRANCH: ${{ github.event.workflow_run.head_branch }}
           REPO: ${{ github.repository }}
         run: |
-          echo "Dispatching All Solutions Build against $BRANCH"
-          gh workflow run all_solutions.yml --repo "$REPO" --ref "$BRANCH"
+          # Attempt every dispatch even if an earlier one fails, so a transient
+          # API error on one workflow does not silently skip the others, then
+          # fail the step if any of them did not launch.
+          failed=""
+          for wf in all_solutions.yml unit_tests.yml; do
+            echo "Dispatching $wf against $BRANCH"
+            if ! gh workflow run "$wf" --repo "$REPO" --ref "$BRANCH"; then
+              echo "::error::Failed to dispatch $wf against $BRANCH"
+              failed="$failed $wf"
+            fi
+          done
+
+          if [ -n "$failed" ]; then
+            echo "Dispatch failed for:$failed"
+            exit 1
+          fi
