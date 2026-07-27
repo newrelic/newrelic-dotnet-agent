@@ -1,4 +1,4 @@
-<a href="https://opensource.newrelic.com/oss-category/#community-plus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Plus.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"><img alt="New Relic Open Source community plus project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"></picture></a>
+<a href="https://docs.newrelic.com/docs/licenses/open-source/oss-category/#community-plus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Plus.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"><img alt="New Relic Open Source community plus project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"></picture></a>
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![build_status](https://github.com/newrelic/newrelic-dotnet-agent/actions/workflows/all_solutions.yml/badge.svg?event=schedule)](https://github.com/newrelic/newrelic-dotnet-agent/actions/workflows/all_solutions.yml)
@@ -64,8 +64,7 @@ If you believe you have found a security vulnerability in this project or any of
 
 If you would like to contribute to this project, please review [these guidelines](CONTRIBUTING.md).
 
-To [all contributors](https://github.com/newrelic/newrelic-dotnet-agent/graphs/contributors), we thank you!  Without your contribution, this project would not be what it is today.  We also host a community project page dedicated to
-the [New Relic .NET agent](https://opensource.newrelic.com/projects/newrelic/newrelic-dotnet-agent).
+To [all contributors](https://github.com/newrelic/newrelic-dotnet-agent/graphs/contributors), we thank you!  Without your contribution, this project would not be what it is today.
 
 ## License
 The .NET Agent is licensed under the [Apache 2.0](https://apache.org/licenses/LICENSE-2.0.txt) License.
