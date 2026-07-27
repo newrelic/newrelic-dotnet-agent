@@ -1,0 +1,37 @@
+# Workflows triggered by Dependabot from a `pull_request` event receive a
+# read-only GITHUB_TOKEN and no access to GitHub Actions secrets (only
+# Dependabot secrets), so they cannot run the full CI suite. This workflow
+# exists solely so that its completion emits a `workflow_run` event, which
+# Dependabot Full CI Dispatch listens for. That dispatcher runs in the context
+# of the default branch, where normal Actions secrets are available.
+#
+# This workflow intentionally does no work and requires no permissions.
+
+name: Dependabot Full CI Trigger
+
+on:
+  pull_request:
+    branches:
+      - main
+      - "feature/**"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  signal:
+    name: Signal that a Dependabot pull request needs the full CI suite
+    # Only Dependabot pull requests need this hop. For any other actor the
+    # normal PR workflows already run with full secrets.
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record pull request details
+        run: |
+          echo "Dependabot pull request #${{ github.event.pull_request.number }}"
+          echo "Head branch: ${{ github.event.pull_request.head.ref }}"
+          echo "Head SHA: ${{ github.event.pull_request.head.sha }}"
+          echo "Dependabot Full CI Dispatch will launch All Solutions Build for this branch."

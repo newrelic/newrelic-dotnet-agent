@@ -1,0 +1,71 @@
+# Reports the result of a Dependabot Full CI Dispatch run back onto the
+# Dependabot pull request as a commit status.
+#
+# Runs dispatched via workflow_dispatch are not attached to a pull request, so
+# their result is otherwise invisible from the PR. This posts a commit status
+# on the branch head SHA (which for a dispatched run is the PR head) so
+# reviewers can see, and click through to, the full CI result.
+#
+# This status is informational and must NOT be added to branch protection as a
+# required check: required contexts apply to every pull request, and pull
+# requests from actors other than Dependabot never receive this status, so
+# requiring it would block them indefinitely.
+
+name: Dependabot Full CI Status
+
+on:
+  workflow_run:
+    workflows: ["All Solutions Build"]
+    types: [completed]
+
+permissions:
+  statuses: write
+
+jobs:
+  report:
+    name: Report full CI result on the Dependabot pull request
+    runs-on: ubuntu-latest
+    # Only report for the dispatched runs this feature creates: a
+    # workflow_dispatch run on a dependabot/nuget/* branch.
+    if: >-
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      startsWith(github.event.workflow_run.head_branch, 'dependabot/nuget/')
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Post commit status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          # A cancelled run is usually a superseded run: Dependabot force-pushes
+          # to rebase its branches, and All Solutions Build cancels in-progress
+          # runs for the same ref. Reporting failure for those would be wrong,
+          # and a replacement run is already on its way.
+          case "$CONCLUSION" in
+            success)
+              state=success
+              ;;
+            cancelled|skipped)
+              echo "Conclusion '$CONCLUSION' is not a result worth reporting; skipping."
+              exit 0
+              ;;
+            *)
+              state=failure
+              ;;
+          esac
+
+          echo "Reporting '$state' for $HEAD_SHA"
+          gh api -X POST "repos/$REPO/statuses/$HEAD_SHA" \
+            -f state="$state" \
+            -f context="full-ci (dependabot)" \
+            -f target_url="$RUN_URL" \
+            -f description="All Solutions Build: $CONCLUSION"

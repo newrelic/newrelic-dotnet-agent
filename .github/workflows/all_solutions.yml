@@ -73,9 +73,12 @@ jobs:
     needs:
       - check-modified-files
       - shellcheck
-    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
+    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well.
+    # workflow_dispatch is exempt from the Dependabot exclusion: Dependabot Full CI Dispatch
+    # relaunches this workflow via workflow_dispatch against a Dependabot branch, and that run is
+    # not a Dependabot event, so it has full access to secrets and must not be skipped.
     # run this job if source files were modified, or if triggered by a release, a manual execution or schedule
-    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    if: (github.event_name == 'workflow_dispatch' || github.actor != 'dependabot[bot]') && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
@@ -190,7 +193,7 @@ jobs:
   get-test-namespaces:
     name: Get Test Namespaces
     needs: check-modified-files
-    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    if: (github.event_name == 'workflow_dispatch' || github.actor != 'dependabot[bot]') && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     runs-on: ubuntu-latest
     outputs:
       integration-namespaces: ${{ steps.compute.outputs.integration }}
