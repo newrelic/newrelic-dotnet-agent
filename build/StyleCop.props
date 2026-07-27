@@ -1,9 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\Common.ruleset</CodeAnalysisRuleSet>
-    <_UsesStyleCop>true</_UsesStyleCop>
-  </PropertyGroup>
-  <ItemGroup>
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)\stylecop.json" Link="stylecop.json" />
-  </ItemGroup>
-</Project>

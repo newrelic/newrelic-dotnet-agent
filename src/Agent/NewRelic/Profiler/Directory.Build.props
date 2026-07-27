@@ -13,5 +13,8 @@
   </PropertyGroup>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <!-- This subtree does not chain to the root Directory.Build.props, so enable code-style
+         analyzers explicitly here to keep IDE0073 copyright-header enforcement active at build. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 </Project>
