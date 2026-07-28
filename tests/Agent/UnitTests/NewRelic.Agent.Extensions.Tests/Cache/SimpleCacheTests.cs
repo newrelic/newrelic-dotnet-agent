@@ -135,6 +135,29 @@ public class SimpleCacheTests
     }
 
     [Test]
+    public void Contains_ReturnsFalse_ForAbsentKey()
+    {
+        var cache = new SimpleCache<string, string>(5);
+
+        Assert.That(cache.Contains("key1"), Is.False);
+    }
+
+    [Test]
+    public void Get_RecordsAMiss_ForAbsentKey()
+    {
+        var cache = new SimpleCache<string, string>(5);
+
+        var result = cache.Get("key1");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.Null);
+            Assert.That(cache.CountHits, Is.EqualTo(0));
+            Assert.That(cache.CountMisses, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
     public void Get_RecordsAHit_ForKeyWithACachedNullValue()
     {
         var cache = new SimpleCache<string, string>(5);
