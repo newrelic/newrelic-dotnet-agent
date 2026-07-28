@@ -26,11 +26,17 @@ jobs:
   report:
     name: Report full CI result on the Dependabot pull request
     runs-on: ubuntu-latest
-    # Only report for the dispatched runs this feature creates: a
-    # workflow_dispatch run on a dependabot/nuget/* branch.
+    # Mirror the Dependabot Full CI Dispatch gate, so only a run that dispatcher
+    # created can produce a "full-ci (dependabot)" status. The actor check is
+    # what stops someone pushing a dependabot/nuget/* branch, dispatching it by
+    # hand, and posting a status to a SHA of their choosing. Fail-closed: if a
+    # Dependabot PR gets no status, check the run's actor fields first.
     if: >-
       github.event.workflow_run.event == 'workflow_dispatch' &&
-      startsWith(github.event.workflow_run.head_branch, 'dependabot/nuget/')
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_branch, 'dependabot/nuget/') &&
+      (github.event.workflow_run.actor.login == 'dependabot[bot]' ||
+       github.event.workflow_run.triggering_actor.login == 'dependabot[bot]')
 
     steps:
       - name: Harden Runner

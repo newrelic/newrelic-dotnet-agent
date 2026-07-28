@@ -17,10 +17,11 @@
 #     `gh workflow run --ref <branch>` reads workflow definitions from that
 #     branch, and the github-actions ecosystem is the one group that modifies
 #     files under .github/workflows. Review those by hand.
-#   - The dispatched build does execute MSBuild targets, analyzers and source
-#     generators shipped inside the updated packages, with secrets present.
-#     That is the same code the scheduled All Solutions Build already runs
-#     against the same packages after the PR merges; this only runs it sooner.
+#   - The dispatched build executes MSBuild targets, analyzers and build tasks
+#     from a package version nobody has reviewed yet, so All Solutions Build
+#     skips its signing steps and the RPM/DEB/ArtifactBuilder jobs for
+#     dependabot/* branches. TEST_SECRETS is still present on the test runners:
+#     accepted, since those are test-account credentials, not signing material.
 
 name: Dependabot Full CI Dispatch
 
