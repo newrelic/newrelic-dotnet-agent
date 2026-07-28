@@ -91,52 +91,41 @@ public class SimpleCache<TKey, TValue> : ICacheStats, IDisposable where TValue :
     /// </summary>
     public TValue Peek(TKey key)
     {
-        var node = PeekInternal(key);
-        return node;
+        _cacheMap.TryGetValue(key, out var value);
+        return value;
     }
 
     /// <summary>
-    /// Checks whether the specified key exists in the cache without updating stats.
+    /// Checks whether the specified key exists in the cache without updating stats. Unlike <see cref="Peek"/>,
+    /// this is correct for a key whose cached value is itself null.
     /// </summary>
-    public bool Contains(TKey key) => PeekInternal(key) != null;
+    public bool Contains(TKey key) => _cacheMap.ContainsKey(key);
 
     /// <summary>
-    /// Allows searching of the cache.  If found, returns the existing item and updates the statistics.
-    /// If not found, returns NULL.
+    /// Allows searching of the cache. If found, returns the existing item (which may itself be null) and
+    /// records a hit. If not found, records a miss and returns null.
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
     public TValue Get(TKey key)
     {
-
-        var node = PeekInternal(key);
-
-        if (node != null)
-        {
-            Interlocked.Increment(ref _countHits);
-        }
-        else
-        {
-            Interlocked.Increment(ref _countMisses);
-        }
-
-        return node;
+        TryGetTrackingStats(key, out var value);
+        return value;
     }
 
     /// <summary>
-    /// Attempts to find an item in the cache.  If found, returns the existing item and updates the statistics.
-    /// If not found, will add the item to the cache, unless the cache is at capacity, in which case the item
-    /// is dropped (not cached) but is still computed and returned.
+    /// Attempts to find an item in the cache.  If found (a cached null value counts as found), returns the
+    /// existing item and updates the statistics. If not found, will add the item to the cache, unless the
+    /// cache is at capacity, in which case the item is dropped (not cached) but is still computed and returned.
     /// </summary>
     /// <param name="key"></param>
     /// <param name="valueFx">Function to call to obtain the value if the key is not present in the cache.</param>
     /// <returns></returns>
     public TValue GetOrAdd(TKey key, Func<TValue> valueFx)
     {
-        var result = Get(key);
-        if (result != null)
+        if (TryGetTrackingStats(key, out var existing))
         {
-            return result;
+            return existing;
         }
 
         if (_count >= _capacity)
@@ -158,8 +147,8 @@ public class SimpleCache<TKey, TValue> : ICacheStats, IDisposable where TValue :
             return newValue;
         }
 
-        // Another thread won the race for this key; return the value that is actually cached. If the
-        // cache was cleared in between, fall back to the value just computed.
+        // Another thread won the race for this key; return the value that is actually cached, which may
+        // legitimately be null. If the cache was cleared in between, fall back to the value just computed.
         return _cacheMap.TryGetValue(key, out var raceWinner) ? raceWinner : newValue;
     }
 
@@ -226,15 +215,20 @@ public class SimpleCache<TKey, TValue> : ICacheStats, IDisposable where TValue :
     /// </summary>
     public int Size => _count;
 
-    private TValue PeekInternal(TKey key)
+    /// <summary>
+    /// Looks up <paramref name="key"/> and records a hit or miss based on whether it is actually present -
+    /// not on whether <paramref name="value"/> is null, since a cached null value is a valid hit.
+    /// </summary>
+    private bool TryGetTrackingStats(TKey key, out TValue value)
     {
-        TValue node;
-        if (!_cacheMap.TryGetValue(key, out node))
+        if (_cacheMap.TryGetValue(key, out value))
         {
-            return null;
+            Interlocked.Increment(ref _countHits);
+            return true;
         }
 
-        return node;
+        Interlocked.Increment(ref _countMisses);
+        return false;
     }
 
     /// <summary>
@@ -246,11 +240,14 @@ public class SimpleCache<TKey, TValue> : ICacheStats, IDisposable where TValue :
     {
         if (_droppedSinceLastMaintenance > 0 || _count > _capacity)
         {
-            // Zero the tracked count before clearing the map: an insert that lands between the two
-            // would otherwise be counted (Interlocked.Increment already ran) but then wiped by Clear,
-            // permanently under-counting. Doing it in this order instead risks the opposite, harmless
-            // direction: an insert landing here is wiped by Clear but not counted, so _count briefly
-            // under-reports until that thread's next successful insert - it never drifts high.
+            // Zero the tracked count before clearing the map, not after: once both halves of every
+            // in-flight insert have completed, this guarantees map.Count <= _count - drift is over-report
+            // only, so the capacity guard can never be silently defeated and the map can't grow past
+            // capacity indefinitely. (Transiently, e.g. mid-Clear, the map can briefly hold more real
+            // entries than _count reports - that's expected and resolves once Clear finishes.) The
+            // opposite order (Clear then Exchange) permits an insert to durably survive the Clear while
+            // its Increment is wiped by the Exchange, permanently under-counting and letting the map
+            // creep past capacity forever.
             var count = Interlocked.Exchange(ref _count, 0);
             _cacheMap.Clear();
             Interlocked.Add(ref _countEjections, count);

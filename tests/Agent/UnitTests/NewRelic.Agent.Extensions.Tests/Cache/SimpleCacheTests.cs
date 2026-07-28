@@ -100,6 +100,67 @@ public class SimpleCacheTests
     }
 
     [Test]
+    public void GetOrAdd_TreatsACachedNullValueAsAHit_NotAMiss()
+    {
+        int capacity = 5;
+        var cache = new SimpleCache<string, string>(capacity);
+
+        var firstFactoryInvocations = 0;
+        var result1 = cache.GetOrAdd("key1", () => { firstFactoryInvocations++; return null; });
+
+        var secondFactoryInvocations = 0;
+        var result2 = cache.GetOrAdd("key1", () => { secondFactoryInvocations++; return "value2"; });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result1, Is.Null);
+            //key1 is cached (with a null value), so this must be a hit: the cached null is returned
+            //as-is and the second factory must never run.
+            Assert.That(result2, Is.Null);
+            Assert.That(firstFactoryInvocations, Is.EqualTo(1));
+            Assert.That(secondFactoryInvocations, Is.EqualTo(0));
+            Assert.That(cache.CountHits, Is.EqualTo(1));
+            Assert.That(cache.CountMisses, Is.EqualTo(1));
+            Assert.That(cache.Size, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void Contains_ReturnsTrue_ForKeyWithACachedNullValue()
+    {
+        var cache = new SimpleCache<string, string>(5);
+        cache.GetOrAdd("key1", () => null);
+
+        Assert.That(cache.Contains("key1"), Is.True);
+    }
+
+    [Test]
+    public void Get_RecordsAHit_ForKeyWithACachedNullValue()
+    {
+        var cache = new SimpleCache<string, string>(5);
+        cache.GetOrAdd("key1", () => null); //1 miss (insert)
+
+        var result = cache.Get("key1"); //should be a hit, not another miss
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.Null);
+            Assert.That(cache.CountHits, Is.EqualTo(1));
+            Assert.That(cache.CountMisses, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void Peek_ReturnsNull_ForKeyWithACachedNullValue()
+    {
+        var cache = new SimpleCache<string, string>(5);
+        cache.GetOrAdd("key1", () => null);
+
+        //Peek can't distinguish a cached null from an absent key - Contains is the correct check for that.
+        Assert.That(cache.Peek("key1"), Is.Null);
+    }
+
+    [Test]
     public void TryAdd_DropsNewItem_WhenCacheAtCapacity()
     {
         int capacity = 2;
