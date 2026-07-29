@@ -165,7 +165,7 @@ public class TransactionTransformerTests
     {
         _metricNameService = Mock.Create<IMetricNameService>();
         Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
-        return new MetricWireModel.MetricBuilder(_metricNameService);
+        return new MetricWireModel.MetricBuilder();
     }
 
     #region Invalid/ignored transactions
