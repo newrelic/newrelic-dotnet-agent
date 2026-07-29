@@ -10,5 +10,6 @@ public interface ICacheStats
     int CountHits { get; }
     int CountMisses { get; }
     int CountEjections { get; }
+    int CountDropped { get; }
     void ResetStats();
 }
