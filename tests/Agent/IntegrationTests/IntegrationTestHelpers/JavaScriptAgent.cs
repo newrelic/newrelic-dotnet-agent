@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
@@ -30,5 +31,29 @@ public static class JavaScriptAgent
         var match = matches[1]; //specifically look for the 2nd match. The first match contains settings. The 2nd match contains the actual browser agent.
         Assert.True(match.Success, "Did not find a match for the JavaScript agent config in the provided page.");
         return match.Groups[1].Value;
+    }
+
+    /// <summary>
+    /// Returns the offset of every non-overlapping NREUM.info block in the source. Exactly one
+    /// offset means the browser agent script was injected exactly once; more than one means the
+    /// agent injected it multiple times into a single response.
+    /// </summary>
+    public static List<int> FindInfoBlockOffsets(string source)
+    {
+        const string marker = "NREUM.info";
+
+        var offsets = new List<int>();
+        var searchStart = 0;
+        while (true)
+        {
+            var index = source.IndexOf(marker, searchStart, StringComparison.Ordinal);
+            if (index < 0)
+                break;
+
+            offsets.Add(index);
+            searchStart = index + marker.Length;
+        }
+
+        return offsets;
     }
 }

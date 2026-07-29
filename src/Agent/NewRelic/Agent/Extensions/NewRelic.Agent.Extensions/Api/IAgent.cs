@@ -103,8 +103,8 @@ public interface IAgent : IAgentExperimental
     /// <param name="requestPath">The path of the request</param>
     /// <param name="buffer">A UTF-8 encoded buffer of the content for this request</param>
     /// <param name="baseStream">The stream into which the script (and buffer) should be injected</param>
-    /// <returns></returns>
-    Task TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream);
+    /// <returns>True if the browser script was injected into the stream; false if it was not (e.g. no script was available, or no suitable injection location was found).</returns>
+    Task<bool> TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream);
 
     /// <summary>
     /// Returns the Trace Metadata of the currently executing transaction.
