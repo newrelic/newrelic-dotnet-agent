@@ -109,7 +109,7 @@ public class SimpleCache<TKey, TValue> : ICacheStats, IDisposable where TValue :
     /// <returns></returns>
     public TValue Get(TKey key)
     {
-        TryGetTrackingStats(key, out var value);
+        TryGetInternal(key, out var value);
         return value;
     }
 
@@ -123,7 +123,7 @@ public class SimpleCache<TKey, TValue> : ICacheStats, IDisposable where TValue :
     /// <returns></returns>
     public TValue GetOrAdd(TKey key, Func<TValue> valueFx)
     {
-        if (TryGetTrackingStats(key, out var existing))
+        if (TryGetInternal(key, out var existing))
         {
             return existing;
         }
@@ -219,7 +219,7 @@ public class SimpleCache<TKey, TValue> : ICacheStats, IDisposable where TValue :
     /// Looks up <paramref name="key"/> and records a hit or miss based on whether it is actually present -
     /// not on whether <paramref name="value"/> is null, since a cached null value is a valid hit.
     /// </summary>
-    private bool TryGetTrackingStats(TKey key, out TValue value)
+    private bool TryGetInternal(TKey key, out TValue value)
     {
         if (_cacheMap.TryGetValue(key, out value))
         {
