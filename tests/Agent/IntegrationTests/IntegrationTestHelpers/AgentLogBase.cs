@@ -89,6 +89,16 @@ public abstract class AgentLogBase
     public const string WrapperExceptionLogLineRegex = ErrorLogLinePrefixRegex + "An exception occurred in a wrapper";
     public const string ApplicationErrorLogLineRegex = DebugLogLinePrefixRegex + "Noticed application error";
 
+    // A wrapper threw out of BeforeWrappedMethod/AfterWrappedMethod. Distinct
+    // from WrapperExceptionLogLineRegex above, which matches a different message.
+    public const string TracerInvocationErrorLogLineRegex = ErrorLogLinePrefixRegex + "Tracer invocation error";
+
+    // The agent gave up on a wrapper after WrapperExceptionLimit consecutive
+    // failures and swapped in the NoOp wrapper for that functionId. Capture group
+    // 1 is the wrapper type, group 2 is the method it was disabled for.
+    public const string WrapperDisabledLogLineRegex = ErrorLogLinePrefixRegex +
+        @"Wrapper (\S+) is being disabled for (\S+) due to too many consecutive exceptions";
+
     // explain plan failure
     public const string ExplainPlainFailureLogLineRegex = DebugLogLinePrefixRegex + "Unable to execute explain plan for query: (.*)";
 
@@ -663,6 +673,21 @@ public abstract class AgentLogBase
     public int GetApplicationErrorLineCount()
     {
         return TryGetLogLines(ApplicationErrorLogLineRegex).Count();
+    }
+
+    public int GetTracerInvocationErrorLineCount()
+    {
+        return TryGetLogLines(TracerInvocationErrorLogLineRegex).Count();
+    }
+
+    /// <summary>
+    /// Returns the "Wrapper X is being disabled for Y" lines, if any. A non-empty
+    /// result means the agent stopped instrumenting a method for the rest of the
+    /// process lifetime.
+    /// </summary>
+    public IEnumerable<Match> GetWrapperDisabledLines()
+    {
+        return TryGetLogLines(WrapperDisabledLogLineRegex);
     }
 
     #endregion

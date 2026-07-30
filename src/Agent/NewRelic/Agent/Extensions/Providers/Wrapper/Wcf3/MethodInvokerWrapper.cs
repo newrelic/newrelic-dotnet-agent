@@ -63,6 +63,22 @@ public class MethodInvokerWrapper : IWrapper
     private const string InvokeEndMethodName = "InvokeEnd";
     private const string InvokeAsyncMethodName = "InvokeAsync";
     private const string WrapperName = "MethodInvokerWrapper";
+    private const string NullOperationContextMetricPrefix = "WCFService/NullOperationContext";
+    private const string NullOperationContextMetricNameOther = NullOperationContextMetricPrefix + "/Other";
+
+    // Precomputed per-invoker-method metric names for the null-OperationContext bail-out.
+    // This is the granularity at which the wrapper actually gets disabled (the NoOp swap is
+    // keyed per functionId, i.e. one JIT'd method), so it is deliberately not the invocation
+    // style (Sync/APM/TAP) - InvokeEnd's style is ambiguous and is omitted from
+    // _methodNameInvocationTypesDic below, but InvokeEnd can still reach the bail-out.
+    private static readonly Dictionary<string, string> _nullOperationContextMetricNamesByMethod = new Dictionary<string, string>()
+    {
+        { SyncMethodName, NullOperationContextMetricPrefix + "/" + SyncMethodName },
+        { InvokeBeginMethodName, NullOperationContextMetricPrefix + "/" + InvokeBeginMethodName },
+        { InvokeEndMethodName, NullOperationContextMetricPrefix + "/" + InvokeEndMethodName },
+        { InvokeAsyncMethodName, NullOperationContextMetricPrefix + "/" + InvokeAsyncMethodName }
+    };
+
     /// <summary>
     /// Translates the method name to the type of invocation
     /// </summary>
@@ -88,6 +104,11 @@ public class MethodInvokerWrapper : IWrapper
 
     private static IEnumerable<string> ExtractHeaderValue(OperationContext context, string key)
     {
+        if (context == null)
+        {
+            return null;
+        }
+
         string headerValue = null;
 
         if(context.IncomingMessageProperties != null && context.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageAsObject))
@@ -130,6 +151,26 @@ public class MethodInvokerWrapper : IWrapper
     public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
     {
         var transactionAlreadyExists = transaction.IsValid;
+        var instrumentedMethodName = instrumentedMethodCall.MethodCall.Method.MethodName;
+
+        // OperationContext.Current is null when the operation is dispatched off the
+        // WCF request thread (e.g. a custom IOperationInvoker that hands work to a
+        // thread pool thread). Without it there is no URI, no request method, no
+        // request headers and no inbound DT/CAT headers to read, and the same missing
+        // ambient context is why no transaction was found in context storage. Creating
+        // a transaction here would produce a contentless WebTransaction/WCF entry that
+        // is still stored (in ThreadLocalStorage) and harvested, and would be left
+        // orphaned for the next invocation on this thread to adopt. Bail out instead.
+        var operationContext = OperationContext.Current;
+        if (!transactionAlreadyExists && operationContext == null)
+        {
+            var nullOperationContextMetricName = _nullOperationContextMetricNamesByMethod.TryGetValue(instrumentedMethodName, out var perMethodMetricName)
+                ? perMethodMetricName
+                : NullOperationContextMetricNameOther;
+
+            agent.GetExperimentalApi().RecordSupportabilityMetric(nullOperationContextMetricName);
+            return Delegates.NoOp;
+        }
 
         var methodInfo = TryGetMethodInfo(instrumentedMethodCall);
         if (methodInfo == null)
@@ -137,7 +178,6 @@ public class MethodInvokerWrapper : IWrapper
             throw new NullReferenceException("methodInfo");
         }
 
-        var instrumentedMethodName = instrumentedMethodCall.MethodCall.Method.MethodName;
         var parameters = GetParameters(instrumentedMethodCall.MethodCall, methodInfo, instrumentedMethodCall.MethodCall.MethodArguments, agent);
 
         ReportSupportabilityMetric_InvocationMethod(agent, instrumentedMethodName);
@@ -146,7 +186,7 @@ public class MethodInvokerWrapper : IWrapper
         var shouldTryProcessInboundCatOrDT = _methodNamesStart.Contains(instrumentedMethodName);
         var shouldTryEndTransaction = _methodNamesEndTrx.Contains(instrumentedMethodName);
 
-        var uri = OperationContext.Current?.IncomingMessageHeaders?.To;
+        var uri = operationContext?.IncomingMessageHeaders?.To;
 
         var transactionName = GetTransactionName(agent, uri, methodInfo);
 
@@ -164,7 +204,7 @@ public class MethodInvokerWrapper : IWrapper
 
             transaction.GetExperimentalApi().SetWrapperToken(_wrapperToken);
 
-            CaptureHttpRequestHeadersAndMethod(agent, transaction);
+            CaptureHttpRequestHeadersAndMethod(agent, transaction, operationContext);
         }
 
         var requestPath = uri?.AbsolutePath;
@@ -189,7 +229,7 @@ public class MethodInvokerWrapper : IWrapper
             {
                 var transportType = TransportType.Other;
 
-                var msgProperties = OperationContext.Current?.IncomingMessageProperties;
+                var msgProperties = operationContext?.IncomingMessageProperties;
                 if (msgProperties != null && msgProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageObject))
                 {
                     if (httpRequestMessageObject is HttpRequestMessageProperty)
@@ -198,7 +238,7 @@ public class MethodInvokerWrapper : IWrapper
                     }
                 }
 
-                transaction.AcceptDistributedTraceHeaders(OperationContext.Current, ExtractHeaderValue, transportType);
+                transaction.AcceptDistributedTraceHeaders(operationContext, ExtractHeaderValue, transportType);
             }
         }
 
@@ -320,9 +360,13 @@ public class MethodInvokerWrapper : IWrapper
             });
     }
 
-    private void CaptureHttpRequestHeadersAndMethod(IAgent agent, ITransaction transaction)
+    private void CaptureHttpRequestHeadersAndMethod(IAgent agent, ITransaction transaction, OperationContext context)
     {
-        var context = OperationContext.Current;
+        if (context == null)
+        {
+            return;
+        }
+
         if (context.IncomingMessageProperties != null
             && context.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageAsObject)
             && httpRequestMessageAsObject is HttpRequestMessageProperty httpRequestMessage)
@@ -377,6 +421,11 @@ public class MethodInvokerWrapper : IWrapper
             return;
         }
 
+        if (context == null)
+        {
+            return;
+        }
+
         var headersToAttach = transaction.GetResponseMetadata();
         foreach (var header in headersToAttach)
         {
@@ -384,7 +433,7 @@ public class MethodInvokerWrapper : IWrapper
             var outgoingMessageHeaders = context.OutgoingMessageHeaders;
             if (outgoingMessageHeaders != null && outgoingMessageHeaders.MessageVersion.Envelope != EnvelopeVersion.None)
             {
-                context.OutgoingMessageHeaders.Add(MessageHeader.CreateHeader(header.Key, "", header.Value));
+                outgoingMessageHeaders.Add(MessageHeader.CreateHeader(header.Key, "", header.Value));
             }
 
             AddHeaderToHttpResponsePropertyForOutgoingMessage(header, context);
