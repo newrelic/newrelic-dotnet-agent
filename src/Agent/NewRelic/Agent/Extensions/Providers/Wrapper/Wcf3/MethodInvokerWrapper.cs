@@ -169,6 +169,9 @@ public class MethodInvokerWrapper : IWrapper
                 : NullOperationContextMetricNameOther;
 
             agent.GetExperimentalApi().RecordSupportabilityMetric(nullOperationContextMetricName);
+
+            agent.Logger.Finest($"{WrapperName}: OperationContext.Current was null in {instrumentedMethodName} (operation likely dispatched off the WCF request thread). Not instrumenting this invocation.");
+
             return Delegates.NoOp;
         }
 
