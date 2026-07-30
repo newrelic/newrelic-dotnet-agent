@@ -25,8 +25,6 @@ on:
 env:
   DOTNET_NOLOGO: true
   NR_DEV_BUILD_HOME: false
-  # Static list of all Distro trait values present in Container Integration Tests
-  CONTAINER_TEST_DISTROS: Debian,Ubuntu,Alpine,Centos,Amazon,Fedora
 
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
@@ -39,46 +37,90 @@ permissions:
 
 jobs:
 
+  # Static guard, not a test run: verifies that every concrete container test
+  # class is selected by exactly one matrix entry below (see
+  # build/Scripts/check-container-test-coverage.py). Runs once per workflow
+  # run, independent of the matrix job, so a missing/miswired trait fails
+  # fast without waiting on Docker or a built agent.
+  check-test-coverage:
+    name: Check Container Test Coverage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Check container test coverage
+        run: python3 build/Scripts/check-container-test-coverage.py --verbose
+
   linux-container-tests:
-    name: Container Test (${{ matrix.distro }}/${{ matrix.arch }})
+    name: Container Test (${{ matrix.name }}/${{ matrix.arch }})
     # Runner chosen per matrix entry
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # amd64 distros (all test types)
+          # amd64 OS compatibility distros
           - arch: amd64
-            distro: Debian
+            name: Ubuntu
             runner: ubuntu-latest
+            filter: "Architecture=amd64&Distro=Ubuntu"
           - arch: amd64
-            distro: Ubuntu
+            name: Alpine
             runner: ubuntu-latest
+            filter: "Architecture=amd64&Distro=Alpine"
           - arch: amd64
-            distro: Alpine
+            name: Centos
             runner: ubuntu-latest
+            filter: "Architecture=amd64&Distro=Centos"
           - arch: amd64
-            distro: Centos
+            name: Amazon
             runner: ubuntu-latest
+            filter: "Architecture=amd64&Distro=Amazon"
           - arch: amd64
-            distro: Amazon
+            name: Fedora
             runner: ubuntu-latest
-          - arch: amd64
-            distro: Fedora
-            runner: ubuntu-latest
-          # arm64 distros (subset of tests implemented)
+            filter: "Architecture=amd64&Distro=Fedora"
+          # arm64 OS compatibility distros (subset of tests implemented)
           - arch: arm64
-            distro: Debian
+            name: Ubuntu
             runner: ubuntu-24.04-arm
+            filter: "Architecture=arm64&Distro=Ubuntu"
           - arch: arm64
-            distro: Ubuntu
+            name: Amazon
             runner: ubuntu-24.04-arm
+            filter: "Architecture=arm64&Distro=Amazon"
           - arch: arm64
-            distro: Amazon
+            name: Fedora
             runner: ubuntu-24.04-arm
-          - arch: arm64
-            distro: Fedora
-            runner: ubuntu-24.04-arm
+            filter: "Architecture=arm64&Distro=Fedora"
+          # amd64 feature-area groupings (moved off Distro=Ubuntu to spread load)
+          - arch: amd64
+            name: Core
+            runner: ubuntu-latest
+            filter: "Architecture=amd64&TestArea=Core"
+          - arch: amd64
+            name: Messaging
+            runner: ubuntu-latest
+            filter: "Architecture=amd64&TestArea=Messaging"
+          - arch: amd64
+            name: Aws
+            runner: ubuntu-latest
+            filter: "Architecture=amd64&TestArea=Aws"
+          - arch: amd64
+            name: Datastore
+            runner: ubuntu-latest
+            filter: "Architecture=amd64&TestArea=Datastore"
 
     env:
       test_results_path: tests/TestResults
@@ -146,7 +188,7 @@ jobs:
             set +e
             dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj \
               --framework net10.0 \
-              --filter "Architecture=${{ matrix.arch }}&Distro=${{ matrix.distro }}" \
+              --filter "${{ matrix.filter }}" \
               --logger "console;verbosity=detailed" \
               --logger "trx;verbosity=detailed" \
               --results-directory ${{ env.test_results_path }}
@@ -154,19 +196,19 @@ jobs:
             set -e
             if [ $exit_code -eq 0 ]; then
               if [ $attempt -gt 1 ]; then
-                echo "::warning::Container tests for ${{ matrix.arch }}/${{ matrix.distro }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
+                echo "::warning::Container tests for ${{ matrix.arch }}/${{ matrix.name }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
                 # Best-effort flaky-retry telemetry (never fails the job).
                 RETRY_TEST_TYPE="containerTests" \
-                RETRY_TEST_GROUP="${{ matrix.arch }}/${{ matrix.distro }}" \
+                RETRY_TEST_GROUP="${{ matrix.arch }}/${{ matrix.name }}" \
                   bash build/Scripts/report-flaky-retry.sh || true
               fi
               break
             fi
             if [ $attempt -ge $max_attempts ]; then
-              echo "Container tests for ${{ matrix.arch }}/${{ matrix.distro }} failed after $attempt attempt(s) (exit code $exit_code)."
+              echo "Container tests for ${{ matrix.arch }}/${{ matrix.name }} failed after $attempt attempt(s) (exit code $exit_code)."
               exit $exit_code
             fi
-            echo "Container tests for ${{ matrix.arch }}/${{ matrix.distro }} failed on attempt $attempt (exit code $exit_code); retrying once to absorb a possible transient blip..."
+            echo "Container tests for ${{ matrix.arch }}/${{ matrix.name }} failed on attempt $attempt (exit code $exit_code); retrying once to absorb a possible transient blip..."
             attempt=$((attempt + 1))
             sleep 10
           done
@@ -174,8 +216,8 @@ jobs:
       - name: Extract payload bytes log from TRX
         if: inputs.aggregate_payload_data == true
         run: |
-          PAYLOAD_LOG="${{ env.test_results_path }}/${{ matrix.arch }}_${{ matrix.distro }}_payload_bytes.json"
-          COUNT_LOG="${{ env.test_results_path }}/${{ matrix.arch }}_${{ matrix.distro }}_test_count.json"
+          PAYLOAD_LOG="${{ env.test_results_path }}/${{ matrix.arch }}_${{ matrix.name }}_payload_bytes.json"
+          COUNT_LOG="${{ env.test_results_path }}/${{ matrix.arch }}_${{ matrix.name }}_test_count.json"
           echo "Searching for TRX files in: ${{ env.test_results_path }}"
 
           # Find all TRX files
@@ -227,7 +269,7 @@ jobs:
         if: inputs.aggregate_payload_data == true
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: linux-container-payload-bytes-${{ matrix.arch }}-${{ matrix.distro }}
+          name: linux-container-payload-bytes-${{ matrix.arch }}-${{ matrix.name }}
           path: |
             ${{ env.test_results_path }}/*_payload_bytes.json
             ${{ env.test_results_path }}/*_test_count.json
@@ -237,7 +279,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ContainerTestResults-${{ matrix.arch }}-${{ matrix.distro }}
+          name: ContainerTestResults-${{ matrix.arch }}-${{ matrix.name }}
           path: ${{ env.test_results_path }}
 
   aggregate-linux-container-payload-logs:

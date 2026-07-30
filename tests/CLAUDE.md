@@ -131,6 +131,19 @@ Staging's connect response sets `event_harvest_config.report_period_ms=5000`, so
 
 The repo-root `test.runsettings` holds only NUnit naming settings and is auto-applied to **unit-test** projects via `RunSettingsFilePath` in their csproj (don't pass `--settings` by hand). It is **not** wired into integration projects, and CI runs those via the built exe (`NewRelic.Agent.IntegrationTests.exe -namespace ...`), so no run-settings file applies there.
 
+### Container tests: Distro vs TestArea traits
+
+`linux_container_tests.yml`'s matrix selects which `ContainerIntegrationTests` classes run per job via an xunit `--filter` on two **disjoint** trait axes -- a class must carry exactly one combination that exactly one matrix entry asks for:
+
+- `[Trait("Distro", "...")]` -- **OS-compatibility smoke tests only** (current values: `Ubuntu`, `Alpine`, `Centos`, `Amazon`, `Fedora`). Do not add new functional coverage here; it does not scale (this is what previously piled 15+ unrelated classes onto `Distro=Ubuntu`).
+- `[Trait("TestArea", "...")]` -- **functional test groupings** (current values: `Core`, `Messaging`, `Aws`, `Datastore`).
+
+**A new functional container test class must get a `TestArea` trait, never `Distro`.** Reuse an existing `TestArea` value where it fits. Adding a **new** `TestArea` value requires adding a matching matrix `include:` entry in `linux_container_tests.yml` (filter `Architecture=<arch>&TestArea=<value>`), or the coverage guard below fails the build with a "selected by NO matrix entry" error.
+
+Both `Distro` and `TestArea` traits may be declared on an **abstract base class** and inherited by concrete subclasses (e.g. `AwsSdkSQSTestBase` carries `TestArea=Aws`; its two concrete subclasses inherit it without redeclaring). Only concrete classes need a selector; abstract bases never need one.
+
+A static guard enforces all of this: `build/Scripts/check-container-test-coverage.py` (Python 3, `pip install pyyaml`) parses the matrix out of `linux_container_tests.yml`, resolves every concrete test class's effective traits (own traits win over inherited ones), and fails if any class is selected by zero or more than one matrix entry; it also warns (non-fatally) on a matrix entry that selects zero classes. It runs as its own fast job (`check-test-coverage`) in `linux_container_tests.yml`, independent of the Docker-based matrix job. Run it locally after adding/moving a container test: `python build/Scripts/check-container-test-coverage.py --verbose`.
+
 ## Performance tests
 
 Agent-overhead harness under `tests/Agent/PerformanceTests/` -- Python-orchestrated, not `dotnet test`. Components: `PerformanceTestApp/` (ASP.NET Core workload), `TrafficDriver/` (Locust, enforces <1% error rate), `ReportGenerator/` (ScottPlot charts + `summary.md`), `run-perf-test.py` (single run), `run-perf-comparison.py` (multiple configs from `compare.yml`). The runner bind-mounts an agent-home dir into the container at `/usr/local/newrelic-dotnet-agent` and sets `CORECLR_ENABLE_PROFILING` (0 for the no-agent baseline); `agent-home/` is repopulated and cleared between runs. Needs Docker Desktop (Linux containers), Python 3, `pip install pyyaml`. Full reference: [PerformanceTests/README.md](Agent/PerformanceTests/README.md).

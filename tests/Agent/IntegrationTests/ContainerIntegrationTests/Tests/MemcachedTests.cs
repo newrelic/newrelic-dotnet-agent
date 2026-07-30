@@ -129,7 +129,7 @@ public abstract class LinuxMemcachedTest<T> : NewRelicIntegrationTest<T> where T
 
 [Collection("MemcachedTests")]
 [Trait("Architecture", "amd64")]
-[Trait("Distro", "Ubuntu")]
+[Trait("TestArea", "Datastore")]
 public class MemcachedDotNet8Test : LinuxMemcachedTest<MemcachedDotNet8TestFixture>
 {
     public MemcachedDotNet8Test(MemcachedDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -139,7 +139,7 @@ public class MemcachedDotNet8Test : LinuxMemcachedTest<MemcachedDotNet8TestFixtu
 
 [Collection("MemcachedTests")]
 [Trait("Architecture", "amd64")]
-[Trait("Distro", "Ubuntu")]
+[Trait("TestArea", "Datastore")]
 public class MemcachedDotNet10Test : LinuxMemcachedTest<MemcachedDotNet10TestFixture>
 {
     public MemcachedDotNet10Test(MemcachedDotNet10TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
