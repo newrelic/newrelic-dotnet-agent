@@ -2,7 +2,7 @@
 
 Layout, conventions, and the non-obvious facts for **writing** tests.
 - **Running** integration tests -> `run-integration-tests` skill (build-first, layer pick, CLI, env gotchas, troubleshooting). Don't duplicate it here.
-- **Building** first -> `build-dotnet-agent` skill. CLI build workarounds (`Core.UnitTest` `SolutionDir`, Extensions DLL-direct) and the no-unit-tests-for-wrappers rule -> [root claude.md](../CLAUDE.md).
+- **Building** first -> `build-dotnet-agent` skill. CLI build workarounds (`Core.UnitTest` `SolutionDir`, Extensions DLL-direct) and the no-unit-tests-for-wrappers rule -> [root claude.md](../CLAUDE.md). Building the **integration test solutions** themselves needs VS MSBuild + three specific flags -> [Building the solution](#building-the-solution) below.
 
 Five layers, all integration layers read the built `src/Agent/newrelichome_*` dirs (build `FullAgent.sln` first):
 
@@ -48,6 +48,26 @@ tests/Agent/
 - **Never `InternalsVisibleTo`** -- refactor the production type instead (root claude.md).
 
 ## Integration tests
+
+### Building the solution
+
+`IntegrationTests.sln` / `UnboundedIntegrationTests.sln` need **VS MSBuild** with all three of these flags -- use the CI invocation verbatim (`all_solutions.yml`):
+
+```
+"C:\Program Files\Microsoft Visual Studio\<ver>\Enterprise\MSBuild\Current\Bin\MSBuild.exe" \
+  tests/Agent/IntegrationTests/IntegrationTests.sln \
+  -restore -m -p:Configuration=Debug -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy
+```
+
+Each omission produces a different misleading error in the legacy ASP.NET FW web apps -- none of them a real code break:
+
+| Wrong invocation | Error |
+|---|---|
+| `dotnet build` (any flags) | `MSB4019: Microsoft.WebApplication.targets was not found` -- `VSToolsPath` resolves under the dotnet SDK |
+| missing `-restore` | `error: Your project file doesn't list 'win' as a "RuntimeIdentifier"` (packages.config projects) |
+| missing `DeployOnBuild`/`PublishProfile` | `MSB4006: circular dependency ... involving target "Deploy"` (~11 projects) |
+
+`MSB3027/MSB3021: cannot copy netstandard.dll ... locked by ".NET Host (<pid>)"` is a persistent MSBuild worker node left over from an earlier `dotnet build` -- clear it with `dotnet build-server shutdown`, not by killing PIDs.
 
 Pattern: start a test app with the agent attached, exercise it, wait for a harvest, assert on the parsed agent log.
 

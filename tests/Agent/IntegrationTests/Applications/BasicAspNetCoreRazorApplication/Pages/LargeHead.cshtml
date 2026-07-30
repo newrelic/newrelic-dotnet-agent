@@ -1,0 +1,27 @@
+@page
+@{
+    Layout = null;
+}
+@*
+    Page for BrowserAgentAutoInjectionLargeHead (GitHub issue #3725). The oversized
+    <head> is the point: it must exceed the response writer's buffer so that <body>
+    lands in a later write to the response body than <head>, which is what used to
+    make the agent inject the RUM script twice. Do not shrink the filler loop or use
+    a shared layout - either change makes the test pass for the wrong reason.
+
+    The injection anchor here is the charset <meta> tag (the agent prefers the last
+    charset / x-ua-compatible meta tag in the head over the opening <head> tag), so
+    keep that tag ahead of the filler.
+*@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8" />
+<title>Large Head</title>
+<style>
+@for (var i = 0; i < 8000; i++)
+{
+    @Html.Raw($".filler-{i} {{ color: #abcdef; content: \"padding padding padding padding padding\"; }}\n")
+}
+</style>
+</head><body>
+Large head page
+</body></html>

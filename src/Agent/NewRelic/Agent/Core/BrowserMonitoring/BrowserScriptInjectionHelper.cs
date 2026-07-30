@@ -17,8 +17,8 @@ public static class BrowserScriptInjectionHelper
     /// <param name="baseStream"></param>
     /// <param name="rumBytes"></param>
     /// <param name="transaction"></param>
-    /// <returns></returns>
-    public static async Task InjectBrowserScriptAsync(byte[] buffer, Stream baseStream, byte[] rumBytes, ITransaction transaction)
+    /// <returns>True if the RUM script was actually written into the stream; false if the buffer was written through unmodified.</returns>
+    public static async Task<bool> InjectBrowserScriptAsync(byte[] buffer, Stream baseStream, byte[] rumBytes, ITransaction transaction)
     {
         var index = BrowserScriptInjectionIndexHelper.TryFindInjectionIndex(buffer);
         if (index == -1)
@@ -26,33 +26,36 @@ public static class BrowserScriptInjectionHelper
             // not found, can't inject anything
             transaction?.LogFinest("Skipping RUM Injection: No suitable location found to inject script.");
             await TryWriteStreamAsync(baseStream, buffer, 0, buffer.Length, transaction);
-            return;
+            return false;
         }
 
         transaction?.LogFinest($"Injecting RUM script at byte index {index}.");
 
-        if (index < buffer.Length) // validate index is less than buffer length
-        {
-            // Write everything up to the insertion index
-            await TryWriteStreamAsync(baseStream, buffer, 0, index, transaction);
-            // Write the RUM script
-            await TryWriteStreamAsync(baseStream, rumBytes, 0, rumBytes.Length, transaction);
-            // Write the rest of the doc, starting after the insertion index
-            await TryWriteStreamAsync(baseStream, buffer, index, buffer.Length - index, transaction);
-        }
-        else
-            transaction?.LogFinest($"Skipping RUM Injection: Insertion index was invalid.");
+        // TryFindInjectionIndex returns an index within the buffer, or an index equal to the
+        // buffer length when the matched tag ends exactly at the end of this buffer - in which
+        // case the script is appended and the trailing write covers zero bytes.
+
+        // Write everything up to the insertion index
+        await TryWriteStreamAsync(baseStream, buffer, 0, index, transaction);
+        // Write the RUM script
+        var scriptWritten = await TryWriteStreamAsync(baseStream, rumBytes, 0, rumBytes.Length, transaction);
+        // Write the rest of the doc, starting after the insertion index
+        await TryWriteStreamAsync(baseStream, buffer, index, buffer.Length - index, transaction);
+
+        return scriptWritten;
     }
 
-    private static async Task TryWriteStreamAsync(Stream stream, byte[] buffer, int offset, int count, ITransaction transaction)
+    private static async Task<bool> TryWriteStreamAsync(Stream stream, byte[] buffer, int offset, int count, ITransaction transaction)
     {
         try
         {
             await stream.WriteAsync(buffer, offset, count);
+            return true;
         }
         catch (ObjectDisposedException)
         {
             transaction?.LogFinest("RUM Injection aborted: Stream was disposed.");
+            return false;
         }
     }
 }

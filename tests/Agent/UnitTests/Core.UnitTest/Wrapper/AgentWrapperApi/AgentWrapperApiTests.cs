@@ -3,9 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
@@ -2305,6 +2308,55 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             // Assert
             Assert.That(actualAttributes.ContainsKey(attributeName), Is.False);
         }
+        #endregion
+
+        #region TryInjectBrowserScriptAsync
+
+        [Test]
+        public async Task TryInjectBrowserScriptAsync_ReturnsFalse_AndWritesBufferUnchanged_WhenNoScriptIsAvailable()
+        {
+            // with the prereq checker declining, no script is produced, so there is
+            // nothing to inject; the buffer must still be written through untouched
+            Mock.Arrange(() => _browserMonitoringPrereqChecker.ShouldAutomaticallyInject(Arg.IsAny<IInternalTransaction>(), Arg.IsAny<string>(), Arg.IsAny<string>()))
+                .Returns(false);
+
+            var buffer = Encoding.UTF8.GetBytes("<html><head></head><body></body></html>");
+            using var baseStream = new MemoryStream();
+
+            var result = await _agent.TryInjectBrowserScriptAsync("text/html", "/some/path", buffer, baseStream);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result, Is.False);
+                Assert.That(baseStream.ToArray(), Is.EqualTo(buffer));
+            });
+        }
+
+        [Test]
+        public async Task TryInjectBrowserScriptAsync_ReturnsTrue_AndWritesScriptIntoBuffer_WhenScriptIsAvailable()
+        {
+            const string script = "<script>RUM</script>";
+
+            SetupTransaction();
+            Mock.Arrange(() => _browserMonitoringPrereqChecker.ShouldAutomaticallyInject(Arg.IsAny<IInternalTransaction>(), Arg.IsAny<string>(), Arg.IsAny<string>()))
+                .Returns(true);
+            Mock.Arrange(() => _browserMonitoringScriptMaker.GetScript(Arg.IsAny<IInternalTransaction>(), Arg.IsAny<string>()))
+                .Returns(script);
+
+            var buffer = Encoding.UTF8.GetBytes("<html><head></head><body></body></html>");
+            using var baseStream = new MemoryStream();
+
+            var result = await _agent.TryInjectBrowserScriptAsync("text/html", "/some/path", buffer, baseStream);
+
+            var written = Encoding.UTF8.GetString(baseStream.ToArray());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result, Is.True);
+                Assert.That(written, Is.EqualTo("<html><head>" + script + "</head><body></body></html>"));
+            });
+        }
+
         #endregion
 
         private void SetupTransaction()
