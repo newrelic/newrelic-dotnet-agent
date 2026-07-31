@@ -61,6 +61,16 @@ public class Program
                 }));
         });
 
+        // Writes an HTML document in two explicit writes, split exactly on the closing '>'
+        // of the opening <head> tag. That puts the RUM injection index exactly at the end of
+        // the first write's buffer - see BrowserAgentAutoInjectionSplitHead.
+        app.MapGet("/splithead", async context =>
+        {
+            context.Response.ContentType = "text/html; charset=utf-8";
+            await context.Response.WriteAsync("<html><head>");
+            await context.Response.WriteAsync("</head><body>split head page</body></html>");
+        });
+
         app.Urls.Add($"http://127.0.0.1:{_port}");
 
         var task = app.RunAsync(ct.Token);
