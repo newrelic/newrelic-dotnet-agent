@@ -4,7 +4,6 @@
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using Telerik.JustMock;
 using realWireModels = NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.WireModels;
@@ -17,10 +16,7 @@ public class MetricBuilderTests
     [SetUp]
     public void SetUp()
     {
-        var metricNameService = Mock.Create<IMetricNameService>();
-        Mock.Arrange(() => metricNameService.RenameMetric(Arg.IsAny<string>()))
-            .Returns(metricName => metricName);
-        _metricBuilder = new MetricWireModel.MetricBuilder(metricNameService);
+        _metricBuilder = new MetricWireModel.MetricBuilder();
     }
 
     [Test]
