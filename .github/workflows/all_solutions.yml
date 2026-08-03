@@ -38,6 +38,15 @@ env:
   tools_path: ${{ github.workspace }}\build\Tools
   DOTNET_NOLOGO: true
 
+  # Dependabot Full CI Dispatch relaunches this workflow via workflow_dispatch against a
+  # dependabot/* branch. Those runs need the build and the test suites, not a signed MSI or
+  # signed Linux packages, so everything that touches signing material is skipped for them --
+  # keeping the signing cert and GPG key off a runner that just executed build logic from a
+  # package version nobody has reviewed. Steps gate on `env.skip_signing != 'true'`; the
+  # packaging jobs gate on build-fullagent-msi's skipSigning output, since job-level `if`
+  # cannot see `env`. Never true for a pull_request run: ref_name is <pr>/merge there.
+  skip_signing: ${{ github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'dependabot/') }}
+
 jobs:
   check-modified-files:
     name: Check if source files were modified, skip remaining jobs if not
@@ -73,9 +82,12 @@ jobs:
     needs:
       - check-modified-files
       - shellcheck
-    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
+    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well.
+    # workflow_dispatch is exempt from the Dependabot exclusion: Dependabot Full CI Dispatch
+    # relaunches this workflow via workflow_dispatch against a Dependabot branch, and that run is
+    # not a Dependabot event, so it has full access to secrets and must not be skipped.
     # run this job if source files were modified, or if triggered by a release, a manual execution or schedule
-    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    if: (github.event_name == 'workflow_dispatch' || github.actor != 'dependabot[bot]') && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
@@ -83,6 +95,8 @@ jobs:
 
     outputs:
       agentVersion: ${{ steps.agentVersion.outputs.version }}
+      # Re-exported so the packaging jobs can gate on it: job-level `if` cannot read `env`.
+      skipSigning: ${{ env.skip_signing }}
 
     steps:
       - name: Checkout
@@ -130,8 +144,11 @@ jobs:
             ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
           if-no-files-found: error
 
+      # Signing and MSI build are skipped for the Dependabot dispatch (see note above the jobs).
+      # The build and homefolders artifact above are all the test suites need.
       - name: Convert Code Signing Certificate Into File
         id: write_cert
+        if: env.skip_signing != 'true'
         run: |
           $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
           $bytes = [Convert]::FromBase64String('${{ secrets.SIGNING_CERT }}')
@@ -140,6 +157,7 @@ jobs:
         shell: powershell
 
       - name: Install Code Signing Certificate
+        if: env.skip_signing != 'true'
         run: |
           Write-Host "certutil.exe -f -user -p <passphrase> -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot"
           certutil.exe -f -user -p ${{ secrets.CERT_PASSPHRASE }} -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot
@@ -147,21 +165,25 @@ jobs:
 
 
       - name: Add msbuild to PATH (required for MsiInstaller build)
+        if: env.skip_signing != 'true'
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
 
       - name: Build MsiInstaller.sln x86
+        if: env.skip_signing != 'true'
         run: |
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}
         shell: powershell
 
       - name: Build MsiInstaller.sln x64
+        if: env.skip_signing != 'true'
         run: |
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
         shell: powershell
 
       - name: Archive msi _build Artifacts
+        if: env.skip_signing != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: msi-build-folder-artifacts
@@ -190,7 +212,7 @@ jobs:
   get-test-namespaces:
     name: Get Test Namespaces
     needs: check-modified-files
-    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    if: (github.event_name == 'workflow_dispatch' || github.actor != 'dependabot[bot]') && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     runs-on: ubuntu-latest
     outputs:
       integration-namespaces: ${{ steps.compute.outputs.integration }}
@@ -634,13 +656,6 @@ jobs:
           dotnet-quality: 'ga'
 
       - name: Run Integration Tests
-        env:
-          NR_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
-          CI_BRANCH: ${{ github.ref_name }}
-          CI_COMMIT: ${{ github.sha }}
-          CI_RUN_ID: ${{ github.run_id }}
-          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          CI_TRIGGER: ${{ github.event_name }}
         run: |
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "List ports in use"
@@ -677,10 +692,13 @@ jobs:
             if ($exitCode -eq 0) {
               if ($attempt -gt 1) {
                 Write-Host "::warning::Integration tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
-                # Best-effort flaky-retry telemetry (never fails the job).
-                $env:RETRY_TEST_TYPE = "integrationTests"
-                $env:RETRY_TEST_GROUP = "${{ matrix.namespace }}"
-                & bash build/Scripts/report-flaky-retry.sh
+                # Record the flaky retry to a marker file under RUNNER_TEMP, which the
+                # failure-artifact upload globs never collect. Reporting runs in the separate
+                # step below so that no secret is in scope for this step: HostedWebCore and
+                # other test hosts launched here write their environment to the console, and
+                # that console output is captured into the test results.
+                $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
+                @{ testType = "integrationTests"; testGroup = "${{ matrix.namespace }}" } | ConvertTo-Json | Out-File -FilePath $marker -Encoding UTF8
               }
               break
             }
@@ -699,6 +717,28 @@ jobs:
 
             Write-Host "Get .NET Runtime errors (if any)"
             Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
+          }
+        shell: powershell
+
+      - name: Report flaky retry telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
+          NR_CI_ACCOUNT_ID: ${{ secrets.NR_CI_ACCOUNT_ID }}
+          CI_BRANCH: ${{ github.ref_name }}
+          CI_COMMIT: ${{ github.sha }}
+          CI_RUN_ID: ${{ github.run_id }}
+          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CI_TRIGGER: ${{ github.event_name }}
+        run: |
+          $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
+          if (Test-Path $marker) {
+            $info = Get-Content $marker | ConvertFrom-Json
+            $Env:RETRY_TEST_TYPE = $info.testType
+            $Env:RETRY_TEST_GROUP = $info.testGroup
+            & bash build/Scripts/report-flaky-retry.sh
+            Remove-Item $marker -Force -ErrorAction Ignore
           }
         shell: powershell
 
@@ -781,7 +821,6 @@ jobs:
           name: integration-test-results-${{ matrix.namespace }}
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
-            C:\IntegrationTestWorkingDirectory\**\*.config
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
@@ -880,13 +919,6 @@ jobs:
           dotnet-quality: 'ga'
   
       - name: Run Unbounded Integration Tests
-        env:
-          NR_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
-          CI_BRANCH: ${{ github.ref_name }}
-          CI_COMMIT: ${{ github.sha }}
-          CI_RUN_ID: ${{ github.run_id }}
-          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          CI_TRIGGER: ${{ github.event_name }}
         run: |
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "List ports in use"
@@ -917,10 +949,13 @@ jobs:
             if ($exitCode -eq 0) {
               if ($attempt -gt 1) {
                 Write-Host "::warning::Unbounded tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
-                # Best-effort flaky-retry telemetry (never fails the job).
-                $env:RETRY_TEST_TYPE = "unboundedTests"
-                $env:RETRY_TEST_GROUP = "${{ matrix.namespace }}"
-                & bash build/Scripts/report-flaky-retry.sh
+                # Record the flaky retry to a marker file under RUNNER_TEMP, which the
+                # failure-artifact upload globs never collect. Reporting runs in the separate
+                # step below so that no secret is in scope for this step: HostedWebCore and
+                # other test hosts launched here write their environment to the console, and
+                # that console output is captured into the test results.
+                $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
+                @{ testType = "unboundedTests"; testGroup = "${{ matrix.namespace }}" } | ConvertTo-Json | Out-File -FilePath $marker -Encoding UTF8
               }
               break
             }
@@ -939,6 +974,28 @@ jobs:
 
             Write-Host "Get .NET Runtime errors (if any)"
             Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
+          }
+        shell: powershell
+
+      - name: Report flaky retry telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
+          NR_CI_ACCOUNT_ID: ${{ secrets.NR_CI_ACCOUNT_ID }}
+          CI_BRANCH: ${{ github.ref_name }}
+          CI_COMMIT: ${{ github.sha }}
+          CI_RUN_ID: ${{ github.run_id }}
+          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CI_TRIGGER: ${{ github.event_name }}
+        run: |
+          $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
+          if (Test-Path $marker) {
+            $info = Get-Content $marker | ConvertFrom-Json
+            $Env:RETRY_TEST_TYPE = $info.testType
+            $Env:RETRY_TEST_GROUP = $info.testGroup
+            & bash build/Scripts/report-flaky-retry.sh
+            Remove-Item $marker -Force -ErrorAction Ignore
           }
         shell: powershell
 
@@ -1021,7 +1078,6 @@ jobs:
           name: unbounded-test-working-directory-${{ matrix.namespace }}
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
-            C:\IntegrationTestWorkingDirectory\**\*.config
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
@@ -1029,6 +1085,10 @@ jobs:
     needs: build-fullagent-msi
     name: Create RPM Package
     runs-on: ubuntu-22.04
+    # Skipped for the Dependabot dispatch: signs with NEW_GPG_KEY, and needs an MSI artifact
+    # that run does not produce. Compared against 'false' so an unresolved output skips this
+    # job rather than running it with the signing key.
+    if: needs.build-fullagent-msi.outputs.skipSigning == 'false'
 
     steps:
       - name: Harden Runner
@@ -1094,6 +1154,10 @@ jobs:
     needs: build-fullagent-msi
     name: Create Debian package
     runs-on: ubuntu-22.04
+    # Skipped for the Dependabot dispatch: signs with NEW_GPG_KEY, and needs an MSI artifact
+    # that run does not produce. Compared against 'false' so an unresolved output skips this
+    # job rather than running it with the signing key.
+    if: needs.build-fullagent-msi.outputs.skipSigning == 'false'
 
     steps:
       - name: Harden Runner
@@ -1145,6 +1209,8 @@ jobs:
     needs: [create-package-rpm, create-package-deb]
     name: Run ArtifactBuilder
     runs-on: windows-2022
+    # No explicit gate needed: both packaging jobs it needs are skipped for the Dependabot
+    # dispatch, which skips this job with them.
 
     steps:
       - name: Install latest .NET 10 SDK
@@ -1411,7 +1477,7 @@ jobs:
         env:
           PAYLOAD_SUMMARY_FILE: final_payload_summary.json
           NR_METRIC_API_URL: https://staging-metric-api.newrelic.com/metric/v1
-          NR_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
           CI_BRANCH: ${{ github.ref_name }}
           CI_COMMIT: ${{ github.sha }}
           CI_RUN_ID: ${{ github.run_id }}
