@@ -80,23 +80,23 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = $"DotNet/Kinesis/CreateStream/{_streamName}", callCount = 1},
-            new() { metricName = $"DotNet/Kinesis/CreateStream/{_streamName}", callCount = 1, metricScope = createStreamScope},
-            new() { metricName = $"DotNet/Kinesis/ListStreams", callCount = 1},
-            new() { metricName = $"DotNet/Kinesis/ListStreams", callCount = 1, metricScope = listStreamsScope},
-            new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer/{_streamName}", callCount = 1},
-            new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer/{_streamName}", callCount = 1, metricScope = registerStreamConsumerScope},
-            new() { metricName = $"DotNet/Kinesis/ListStreamConsumers/{_streamName}", callCount = 1},
-            new() { metricName = $"DotNet/Kinesis/ListStreamConsumers/{_streamName}", callCount = 1, metricScope = listStreamConsumersScope},
-            new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 2}, // one for PutRecordAsync and one for PutRecordsAsync
-            new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 1, metricScope = putRecordScope},
-            new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", callCount = 1, metricScope = putRecordsScope},
-            new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Named/Unknown", callCount = 1}, // The instrumentation is unable to get the stream name from GetRecords requests
-            new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Named/Unknown", callCount = 1, metricScope = getRecordsScope},
-            new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer/{_streamName}", callCount = 1},
-            new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer/{_streamName}", callCount = 1, metricScope = deregisterStreamConsumerScope},
-            new() { metricName = $"DotNet/Kinesis/DeleteStream/{_streamName}", callCount = 1},
-            new() { metricName = $"DotNet/Kinesis/DeleteStream/{_streamName}", callCount = 1, metricScope = deleteStreamScope},
+            new() { metricName = $"DotNet/Kinesis/CreateStream/{_streamName}", CallCountAllHarvests = 1},
+            new() { metricName = $"DotNet/Kinesis/CreateStream/{_streamName}", CallCountAllHarvests = 1, metricScope = createStreamScope},
+            new() { metricName = $"DotNet/Kinesis/ListStreams", CallCountAllHarvests = 1},
+            new() { metricName = $"DotNet/Kinesis/ListStreams", CallCountAllHarvests = 1, metricScope = listStreamsScope},
+            new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer/{_streamName}", CallCountAllHarvests = 1},
+            new() { metricName = $"DotNet/Kinesis/RegisterStreamConsumer/{_streamName}", CallCountAllHarvests = 1, metricScope = registerStreamConsumerScope},
+            new() { metricName = $"DotNet/Kinesis/ListStreamConsumers/{_streamName}", CallCountAllHarvests = 1},
+            new() { metricName = $"DotNet/Kinesis/ListStreamConsumers/{_streamName}", CallCountAllHarvests = 1, metricScope = listStreamConsumersScope},
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", CallCountAllHarvests = 2}, // one for PutRecordAsync and one for PutRecordsAsync
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", CallCountAllHarvests = 1, metricScope = putRecordScope},
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Produce/Named/{_streamName}", CallCountAllHarvests = 1, metricScope = putRecordsScope},
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Named/Unknown", CallCountAllHarvests = 1}, // The instrumentation is unable to get the stream name from GetRecords requests
+            new() { metricName = $"MessageBroker/Kinesis/Queue/Consume/Named/Unknown", CallCountAllHarvests = 1, metricScope = getRecordsScope},
+            new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer/{_streamName}", CallCountAllHarvests = 1},
+            new() { metricName = $"DotNet/Kinesis/DeregisterStreamConsumer/{_streamName}", CallCountAllHarvests = 1, metricScope = deregisterStreamConsumerScope},
+            new() { metricName = $"DotNet/Kinesis/DeleteStream/{_streamName}", CallCountAllHarvests = 1},
+            new() { metricName = $"DotNet/Kinesis/DeleteStream/{_streamName}", CallCountAllHarvests = 1, metricScope = deleteStreamScope},
 
         };
 

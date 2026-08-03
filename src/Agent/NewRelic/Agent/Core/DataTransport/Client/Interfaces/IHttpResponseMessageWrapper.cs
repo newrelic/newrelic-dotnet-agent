@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces;
@@ -14,4 +15,5 @@ public interface IHttpResponseMessageWrapper : IDisposable
     IHttpContentWrapper Content { get; }
     bool IsSuccessStatusCode { get; }
     HttpStatusCode StatusCode { get; }
+    IEnumerable<KeyValuePair<string, IEnumerable<string>>> Headers { get; }
 }

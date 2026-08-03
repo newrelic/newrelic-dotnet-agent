@@ -37,10 +37,12 @@ public abstract class NsbSendTestsBase<TFixture> : NewRelicIntegrationTest<TFixt
                 configModifier.SetLogLevel("finest");
                 configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
             },
             exerciseApplication: () =>
             {
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 _fixture.SendCommand("NServiceBusDriver StopNServiceBus");
             }
@@ -54,8 +56,8 @@ public abstract class NsbSendTestsBase<TFixture> : NewRelicIntegrationTest<TFixt
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command", callCount = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.NServiceBusDriver/SendCommandInTransaction"}
+            new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models.Command", CallCountAllHarvests = 1, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.NServiceBusDriver/SendCommandInTransaction"}
         };
         var expectedTransactionTraceSegments = new List<string>
         {

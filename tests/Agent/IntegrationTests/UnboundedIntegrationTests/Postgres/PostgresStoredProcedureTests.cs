@@ -62,8 +62,8 @@ public abstract class PostgresSqlStoredProcedureTestsBase<TFixture> : NewRelicIn
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = expectedTransactionName}
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", CallCountAllHarvests = 1, metricScope = expectedTransactionName}
         };
 
         var expectedTransactionTraceSegments = new List<string>
@@ -110,22 +110,6 @@ public abstract class PostgresSqlStoredProcedureTestsBase<TFixture> : NewRelicIn
 public class PostgresSqlStoredProcedureTestsFW462 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlStoredProcedureTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlStoredProcedureTestsFW471 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlStoredProcedureTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlStoredProcedureTestsFW48 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlStoredProcedureTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
     {
 
     }

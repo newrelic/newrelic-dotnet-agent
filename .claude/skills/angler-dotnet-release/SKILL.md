@@ -55,10 +55,34 @@ that (a normal outcome, not an error).
 
 To target a specific version instead of the latest release, add `--version X.Y.Z`.
 
-## Step 2: Discover new supportability metrics
+## Step 2: Sync main, build the agent, and discover new supportability metrics
 
-The discovery tool reflects over the compiled agent, so `FullAgent.sln` must
-be built before running it. Ask the user for permission before building:
+The discovery tool reflects over the compiled agent, and the scan is only
+meaningful if that build reflects the **released** code on `main`. A stale
+checkout or a feature branch produces misleading candidates. So before building,
+check the checkout state:
+
+```bash
+git rev-parse --abbrev-ref HEAD
+git status --porcelain
+git fetch origin main && git rev-list --left-right --count HEAD...origin/main
+```
+
+If the checkout is not on `main`, is behind `origin/main`, or has uncommitted
+changes, tell the user and ask:
+
+> The metric scan reflects the compiled agent, so it should be built from the
+> latest `main`. You are currently on `<branch>` (`<N>` commits behind
+> `origin/main`, with uncommitted changes). Switch to `main` and pull latest
+> before building? (Answer no to build the current checkout as-is.)
+
+Only switch branches / pull when the user agrees **and** the working tree is
+clean -- never discard uncommitted work. If the user declines, build the current
+checkout and note in the final report that the scan reflects `<branch>`, not
+`main`.
+
+Then build -- the discovery tool needs a current `FullAgent.sln` build to run.
+Ask the user for permission before building:
 
 Check whether `src/Agent/newrelichome_x64_coreclr/NewRelic.Agent.Core.dll`
 exists:

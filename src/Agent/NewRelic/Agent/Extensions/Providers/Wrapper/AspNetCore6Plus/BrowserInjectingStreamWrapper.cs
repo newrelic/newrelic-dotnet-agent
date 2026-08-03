@@ -136,15 +136,18 @@ public class BrowserInjectingStreamWrapper : Stream
     public override void Write(byte[] buffer, int offset, int count)
     {
         // pass through without modification if we're already in the middle of injecting
+        // don't inject if the script has already been injected into this response
         // don't inject if the response isn't an HTML response
-        if (_context != null && !Disabled && !CurrentlyInjecting() && IsHtmlResponse())
+        if (_context != null && !Disabled && !CurrentlyInjecting() && IsHtmlResponse() && !WasScriptInjected())
         {
             try
             {
                 // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
                 StartInjecting();
-                _agent.TryInjectBrowserScriptAsync(_context.Response?.ContentType, _context.Request?.Path, buffer, _baseStream)
+                var injected = _agent.TryInjectBrowserScriptAsync(_context.Response?.ContentType, _context.Request?.Path, buffer, _baseStream)
                     .GetAwaiter().GetResult();
+                if (injected)
+                    MarkScriptInjected();
             }
             finally
             {
@@ -169,14 +172,17 @@ public class BrowserInjectingStreamWrapper : Stream
     public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
     {
         // pass through without modification if we're already in the middle of injecting
+        // don't inject if the script has already been injected into this response
         // don't inject if the response isn't an HTML response
-        if (_context != null & !Disabled && !CurrentlyInjecting() && IsHtmlResponse())
+        if (_context != null && !Disabled && !CurrentlyInjecting() && IsHtmlResponse() && !WasScriptInjected())
         {
             try
             {
                 // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
                 StartInjecting();
-                await _agent.TryInjectBrowserScriptAsync(_context.Response?.ContentType, _context.Request?.Path, buffer.ToArray(), _baseStream);
+                var injected = await _agent.TryInjectBrowserScriptAsync(_context.Response?.ContentType, _context.Request?.Path, buffer.ToArray(), _baseStream);
+                if (injected)
+                    MarkScriptInjected();
             }
             finally
             {
@@ -200,6 +206,39 @@ public class BrowserInjectingStreamWrapper : Stream
     }
 
     private const string InjectingRUM = "InjectingRUM";
+
+    // Latches the first successful injection so later writes in the same response pass through.
+    // Stored on the shared HttpContext.Items rather than in an instance field because response
+    // compression puts a second, independent BrowserInjectingStreamWrapper on the same response
+    // (ResponseCompressionBodyOnWriteWrapper wraps the compression stream), and an instance field
+    // would only latch whichever instance performed the injection.
+    private const string RumScriptInjected = "RumScriptInjected";
+
+    private bool WasScriptInjected()
+    {
+        try
+        {
+            return _context?.Items.ContainsKey(RumScriptInjected) ?? false;
+        }
+        catch (ObjectDisposedException)
+        {
+            _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: Unable to check for RUM script injected flag, _context.Items was disposed.");
+            return false;
+        }
+    }
+
+    private void MarkScriptInjected()
+    {
+        try
+        {
+            if (_context != null)
+                _context.Items[RumScriptInjected] = null;
+        }
+        catch (ObjectDisposedException)
+        {
+            _agent.Logger.Log(Level.Finest, "BrowserInjectingStreamWrapper: Unable to insert RUM script injected flag, _context.Items was disposed.");
+        }
+    }
 
     private void FinishInjecting()
     {

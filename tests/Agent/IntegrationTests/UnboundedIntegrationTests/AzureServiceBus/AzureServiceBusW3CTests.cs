@@ -44,10 +44,8 @@ public abstract class AzureServiceBusW3CTestsBase<TFixture> : NewRelicIntegratio
                 configModifier
                     .SetLogLevel("finest")
                     .EnableDistributedTrace()
-                    .ForceTransactionTraces()
                     .ConfigureFasterMetricsHarvestCycle(20)
-                    .ConfigureFasterSpanEventsHarvestCycle(20)
-                    .ConfigureFasterTransactionTracesHarvestCycle(25);
+                    .ConfigureFasterSpanEventsHarvestCycle(20);
             },
             exerciseApplication: () =>
             {
@@ -127,11 +125,11 @@ public abstract class AzureServiceBusW3CTestsBase<TFixture> : NewRelicIntegratio
         {
             new Assertions.ExpectedMetric
             {
-                metricName = $"Supportability/DistributedTrace/CreatePayload/Success", callCount = 1
+                metricName = $"Supportability/DistributedTrace/CreatePayload/Success", CallCountAllHarvests = 1
             },
             new Assertions.ExpectedMetric
             {
-                metricName = $"Supportability/TraceContext/Create/Success", callCount = 1
+                metricName = $"Supportability/TraceContext/Create/Success", CallCountAllHarvests = 1
             },
         };
 
@@ -251,10 +249,8 @@ public abstract class AzureServiceBusW3CDTHeaderReplacementTestsBase<TFixture> :
                 configModifier
                     .SetLogLevel("finest")
                     .EnableDistributedTrace()
-                    .ForceTransactionTraces()
                     .ConfigureFasterMetricsHarvestCycle(20)
-                    .ConfigureFasterSpanEventsHarvestCycle(20)
-                    .ConfigureFasterTransactionTracesHarvestCycle(25);
+                    .ConfigureFasterSpanEventsHarvestCycle(20);
             },
             exerciseApplication: () =>
             {
@@ -272,8 +268,8 @@ public abstract class AzureServiceBusW3CDTHeaderReplacementTestsBase<TFixture> :
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = "Supportability/TraceContext/Create/Success", callCount = 1 },
-            new() { metricName = "Supportability/TraceContext/Accept/Success", callCount = 1 },
+            new() { metricName = "Supportability/TraceContext/Create/Success", CallCountAllHarvests = 1 },
+            new() { metricName = "Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 1 },
         };
 
         Assertions.MetricsExist(expectedMetrics, metrics);

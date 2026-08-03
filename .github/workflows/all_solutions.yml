@@ -38,6 +38,15 @@ env:
   tools_path: ${{ github.workspace }}\build\Tools
   DOTNET_NOLOGO: true
 
+  # Dependabot Full CI Dispatch relaunches this workflow via workflow_dispatch against a
+  # dependabot/* branch. Those runs need the build and the test suites, not a signed MSI or
+  # signed Linux packages, so everything that touches signing material is skipped for them --
+  # keeping the signing cert and GPG key off a runner that just executed build logic from a
+  # package version nobody has reviewed. Steps gate on `env.skip_signing != 'true'`; the
+  # packaging jobs gate on build-fullagent-msi's skipSigning output, since job-level `if`
+  # cannot see `env`. Never true for a pull_request run: ref_name is <pr>/merge there.
+  skip_signing: ${{ github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'dependabot/') }}
+
 jobs:
   check-modified-files:
     name: Check if source files were modified, skip remaining jobs if not
@@ -55,13 +64,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Run Shellcheck
         run: |
           find ${{ github.workspace }} -name "*.sh" -exec shellcheck --severity=error {} +
@@ -73,9 +82,12 @@ jobs:
     needs:
       - check-modified-files
       - shellcheck
-    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
+    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well.
+    # workflow_dispatch is exempt from the Dependabot exclusion: Dependabot Full CI Dispatch
+    # relaunches this workflow via workflow_dispatch against a Dependabot branch, and that run is
+    # not a Dependabot event, so it has full access to secrets and must not be skipped.
     # run this job if source files were modified, or if triggered by a release, a manual execution or schedule
-    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    if: (github.event_name == 'workflow_dispatch' || github.actor != 'dependabot[bot]') && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
@@ -83,23 +95,25 @@ jobs:
 
     outputs:
       agentVersion: ${{ steps.agentVersion.outputs.version }}
+      # Re-exported so the packaging jobs can gate on it: job-level `if` cannot read `env`.
+      skipSigning: ${{ env.skip_signing }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           filter: blob:none
 
       - name: Cache NuGet packages
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
           restore-keys: ${{ runner.os }}-nuget-
 
       - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
@@ -130,8 +144,11 @@ jobs:
             ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
           if-no-files-found: error
 
+      # Signing and MSI build are skipped for the Dependabot dispatch (see note above the jobs).
+      # The build and homefolders artifact above are all the test suites need.
       - name: Convert Code Signing Certificate Into File
         id: write_cert
+        if: env.skip_signing != 'true'
         run: |
           $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
           $bytes = [Convert]::FromBase64String('${{ secrets.SIGNING_CERT }}')
@@ -140,6 +157,7 @@ jobs:
         shell: powershell
 
       - name: Install Code Signing Certificate
+        if: env.skip_signing != 'true'
         run: |
           Write-Host "certutil.exe -f -user -p <passphrase> -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot"
           certutil.exe -f -user -p ${{ secrets.CERT_PASSPHRASE }} -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot
@@ -147,21 +165,25 @@ jobs:
 
 
       - name: Add msbuild to PATH (required for MsiInstaller build)
+        if: env.skip_signing != 'true'
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
 
       - name: Build MsiInstaller.sln x86
+        if: env.skip_signing != 'true'
         run: |
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}
         shell: powershell
 
       - name: Build MsiInstaller.sln x64
+        if: env.skip_signing != 'true'
         run: |
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
         shell: powershell
 
       - name: Archive msi _build Artifacts
+        if: env.skip_signing != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: msi-build-folder-artifacts
@@ -190,14 +212,14 @@ jobs:
   get-test-namespaces:
     name: Get Test Namespaces
     needs: check-modified-files
-    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    if: (github.event_name == 'workflow_dispatch' || github.actor != 'dependabot[bot]') && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     runs-on: ubuntu-latest
     outputs:
       integration-namespaces: ${{ steps.compute.outputs.integration }}
       unbounded-namespaces: ${{ steps.compute.outputs.unbounded }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           disable-sudo: true
           egress-policy: audit
@@ -332,20 +354,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           filter: blob:none
 
       - name: Cache NuGet packages
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
           restore-keys: ${{ runner.os }}-nuget-
 
       - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
@@ -447,20 +469,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           filter: blob:none
 
       - name: Cache NuGet packages
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
           restore-keys: ${{ runner.os }}-nuget-
 
       - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
@@ -563,7 +585,7 @@ jobs:
       CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           filter: blob:none
@@ -628,7 +650,7 @@ jobs:
         shell: powershell
 
       - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
@@ -657,7 +679,37 @@ jobs:
           $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
           $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
-          ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          # Retry once on failure to absorb transient infrastructure blips (e.g. port
+          # contention, SSL cert / tooling startup races, or a flaky test-app launch) that
+          # can surface as a spurious failure while the code under test is healthy. A
+          # retried-but-passing job still emits a ::warning:: so genuine regressions /
+          # flake churn stay visible in the UI.
+          $maxAttempts = 2
+          $attempt = 1
+          while ($true) {
+            & "${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe" -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+            $exitCode = $LASTEXITCODE
+            if ($exitCode -eq 0) {
+              if ($attempt -gt 1) {
+                Write-Host "::warning::Integration tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
+                # Record the flaky retry to a marker file under RUNNER_TEMP, which the
+                # failure-artifact upload globs never collect. Reporting runs in the separate
+                # step below so that no secret is in scope for this step: HostedWebCore and
+                # other test hosts launched here write their environment to the console, and
+                # that console output is captured into the test results.
+                $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
+                @{ testType = "integrationTests"; testGroup = "${{ matrix.namespace }}" } | ConvertTo-Json | Out-File -FilePath $marker -Encoding UTF8
+              }
+              break
+            }
+            if ($attempt -ge $maxAttempts) {
+              Write-Host "Integration tests for ${{ matrix.namespace }} failed after $attempt attempt(s) (exit code $exitCode)."
+              exit $exitCode
+            }
+            Write-Host "Integration tests for ${{ matrix.namespace }} failed on attempt $attempt (exit code $exitCode); retrying once to absorb a possible transient blip..."
+            $attempt++
+            Start-Sleep -Seconds 10
+          }
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
@@ -668,13 +720,38 @@ jobs:
           }
         shell: powershell
 
+      - name: Report flaky retry telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
+          NR_CI_ACCOUNT_ID: ${{ secrets.NR_CI_ACCOUNT_ID }}
+          CI_BRANCH: ${{ github.ref_name }}
+          CI_COMMIT: ${{ github.sha }}
+          CI_RUN_ID: ${{ github.run_id }}
+          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CI_TRIGGER: ${{ github.event_name }}
+        run: |
+          $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
+          if (Test-Path $marker) {
+            $info = Get-Content $marker | ConvertFrom-Json
+            $Env:RETRY_TEST_TYPE = $info.testType
+            $Env:RETRY_TEST_GROUP = $info.testGroup
+            & bash build/Scripts/report-flaky-retry.sh
+            Remove-Item $marker -Force -ErrorAction Ignore
+          }
+        shell: powershell
+
       - name: Extract payload bytes log from TRX
         if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
         run: |
           $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
+          $countLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_test_count.json"
 
           Write-Host "Checking for TRX file at: $trxFile"
+
+          $executedTests = 0
 
           if (Test-Path $trxFile) {
             $fileSize = (Get-Item $trxFile).Length
@@ -686,19 +763,25 @@ jobs:
 
             $payloadData = @{}
             foreach ($message in $messageElements) {
-              $text = $message.InnerText
-              if ($text -match "^(.+?):\s*Total payload bytes sent:\s*(\d+)") {
-                $className = $Matches[1].Trim()
-                $byteCount = [int]$Matches[2]
-                $payloadData[$className] = $byteCount
-                Write-Host "Found: $className = $byteCount bytes"
+              foreach ($line in ($message.InnerText -split "\r?\n")) {
+                if ($line -match '^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$') {
+                  $className = $Matches[1].Trim()
+                  $category  = $Matches[2]
+                  $byteCount = [int]$Matches[3]
+                  if (-not $payloadData.ContainsKey($className)) { $payloadData[$className] = @{} }
+                  if ($payloadData[$className].ContainsKey($category)) {
+                    $payloadData[$className][$category] += $byteCount
+                  } else {
+                    $payloadData[$className][$category] = $byteCount
+                  }
+                }
               }
             }
 
             Write-Host "Found $($payloadData.Count) payload log entries"
 
             if ($payloadData.Count -gt 0) {
-              $payloadData | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+              $payloadData | ConvertTo-Json -Depth 5 | Out-File -FilePath $payloadLog -Encoding UTF8
               Write-Host "Extracted payload logs to $payloadLog"
               Write-Host "Content:"
               Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
@@ -706,10 +789,19 @@ jobs:
               Write-Host "No payload byte logs found in TRX file"
               @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
             }
+
+            # Extract the executed-test count from the TRX ResultSummary/Counters (VSTest
+            # schema, emitted by the xUnit v3 runner). 'executed' counts tests that ran
+            # (any outcome), excluding skipped / not-executed.
+            $counters = $trxContent.SelectSingleNode("//*[local-name()='ResultSummary']/*[local-name()='Counters']")
+            if ($counters -ne $null -and $counters.executed) { $executedTests = [int]$counters.executed }
           } else {
             Write-Host "TRX file not found"
             @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
           }
+
+          Write-Host "Executed test count: $executedTests"
+          @{ executedTests = $executedTests } | ConvertTo-Json | Out-File -FilePath $countLog -Encoding UTF8
         shell: powershell
 
       - name: Upload payload bytes log
@@ -717,7 +809,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: integration-payload-bytes-${{ matrix.namespace }}
-          path: C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
+          path: |
+            C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
+            C:\IntegrationTestWorkingDirectory\TestResults\*_test_count.json
           if-no-files-found: warn
 
       - name: Archive integration test results on failure
@@ -727,7 +821,6 @@ jobs:
           name: integration-test-results-${{ matrix.namespace }}
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
-            C:\IntegrationTestWorkingDirectory\**\*.config
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
@@ -752,7 +845,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           filter: blob:none
@@ -820,7 +913,7 @@ jobs:
 #        shell: pwsh
 
       - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
@@ -844,7 +937,36 @@ jobs:
           $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
           $json | ConvertTo-Json | Out-File "${{ env.unbounded_tests_path }}/xunit.runner.json"
 
-          ${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          # Retry once on failure to absorb transient WAN/infra blips between the GitHub-hosted
+          # runner and the Azure-hosted unbounded services (e.g. brief packet loss surfacing as a
+          # client command timeout while the service itself is healthy). A retried-but-passing job
+          # still emits a ::warning:: so genuine regressions / flake churn stay visible in the UI.
+          $maxAttempts = 2
+          $attempt = 1
+          while ($true) {
+            & "${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe" -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+            $exitCode = $LASTEXITCODE
+            if ($exitCode -eq 0) {
+              if ($attempt -gt 1) {
+                Write-Host "::warning::Unbounded tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
+                # Record the flaky retry to a marker file under RUNNER_TEMP, which the
+                # failure-artifact upload globs never collect. Reporting runs in the separate
+                # step below so that no secret is in scope for this step: HostedWebCore and
+                # other test hosts launched here write their environment to the console, and
+                # that console output is captured into the test results.
+                $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
+                @{ testType = "unboundedTests"; testGroup = "${{ matrix.namespace }}" } | ConvertTo-Json | Out-File -FilePath $marker -Encoding UTF8
+              }
+              break
+            }
+            if ($attempt -ge $maxAttempts) {
+              Write-Host "Unbounded tests for ${{ matrix.namespace }} failed after $attempt attempt(s) (exit code $exitCode)."
+              exit $exitCode
+            }
+            Write-Host "Unbounded tests for ${{ matrix.namespace }} failed on attempt $attempt (exit code $exitCode); retrying once to absorb a possible transient blip..."
+            $attempt++
+            Start-Sleep -Seconds 10
+          }
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
@@ -855,13 +977,38 @@ jobs:
           }
         shell: powershell
 
+      - name: Report flaky retry telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
+          NR_CI_ACCOUNT_ID: ${{ secrets.NR_CI_ACCOUNT_ID }}
+          CI_BRANCH: ${{ github.ref_name }}
+          CI_COMMIT: ${{ github.sha }}
+          CI_RUN_ID: ${{ github.run_id }}
+          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CI_TRIGGER: ${{ github.event_name }}
+        run: |
+          $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
+          if (Test-Path $marker) {
+            $info = Get-Content $marker | ConvertFrom-Json
+            $Env:RETRY_TEST_TYPE = $info.testType
+            $Env:RETRY_TEST_GROUP = $info.testGroup
+            & bash build/Scripts/report-flaky-retry.sh
+            Remove-Item $marker -Force -ErrorAction Ignore
+          }
+        shell: powershell
+
       - name: Extract payload bytes log from TRX
         if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
         run: |
           $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
+          $countLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_test_count.json"
 
           Write-Host "Checking for TRX file at: $trxFile"
+
+          $executedTests = 0
 
           if (Test-Path $trxFile) {
             $fileSize = (Get-Item $trxFile).Length
@@ -873,19 +1020,25 @@ jobs:
 
             $payloadData = @{}
             foreach ($message in $messageElements) {
-              $text = $message.InnerText
-              if ($text -match "^(.+?):\s*Total payload bytes sent:\s*(\d+)") {
-                $className = $Matches[1].Trim()
-                $byteCount = [int]$Matches[2]
-                $payloadData[$className] = $byteCount
-                Write-Host "Found: $className = $byteCount bytes"
+              foreach ($line in ($message.InnerText -split "\r?\n")) {
+                if ($line -match '^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$') {
+                  $className = $Matches[1].Trim()
+                  $category  = $Matches[2]
+                  $byteCount = [int]$Matches[3]
+                  if (-not $payloadData.ContainsKey($className)) { $payloadData[$className] = @{} }
+                  if ($payloadData[$className].ContainsKey($category)) {
+                    $payloadData[$className][$category] += $byteCount
+                  } else {
+                    $payloadData[$className][$category] = $byteCount
+                  }
+                }
               }
             }
 
             Write-Host "Found $($payloadData.Count) payload log entries"
 
             if ($payloadData.Count -gt 0) {
-              $payloadData | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+              $payloadData | ConvertTo-Json -Depth 5 | Out-File -FilePath $payloadLog -Encoding UTF8
               Write-Host "Extracted payload logs to $payloadLog"
               Write-Host "Content:"
               Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
@@ -893,10 +1046,19 @@ jobs:
               Write-Host "No payload byte logs found in TRX file"
               @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
             }
+
+            # Extract the executed-test count from the TRX ResultSummary/Counters (VSTest
+            # schema, emitted by the xUnit v3 runner). 'executed' counts tests that ran
+            # (any outcome), excluding skipped / not-executed.
+            $counters = $trxContent.SelectSingleNode("//*[local-name()='ResultSummary']/*[local-name()='Counters']")
+            if ($counters -ne $null -and $counters.executed) { $executedTests = [int]$counters.executed }
           } else {
             Write-Host "TRX file not found"
             @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
           }
+
+          Write-Host "Executed test count: $executedTests"
+          @{ executedTests = $executedTests } | ConvertTo-Json | Out-File -FilePath $countLog -Encoding UTF8
         shell: powershell
 
       - name: Upload payload bytes log
@@ -904,7 +1066,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: unbounded-payload-bytes-${{ matrix.namespace }}
-          path: C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
+          path: |
+            C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
+            C:\IntegrationTestWorkingDirectory\TestResults\*_test_count.json
           if-no-files-found: warn
 
       - name: Archive unbounded test results on failure
@@ -914,7 +1078,6 @@ jobs:
           name: unbounded-test-working-directory-${{ matrix.namespace }}
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
-            C:\IntegrationTestWorkingDirectory\**\*.config
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
@@ -922,16 +1085,20 @@ jobs:
     needs: build-fullagent-msi
     name: Create RPM Package
     runs-on: ubuntu-22.04
+    # Skipped for the Dependabot dispatch: signs with NEW_GPG_KEY, and needs an MSI artifact
+    # that run does not produce. Compared against 'false' so an unresolved output skips this
+    # job rather than running it with the signing key.
+    if: needs.build-fullagent-msi.outputs.skipSigning == 'false'
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Download msi _build Artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -987,16 +1154,20 @@ jobs:
     needs: build-fullagent-msi
     name: Create Debian package
     runs-on: ubuntu-22.04
+    # Skipped for the Dependabot dispatch: signs with NEW_GPG_KEY, and needs an MSI artifact
+    # that run does not produce. Compared against 'false' so an unresolved output skips this
+    # job rather than running it with the signing key.
+    if: needs.build-fullagent-msi.outputs.skipSigning == 'false'
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Download Agent Home Folders
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -1038,16 +1209,18 @@ jobs:
     needs: [create-package-rpm, create-package-deb]
     name: Run ArtifactBuilder
     runs-on: windows-2022
+    # No explicit gate needed: both packaging jobs it needs are skipped for the Dependabot
+    # dispatch, which skips this job with them.
 
     steps:
       - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
   
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           filter: blob:none
@@ -1106,7 +1279,7 @@ jobs:
     if: always()
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           disable-sudo: true
           egress-policy: audit
@@ -1127,10 +1300,13 @@ jobs:
       contents: read
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           disable-sudo: true
           egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Download all integration payload artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -1140,62 +1316,7 @@ jobs:
           merge-multiple: true
 
       - name: Combine payload logs
-        run: |
-          mkdir -p combined-logs
-
-          if [ -d "payload-logs/integration" ]; then
-            echo "["  > combined-logs/integration_payload_bytes_combined.json
-            first=true
-            grand_total=0
-
-            # Process JSON files and merge into array
-            while IFS= read -r file; do
-              echo "Processing: $(basename "$file")"
-
-              # Read JSON and extract key-value pairs
-              while IFS= read -r line; do
-                # Skip lines that are just braces or empty
-                if [[ "$line" =~ ^[[:space:]]*\{[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*$ ]] || [[ -z "$line" ]]; then
-                  continue
-                fi
-
-                # Extract class name and byte count from JSON property
-                if [[ "$line" =~ \"([^\"]+)\":[[:space:]]*([0-9]+) ]]; then
-                  className="${BASH_REMATCH[1]}"
-                  byteCount="${BASH_REMATCH[2]}"
-                  grand_total=$((grand_total + byteCount))
-
-                  if [ "$first" = true ]; then
-                    first=false
-                  else
-                    echo "," >> combined-logs/integration_payload_bytes_combined.json
-                  fi
-                  echo "  {\"className\": \"$className\", \"payloadBytes\": $byteCount}" >> combined-logs/integration_payload_bytes_combined.json
-                fi
-              done < "$file"
-            done < <(find payload-logs/integration -name "*_payload_bytes.json" -type f | sort)
-
-            echo "" >> combined-logs/integration_payload_bytes_combined.json
-            echo "]" >> combined-logs/integration_payload_bytes_combined.json
-
-            # Create summary metadata file
-            echo "{" > combined-logs/integration_payload_bytes_summary.json
-            echo "  \"testType\": \"Integration Tests\"," >> combined-logs/integration_payload_bytes_summary.json
-            echo "  \"generatedAt\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"," >> combined-logs/integration_payload_bytes_summary.json
-            echo "  \"grandTotalBytes\": $grand_total" >> combined-logs/integration_payload_bytes_summary.json
-            echo "}" >> combined-logs/integration_payload_bytes_summary.json
-
-            echo "Combined payload JSON created with grand total: $grand_total bytes"
-            echo "Payload data:"
-            cat combined-logs/integration_payload_bytes_combined.json
-            echo ""
-            echo "Summary:"
-            cat combined-logs/integration_payload_bytes_summary.json
-          else
-            echo "No integration payload logs found"
-            echo "[]" > combined-logs/integration_payload_bytes_combined.json
-            echo "{\"testType\": \"Integration Tests\", \"grandTotalBytes\": 0}" > combined-logs/integration_payload_bytes_summary.json
-          fi
+        run: bash build/Scripts/combine-payload-logs.sh payload-logs/integration "Integration Tests" combined-logs/integration_payload_bytes_combined.json
         shell: bash
 
       - name: Upload combined integration payload log
@@ -1231,10 +1352,13 @@ jobs:
       contents: read
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           disable-sudo: true
           egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Download all unbounded payload artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -1244,62 +1368,7 @@ jobs:
           merge-multiple: true
 
       - name: Combine payload logs
-        run: |
-          mkdir -p combined-logs
-
-          if [ -d "payload-logs/unbounded" ]; then
-            echo "["  > combined-logs/unbounded_payload_bytes_combined.json
-            first=true
-            grand_total=0
-
-            # Process JSON files and merge into array
-            while IFS= read -r file; do
-              echo "Processing: $(basename "$file")"
-
-              # Read JSON and extract key-value pairs
-              while IFS= read -r line; do
-                # Skip lines that are just braces or empty
-                if [[ "$line" =~ ^[[:space:]]*\{[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*$ ]] || [[ -z "$line" ]]; then
-                  continue
-                fi
-
-                # Extract class name and byte count from JSON property
-                if [[ "$line" =~ \"([^\"]+)\":[[:space:]]*([0-9]+) ]]; then
-                  className="${BASH_REMATCH[1]}"
-                  byteCount="${BASH_REMATCH[2]}"
-                  grand_total=$((grand_total + byteCount))
-
-                  if [ "$first" = true ]; then
-                    first=false
-                  else
-                    echo "," >> combined-logs/unbounded_payload_bytes_combined.json
-                  fi
-                  echo "  {\"className\": \"$className\", \"payloadBytes\": $byteCount}" >> combined-logs/unbounded_payload_bytes_combined.json
-                fi
-              done < "$file"
-            done < <(find payload-logs/unbounded -name "*_payload_bytes.json" -type f | sort)
-
-            echo "" >> combined-logs/unbounded_payload_bytes_combined.json
-            echo "]" >> combined-logs/unbounded_payload_bytes_combined.json
-
-            # Create summary metadata file
-            echo "{" > combined-logs/unbounded_payload_bytes_summary.json
-            echo "  \"testType\": \"Unbounded Integration Tests\"," >> combined-logs/unbounded_payload_bytes_summary.json
-            echo "  \"generatedAt\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"," >> combined-logs/unbounded_payload_bytes_summary.json
-            echo "  \"grandTotalBytes\": $grand_total" >> combined-logs/unbounded_payload_bytes_summary.json
-            echo "}" >> combined-logs/unbounded_payload_bytes_summary.json
-
-            echo "Combined payload JSON created with grand total: $grand_total bytes"
-            echo "Payload data:"
-            cat combined-logs/unbounded_payload_bytes_combined.json
-            echo ""
-            echo "Summary:"
-            cat combined-logs/unbounded_payload_bytes_summary.json
-          else
-            echo "No unbounded payload logs found"
-            echo "[]" > combined-logs/unbounded_payload_bytes_combined.json
-            echo "{\"testType\": \"Unbounded Integration Tests\", \"grandTotalBytes\": 0}" > combined-logs/unbounded_payload_bytes_summary.json
-          fi
+        run: bash build/Scripts/combine-payload-logs.sh payload-logs/unbounded "Unbounded Integration Tests" combined-logs/unbounded_payload_bytes_combined.json
         shell: bash
 
       - name: Upload combined unbounded payload log
@@ -1335,10 +1404,13 @@ jobs:
       contents: read
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           disable-sudo: true
           egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Download combined integration payload log
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -1363,104 +1435,28 @@ jobs:
 
       - name: Create consolidated JSON output
         run: |
-          if [ -d "payload-summaries" ]; then
-            echo "{"  > final_payload_summary.json
-
-            first_type=true
-            overall_total=0
-
-            # Process each test type's combined data
-            for data_file in payload-summaries/*_combined.json; do
-              if [ -f "$data_file" ]; then
-                filename=$(basename "$data_file" _payload_bytes_combined.json)
-
-                # Determine test type name
-                case "$filename" in
-                  integration)
-                    test_type="integrationTests"
-                    ;;
-                  unbounded)
-                    test_type="unboundedTests"
-                    ;;
-                  linux_container)
-                    test_type="containerTests"
-                    ;;
-                  *)
-                    test_type="$filename"
-                    ;;
-                esac
-
-                # Get corresponding summary file for grand total and timestamp
-                summary_file="payload-summaries/${filename}_payload_bytes_summary.json"
-                grand_total=0
-                generated_at=""
-                if [ -f "$summary_file" ]; then
-                  if grep -q "grandTotalBytes" "$summary_file"; then
-                    grand_total=$(grep -oP '"grandTotalBytes":\s*\K\d+' "$summary_file")
-                    overall_total=$((overall_total + grand_total))
-                  fi
-                  if grep -q "generatedAt" "$summary_file"; then
-                    generated_at=$(grep -oP '"generatedAt":\s*"\K[^"]+' "$summary_file")
-                  fi
-                fi
-
-                # Add comma separator if not first entry
-                if [ "$first_type" = false ]; then
-                  echo "," >> final_payload_summary.json
-                fi
-                first_type=false
-
-                # Add test type section
-                echo "  \"$test_type\": {" >> final_payload_summary.json
-                echo "    \"generatedAt\": \"$generated_at\"," >> final_payload_summary.json
-                echo "    \"bytes\": $grand_total," >> final_payload_summary.json
-                echo "    \"details\": [" >> final_payload_summary.json
-
-                # Read and merge test class data from combined file, converting payloadBytes to bytes
-                first_test=true
-                while IFS= read -r line; do
-                  # Skip array brackets and empty lines
-                  if [[ "$line" =~ ^[[:space:]]*\[[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*\][[:space:]]*$ ]] || [[ -z "$line" ]]; then
-                    continue
-                  fi
-
-                  # Extract className and payloadBytes, convert to new format
-                  if [[ "$line" =~ \"className\":[[:space:]]*\"([^\"]+)\".*\"payloadBytes\":[[:space:]]*([0-9]+) ]]; then
-                    className="${BASH_REMATCH[1]}"
-                    byteCount="${BASH_REMATCH[2]}"
-
-                    # Add comma separator if not first test entry
-                    if [ "$first_test" = false ]; then
-                      echo "," >> final_payload_summary.json
-                    fi
-                    first_test=false
-
-                    echo "      {\"className\": \"$className\", \"bytes\": $byteCount}" >> final_payload_summary.json
-                  fi
-                done < "$data_file"
-
-                echo "" >> final_payload_summary.json
-                echo "    ]" >> final_payload_summary.json
-                echo -n "  }" >> final_payload_summary.json
-              fi
+          if ls payload-summaries/*_combined.json >/dev/null 2>&1; then
+            final="$(jq -n '{bytes:0, byType:{}, executedTests:0}')"
+            for f in payload-summaries/*_combined.json; do
+              base="$(basename "$f" _payload_bytes_combined.json)"
+              case "$base" in
+                integration)    key="integrationTests";;
+                unbounded)      key="unboundedTests";;
+                linux_container) key="containerTests";;
+                *)              key="$base";;
+              esac
+              final="$(jq --arg key "$key" --slurpfile c "$f" '
+                .[$key] = {generatedAt:$c[0].generatedAt, bytes:$c[0].grandTotalBytes, executedTests:($c[0].executedTests // 0), byType:$c[0].byType, details:$c[0].details}
+                | .bytes += $c[0].grandTotalBytes
+                | .executedTests += ($c[0].executedTests // 0)
+                | .byType = (reduce ($c[0].byType|to_entries[]) as $cat (.byType; .[$cat.key]=((.[$cat.key]//0)+$cat.value)))
+              ' <<<"$final")"
             done
-
-            echo "," >> final_payload_summary.json
-            echo "  \"bytes\": $overall_total" >> final_payload_summary.json
-            echo "}" >> final_payload_summary.json
-
-            echo "=========================================="
-            echo "FINAL CONSOLIDATED PAYLOAD SUMMARY"
-            echo "=========================================="
-            cat final_payload_summary.json
-            echo ""
-            echo "=========================================="
-            echo "OVERALL TOTAL: $overall_total bytes"
-            echo "=========================================="
+            echo "$final" > final_payload_summary.json
           else
-            echo "No payload summary files found"
-            echo '{"bytes": 0}' > final_payload_summary.json
+            echo '{"bytes": 0, "byType": {}, "executedTests": 0}' > final_payload_summary.json
           fi
+          echo "FINAL CONSOLIDATED PAYLOAD SUMMARY"; cat final_payload_summary.json
         shell: bash
 
       - name: Upload final consolidated summary
@@ -1469,6 +1465,25 @@ jobs:
           name: final-payload-summary
           path: final_payload_summary.json
           if-no-files-found: warn
+
+      - name: Guard against empty payload data
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
+        run: bash build/Scripts/check-payload-not-empty.sh final_payload_summary.json
+        shell: bash
+
+      - name: Report payload metrics to New Relic (staging)
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
+        continue-on-error: true
+        env:
+          PAYLOAD_SUMMARY_FILE: final_payload_summary.json
+          NR_METRIC_API_URL: https://staging-metric-api.newrelic.com/metric/v1
+          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
+          CI_BRANCH: ${{ github.ref_name }}
+          CI_COMMIT: ${{ github.sha }}
+          CI_RUN_ID: ${{ github.run_id }}
+          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash build/Scripts/report-payload-metrics.sh
+        shell: bash
 
       - name: Delete combined payload artifacts
         run: |

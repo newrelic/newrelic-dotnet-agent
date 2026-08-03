@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Local test for report-payload-metrics.sh: runs the transform in dry-run mode
+# against a fixture and asserts the generated Metric API body is correct.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT="$SCRIPT_DIR/../report-payload-metrics.sh"
+FIXTURE="$SCRIPT_DIR/fixtures/sample-payload-summary.json"
+
+fail() { echo "FAIL: $1" >&2; exit 1; }
+
+# In dry-run mode, stdout is exactly the Metric API body (one line of JSON).
+OUT="$(PAYLOAD_SUMMARY_FILE="$FIXTURE" DRY_RUN=1 bash "$SCRIPT")"
+
+echo "$OUT" | jq -e . >/dev/null 2>&1 || fail "dry-run output is not valid JSON"
+
+BASE_COUNT="$(echo "$OUT" | jq '[.[0].metrics[] | select(.name=="newrelic.dotnet.ci.payload.bytes" or .name=="newrelic.dotnet.ci.payload.total.bytes")] | length')"
+[ "$BASE_COUNT" = "6" ] || fail "expected 6 per-class/total metrics, got $BASE_COUNT"
+
+ALPHA="$(echo "$OUT" | jq -r '.[0].metrics[]
+  | select(.name=="newrelic.dotnet.ci.payload.bytes" and .attributes.className=="AlphaTests")
+  | .value')"
+[ "$ALPHA" = "250" ] || fail "expected AlphaTests deduped to 250, got $ALPHA"
+
+INT_TOTAL="$(echo "$OUT" | jq -r '.[0].metrics[]
+  | select(.name=="newrelic.dotnet.ci.payload.total.bytes" and .attributes.testType=="integrationTests")
+  | .value')"
+[ "$INT_TOTAL" = "300" ] || fail "expected integrationTests total 300, got $INT_TOTAL"
+
+ALL="$(echo "$OUT" | jq -r '.[0].metrics[]
+  | select(.name=="newrelic.dotnet.ci.payload.total.bytes" and .attributes.testType=="all")
+  | .value')"
+[ "$ALL" = "325" ] || fail "expected overall total 325, got $ALL"
+
+BYTYPE_COUNT="$(echo "$OUT" | jq '[.[0].metrics[]|select(.name=="newrelic.dotnet.ci.payload.by_type.bytes")]|length')"
+[ "$BYTYPE_COUNT" = "5" ] || fail "expected 5 by_type metrics, got $BYTYPE_COUNT"
+
+ALL_CONNECT="$(echo "$OUT" | jq -r '.[0].metrics[]
+  | select(.name=="newrelic.dotnet.ci.payload.by_type.bytes" and .attributes.testType=="all" and .attributes.payloadType=="connect")
+  | .value')"
+[ "$ALL_CONNECT" = "145" ] || fail "expected all/connect by_type 145, got $ALL_CONNECT"
+
+INT_CONNECT="$(echo "$OUT" | jq -r '.[0].metrics[]
+  | select(.name=="newrelic.dotnet.ci.payload.by_type.bytes" and .attributes.testType=="integrationTests" and .attributes.payloadType=="connect")
+  | .value')"
+[ "$INT_CONNECT" = "120" ] || fail "expected integrationTests/connect by_type 120, got $INT_CONNECT"
+
+TOTAL_COUNT="$(echo "$OUT" | jq '.[0].metrics|length')"
+[ "$TOTAL_COUNT" = "11" ] || fail "expected 11 metrics total, got $TOTAL_COUNT"
+
+echo "PASS: all assertions passed ($TOTAL_COUNT metrics)"

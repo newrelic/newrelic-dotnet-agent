@@ -60,15 +60,15 @@ public abstract class PostgresSqlExecuteScalarAsyncTestsBase<TFixture> : NewReli
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/OpenAsync", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", callCount = expectedDatastoreCallCount},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = expectedTransactionName},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/OpenAsync", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", CallCountAllHarvests = expectedDatastoreCallCount},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", CallCountAllHarvests = 1, metricScope = expectedTransactionName},
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
@@ -78,7 +78,7 @@ public abstract class PostgresSqlExecuteScalarAsyncTestsBase<TFixture> : NewReli
             // Don't double count the Open
             new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open" },
             // The operation metric should not be scoped because the statement metric is scoped instead
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedTransactionName },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", CallCountAllHarvests = 1, metricScope = expectedTransactionName },
         };
         var expectedTransactionTraceSegments = new List<string>
         {
@@ -126,22 +126,6 @@ public abstract class PostgresSqlExecuteScalarAsyncTestsBase<TFixture> : NewReli
 public class PostgresSqlExecuteScalarAsyncTestsFW462 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlExecuteScalarAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlExecuteScalarAsyncTestsFW471 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlExecuteScalarAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlExecuteScalarAsyncTestsFW48 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlExecuteScalarAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
     {
 
     }

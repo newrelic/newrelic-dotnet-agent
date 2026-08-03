@@ -49,7 +49,7 @@ public class HybridHttpContextStorageTests : NewRelicIntegrationTest<RemoteServi
 
         var endpointMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = "WebTransaction/ASP/webformwithtask.aspx", callCount = 1 },
+            new() { metricName = "WebTransaction/ASP/webformwithtask.aspx", CallCountAllHarvests = 1 },
             new() { metricName = "External/google.com/Stream/GET", CallCountAllHarvests = 1, metricScope = "WebTransaction/ASP/webformwithtask.aspx"}
         };
         expectedMetrics.AddRange(endpointMetrics);

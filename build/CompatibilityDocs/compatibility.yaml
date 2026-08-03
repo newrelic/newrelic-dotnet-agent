@@ -203,6 +203,7 @@ categories:
             minVersion: "4.0.0"
         notes:
           - { type: freeform, text: "Prior versions of Npgsql may also be instrumented, but duplicate and/or missing metrics are possible." }
+          - { type: freeform, text: "Npgsql 9.0 and later dropped .NET Framework support; on .NET Framework the agent supports Npgsql 8.x and earlier.", tabs: [framework] }
 
       - name: ServiceStack.Redis
         packages:
@@ -310,6 +311,13 @@ categories:
         tabs: [framework]
         methods:
           - GetResponse
+          - BeginGetResponse
+          - EndGetResponse
+          - GetRequestStream
+          - BeginGetRequestStream
+          - GetRequestStreamAsync
+        notes:
+          - { type: freeform, text: "`BeginGetResponse`, `EndGetResponse`, `GetRequestStream`, `BeginGetRequestStream`, and `GetRequestStreamAsync` are supported in agent v10.52.0 and later. `GetResponse` is supported in all agent versions." }
 
       - name: gRPC (grpc-dotnet)
         tabs: [core]
@@ -408,7 +416,6 @@ categories:
         minAgentVersion: "10.14.0"
         packages:
           - id: Sitecore.Logging
-            nugetUrl: https://www.nuget.org/packages/Sitecore.Logging/
             tabs: [framework]
             minVersion: "10.0.0"
         notes:

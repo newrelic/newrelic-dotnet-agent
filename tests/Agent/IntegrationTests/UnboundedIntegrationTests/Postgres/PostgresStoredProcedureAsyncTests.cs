@@ -62,8 +62,8 @@ public abstract class PostgresSqlStoredProcedureAsyncTestsBase<TFixture> : NewRe
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = expectedTransactionName}
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", CallCountAllHarvests = 1, metricScope = expectedTransactionName}
         };
 
         var expectedTransactionTraceSegments = new List<string>
@@ -110,22 +110,6 @@ public abstract class PostgresSqlStoredProcedureAsyncTestsBase<TFixture> : NewRe
 public class PostgresSqlStoredProcedureAsyncTestsFW462 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlStoredProcedureAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlStoredProcedureAsyncTestsFW471 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlStoredProcedureAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlStoredProcedureAsyncTestsFW48 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlStoredProcedureAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
     {
 
     }

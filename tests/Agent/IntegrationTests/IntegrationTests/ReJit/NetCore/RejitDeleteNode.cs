@@ -72,17 +72,17 @@ public abstract class RejitDeleteNodeBase<TFixture> : NewRelicIntegrationTest<TF
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             //transactions
-            new Assertions.ExpectedMetric {metricName = @"WebTransaction/MVC/Home/Index", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = @"WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1},
             new Assertions.ExpectedMetric {metricName = @"WebTransaction/Custom/MyCustomDeleteMetricName", CallCountAllHarvests = 3},
-            new Assertions.ExpectedMetric {metricName = @"WebTransaction/MVC/Rejit/GetDeleteNode/{id}", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = @"WebTransaction/MVC/Rejit/GetDeleteNode/{id}", CallCountAllHarvests = 1},
 
             // Unscoped
-            new Assertions.ExpectedMetric {metricName = @"DotNet/HomeController/Index", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/HomeController/Index", CallCountAllHarvests = 1},
             new Assertions.ExpectedMetric {metricName = @"Custom/MyCustomDeleteMetricName", CallCountAllHarvests = 3},
             new Assertions.ExpectedMetric {metricName = @"DotNet/RejitController/GetDeleteNode", CallCountAllHarvests = 4},
 
             // Scoped
-            new Assertions.ExpectedMetric {metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1},
             new Assertions.ExpectedMetric {metricName = @"Custom/MyCustomDeleteMetricName", metricScope = "WebTransaction/Custom/MyCustomDeleteMetricName", CallCountAllHarvests = 3},
             new Assertions.ExpectedMetric {metricName = @"DotNet/RejitController/GetDeleteNode", metricScope = "WebTransaction/MVC/Rejit/GetDeleteNode/{id}", CallCountAllHarvests = 1}
         };

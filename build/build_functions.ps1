@@ -284,9 +284,13 @@ function Get-GrpcPackagePath {
 
     $ErrorActionPreference = "Stop"
 
-    $match = Select-String -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\Core.csproj" -Pattern '<PackageReference Include="Grpc.Core"'
-    $versionIndex = $match.Line.IndexOf('"', $match.Line.IndexOf('Version')) + 1
-    $grpcVersion = $match.Line.TrimEnd('/>').TrimEnd(' ').TrimEnd('"').Substring($versionIndex)
+    # Grpc.Core is centrally managed (CPM): its version lives in the root Directory.Packages.props,
+    # not inline on Core.csproj's PackageReference (which no longer carries a Version= attribute).
+    $match = Select-String -Path "$RootDirectory\Directory.Packages.props" -Pattern '<PackageVersion Include="Grpc.Core"'
+    if (-not ($match.Line -match 'Version="([^"]+)"')) {
+        throw "Get-GrpcPackagePath: could not parse Grpc.Core version from Directory.Packages.props"
+    }
+    $grpcVersion = $Matches[1]
     $rawpkgList = $(dotnet nuget locals global-packages --list)
     $pkgList = $rawpkgList -Replace "global-packages: "
     $grpcDir = "$pkgList\Grpc.Core\$grpcVersion"

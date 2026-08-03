@@ -58,20 +58,20 @@ public abstract class RejitChangeAttributeValueBase<TFixture> : NewRelicIntegrat
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             //transactions
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomChangeMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomRenamedMetricName", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomChangeMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomRenamedMetricName", CallCountAllHarvests = 1 },
 
             // Unscoped
-            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomChangeMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenamedMetricName", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomChangeMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenamedMetricName", CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetChangeAttributeValue", CallCountAllHarvests = 2 },
 
             // Scoped
-            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomChangeMetricName", metricScope = "WebTransaction/Custom/MyCustomChangeMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenamedMetricName", metricScope = "WebTransaction/Custom/MyCustomRenamedMetricName", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomChangeMetricName", metricScope = "WebTransaction/Custom/MyCustomChangeMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenamedMetricName", metricScope = "WebTransaction/Custom/MyCustomRenamedMetricName", CallCountAllHarvests = 1 }
         };
 
         var notExpectedMetrics = new List<Assertions.ExpectedMetric>

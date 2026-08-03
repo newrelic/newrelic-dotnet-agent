@@ -11,4 +11,5 @@ public interface IHttpResponse : IDisposable
     bool IsSuccessStatusCode { get; }
     HttpStatusCode StatusCode { get; }
     string GetContent();
+    string GetHeaders();
 }

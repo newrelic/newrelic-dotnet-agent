@@ -195,8 +195,8 @@ public class MetricAggregatorTests
         Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
             .DoInstead<IEnumerable<MetricWireModel>>(metrics => sentMetrics = metrics);
 
-        _metricAggregator.Collect(MetricWireModel.BuildMetric(_metricNameService, "DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
-        _metricAggregator.Collect(MetricWireModel.BuildMetric(_metricNameService, "DotNet/metric2", "scope2", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5))));
+        _metricAggregator.Collect(MetricWireModel.BuildMetric("DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
+        _metricAggregator.Collect(MetricWireModel.BuildMetric("DotNet/metric2", "scope2", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5))));
 
         _harvestAction();
 
@@ -263,9 +263,9 @@ public class MetricAggregatorTests
         Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>(), Arg.IsAny<string>()))
             .DoInstead<IEnumerable<MetricWireModel>>(metrics => sentMetrics = metrics);
 
-        _metricAggregator.Collect(MetricWireModel.BuildMetric(_metricNameService, "DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
-        _metricAggregator.Collect(MetricWireModel.BuildMetric(_metricNameService, "DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5))));
-        _metricAggregator.Collect(MetricWireModel.BuildMetric(_metricNameService, "DotNet/metric2", "scope2", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5))));
+        _metricAggregator.Collect(MetricWireModel.BuildMetric("DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
+        _metricAggregator.Collect(MetricWireModel.BuildMetric("DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5))));
+        _metricAggregator.Collect(MetricWireModel.BuildMetric("DotNet/metric2", "scope2", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5))));
 
         _harvestAction();
 
@@ -345,9 +345,9 @@ public class MetricAggregatorTests
                 return DataTransportResponseStatus.Retain;
             });
 
-        _metricAggregator.Collect(BuildMetric(_metricNameService, "DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
+        _metricAggregator.Collect(BuildMetric("DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
         _harvestAction();
-        _metricAggregator.Collect(BuildMetric(_metricNameService, "DotNet/metric2", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
+        _metricAggregator.Collect(BuildMetric("DotNet/metric2", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
         _harvestAction();
 
         Assert.Multiple(() =>

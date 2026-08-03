@@ -119,14 +119,14 @@ public abstract class HttpClientW3CTestsNetCore : NewRelicIntegrationTest<AspNet
         var senderExpectedMetrics = new List<Assertions.ExpectedMetric>
         {
             new Assertions.ExpectedMetric { metricName = @"Supportability/SpanEvent/TotalEventsSeen", CallCountAllHarvests = 4 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", CallCountAllHarvests = 1 }
         };
 
         if (! _fixture.ExcludeNewRelicHeader)
         {
-            senderExpectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", callCount = 1 });
+            senderExpectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"Supportability/DistributedTrace/CreatePayload/Success", CallCountAllHarvests = 1 });
         }
 
         var accountId = _fixture.SecondCallAppAgentLog.GetAccountId();
@@ -135,17 +135,17 @@ public abstract class HttpClientW3CTestsNetCore : NewRelicIntegrationTest<AspNet
         var receiverExpectedMetrics = new List<Assertions.ExpectedMetric>
         {
             new Assertions.ExpectedMetric { metricName = @"Supportability/SpanEvent/TotalEventsSeen", CallCountAllHarvests = 4 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"DurationByCaller/App/{accountId}/{appId}/HTTP/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"DurationByCaller/App/{accountId}/{appId}/HTTP/allWeb", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"TransportDuration/App/{accountId}/{appId}/HTTP/all", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"TransportDuration/App/{accountId}/{appId}/HTTP/allWeb", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/Create/Success", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"DurationByCaller/App/{accountId}/{appId}/HTTP/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"DurationByCaller/App/{accountId}/{appId}/HTTP/allWeb", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"TransportDuration/App/{accountId}/{appId}/HTTP/all", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"TransportDuration/App/{accountId}/{appId}/HTTP/allWeb", CallCountAllHarvests = 1 }
         };
 
         var receiverUnexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", CallCountAllHarvests = 1 }
         };
 
 

@@ -4,8 +4,6 @@
 
 root = true
 
-file_header_template = Copyright 2020 New Relic, Inc. All rights reserved.\nSPDX-License-Identifier: Apache-2.0
-
 [*]
 insert_final_newline = true
 indent_style = space
@@ -169,7 +167,8 @@ csharp_style_prefer_index_operator = true:suggestion
 csharp_style_namespace_declarations = file_scoped:warning
 
 # error if file doesn't have the required header
-dotnet_diagnostic.SA1633.severity = error
+file_header_template = Copyright 2020 New Relic, Inc. All rights reserved.\nSPDX-License-Identifier: Apache-2.0
+dotnet_diagnostic.IDE0073.severity = error
 
 ##################################
 # Visual Basic Code Style Rules  #
@@ -200,7 +199,7 @@ indent_size = 2
 indent_size = 2
 
 # Xml files
-[*.{xml,stylecop,resx,ruleset}]
+[*.{xml,resx}]
 indent_size = 2
 
 # Xml config files

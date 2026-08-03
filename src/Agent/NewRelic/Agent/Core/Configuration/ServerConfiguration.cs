@@ -245,6 +245,15 @@ public class ServerConfiguration
 
         [JsonProperty("capture_params")]
         public bool? CaptureParametersEnabled { get; set; }
+
+        [JsonProperty("ai_monitoring.enabled")]
+        public bool? AiMonitoringEnabled { get; set; }
+
+        [JsonProperty("ai_monitoring.streaming.enabled")]
+        public bool? AiMonitoringStreamingEnabled { get; set; }
+
+        [JsonProperty("ai_monitoring.record_content.enabled")]
+        public bool? AiMonitoringRecordContentEnabled { get; set; }
     }
 
     public class InstrumentationConfig

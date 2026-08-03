@@ -42,9 +42,9 @@ public abstract class WCFClientTestBase : WCFLegacyTestBase
             new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncThrowException", CallCountAllHarvests = 2 },
             new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncGetData", CallCountAllHarvests = 2 /*Begin/End + Event Based Async*/  },
             new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncThrowException", CallCountAllHarvests = 4 /*Begin/End + Event Based Async*/ },
-            new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncGetData" , callCount = 1 },
+            new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncGetData" , CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncThrowException", CallCountAllHarvests = 2  },
-            new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncGetData", callCount = 1  },
+            new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncGetData", CallCountAllHarvests = 1  },
 
             new Assertions.ExpectedMetric(){ metricName = "DotNet/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/ThrowException",
                 metricScope = "OtherTransaction/Custom/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/ThrowException", CallCountAllHarvests = _countClientInvocationMethodsToTest * 2 },
@@ -173,7 +173,7 @@ public abstract class WCFClientTestBase : WCFLegacyTestBase
         //to the transaction.
         if (_thereWereCATFailures)
         {
-            expectedMetrics.ForEach(x => x.callCount = null);
+            expectedMetrics.ForEach(x => x.CallCountAllHarvests = null);
         }
 
         if (_tracingTestOption == WCFLegacyTracingTestOption.CAT)
@@ -217,8 +217,8 @@ public abstract class WCFClientTestBase : WCFLegacyTestBase
     {
         var bindingName = $"{_bindingToTest}Binding";
         var expectedMetrics = SystemBindingNames.Contains(bindingName)
-            ? new List<Assertions.ExpectedMetric> { new Assertions.ExpectedMetric() { metricName = $"Supportability/WCFClient/BindingType/{bindingName}", callCount = 1 } }
-            : new List<Assertions.ExpectedMetric> { new Assertions.ExpectedMetric() { metricName = $"Supportability/WCFClient/BindingType/CustomBinding", callCount = 1 } };
+            ? new List<Assertions.ExpectedMetric> { new Assertions.ExpectedMetric() { metricName = $"Supportability/WCFClient/BindingType/{bindingName}", CallCountAllHarvests = 1 } }
+            : new List<Assertions.ExpectedMetric> { new Assertions.ExpectedMetric() { metricName = $"Supportability/WCFClient/BindingType/CustomBinding", CallCountAllHarvests = 1 } };
 
         var unexpectedMetrics = SystemBindingNames.Where(binding => binding != bindingName).Select(binding => new Assertions.ExpectedMetric() { metricName = $"Supportability/WCFClient/BindingType/{binding}" }).ToList();
         if (bindingName != "CustomBinding" && bindingName != "CustomClassBinding")

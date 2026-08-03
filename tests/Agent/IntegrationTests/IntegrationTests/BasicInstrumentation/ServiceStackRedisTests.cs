@@ -37,14 +37,14 @@ public class ServiceStackRedisTests : NewRelicIntegrationTest<RemoteServiceFixtu
             new Assertions.ExpectedMetric {metricName = "Datastore/all", CallCountAllHarvests = 3},
             new Assertions.ExpectedMetric {metricName = "Datastore/Redis/all", CallCountAllHarvests = 3},
 
-            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.SaveAsync, callCount = 1},
-            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.SaveAsync, metricScope = "WebTransaction/MVC/RedisController/Get", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.SaveAsync, CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.SaveAsync, metricScope = "WebTransaction/MVC/RedisController/Get", CallCountAllHarvests = 1},
 
-            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.Shutdown, callCount = 1},
-            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.Shutdown, metricScope = "WebTransaction/MVC/RedisController/Get", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.Shutdown, CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.Shutdown, metricScope = "WebTransaction/MVC/RedisController/Get", CallCountAllHarvests = 1},
 
-            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.RewriteAppendOnlyFileAsync, callCount = 1},
-            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.RewriteAppendOnlyFileAsync, metricScope = "WebTransaction/MVC/RedisController/Get", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.RewriteAppendOnlyFileAsync, CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = "Datastore/operation/Redis/" + ServiceStackRedisCommands.RewriteAppendOnlyFileAsync, metricScope = "WebTransaction/MVC/RedisController/Get", CallCountAllHarvests = 1},
         };
 
         var actualMetrics = _fixture.AgentLog.GetMetrics().ToList();

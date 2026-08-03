@@ -58,19 +58,19 @@ public abstract class RejitDeleteAttributeBase<TFixture> : NewRelicIntegrationTe
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             //transactions
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomDeleteMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Rejit/GetDeleteAttribute", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomDeleteMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Rejit/GetDeleteAttribute", CallCountAllHarvests = 1 },
 
             // Unscoped
-            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomDeleteMetricName", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomDeleteMetricName", CallCountAllHarvests = 1 },
             new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetDeleteAttribute", CallCountAllHarvests = 2 },
 
             // Scoped
-            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomDeleteMetricName", metricScope = "WebTransaction/Custom/MyCustomDeleteMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetDeleteAttribute", metricScope = "WebTransaction/MVC/Rejit/GetDeleteAttribute", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomDeleteMetricName", metricScope = "WebTransaction/Custom/MyCustomDeleteMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetDeleteAttribute", metricScope = "WebTransaction/MVC/Rejit/GetDeleteAttribute", CallCountAllHarvests = 1 }
         };
 
         var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);

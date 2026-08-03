@@ -90,40 +90,40 @@ public abstract class MsSqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixtur
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", callCount = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
 
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)}/default", callCount = expectedDatastoreCallCount},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 4 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = _expectedTransactionName},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = _expectedAsyncTransactionName},
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/select", callCount = 1, metricScope = _expectedTransactionName},
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/select", callCount = 1, metricScope = _expectedAsyncTransactionName},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/insert", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/insert", callCount = 1, metricScope = _expectedTransactionName},
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/insert", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/insert", callCount = 1, metricScope = _expectedAsyncTransactionName},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/delete", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/delete", callCount = 1, metricScope = _expectedTransactionName},
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/delete", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/delete", callCount = 1, metricScope = _expectedAsyncTransactionName},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)}/default", CallCountAllHarvests = expectedDatastoreCallCount},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", CallCountAllHarvests = 4 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", CallCountAllHarvests = 1, metricScope = _expectedTransactionName},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", CallCountAllHarvests = 1, metricScope = _expectedAsyncTransactionName},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/select", CallCountAllHarvests = 1, metricScope = _expectedTransactionName},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/select", CallCountAllHarvests = 1, metricScope = _expectedAsyncTransactionName},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/insert", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/insert", CallCountAllHarvests = 1, metricScope = _expectedTransactionName},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/insert", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/insert", CallCountAllHarvests = 1, metricScope = _expectedAsyncTransactionName},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/delete", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/delete", CallCountAllHarvests = 1, metricScope = _expectedTransactionName},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/delete", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/delete", CallCountAllHarvests = 1, metricScope = _expectedAsyncTransactionName},
         };
 
         // The ODBC instrumentation does not instrument connection calls or iterations
         if (! _isOdbc)
         {
-            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/Open", callCount = 1 });
-            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/OpenAsync", callCount = 1 });
-            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount });
-            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount / 2, metricScope = _expectedTransactionName });
-            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount / 2, metricScope = _expectedAsyncTransactionName });
+            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/Open", CallCountAllHarvests = 1 });
+            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/OpenAsync", CallCountAllHarvests = 1 });
+            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", CallCountAllHarvests = expectedIterateCallCount });
+            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", CallCountAllHarvests = expectedIterateCallCount / 2, metricScope = _expectedTransactionName });
+            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", CallCountAllHarvests = expectedIterateCallCount / 2, metricScope = _expectedAsyncTransactionName });
         }
 
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>

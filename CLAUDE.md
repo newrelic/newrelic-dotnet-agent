@@ -5,9 +5,9 @@ A native C++ profiler injects IL into JIT-compiled methods; the managed agent
 core collects telemetry and ships it to the collector.
 
 Sub-docs (read when working in that area):
-- [src/claude-source.md](src/claude-source.md) — agent/profiler/extensions internals
-- [build/claude-build.md](build/claude-build.md) — build, packaging, release
-- [tests/claude-tests.md](tests/claude-tests.md) — unit + integration test layout
+- [src/CLAUDE.md](src/CLAUDE.md) — agent/profiler/extensions internals
+- [build/CLAUDE.md](build/CLAUDE.md) — build, packaging, release
+- [tests/CLAUDE.md](tests/CLAUDE.md) — unit + integration test layout
 
 ## Solutions
 
@@ -67,6 +67,54 @@ NEWRELIC_LICENSE_KEY=...
 Debug logs: `NEWRELIC_LOG_LEVEL=debug` → `<home>/logs/`. Profiler load
 failures surface in the Windows Event Viewer.
 
+### .NET Framework: non-IIS processes must be allow-listed
+
+**The env vars above are not sufficient on .NET Framework.** The profiler
+instruments only an allow-listed set of process names  -  `w3wp.exe` (or any
+child of it), `WebDev.WebServer40/20.exe`, `inetinfo.exe`, `WaWorkerHost.exe`,
+`WaWebHost.exe`, `WcfSvcHost.exe`. Anything else (a console host, a custom
+service host, a test harness) is rejected and **the profiler unloads before
+the managed agent ever starts**  -  so there is no `newrelic_agent_*.log` at
+all, only a `NewRelic.Profiler.<pid>.log` containing:
+
+```
+This process (C:\...\MYAPP.EXE) is not configured to be instrumented.
+This process should not be instrumented, unloading profiler.
+```
+
+Opt in with either:
+
+```
+NEW_RELIC_INCLUDED_APPLICATION_NAMES=MyApp.exe,Other.exe
+```
+
+or in `newrelic.config`:
+
+```xml
+<instrumentation>
+  <applications>
+    <application name="MyApp.exe" />
+  </applications>
+</instrumentation>
+```
+
+The env var wins  -  when set, the config `<applications>` list is not read
+(`Configuration.h` `SetIncludedProcesses` returns early). Matching is
+`EndsWith` on the full process path, so a bare exe name is fine. There is a
+matching `NEW_RELIC_EXCLUDED_APPLICATION_NAMES` / `<application>` exclude
+list.
+
+Source of truth: `src/Agent/NewRelic/Profiler/Configuration/Configuration.h`
+(`SetIncludedProcesses`, `ShouldInstrumentDefaultProcess`, `IsW3wpProcess`)
+and `src/Agent/NewRelic/Profiler/MethodRewriter/ISystemCalls.h`
+(`GetIncludedApplicationNames`).
+
+**Debugging signal:** "profiler attached but no managed agent log" almost
+always means this. Check for `NewRelic.Profiler.<pid>.log` in `<home>/logs/`
+and grep it for `not configured to be instrumented` before looking anywhere
+else. .NET Core/.NET has no such allow-list  -  `CORECLR_ENABLE_PROFILING=1`
+is enough.
+
 ## How instrumentation works (short version)
 
 1. CLR loads the profiler via `*_PROFILER_PATH`.
@@ -99,7 +147,7 @@ Precedence: env vars > `newrelic.config` > server-side config > defaults.
 **Editing `Configuration.xsd`** requires regenerating `Configuration.cs`
 via `xsd2code` and restoring the license header — never hand-edit the
 generated file. Exact command and caveats in
-[src/claude-source.md](src/claude-source.md) under Configuration.
+[src/CLAUDE.md](src/CLAUDE.md) under Configuration.
 
 ## Building and testing from the CLI
 
@@ -141,8 +189,36 @@ cd tests/Agent/IntegrationTests/UnboundedServices
 docker compose up -d
 ```
 
+## Analyzing agent and integration-test logs
+
+Agent logs and integration-test `.testlog` files are huge (hundreds of KB) with
+single lines tens of KB wide -- the `connect`/`agent_settings` payloads and the
+`span_event_data` / `transaction_sample_data` / `metric_data` /
+`analytic_event_data` harvests are base64 blobs and full JSON. Never raw-read,
+`tail`, or wide-grep them; the bytes land in context and get re-billed every
+later turn. Instead:
+
+- Strip the payload noise into a slim file first, then work from it:
+  `grep -avE 'span_event_data|transaction_sample_data|metric_data|analytic_event_data' big.testlog > /tmp/slim.log`
+- Counts before content: `grep -c`, `grep -o` (matched token only),
+  `sort | uniq -c`. Much is learnable without a full line -- skip-line count,
+  wrapper-selection counts, `TraceContext/Accept/Success` presence.
+- Cap line width on anything that may print a payload: pipe through `cut -c1-200`.
+- Mind log level before concluding a line's absence means the event did not
+  happen. The sender/SUT app is often at `debug` while the receiver is at
+  `all`/finest, so finest-only lines ("Skipping HttpWebRequest header injection",
+  `Segment start`) show for one app but not the other. Check `Log level set to`
+  per pid first.
+- When you only need a conclusion, hand the whole log to a subagent with a
+  specific question rather than reading it in the main thread.
+
 ## Testing conventions
 
+- **New/changed code in `Core` and `NewRelic.Agent.Extensions` must ship with
+  unit tests in the same change (unprompted), targeting 100% reachable
+  coverage.** Enforced by the `dotnet-unit-test-coverage` skill
+  (`.claude/skills/`), which also tells plan-writing to bake this in. Wrapper
+  projects are exempt (see below).
 - Unit tests: `tests/Agent/UnitTests/` (NUnit primary, xUnit used in some
   places). Mocking is **JustMock Lite** (free tier) — interfaces and virtual
   members only. No sealed / static / non-virtual mocking. Design new code
@@ -157,7 +233,7 @@ docker compose up -d
   wrapper. That keeps the interesting logic unit-testable while the
   wrapper itself stays thin (match, create segment, delegate, finish).
 - Integration tests: `tests/Agent/IntegrationTests/` — see
-  [tests/claude-tests.md](tests/claude-tests.md).
+  [tests/CLAUDE.md](tests/CLAUDE.md).
 - **Never use `InternalsVisibleTo`** in any production or test assembly.
   If a test needs to reach non-public code, refactor the production type to
   expose what's needed through a proper surface (interface, public helper,
@@ -205,4 +281,22 @@ only when no suitable overload exists *and* the call is not on a hot path.
 - WebKit C++ style guide.
 - Compact namespaces: `namespace NewRelic::Profiler::Logger { ... }`.
 - `.clang-format` at the profiler solution root is authoritative.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in Jira (New Relic, project `NR`) via the Atlassian MCP;
+the GitHub repo is a public code/PR mirror. External PRs are not a triage
+surface. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical role strings used as-is as Jira labels. See
+`docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See
+`docs/agents/domain.md`.
 

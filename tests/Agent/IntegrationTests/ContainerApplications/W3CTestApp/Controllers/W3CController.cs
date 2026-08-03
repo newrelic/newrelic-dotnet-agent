@@ -63,9 +63,13 @@ public class W3CController : ControllerBase
         foreach (var model in models)
         {
             var request = BuildHttpRequest(model);
+            // Deliberate synchronous wait: the calls must run synchronously and in order so the
+            // agent injects the W3C trace context headers the harness validates (see comment above).
+#pragma warning disable VSTHRD002
             _ = client
                 .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
                 .Result;
+#pragma warning restore VSTHRD002
         }
     }
 

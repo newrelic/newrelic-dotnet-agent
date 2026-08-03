@@ -90,3 +90,9 @@ build/Linux/keys
 !.claude/skills/
 !.claude/settings.json
 **/.claude/settings.local.json
+
+# Superpowers working docs (local only)
+/docs/superpowers/
+
+# Codegraph database (local only)
+.codegraph

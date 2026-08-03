@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.WireModels;
 using NUnit.Framework;
@@ -21,7 +22,7 @@ class MetricStatsCollectionTests
     {
         _metricNameService = Mock.Create<IMetricNameService>();
         Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
-        _metricBuilder = new MetricWireModel.MetricBuilder(_metricNameService);
+        _metricBuilder = new MetricWireModel.MetricBuilder();
     }
 
     [TearDown]
@@ -37,7 +38,7 @@ class MetricStatsCollectionTests
     {
         IMetricNameService mNameService = Mock.Create<IMetricNameService>();
         Mock.Arrange(() => mNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => "IAmRenamed");
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         var collection = new MetricStatsCollection();
         collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
         IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(mNameService);
@@ -64,7 +65,7 @@ class MetricStatsCollectionTests
 
     private void MergeUnscopedNotCreated_OneStat()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         var collection = new MetricStatsCollection();
         collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
         IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
@@ -90,7 +91,7 @@ class MetricStatsCollectionTests
     {
         IMetricNameService mNameService = Mock.Create<IMetricNameService>();
         Mock.Arrange(() => mNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => "IAmRenamed");
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("name", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         var collection = new MetricStatsCollection();
         var scopedStats = new MetricStatsDictionary<string, MetricDataWireModel>();
         scopedStats[metric1.MetricNameModel.Name] = metric1.DataModel;
@@ -116,7 +117,7 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeUnscopedNotCreated_OneStatEmptyString()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("name", "", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         var collection = new MetricStatsCollection();
         collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
         IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
@@ -140,7 +141,7 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeUnscopedNotCreated_TwoStatsSame()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         var collection = new MetricStatsCollection();
         collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
         collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
@@ -161,7 +162,7 @@ class MetricStatsCollectionTests
         }
         Assert.That(count, Is.EqualTo(1));
 
-        var metric2 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
+        var metric2 = MetricWireModel.BuildMetric("name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
         collection.MergeUnscopedStats(metric2.MetricNameModel.Name, metric2.DataModel);
         collection.MergeUnscopedStats(metric2.MetricNameModel.Name, metric2.DataModel);
         stats = collection.ConvertToJsonForSending(_metricNameService);
@@ -186,8 +187,8 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeUnscopeNotCreated_TwoDifferentSame()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
-        var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/another", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
+        var metric2 = MetricWireModel.BuildMetric("DotNet/another", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 
         var collection = new MetricStatsCollection();
         collection.MergeUnscopedStats(metric1.MetricNameModel.Name, metric1.DataModel);
@@ -233,7 +234,7 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeScopedStats_OneStat_StringData()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "myScope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "myScope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         var collection = new MetricStatsCollection();
         collection.MergeScopedStats(metric1.MetricNameModel.Scope, metric1.MetricNameModel.Name, metric1.DataModel);
         IEnumerable<MetricWireModel> stats = collection.ConvertToJsonForSending(_metricNameService);
@@ -257,7 +258,7 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeScopedStats_TwoStatsSame_StringData()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("name", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         var collection = new MetricStatsCollection();
         collection.MergeScopedStats(metric1.MetricNameModel.Scope, metric1.MetricNameModel.Name, metric1.DataModel);
         collection.MergeScopedStats(metric1.MetricNameModel.Scope, metric1.MetricNameModel.Name, metric1.DataModel);
@@ -283,8 +284,8 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeScopedStats_TwoDifferentSame_StringData()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5)));
-        var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/another", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5)));
+        var metric2 = MetricWireModel.BuildMetric("DotNet/another", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 
         var collection = new MetricStatsCollection();
         collection.MergeScopedStats(metric1.MetricNameModel.Scope, metric1.MetricNameModel.Name, metric1.DataModel);
@@ -331,7 +332,7 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeScopedStats_OneStat()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "myScope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("name", "myScope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         var collection = new MetricStatsCollection();
         MetricStatsDictionary<string, MetricDataWireModel> txStats = new MetricStatsDictionary<string, MetricDataWireModel>();
         txStats.Merge(metric1.MetricNameModel.Name, metric1.DataModel, MetricDataWireModel.BuildAggregateData);
@@ -357,7 +358,7 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeScopedStats_TwoStatsSame()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("name", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         var collection = new MetricStatsCollection();
         MetricStatsDictionary<string, MetricDataWireModel> txStats = new MetricStatsDictionary<string, MetricDataWireModel>();
         txStats.Merge(metric1.MetricNameModel.Name, metric1.DataModel, MetricDataWireModel.BuildAggregateData);
@@ -385,7 +386,7 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeScopedStats_TwoStatsSeparateEngines()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("name", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         var collection = new MetricStatsCollection();
         MetricStatsDictionary<string, MetricDataWireModel> txStats1 = new MetricStatsDictionary<string, MetricDataWireModel>();
         txStats1.Merge(metric1.MetricNameModel.Name, metric1.DataModel, MetricDataWireModel.BuildAggregateData);
@@ -415,8 +416,8 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeScopedStats_TwoDifferentSame()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(1)));
-        var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/another", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(1)));
+        var metric2 = MetricWireModel.BuildMetric("DotNet/another", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 
         var collection = new MetricStatsCollection();
         MetricStatsDictionary<string, MetricDataWireModel> txStats1 = new MetricStatsDictionary<string, MetricDataWireModel>();
@@ -462,10 +463,10 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeScopedStats_DifferentScopes()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(1)));
-        var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/another", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
-        var metric3 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "myotherscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
-        var metric4 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/another", "myotherscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(6)));
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(1)));
+        var metric2 = MetricWireModel.BuildMetric("DotNet/another", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        var metric3 = MetricWireModel.BuildMetric("DotNet/name", "myotherscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
+        var metric4 = MetricWireModel.BuildMetric("DotNet/another", "myotherscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(6)));
 
 
         var collection = new MetricStatsCollection();
@@ -549,8 +550,8 @@ class MetricStatsCollectionTests
     [Test]
     public void MergeStatsEngine_Mix()
     {
-        var metric5 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(4)));
-        var metric6 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/another", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(8), TimeSpan.FromSeconds(6)));
+        var metric5 = MetricWireModel.BuildMetric("DotNet/name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(4)));
+        var metric6 = MetricWireModel.BuildMetric("DotNet/another", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(8), TimeSpan.FromSeconds(6)));
 
         var collection1 = new MetricStatsCollection();
         MetricStatsDictionary<string, MetricDataWireModel> scoped1 = new MetricStatsDictionary<string, MetricDataWireModel>();
@@ -581,5 +582,205 @@ class MetricStatsCollectionTests
     }
 
     #endregion MergeStatsEngine
+
+    #region Rename collisions
+
+    /// <summary>
+    /// Creates a name service that renames each key of <paramref name="renames"/> to its value and leaves
+    /// every other metric name alone. A null value means the rename rules ignore that metric.
+    /// </summary>
+    private static IMetricNameService CreateRenamingMetricNameService(IDictionary<string, string> renames)
+    {
+        var nameService = Mock.Create<IMetricNameService>();
+        Mock.Arrange(() => nameService.RenameMetric(Arg.IsAny<string>()))
+            .Returns<string>(name => renames.TryGetValue(name, out var newName) ? newName : name);
+        return nameService;
+    }
+
+    [Test]
+    public void ConvertToJsonForSending_UnscopedMetricsCollidingAfterRename_AreMergedIntoOneMetric()
+    {
+        var nameService = CreateRenamingMetricNameService(new Dictionary<string, string>
+        {
+            { "Custom/A", "Custom/Renamed" },
+            { "Custom/B", "Custom/Renamed" }
+        });
+
+        var collection = new MetricStatsCollection();
+        collection.MergeUnscopedStats("Custom/A", MetricDataWireModel.BuildCountData(5));
+        collection.MergeUnscopedStats("Custom/B", MetricDataWireModel.BuildCountData(10));
+
+        var stats = collection.ConvertToJsonForSending(nameService);
+
+        Assert.That(stats, Has.Count.EqualTo(1));
+        Assert.Multiple(() =>
+        {
+            Assert.That(stats[0].MetricNameModel.Name, Is.EqualTo("Custom/Renamed"));
+            Assert.That(stats[0].MetricNameModel.Scope, Is.EqualTo(null));
+            Assert.That(stats[0].DataModel.Value0, Is.EqualTo(15));
+        });
+    }
+
+    [Test]
+    public void ConvertToJsonForSending_UnscopedMetricsCollidingAfterRename_MergeTimingDataAcrossAllValues()
+    {
+        var nameService = CreateRenamingMetricNameService(new Dictionary<string, string>
+        {
+            { "DotNet/A", "DotNet/Renamed" },
+            { "DotNet/B", "DotNet/Renamed" }
+        });
+
+        var collection = new MetricStatsCollection();
+        collection.MergeUnscopedStats("DotNet/A", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
+        collection.MergeUnscopedStats("DotNet/B", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4)));
+
+        var stats = collection.ConvertToJsonForSending(nameService);
+
+        Assert.That(stats, Has.Count.EqualTo(1));
+        Assert.Multiple(() =>
+        {
+            Assert.That(stats[0].MetricNameModel.Name, Is.EqualTo("DotNet/Renamed"));
+            Assert.That(stats[0].DataModel.Value0, Is.EqualTo(2));
+            Assert.That(stats[0].DataModel.Value1, Is.EqualTo(8));
+            Assert.That(stats[0].DataModel.Value2, Is.EqualTo(6));
+        });
+    }
+
+    [Test]
+    public void ConvertToJsonForSending_ScopedMetricsInSameScopeCollidingAfterRename_AreMergedIntoOneMetric()
+    {
+        var nameService = CreateRenamingMetricNameService(new Dictionary<string, string>
+        {
+            { "Custom/A", "Custom/Renamed" },
+            { "Custom/B", "Custom/Renamed" }
+        });
+
+        var collection = new MetricStatsCollection();
+        collection.MergeScopedStats("myScope", "Custom/A", MetricDataWireModel.BuildCountData(5));
+        collection.MergeScopedStats("myScope", "Custom/B", MetricDataWireModel.BuildCountData(10));
+
+        var stats = collection.ConvertToJsonForSending(nameService);
+
+        Assert.That(stats, Has.Count.EqualTo(1));
+        Assert.Multiple(() =>
+        {
+            Assert.That(stats[0].MetricNameModel.Name, Is.EqualTo("Custom/Renamed"));
+            Assert.That(stats[0].MetricNameModel.Scope, Is.EqualTo("myScope"));
+            Assert.That(stats[0].DataModel.Value0, Is.EqualTo(15));
+        });
+    }
+
+    [Test]
+    public void ConvertToJsonForSending_ScopedMetricsInDifferentScopesCollidingAfterRename_AreNotMerged()
+    {
+        var nameService = CreateRenamingMetricNameService(new Dictionary<string, string>
+        {
+            { "Custom/A", "Custom/Renamed" },
+            { "Custom/B", "Custom/Renamed" }
+        });
+
+        var collection = new MetricStatsCollection();
+        collection.MergeScopedStats("scopeOne", "Custom/A", MetricDataWireModel.BuildCountData(5));
+        collection.MergeScopedStats("scopeTwo", "Custom/B", MetricDataWireModel.BuildCountData(10));
+
+        var stats = collection.ConvertToJsonForSending(nameService);
+
+        Assert.That(stats, Has.Count.EqualTo(2));
+        Assert.Multiple(() =>
+        {
+            Assert.That(stats.Select(metric => metric.MetricNameModel.Name), Has.All.EqualTo("Custom/Renamed"));
+            Assert.That(stats.First(metric => metric.MetricNameModel.Scope == "scopeOne").DataModel.Value0, Is.EqualTo(5));
+            Assert.That(stats.First(metric => metric.MetricNameModel.Scope == "scopeTwo").DataModel.Value0, Is.EqualTo(10));
+        });
+    }
+
+    [Test]
+    public void ConvertToJsonForSending_UnscopedAndScopedMetricsWithTheSameRenamedName_AreNotMerged()
+    {
+        var nameService = CreateRenamingMetricNameService(new Dictionary<string, string>
+        {
+            { "Custom/A", "Custom/Renamed" },
+            { "Custom/B", "Custom/Renamed" }
+        });
+
+        var collection = new MetricStatsCollection();
+        collection.MergeUnscopedStats("Custom/A", MetricDataWireModel.BuildCountData(5));
+        collection.MergeScopedStats("myScope", "Custom/B", MetricDataWireModel.BuildCountData(10));
+
+        var stats = collection.ConvertToJsonForSending(nameService);
+
+        Assert.That(stats, Has.Count.EqualTo(2));
+        Assert.Multiple(() =>
+        {
+            Assert.That(stats.First(metric => metric.MetricNameModel.Scope == null).DataModel.Value0, Is.EqualTo(5));
+            Assert.That(stats.First(metric => metric.MetricNameModel.Scope == "myScope").DataModel.Value0, Is.EqualTo(10));
+        });
+    }
+
+    [Test]
+    public void ConvertToJsonForSending_WhenOneOfTwoCollidingUnscopedMetricsIsIgnored_OnlyTheSurvivorsDataIsSent()
+    {
+        // A null rename means the rename rules say to ignore the metric
+        var nameService = CreateRenamingMetricNameService(new Dictionary<string, string>
+        {
+            { "Custom/A", null },
+            { "Custom/B", "Custom/Renamed" }
+        });
+
+        var collection = new MetricStatsCollection();
+        collection.MergeUnscopedStats("Custom/A", MetricDataWireModel.BuildCountData(5));
+        collection.MergeUnscopedStats("Custom/B", MetricDataWireModel.BuildCountData(10));
+
+        var stats = collection.ConvertToJsonForSending(nameService);
+
+        Assert.That(stats, Has.Count.EqualTo(1));
+        Assert.Multiple(() =>
+        {
+            Assert.That(stats[0].MetricNameModel.Name, Is.EqualTo("Custom/Renamed"));
+            Assert.That(stats[0].DataModel.Value0, Is.EqualTo(10));
+        });
+    }
+
+    [Test]
+    public void ConvertToJsonForSending_WhenAScopedMetricIsIgnored_ItIsNotSent()
+    {
+        var nameService = CreateRenamingMetricNameService(new Dictionary<string, string>
+        {
+            { "Custom/A", null }
+        });
+
+        var collection = new MetricStatsCollection();
+        collection.MergeScopedStats("myScope", "Custom/A", MetricDataWireModel.BuildCountData(5));
+        collection.MergeScopedStats("myScope", "Custom/B", MetricDataWireModel.BuildCountData(10));
+
+        var stats = collection.ConvertToJsonForSending(nameService);
+
+        Assert.That(stats, Has.Count.EqualTo(1));
+        Assert.Multiple(() =>
+        {
+            Assert.That(stats[0].MetricNameModel.Name, Is.EqualTo("Custom/B"));
+            Assert.That(stats[0].MetricNameModel.Scope, Is.EqualTo("myScope"));
+            Assert.That(stats[0].DataModel.Value0, Is.EqualTo(10));
+        });
+    }
+
+    [Test]
+    public void ConvertToJsonForSending_AppliesRenameRulesExactlyOncePerMetricName()
+    {
+        // Guards against the metric name being run through the rename rules more than once, which
+        // a non-idempotent rule (one that does not anchor on something it removes) would compound.
+        var nameService = Mock.Create<IMetricNameService>();
+        Mock.Arrange(() => nameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => "Prefix/" + name);
+
+        var collection = new MetricStatsCollection();
+        collection.MergeUnscopedStats("Custom/A", MetricDataWireModel.BuildCountData(5));
+
+        var stats = collection.ConvertToJsonForSending(nameService);
+
+        Assert.That(stats, Has.Count.EqualTo(1));
+        Assert.That(stats[0].MetricNameModel.Name, Is.EqualTo("Prefix/Custom/A"));
+    }
+
+    #endregion Rename collisions
 
 }

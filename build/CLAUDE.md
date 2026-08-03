@@ -2,7 +2,7 @@
 
 Tools that turn the solutions into shippable artifacts (NuGet, MSI, Linux
 packages, Azure Site Extension, download-site bundle). See the
-[root claude.md](../claude.md) for local-development build basics.
+[root claude.md](../CLAUDE.md) for local-development build basics.
 
 ## Layout
 
@@ -71,7 +71,7 @@ Invoke from repo root, e.g.:
 
 - `xsd2code/` — regenerates `Configuration.cs` from `Configuration.xsd`
   (command + license-header restore in
-  [src/claude-source.md](../src/claude-source.md))
+  [src/CLAUDE.md](../src/CLAUDE.md))
 - `NUnit-Console/`, `XUnit-Console/` — CLI test runners
 - `NuGet/`, `nuget.exe` — NuGet CLI
 - `vswhere.exe` — Visual Studio discovery

@@ -25,10 +25,7 @@ public abstract class MsSqlTruncationTestsBase<TFixture> : NewRelicIntegrationTe
         _fixture = fixture;
         _fixture.TestLogger = output;
 
-        _fixture.BaselinePayloadBytes = 61446; // Baseline payload size for Core Latest agent with Microsoft.Data.SqlClient
-
         _fixture.AddCommand($"{exerciserName} MsSqlWithLongQuery");
-        _fixture.AddCommand($"{exerciserName} Wait 5000");
 
         _fixture.AddActions
         (

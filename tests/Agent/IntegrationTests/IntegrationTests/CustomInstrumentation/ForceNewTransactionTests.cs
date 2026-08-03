@@ -87,16 +87,16 @@ public abstract class GloballyForceNewTransactionTests<TFixture> : NewRelicInteg
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"OtherTransaction/all", callCount = ForceNewTransaction ? 2 : 1 },
-            new Assertions.ExpectedMetric { metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionWithThreadedCallToInstrumentedMethod", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionWithThreadedCallToInstrumentedMethod", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = $"OtherTransaction/all", CallCountAllHarvests = ForceNewTransaction ? 2 : 1 },
+            new Assertions.ExpectedMetric { metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionWithThreadedCallToInstrumentedMethod", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionWithThreadedCallToInstrumentedMethod", CallCountAllHarvests = 1 }
         };
 
         if (ForceNewTransaction)
         {
-            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"OtherTransaction/Custom/{LibraryClassName}/SpanOrTransactionBasedOnConfig", callCount = 1 });
+            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"OtherTransaction/Custom/{LibraryClassName}/SpanOrTransactionBasedOnConfig", CallCountAllHarvests = 1 });
         }
-        expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"DotNet/{LibraryClassName}/SpanOrTransactionBasedOnConfig", callCount = 1 });
+        expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"DotNet/{LibraryClassName}/SpanOrTransactionBasedOnConfig", CallCountAllHarvests = 1 });
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();
 

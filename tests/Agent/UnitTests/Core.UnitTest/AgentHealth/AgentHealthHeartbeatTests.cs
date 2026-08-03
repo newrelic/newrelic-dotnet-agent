@@ -43,7 +43,7 @@ internal class AgentHealthHeartbeatTests
     {
         var metricNameService = Mock.Create<IMetricNameService>();
         Mock.Arrange(() => metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
-        return new MetricWireModel.MetricBuilder(metricNameService);
+        return new MetricWireModel.MetricBuilder();
     }
 
     [Test]

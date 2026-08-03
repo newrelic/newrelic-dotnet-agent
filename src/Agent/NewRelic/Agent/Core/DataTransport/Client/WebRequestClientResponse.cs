@@ -61,6 +61,8 @@ public class WebRequestClientResponse : IHttpResponse
         }
     }
 
+    public string GetHeaders() => HttpResponseHeaderFormatter.Format(_response.Headers);
+
     public bool IsSuccessStatusCode => (200 <= (int)_response.StatusCode) && ((int)_response.StatusCode <= 299);
     public HttpStatusCode StatusCode => _response.StatusCode;
 

@@ -82,8 +82,8 @@ public class RabbitMqLegacyW3cTracingBasicTest : RabbitMqLegacyW3cTracingTests
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"Supportability/DistributedTrace/CreatePayload/Success", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = $"Supportability/TraceContext/Create/Success", callCount = 1},
+            new Assertions.ExpectedMetric { metricName = $"Supportability/DistributedTrace/CreatePayload/Success", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = $"Supportability/TraceContext/Create/Success", CallCountAllHarvests = 1},
         };
 
         var metrics = _fixture.AgentLog.GetMetrics();
@@ -147,15 +147,15 @@ public class RabbitMqLegacyW3cTracingEventingConsumerTest : RabbitMqLegacyW3cTra
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $"DurationByCaller/App/{acctId}/{appId}/AMQP/all", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = $"DurationByCaller/App/{acctId}/{appId}/AMQP/allOther", callCount = 1},
+            new Assertions.ExpectedMetric { metricName = $"DurationByCaller/App/{acctId}/{appId}/AMQP/all", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = $"DurationByCaller/App/{acctId}/{appId}/AMQP/allOther", CallCountAllHarvests = 1},
 
-            new Assertions.ExpectedMetric { metricName = $"TransportDuration/App/{acctId}/{appId}/AMQP/all", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = $"TransportDuration/App/{acctId}/{appId}/AMQP/allOther", callCount = 1},
+            new Assertions.ExpectedMetric { metricName = $"TransportDuration/App/{acctId}/{appId}/AMQP/all", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = $"TransportDuration/App/{acctId}/{appId}/AMQP/allOther", CallCountAllHarvests = 1},
 
-            new Assertions.ExpectedMetric { metricName = $"Supportability/DistributedTrace/CreatePayload/Success", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = $"Supportability/TraceContext/Create/Success", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = $"Supportability/TraceContext/Accept/Success", callCount = 1}
+            new Assertions.ExpectedMetric { metricName = $"Supportability/DistributedTrace/CreatePayload/Success", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = $"Supportability/TraceContext/Create/Success", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = $"Supportability/TraceContext/Accept/Success", CallCountAllHarvests = 1}
         };
 
         var metrics = _fixture.AgentLog.GetMetrics();

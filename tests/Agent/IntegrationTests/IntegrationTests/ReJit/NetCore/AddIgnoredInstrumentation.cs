@@ -69,12 +69,12 @@ public class AddIgnoredInstrumentation : NewRelicIntegrationTest<AspNetCoreReJit
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             // From the initialize call
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", CallCountAllHarvests = 1 },
             // From the first 2 calls to TestAddNode
             new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 2 },
             // From the second set of calls after the mvc and custom instrumentations are disabled
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/Rejit/GetAddNode/0", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/Rejit/GetAddNode/1", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/Rejit/GetAddNode/0", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/Rejit/GetAddNode/1", CallCountAllHarvests = 1 }
         };
 
         var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);

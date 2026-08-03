@@ -76,8 +76,8 @@ public abstract class ApiCallsTests<TFixture> : NewRelicIntegrationTest<TFixture
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/TraceMetadata" },
-            new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/GetLinkingMetadata"},
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Supportability/ApiInvocation/TraceMetadata" },
+            new Assertions.ExpectedMetric(){ CallCountAllHarvests = 1, metricName = "Supportability/ApiInvocation/GetLinkingMetadata"},
             new Assertions.ExpectedMetric(){ CallCountAllHarvests = 2, metricName = "Supportability/ApiInvocation/StartDatastoreSegment"}
         };
 

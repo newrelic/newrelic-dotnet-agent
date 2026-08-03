@@ -60,15 +60,15 @@ public abstract class PostgresSqlSimpleQueryTestsBase<TFixture> : NewRelicIntegr
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open", callCount = expectedDatastoreCallCount},
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", callCount = expectedDatastoreCallCount},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = expectedDatastoreCallCount, metricScope = expectedTransactionName},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open", CallCountAllHarvests = expectedDatastoreCallCount},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", CallCountAllHarvests = expectedDatastoreCallCount},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", CallCountAllHarvests = expectedDatastoreCallCount, metricScope = expectedTransactionName},
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
@@ -77,7 +77,7 @@ public abstract class PostgresSqlSimpleQueryTestsBase<TFixture> : NewRelicIntegr
             new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allWeb" },
 
             // The operation metric should not be scoped because the statement metric is scoped instead
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedTransactionName }
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", CallCountAllHarvests = 1, metricScope = expectedTransactionName }
         };
         var expectedTransactionTraceSegments = new List<string>
         {
@@ -123,22 +123,6 @@ public abstract class PostgresSqlSimpleQueryTestsBase<TFixture> : NewRelicIntegr
 public class PostgresSqlSimpleQueryTestsFW462 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlSimpleQueryTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlSimpleQueryTestsFW471 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlSimpleQueryTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlSimpleQueryTestsFW48 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlSimpleQueryTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
     {
 
     }

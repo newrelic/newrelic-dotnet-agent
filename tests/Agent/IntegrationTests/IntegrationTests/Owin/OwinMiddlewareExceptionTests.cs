@@ -52,11 +52,11 @@ public abstract class OwinMiddlewareExceptionTestsBase<TFixture> : NewRelicInteg
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric {metricName = @"DotNet/Owin Middleware Pipeline", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"WebTransaction", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/StatusCode/500", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/Owin Middleware Pipeline", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"WebTransaction", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"Errors/all", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/StatusCode/500", CallCountAllHarvests = 1},
         };
 
         var expectedExceptionClassName = "System.ArgumentException";

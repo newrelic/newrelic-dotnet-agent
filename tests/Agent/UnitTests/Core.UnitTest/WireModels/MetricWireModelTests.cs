@@ -38,7 +38,7 @@ public class MetricWireModelTests
     public void MetricWireModelStartsWithNameInString()
     {
         var metricData = MetricDataWireModel.BuildGaugeValue(1);
-        var wireModel = MetricWireModel.BuildMetric(_metricNameService, "originalName", null, metricData);
+        var wireModel = MetricWireModel.BuildMetric("originalName", null, metricData);
 
         var wireModelString = wireModel.ToString();
 
@@ -49,7 +49,7 @@ public class MetricWireModelTests
     public void ScopedMetricWireModelStartsWithNameInString()
     {
         var metricData = MetricDataWireModel.BuildGaugeValue(1);
-        var actual = MetricWireModel.BuildMetric(_metricNameService, "originalName", "theScope", metricData);
+        var actual = MetricWireModel.BuildMetric("originalName", "theScope", metricData);
 
         // The code currently uses the type name of the data value and is not worth testing
         Assert.That(actual.ToString(), Does.StartWith("originalName (theScope)"));
@@ -59,7 +59,7 @@ public class MetricWireModelTests
     public void MetricWireModelUsesReferenceEquals()
     {
         var metricData = MetricDataWireModel.BuildGaugeValue(1);
-        var metricWireModel = MetricWireModel.BuildMetric(_metricNameService, "originalName", "theScope", metricData);
+        var metricWireModel = MetricWireModel.BuildMetric("originalName", "theScope", metricData);
 
 #pragma warning disable NUnit2009 // The same value has been provided as both the actual and the expected argument
         Assert.That(metricWireModel, Is.EqualTo(metricWireModel));
@@ -73,8 +73,8 @@ public class MetricWireModelTests
     public bool MetricWireModelComparesItsData(string firstMetricName, string firstMetricScope, float firstMetricValue,
         string secondMetricName, string secondMetricScope, float secondMetricValue)
     {
-        var first = MetricWireModel.BuildMetric(_metricNameService, firstMetricName, firstMetricScope, MetricDataWireModel.BuildGaugeValue(firstMetricValue));
-        var second = MetricWireModel.BuildMetric(_metricNameService, secondMetricName, secondMetricScope, MetricDataWireModel.BuildGaugeValue(secondMetricValue));
+        var first = MetricWireModel.BuildMetric(firstMetricName, firstMetricScope, MetricDataWireModel.BuildGaugeValue(firstMetricValue));
+        var second = MetricWireModel.BuildMetric(secondMetricName, secondMetricScope, MetricDataWireModel.BuildGaugeValue(secondMetricValue));
 
         return first.Equals(second);
     }
@@ -82,7 +82,7 @@ public class MetricWireModelTests
     [Test]
     public void MetricWireModelDoesNotEqualNull()
     {
-        var metricWireModel = MetricWireModel.BuildMetric(_metricNameService, "originalName", null, null);
+        var metricWireModel = MetricWireModel.BuildMetric("originalName", null, null);
 
         Assert.That(metricWireModel, Is.Not.EqualTo(null));
     }
@@ -94,8 +94,8 @@ public class MetricWireModelTests
     public bool MetricWireModelHashCodeUsesNameAndData(string firstMetricName, string firstMetricScope, float firstMetricValue,
         string secondMetricName, string secondMetricScope, float secondMetricValue)
     {
-        var first = MetricWireModel.BuildMetric(_metricNameService, firstMetricName, firstMetricScope, MetricDataWireModel.BuildGaugeValue(firstMetricValue));
-        var second = MetricWireModel.BuildMetric(_metricNameService, secondMetricName, secondMetricScope, MetricDataWireModel.BuildGaugeValue(secondMetricValue));
+        var first = MetricWireModel.BuildMetric(firstMetricName, firstMetricScope, MetricDataWireModel.BuildGaugeValue(firstMetricValue));
+        var second = MetricWireModel.BuildMetric(secondMetricName, secondMetricScope, MetricDataWireModel.BuildGaugeValue(secondMetricValue));
 
         return first.GetHashCode().Equals(second.GetHashCode());
     }
@@ -105,7 +105,7 @@ public class MetricWireModelTests
     [Test]
     public void AddMetricsToEngine_OneScopedMetric()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         Assert.That(metric1, Is.Not.Null);
         var data = metric1.DataModel;
@@ -161,7 +161,7 @@ public class MetricWireModelTests
     [TestCase(null)]
     public void AddMetricsToEngine_OneUnscopedMetricMissingScope(string empty)
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", empty,
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", empty,
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
         Assert.That(metric1, Is.Not.Null);
 
@@ -203,7 +203,7 @@ public class MetricWireModelTests
     [Test]
     public void Merge_MergesOneMetricCorrectly()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
         var mergedMetric = MetricWireModel.Merge(new[] { metric1 });
 
@@ -221,9 +221,9 @@ public class MetricWireModelTests
     [Test]
     public void Merge_MergesTwoMetricsCorrectly()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
-        var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric2 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5)));
 
         var mergedMetric = MetricWireModel.Merge(metric1, metric2);
@@ -242,11 +242,11 @@ public class MetricWireModelTests
     [Test]
     public void Merge_MergesThreeMetricsCorrectly()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
-        var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric2 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5)));
-        var metric3 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric3 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(13), TimeSpan.FromSeconds(11)));
 
         var mergedMetric = MetricWireModel.Merge(new[] { metric1, metric2, metric3 });
@@ -265,11 +265,11 @@ public class MetricWireModelTests
     [Test]
     public void Merge_MergesThreeMetricsCorrectly_WhenMergedProgressively()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
-        var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric2 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5)));
-        var metric3 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric3 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(13), TimeSpan.FromSeconds(11)));
 
         var mergedMetric = MetricWireModel.Merge(new[] { metric1, metric2 });
@@ -289,7 +289,7 @@ public class MetricWireModelTests
     [Test]
     public void Merge_IgnoresNullMetrics()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
 
         var mergedMetric = MetricWireModel.Merge(new[] { null, metric1, null });
@@ -308,11 +308,11 @@ public class MetricWireModelTests
     [Test]
     public void Merge_Throws_IfGivenMetricsWithDifferentNames()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
-        var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name1", "scope",
+        var metric2 = MetricWireModel.BuildMetric("DotNet/name1", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5)));
-        var metric3 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name2", "scope",
+        var metric3 = MetricWireModel.BuildMetric("DotNet/name2", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(13), TimeSpan.FromSeconds(11)));
 
         NrAssert.Throws<Exception>(() => MetricWireModel.Merge(new[] { metric1, metric2, metric3 }));
@@ -321,11 +321,11 @@ public class MetricWireModelTests
     [Test]
     public void Merge_Throws_IfGivenMetricsWithDifferentScopes()
     {
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "scope",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
-        var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope1",
+        var metric2 = MetricWireModel.BuildMetric("DotNet/name", "scope1",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5)));
-        var metric3 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope2",
+        var metric3 = MetricWireModel.BuildMetric("DotNet/name", "scope2",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(13), TimeSpan.FromSeconds(11)));
 
 
@@ -353,7 +353,7 @@ public class MetricWireModelTests
     {
         const string expectedJson = @"[{""name"":""DotNet/name"",""scope"":""scope1""},[1,3.0,1.0,3.0,3.0,9.0]]";
 
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope1", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", "scope1", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
 
         var serializedMetric = JsonConvert.SerializeObject(metric1);
 
@@ -365,7 +365,7 @@ public class MetricWireModelTests
     {
         const string expectedJson = @"[{""name"":""DotNet/name""},[1,3.0,1.0,3.0,3.0,9.0]]";
 
-        var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
+        var metric1 = MetricWireModel.BuildMetric("DotNet/name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
 
         var serializedMetric = JsonConvert.SerializeObject(metric1);
 
@@ -379,18 +379,26 @@ public class MetricWireModelTests
     [Test]
     public void BuildMetricWireModelUsesOriginalName()
     {
-        var actual = MetricWireModel.BuildMetric(_metricNameService, "originalName", null, null);
+        var actual = MetricWireModel.BuildMetric("originalName", null, null);
         Assert.That(actual.MetricNameModel.Name, Is.EqualTo("originalName"));
     }
 
     [Test]
     public void BuildMetricWireModelReturnsNullWhenNameIsNull()
     {
-        var mockNameService = Mock.Create<IMetricNameService>();
-        Mock.Arrange(() => mockNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(null);
-
-        var actual = MetricWireModel.BuildMetric(mockNameService, "originalName", null, null);
+        var actual = MetricWireModel.BuildMetric(null, "theScope", MetricDataWireModel.BuildGaugeValue(1));
         Assert.That(actual, Is.Null);
+    }
+
+    [Test]
+    public void BuildMetricWireModelDoesNotApplyRenameRules()
+    {
+        // Rename rules belong to the harvest (MetricStatsCollection.ConvertToJsonForSending). Applying them
+        // here as well would run them twice over any metric that is built before it is aggregated, such as
+        // the supportability metrics from AgentHealthReporter and metrics retained after a failed send.
+        var actual = MetricWireModel.BuildMetric("Supportability/originalName", null, MetricDataWireModel.BuildGaugeValue(1));
+
+        Assert.That(actual.MetricNameModel.Name, Is.EqualTo("Supportability/originalName"));
     }
 
     [Test]

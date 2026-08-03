@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore6Plus;
@@ -209,6 +210,8 @@ internal class WrapPipelineMiddleware
 
             transaction.SetRequestParameters(parameters);
         }
+
+        transaction.TrySetQueueTimeFromHeaders(request, static (r, n) => r.Headers[n].ToString());
 
         return transaction;
     }

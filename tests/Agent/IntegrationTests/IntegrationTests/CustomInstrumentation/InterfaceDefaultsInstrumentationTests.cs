@@ -50,26 +50,26 @@ public class InterfaceDefaultsInstrumentationTests : NewRelicIntegrationTest<Rem
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"DotNet/InterfaceDefaultsController/GetWithAttributes", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ILoggerWithAttributes/LogException", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesNoDefault/LogMessage", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesOverridesDefault/LogException", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesOverridesDefault/LogMessage", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/InterfaceDefaultsController/GetWithAttributes", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithAttributes", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ILoggerWithAttributes/LogException", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithAttributes", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesNoDefault/LogMessage", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithAttributes", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesOverridesDefault/LogException", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithAttributes", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesOverridesDefault/LogMessage", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithAttributes", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/InterfaceDefaultsController/GetWithAttributes", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ILoggerWithAttributes/LogException", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesNoDefault/LogMessage", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesOverridesDefault/LogException", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesOverridesDefault/LogMessage", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/InterfaceDefaultsController/GetWithAttributes", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithAttributes", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ILoggerWithAttributes/LogException", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithAttributes", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesNoDefault/LogMessage", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithAttributes", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesOverridesDefault/LogException", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithAttributes", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerWithAttributesOverridesDefault/LogMessage", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithAttributes", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"DotNet/InterfaceDefaultsController/GetWithoutAttributes", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ILoggerNoAttributes/LogException", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesNoDefault/LogMessage", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesOverridesDefault/LogException", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesOverridesDefault/LogMessage", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/InterfaceDefaultsController/GetWithoutAttributes", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ILoggerNoAttributes/LogException", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesNoDefault/LogMessage", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesOverridesDefault/LogException", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesOverridesDefault/LogMessage", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", callCount = 1 }
+        new Assertions.ExpectedMetric { metricName = @"DotNet/InterfaceDefaultsController/GetWithoutAttributes", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ILoggerNoAttributes/LogException", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesNoDefault/LogMessage", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesOverridesDefault/LogException", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesOverridesDefault/LogMessage", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/InterfaceDefaultsController/GetWithoutAttributes", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ILoggerNoAttributes/LogException", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesNoDefault/LogMessage", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesOverridesDefault/LogException", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesOverridesDefault/LogMessage", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", CallCountAllHarvests = 1 }
     };
 }

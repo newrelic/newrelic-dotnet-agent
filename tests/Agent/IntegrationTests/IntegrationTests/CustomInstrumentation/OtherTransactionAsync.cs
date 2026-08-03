@@ -44,9 +44,9 @@ public class OtherTransactionAsync : NewRelicIntegrationTest<RemoteServiceFixtur
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/MyCustomMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", metricScope = "OtherTransaction/Custom/MyCustomMetricName", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", metricScope = "OtherTransaction/Custom/MyCustomMetricName", CallCountAllHarvests = 1 }
         };
 
         var expectedTransactionTraceSegments = new List<string>

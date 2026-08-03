@@ -71,15 +71,15 @@ public class RemoveIgnoredInstrumentation : NewRelicIntegrationTest<AspNetCoreRe
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             // From the initialize call with MVC instrumentation ignored
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/ROOT", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/ROOT", CallCountAllHarvests = 1 },
             // From the first set of calls when the mvc and custom instrumentations are disabled
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/Rejit/GetAddNode/0", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/Rejit/GetAddNode/1", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/Rejit/GetAddNode/0", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/Rejit/GetAddNode/1", CallCountAllHarvests = 1 },
             // From the second 2 calls to TestAddNode after the instrumentations are enabled
             new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 2 },
             // Supportability metric indicating that the managed code successfully parsed the ignored instrumentation settings
             // This is only sent on the first metric harvest
-            new Assertions.ExpectedMetric { metricName = @"Supportability/Dotnet/IgnoredInstrumentation", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"Supportability/Dotnet/IgnoredInstrumentation", CallCountAllHarvests = 1 }
         };
 
         var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);

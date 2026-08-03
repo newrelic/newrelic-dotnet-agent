@@ -64,6 +64,8 @@ public class HttpResponse : IHttpResponse
         }
     }
 
+    public string GetHeaders() => HttpResponseHeaderFormatter.Format(_httpResponseMessageWrapper.Headers);
+
     public bool IsSuccessStatusCode => _httpResponseMessageWrapper.IsSuccessStatusCode;
     public HttpStatusCode StatusCode => _httpResponseMessageWrapper.StatusCode;
 
