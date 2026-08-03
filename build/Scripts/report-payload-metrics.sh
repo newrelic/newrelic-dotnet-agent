@@ -6,9 +6,8 @@
 # Env vars:
 #   PAYLOAD_SUMMARY_FILE  Path to final_payload_summary.json (required)
 #   NR_METRIC_API_URL     Metric API endpoint (required unless dry-run)
-#   NR_TEST_SECRETS       Raw TEST_SECRETS JSON, may carry a UTF-8 BOM
-#                         (required unless dry-run). License key is read from
-#                         .IntegrationTestConfiguration.DefaultSetting.LicenseKey
+#   NR_CI_INGEST_KEY      Dedicated New Relic ingest license key, used as the
+#                         Api-Key header (required unless dry-run)
 #   CI_BRANCH CI_COMMIT CI_RUN_ID CI_RUN_URL   Optional metadata attributes
 #   DRY_RUN               "1"/"true" => print request body to stdout, do not POST
 #
@@ -83,19 +82,10 @@ if is_dry_run; then
   exit 0
 fi
 
-# Extract the license key (Api-Key) from TEST_SECRETS; strip a possible UTF-8 BOM.
-LICENSE_KEY=""
-if [ -n "${NR_TEST_SECRETS:-}" ]; then
-  LICENSE_KEY="$(printf '%s' "$NR_TEST_SECRETS" | sed '1s/^\xEF\xBB\xBF//' \
-    | jq -r '.IntegrationTestConfiguration.DefaultSetting.LicenseKey // empty')"
-fi
-
-# Mask the extracted license key in CI logs. GitHub Actions only auto-masks the
-# exact TEST_SECRETS blob, not this jq-extracted substring. No-op outside Actions.
-[ -n "$LICENSE_KEY" ] && echo "::add-mask::$LICENSE_KEY"
+LICENSE_KEY="${NR_CI_INGEST_KEY:-}"
 
 if [ -z "$LICENSE_KEY" ]; then
-  echo "WARNING: no New Relic license key available; skipping." >&2
+  echo "WARNING: NR_CI_INGEST_KEY not set; skipping." >&2
   exit 0
 fi
 if [ -z "${NR_METRIC_API_URL:-}" ]; then

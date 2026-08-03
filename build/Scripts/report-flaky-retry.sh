@@ -13,9 +13,8 @@
 # so every path exits 0 and errors are swallowed with a warning.
 #
 # Env vars:
-#   NR_TEST_SECRETS   Raw TEST_SECRETS JSON, may carry a UTF-8 BOM. License key
-#                     is read from .IntegrationTestConfiguration.DefaultSetting.LicenseKey
-#                     and the account id from .IntegrationTestConfiguration.DefaultSetting.NewRelicAccountId
+#   NR_CI_INGEST_KEY  Dedicated New Relic ingest license key, used as the Api-Key header
+#   NR_CI_ACCOUNT_ID  New Relic account id, used in the Insights Event API URL path
 #   RETRY_TEST_TYPE   testType attribute (e.g. integrationTests / unboundedTests / containerTests)
 #   RETRY_TEST_GROUP  testGroup attribute (namespace, or "<arch>/<distro>" for container)
 #   CI_BRANCH CI_COMMIT CI_RUN_ID CI_RUN_URL CI_TRIGGER   Optional metadata attributes
@@ -59,21 +58,11 @@ if is_dry_run; then
   exit 0
 fi
 
-# Parse license key + account id from TEST_SECRETS (nested JSON); strip a UTF-8 BOM.
-LICENSE_KEY=""
-ACCOUNT_ID=""
-if [ -n "${NR_TEST_SECRETS:-}" ]; then
-  CLEAN_SECRETS="$(printf '%s' "$NR_TEST_SECRETS" | sed '1s/^\xEF\xBB\xBF//')"
-  LICENSE_KEY="$(printf '%s' "$CLEAN_SECRETS" | jq -r '.IntegrationTestConfiguration.DefaultSetting.LicenseKey // empty' 2>/dev/null)"
-  ACCOUNT_ID="$(printf '%s' "$CLEAN_SECRETS" | jq -r '.IntegrationTestConfiguration.DefaultSetting.NewRelicAccountId // empty' 2>/dev/null)"
-fi
-
-# Mask the extracted license key in CI logs. GitHub Actions only auto-masks the
-# exact TEST_SECRETS blob, not this jq-extracted substring. No-op outside Actions.
-[ -n "$LICENSE_KEY" ] && echo "::add-mask::$LICENSE_KEY"
+LICENSE_KEY="${NR_CI_INGEST_KEY:-}"
+ACCOUNT_ID="${NR_CI_ACCOUNT_ID:-}"
 
 if [ -z "$LICENSE_KEY" ] || [ -z "$ACCOUNT_ID" ]; then
-  echo "WARNING: no New Relic license key / account id available; skipping flaky-retry event." >&2
+  echo "WARNING: NR_CI_INGEST_KEY / NR_CI_ACCOUNT_ID not available; skipping flaky-retry event." >&2
   exit 0
 fi
 
