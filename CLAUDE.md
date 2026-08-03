@@ -67,6 +67,54 @@ NEWRELIC_LICENSE_KEY=...
 Debug logs: `NEWRELIC_LOG_LEVEL=debug` → `<home>/logs/`. Profiler load
 failures surface in the Windows Event Viewer.
 
+### .NET Framework: non-IIS processes must be allow-listed
+
+**The env vars above are not sufficient on .NET Framework.** The profiler
+instruments only an allow-listed set of process names  -  `w3wp.exe` (or any
+child of it), `WebDev.WebServer40/20.exe`, `inetinfo.exe`, `WaWorkerHost.exe`,
+`WaWebHost.exe`, `WcfSvcHost.exe`. Anything else (a console host, a custom
+service host, a test harness) is rejected and **the profiler unloads before
+the managed agent ever starts**  -  so there is no `newrelic_agent_*.log` at
+all, only a `NewRelic.Profiler.<pid>.log` containing:
+
+```
+This process (C:\...\MYAPP.EXE) is not configured to be instrumented.
+This process should not be instrumented, unloading profiler.
+```
+
+Opt in with either:
+
+```
+NEW_RELIC_INCLUDED_APPLICATION_NAMES=MyApp.exe,Other.exe
+```
+
+or in `newrelic.config`:
+
+```xml
+<instrumentation>
+  <applications>
+    <application name="MyApp.exe" />
+  </applications>
+</instrumentation>
+```
+
+The env var wins  -  when set, the config `<applications>` list is not read
+(`Configuration.h` `SetIncludedProcesses` returns early). Matching is
+`EndsWith` on the full process path, so a bare exe name is fine. There is a
+matching `NEW_RELIC_EXCLUDED_APPLICATION_NAMES` / `<application>` exclude
+list.
+
+Source of truth: `src/Agent/NewRelic/Profiler/Configuration/Configuration.h`
+(`SetIncludedProcesses`, `ShouldInstrumentDefaultProcess`, `IsW3wpProcess`)
+and `src/Agent/NewRelic/Profiler/MethodRewriter/ISystemCalls.h`
+(`GetIncludedApplicationNames`).
+
+**Debugging signal:** "profiler attached but no managed agent log" almost
+always means this. Check for `NewRelic.Profiler.<pid>.log` in `<home>/logs/`
+and grep it for `not configured to be instrumented` before looking anywhere
+else. .NET Core/.NET has no such allow-list  -  `CORECLR_ENABLE_PROFILING=1`
+is enough.
+
 ## How instrumentation works (short version)
 
 1. CLR loads the profiler via `*_PROFILER_PATH`.

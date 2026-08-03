@@ -26,7 +26,7 @@ public class MemorySampleTransformerTests
     [SetUp]
     public void SetUp()
     {
-        _metricBuilder = new MetricWireModel.MetricBuilder(new MetricNameService());
+        _metricBuilder = new MetricWireModel.MetricBuilder();
         _metricAggregator = Mock.Create<IMetricAggregator>();
     }
 

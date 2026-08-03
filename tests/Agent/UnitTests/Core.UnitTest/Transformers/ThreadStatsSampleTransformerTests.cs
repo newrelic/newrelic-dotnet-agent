@@ -26,7 +26,7 @@ public class ThreadStatsSampleTransformerTests
     public void SetUp()
     {
         var metricNameService = new MetricNameService();
-        _metricBuilder = new MetricBuilder(metricNameService);
+        _metricBuilder = new MetricBuilder();
         _metricAggregator = Mock.Create<IMetricAggregator>();
 
         _threadStatsTransformer = new ThreadStatsSampleTransformer(_metricBuilder, _metricAggregator);
