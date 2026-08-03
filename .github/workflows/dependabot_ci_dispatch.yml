@@ -1,0 +1,76 @@
+# Runs the full CI suite for Dependabot pull requests.
+#
+# Dependabot-triggered `pull_request` runs get a read-only GITHUB_TOKEN and no
+# Actions secrets, so both All Solutions Build (which needs signing and test
+# secrets) and Unit Tests and Code Coverage skip themselves for Dependabot.
+# `workflow_run` is not subject to those restrictions: it executes the workflow
+# definition from the default branch with normal Actions secrets, so it can
+# relaunch both workflows via workflow_dispatch against the Dependabot branch.
+#
+# Security notes:
+#   - This workflow never checks out the pull request branch. It reads event
+#     metadata only, so no pull request content executes in this run.
+#   - The `if` below requires the head repository to be this repository, which
+#     structurally excludes every fork (and therefore every community) pull
+#     request: Dependabot branches live in this repo, fork PRs never do.
+#   - `dependabot/github_actions/*` branches are deliberately excluded.
+#     `gh workflow run --ref <branch>` reads workflow definitions from that
+#     branch, and the github-actions ecosystem is the one group that modifies
+#     files under .github/workflows. Review those by hand.
+#   - The dispatched build executes MSBuild targets, analyzers and build tasks
+#     from a package version nobody has reviewed yet, so All Solutions Build
+#     skips its signing steps and the RPM/DEB/ArtifactBuilder jobs for
+#     dependabot/* branches. TEST_SECRETS is still present on the test runners:
+#     accepted, since those are test-account credentials, not signing material.
+
+name: Dependabot Full CI Dispatch
+
+on:
+  workflow_run:
+    workflows: ["Dependabot Full CI Trigger"]
+    types: [completed]
+
+permissions:
+  actions: write
+
+jobs:
+  dispatch:
+    name: Dispatch All Solutions Build for the Dependabot branch
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.actor.login == 'dependabot[bot]' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_branch, 'dependabot/nuget/')
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Dispatch CI workflows
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Passed through the environment rather than interpolated into the
+          # script body, so a branch name can never be treated as shell syntax.
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Attempt every dispatch even if an earlier one fails, so a transient
+          # API error on one workflow does not silently skip the others, then
+          # fail the step if any of them did not launch.
+          failed=""
+          for wf in all_solutions.yml unit_tests.yml; do
+            echo "Dispatching $wf against $BRANCH"
+            if ! gh workflow run "$wf" --repo "$REPO" --ref "$BRANCH"; then
+              echo "::error::Failed to dispatch $wf against $BRANCH"
+              failed="$failed $wf"
+            fi
+          done
+
+          if [ -n "$failed" ]; then
+            echo "Dispatch failed for:$failed"
+            exit 1
+          fi
