@@ -1,0 +1,81 @@
+# Reports the result of a Dependabot Full CI Dispatch run back onto the
+# Dependabot pull request as a commit status.
+#
+# Runs dispatched via workflow_dispatch are not attached to a pull request, so
+# their result is otherwise invisible from the PR. This posts a commit status
+# on the branch head SHA (which for a dispatched run is the PR head) so
+# reviewers can see, and click through to, the full CI result. One status is
+# posted per dispatched workflow, distinguished by the workflow name.
+#
+# These statuses are informational and must NOT be added to branch protection
+# as required checks: required contexts apply to every pull request, and pull
+# requests from actors other than Dependabot never receive them, so requiring
+# them would block those pull requests indefinitely.
+
+name: Dependabot Full CI Status
+
+on:
+  workflow_run:
+    workflows: ["All Solutions Build", "Unit Tests and Code Coverage"]
+    types: [completed]
+
+permissions:
+  statuses: write
+
+jobs:
+  report:
+    name: Report full CI result on the Dependabot pull request
+    runs-on: ubuntu-latest
+    # Mirror the Dependabot Full CI Dispatch gate, so only a run that dispatcher
+    # created can produce a "full-ci (dependabot)" status. The actor check is
+    # what stops someone pushing a dependabot/nuget/* branch, dispatching it by
+    # hand, and posting a status to a SHA of their choosing. Fail-closed: if a
+    # Dependabot PR gets no status, check the run's actor fields first.
+    if: >-
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_branch, 'dependabot/nuget/') &&
+      (github.event.workflow_run.actor.login == 'dependabot[bot]' ||
+       github.event.workflow_run.triggering_actor.login == 'dependabot[bot]')
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Post commit status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+        run: |
+          # A cancelled run is usually a superseded run: Dependabot force-pushes
+          # to rebase its branches, and both dispatched workflows cancel
+          # in-progress runs for the same ref. Reporting failure for those would
+          # be wrong, and a replacement run is already on its way.
+          case "$CONCLUSION" in
+            success)
+              state=success
+              ;;
+            cancelled|skipped)
+              echo "Conclusion '$CONCLUSION' is not a result worth reporting; skipping."
+              exit 0
+              ;;
+            *)
+              state=failure
+              ;;
+          esac
+
+          # One context per dispatched workflow, so All Solutions Build and Unit
+          # Tests report independently instead of overwriting each other.
+          echo "Reporting '$state' for $HEAD_SHA ($WORKFLOW_NAME)"
+          gh api -X POST "repos/$REPO/statuses/$HEAD_SHA" \
+            -f state="$state" \
+            -f context="full-ci (dependabot) / $WORKFLOW_NAME" \
+            -f target_url="$RUN_URL" \
+            -f description="$WORKFLOW_NAME: $CONCLUSION"

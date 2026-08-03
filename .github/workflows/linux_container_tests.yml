@@ -170,7 +170,8 @@ jobs:
       - name: Build & Run Linux Container Integration Tests
         env:
           BUILD_ARCH: ${{ matrix.arch }}
-          NR_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
+          NR_CI_ACCOUNT_ID: ${{ secrets.NR_CI_ACCOUNT_ID }}
           CI_BRANCH: ${{ github.ref_name }}
           CI_COMMIT: ${{ github.sha }}
           CI_RUN_ID: ${{ github.run_id }}
