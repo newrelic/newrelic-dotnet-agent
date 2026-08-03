@@ -66,6 +66,14 @@ public abstract class AppDomainCachingContainerTest<T> : NewRelicIntegrationTest
     }
 }
 
+// TODO (before/at merge to main): main now splits container tests on two disjoint
+// trait axes -- Distro means OS-compatibility smoke tests ONLY, and functional tests
+// carry TestArea instead (Core, Messaging, Aws, Datastore). See PR #3731. These two
+// classes are functional tests, so both Distro traits below must become
+// [Trait("TestArea", "Core")]. Leaving them as Distro=Ubuntu will silently drop them
+// into the Ubuntu OS-compat job and re-add the docker contention that PR fixed; the
+// check-test-coverage CI guard will NOT catch it, because Distro=Ubuntu is still a
+// valid selector. Also update tests/CLAUDE.md if a new TestArea is needed.
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Ubuntu")]
 public class AppDomainCachingEnabledContainerTest : AppDomainCachingContainerTest<AppDomainCachingEnabledContainerTestFixture>
@@ -76,6 +84,8 @@ public class AppDomainCachingEnabledContainerTest : AppDomainCachingContainerTes
     }
 }
 
+// TODO (before/at merge to main): see the note above -- this Distro trait must also
+// become [Trait("TestArea", "Core")]. PR #3731.
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Ubuntu")]
 public class AppDomainCachingDisabledContainerTest : AppDomainCachingContainerTest<AppDomainCachingDisabledContainerTestFixture>
