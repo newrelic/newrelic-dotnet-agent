@@ -24,9 +24,9 @@
     <PackageReference Include="Hangfire" Version="1.8.24" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Hangfire.InMemory" Version="1.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Hangfire.InMemory" Version="1.0.0" Condition="'$(TargetFramework)' == 'net10.0'" />
-    <!-- Hangfire.SqlServer is excluded from all target frameworks because we aren't using it, and it has a dependency on System.Data.SqlClient that causes problems for NServiceBus -->
-    <PackageReference Include="Hangfire.SqlServer" Version="1.8.23" ExcludeAssets="all" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Hangfire.SqlServer" Version="1.8.23" ExcludeAssets="all" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <!-- Hangfire.SqlServer is required by Hangfire but we don't actually use it. It's excluded from all target frameworks because it has a dependency on System.Data.SqlClient that causes problems for NServiceBus -->
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.24" ExcludeAssets="all" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.24" ExcludeAssets="all" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="log4net" Version="3.3.2" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="log4net" Version="3.3.2" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="3.0.3" Condition="'$(TargetFramework)' == 'net481'" />
