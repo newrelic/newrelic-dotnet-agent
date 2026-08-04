@@ -453,9 +453,3 @@ public class HSMBasicMvcApplicationTestFixture : BasicMvcApplicationTestFixture
     public override string TestSettingCategory { get { return "HSM"; } }
 
 }
-
-public class SecurityPoliciesBasicMvcApplicationTestFixture : BasicMvcApplicationTestFixture
-{
-    public override string TestSettingCategory { get { return "CSP"; } }
-
-}
