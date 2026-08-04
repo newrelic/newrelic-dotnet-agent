@@ -135,11 +135,11 @@ The integration tests require round-trip communication with valid New Relic acco
 * The [example](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/example-secrets.json) includes values needed for all Integration Tests and Unbounded Integration Tests.
   * Not all values in the `secrets.json` are required if a user is running a subset of tests, and can be omitted for irrelevant tests.
 
-* Some tests require special New Relic license keys for High Security Mode (HSM) or Configurable Security Policies (CSP). Follow the steps below to set these license keys:
+* Some tests require a special New Relic license key for High Security Mode (HSM). Follow the steps below to set this license key:
 
   1. Create a `secrets.json` file using the template below or copy the [example](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/example-secrets.json).  **Do *not* place the `secrets.json` file within your local repo folder.**
   2. Replace the license key placeholders in the `secrets.json` template with actual license keys.
-      * The `REPLACE_WITH_HIGH_SECURITY_LICENSE_KEY` and `REPLACE_WITH_SECURITY_POLICIES_CONFIGURABLE_LICENSE_KEY` are placeholders for license keys from a [HSM](https://docs.newrelic.com/docs/agents/manage-apm-agents/configuration/high-security-mode)-enabled account and a CSP-enabled account, respectively.
+      * The `REPLACE_WITH_HIGH_SECURITY_LICENSE_KEY` is a placeholder for a license key from a [HSM](https://docs.newrelic.com/docs/agents/manage-apm-agents/configuration/high-security-mode)-enabled account.
       * To find your license keys, visit [this page](https://docs.newrelic.com/docs/accounts/accounts-billing/account-setup/new-relic-license-key/).
 
 * Once placeholder values have been replaced with actual values:
@@ -162,9 +162,6 @@ The integration tests require round-trip communication with valid New Relic acco
     "TestSettingOverrides": {
       "HSM": {
         "LicenseKey": "REPLACE_WITH_HIGH_SECURITY_LICENSE_KEY"
-      },
-      "CSP" : {
-        "LicenseKey": "REPLACE_WITH_SECURITY_POLICIES_CONFIGURABLE_LICENSE_KEY",
       }
     }
   }
@@ -188,9 +185,9 @@ All of these currently use the application name: "IntegrationTestAppName".
 * NewRelic.Agent.IntegrationTests.BasicInstrumentation.BasicMvcApplicationWithAsyncDisabled.Test
 * NewRelic.Agent.IntegrationTests.BasicInstrumentation.MvcRum.Test
 
-#### HSM / CSP tests
+#### HSM tests
 
-High security mode (HSM) tests or Configurable Security Policies (CSP) tests require matching settings on the account they run against. These typically have "HSM" or "CSP" (or the full names) in the test or fixture naming.
+High security mode (HSM) tests require matching settings on the account they run against. These typically have "HSM" (or the full name) in the test or fixture naming.
 
 See the test secrets section above on configuring an appropriate account.
 

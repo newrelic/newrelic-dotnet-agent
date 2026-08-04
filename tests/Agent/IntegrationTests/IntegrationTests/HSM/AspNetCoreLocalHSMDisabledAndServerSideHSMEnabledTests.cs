@@ -5,13 +5,16 @@
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.CSP;
+namespace NewRelic.Agent.IntegrationTests.HSM;
 
-public class HighSecurityModeServerEnabled : NewRelicIntegrationTest<RemoteServiceFixtures.HSMOwinWebApiFixture>
+public class AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture>
 {
-    private readonly RemoteServiceFixtures.HSMOwinWebApiFixture _fixture;
+    private const string QueryStringParameterValue = @"my thing";
 
-    public HighSecurityModeServerEnabled(RemoteServiceFixtures.HSMOwinWebApiFixture fixture, ITestOutputHelper output) : base(fixture)
+
+    private readonly RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture _fixture;
+
+    public AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests(RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -21,18 +24,12 @@ public class HighSecurityModeServerEnabled : NewRelicIntegrationTest<RemoteServi
             {
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ForceTransactionTraces();
                 configModifier.SetLogLevel("debug");
-                configModifier.SetHighSecurityMode(false);
                 configModifier.AddAttributesInclude("request.parameters.*");
+                configModifier.SetHighSecurityMode(false);
             },
-            exerciseApplication: () =>
-            {
-                _fixture.GetData();
-                _fixture.Get();
-                _fixture.Get404();
-                _fixture.GetId();
-                _fixture.Post();
-            }
+            exerciseApplication: () => _fixture.GetWithData(QueryStringParameterValue)
         );
         _fixture.Initialize();
     }
