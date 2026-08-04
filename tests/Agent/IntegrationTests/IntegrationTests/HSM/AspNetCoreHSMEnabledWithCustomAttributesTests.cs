@@ -10,7 +10,7 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.CSP;
+namespace NewRelic.Agent.IntegrationTests.HSM;
 
 public class AspNetCoreHSMEnabledWithCustomAttributesTests : NewRelicIntegrationTest<HSMAspNetCoreWebApiCustomAttributesFixture>
 {

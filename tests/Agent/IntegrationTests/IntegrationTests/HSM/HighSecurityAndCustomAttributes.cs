@@ -11,13 +11,13 @@ using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.CSP;
+namespace NewRelic.Agent.IntegrationTests.HSM;
 
-public class SecurityPoliciesMostRestrictiveAndCustomAttributesTests : NewRelicIntegrationTest<SecurityPoliciesCustomAttributesWebApi>
+public class HighSecurityAndCustomAttributes : NewRelicIntegrationTest<HSMCustomAttributesWebApi>
 {
-    private readonly SecurityPoliciesCustomAttributesWebApi _fixture;
+    private readonly HSMCustomAttributesWebApi _fixture;
 
-    public SecurityPoliciesMostRestrictiveAndCustomAttributesTests(SecurityPoliciesCustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
+    public HighSecurityAndCustomAttributes(HSMCustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -25,13 +25,12 @@ public class SecurityPoliciesMostRestrictiveAndCustomAttributesTests : NewRelicI
             setupConfiguration: () =>
             {
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
-
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces();
+                configModifier.SetHighSecurityMode(true);
+                configModifier.SetLogLevel("debug");
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
                 configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level",
-                    "debug");
             },
             exerciseApplication: () =>
             {
@@ -45,7 +44,7 @@ public class SecurityPoliciesMostRestrictiveAndCustomAttributesTests : NewRelicI
         _fixture.Initialize();
     }
 
-    [Fact(Skip = "Disabled: CSP is deprecated")]
+    [Fact]
     public void Test()
     {
         var unexpectedTransactionTraceAttributes = new List<string>
@@ -60,7 +59,7 @@ public class SecurityPoliciesMostRestrictiveAndCustomAttributesTests : NewRelicI
         Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample);
 
         var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-        var errorEventPayload = _fixture.AgentLog.GetErrorEventPayloads().FirstOrDefault();
+        var errorEvent = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
 
         var unexpectedErrorCustomAttributes = new List<string>
         {
@@ -70,7 +69,7 @@ public class SecurityPoliciesMostRestrictiveAndCustomAttributesTests : NewRelicI
 
         NrAssert.Multiple(
             () => Assertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorCustomAttributes, ErrorTraceAttributeType.Intrinsic, errorTrace),
-            () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorCustomAttributes, EventAttributeType.User, errorEventPayload.Events[0])
+            () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorCustomAttributes, EventAttributeType.User, errorEvent)
         );
     }
 }

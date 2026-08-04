@@ -8,7 +8,7 @@ using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.CSP;
+namespace NewRelic.Agent.IntegrationTests.HSM;
 
 public class AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture>
 {

@@ -199,11 +199,6 @@ public abstract class RemoteApplicationFixture : IDisposable
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "licenseKey", TestConfiguration.LicenseKey);
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "host", TestConfiguration.CollectorUrl);
-        if (TestSettingCategory == "CSP")
-        {
-            var securityPoliciesToken = "ffff-ffff-ffff-ffff";
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration" }, "securityPoliciesToken", securityPoliciesToken);
-        }
     }
 
     public RemoteApplicationFixture SetAdditionalEnvironmentVariables(IDictionary<string, string> envVars)

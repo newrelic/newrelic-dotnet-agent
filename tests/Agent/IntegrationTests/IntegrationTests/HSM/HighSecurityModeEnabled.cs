@@ -9,16 +9,16 @@ using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.CSP;
+namespace NewRelic.Agent.IntegrationTests.HSM;
 
-public class SecurityPoliciesMostRestrictiveTests : NewRelicIntegrationTest<RemoteServiceFixtures.SecurityPoliciesBasicMvcApplicationTestFixture>
+public class HighSecurityModeEnabled : NewRelicIntegrationTest<RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture>
 {
     private const string QueryStringParameterValue = @"my thing";
+
+    private readonly RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture _fixture;
+
     private const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
-
-    private readonly RemoteServiceFixtures.SecurityPoliciesBasicMvcApplicationTestFixture _fixture;
-
-    public SecurityPoliciesMostRestrictiveTests(RemoteServiceFixtures.SecurityPoliciesBasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    public HighSecurityModeEnabled(RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -27,13 +27,13 @@ public class SecurityPoliciesMostRestrictiveTests : NewRelicIntegrationTest<Remo
             setupConfiguration: () =>
             {
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
-
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces();
+                configModifier.SetLogLevel("debug");
+                configModifier.SetHighSecurityMode(true);
                 configModifier.AddAttributesInclude("request.parameters.*");
-
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
+                configModifier.SetTransactionTracerRecordSql("raw");
+                configModifier.SetCustomHostName("custom-host-name");
             },
             exerciseApplication: () =>
             {
@@ -44,7 +44,7 @@ public class SecurityPoliciesMostRestrictiveTests : NewRelicIntegrationTest<Remo
         _fixture.Initialize();
     }
 
-    [Fact(Skip = "Disabled: CSP is deprecated")]
+    [Fact]
     public void Test()
     {
         var unexpectedAgentAttributes = new List<string>
@@ -55,27 +55,29 @@ public class SecurityPoliciesMostRestrictiveTests : NewRelicIntegrationTest<Remo
         var expectedTransactionTraceAgentAttributes = new Dictionary<string, object>
         {
             { "response.status", "200" },
-            { "http.statusCode", 200 }
+            { "http.statusCode", 200 },
+            { "host.displayName", "custom-host-name"}
         };
         var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
         {
             {"type", "Transaction"}
-                
         };
+
         var expectedTransactionEventIntrinsicAttributes2 = new List<string>
         {
-            "nr.apdexPerfZone",
             "timestamp",
             "duration",
             "webDuration",
             "queueDuration",
             "totalTime",
-            "name"
+            "name",
+            "nr.apdexPerfZone"
         };
         var expectedTransactionEventAgentAttributes = new Dictionary<string, object>
         {
             { "response.status", "200"},
-            { "http.statusCode", 200 }
+            { "http.statusCode", 200 },
+            { "host.displayName", "custom-host-name"}
         };
 
         var expectedErrorTransactionEventAttributes = new List<string>
@@ -84,13 +86,24 @@ public class SecurityPoliciesMostRestrictiveTests : NewRelicIntegrationTest<Remo
             "errorMessage"
         };
 
-        var expectedErrorEventAttributes = new Dictionary<string, string>
+        var expectedAgentErrorTraceAttributes = new Dictionary<string, string>
         {
-            { "error.message", StripExceptionMessagesMessage}
+            { "host.displayName", "custom-host-name"}
+        };
+
+        var expectedIntrinsicErrorEventAttributes = new Dictionary<string, string>
+        {
+            { "error.message", StripExceptionMessagesMessage},
+        };
+
+        var expectedAgentErrorEventAttributes = new Dictionary<string, string>
+        {
+            { "host.displayName", "custom-host-name"}
         };
 
         const string originalErrorMessage = "!Exception~Message!";
 
+        var displayHost = _fixture.AgentLog.GetConnectData().DisplayHost;
         var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/Query");
         var getDataTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/Query");
         var getExceptionTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/ThrowException");
@@ -101,7 +114,7 @@ public class SecurityPoliciesMostRestrictiveTests : NewRelicIntegrationTest<Remo
         var firstErrorEvent = errorEvents.FirstOrDefault();
         var firstErrorTrace = errorTraces.FirstOrDefault();
 
-        var stackTrace = firstErrorTrace?.Attributes.StackTrace.ToList();
+        var stackTrace = firstErrorTrace.Attributes.StackTrace.ToList();
 
         NrAssert.Multiple(
             () => Assert.NotNull(transactionSample),
@@ -113,24 +126,24 @@ public class SecurityPoliciesMostRestrictiveTests : NewRelicIntegrationTest<Remo
 
         NrAssert.Multiple(
             () => Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedAgentAttributes, TransactionTraceAttributeType.Agent, transactionSample),
-            () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, firstErrorEvent),
             () => Assert.Equal(StripExceptionMessagesMessage, firstErrorTrace.Message),
             () => Assert.Contains(StripExceptionMessagesMessage, stackTrace[0]),
-            () => Assert.DoesNotContain(originalErrorMessage, stackTrace[0])
+            () => Assert.DoesNotContain(originalErrorMessage, stackTrace[0]),
+            () => Assert.Equal("custom-host-name", displayHost)
         );
 
         NrAssert.Multiple
         (
             () => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceAgentAttributes, TransactionTraceAttributeType.Agent, transactionSample),
-
             () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes1, TransactionEventAttributeType.Intrinsic, getDataTransactionEvent),
             () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes2, TransactionEventAttributeType.Intrinsic, getDataTransactionEvent),
-            () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, getDataTransactionEvent),
-
-
             () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes1, TransactionEventAttributeType.Intrinsic, getExceptionTransactionEvent),
             () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes2, TransactionEventAttributeType.Intrinsic, getExceptionTransactionEvent),
-            () => Assertions.TransactionEventHasAttributes(expectedErrorTransactionEventAttributes, TransactionEventAttributeType.Intrinsic, getExceptionTransactionEvent)
+            () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, getDataTransactionEvent),
+            () => Assertions.TransactionEventHasAttributes(expectedErrorTransactionEventAttributes, TransactionEventAttributeType.Intrinsic, getExceptionTransactionEvent),
+            () => Assertions.ErrorTraceHasAttributes(expectedAgentErrorTraceAttributes, ErrorTraceAttributeType.Agent, firstErrorTrace),
+            () => Assertions.ErrorEventHasAttributes(expectedIntrinsicErrorEventAttributes, EventAttributeType.Intrinsic, firstErrorEvent),
+            () => Assertions.ErrorEventHasAttributes(expectedAgentErrorEventAttributes, EventAttributeType.Agent, firstErrorEvent)
         );
     }
 }
