@@ -3,10 +3,8 @@
 
 
 using System;
-using System.Collections;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.Text;
 using CommandLine;
 
 namespace HostedWebCore;
@@ -26,15 +24,6 @@ static class Program
         string msg = "Firing up...args: " + string.Join(", ", args);
         Log("Firing up...args: " + string.Join(", ", args));
         Log("Starting directory: " + Directory.GetCurrentDirectory());
-
-        var environmentVariables = new StringBuilder();
-        foreach (DictionaryEntry de in Environment.GetEnvironmentVariables())
-        {
-            // strip newlines in the environment variable value - otherwise our log parsing may fail
-            var valueStr = de.Value?.ToString().Replace("\r", string.Empty).Replace("\n", string.Empty);
-            environmentVariables.Append($"  {de.Key} = {valueStr}; ");
-        }
-        Log("Environment Variables: " + environmentVariables.ToString());
 
         if (Parser.Default == null)
             throw new NullReferenceException("CommandLine.Parser.Default");

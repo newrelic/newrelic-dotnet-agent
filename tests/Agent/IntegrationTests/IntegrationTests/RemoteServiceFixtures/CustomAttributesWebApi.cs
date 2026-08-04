@@ -116,8 +116,3 @@ public class HSMCustomAttributesWebApi : CustomAttributesWebApi
 {
     public override string TestSettingCategory { get { return "HSM"; } }
 }
-
-public class SecurityPoliciesCustomAttributesWebApi : CustomAttributesWebApi
-{
-    public override string TestSettingCategory { get { return "CSP"; } }
-}

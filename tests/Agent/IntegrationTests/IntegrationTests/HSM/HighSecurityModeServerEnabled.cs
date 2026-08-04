@@ -5,16 +5,13 @@
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests.CSP;
+namespace NewRelic.Agent.IntegrationTests.HSM;
 
-public class AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture>
+public class HighSecurityModeServerEnabled : NewRelicIntegrationTest<RemoteServiceFixtures.HSMOwinWebApiFixture>
 {
-    private const string QueryStringParameterValue = @"my thing";
+    private readonly RemoteServiceFixtures.HSMOwinWebApiFixture _fixture;
 
-
-    private readonly RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture _fixture;
-
-    public AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests(RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output) : base(fixture)
+    public HighSecurityModeServerEnabled(RemoteServiceFixtures.HSMOwinWebApiFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -24,12 +21,18 @@ public class AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests : NewRelicIn
             {
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
-                configModifier.ForceTransactionTraces();
                 configModifier.SetLogLevel("debug");
-                configModifier.AddAttributesInclude("request.parameters.*");
                 configModifier.SetHighSecurityMode(false);
+                configModifier.AddAttributesInclude("request.parameters.*");
             },
-            exerciseApplication: () => _fixture.GetWithData(QueryStringParameterValue)
+            exerciseApplication: () =>
+            {
+                _fixture.GetData();
+                _fixture.Get();
+                _fixture.Get404();
+                _fixture.GetId();
+                _fixture.Post();
+            }
         );
         _fixture.Initialize();
     }
