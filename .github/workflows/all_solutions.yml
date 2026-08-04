@@ -258,7 +258,6 @@ jobs:
             "CatOutbound",
             "CodeLevelMetrics",
             "Configuration",
-            "CSP",
             "CustomAttributes",
             "CustomInstrumentation",
             "DataTransmission",
@@ -266,13 +265,14 @@ jobs:
             "Errors",
             "Grpc",
             "Hangfire",
+            "HSM",
             "HttpClientInstrumentation",
             "HybridHttpContextStorage",
             "InfiniteTracing",
             "LLM",
             "Logging.AuditLog",
             "Logging.ContextData",
-            "Logging.HsmAndCsp",
+            "Logging.Hsm",
             "Logging.Labels",
             "Logging.LocalDecoration",
             "Logging.LogLevelDetection",
@@ -631,9 +631,9 @@ jobs:
       - name: Install HostableWebCore Feature
         if: | # only install for the required namespaces
           matrix.namespace == 'AgentFeatures' || matrix.namespace == 'AgentLogs' || matrix.namespace == 'AgentMetrics' || matrix.namespace == 'BasicInstrumentation' || 
-          matrix.namespace == 'CatInbound' || matrix.namespace == 'CatOutbound' || matrix.namespace == 'CodeLevelMetrics' || matrix.namespace == 'CSP' || 
+          matrix.namespace == 'CatInbound' || matrix.namespace == 'CatOutbound' || matrix.namespace == 'CodeLevelMetrics' ||
           matrix.namespace == 'CustomAttributes' || matrix.namespace == 'CustomInstrumentation' || matrix.namespace == 'DataTransmission' || 
-          matrix.namespace == 'DistributedTracing' || matrix.namespace == 'Errors' || matrix.namespace == 'HttpClientInstrumentation' || matrix.namespace == 'HybridHttpContextStorage' ||
+          matrix.namespace == 'DistributedTracing' || matrix.namespace == 'Errors' || matrix.namespace == 'HSM' || matrix.namespace == 'HttpClientInstrumentation' || matrix.namespace == 'HybridHttpContextStorage' ||
           matrix.namespace == 'Rejit.NetFramework' || matrix.namespace == 'RequestHandling' || matrix.namespace == 'RequestHeadersCapture.AspNet' ||
           matrix.namespace == 'RequestHeadersCapture.AspNetCore' || matrix.namespace == 'RequestHeadersCapture.EnvironmentVariables' ||
           matrix.namespace == 'RequestHeadersCapture.WCF' || matrix.namespace == 'WCF.Client.IIS.ASPDisabled' ||
