@@ -44,7 +44,7 @@ public class SecurityPoliciesMostRestrictiveTests : NewRelicIntegrationTest<Remo
         _fixture.Initialize();
     }
 
-    [Fact]
+    [Fact(Skip = "Disabled: CSP is deprecated")]
     public void Test()
     {
         var unexpectedAgentAttributes = new List<string>

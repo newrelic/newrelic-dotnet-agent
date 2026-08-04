@@ -14,6 +14,11 @@ public abstract class HSMOrCSPDisablesForwardingTestsBase<TFixture> : NewRelicIn
 {
     private readonly TFixture _fixture;
 
+    /// <summary>
+    /// Consumed by SkipWhen on NoLogDataIsSent so the CSP variants are skipped while the HSM variants still run.
+    /// </summary>
+    public static bool IsCspFixture => typeof(TFixture).ToString().Contains("CSP");
+
     public HSMOrCSPDisablesForwardingTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework) : base(fixture)
     {
         _fixture = fixture;
@@ -50,7 +55,7 @@ public abstract class HSMOrCSPDisablesForwardingTestsBase<TFixture> : NewRelicIn
         _fixture.Initialize();
     }
 
-    [Fact]
+    [Fact(Skip = "Disabled: CSP is deprecated", SkipWhen = nameof(IsCspFixture))]
     public void NoLogDataIsSent()
     {
         var logData = _fixture.AgentLog.GetLogEventData().FirstOrDefault();

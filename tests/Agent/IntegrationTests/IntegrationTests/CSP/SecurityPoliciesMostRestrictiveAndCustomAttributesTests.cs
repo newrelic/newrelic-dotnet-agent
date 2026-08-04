@@ -45,7 +45,7 @@ public class SecurityPoliciesMostRestrictiveAndCustomAttributesTests : NewRelicI
         _fixture.Initialize();
     }
 
-    [Fact]
+    [Fact(Skip = "Disabled: CSP is deprecated")]
     public void Test()
     {
         var unexpectedTransactionTraceAttributes = new List<string>
