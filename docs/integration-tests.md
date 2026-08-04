@@ -191,6 +191,73 @@ High security mode (HSM) tests require matching settings on the account they run
 
 See the test secrets section above on configuring an appropriate account.
 
+#### LLM / Bedrock tests
+
+The Bedrock tests in the `LLM` namespace call the real AWS Bedrock service. They
+no longer use a static access key.
+
+Before running them:
+
+1. Sign in to AWS however you normally do, and confirm it worked:
+
+   ```
+   aws sts get-caller-identity
+   ```
+
+2. Make sure `AwsRegion` is present under `DefaultSetting` in your
+   `secrets.json`, set to `us-west-2`.
+
+That is all. `AwsTestCredentials` runs at test startup, asks the AWS CLI for your
+current credentials, and passes them to the test application as environment
+variables. You do not need to set `AWS_PROFILE` or `AWS_REGION` yourself, and you
+do not need to export credentials by hand.
+
+Two things are worth knowing if this ever fails:
+
+* The AWS SDK for .NET cannot read an AWS SSO session on its own. SSO credential
+  resolution lives in the `AWSSDK.SSO` and `AWSSDK.SSOOIDC` packages, which the
+  test applications deliberately do not reference. That is why the credentials
+  come via the AWS CLI rather than from the SDK's own profile handling. CI works
+  the same way: `aws-actions/configure-aws-credentials` exports credentials into
+  the job environment, and `AwsTestCredentials` sees they are already present and
+  does nothing.
+* `AWS_REGION` has no effect on these tests. The Bedrock client is constructed
+  with an explicit region taken from `AwsRegion` in your `secrets.json`, so that
+  setting is the one that matters.
+
+Developers reach this AWS account through the org-wide `NRAdmin` or
+`NRPowerUser` permission sets. There is no dedicated Bedrock permission set to
+request.
+
+Three test classes exercise models Bedrock still offers in us-west-2:
+
+* `BedrockInvokeTests` -- `amazon.titan-embed-text-v1`
+* `BedrockConverseTests` -- `us.amazon.nova-micro-v1:0`
+* `BedrockConverseContentBlockTests` -- `us.anthropic.claude-sonnet-4-5-20250929-v1:0`
+
+`LLMDisabledTests` and `LLMErrorTests` still name `meta.llama2-13b-chat-v1` and
+`meta.llama2-70b-chat-v1`, which Bedrock has retired along with the rest of the
+Llama 2 and Jurassic-2 families. They pass anyway, because neither asserts a
+successful completion: `LLMDisabledTests` runs with AI monitoring disabled and
+checks that no LLM events are produced, and `LLMErrorTests` checks that a failed
+call produces an error event. A retired model and an IAM-denied model produce the
+same error shape, so both satisfy it.
+
+`LLMApiTests` and `LLMAccountDisabledTests` have their `[Fact]` attributes
+commented out for the same deprecation, so they do not run at all. Migrating
+those to current models would need a change to the agent's own model-ID handling
+in `BedrockLlmModelTypeExtensions`, not just the tests, and is tracked
+separately.
+
+`LLM` is excluded from CI via the `INTEGRATION_EXCLUDE_NAMESPACES` repository
+variable, for reasons unrelated to Bedrock.
+
+The CI role grants only `bedrock:InvokeModel`. The Converse API authorizes
+against that action, but `ConverseStream` would need
+`bedrock:InvokeModelWithResponseStream`, which is deliberately not granted
+because nothing in the repo calls it. A new streaming Bedrock call will get a
+403 until the policy is updated.
+
 #### Selenium tests
 
 We currently have one test that executes a JavaScript ajax request via Selenium. This requires Chrome to be installed.

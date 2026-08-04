@@ -106,11 +106,7 @@ public class TestSettings
     public string LicenseKey { get; set; }
     public string Collector { get; set; }
     public string NewRelicAccountId { get; set; }
-    public string AwsTestRoleArn { get; set; }
-    public string AwsAccessKeyId { get; set; }
-    public string AwsSecretAccessKey { get; set; }
     public string AwsRegion { get; set; }
-    public string AwsAccountNumber { get; set; }
     public string TraceObserverUrl { get; set; }
     public IDictionary<string, string> CustomSettings { get; set; }
     public string TraceObserverPort { get; set; } = "443";
