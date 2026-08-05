@@ -5,24 +5,6 @@ namespace NewRelic.Agent.IntegrationTests.Shared;
 
 public class AwsConfiguration
 {
-    public static string AwsAccessKeyId
-    {
-        get
-        {
-            var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("");
-            return testConfiguration.DefaultSetting.AwsAccessKeyId;
-        }
-    }
-
-    public static string AwsSecretAccessKey
-    {
-        get
-        {
-            var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("");
-            return testConfiguration.DefaultSetting.AwsSecretAccessKey;
-        }
-    }
-
     public static string AwsRegion
     {
         get

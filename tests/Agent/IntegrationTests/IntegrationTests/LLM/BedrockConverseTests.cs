@@ -62,6 +62,13 @@ public abstract class BedrockConverseTestsBase<TFixture> : NewRelicIntegrationTe
         _fixture.AddCommand($"BedrockExerciser Converse {LLMHelpers.ConvertToBase64(_prompt)}");
         _fixture.AddCommand($"BedrockExerciser ConverseWithError {LLMHelpers.ConvertToBase64(_prompt)}");
 
+        // Bedrock is called for real, so the test application needs AWS credentials in its
+        // environment. Supplied by OIDC in CI, by the AWS CLI locally. See NR-601301.
+        foreach (var awsCredential in AwsTestCredentials.GetEnvironmentVariables())
+        {
+            _fixture.SetAdditionalEnvironmentVariable(awsCredential.Key, awsCredential.Value);
+        }
+
         _fixture.Initialize();
     }
 
