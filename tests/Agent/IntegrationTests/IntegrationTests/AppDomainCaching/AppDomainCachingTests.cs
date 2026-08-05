@@ -12,6 +12,10 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching;
 public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
     where TFixture : ConsoleDynamicMethodFixture
 {
+    private const string TransactionCategory = "AppDomainCachingGroup";
+    private const string OriginalTransactionName = "OriginalName";
+    private const string RenamedTransactionName = "RenamedName";
+
     private readonly TFixture _fixture;
     private bool _appDomainCachingDisabled;
     private readonly string _expectedCallingStrategy;
@@ -25,6 +29,13 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
         _fixture.TestLogger = output;
 
         _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
+
+        // Exercises the Agent API path in addition to the instrumented-method path above. The two use
+        // different cache shapes: instrumented methods resolve one shared agent-shim MethodInfo from an
+        // injected static field, while an API call goes through a cached invoker delegate plus a managed
+        // per-method delegate cache. Without this command the API path is only covered incidentally by
+        // other suites, and never side by side under both calling strategies.
+        _fixture.AddCommand($"ApiCalls TestSetTransactionName {TransactionCategory} {OriginalTransactionName},{RenamedTransactionName}");
 
         if(_appDomainCachingDisabled)
         {
@@ -58,6 +69,18 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
         // NEW_RELIC_DISABLE_APPDOMAIN_CACHING like .NET Framework: default (unset) => AppDomain Fallback Cache,
         // opt-out (true) => Reflection.
         Assert.Contains($"Calls to the managed agent will use the calling strategy - {_expectedCallingStrategy}", _fixture.ProfilerLog.GetFullLogAsString());
+    }
+
+    [Fact]
+    public void AgentApiCallTakesEffectUnderConfiguredStrategy()
+    {
+        // SetTransactionName is a direct public-API call, so it reaches the agent through the API path
+        // rather than through wrapper instrumentation. If that path failed to resolve its target under
+        // either calling strategy, the rename would not happen and the metric below would not exist.
+        var actualMetrics = _fixture.AgentLog.GetMetrics();
+
+        Assert.Contains(actualMetrics, x => x.MetricSpec.Name == $"OtherTransaction/{TransactionCategory}/{RenamedTransactionName}");
+        Assert.DoesNotContain(actualMetrics, x => x.MetricSpec.Name == $"OtherTransaction/{TransactionCategory}/{OriginalTransactionName}");
     }
 
     [Fact]
