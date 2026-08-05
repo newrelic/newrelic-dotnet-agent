@@ -309,15 +309,14 @@ public class CatMapTests
         }
     }
 
-    public static IEnumerable<TestCase[]> TestCases
+    public static IEnumerable<TestCase> TestCases
     {
         get
         {
             var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
             Assert.That(testCases, Is.Not.Null);
             return testCases
-                .Where(testCase => testCase != null)
-                .Select(testCase => new[] { testCase });
+                .Where(testCase => testCase != null);
         }
     }
 
