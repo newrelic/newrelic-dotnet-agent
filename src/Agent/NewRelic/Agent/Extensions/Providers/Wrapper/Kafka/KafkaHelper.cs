@@ -41,10 +41,8 @@ internal static class KafkaHelper
         }
     }
 
-    private sealed class BootstrapEntry { public string BootstrapServers; }
-
     // ConditionalWeakTable maps each instance to its bootstrapServers string; entries auto-evict when GC'd.
-    private static readonly ConditionalWeakTable<object, BootstrapEntry> _bootstrapEntryByInstance = new();
+    private static readonly ConditionalWeakTable<object, string> _bootstrapServersByInstance = new();
     // Guards against duplicate concurrent fetches for the same bootstrap servers string.
     private static readonly ConcurrentDictionary<string, byte> _fetchScheduled = new();
     // Resolved cluster IDs. Cached forever once resolved — a cluster id is a stable identifier
@@ -61,7 +59,7 @@ internal static class KafkaHelper
         Array.Sort(parts);
         bootstrapServers = string.Join(",", parts);
 
-        _bootstrapEntryByInstance.GetValue(producerOrConsumerInstance, _ => new BootstrapEntry { BootstrapServers = bootstrapServers });
+        _bootstrapServersByInstance.GetValue(producerOrConsumerInstance, _ => bootstrapServers);
 
         if (_clusterIdByBootstrap.ContainsKey(bootstrapServers)) return; // already resolved
         if (!_fetchScheduled.TryAdd(bootstrapServers, 1)) return; // fetch already in flight
@@ -113,12 +111,12 @@ internal static class KafkaHelper
 
     public static bool TryGetClusterIdFromCache(object instance, out string clusterId)
     {
-        if (!_bootstrapEntryByInstance.TryGetValue(instance, out var entry))
+        if (!_bootstrapServersByInstance.TryGetValue(instance, out var bootstrapServers))
         {
             clusterId = null;
             return false;
         }
 
-        return _clusterIdByBootstrap.TryGetValue(entry.BootstrapServers, out clusterId);
+        return _clusterIdByBootstrap.TryGetValue(bootstrapServers, out clusterId);
     }
 }
