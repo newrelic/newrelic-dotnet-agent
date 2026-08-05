@@ -216,15 +216,19 @@ public class ContainerApplication : RemoteApplication
             }
             catch { /* ignore */ }
         }
-
-#if DEBUG
-        // Cleanup the networks with no attached containers. Mainly for testings on dev laptops - they can build up and block runs.
-        Process.Start("docker", "network prune -f");
-#endif
     }
 
     protected override void PrepareForStart()
     {
+        // Stagger concurrently-starting fixtures so they don't all issue their docker
+        // compose/network commands at the exact same instant. This widens the window
+        // between one fixture's network creation and another fixture's cleanup calls,
+        // which is what caused the "network <project>_default not found" flake when a
+        // global "docker network prune -f" (now removed) raced other fixtures' networks.
+        var startupJitterMs = Random.Shared.Next(0, 3000);
+        Console.WriteLine($"[{AppName} {DateTime.Now}] Delaying startup by {startupJitterMs}ms to de-synchronize concurrent docker commands.");
+        Thread.Sleep(startupJitterMs);
+
         CleanupContainer();
 
         // Remove any stale network left by a previous crashed run so compose can recreate it cleanly
@@ -277,8 +281,12 @@ public class ContainerApplication : RemoteApplication
             TestLogger?.WriteLine($"[{AppName}] Retrying docker compose up.");
             CleanupContainer();
 
-            // Give Docker time to fully release network resources before retrying
-            Thread.Sleep(TimeSpan.FromSeconds(15));
+            // Give Docker time to fully release network resources before retrying.
+            // Add jitter on top of the 15s floor so fixtures that failed at the same
+            // moment don't all retry in lockstep and collide again.
+            var retryJitterMs = Random.Shared.Next(0, 5000);
+            Console.WriteLine($"[{AppName} {DateTime.Now}] Waiting 15s plus {retryJitterMs}ms jitter before retrying to de-synchronize concurrent retries.");
+            Thread.Sleep(TimeSpan.FromSeconds(15) + TimeSpan.FromMilliseconds(retryJitterMs));
 
             try
             {
