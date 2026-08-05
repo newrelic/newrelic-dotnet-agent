@@ -225,10 +225,6 @@ Two things are worth knowing if this ever fails:
   with an explicit region taken from `AwsRegion` in your `secrets.json`, so that
   setting is the one that matters.
 
-Developers reach this AWS account through the org-wide `NRAdmin` or
-`NRPowerUser` permission sets. There is no dedicated Bedrock permission set to
-request.
-
 Three test classes exercise models Bedrock still offers in us-west-2:
 
 * `BedrockInvokeTests` -- `amazon.titan-embed-text-v1`
