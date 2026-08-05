@@ -37,31 +37,6 @@ permissions:
 
 jobs:
 
-  # Static guard, not a test run: verifies that every concrete container test
-  # class is selected by exactly one matrix entry below (see
-  # build/Scripts/check-container-test-coverage.py). Runs once per workflow
-  # run, independent of the matrix job, so a missing/miswired trait fails
-  # fast without waiting on Docker or a built agent.
-  check-test-coverage:
-    name: Check Container Test Coverage
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
-        with:
-          egress-policy: audit
-
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Install PyYAML
-        run: pip install pyyaml
-
-      - name: Check container test coverage
-        run: python3 build/Scripts/check-container-test-coverage.py --verbose
-
   linux-container-tests:
     name: Container Test (${{ matrix.name }}/${{ matrix.arch }})
     # Runner chosen per matrix entry

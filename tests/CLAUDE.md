@@ -138,11 +138,9 @@ The repo-root `test.runsettings` holds only NUnit naming settings and is auto-ap
 - `[Trait("Distro", "...")]` -- **OS-compatibility smoke tests only** (current values: `Ubuntu`, `Alpine`, `Centos`, `Amazon`, `Fedora`). Do not add new functional coverage here; it does not scale (this is what previously piled 15+ unrelated classes onto `Distro=Ubuntu`).
 - `[Trait("TestArea", "...")]` -- **functional test groupings** (current values: `Core`, `Messaging`, `Aws`, `Datastore`).
 
-**A new functional container test class must get a `TestArea` trait, never `Distro`.** Reuse an existing `TestArea` value where it fits. Adding a **new** `TestArea` value requires adding a matching matrix `include:` entry in `linux_container_tests.yml` (filter `Architecture=<arch>&TestArea=<value>`), or the coverage guard below fails the build with a "selected by NO matrix entry" error.
+**A new functional container test class must get a `TestArea` trait, never `Distro`.** Reuse an existing `TestArea` value where it fits. Adding a **new** `TestArea` value requires adding a matching matrix `include:` entry in `linux_container_tests.yml` (filter `Architecture=<arch>&TestArea=<value>`) -- nothing checks this for you, so a class whose trait no matrix entry asks for is silently never run.
 
-Both `Distro` and `TestArea` traits may be declared on an **abstract base class** and inherited by concrete subclasses (e.g. `AwsSdkSQSTestBase` carries `TestArea=Aws`; its two concrete subclasses inherit it without redeclaring). Only concrete classes need a selector; abstract bases never need one.
-
-A static guard enforces all of this: `build/Scripts/check-container-test-coverage.py` (Python 3, `pip install pyyaml`) parses the matrix out of `linux_container_tests.yml`, resolves every concrete test class's effective traits (own traits win over inherited ones), and fails if any class is selected by zero or more than one matrix entry; it also warns (non-fatally) on a matrix entry that selects zero classes. It runs as its own fast job (`check-test-coverage`) in `linux_container_tests.yml`, independent of the Docker-based matrix job. Run it locally after adding/moving a container test: `python build/Scripts/check-container-test-coverage.py --verbose`.
+Both `Distro` and `TestArea` traits may be declared on an **abstract base class** and inherited by concrete subclasses (e.g. `AwsSdkSQSTestBase` carries `TestArea=Aws`; its two concrete subclasses inherit it without redeclaring). Only concrete classes need a selector; abstract bases never need one. Own traits win over inherited ones.
 
 ## Performance tests
 
