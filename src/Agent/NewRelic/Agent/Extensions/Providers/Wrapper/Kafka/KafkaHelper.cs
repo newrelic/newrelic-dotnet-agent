@@ -41,26 +41,18 @@ internal static class KafkaHelper
         }
     }
 
-    private const long ClusterIdTtlMs = 60L * 60 * 1000;
-
-    private sealed class ClusterIdEntry
-    {
-        public string ClusterId;
-        public long StoredMs; // DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-    }
-
     private sealed class BootstrapEntry { public string BootstrapServers; }
 
     // ConditionalWeakTable maps each instance to its bootstrapServers string; entries auto-evict when GC'd.
     private static readonly ConditionalWeakTable<object, BootstrapEntry> _bootstrapEntryByInstance = new();
     // Guards against duplicate concurrent fetches for the same bootstrap servers string.
     private static readonly ConcurrentDictionary<string, byte> _fetchScheduled = new();
-    // Resolved cluster IDs, with the timestamp when they were stored (for TTL checks).
-    private static readonly ConcurrentDictionary<string, ClusterIdEntry> _clusterIdByBootstrap = new();
-    // Full producer/consumer config retained so expired entries can be re-fetched without a new instance.
-    private static readonly ConcurrentDictionary<string, Dictionary<string, string>> _configByBootstrap = new();
+    // Resolved cluster IDs. Cached forever once resolved — a cluster id is a stable identifier
+    // for the lifetime of a broker cluster; on failure, nothing is cached, so the next
+    // Producer/Consumer built against the same bootstrap servers retries naturally.
+    private static readonly ConcurrentDictionary<string, string> _clusterIdByBootstrap = new();
 
-    public static void ScheduleClusterIdFetch(object producerOrConsumerInstance, string bootstrapServers, Dictionary<string, string> fullConfig)
+    public static void ScheduleClusterIdFetch(object producerOrConsumerInstance, string bootstrapServers)
     {
         if (string.IsNullOrEmpty(bootstrapServers)) return;
 
@@ -70,44 +62,52 @@ internal static class KafkaHelper
         bootstrapServers = string.Join(",", parts);
 
         _bootstrapEntryByInstance.GetValue(producerOrConsumerInstance, _ => new BootstrapEntry { BootstrapServers = bootstrapServers });
-        _configByBootstrap.TryAdd(bootstrapServers, fullConfig);
 
-        if (!_fetchScheduled.TryAdd(bootstrapServers, 1)) return;
+        if (_clusterIdByBootstrap.ContainsKey(bootstrapServers)) return; // already resolved
+        if (!_fetchScheduled.TryAdd(bootstrapServers, 1)) return; // fetch already in flight
 
-        StartClusterIdFetchTask(bootstrapServers, fullConfig);
+        Handle handle;
+        try
+        {
+            // Producer<TKey,TValue> and Consumer<TKey,TValue> both implement the non-generic
+            // IClient interface, so this doesn't need reflection despite the instance arriving
+            // here as `object` (its TKey/TValue are only known to customer code).
+            handle = ((IClient)producerOrConsumerInstance).Handle;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceInformation($"New Relic: Could not read Kafka client handle for cluster ID fetch: {ex.Message}");
+            _fetchScheduled.TryRemove(bootstrapServers, out _);
+            return;
+        }
+
+        StartClusterIdFetchTask(bootstrapServers, handle);
     }
 
-    private static void StartClusterIdFetchTask(string bootstrapServers, Dictionary<string, string> fullConfig)
+    private static void StartClusterIdFetchTask(string bootstrapServers, Handle handle)
     {
         Task.Run(async () =>
         {
-            int[] delaysMs = { 0, 30000, 60000, 120000, 240000 };
-            for (int attempt = 0; attempt < delaysMs.Length; attempt++)
+            try
             {
-                if (delaysMs[attempt] > 0) await Task.Delay(delaysMs[attempt]);
-                try
+                // DependentAdminClientBuilder reuses the producer/consumer's already-connected
+                // native handle — no second connection is opened.
+                using var adminClient = new DependentAdminClientBuilder(handle).Build();
+                var result = await adminClient.DescribeClusterAsync(new DescribeClusterOptions { RequestTimeout = TimeSpan.FromSeconds(5) });
+                var clusterId = result?.ClusterId;
+                if (!string.IsNullOrEmpty(clusterId))
                 {
-                    var adminConfig = new Dictionary<string, string>(fullConfig)
-                    {
-                        ["bootstrap.servers"] = bootstrapServers,
-                        ["socket.timeout.ms"] = "60000",
-                        ["request.timeout.ms"] = "60000",
-                        ["socket.connection.setup.timeout.ms"] = "60000",
-                    };
-                    using var adminClient = new AdminClientBuilder(adminConfig).Build();
-                    var result = await adminClient.DescribeClusterAsync(new DescribeClusterOptions { RequestTimeout = TimeSpan.FromSeconds(60) });
-                    var clusterId = result?.ClusterId;
-                    if (!string.IsNullOrEmpty(clusterId))
-                    {
-                        _clusterIdByBootstrap[bootstrapServers] = new ClusterIdEntry { ClusterId = clusterId, StoredMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
-                        _fetchScheduled.TryRemove(bootstrapServers, out _);
-                        return;
-                    }
+                    _clusterIdByBootstrap[bootstrapServers] = clusterId;
                 }
-                catch (Exception ex) { Trace.TraceInformation($"New Relic: Kafka cluster ID fetch attempt {attempt + 1} failed: {ex.Message}"); }
             }
-            // All retries exhausted — clear guard so TTL expiry can trigger a future retry.
-            _fetchScheduled.TryRemove(bootstrapServers, out _);
+            catch (Exception ex)
+            {
+                Trace.TraceInformation($"New Relic: Kafka cluster ID fetch failed: {ex.Message}");
+            }
+            finally
+            {
+                _fetchScheduled.TryRemove(bootstrapServers, out _);
+            }
         });
     }
 
@@ -119,23 +119,6 @@ internal static class KafkaHelper
             return false;
         }
 
-        if (!_clusterIdByBootstrap.TryGetValue(entry.BootstrapServers, out var cacheEntry))
-        {
-            clusterId = null;
-            return false;
-        }
-
-        // TTL check — kick off a background re-fetch; return stale value while it's in progress.
-        if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - cacheEntry.StoredMs > ClusterIdTtlMs)
-        {
-            if (_configByBootstrap.TryGetValue(entry.BootstrapServers, out var savedConfig) &&
-                _fetchScheduled.TryAdd(entry.BootstrapServers, 1))
-            {
-                StartClusterIdFetchTask(entry.BootstrapServers, savedConfig);
-            }
-        }
-
-        clusterId = cacheEntry.ClusterId;
-        return true;
+        return _clusterIdByBootstrap.TryGetValue(entry.BootstrapServers, out clusterId);
     }
 }

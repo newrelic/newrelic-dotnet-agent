@@ -61,16 +61,16 @@ public class KafkaBuilderWrapper : IWrapper
 
         var configuration = GetBuilderConfig(builder);
         string bootstrapServers = null;
-        var fullConfig = new Dictionary<string, string>();
 
         try
         {
             foreach (KeyValuePair<string, string> kvp in configuration)
             {
-                if (kvp.Key != null && kvp.Value != null)
-                    fullConfig[kvp.Key] = kvp.Value;
                 if (kvp.Key == BootstrapServersKey)
+                {
                     bootstrapServers = kvp.Value;
+                    break;
+                }
             }
         }
         catch (Exception ex)
@@ -91,7 +91,7 @@ public class KafkaBuilderWrapper : IWrapper
             {
                 KafkaHelper.AddBootstrapServersToCache(clientAsObject, bootstrapServers);
                 if (agent.Configuration.KafkaClusterMetricsEnabled)
-                    KafkaHelper.ScheduleClusterIdFetch(clientAsObject, bootstrapServers, fullConfig);
+                    KafkaHelper.ScheduleClusterIdFetch(clientAsObject, bootstrapServers);
             }
         });
     }
