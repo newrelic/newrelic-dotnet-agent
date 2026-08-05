@@ -20,8 +20,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LLM;
 
 internal class BedrockModels
 {
+    // No explicit credentials: the AWS SDK default credential chain resolves
+    // identity from the environment (OIDC in CI) or the developer's AWS SSO
+    // profile locally. See NR-601301.
     private static readonly AmazonBedrockRuntimeClient _amazonBedrockRuntimeClient =
-        new AmazonBedrockRuntimeClient(AwsConfiguration.AwsAccessKeyId, AwsConfiguration.AwsSecretAccessKey, AwsConfiguration.AwsRegion.ToRegionId());
+        new AmazonBedrockRuntimeClient(AwsConfiguration.AwsRegion.ToRegionId());
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static async Task<string> InvokeAmazonEmbedAsync(string prompt, bool generateError) => await InvokeTitanAsync(prompt, true, generateError);
