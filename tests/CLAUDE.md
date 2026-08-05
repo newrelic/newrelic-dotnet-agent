@@ -166,12 +166,24 @@ How the Linux-agent container tests actually wire up (rediscovered often -- capt
 - **Templates:** simplest fixture+test pair to copy = `Fixtures/LinuxUnicodeLogFileTestFixture.cs` +
   `Tests/LinuxUnicodeLogFileTest.cs` (asserts on `ProfilerLog`). `Tests/LinuxContainerTests.cs` shows the
   per-distro `[Trait("Architecture",...)] [Trait("Distro",...)]` class fan-out and the
-  `Actions(setupConfiguration, exerciseApplication)` -> `Initialize()` flow.
+  `Actions(setupConfiguration, exerciseApplication)` -> `Initialize()` flow. Copy the *mechanics* from
+  those, not the `Distro` trait: they are OS-compatibility smoke tests. A new **functional** class takes
+  `TestArea` instead -- see the trait section below.
 - **glibc vs musl:** `build.ps1 -Platform linux` and the `homefolders` CI artifact only carry the **glibc**
   `.so` (`newrelichome_{x64,arm64}_coreclr_linux`); `CopyNewRelicHomeCoreClrLinuxDirectoryToRemote` copies that
   same glibc home for **every** distro fixture including Alpine (the separate musl profiler artifacts from
   `build_profiler.yml` are not wired into `homefolders`). Target **glibc distros (Ubuntu "noble")** for new
   functional tests; avoid Alpine unless specifically validating musl.
+### Container tests: Distro vs TestArea traits
+
+`linux_container_tests.yml`'s matrix selects which `ContainerIntegrationTests` classes run per job via an xunit `--filter` on two **disjoint** trait axes -- a class must carry exactly one combination that exactly one matrix entry asks for:
+
+- `[Trait("Distro", "...")]` -- **OS-compatibility smoke tests only** (current values: `Ubuntu`, `Alpine`, `Centos`, `Amazon`, `Fedora`). Do not add new functional coverage here; it does not scale (this is what previously piled 15+ unrelated classes onto `Distro=Ubuntu`).
+- `[Trait("TestArea", "...")]` -- **functional test groupings** (current values: `Core`, `Messaging`, `Aws`, `Datastore`).
+
+**A new functional container test class must get a `TestArea` trait, never `Distro`.** Reuse an existing `TestArea` value where it fits. Adding a **new** `TestArea` value requires adding a matching matrix `include:` entry in `linux_container_tests.yml` (filter `Architecture=<arch>&TestArea=<value>`) -- nothing checks this for you, so a class whose trait no matrix entry asks for is silently never run.
+
+Both `Distro` and `TestArea` traits may be declared on an **abstract base class** and inherited by concrete subclasses (e.g. `AwsSdkSQSTestBase` carries `TestArea=Aws`; its two concrete subclasses inherit it without redeclaring). Only concrete classes need a selector; abstract bases never need one. Own traits win over inherited ones.
 
 ## Performance tests
 
