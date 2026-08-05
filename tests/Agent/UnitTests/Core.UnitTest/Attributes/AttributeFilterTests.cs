@@ -368,12 +368,11 @@ public class AttributeFilterTests
         }
     }
 
-    public static IEnumerable<TestCase[]> TestCases
+    public static IEnumerable<TestCase> TestCases
     {
         get
         {
-            return JsonConvert.DeserializeObject<IEnumerable<TestCase>>(TestCaseData)
-                .Select(testCase => new[] { testCase });
+            return JsonConvert.DeserializeObject<IEnumerable<TestCase>>(TestCaseData);
         }
     }
 
