@@ -88,6 +88,16 @@ internal static class KafkaHelper
         {
             try
             {
+                // The customer may dispose their producer/consumer between Build() returning and this
+                // deferred task running, releasing the native handle. AdminClient's dependent-handle
+                // constructor doesn't check handle validity before using it, so build against an
+                // already-released handle is a native fault, not a catchable exception — check first
+                // to close (not eliminate) that window.
+                if (handle.IsInvalid)
+                {
+                    return;
+                }
+
                 // DependentAdminClientBuilder reuses the producer/consumer's already-connected
                 // native handle — no second connection is opened.
                 using var adminClient = new DependentAdminClientBuilder(handle).Build();
