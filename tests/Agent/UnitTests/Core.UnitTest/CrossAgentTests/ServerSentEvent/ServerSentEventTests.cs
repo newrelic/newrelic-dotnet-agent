@@ -210,7 +210,7 @@ public class ServerSentEventTests
         assertAction();
     }
 
-    public static IEnumerable<TestCase[]> TestCases
+    public static IEnumerable<TestCase> TestCases
     {
         get
         {
@@ -222,8 +222,7 @@ public class ServerSentEventTests
             var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(jsonString);
             Assert.That(testCases, Is.Not.Null);
             return testCases
-                .Where(testCase => testCase != null)
-                .Select(testCase => new[] { testCase });
+                .Where(testCase => testCase != null);
         }
     }
 
