@@ -18,6 +18,40 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace Test
 {
+    // FunctionManipulator keeps LoadMethodInfo, LoadMethodInfoFromType, InvokeMethodInfo and
+    // ThrowExceptionIfStackItemIsNull protected, since production callers only ever reach them
+    // through a derived manipulator (Api/Instrument/HelperFunctionManipulator). This test-only
+    // subclass forwards to them directly so their branches can be driven without going through
+    // a full end-to-end instrumentation pass.
+    struct TestableFunctionManipulator : public FunctionManipulator
+    {
+        TestableFunctionManipulator(IFunctionPtr function, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) :
+            FunctionManipulator(function, isCoreClr, agentCallStrategy)
+        {
+            Initialize();
+        }
+
+        void CallLoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda)
+        {
+            LoadMethodInfo(assemblyPath, className, methodName, functionId, argumentTypesLambda);
+        }
+
+        void CallLoadMethodInfoFromType(xstring_t methodName, std::function<void()> argumentTypesLambda)
+        {
+            LoadMethodInfoFromType(methodName, argumentTypesLambda);
+        }
+
+        void CallInvokeMethodInfo()
+        {
+            InvokeMethodInfo();
+        }
+
+        static void CallThrowExceptionIfStackItemIsNull(const InstructionSetPtr& instructions, const xstring_t& message, const bool& inCoreLib)
+        {
+            ThrowExceptionIfStackItemIsNull(instructions, message, inCoreLib);
+        }
+    };
+
     TEST_CLASS(FunctionManipulatorTest)
     {
     public:
@@ -417,6 +451,87 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                     Assert::IsTrue(capturedBytes.size() <= 64, (helperName + _X(": IL exceeds the tiny method limit")).c_str());
                 }
             }
+        }
+
+        // LoadMethodInfoFromType's null-lambda branch is only reached when a caller has no
+        // parameters to match against (Type.GetMethod(string) instead of the overload that
+        // also takes a Type[]). ApiFunctionManipulator always supplies a non-null lambda, so
+        // this branch needs a direct call through the test-only forwarder.
+        TEST_METHOD(load_method_info_from_type_resolves_without_argument_types_when_no_parameters)
+        {
+            auto function = std::make_shared<MockFunction>();
+            auto tokenizer = std::make_shared<RecordingTokenizer>();
+            function->_tokenizer = tokenizer;
+
+            TestableFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::Reflection);
+
+            manipulator.CallLoadMethodInfoFromType(_X("SomeMethod"), std::function<void()>());
+
+            Assert::IsTrue(tokenizer->Tokenized(_X("GetMethod")), L"a null argument-types lambda should resolve via the single-argument Type.GetMethod(string) overload");
+        }
+
+        // No current production caller reaches FunctionManipulator::InvokeMethodInfo directly:
+        // ApiFunctionManipulator's reflection path emits its own inline MethodBase.Invoke call
+        // rather than delegating to it. Call the base method itself through the forwarder so
+        // its own Append call is exercised.
+        TEST_METHOD(invoke_method_info_dispatches_through_method_base_invoke)
+        {
+            auto function = std::make_shared<MockFunction>();
+            auto tokenizer = std::make_shared<RecordingTokenizer>();
+            function->_tokenizer = tokenizer;
+
+            TestableFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::Reflection);
+
+            manipulator.CallInvokeMethodInfo();
+
+            Assert::IsTrue(tokenizer->Tokenized(_X("Invoke")), L"should dispatch through MethodBase.Invoke(object, object[])");
+        }
+
+        // Under AppDomainFallbackCache, LoadMethodInfo special-cases the AgentShim class name to
+        // use a dedicated cache helper; every other caller falls through to the generic
+        // app-domain-cache lookup helper. No current production caller passes a non-AgentShim
+        // class name with this strategy, so this branch needs a direct, synthetic call.
+        TEST_METHOD(load_method_info_uses_generic_app_domain_cache_lookup_for_non_agent_shim_callers)
+        {
+            auto function = std::make_shared<MockFunction>();
+            auto tokenizer = std::make_shared<RecordingTokenizer>();
+            function->_tokenizer = tokenizer;
+
+            TestableFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+
+            manipulator.CallLoadMethodInfo(_X("C:\\corepath"), _X("NewRelic.Agent.Core.SomeOtherCaller"), _X("SomeMethod"), 1, std::function<void()>());
+
+            Assert::IsTrue(tokenizer->Tokenized(_X("GetMethodFromAppDomainStorageOrReflectionOrThrow")), L"non-AgentShim callers should use the generic app-domain cache lookup helper");
+            Assert::IsFalse(tokenizer->Tokenized(_X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow")), L"the AgentShim-specific helper should not be used for a non-AgentShim caller");
+        }
+
+        // AgentCallStyle::Strategy has exactly two legitimate values, both handled by
+        // LoadMethodInfo. The else branch is otherwise unreachable, so this forces an
+        // out-of-range strategy through the constructor to exercise it.
+        TEST_METHOD(load_method_info_throws_for_an_unsupported_agent_call_strategy)
+        {
+            auto function = std::make_shared<MockFunction>();
+            TestableFunctionManipulator manipulator(function, false, static_cast<AgentCallStyle::Strategy>(-1));
+
+            std::function<void(void)> func = [&manipulator]() {
+                manipulator.CallLoadMethodInfo(_X("C:\\corepath"), _X("NewRelic.Agent.Core.AgentApi"), _X("SomeMethod"), 1, std::function<void()>());
+                };
+
+            Assert::ExpectException<FunctionManipulatorException>(func, L"an unsupported AgentCallStyle::Strategy should not be usable to load method info.");
+        }
+
+        // ThrowExceptionIfStackItemIsNull unconditionally emits a dup/branch/throw/label
+        // sequence at IL-generation time; the CEE_BRTRUE it appends only affects behaviour of
+        // the generated IL at CLR runtime, not which C++ statements execute here. A single
+        // direct call is enough to exercise the call to ThrowException inside it.
+        TEST_METHOD(throw_exception_if_stack_item_is_null_appends_a_conditional_throw)
+        {
+            auto tokenizer = std::make_shared<RecordingTokenizer>();
+            auto instructions = std::make_shared<InstructionSet>(tokenizer, nullptr);
+
+            TestableFunctionManipulator::CallThrowExceptionIfStackItemIsNull(instructions, _X("null check message"), true);
+
+            Assert::IsTrue(tokenizer->Tokenized(_X(".ctor")), L"should append a call to construct and throw a System.Exception when the stack item is null");
         }
 
     private:

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include "../sicily/codegen/ITokenizer.h"
 #include "../sicily/SicilyTest/RealisticTokenizer.h"
@@ -22,10 +23,16 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {}
 
         std::vector<std::wstring> _memberRefMethodNames;
+        std::vector<std::pair<std::wstring, std::wstring>> _typeRefRequests;
 
         bool Tokenized(const std::wstring& methodName) const
         {
             return std::find(_memberRefMethodNames.begin(), _memberRefMethodNames.end(), methodName) != _memberRefMethodNames.end();
+        }
+
+        bool TypeRefTokenized(const std::wstring& assemblyName, const std::wstring& fullyQualifiedName) const
+        {
+            return std::find(_typeRefRequests.begin(), _typeRefRequests.end(), std::make_pair(assemblyName, fullyQualifiedName)) != _typeRefRequests.end();
         }
 
         virtual uint32_t GetMemberRefOrDefToken(uint32_t parent, const std::wstring& methodName, const ByteVector& signature) override
@@ -41,6 +48,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
         virtual uint32_t GetTypeRefToken(const std::wstring& assemblyName, const std::wstring& fullyQualifiedName) override
         {
+            _typeRefRequests.push_back(std::make_pair(assemblyName, fullyQualifiedName));
             return _inner->GetTypeRefToken(assemblyName, fullyQualifiedName);
         }
 
