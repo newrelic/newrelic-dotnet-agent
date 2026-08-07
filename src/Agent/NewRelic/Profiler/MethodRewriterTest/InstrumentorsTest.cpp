@@ -528,13 +528,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::AreEqual((uint64_t)1, instr.GetHelperFireCount());
         }
 
-        TEST_METHOD(helper_cctor_fires_and_returns_false)
+        TEST_METHOD(helper_cctor_does_not_fire)
         {
+            // .cctor is no longer a recognized helper -- it must not pass the allow-list.
             HelperInstrumentor instr;
             auto func = MakeHelperFunc(L".cctor");
             bool result = instr.Instrument(func, nullptr, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
             Assert::IsFalse(result);
-            Assert::AreEqual((uint64_t)1, instr.GetHelperFireCount());
+            Assert::AreEqual((uint64_t)0, instr.GetHelperFireCount());
         }
 
         TEST_METHOD(helper_fire_count_accumulates_across_multiple_calls)

@@ -65,8 +65,13 @@ public class ProfilerAgentMethodInvoker
             IEnumerable<Expression> parameterExpressions = GetInvokerParameterExpressions(parametersParam, types);
             var invocationExpression = Expression.Invoke(methodToCall, parameterExpressions);
 
+            // Expression trees do not insert implicit boxing conversions. When returnType is a value type,
+            // invocationExpression.Type is that value type while the lambda's declared return type is object,
+            // so Expression.Lambda would throw an ArgumentException without an explicit Convert. Expression.Convert
+            // to object is a boxing conversion for value types and a no-op upcast for reference types, so it is
+            // safe for both cases.
             var lambdaExpression = returnType != null ?
-                Expression.Lambda<Func<object[], object>>(invocationExpression, parametersParam) :
+                Expression.Lambda<Func<object[], object>>(Expression.Convert(invocationExpression, typeof(object)), parametersParam) :
                 Expression.Lambda<Func<object[], object>>(Expression.Block(invocationExpression, Expression.Constant(null)), parametersParam);
 
             invoker = lambdaExpression.Compile();

@@ -169,10 +169,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X("StoreMethodInAppDomainStorageOrThrow")));
         }
 
-        TEST_METHOD(ShouldInstrumentFunction_cctor_returns_true)
+        TEST_METHOD(ShouldInstrumentFunction_cctor_returns_false)
         {
+            // .cctor is no longer an instrumented helper function name, so it must not
+            // widen the JIT-time function-name gate for every core library static ctor.
             auto rewriter = MakeRewriter();
-            Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X(".cctor")));
+            Assert::IsFalse(rewriter->ShouldInstrumentFunction(_X(".cctor")));
         }
 
         TEST_METHOD(ShouldInstrumentFunction_unknown_function_returns_false)

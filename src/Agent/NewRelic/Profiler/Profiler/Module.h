@@ -98,43 +98,19 @@ namespace NewRelic { namespace Profiler
             AddPermissionSetAssertToMethod(injectedMethodToken, permissionBlob);
         }
 
-        virtual void InjectStaticSecuritySafeCtor(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override
-        {
-            auto interfaceAttributes = CorMethodAttr::mdStatic | CorMethodAttr::mdPrivate | CorMethodAttr::mdHideBySig | CorMethodAttr::mdSpecialName | CorMethodAttr::mdRTSpecialName;
-            auto implementationAttributes = CorMethodImpl::miIL | CorMethodImpl::miNoInlining;
-            auto permissionBlob = GetPermissionBlob();
-            BYTEVECTOR(constructorSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_HASTHIS, 0, CorElementType::ELEMENT_TYPE_VOID);
-
-            auto injectionTargetClassToken = GetTypeToken(className);
-            auto constructorCodeAddress = GetMethodCodeAddress(injectionTargetClassToken, _X(".ctor"), constructorSignature);
-            auto securitySafeCriticalConstructorToken = GetSecuritySafeCriticalConstructorToken();
-            auto suppressUnmanagedCodeSecurityAttributeToken = GetSuppressUnmanagedCodeSecurityAttributeToken();
-
-            auto injectedMethodToken = AddMethodDefinition(methodName, injectionTargetClassToken, signature, interfaceAttributes, implementationAttributes, constructorCodeAddress);
-            AddAttributeToMethod(injectedMethodToken, securitySafeCriticalConstructorToken);
-            AddAttributeToMethod(injectedMethodToken, suppressUnmanagedCodeSecurityAttributeToken);
-            AddPermissionSetAssertToMethod(injectedMethodToken, permissionBlob);
-        }
-
         virtual void InjectNRHelperType() override
         {
             auto objectTypeToken = GetTypeToken(_X("System.Object"));
             mdTypeDef nrHelperType;
             ThrowOnError(_metaDataEmit->DefineTypeDef, _X("__NRInitializer__"), CorTypeAttr::tdAbstract | CorTypeAttr::tdSealed, objectTypeToken, NULL, &nrHelperType);
 
-            //auto isVolatileTypeToken = GetTypeToken(_X("System.Runtime.CompilerServices.IsVolatile"));
-            //auto isVolatileSignature = Profiler::SignatureParser::CompressToken(isVolatileTypeToken);
             auto dataFieldAttributes = CorFieldAttr::fdPublic | CorFieldAttr::fdStatic;
-            BYTEVECTOR(dataFieldSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD, CorElementType::ELEMENT_TYPE_OBJECT /*, CorElementType::ELEMENT_TYPE_CMOD_REQD*/);
-            //dataFieldSignature.insert(dataFieldSignature.end(), isVolatileSignature->begin(), isVolatileSignature->end());
+            BYTEVECTOR(dataFieldSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD, CorElementType::ELEMENT_TYPE_OBJECT);
 
             mdFieldDef dataFieldToken;
             ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_agentMethodFunc"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
             ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_agentShimFunc"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
             ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_agentShimMethodInfo"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
-
-            //BYTEVECTOR(intFieldSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD, CorElementType::ELEMENT_TYPE_I4);
-            //ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_isInitialized"), dataFieldAttributes, intFieldSignature.data(), (uint32_t)intFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
         }
 
         virtual bool VerifyNRHelperTypeInjected() override
@@ -155,6 +131,9 @@ namespace NewRelic { namespace Profiler
             const auto coreLibName = _isCoreClr ? SYSTEM_PRIVATE_CORELIB_ASSEMBLYNAME : MSCORLIB_ASSEMBLYNAME;
             constexpr const BYTE pubTokenCoreClr[] = { 0x7C, 0xEC, 0x85, 0xD7, 0xBE, 0xA7, 0x79, 0x8E };
             constexpr const BYTE pubTokenNetFramework[] = { 0xB7, 0x7A, 0x5C, 0x56, 0x19, 0x34, 0xE0, 0x89 };
+            constexpr ULONG pubTokenLength = 8;
+            static_assert(sizeof(pubTokenCoreClr) == pubTokenLength, "CoreCLR public key token must be 8 bytes");
+            static_assert(sizeof(pubTokenNetFramework) == pubTokenLength, "NetFramework public key token must be 8 bytes");
 
             try
             {
@@ -168,9 +147,12 @@ namespace NewRelic { namespace Profiler
                 amd.usBuildNumber = 0;
                 amd.usRevisionNumber = 0;
 
-                auto pubToken = _isCoreClr ? pubTokenCoreClr : pubTokenNetFramework;
+                // pubToken decays to a pointer here, so sizeof(pubToken) would be the pointer
+                // size (4 on x86, 8 on x64) instead of the token's byte length -- pass the
+                // explicit pubTokenLength constant instead.
+                const BYTE* pubToken = _isCoreClr ? pubTokenCoreClr : pubTokenNetFramework;
 
-                auto injectResult = _metaDataAssemblyEmit->DefineAssemblyRef(pubToken, sizeof(pubToken), coreLibName, &amd, NULL, 0, 0, &_coreLibAssemblyRefToken);
+                auto injectResult = _metaDataAssemblyEmit->DefineAssemblyRef(pubToken, pubTokenLength, coreLibName, &amd, NULL, 0, 0, &_coreLibAssemblyRefToken);
                 if (injectResult == S_OK)
                 {
                     LogDebug(L"Attempting to Inject reference to ", coreLibName, L" into Module  ", GetModuleName(), L" - Success: ", _coreLibAssemblyRefToken);

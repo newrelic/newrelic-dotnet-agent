@@ -222,25 +222,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::AreEqual((uint8_t)0x7E, capturedBytes[1]);
         }
 
-        TEST_METHOD(helper_method_cctor)
-        {
-            auto function = std::make_shared<MockFunction>();
-            function->_functionName = _X(".cctor");
-
-            ByteVector capturedBytes;
-            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
-                capturedBytes = bytes;
-            };
-
-            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
-            manipulator.InstrumentHelper();
-
-            // capturedBytes = 1-byte tiny header + IL body
-            // expected IL size: 1 byte; first IL byte: CEE_RET (0x2A)
-            Assert::AreEqual((size_t)2, capturedBytes.size());
-            Assert::AreEqual((uint8_t)0x2A, capturedBytes[1]);
-        }
-
         TEST_METHOD(helper_method_EnsureInitialized)
         {
             auto function = std::make_shared<MockFunction>();
@@ -422,8 +403,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 _X("EnsureInitialized"),
                 _X("GetAgentMethodInvokerObject"),
                 _X("InvokeAgentMethodInvokerFunc"),
-                _X("StoreAgentMethodInvokerFunc"),
-                _X(".cctor")
+                _X("StoreAgentMethodInvokerFunc")
             };
 
             const std::vector<AgentCallStyle::Strategy> strategies {

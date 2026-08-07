@@ -347,22 +347,29 @@ namespace NewRelic { namespace Profiler {
                 return E_FAIL;
             }
 
+            bool injectionSucceeded = false;
+            HRESULT injectionResult = S_OK;
             try
             {
-                ModuleInjector::ModuleInjector::InjectIntoModule(*module, _isCoreClr);
+                injectionSucceeded = ModuleInjector::ModuleInjector::InjectIntoModule(*module, _isCoreClr);
             }
             catch (...)
             {
                 LogError(L"An exception was thrown while attempting to inject into a module.");
-                return E_FAIL;
+                injectionSucceeded = false;
+                injectionResult = E_FAIL;
             }
 
-            // (F) safety net: after injecting into the core library, confirm the helper type actually
-            // took. If not, downgrade the whole process to Reflection (the corelib is the first module
-            // loaded, so this precedes essentially every app-method JIT). Runtime-agnostic seam decides.
+            // (F) safety net: after injecting into the core library, confirm both the helper type
+            // AND the helper methods actually took (InjectIntoModule reports the latter via its
+            // return value; VerifyNRHelperTypeInjected re-reads metadata for the former). If not,
+            // downgrade the whole process to Reflection (the corelib is the first module loaded, so
+            // this precedes essentially every app-method JIT). This check runs even when injection
+            // above threw, so a corelib injection failure is never silently ignored. Runtime-agnostic
+            // seam decides.
             if (module->GetIsThisTheCoreLibAssembly())
             {
-                const bool injected = module->VerifyNRHelperTypeInjected();
+                const bool injected = injectionSucceeded && module->VerifyNRHelperTypeInjected();
                 const auto effective = MethodRewriter::AgentCallStyle::ResolveEffectiveStrategy(_agentCallStrategy, injected);
                 if (effective != _agentCallStrategy)
                 {
@@ -372,6 +379,11 @@ namespace NewRelic { namespace Profiler {
                              L"injection_downgrades=", _injectionDowngradeCount.load());
                 }
                 _agentCallStrategy = effective;
+            }
+
+            if (FAILED(injectionResult))
+            {
+                return injectionResult;
             }
 
             LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
@@ -904,7 +916,10 @@ namespace NewRelic { namespace Profiler {
         xstring_t _agentCoreDllPath = _X("");
 
         bool _isCoreClr = false;
-        MethodRewriter::AgentCallStyle::Strategy _agentCallStrategy = MethodRewriter::AgentCallStyle::Strategy::AppDomainFallbackCache;
+        // Written from ModuleLoadFinished (the downgrade path) and from Initialize; read on every
+        // JIT and ReJIT compilation via ProcessMethodJit, each of which can run on a different
+        // thread than ModuleLoadFinished -- so this must be atomic.
+        std::atomic<MethodRewriter::AgentCallStyle::Strategy> _agentCallStrategy = MethodRewriter::AgentCallStyle::Strategy::AppDomainFallbackCache;
 
         MethodRewriter::MethodRewriterPtr GetMethodRewriter()
         {

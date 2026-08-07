@@ -151,8 +151,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 function->GetFunctionName() != _X("InvokeAgentMethodInvokerFunc") &&
                 function->GetFunctionName() != _X("GetAgentMethodInvokerObject") &&
                 function->GetFunctionName() != _X("StoreAgentMethodInvokerFunc") &&
-                function->GetFunctionName() != _X("EnsureInitialized") &&
-                function->GetFunctionName() != _X(".cctor"))
+                function->GetFunctionName() != _X("EnsureInitialized"))
                 return false;
 
             ++_helperFireCount;
