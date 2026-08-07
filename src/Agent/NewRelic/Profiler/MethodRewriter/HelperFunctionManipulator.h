@@ -186,6 +186,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
         // object GetAgentShimFinishTracerDelegateFunc()
         // Fast-path: reads _agentShimFunc static field; falls back to AppDomain.GetData if null.
+        // The fallback writes the value back into the field so later calls take the fast path.
         void BuildGetAgentShimFinishTracerDelegateFunc()
         {
             _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_agentShimFunc"));
@@ -198,6 +199,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true);
             _instructions->AppendString(_X("__NRInitializer__::_agentShimFunc"));
             _instructions->Append(CEE_CALLVIRT, _X("instance object System.AppDomain::GetData(string)"));
+
+            _instructions->Append(CEE_DUP);
+            _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_agentShimFunc"));
 
             _instructions->AppendLabel(afterFallback);
 
@@ -253,6 +257,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
         // object GetAgentMethodInvokerObject()
         // Fast-path: reads _agentMethodFunc static field; falls back to AppDomain.GetData if null.
+        // The fallback writes the value back into the field so later calls take the fast path.
         void BuildGetAgentMethodInvokerObject()
         {
             _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_agentMethodFunc"));
@@ -265,6 +270,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true);
             _instructions->AppendString(_X("__NRInitializer__::_agentMethodFunc"));
             _instructions->Append(CEE_CALLVIRT, _X("instance object System.AppDomain::GetData(string)"));
+
+            _instructions->Append(CEE_DUP);
+            _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_agentMethodFunc"));
 
             _instructions->AppendLabel(afterFallback);
 
@@ -314,14 +322,13 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
         // object InvokeAgentMethodInvokerFunc(string assemblyPath, string storageKey, string typeName,
         //     string methodName, Type[] parameterTypes, Type returnType, object[] methodParameters)
+        // Initializes unconditionally: this helper is the only entry point to the managed
+        // invoker, so nothing else can be relied on to have populated the delegate. In steady
+        // state EnsureInitialized reduces to a static field read plus a branch, with no lock.
         void BuildInvokeAgentMethodInvokerFunc()
         {
-            // Reflection dispatches always call EnsureInitialized inline; AppDomainFallbackCache trusts the user-method IL to have called it once.
-            if (_agentCallStrategy != AgentCallStyle::Strategy::AppDomainFallbackCache)
-            {
-                _instructions->Append(CEE_LDARG_0);
-                _instructions->Append(_X("call void System.CannotUnloadAppDomainException::EnsureInitialized(string)"));
-            }
+            _instructions->Append(CEE_LDARG_0);
+            _instructions->Append(_X("call void System.CannotUnloadAppDomainException::EnsureInitialized(string)"));
 
             _instructions->Append(_X("call object System.CannotUnloadAppDomainException::GetAgentMethodInvokerObject()"));
 

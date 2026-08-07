@@ -11,6 +11,8 @@
 #include "../MethodRewriter/FunctionManipulator.h"
 #include "../MethodRewriter/InstrumentFunctionManipulator.h"
 #include "../MethodRewriter/HelperFunctionManipulator.h"
+#include "../MethodRewriter/ApiFunctionManipulator.h"
+#include "RecordingTokenizer.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -143,8 +145,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             manipulator.InstrumentHelper();
 
             // capturedBytes = 1-byte tiny header + IL body
-            // expected IL size: 45 bytes; first IL byte: CEE_LDSFLD (0x7E)
-            Assert::AreEqual((size_t)46, capturedBytes.size());
+            // expected IL size: 51 bytes; first IL byte: CEE_LDSFLD (0x7E)
+            Assert::AreEqual((size_t)52, capturedBytes.size());
             Assert::AreEqual((uint8_t)0x7E, capturedBytes[1]);
         }
 
@@ -238,8 +240,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             manipulator.InstrumentHelper();
 
             // capturedBytes = 1-byte tiny header + IL body
-            // expected IL size: 45 bytes; first IL byte: CEE_LDSFLD (0x7E)
-            Assert::AreEqual((size_t)46, capturedBytes.size());
+            // expected IL size: 51 bytes; first IL byte: CEE_LDSFLD (0x7E)
+            Assert::AreEqual((size_t)52, capturedBytes.size());
             Assert::AreEqual((uint8_t)0x7E, capturedBytes[1]);
         }
 
@@ -262,6 +264,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::AreEqual((uint8_t)0x02, capturedBytes[1]);
         }
 
+        // The invoker helper self-initializes, so it emits the same IL under both
+        // strategies. Both cases are kept to pin that the shape is deliberately
+        // strategy-independent: nothing outside this helper initializes it.
         TEST_METHOD(helper_method_InvokeAgentMethodInvokerFunc_AppDomainFallbackCache)
         {
             auto function = std::make_shared<MockFunction>();
@@ -276,9 +281,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             manipulator.InstrumentHelper();
 
             // capturedBytes = 1-byte tiny header + IL body
-            // expected IL size: 25 bytes; first IL byte: CEE_CALL (0x28)
-            Assert::AreEqual((size_t)26, capturedBytes.size());
-            Assert::AreEqual((uint8_t)0x28, capturedBytes[1]);
+            // expected IL size: 31 bytes; first IL byte: CEE_LDARG_0 (0x02)
+            Assert::AreEqual((size_t)32, capturedBytes.size());
+            Assert::AreEqual((uint8_t)0x02, capturedBytes[1]);
         }
 
         TEST_METHOD(helper_method_InvokeAgentMethodInvokerFunc_Reflection)
@@ -294,10 +299,124 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::Reflection);
             manipulator.InstrumentHelper();
 
-            // capturedBytes = 1-byte tiny header + IL body
+            // Same IL as the AppDomainFallbackCache case, by design.
             // expected IL size: 31 bytes; first IL byte: CEE_LDARG_0 (0x02)
             Assert::AreEqual((size_t)32, capturedBytes.size());
             Assert::AreEqual((uint8_t)0x02, capturedBytes[1]);
+        }
+
+        // Pins the Reflection strategy emission for the Agent API path. Reflection is
+        // the graceful-degradation path used when core library helper injection fails,
+        // so it must stay self-contained: it resolves the target itself and must never
+        // call an injected helper.
+        TEST_METHOD(api_method_emits_reflection_path_under_reflection_strategy)
+        {
+            auto function = std::make_shared<MockFunction>();
+            auto tokenizer = std::make_shared<RecordingTokenizer>();
+            function->_tokenizer = tokenizer;
+
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("C:\\corepath")), false, AgentCallStyle::Strategy::Reflection);
+            manipulator.InstrumentApi();
+
+            // Reflection resolves the method itself and dispatches through MethodBase.Invoke.
+            Assert::IsTrue(tokenizer->Tokenized(_X("Invoke")), L"Reflection path must dispatch through MethodBase.Invoke");
+            // It must not depend on any injected core library helper.
+            Assert::IsFalse(tokenizer->Tokenized(_X("InvokeAgentMethodInvokerFunc")), L"Reflection path must not call injected helpers");
+            Assert::IsFalse(tokenizer->Tokenized(_X("GetMethodFromAppDomainStorageOrReflectionOrThrow")), L"Reflection path must not call injected helpers");
+        }
+
+        // Under AppDomainFallbackCache the API path must dispatch through the injected
+        // managed invoker helper, not resolve a MethodInfo and call MethodBase.Invoke.
+        // That is what removes the per-call AppDomain.GetData.
+        TEST_METHOD(api_method_emits_managed_invoker_under_app_domain_fallback_cache)
+        {
+            auto function = std::make_shared<MockFunction>();
+            auto tokenizer = std::make_shared<RecordingTokenizer>();
+            function->_tokenizer = tokenizer;
+
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("C:\\corepath")), false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            manipulator.InstrumentApi();
+
+            Assert::IsTrue(tokenizer->Tokenized(_X("InvokeAgentMethodInvokerFunc")), L"API path must call the managed invoker helper");
+            Assert::IsFalse(tokenizer->Tokenized(_X("Invoke")), L"API path must no longer dispatch through MethodBase.Invoke");
+            Assert::IsFalse(tokenizer->Tokenized(_X("GetMethodFromAppDomainStorageOrReflectionOrThrow")), L"API path must no longer resolve a MethodInfo per call");
+        }
+
+        // Covers the non-void return path. The invoker needs a real System.Type for the
+        // return type, not the null used for void. A mismatch here would make CreateDelegate
+        // throw on the managed side and fall back silently to the original method body,
+        // so it gets its own test.
+        TEST_METHOD(api_method_passes_return_type_for_non_void_methods)
+        {
+            auto function = std::make_shared<MockFunction>();
+            auto tokenizer = std::make_shared<RecordingTokenizer>();
+            function->_tokenizer = tokenizer;
+
+            // MockFunction defaults to a void return. Swap in a signature with a string
+            // return: default calling convention, 1 parameter, ELEMENT_TYPE_STRING (0x0e)
+            // return, ELEMENT_TYPE_CLASS (0x12) parameter with a compressed class token.
+            BYTEVECTOR(nonVoidSignature, 0x00, 0x01, 0x0e, 0x12, 0x49);
+            function->_signature = std::make_shared<ByteVector>(nonVoidSignature);
+
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("C:\\corepath")), false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            manipulator.InstrumentApi();
+
+            Assert::IsTrue(tokenizer->Tokenized(_X("InvokeAgentMethodInvokerFunc")), L"non-void API methods must still use the managed invoker");
+
+            // Type::GetTypeFromHandle is emitted once per System.Type pushed: one for the
+            // single parameter, one for the non-void return type.
+            auto getTypeFromHandleCount = std::count(tokenizer->_memberRefMethodNames.begin(), tokenizer->_memberRefMethodNames.end(), std::wstring(_X("GetTypeFromHandle")));
+            Assert::AreEqual((size_t)2, (size_t)getTypeFromHandleCount, L"expected one GetTypeFromHandle for the parameter and one for the return type");
+        }
+
+        // Injected core library helpers are always emitted with a tiny method header, which
+        // caps IL at 63 bytes. Over-limit IL is silently truncated into a malformed method:
+        // no assert, no exception, just an InvalidProgramException or a crash at runtime.
+        // This guards every helper under both strategies so nobody has to remember.
+        TEST_METHOD(all_injected_helpers_respect_the_tiny_method_limit)
+        {
+            const std::vector<xstring_t> helperNames {
+                _X("LoadAssemblyOrThrow"),
+                _X("GetTypeViaReflectionOrThrow"),
+                _X("GetMethodViaReflectionOrThrow"),
+                _X("StoreMethodInAppDomainStorageOrThrow"),
+                _X("GetMethodFromAppDomainStorage"),
+                _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"),
+                _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"),
+                _X("GetAgentShimFinishTracerDelegateFunc"),
+                _X("StoreAgentShimFinishTracerDelegateFunc"),
+                _X("EnsureInitialized"),
+                _X("GetAgentMethodInvokerObject"),
+                _X("InvokeAgentMethodInvokerFunc"),
+                _X("StoreAgentMethodInvokerFunc"),
+                _X(".cctor")
+            };
+
+            const std::vector<AgentCallStyle::Strategy> strategies {
+                AgentCallStyle::Strategy::AppDomainFallbackCache,
+                AgentCallStyle::Strategy::Reflection
+            };
+
+            for (auto strategy : strategies)
+            {
+                for (auto helperName : helperNames)
+                {
+                    auto function = std::make_shared<MockFunction>();
+                    function->_functionName = helperName;
+
+                    ByteVector capturedBytes;
+                    function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
+                        capturedBytes = bytes;
+                    };
+
+                    HelperFunctionManipulator manipulator(function, false, strategy);
+                    manipulator.InstrumentHelper();
+
+                    Assert::IsTrue(capturedBytes.size() > 1, (helperName + _X(": emitted no IL")).c_str());
+                    // 1-byte tiny header plus IL body, and tiny IL must be under 64 bytes.
+                    Assert::IsTrue(capturedBytes.size() <= 64, (helperName + _X(": IL exceeds the tiny method limit")).c_str());
+                }
+            }
         }
 
     private:
