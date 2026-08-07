@@ -919,7 +919,10 @@ namespace NewRelic { namespace Profiler {
         // Written from ModuleLoadFinished (the downgrade path) and from Initialize; read on every
         // JIT and ReJIT compilation via ProcessMethodJit, each of which can run on a different
         // thread than ModuleLoadFinished -- so this must be atomic.
-        std::atomic<MethodRewriter::AgentCallStyle::Strategy> _agentCallStrategy = MethodRewriter::AgentCallStyle::Strategy::AppDomainFallbackCache;
+        // Brace-initialized on purpose: std::atomic has a deleted copy constructor, and the
+        // Linux build is -std=c++14, where `= value` copy-initialization is not guaranteed to
+        // elide the temporary and so fails to compile.
+        std::atomic<MethodRewriter::AgentCallStyle::Strategy> _agentCallStrategy{ MethodRewriter::AgentCallStyle::Strategy::AppDomainFallbackCache };
 
         MethodRewriter::MethodRewriterPtr GetMethodRewriter()
         {
