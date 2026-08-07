@@ -48,7 +48,7 @@ public class KafkaProducerWrapper : IWrapper
                 {
                     segment.End();
                     if (agent.Configuration.KafkaClusterMetricsEnabled && !string.IsNullOrEmpty(clusterId))
-                        agent.RecordCountMetric($"MessageBroker/Kafka/Cluster/{clusterId}/Topic/{topic}/Produce");
+                        agent.RecordCountMetric($"MessageBroker/Kafka/Cluster/{clusterId}/Produce/{topic}");
                 },
                 onFailure: (ex) => segment.End(ex));
         }
@@ -56,7 +56,7 @@ public class KafkaProducerWrapper : IWrapper
         return Delegates.GetAsyncDelegateFor<Task>(agent, segment, false, (task) =>
         {
             if (task.Status == TaskStatus.RanToCompletion && agent.Configuration.KafkaClusterMetricsEnabled && !string.IsNullOrEmpty(clusterId))
-                agent.RecordCountMetric($"MessageBroker/Kafka/Cluster/{clusterId}/Topic/{topic}/Produce");
+                agent.RecordCountMetric($"MessageBroker/Kafka/Cluster/{clusterId}/Produce/{topic}");
         });
     }
 

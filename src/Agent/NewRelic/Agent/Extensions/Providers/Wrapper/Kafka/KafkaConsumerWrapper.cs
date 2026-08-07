@@ -95,7 +95,7 @@ public class KafkaConsumerWrapper : IWrapper
                 if (agent.Configuration.KafkaClusterMetricsEnabled &&
                     KafkaHelper.TryGetClusterIdFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var clusterId))
                 {
-                    agent.RecordCountMetric($"MessageBroker/Kafka/Cluster/{clusterId}/Topic/{topic}/Consume");
+                    agent.RecordCountMetric($"MessageBroker/Kafka/Cluster/{clusterId}/Consume/{topic}");
                 }
 
                 // get the Message.Headers property and process distributed trace headers
