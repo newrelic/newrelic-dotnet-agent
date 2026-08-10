@@ -17,15 +17,13 @@ namespace sicily {
             FieldType(
                 ClassTypePtr targetType,
                 const xstring_t& fieldName,
-                TypePtr returnType,
-                TypePtr requiredModifierType
+                TypePtr returnType
             );
             virtual ~FieldType();
 
             ClassTypePtr GetTargetType() const;
             xstring_t GetFieldName() const;
             TypePtr GetReturnType() const;
-            TypePtr GetRequiredModifierType() const;
 
             xstring_t ToString() const;
 
@@ -33,7 +31,6 @@ namespace sicily {
             ClassTypePtr targetType_;
             xstring_t fieldName_;
             TypePtr returnType_;
-            TypePtr requiredModifierType_;
         };
 
         typedef std::shared_ptr<FieldType> FieldTypePtr;

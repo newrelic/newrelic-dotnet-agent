@@ -190,11 +190,6 @@ namespace sicily
             {
                 TestParser(L"int32 __NRInitializer__::_isAgentAssemblyLoaded");
             }
-
-            TEST_METHOD(TestVolatileField)
-            {
-                TestParser(L"object modreq(System.Runtime.CompilerServices.IsVolatile) __NRInitializer__::_myField");
-            }
         };
     }
 }

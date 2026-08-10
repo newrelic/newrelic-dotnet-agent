@@ -93,6 +93,31 @@ public class ProfilerAgentMethodInvokerTests
         });
     }
 
+    [Test]
+    public void ShouldHandleMethodsWithValueTypeReturnType()
+    {
+        var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodInvoker.GetInvoker();
+
+        var typeName = typeof(TestingClass).AssemblyQualifiedName;
+
+        // Expression trees do not insert implicit boxing conversions, so a value-type return
+        // requires an explicit Expression.Convert to object. Without it, building the lambda
+        // throws ArgumentException and the profiler-injected call fails at runtime.
+        var intResult = invoker.Invoke(string.Concat(typeName, "|", nameof(TestingClass.MethodWithIntReturn)), typeName,
+            nameof(TestingClass.MethodWithIntReturn), new Type[] { typeof(int) }, typeof(int), new object[] { 21 });
+
+        var boolResult = invoker.Invoke(string.Concat(typeName, "|", nameof(TestingClass.MethodWithBoolReturn)), typeName,
+            nameof(TestingClass.MethodWithBoolReturn), null, typeof(bool), null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(intResult, Is.TypeOf<int>());
+            Assert.That(intResult, Is.EqualTo(42));
+            Assert.That(boolResult, Is.TypeOf<bool>());
+            Assert.That(boolResult, Is.EqualTo(true));
+        });
+    }
+
     public class TestingClass
     {
         public static string MethodWithNoParams()
@@ -125,6 +150,16 @@ public class ProfilerAgentMethodInvokerTests
         public static void ActionWithParam(int value)
         {
             ActionWithParamLatestValue = value;
+        }
+
+        public static int MethodWithIntReturn(int value)
+        {
+            return value * 2;
+        }
+
+        public static bool MethodWithBoolReturn()
+        {
+            return true;
         }
     }
 }

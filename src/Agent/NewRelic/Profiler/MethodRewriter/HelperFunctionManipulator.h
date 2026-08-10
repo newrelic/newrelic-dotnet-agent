@@ -74,10 +74,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             {
                 BuildStoreAgentMethodInvokerFunc();
             }
-            else if (_function->GetFunctionName() == _X(".cctor"))
-            {
-                BuildStaticCtor();
-            }
             else
             {
                 LogError(L"Attempted to instrument an unknown helper method in ", _function->GetAssemblyName());
@@ -341,12 +337,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_LDARG_S, (uint8_t)6);
             _instructions->Append(CEE_CALLVIRT, _X("instance !6 class System.Func`7<string, string, string, class System.Type[], class System.Type, object[], object>::Invoke(!0, !1, !2, !3, !4, !5)"));
 
-            _instructions->Append(CEE_RET);
-        }
-
-        // .cctor (static constructor, injected as a no-op placeholder)
-        void BuildStaticCtor()
-        {
             _instructions->Append(CEE_RET);
         }
     };

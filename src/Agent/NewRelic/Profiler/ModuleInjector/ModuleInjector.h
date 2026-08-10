@@ -31,7 +31,12 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
         };
 
     public:
-        static void InjectIntoModule(IModule& module, const bool isCoreClr = false)
+        // Returns true if it is safe to keep the AppDomainFallbackCache calling strategy.
+        // For non-corelib modules this is always true (a failed reference injection only
+        // means that one module will not be instrumented, which is not a reason to downgrade
+        // the whole process). For the corelib module, this is true only if the helper type and
+        // every helper method were injected without an exception.
+        static bool InjectIntoModule(IModule& module, const bool isCoreClr = false)
         {
             // When injecting method REFERENCES into an assembly, theses references should have
             // the external assembly identifier to System.Private.CoreLib
@@ -42,7 +47,6 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorage"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo"), _X("string")),
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo"), _X("string,string,string,string,class [System.Private.CoreLib]System.Type[]")),
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo"), _X("string,string,string,string,class [System.Private.CoreLib]System.Type[]")),
-                //ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo,string")),
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("object,string")),
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("StoreAgentMethodInvokerFunc"), _X("void"), _X("string")),
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("StoreAgentShimFinishTracerDelegateFunc"), _X("void"), _X("string")),
@@ -61,7 +65,6 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorage"), _X("class [mscorlib]System.Reflection.MethodInfo"), _X("string")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class [mscorlib]System.Reflection.MethodInfo"), _X("string,string,string,string,class [mscorlib]System.Type[]")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class [mscorlib]System.Reflection.MethodInfo"), _X("string,string,string,string,class [mscorlib]System.Type[]")),
-                //ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("class [mscorlib]System.Reflection.MethodInfo,string")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("object,string")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("StoreAgentMethodInvokerFunc"), _X("void"), _X("string")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("StoreAgentShimFinishTracerDelegateFunc"), _X("void"), _X("string")),
@@ -80,7 +83,6 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorage"), _X("class System.Reflection.MethodInfo"), _X("string")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class System.Reflection.MethodInfo"), _X("string,string,string,string,class System.Type[]")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class System.Reflection.MethodInfo"), _X("string,string,string,string,class System.Type[]")),
-                //ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("class System.Reflection.MethodInfo,string")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("object,string")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("StoreAgentMethodInvokerFunc"), _X("void"), _X("string")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("StoreAgentShimFinishTracerDelegateFunc"), _X("void"), _X("string")),
@@ -101,8 +103,16 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
             if (!is_coreLib && !EnsureReferenceToCoreLib(module))
             {
                 LogInfo(L"Unable to inject reference to Core Library into ", module.GetModuleName(), L".  This module will not be instrumented.");
-                return;
+                // A failed reference injection only means that this one module will not be
+                // instrumented; it is not a reason to downgrade the whole process's calling
+                // strategy, so report success here.
+                return true;
             }
+
+            // Only meaningful for the corelib module: becomes false if the helper type or any
+            // helper method fails to be injected, which the caller uses to decide whether to
+            // downgrade the process's calling strategy away from AppDomainFallbackCache.
+            bool allHelpersInjected = true;
 
             if (is_coreLib)
             {
@@ -111,9 +121,10 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
                 {
                     module.InjectNRHelperType();
                 }
-                catch (NewRelic::Profiler::Win32Exception&)
+                catch (...)
                 {
                     LogError(L"Failed to inject New Relic helper type into ", module.GetModuleName());
+                    allHelpersInjected = false;
                 }
             }
 
@@ -138,11 +149,17 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
                     //inject method or references...
                     (module.*workerFunc)(managedMethod.MethodName, managedMethod.TypeName, signature);
                 }
-                catch (NewRelic::Profiler::Win32Exception&)
+                catch (...)
                 {
+                    // Catch everything here, not just Win32Exception -- ToSignature can throw a
+                    // Sicily parser exception (sicily::SicilyException), which does not derive
+                    // from Win32Exception. Without a catch-all, that exception would escape this
+                    // loop, abort injection of the remaining methods, and (for the corelib case)
+                    // skip the AppDomainFallbackCache downgrade check in the caller.
                     if (is_coreLib)
                     {
                         LogError(L"Failed to tokenize method signature: ", signatum, L". Proceeding to next method.");
+                        allHelpersInjected = false;
                     }
                     else
                     {
@@ -151,34 +168,7 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
                 }
             }
 
-            //if (is_coreLib)
-            //{
-            //    auto managedMethod = ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X(".cctor"), _X("void"), _X(""));
-            //    try
-            //    {
-            //        //create standard signature string
-            //        signatum.assign(managedMethod.ReturnType)
-            //            .append(1, _X(' ')).append(managedMethod.TypeName)
-            //            .append(_X("::"), 2).append(managedMethod.MethodName)
-            //            .append(1, _X('(')).append(managedMethod.ParameterTypes)
-            //            .append(1, _X(')'));
-            //        auto signature = ToSignature(signatum, module.GetTokenizer());
-
-            //        //inject method or references...
-            //        module.InjectStaticSecuritySafeCtor(managedMethod.MethodName, managedMethod.TypeName, signature);
-            //    }
-            //    catch (NewRelic::Profiler::Win32Exception&)
-            //    {
-            //        if (is_coreLib)
-            //        {
-            //            LogError(L"Failed to tokenize method signature: ", signatum, L". Proceeding to next method.");
-            //        }
-            //        else
-            //        {
-            //            LogTrace(L"Failed to tokenize method signature: ", signatum, L". Skipping injection of other method references for this module.");
-            //        }
-            //    }
-            //}
+            return !is_coreLib || allHelpersInjected;
         }
 
     private:

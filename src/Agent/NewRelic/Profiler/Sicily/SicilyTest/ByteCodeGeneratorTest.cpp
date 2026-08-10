@@ -167,39 +167,8 @@ namespace sicily
                     Assert::AreEqual(expectedBytes, actualBytes);
                 }
 
-                TEST_METHOD(TestFieldTypeToBytes)
-                {
-                    ast::ClassTypePtr targetType(new ast::ClassType(L"MyClass", L"MyAssembly"));
-                    ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kI4));
-                    ast::TypePtr type(new ast::FieldType(targetType, L"MyField", returnType, nullptr));
-
-                    auto actualBytes = CreateBadFoodByteCodeGenerator().TypeToBytes(type);
-                    // RetType
-                    // 0x08
-                    BYTEVECTOR(expectedBytes, 0x08);
-                    Assert::AreEqual(expectedBytes, actualBytes);
-                }
-
-                TEST_METHOD(TestVolatileFieldTypeToBytes)
-                {
-                    ast::ClassTypePtr targetType(new ast::ClassType(L"MyClass", L"MyAssembly"));
-                    ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT));
-                    ast::ClassTypePtr requiredModifierType(new ast::ClassType(L"System.Runtime.CompilerServices.IsVolatile", L"", true));
-                    ast::TypePtr type(new ast::FieldType(targetType, L"MyField", returnType, requiredModifierType));
-
-                    auto actualBytes = CreateBadFoodByteCodeGenerator().TypeToBytes(type);
-                    // RetType
-                    // 0x1c
-                    // modreq
-                    // 0x1f
-                    // modreq type
-                    // 0x00 (NullTokenizer resolves all type tokens to 0x00)
-                    BYTEVECTOR(expectedBytes, 0x1c, 0x1f, 0x00);
-                    Assert::AreEqual(expectedBytes, actualBytes);
-                }
-
-                // TypeToToken's field-type branch (as opposed to TypeToBytes, covered above) is
-                // untested: it tokens the target class, then requests a field definition token
+                // TypeToToken's field-type branch is the generator's only field path: it
+                // tokens the target class, then requests a field definition token
                 // for (targetTypeToken, fieldName). NullTokenizer returns a hardcoded zero
                 // regardless of arguments, so it cannot show the right values were threaded
                 // through; RecordingTokenizer wraps a RealisticTokenizer and records the field
@@ -209,7 +178,7 @@ namespace sicily
                     auto tokenizer = std::make_shared<RecordingTokenizer>();
                     ast::ClassTypePtr targetType(new ast::ClassType(L"MyClass", L"MyAssembly"));
                     ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kI4));
-                    ast::TypePtr type(new ast::FieldType(targetType, L"MyField", returnType, nullptr));
+                    ast::TypePtr type(new ast::FieldType(targetType, L"MyField", returnType));
 
                     ByteCodeGenerator generator(tokenizer);
                     auto actualFieldToken = generator.TypeToToken(type);

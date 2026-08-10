@@ -97,15 +97,68 @@ limit does NOT fail loudly: `InstrumentTiny` sets
 `Flags_CodeSize = (uint8_t)((codeSize << 2) | 0x2)` and silently truncates to
 one byte, so a >= 64-byte body encodes a wrong (smaller) size and the CLR
 then reads a malformed method (InvalidProgramException / JIT failure /
-crash). Nothing asserts or tests this (the tiny/fat boundary tests in
-`MethodRewriterTest/FunctionManipulatorTest.cpp` are disabled) -- it is
-enforced by convention only. Rule: keep every injected helper minimal; when
-adding IL to a `Build*` helper, budget the bytes (single-byte opcodes 1 B;
-short-form branch 2 B; `call`/`callvirt`/`ldsfld`/`stsfld`/`castclass`/
-`ldstr`/`newobj` with a 4-byte token 5 B), keep live stack <= 8, add no
-locals. Verify empirically in a debug build by logging
+crash). The limit IS enforced, but only for helpers already known to the
+test: `MethodRewriterTest/FunctionManipulatorTest.cpp` has an active
+`TEST_METHOD(all_injected_helpers_respect_the_tiny_method_limit)` that builds
+every injected helper under both `AgentCallStyle::Strategy` values and
+asserts `capturedBytes.size() <= 64` (a 1-byte tiny header plus a body of at
+most 63 bytes). The older `test_method_with_tiny_header` /
+`test_method_with_fat_header` / `test_fat_header_migration` tests are a
+separate, still-commented-out set covering the fat-header path, not this
+limit. The gap: `InstrumentTiny` itself still has no runtime guard -- it
+computes `Flags_CodeSize = (uint8_t)((codeSize << 2) | 0x2)` and silently
+truncates -- so a NEW helper is only protected once it is added to that
+test's helper list. Rule: keep every injected helper minimal; when adding IL
+to a `Build*` helper, budget the bytes (single-byte opcodes 1 B; a branch via
+`AppendJump` 5 B -- it always emits a long-form branch: 1-byte opcode plus a
+4-byte offset, never a short-form `_S` opcode; `call`/`callvirt`/`ldsfld`/
+`stsfld`/`castclass`/`ldstr`/`newobj` with a 4-byte token 5 B), keep live
+stack <= 8, add no locals. Verify empirically in a debug build by logging
 `_instructions->GetBytes().size()` before `InstrumentTiny()`; do not trust it
 to fail safely.
+
+**No managed caller is no evidence of dead code at the profiler/managed
+boundary.** Two separate mechanisms hide the real caller, and managed-side
+reachability analysis (grep, codegraph, find-usages, compiler warnings) misses
+both.
+
+*String-bound.* Injected IL emits the target's name as an IL string and
+resolves it at runtime (`AppendString(_X("GetFinishTracerDelegateFunc"))` ->
+`GetMethodViaReflectionOrThrow` -> `MethodBase.Invoke`), so no symbol
+reference exists at all. Verified literals today:
+`AgentShim.GetFinishTracerDelegate` (`InstrumentFunctionManipulator.h`),
+`AgentShim.GetFinishTracerDelegateFunc` and
+`ProfilerAgentMethodInvoker.GetInvoker` (`HelperFunctionManipulator.h`). Every
+public static on `AgentApi` is also reached this way, keyed on the instrumented
+API method's own name rather than a literal, so no grep finds those at all.
+Check with `grep -rn '_X("MethodName")' src/Agent/NewRelic/Profiler/` before
+concluding anything.
+
+*Delegate target.* `AgentShim.FinishTracer`,
+`AgentShim.GetFinishTracerDelegateParameterWrapper`, and
+`ProfilerAgentMethodInvoker.GetAndInvokeMethodFromCache` do have managed
+references -- they are converted to delegates -- but nothing managed ever
+invokes them. Their parameter order and types are a contract with injected IL
+only, so a grep hit here proves a reference exists, not that any managed code
+exercises the method.
+
+Either way a rename or signature change builds clean and breaks
+instrumentation at runtime, which is why `AgentShim.GetTracer` carries
+"Changing the signature of this method will break the C++ code." Unit tests
+are the only compile-time guard on these contracts.
+
+The injected helpers on `System.CannotUnloadAppDomainException` are
+string-bound the same way, and each name is repeated in four places that must
+agree for the helper to be reachable: the three `ManagedMethodToInject` arrays
+in `ModuleInjector.h` (whose `std::array` sizes are hardcoded), the
+`_instrumentedFunctionNames` set in `MethodRewriter.h`, `HelperInstrumentor`'s
+allow-list in `Instrumentors.h`, and `InstrumentHelper`'s dispatch in
+`HelperFunctionManipulator.h`.
+
+A populated-but-unread cache is also not evidence of dead code: the store half
+can be live and deliberate while the read half is staged for a later consumer,
+as with `__NRInitializer__::_agentShimFunc`. Establish both halves before
+removing either.
 
 ## Agent Core (`Agent/NewRelic/Agent/Core/`)
 

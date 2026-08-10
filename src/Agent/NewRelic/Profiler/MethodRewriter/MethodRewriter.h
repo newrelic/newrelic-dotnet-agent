@@ -61,7 +61,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _instrumentedFunctionNames->emplace(_X("StoreAgentMethodInvokerFunc"));
             _instrumentedFunctionNames->emplace(_X("EnsureInitialized"));
             _instrumentedFunctionNames->emplace(_X("InvokeAgentMethodInvokerFunc"));
-            _instrumentedFunctionNames->emplace(_X(".cctor"));
 
             auto instrumentationPoints = _instrumentationConfiguration->GetInstrumentationPoints();
 

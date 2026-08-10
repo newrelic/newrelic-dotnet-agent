@@ -28,7 +28,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             modulePtr->_needsReferenceToCoreLib = true;
             modulePtr->_injectReferenceToCoreLib = false;
 
-            ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, true);
+            auto result = ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, true);
+
+            // A failed reference injection into a non-corelib module must not be reported as a
+            // reason to downgrade the process's calling strategy.
+            Assert::IsTrue(result);
         }
 
         TEST_METHOD(ModuleInjector_NetFramework_DoesNotCrash_CannotEnsureReferenceToCoreLib)
@@ -37,7 +41,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             modulePtr->_needsReferenceToCoreLib = true;
             modulePtr->_injectReferenceToCoreLib = false;
 
-            ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, false);
+            auto result = ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, false);
+
+            Assert::IsTrue(result);
         }
 
         TEST_METHOD(ModuleInjector_CoreClr_InjectsHelperType)
@@ -47,9 +53,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             bool wasHelperTypeInjected(false);
             modulePtr->_injectNRHelperType = [&wasHelperTypeInjected]() { wasHelperTypeInjected = true; };
 
-            ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, true);
+            auto result = ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, true);
 
             Assert::IsTrue(wasHelperTypeInjected);
+            Assert::IsTrue(result);
         }
 
         TEST_METHOD(ModuleInjector_NetFramework_InjectsHelperType)
@@ -59,9 +66,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             bool wasHelperTypeInjected(false);
             modulePtr->_injectNRHelperType = [&wasHelperTypeInjected]() { wasHelperTypeInjected = true; };
 
-            ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, false);
+            auto result = ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, false);
 
             Assert::IsTrue(wasHelperTypeInjected);
+            Assert::IsTrue(result);
         }
 
         TEST_METHOD(ModuleInjector_CoreClr_InjectsHelperMethods_DoesNotThrow)
@@ -70,7 +78,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             modulePtr->_isThisTheCoreLibAssembly = true;
             modulePtr->_injectNRHelperType = []() { throw NewRelic::Profiler::Win32Exception(E_UNEXPECTED); };
 
-            ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, true);
+            auto result = ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, true);
+
+            // The helper type failed to inject, so the corelib module is not safe to keep the
+            // AppDomainFallbackCache strategy for.
+            Assert::IsFalse(result);
         }
 
         TEST_METHOD(ModuleInjector_NetFramework_InjectsHelperMethods_DoesNotThrow)
@@ -79,7 +91,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             modulePtr->_isThisTheCoreLibAssembly = true;
             modulePtr->_injectNRHelperType = []() { throw NewRelic::Profiler::Win32Exception(E_UNEXPECTED); };
 
-            ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, false);
+            auto result = ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, false);
+
+            Assert::IsFalse(result);
         }
 
         TEST_METHOD(ModuleInjector_CoreClr_InjectsHelperMethods)
@@ -158,8 +172,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 }
             };
 
-            ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, isCoreClr);
+            auto result = ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, isCoreClr);
 
+            // The corelib injection is only safe to keep AppDomainFallbackCache for when none of
+            // the helper methods failed to inject.
+            Assert::AreEqual(!throwsException, result);
             Assert::AreEqual(expectedMethods.size(), injectedMethodNamesWithType.size());
 
             for (const auto& expected : expectedMethods)
@@ -205,8 +222,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 }
             };
 
-            ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, isCoreClr);
+            auto result = ModuleInjector::ModuleInjector::InjectIntoModule(*modulePtr, isCoreClr);
 
+            // A failed method-reference injection into a non-corelib module never triggers a
+            // downgrade -- InjectIntoModule always reports success for non-corelib modules.
+            Assert::IsTrue(result);
             Assert::AreEqual(expectedMethods.size(), injectedMethodNamesWithType.size());
 
             for (const auto& expected : expectedMethods)
