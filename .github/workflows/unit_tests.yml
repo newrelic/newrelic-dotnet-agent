@@ -87,3 +87,63 @@ jobs:
         with:
             name: UnitTestResults # Artifact name        
             path: ${{ env.test_results_path }} # Directory containing files to upload
+
+  # Posts the dispatched run's result back onto the Dependabot pull request as a
+  # commit status. See the matching job in all_solutions.yml for why this reports
+  # from inside the run, and why it must not become a required check.
+  report-dependabot-status:
+    name: Report full CI result on the Dependabot pull request
+    needs: [run-unit-tests]
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'dependabot/nuget/')
+    permissions:
+      actions: read
+      statuses: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Post commit status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          HEAD_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+        run: |
+          set -o pipefail
+
+          # Every job in this run that has finished; this job is still in progress.
+          conclusions="$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs" --paginate \
+            --jq '.jobs[] | select(.conclusion != null) | .conclusion' | sort -u)"
+
+          if [ -z "$conclusions" ]; then
+            echo "::error::Could not read job conclusions for run $RUN_ID"
+            exit 1
+          fi
+          echo "Job conclusions in this run: $(echo $conclusions | tr '\n' ' ')"
+
+          # A cancelled job means this run was superseded by a Dependabot
+          # force-push rebase; a replacement run is already on its way.
+          if grep -qx cancelled <<<"$conclusions"; then
+            echo "Run was cancelled (superseded); not reporting."
+            exit 0
+          fi
+
+          if grep -vqxE 'success|skipped|neutral' <<<"$conclusions"; then
+            state=failure
+          else
+            state=success
+          fi
+
+          echo "Reporting '$state' for $HEAD_SHA ($WORKFLOW_NAME)"
+          gh api -X POST "repos/$REPO/statuses/$HEAD_SHA" \
+            -f state="$state" \
+            -f context="full-ci (dependabot) / $WORKFLOW_NAME" \
+            -f target_url="$RUN_URL" \
+            -f description="$WORKFLOW_NAME: $state"
+        shell: bash

@@ -1518,3 +1518,76 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         continue-on-error: true
+
+  # Posts the dispatched run's result back onto the Dependabot pull request as a
+  # commit status. Reported from inside the run because Dependabot Full CI Dispatch
+  # creates these runs with GITHUB_TOKEN, and GitHub suppresses a
+  # GITHUB_TOKEN-created run's events, so no workflow_run ever fires for them.
+  # Informational only -- must not become a required check, since pull requests
+  # from actors other than Dependabot never receive it.
+  report-dependabot-status:
+    name: Report full CI result on the Dependabot pull request
+    # Only the two leaf jobs are needed, to order this last; everything else is
+    # transitively upstream. The result is read from the run's own job list rather
+    # than needs.*.result, which cannot see an upstream failure: that leaves the
+    # downstream jobs 'skipped', not 'failure'.
+    needs: [shellcheck, integration-test-status]
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'dependabot/nuget/')
+    permissions:
+      actions: read
+      statuses: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Post commit status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          HEAD_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+        run: |
+          set -o pipefail
+
+          # Every job in this run that has finished. This job itself is still in
+          # progress, so it has a null conclusion and drops out here.
+          conclusions="$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs" --paginate \
+            --jq '.jobs[] | select(.conclusion != null) | .conclusion' | sort -u)"
+
+          if [ -z "$conclusions" ]; then
+            echo "::error::Could not read job conclusions for run $RUN_ID"
+            exit 1
+          fi
+          echo "Job conclusions in this run: $(echo $conclusions | tr '\n' ' ')"
+
+          # A cancelled job means this run was superseded: Dependabot force-pushes
+          # to rebase its branches, and this workflow cancels in-progress runs for
+          # the same ref. A replacement run is already on its way, so reporting
+          # failure for this one would be wrong.
+          if grep -qx cancelled <<<"$conclusions"; then
+            echo "Run was cancelled (superseded); not reporting."
+            exit 0
+          fi
+
+          # Anything that is not a clean outcome is a failure. The packaging and
+          # ArtifactBuilder jobs are skipped for Dependabot runs by design
+          # (env.skip_signing), and skipped is a clean outcome.
+          if grep -vqxE 'success|skipped|neutral' <<<"$conclusions"; then
+            state=failure
+          else
+            state=success
+          fi
+
+          echo "Reporting '$state' for $HEAD_SHA ($WORKFLOW_NAME)"
+          gh api -X POST "repos/$REPO/statuses/$HEAD_SHA" \
+            -f state="$state" \
+            -f context="full-ci (dependabot) / $WORKFLOW_NAME" \
+            -f target_url="$RUN_URL" \
+            -f description="$WORKFLOW_NAME: $state"
+        shell: bash
