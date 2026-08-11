@@ -30,10 +30,21 @@ public class OdbcCommandWrapper : IWrapper
 
             var sql = odbcCommand.CommandText;
 
-            var vendor = SqlWrapperHelper.GetVendorNameFromOdbcConnectionString(odbcCommand.Connection.ConnectionString);
+            // Read the connection string once and reuse it for vendor detection, the
+            // cache key, and the parser call. This wrapper previously read it two or
+            // three times per command execution, and every read allocates.
+            var connection = odbcCommand.Connection;
+            var connectionString = connection.ConnectionString;
 
-            object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, odbcCommand.Connection.ConnectionString, agent.Configuration.UtilizationHostName);
-            var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(odbcCommand.Connection.ConnectionString, GetConnectionInfo);
+            var vendor = SqlWrapperHelper.GetVendorNameFromOdbcConnectionString(connectionString);
+
+            object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, connectionString, agent.Configuration.UtilizationHostName);
+            var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(connectionString, GetConnectionInfo);
+
+            // The active database can be changed on an open connection (ChangeDatabase
+            // or a USE statement) without the connection string changing, so trust the
+            // live value over the parsed one when they disagree.
+            connectionInfo = ConnectionInfoResolver.ResolveWithLiveDatabase(transaction, connectionInfo, connectionString, connection.Database);
 
             var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, odbcCommand.CommandType, sql);
 

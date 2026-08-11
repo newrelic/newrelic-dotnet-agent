@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
@@ -18,6 +19,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql;
 public class SystemDataOdbcExerciser : MsSqlExerciserBase
 {
     private static string _connectionString = MsSqlOdbcConfiguration.MsSqlOdbcConnectionString;
+    // used only by CreateDatabaseAndTable to create a database, since ODBC can't create a database directly
+    private static string _sqlConnectionString = MsSqlConfiguration.MsSqlConnectionString;
 
     [LibraryMethod]
     [Transaction]
@@ -257,6 +260,114 @@ public class SystemDataOdbcExerciser : MsSqlExerciserBase
             using (var command = new OdbcCommand(dropProcedureSql, connection))
             {
                 command.ExecuteNonQuery();
+            }
+        }
+    }
+
+    // odbc can't create a database directly, so use the _sqlConnectionString to connect to the default database and create the new database
+    [LibraryMethod]
+    public void CreateDatabaseAndTable(string databaseName, string tableName)
+    {
+        using (var connection = new SqlConnection(_sqlConnectionString))
+        {
+            connection.Open();
+
+            try
+            {
+                using (var command = new SqlCommand($"IF DB_ID('{databaseName}') IS NULL CREATE DATABASE [{databaseName}]", connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (SqlException)
+            {
+                // database already exists - harmless
+            }
+
+            connection.ChangeDatabase(databaseName);
+
+            using (var command = new SqlCommand($"IF OBJECT_ID('dbo.{tableName}') IS NULL CREATE TABLE {tableName} (FirstName varchar(20) NOT NULL)", connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            using (var command = new SqlCommand($"INSERT INTO {tableName} (FirstName) VALUES ('Switched')", connection))
+            {
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+
+    [LibraryMethod]
+    public void DropTableInDatabase(string databaseName, string tableName)
+    {
+        using (var connection = new OdbcConnection(_connectionString))
+        {
+            connection.Open();
+            connection.ChangeDatabase(databaseName);
+
+            using (var command = new OdbcCommand(string.Format(DropPersonTableMsSql, tableName), connection))
+            {
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void MsSqlDatabaseSwitch(string databaseName, string tableName)
+    {
+        using (var connection = new OdbcConnection(_connectionString))
+        {
+            connection.Open();
+
+            // Runs against the database named in the connection string.
+            using (var command = new OdbcCommand(SelectPersonByFirstNameMsSql, connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read()) { }
+            }
+
+            // Change the active database on the SAME open connection. This does not
+            // change the connection string.
+            connection.ChangeDatabase(databaseName);
+
+            // Runs against the switched-to database.
+            using (var command = new OdbcCommand($"SELECT * FROM {tableName} WITH(nolock)", connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read()) { }
+            }
+        }
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void MsSqlDatabaseSwitchViaUseStatement(string databaseName, string tableName)
+    {
+        using (var connection = new OdbcConnection(_connectionString))
+        {
+            connection.Open();
+
+            using (var command = new OdbcCommand(SelectPersonByFirstNameMsSql, connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read()) { }
+            }
+
+            // Change the active database with a raw USE statement rather than the
+            // client API. The SQL Server ODBC driver reflects this in .Database.
+            using (var command = new OdbcCommand($"USE [{databaseName}]", connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            using (var command = new OdbcCommand($"SELECT * FROM {tableName} WITH(nolock)", connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read()) { }
             }
         }
     }
