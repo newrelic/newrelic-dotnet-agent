@@ -143,7 +143,7 @@ public class ConnectionHandlerTests
         _connectionHandler.Connect();
 
         // Assert
-        Mock.Assert(() => _nrLogger.Info(Arg.Matches<string>(m => m.Contains("securityPoliciesToken")), Arg.IsAny<object[]>()), Occurs.Once());
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("securityPoliciesToken")), Arg.IsAny<object[]>()), Occurs.Once());
     }
 
     [Test]
@@ -174,7 +174,7 @@ public class ConnectionHandlerTests
         _connectionHandler.Connect();
 
         // Assert
-        Mock.Assert(() => _nrLogger.Info(Arg.Matches<string>(m => m.Contains("securityPoliciesToken")), Arg.IsAny<object[]>()), Occurs.Never());
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("securityPoliciesToken")), Arg.IsAny<object[]>()), Occurs.Never());
     }
 
     [Test]
