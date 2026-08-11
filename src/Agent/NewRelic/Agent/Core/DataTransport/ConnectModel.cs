@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Configuration;
@@ -66,10 +65,7 @@ public class ConnectModel
     [JsonProperty("environment", NullValueHandling = NullValueHandling.Ignore)]
     public readonly Environment Environment;
 
-    [JsonProperty("security_policies", NullValueHandling = NullValueHandling.Ignore)]
-    public readonly SecurityPoliciesSettingsModel SecurityPoliciesSettings;
-
-    public ConnectModel(int processId, string language, string displayHost, string hostName, IEnumerable<string> appNames, string agentVersion, long agentVersionTimestamp, SecuritySettingsModel securitySettings, bool highSecurityModeEnabled, string identifier, IEnumerable<Label> labels, Dictionary<string, string> metadata, UtilizationSettingsModel utilizationSettings, Environment environment, SecurityPoliciesSettingsModel securityPoliciesSettings, EventHarvestConfigModel eventHarvestConfig, ReportedConfiguration configuration)
+    public ConnectModel(int processId, string language, string displayHost, string hostName, IEnumerable<string> appNames, string agentVersion, long agentVersionTimestamp, SecuritySettingsModel securitySettings, bool highSecurityModeEnabled, string identifier, IEnumerable<Label> labels, Dictionary<string, string> metadata, UtilizationSettingsModel utilizationSettings, Environment environment, EventHarvestConfigModel eventHarvestConfig, ReportedConfiguration configuration)
     {
         ProcessId = processId;
         Language = language;
@@ -85,7 +81,6 @@ public class ConnectModel
         Metadata = metadata;
         UtilizationSettings = utilizationSettings;
         Environment = environment;
-        SecurityPoliciesSettings = securityPoliciesSettings;
         EventHarvestConfig = eventHarvestConfig;
         Configuration = configuration;
     }
@@ -110,42 +105,6 @@ public class TransactionTraceSettingsModel
     public TransactionTraceSettingsModel(string recordSql)
     {
         RecordSql = recordSql;
-    }
-}
-
-public class SecurityPoliciesSettingsModel
-{
-    [JsonProperty("record_sql")]
-    public readonly Dictionary<string, bool> RecordSql;
-
-    [JsonProperty("attributes_include")]
-    public readonly Dictionary<string, bool> AttributesInclude;
-
-    [JsonProperty("allow_raw_exception_messages")]
-    public readonly Dictionary<string, bool> AllowRawExceptionMessages;
-
-    [JsonProperty("custom_events")]
-    public readonly Dictionary<string, bool> CustomEvents;
-
-    [JsonProperty("custom_parameters")]
-    public readonly Dictionary<string, bool> CustomParameters;
-
-    [JsonProperty("custom_instrumentation_editor")]
-    public readonly Dictionary<string, bool> CustomInstrumentationEditor;
-
-    public SecurityPoliciesSettingsModel(IConfiguration configuration)
-    {
-        if (configuration.TransactionTracerRecordSql == DefaultConfiguration.RawStringValue)
-        {
-            throw new ArgumentException($"{DefaultConfiguration.RawStringValue} is not a valid record_sql setting for security policies.");
-        }
-
-        RecordSql = new Dictionary<string, bool>() { { "enabled", configuration.TransactionTracerRecordSql == DefaultConfiguration.ObfuscatedStringValue } };
-        AttributesInclude = new Dictionary<string, bool>() { { "enabled", configuration.CanUseAttributesIncludes } };
-        AllowRawExceptionMessages = new Dictionary<string, bool>() { { "enabled", !configuration.StripExceptionMessages } };
-        CustomEvents = new Dictionary<string, bool>() { { "enabled", configuration.CustomEventsEnabled } };
-        CustomParameters = new Dictionary<string, bool>() { { "enabled", configuration.CaptureCustomParameters } };
-        CustomInstrumentationEditor = new Dictionary<string, bool>() { { "enabled", configuration.CustomInstrumentationEditorEnabled } };
     }
 }
 

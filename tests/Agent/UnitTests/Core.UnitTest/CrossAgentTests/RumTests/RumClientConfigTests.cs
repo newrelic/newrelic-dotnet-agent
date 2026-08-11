@@ -45,7 +45,6 @@ public class RumClientConfigTests
     private configuration _localConfig;
     private ServerConfiguration _serverConfig;
     private RunTimeConfiguration _runTimeConfiguration;
-    private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
     private IBootstrapConfiguration _bootstrapConfiguration;
 
     private IEnvironment _environment;
@@ -86,7 +85,6 @@ public class RumClientConfigTests
         _httpRuntimeStatic = Mock.Create<IHttpRuntimeStatic>();
         _configurationManagerStatic = new ConfigurationManagerStaticMock();
         _dnsStatic = Mock.Create<IDnsStatic>();
-        _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
         _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
@@ -108,7 +106,7 @@ public class RumClientConfigTests
         _serverConfig.RumSettingsApplicationId = testCase.ConnectReply.ApplicationId;
         _localConfig.browserMonitoring.attributes.enabled = testCase.BrowserMonitoringAttributesEnabled;
 
-        _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+        _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
         _configurationService = Mock.Create<IConfigurationService>();
         Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 

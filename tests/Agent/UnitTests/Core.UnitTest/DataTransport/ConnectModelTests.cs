@@ -55,7 +55,6 @@ public class ConnectModelTests
                 new Dictionary<string, string> { { "hello", "there" } },
                 new UtilizationSettingsModel(2, 3, "myHost2", "myHost2.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, utilitizationConfig),
                 null,
-                new SecurityPoliciesSettingsModel(fullyPopulatedTestConfiguration),
                 new EventHarvestConfigModel(fullyPopulatedTestConfiguration),
                 agentSettings
             );
@@ -490,26 +489,6 @@ public class ConnectModelTests
                                                         "azureappservice": {
                                                             "cloud.resource_id": "/subscriptions/b808887b-cb91-49e0-b922-c9188372bdba/resourceGroups/testgroup/providers/Microsoft.Web/sites/testwebsitename"
                                                         }
-                                                    }
-                                                },
-                                                "security_policies": {
-                                                    "record_sql": {
-                                                        "enabled": false
-                                                    },
-                                                    "attributes_include": {
-                                                        "enabled": true
-                                                    },
-                                                    "allow_raw_exception_messages": {
-                                                        "enabled": false
-                                                    },
-                                                    "custom_events": {
-                                                        "enabled": true
-                                                    },
-                                                    "custom_parameters": {
-                                                        "enabled": false
-                                                    },
-                                                    "custom_instrumentation_editor": {
-                                                        "enabled": true
                                                     }
                                                 }
                                             }

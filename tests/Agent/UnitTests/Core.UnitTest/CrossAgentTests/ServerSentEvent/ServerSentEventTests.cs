@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests;
 
 internal class TestableDefaultConfiguration : DefaultConfiguration
 {
-    public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter) : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
+    public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter) : base(environment, localConfig, serverConfig, runTimeConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
 }
 
 [TestFixture]
@@ -81,7 +81,7 @@ public class ServerSentEventTests
         _runTimeConfig = new RunTimeConfiguration();
         _bootstrapConfig = Mock.Create<IBootstrapConfiguration>();
         _defaultConfig = new TestableDefaultConfiguration(Mock.Create<IEnvironment>(), _localConfig, _serverConfig, _runTimeConfig,
-            new SecurityPoliciesConfiguration(), _bootstrapConfig, Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(),
+            _bootstrapConfig, Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(),
             Mock.Create<IDnsStatic>(), Mock.Create<IAgentHealthReporter>());
 
         _transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();

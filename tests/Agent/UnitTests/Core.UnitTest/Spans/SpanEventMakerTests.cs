@@ -97,7 +97,6 @@ public class SpanEventMakerTests
     private IHttpRuntimeStatic _httpRuntimeStatic;
     private IConfigurationManagerStatic _configurationManagerStatic;
     private IDnsStatic _dnsStatic;
-    private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
     private RunTimeConfiguration _runTimeConfiguration;
     private ServerConfiguration _serverConfig;
     private IBootstrapConfiguration _bootstrapConfiguration;
@@ -124,7 +123,7 @@ public class SpanEventMakerTests
 
     private void PublishConfig()
     {
-        var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         _config = config;
         EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_config, ConfigurationUpdateSource.Local));
     }
@@ -137,7 +136,6 @@ public class SpanEventMakerTests
         _httpRuntimeStatic = Mock.Create<IHttpRuntimeStatic>();
         _configurationManagerStatic = Mock.Create<IConfigurationManagerStatic>();
         _dnsStatic = Mock.Create<IDnsStatic>();
-        _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
         _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
         _runTimeConfiguration = new RunTimeConfiguration();
