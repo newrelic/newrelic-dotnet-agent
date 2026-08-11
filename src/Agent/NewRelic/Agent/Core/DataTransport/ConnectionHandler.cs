@@ -79,7 +79,7 @@ public class ConnectionHandler : ConfigurationBasedService, IConnectionHandler
         {
             if (_configuration.SecurityPoliciesTokenExists)
             {
-                Log.Info("The 'securityPoliciesToken' configuration option is deprecated and no longer honored. Language Agent Security Policies (LASP) support has been removed from the agent. Please remove this setting from your configuration.");
+                Log.Warn("The 'securityPoliciesToken' configuration option is deprecated and no longer honored. Language Agent Security Policies (LASP) support has been removed from the agent. Please remove this setting from your configuration.");
             }
 
             LogTlsConfiguration();
