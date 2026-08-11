@@ -93,7 +93,12 @@ namespace sicily {
             scanner.Expect(TOK_GT);
         }
 
-        if (scanner.Peek(sem) == TOK_END) {
+        //
+        // A signature that ends here, with no argument list, names a field. `instance` and
+        // generic arguments are method-only, so a signature carrying either is malformed --
+        // fall through and let the argument list expectation below reject it.
+        //
+        if (scanner.Peek(sem) == TOK_END && !instanceMethod && genericTypes == nullptr) {
             return std::make_shared<ast::FieldType>(ast::FieldType(targetType, name, returnType));
         }
 

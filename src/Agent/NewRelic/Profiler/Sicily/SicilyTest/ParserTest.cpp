@@ -25,6 +25,22 @@ namespace sicily
                 Assert::AreEqual(std::wstring(testString), rootType->ToString());
             }
 
+            void TestParserThrows(std::wstring testString)
+            {
+                Scanner scanner(testString);
+                Parser parser;
+                try
+                {
+                    parser.Parse(scanner);
+                }
+                catch (const UnexpectedTokenException&)
+                {
+                    return;
+                }
+
+                Assert::Fail(L"Expected an UnexpectedTokenException but no exception was thrown.");
+            }
+
         public:
             TEST_METHOD(TestGenericMethod)
             {
@@ -189,6 +205,20 @@ namespace sicily
             TEST_METHOD(TestField)
             {
                 TestParser(L"int32 __NRInitializer__::_isAgentAssemblyLoaded");
+            }
+
+            //
+            // `instance` and generic arguments are method-only. A field signature carrying
+            // either is malformed and must not silently resolve to a field.
+            //
+            TEST_METHOD(TestFieldRejectsInstanceKeyword)
+            {
+                TestParserThrows(L"instance int32 __NRInitializer__::_isAgentAssemblyLoaded");
+            }
+
+            TEST_METHOD(TestFieldRejectsGenericArguments)
+            {
+                TestParserThrows(L"int32 __NRInitializer__::_isAgentAssemblyLoaded<bool>");
             }
         };
     }
