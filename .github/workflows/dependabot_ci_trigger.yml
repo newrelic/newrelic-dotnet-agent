@@ -30,8 +30,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Record pull request details
+        # Pass the event fields through env vars and reference them as shell
+        # variables, so a branch name can never be treated as shell syntax.
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          echo "Dependabot pull request #${{ github.event.pull_request.number }}"
-          echo "Head branch: ${{ github.event.pull_request.head.ref }}"
-          echo "Head SHA: ${{ github.event.pull_request.head.sha }}"
+          echo "Dependabot pull request #$PR_NUMBER"
+          echo "Head branch: $HEAD_REF"
+          echo "Head SHA: $HEAD_SHA"
           echo "Dependabot Full CI Dispatch will launch All Solutions Build and Unit Tests for this branch."
