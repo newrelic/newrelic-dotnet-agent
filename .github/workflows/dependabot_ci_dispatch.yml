@@ -23,6 +23,13 @@
 #     dependabot/* branches. TEST_SECRETS is still present on the test runners:
 #     accepted, since those are test-account credentials, not signing material.
 
+# Result reporting: each dispatched workflow posts its own
+# `full-ci (dependabot) / <workflow name>` commit status on the pull request head
+# from a `report-dependabot-status` job at the end of its own run. It cannot be
+# done from a workflow listening on `workflow_run`, because GitHub suppresses the
+# events of a run created with GITHUB_TOKEN, so no `workflow_run` fires for the
+# runs dispatched below.
+
 name: Dependabot Full CI Dispatch
 
 on:

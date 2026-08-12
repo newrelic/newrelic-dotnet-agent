@@ -913,6 +913,67 @@ jobs:
           Start-Sleep 20 # Need to wait for install to finish -- takes only a few seconds, but we need to be sure.
         shell: powershell
 
+      # SQL Server Native Client 11.0 (installed above) is still needed by the OleDb tests,
+      # which connect with PROVIDER=SQLNCLI11, so this adds a driver rather than replacing one.
+      #
+      # The ODBC tests connect with DRIVER={ODBC Driver 18 for SQL Server}. The runner image
+      # ships the Visual Studio component Microsoft.VisualStudio.Component.MSODBC.SQL, but the
+      # image readme records only that component's Visual Studio version, never the ODBC driver
+      # version it delivers, and the readme's standalone driver list carries OLE DB drivers
+      # rather than ODBC ones. So probe for the driver by the exact name the connection string
+      # asks for and install only when it is missing: no-op on an image that already has it,
+      # self-repairing on one that does not. The listing also records what the image really
+      # provides, which is otherwise undocumented.
+      - name: Ensure Microsoft ODBC Driver 18 for SQL Server
+        if: matrix.namespace == 'MsSql'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Invoke-WebRequest is very slow on Windows PowerShell while it renders progress.
+          $ProgressPreference = 'SilentlyContinue'
+          $driverName = 'ODBC Driver 18 for SQL Server'
+
+          Write-Host "Registered 64-bit ODBC drivers on this image:"
+          Get-OdbcDriver -Platform '64-bit' | ForEach-Object { Write-Host "  $($_.Name)" }
+
+          if (Get-OdbcDriver -Name $driverName -Platform '64-bit' -ErrorAction SilentlyContinue) {
+            Write-Host "$driverName is already present. Nothing to install."
+            exit 0
+          }
+
+          # x64 only: the ODBC test fixtures (FWLatest, CoreLatest) both run 64-bit. This link
+          # resolves to the latest GA 18.x, so the installed patch version can move without
+          # notice. Pin the download.microsoft.com URL it redirects to if that ever matters.
+          $url = 'https://go.microsoft.com/fwlink/?linkid=2358430'
+          $msi = Join-Path $env:RUNNER_TEMP 'msodbcsql18.msi'
+
+          Write-Host "$driverName not found. Downloading from $url"
+          Invoke-WebRequest -Uri $url -OutFile $msi -UseBasicParsing
+
+          # A wrong or redirected-to-HTML URL yields a small text file that msiexec silently
+          # refuses, so fail here instead of hours later with a confusing IM002 in a test log.
+          $size = (Get-Item $msi).Length
+          Write-Host "Downloaded $size bytes"
+          if ($size -lt 1MB) {
+            throw "Expected an MSI of several MB but got $size bytes. The download URL is probably wrong."
+          }
+
+          $proc = Start-Process msiexec.exe -Wait -PassThru -ArgumentList @(
+            '/i', "`"$msi`"", '/quiet', '/qn', '/norestart', 'IACCEPTMSODBCSQLLICENSETERMS=YES'
+          )
+          if ($proc.ExitCode -ne 0) {
+            throw "msiexec failed with exit code $($proc.ExitCode)."
+          }
+
+          # Assert it registered. Without this the job goes green and the failure resurfaces as
+          # ERROR [IM002] Data source name not found, far away from its cause.
+          if (-not (Get-OdbcDriver -Name $driverName -Platform '64-bit' -ErrorAction SilentlyContinue)) {
+            Write-Host "Registered 64-bit ODBC drivers after install:"
+            Get-OdbcDriver -Platform '64-bit' | ForEach-Object { Write-Host "  $($_.Name)" }
+            throw "$driverName did not register. Try adding ADDLOCAL=ALL to the msiexec arguments."
+          }
+          Write-Host "$driverName installed."
+        shell: powershell
+
       - name: Set up secrets
         env:
           INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
@@ -1517,3 +1578,76 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         continue-on-error: true
+
+  # Posts the dispatched run's result back onto the Dependabot pull request as a
+  # commit status. Reported from inside the run because Dependabot Full CI Dispatch
+  # creates these runs with GITHUB_TOKEN, and GitHub suppresses a
+  # GITHUB_TOKEN-created run's events, so no workflow_run ever fires for them.
+  # Informational only -- must not become a required check, since pull requests
+  # from actors other than Dependabot never receive it.
+  report-dependabot-status:
+    name: Report full CI result on the Dependabot pull request
+    # Only the two leaf jobs are needed, to order this last; everything else is
+    # transitively upstream. The result is read from the run's own job list rather
+    # than needs.*.result, which cannot see an upstream failure: that leaves the
+    # downstream jobs 'skipped', not 'failure'.
+    needs: [shellcheck, integration-test-status]
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'dependabot/nuget/')
+    permissions:
+      actions: read
+      statuses: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Post commit status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          HEAD_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+        run: |
+          set -o pipefail
+
+          # Every job in this run that has finished. This job itself is still in
+          # progress, so it has a null conclusion and drops out here.
+          conclusions="$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs" --paginate \
+            --jq '.jobs[] | select(.conclusion != null) | .conclusion' | sort -u)"
+
+          if [ -z "$conclusions" ]; then
+            echo "::error::Could not read job conclusions for run $RUN_ID"
+            exit 1
+          fi
+          echo "Job conclusions in this run: $(echo $conclusions | tr '\n' ' ')"
+
+          # A cancelled job means this run was superseded: Dependabot force-pushes
+          # to rebase its branches, and this workflow cancels in-progress runs for
+          # the same ref. A replacement run is already on its way, so reporting
+          # failure for this one would be wrong.
+          if grep -qx cancelled <<<"$conclusions"; then
+            echo "Run was cancelled (superseded); not reporting."
+            exit 0
+          fi
+
+          # Anything that is not a clean outcome is a failure. The packaging and
+          # ArtifactBuilder jobs are skipped for Dependabot runs by design
+          # (env.skip_signing), and skipped is a clean outcome.
+          if grep -vqxE 'success|skipped|neutral' <<<"$conclusions"; then
+            state=failure
+          else
+            state=success
+          fi
+
+          echo "Reporting '$state' for $HEAD_SHA ($WORKFLOW_NAME)"
+          gh api -X POST "repos/$REPO/statuses/$HEAD_SHA" \
+            -f state="$state" \
+            -f context="full-ci (dependabot) / $WORKFLOW_NAME" \
+            -f target_url="$RUN_URL" \
+            -f description="$WORKFLOW_NAME: $state"
+        shell: bash
