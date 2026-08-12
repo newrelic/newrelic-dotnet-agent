@@ -30,10 +30,12 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Core\Core.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\Providers\Storage\CallContext\CallContext.csproj" />
+    <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\Providers\Storage\HybridHttpContext\HybridHttpContext.csproj" />
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
   </ItemGroup>
   <ItemGroup>
