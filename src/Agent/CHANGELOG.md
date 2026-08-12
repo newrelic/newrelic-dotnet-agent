@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.53.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.53.0...v10.53.1) (2026-08-12)
+
+
+### Fixes
+
+* Add on-insert check to SimpleCache to prevent runaway growth. ([#3727](https://github.com/newrelic/newrelic-dotnet-agent/issues/3727)) ([88e667f](https://github.com/newrelic/newrelic-dotnet-agent/commit/88e667f8d4d4c1b6cf82a228e7de67bb1a5d0d4a))
+* Aggregate metrics post rename instead of using old names. ([#3729](https://github.com/newrelic/newrelic-dotnet-agent/issues/3729)) ([67f7fcd](https://github.com/newrelic/newrelic-dotnet-agent/commit/67f7fcdefb67890df70e600936bed537d5b32d1a))
+* Guard null OperationContext in WCF MethodInvokerWrapper ([#3730](https://github.com/newrelic/newrelic-dotnet-agent/issues/3730)) ([4ab79f3](https://github.com/newrelic/newrelic-dotnet-agent/commit/4ab79f32c4fb6a22d92d488920894f0d069e9d28))
+* Instrument new method for local log decoration in Serilog 4.4.0+ ([#3705](https://github.com/newrelic/newrelic-dotnet-agent/issues/3705)) ([426f711](https://github.com/newrelic/newrelic-dotnet-agent/commit/426f7114ced333e508e168179b28837f8d42fbe4))
+* Prevent double RUM script injection in ASP.NET Core 6+ responses ([#3726](https://github.com/newrelic/newrelic-dotnet-agent/issues/3726)) ([498da98](https://github.com/newrelic/newrelic-dotnet-agent/commit/498da9850133d8d16c2a906d6a4e9951ef39e3ac))
+* Report the database a SQL command actually ran against ([#3752](https://github.com/newrelic/newrelic-dotnet-agent/issues/3752)) ([b24ff10](https://github.com/newrelic/newrelic-dotnet-agent/commit/b24ff1062a728ba3809ce02feca8a80b6f12fcda))
+
 ## [10.53.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.52.0...v10.53.0) (2026-07-14)
 
 
