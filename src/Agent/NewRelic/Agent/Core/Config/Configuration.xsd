@@ -1230,7 +1230,7 @@
                                             <xs:documentation>
                                                 WARNING: Enabling this setting has the potential of collecting sensitive data or personally identifiable information within your queries.
 
-                                                This setting controls whether or not database query parameters are reported for slow SQL queries. The transactionTracer.recordSql setting must be set to 'raw'. This setting is ignored when configurable security policies have been applied or High Security Mode is enabled.
+                                                This setting controls whether or not database query parameters are reported for slow SQL queries. The transactionTracer.recordSql setting must be set to 'raw'. This setting is ignored when High Security Mode is enabled.
                                             </xs:documentation>
                                         </xs:annotation>
                                     </xs:attribute>
