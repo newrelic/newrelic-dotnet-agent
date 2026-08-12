@@ -38,7 +38,6 @@ public class DefaultConfiguration : IConfiguration
     private static readonly char HyphenChar = '-';
 
     private const string HighSecurityConfigSource = "High Security Mode";
-    private const string SecurityPolicyConfigSource = "Security Policy";
     private const string LocalConfigSource = "Local Configuration";
     private const string ServerConfigSource = "Server Configuration";
     private const int MaxExptectedErrorConfigEntries = 50;
@@ -58,7 +57,6 @@ public class DefaultConfiguration : IConfiguration
     private readonly configuration _localConfiguration = new configuration();
     private readonly ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
     private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
-    private readonly SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
     private readonly IBootstrapConfiguration _bootstrapConfiguration = BootstrapConfiguration.GetDefault();
     private readonly Dictionary<string, string> _newRelicAppSettings;
 
@@ -76,7 +74,7 @@ public class DefaultConfiguration : IConfiguration
         ConfigurationVersion = Interlocked.Increment(ref _currentConfigurationVersion);
     }
 
-    protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
+    protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
         : this()
     {
         _environment = environment;
@@ -99,10 +97,6 @@ public class DefaultConfiguration : IConfiguration
         if (runTimeConfiguration != null)
         {
             _runTimeConfiguration = runTimeConfiguration;
-        }
-        if (securityPoliciesConfiguration != null)
-        {
-            _securityPoliciesConfiguration = securityPoliciesConfiguration;
         }
         if (_bootstrapConfiguration != null)
         {
@@ -516,12 +510,6 @@ public class DefaultConfiguration : IConfiguration
             return new BoolConfigurationItem(false, HighSecurityConfigSource);
         }
 
-        if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName)
-            && (_securityPoliciesConfiguration.AttributesInclude.Enabled == false))
-        {
-            return new BoolConfigurationItem(false, SecurityPolicyConfigSource);
-        }
-
         return new BoolConfigurationItem(CaptureAttributes, LocalConfigSource);
     }
 
@@ -539,26 +527,11 @@ public class DefaultConfiguration : IConfiguration
     private IEnumerable<string> _captureAttributesDefaultExcludes;
     public virtual IEnumerable<string> CaptureAttributesDefaultExcludes => _captureAttributesDefaultExcludes ??= ["identity.*"];
 
-    private bool IsAttributesAllowedByConfigurableSecurityPolicy
-    {
-        get
-        {
-            if (HighSecurityModeEnabled) return false;
-
-            if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName))
-            {
-                return _securityPoliciesConfiguration.AttributesInclude.Enabled;
-            }
-
-            return true;
-        }
-    }
-
     public virtual bool TransactionEventsAttributesEnabled => CaptureAttributes && _localConfiguration.transactionEvents.attributes.enabled;
 
     private HashSet<string> _transactionEventsAttributesInclude;
     public HashSet<string> TransactionEventsAttributesInclude =>
-        _transactionEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && TransactionEventsAttributesEnabled
+        _transactionEventsAttributesInclude ??= !HighSecurityModeEnabled && TransactionEventsAttributesEnabled
             ? [.. _localConfiguration.transactionEvents.attributes.include]
             : [];
 
@@ -599,11 +572,6 @@ public class DefaultConfiguration : IConfiguration
         }
 
         var shouldCapture = !HighSecurityModeEnabled && CaptureTransactionTraceAttributes;
-
-        if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName))
-        {
-            shouldCapture = shouldCapture && _securityPoliciesConfiguration.AttributesInclude.Enabled;
-        }
 
         _shouldCaptureTransactionTraceAttributesIncludes = shouldCapture;
 
@@ -647,11 +615,6 @@ public class DefaultConfiguration : IConfiguration
 
         var shouldCapture = !HighSecurityModeEnabled && CaptureErrorCollectorAttributes;
 
-        if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName))
-        {
-            shouldCapture = shouldCapture && _securityPoliciesConfiguration.AttributesInclude.Enabled;
-        }
-
         _shouldCaptureErrorCollectorAttributesIncludes = shouldCapture;
         return _shouldCaptureErrorCollectorAttributesIncludes.Value;
     }
@@ -690,11 +653,6 @@ public class DefaultConfiguration : IConfiguration
 
         var shouldCapture = !HighSecurityModeEnabled && CaptureBrowserMonitoringAttributes;
 
-        if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName))
-        {
-            shouldCapture = shouldCapture && _securityPoliciesConfiguration.AttributesInclude.Enabled;
-        }
-
         _shouldCaptureBrowserMonitoringAttributesIncludes = shouldCapture;
         return _shouldCaptureBrowserMonitoringAttributesIncludes.Value;
     }
@@ -730,12 +688,6 @@ public class DefaultConfiguration : IConfiguration
         if (HighSecurityModeEnabled)
         {
             return new BoolConfigurationItem(false, HighSecurityConfigSource);
-        }
-
-        if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.CustomParametersPolicyName)
-            && (_securityPoliciesConfiguration.CustomParameters.Enabled == false))
-        {
-            return new BoolConfigurationItem(false, SecurityPolicyConfigSource);
         }
 
         var localConfigValue = GetLocalShouldCaptureCustomParameters();
@@ -845,7 +797,7 @@ public class DefaultConfiguration : IConfiguration
 
     private HashSet<string> _spanEventsAttributesInclude;
     public HashSet<string> SpanEventsAttributesInclude =>
-        _spanEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && SpanEventsAttributesEnabled
+        _spanEventsAttributesInclude ??= !HighSecurityModeEnabled && SpanEventsAttributesEnabled
             ? [.. _localConfiguration.spanEvents.attributes.include]
             : [];
 
@@ -1340,12 +1292,6 @@ public class DefaultConfiguration : IConfiguration
             return new BoolConfigurationItem(false, HighSecurityConfigSource);
         }
 
-        if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.CustomInstrumentationEditorPolicyName)
-            && (_securityPoliciesConfiguration.CustomInstrumentationEditor.Enabled == false))
-        {
-            return new BoolConfigurationItem(false, SecurityPolicyConfigSource);
-        }
-
         return new BoolConfigurationItem(_localConfiguration.customInstrumentationEditor.enabled, LocalConfigSource);
     }
 
@@ -1384,12 +1330,6 @@ public class DefaultConfiguration : IConfiguration
         if (HighSecurityModeEnabled)
         {
             return new BoolConfigurationItem(true, HighSecurityConfigSource);
-        }
-
-        if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AllowRawExceptionMessagePolicyName)
-            && (_securityPoliciesConfiguration.AllowRawExceptionMessage.Enabled == false))
-        {
-            return new BoolConfigurationItem(true, SecurityPolicyConfigSource);
         }
 
         return new BoolConfigurationItem(_localConfiguration.stripExceptionMessages.enabled, LocalConfigSource);
@@ -1599,12 +1539,6 @@ public class DefaultConfiguration : IConfiguration
             return new BoolConfigurationItem(false, HighSecurityConfigSource);
         }
 
-        if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.CustomEventsPolicyName)
-            && (_securityPoliciesConfiguration.CustomEvents.Enabled == false))
-        {
-            return new BoolConfigurationItem(false, SecurityPolicyConfigSource);
-        }
-
         if (_serverConfiguration.CustomEventCollectionEnabled.HasValue
             && (_serverConfiguration.CustomEventCollectionEnabled.Value == false))
         {
@@ -1636,7 +1570,7 @@ public class DefaultConfiguration : IConfiguration
 
     private HashSet<string> _customEventsAttributesInclude;
     public HashSet<string> CustomEventsAttributesInclude =>
-        _customEventsAttributesInclude ??= IsAttributesAllowedByConfigurableSecurityPolicy && CustomEventsAttributesEnabled
+        _customEventsAttributesInclude ??= !HighSecurityModeEnabled && CustomEventsAttributesEnabled
             ? [.. _localConfiguration.customEvents.attributes.include]
             : [];
 
@@ -1726,21 +1660,6 @@ public class DefaultConfiguration : IConfiguration
 
     private RecordSqlConfigurationItem GetRecordSqlConfiguration()
     {
-        if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.RecordSqlPolicyName))
-        {
-            var localRecordSql = _localConfiguration.transactionTracer.recordSql;
-            var serverConfigRecordSql = _serverConfiguration.RpmConfig.TransactionTracerRecordSql;
-
-            // "raw" is never allowed with security policies
-            var policyValue = _securityPoliciesConfiguration.RecordSql.Enabled ? ObfuscatedStringValue : OffStringValue;
-
-            var mostRestrictiveConfiguration = new RecordSqlConfigurationItem(policyValue, SecurityPolicyConfigSource)
-                .ApplyIfMoreRestrictive(serverConfigRecordSql, ServerConfigSource)
-                .ApplyIfMoreRestrictive(localRecordSql, LocalConfigSource);
-
-            return mostRestrictiveConfiguration;
-        }
-
         var serverOrLocalConfiguration = GetServerOverrideOrLocalRecordSqlConfiguration();
 
         if (HighSecurityModeEnabled)
@@ -1869,7 +1788,6 @@ public class DefaultConfiguration : IConfiguration
     public virtual bool LogEventCollectorEnabled =>
         ApplicationLoggingEnabled &&
         LogEventsMaxSamplesStored > 0 &&
-        !SecurityPoliciesTokenExists &&
         HighSecurityModeOverrides(false,
             EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED"));
 

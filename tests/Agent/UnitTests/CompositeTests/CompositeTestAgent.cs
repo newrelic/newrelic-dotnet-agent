@@ -82,8 +82,6 @@ public class CompositeTestAgent : IDisposable
 
     public IConfiguration CurrentConfiguration { get; private set; }
 
-    public SecurityPoliciesConfiguration SecurityConfiguration { get; }
-
     public INativeMethods NativeMethods { get; }
 
     public IInstrumentationService InstrumentationService { get; }
@@ -235,7 +233,6 @@ public class CompositeTestAgent : IDisposable
         // Update configuration (will also start services)
         LocalConfiguration = GetDefaultTestLocalConfiguration(rootSamplerType, remoteParentSampledSamplerType, remoteParentNotSampledSamplerType);
         ServerConfiguration = GetDefaultTestServerConfiguration();
-        SecurityConfiguration = GetDefaultSecurityPoliciesConfiguration();
         InstrumentationWatcher.Start();
         PushConfiguration();
 
@@ -396,8 +393,6 @@ public class CompositeTestAgent : IDisposable
         // Push ServerConfigurationUpdates
         EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(ServerConfiguration));
 
-        EventBus<SecurityPoliciesConfigurationUpdatedEvent>.Publish(new SecurityPoliciesConfigurationUpdatedEvent(SecurityConfiguration));
-
         // Update CurrentConfiguration
         IConfiguration newConfig = null;
         RequestBus<GetCurrentConfigurationRequest, IConfiguration>.Post(new GetCurrentConfigurationRequest(), config => newConfig = config);
@@ -444,8 +439,4 @@ public class CompositeTestAgent : IDisposable
         };
     }
 
-    private static SecurityPoliciesConfiguration GetDefaultSecurityPoliciesConfiguration()
-    {
-        return new SecurityPoliciesConfiguration();
-    }
 }

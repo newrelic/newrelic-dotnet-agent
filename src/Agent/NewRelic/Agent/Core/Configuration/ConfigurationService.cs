@@ -20,7 +20,6 @@ public class ConfigurationService : IConfigurationService, IDisposable
     private readonly IEnvironment _environment;
     private configuration _localConfiguration = new configuration();
     private ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
-    private SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
     private RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
     private readonly IBootstrapConfiguration _bootstrapConfiguration = ConfigurationLoader.BootstrapConfig;
     private readonly Subscriptions _subscriptions = new Subscriptions();
@@ -44,7 +43,7 @@ public class ConfigurationService : IConfigurationService, IDisposable
         _configurationManagerStatic = configurationManagerStatic;
         _dnsStatic = dnsStatic;
 
-        Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, dnsStatic);
+        Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, dnsStatic);
 
         _subscriptions.Add<ConfigurationDeserializedEvent>(OnConfigurationDeserialized);
         _subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
@@ -52,13 +51,6 @@ public class ConfigurationService : IConfigurationService, IDisposable
         _subscriptions.Add<ErrorGroupCallbackUpdateEvent>(OnErrorGroupCallbackUpdate);
         _subscriptions.Add<LlmTokenCountingCallbackUpdateEvent>(OnLlmTokenCountingCallbackUpdate);
         _subscriptions.Add<GetCurrentConfigurationRequest, IConfiguration>(OnGetCurrentConfiguration);
-        _subscriptions.Add<SecurityPoliciesConfigurationUpdatedEvent>(OnSecurityPoliciesUpdated);
-    }
-
-    private void OnSecurityPoliciesUpdated(SecurityPoliciesConfigurationUpdatedEvent securityPoliciesConfigurationUpdatedEvent)
-    {
-        _securityPoliciesConfiguration = securityPoliciesConfigurationUpdatedEvent.Configuration;
-        UpdateAndPublishConfiguration(ConfigurationUpdateSource.SecurityPolicies);
     }
 
     private void OnConfigurationDeserialized(ConfigurationDeserializedEvent configurationDeserializedEvent)
@@ -123,7 +115,7 @@ public class ConfigurationService : IConfigurationService, IDisposable
     {
         var previousLogLevel = Configuration.LoggingLevel;
 
-        Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         UpdateLogLevel(previousLogLevel);
 

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
@@ -78,29 +77,19 @@ public class ConnectionHandler : ConfigurationBasedService, IConnectionHandler
 
         try
         {
-            ValidateNotBothHsmAndSecurityPolicies(_configuration);
+            if (_configuration.SecurityPoliciesTokenExists)
+            {
+                Log.Warn("The 'securityPoliciesToken' configuration option is deprecated and no longer honored. Language Agent Security Policies (LASP) support has been removed from the agent. Please remove this setting from your configuration.");
+            }
+
             LogTlsConfiguration();
 
             var preconnectResult = SendPreconnectRequest();
             _connectionInfo = new ConnectionInfo(_configuration, preconnectResult.RedirectHost);
 
-            ValidateAgentTokenSettingToPoliciesReceived(preconnectResult.SecurityPolicies);
-
-            if (_configuration.SecurityPoliciesTokenExists)
-            {
-                ValidateAgentExpectedSecurityPoliciesExist(preconnectResult.SecurityPolicies);
-                ValidateAllRequiredPoliciesFromServerExist(preconnectResult.SecurityPolicies);
-
-                var securityPoliciesConfiguration = new SecurityPoliciesConfiguration(preconnectResult.SecurityPolicies);
-                EventBus<SecurityPoliciesConfigurationUpdatedEvent>.Publish(new SecurityPoliciesConfigurationUpdatedEvent(securityPoliciesConfiguration));
-
-                _agentHealthReporter.ReportSupportabilityCountMetric(MetricNames.GetSupportabilityFeatureEnabled("CSP"));
-            }
-
             var serverConfiguration = SendConnectRequest();
             EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(serverConfiguration));
 
-            LogSecurityPolicySettingsOnceAllSettingsResolved();
             GenerateFasterEventHarvestConfigMetrics(serverConfiguration.EventHarvestConfig);
 
             GenerateSpanEventsHarvestLimitMetrics(serverConfiguration.SpanEventHarvestConfig);
@@ -134,21 +123,6 @@ public class ConnectionHandler : ConfigurationBasedService, IConnectionHandler
         }
     }
 
-    private void LogSecurityPolicySettingsOnceAllSettingsResolved()
-    {
-        if (_configuration.SecurityPoliciesTokenExists == false)
-        {
-            return;
-        }
-
-        Log.Debug("Setting applied: {{\"record_sql\": \"{0}\"}}. Source: {1}", _configuration.TransactionTracerRecordSql, _configuration.TransactionTracerRecordSqlSource);
-        Log.Debug("Setting applied: {{\"attributes_include\": {0}}}. Source: {1}", _configuration.CanUseAttributesIncludes, _configuration.CanUseAttributesIncludesSource);
-        Log.Debug("Setting applied: {{\"allow_raw_exception_messages\": {0}}}. Source: {1}", !_configuration.StripExceptionMessages, _configuration.StripExceptionMessagesSource);
-        Log.Debug("Setting applied: {{\"custom_events\": {0}}}. Source: {1}", _configuration.CustomEventsEnabled, _configuration.CustomEventsEnabledSource);
-        Log.Debug("Setting applied: {{\"custom_parameters\": {0}}}. Source: {1}", _configuration.CaptureCustomParameters, _configuration.CaptureCustomParametersSource);
-        Log.Debug("Setting applied: {{\"custom_instrumentation_editor\": {0}}}. Source: {1}", _configuration.CustomInstrumentationEditorEnabled, _configuration.CustomInstrumentationEditorEnabledSource);
-    }
-
     public void Disconnect()
     {
         if (!string.IsNullOrEmpty(_configuration.AgentRunId?.ToString()))
@@ -175,67 +149,8 @@ public class ConnectionHandler : ConfigurationBasedService, IConnectionHandler
             { "high_security", _configuration.HighSecurityModeEnabled }
         };
 
-        if (_configuration.SecurityPoliciesTokenExists)
-        {
-            payload["security_policies_token"] = _configuration.SecurityPoliciesToken;
-        }
-
         var result = SendNonDataRequest<PreconnectResult>("preconnect", payload);
         return result;
-    }
-
-    private static void ValidateNotBothHsmAndSecurityPolicies(IConfiguration configuration)
-    {
-        if (configuration.HighSecurityModeEnabled && configuration.SecurityPoliciesTokenExists)
-        {
-            const string errorMessage = @"Security Policies and High Security Mode cannot both be present in the agent configuration. If Security Policies have been set for your account, please ensure the securityPoliciesToken is set but highSecurity is disabled (default).";
-            throw new SecurityPoliciesValidationException(errorMessage);
-        }
-    }
-
-    private static void ValidateAgentExpectedSecurityPoliciesExist(Dictionary<string, SecurityPolicyState> securityPoliciesFromServer)
-    {
-        var missingExpectedPolicies = SecurityPoliciesConfiguration.GetMissingExpectedSeverPolicyNames(securityPoliciesFromServer);
-
-        if (missingExpectedPolicies.Count > 0)
-        {
-            var formattedMissingExpectedPolicies = string.Join(", ", missingExpectedPolicies);
-            var errorMessage = $"The agent did not receive one or more security policies that it expected and will shut down: {formattedMissingExpectedPolicies}. Please contact support.";
-            throw new SecurityPoliciesValidationException(errorMessage);
-        }
-    }
-
-    private static void ValidateAllRequiredPoliciesFromServerExist(Dictionary<string, SecurityPolicyState> securityPoliciesFromServer)
-    {
-        var missingRequiredPolicies = SecurityPoliciesConfiguration.GetMissingRequiredPolicies(securityPoliciesFromServer);
-
-        if (missingRequiredPolicies.Count > 0)
-        {
-            var formattedMissingRequiredPolicies = string.Join(", ", missingRequiredPolicies);
-            var errorMessage = $"The agent received one or more required security policies that it does not recognize and will shut down: {formattedMissingRequiredPolicies}. Please check if a newer agent version supports these policies or contact support.";
-            throw new SecurityPoliciesValidationException(errorMessage);
-        }
-    }
-
-    private void ValidateAgentTokenSettingToPoliciesReceived(Dictionary<string, SecurityPolicyState> securityPoliciesFromServer)
-    {
-        // LASP is not enabled, but security policies received from server
-        if (!_configuration.SecurityPoliciesTokenExists && securityPoliciesFromServer != null && securityPoliciesFromServer.Count > 0)
-        {
-            var policiesReceived = string.Join(", ", securityPoliciesFromServer.Keys);
-            var errorMessage = $"The agent received one or more security policies without a security policies token defined and will shut down: {policiesReceived}. Please configure your security policies token or contact support.";
-
-            throw new SecurityPoliciesValidationException(errorMessage);
-        }
-
-        // LASP is enabled, but no policies from server
-        if (_configuration.SecurityPoliciesTokenExists &&
-            (securityPoliciesFromServer == null || securityPoliciesFromServer.Count == 0))
-        {
-            const string errorMessage = "The agent has a security policies token defined but did not receive any policies from the server and will shut down. Please verify local and server configuration or contact support.";
-
-            throw new SecurityPoliciesValidationException(errorMessage);
-        }
     }
 
     private ServerConfiguration SendConnectRequest()
@@ -318,7 +233,6 @@ public class ConnectionHandler : ConfigurationBasedService, IConnectionHandler
             metadata ?? new Dictionary<string, string>(),
             new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter, _fileWrapper).GetUtilizationSettings(),
             _configuration.CollectorSendEnvironmentInfo ? _environment : null,
-            _configuration.SecurityPoliciesTokenExists ? new SecurityPoliciesSettingsModel(_configuration) : null,
             new EventHarvestConfigModel(_configuration),
             new ReportedConfiguration(_configuration)
         );

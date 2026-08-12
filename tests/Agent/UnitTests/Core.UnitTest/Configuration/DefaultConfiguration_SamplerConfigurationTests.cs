@@ -18,7 +18,6 @@ public class DefaultConfiguration_SamplerConfigurationTests
     private configuration _localConfig;
     private ServerConfiguration _serverConfig;
     private RunTimeConfiguration _runTimeConfig;
-    private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
     private IBootstrapConfiguration _bootstrapConfiguration;
     private IProcessStatic _processStatic;
     private IHttpRuntimeStatic _httpRuntimeStatic;
@@ -35,7 +34,6 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig = new configuration();
         _serverConfig = new ServerConfiguration();
         _runTimeConfig = new RunTimeConfiguration();
-        _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
         _processStatic = Mock.Create<IProcessStatic>();
         _httpRuntimeStatic = Mock.Create<IHttpRuntimeStatic>();
@@ -52,7 +50,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
     private void CreateConfig()
     {
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
     }
 
@@ -161,7 +159,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
 
         // Recreate config to apply env override
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act
@@ -180,7 +178,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
             .Returns("alwaysOn");
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act
@@ -199,7 +197,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig.distributedTracing.sampler.root.Item = new AdaptiveSamplerType(); // no TraceIdRatioSamplerType provided
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act
@@ -256,7 +254,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new TraceIdRatioBasedSamplerType { ratio = 0.55m };
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act
@@ -275,7 +273,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
             .Returns("alwaysOff");
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act
@@ -294,7 +292,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig.distributedTracing.sampler.remoteParentSampled.Item = new AdaptiveSamplerType(); // no ratio sampler object
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act
@@ -351,7 +349,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new TraceIdRatioBasedSamplerType { ratio = 0.9m };
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act
@@ -370,7 +368,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
             .Returns("default");
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act
@@ -389,7 +387,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig.distributedTracing.sampler.remoteParentNotSampled.Item = new AdaptiveSamplerType(); // no TraceIdRatioSamplerType
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act
@@ -412,7 +410,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig.distributedTracing.sampler.remoteParentSampled1 = RemoteParentSampledBehaviorType.alwaysOn;
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act / Assert
@@ -428,7 +426,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig.distributedTracing.sampler.remoteParentSampled1 = RemoteParentSampledBehaviorType.traceIdRatioBased;
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act / Assert
@@ -444,7 +442,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig.distributedTracing.sampler.remoteParentSampled1 = RemoteParentSampledBehaviorType.alwaysOn; // should be ignored
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act / Assert
@@ -460,7 +458,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig.distributedTracing.sampler.remoteParentNotSampled1 = RemoteParentSampledBehaviorType.alwaysOff;
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act / Assert
@@ -476,7 +474,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig.distributedTracing.sampler.remoteParentNotSampled1 = RemoteParentSampledBehaviorType.@default; // should map to Default
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act / Assert
@@ -492,7 +490,7 @@ public class DefaultConfiguration_SamplerConfigurationTests
         _localConfig.distributedTracing.sampler.remoteParentNotSampled1 = RemoteParentSampledBehaviorType.alwaysOff; // should be ignored
 
         _config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig,
-            _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
+            _bootstrapConfiguration, _processStatic, _httpRuntimeStatic,
             _configurationManagerStatic, _dnsStatic);
 
         // Act / Assert
