@@ -259,6 +259,143 @@ public class MicrosoftDataSqlClientExerciser : MsSqlExerciserBase
     }
 
     [LibraryMethod]
+    public void CreateDatabaseAndTable(string databaseName, string tableName)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+
+            try
+            {
+                using (var command = new SqlCommand($"IF DB_ID('{databaseName}') IS NULL CREATE DATABASE [{databaseName}]", connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (SqlException)
+            {
+                // database already exists - harmless
+            }
+
+            connection.ChangeDatabase(databaseName);
+
+            using (var command = new SqlCommand($"IF OBJECT_ID('dbo.{tableName}') IS NULL CREATE TABLE {tableName} (FirstName varchar(20) NOT NULL)", connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            using (var command = new SqlCommand($"INSERT INTO {tableName} (FirstName) VALUES ('Switched')", connection))
+            {
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+
+    [LibraryMethod]
+    public void DropTableInDatabase(string databaseName, string tableName)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+            connection.ChangeDatabase(databaseName);
+
+            using (var command = new SqlCommand(string.Format(DropPersonTableMsSql, tableName), connection))
+            {
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void MsSqlDatabaseSwitch(string databaseName, string tableName)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+
+            // Runs against the database named in the connection string.
+            using (var command = new SqlCommand(SelectPersonByFirstNameMsSql, connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read()) { }
+            }
+
+            // Change the active database on the SAME open connection. This does not
+            // change the connection string.
+            connection.ChangeDatabase(databaseName);
+
+            // Runs against the switched-to database.
+            using (var command = new SqlCommand($"SELECT * FROM {tableName} WITH(nolock)", connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read()) { }
+            }
+        }
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void MsSqlDatabaseSwitchViaUseStatement(string databaseName, string tableName)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+
+            using (var command = new SqlCommand(SelectPersonByFirstNameMsSql, connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read()) { }
+            }
+
+            // Change the active database with a raw USE statement rather than the
+            // client API. MSSQL reflects this in SqlConnection.Database.
+            using (var command = new SqlCommand($"USE [{databaseName}]", connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            using (var command = new SqlCommand($"SELECT * FROM {tableName} WITH(nolock)", connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read()) { }
+            }
+        }
+    }
+
+#if NET8_0_OR_GREATER
+    // ChangeDatabaseAsync is a .NET 5+ BCL API on DbConnection and does not exist on
+    // .NET Framework, so this method is compiled out there. Test classes that drive it
+    // must bind to a Core fixture only.
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task MsSqlDatabaseSwitchAsync(string databaseName, string tableName)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+
+            using (var command = new SqlCommand(SelectPersonByFirstNameMsSql, connection))
+            using (var reader = await command.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync()) { }
+            }
+
+            await connection.ChangeDatabaseAsync(databaseName);
+
+            using (var command = new SqlCommand($"SELECT * FROM {tableName} WITH(nolock)", connection))
+            using (var reader = await command.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync()) { }
+            }
+        }
+    }
+#endif
+
+    [LibraryMethod]
     public void Wait(int millisecondsTimeOut)
     {
         Thread.Sleep(millisecondsTimeOut);
