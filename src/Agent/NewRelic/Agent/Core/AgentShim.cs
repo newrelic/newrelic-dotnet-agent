@@ -100,7 +100,7 @@ public class AgentShim
     }
 
     /// <summary>
-    /// This method is used to work around .NET Framework and .NET < 6.0 not supporting generic delegates
+    /// This method is used to work around .NET Framework and .NET &lt; 6.0 not supporting generic delegates
     /// with 11 parameters.
     /// </summary>
     /// <param name="parameters">An array of boxed parameters for the GetFinishTracerDelegate method.</param>
