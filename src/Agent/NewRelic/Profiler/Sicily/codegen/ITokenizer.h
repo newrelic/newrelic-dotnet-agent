@@ -25,6 +25,20 @@ namespace sicily
             virtual uint32_t GetTypeSpecToken(const ByteVector& instantiationSignature) = 0;
             virtual uint32_t GetMemberRefOrDefToken(uint32_t parent, const xstring_t& methodName, const ByteVector& signature) = 0;
             virtual uint32_t GetMethodDefinitionToken(const uint32_t& typeDefinitionToken, const xstring_t& name, const ByteVector& signature) = 0;
+            // Resolves a field by name alone. Unlike GetMethodDefinitionToken above, no signature
+            // is passed, so three constraints apply:
+            //   - The field's declared type is NOT validated. A sicily string whose field type
+            //     disagrees with the real field still resolves. The type is inert: it never
+            //     reaches the emitted IL, so a wrong type produces identical bytecode rather
+            //     than a fault.
+            //   - typeDefinitionToken must be a TypeDef in the module being rewritten.
+            //     IMetaDataImport::FindField takes an mdTypeDef; a TypeRef will not resolve.
+            //     Today this holds by construction -- the only field signatures are for
+            //     __NRInitializer__, whose TypeDef is created in the corelib module
+            //     (ModuleInjector::InjectIntoModule) and whose field IL is emitted only into
+            //     that same module (HelperInstrumentor::Instrument). Those two corelib checks
+            //     are separate copies of the same predicate; keep them in step.
+            //   - Inherited fields are not found, only ones declared directly on the type.
             virtual uint32_t GetFieldDefinitionToken(const uint32_t& typeDefinitionToken, const xstring_t& name) = 0;
             virtual uint32_t GetMethodSpecToken(uint32_t methodDefOrRefOrSpecToken, const ByteVector& instantiationSignature) = 0;
             virtual uint32_t GetStringToken(const xstring_t& string) = 0;
