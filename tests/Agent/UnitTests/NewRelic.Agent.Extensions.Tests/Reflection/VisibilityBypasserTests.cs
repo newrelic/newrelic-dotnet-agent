@@ -701,5 +701,8 @@ public class StaticMethodTests
 
         // Assert
         Assert.That(success, Is.False);
-        Assert.That(accessor, Is.Null);
+        // compare the delegate reference, do not let NUnit evaluate it:
+        // NUnit is replacing ActualValueDelegate<T> with Func<T> (nunit/nunit#4824),
+        // after which an un-cast Func<int> actual would be invoked, not compared.
+        Assert.That((Delegate)accessor, Is.Null);
     }    }

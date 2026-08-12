@@ -55,7 +55,7 @@ public abstract class LinuxW3CValidationTest<T> : NewRelicIntegrationTest<T> whe
 }
 
 [Trait("Architecture", "amd64")]
-[Trait("Distro", "Ubuntu")]
+[Trait("TestArea", "Core")]
 public class W3CValidationDotNet10Test : LinuxW3CValidationTest<W3CValidationDotNet10TestFixture>
 {
     public W3CValidationDotNet10Test(W3CValidationDotNet10TestFixture fixture, ITestOutputHelper output) : base(fixture, output)

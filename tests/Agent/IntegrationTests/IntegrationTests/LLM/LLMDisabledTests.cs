@@ -38,6 +38,13 @@ public abstract class LlmDisabledTestsBase<TFixture> : NewRelicIntegrationTest<T
 
         _fixture.AddCommand($"BedrockExerciser InvokeModel {_model} {LLMHelpers.ConvertToBase64(_prompt)}");
 
+        // Bedrock is called for real, so the test application needs AWS credentials in its
+        // environment. Supplied by OIDC in CI, by the AWS CLI locally. See NR-601301.
+        foreach (var awsCredential in AwsTestCredentials.GetEnvironmentVariables())
+        {
+            _fixture.SetAdditionalEnvironmentVariable(awsCredential.Key, awsCredential.Value);
+        }
+
         _fixture.Initialize();
     }
 
