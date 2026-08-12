@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using NewRelic.Agent.Api;
 
 namespace NewRelic.Agent.Extensions.Parsing;
 
@@ -16,19 +15,17 @@ public static class ConnectionInfoResolver
     /// Returns the ConnectionInfo that describes where a command really ran. An application
     /// can change the active database on an already-open connection (ChangeDatabase,
     /// ChangeDatabaseAsync, or a USE statement) without the connection string changing, so
-    /// when the live database name disagrees with the parsed one the live value wins and the
-    /// result is cached per transaction under a composite key. Providers that do not expose a
-    /// live database name pass null or empty and take the unchanged path.
+    /// when the live database name disagrees with the parsed one the live value wins.
+    /// Providers that do not expose a live database name pass null or empty and take the
+    /// unchanged path.
     /// </summary>
-    /// <param name="transaction">The current transaction, whose per-transaction cache holds the result.</param>
     /// <param name="parsedConnectionInfo">The ConnectionInfo parsed from the connection string. Never mutated.</param>
-    /// <param name="connectionString">The connection string, already cached as its own key.</param>
     /// <param name="liveDatabaseName">The connection's current database, or null/empty if the provider does not report one.</param>
-    public static ConnectionInfo ResolveWithLiveDatabase(ITransaction transaction, ConnectionInfo parsedConnectionInfo, string connectionString, string liveDatabaseName)
+    public static ConnectionInfo ResolveWithLiveDatabase(ConnectionInfo parsedConnectionInfo, string liveDatabaseName)
     {
         // OrdinalIgnoreCase is mandatory: MSSQL reports connection-string casing when a
         // connection is first opened but server casing after a switch, so a case-sensitive
-        // compare would fire on every call and pollute the cache.
+        // compare would read every call as a database switch.
         //
         // parsedConnectionInfo can be null: the caller's cache (GetOrSetValueFromCache)
         // returns null when its key is null, and the key is the connection's
@@ -43,8 +40,13 @@ public static class ConnectionInfoResolver
             return parsedConnectionInfo;
         }
 
-        return (ConnectionInfo)transaction.GetOrSetValueFromCache(
-            connectionString + "|" + liveDatabaseName,
-            () => parsedConnectionInfo.WithDatabaseName(liveDatabaseName));
+        // WithDatabaseName caches per database name, so this allocates nothing once the
+        // application has visited each database it uses, switches back included. The result
+        // deliberately does not go through the per-transaction cache: that cache is keyed by
+        // string, and the only correct key there combines the connection string with the
+        // database name, which means building a connection-string-length key on every command.
+        // A connection string that omits the database parses to "unknown" and so never matches
+        // the live name, making that the steady state for those applications, not a rare case.
+        return parsedConnectionInfo.WithDatabaseName(liveDatabaseName);
     }
 }

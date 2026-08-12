@@ -44,7 +44,7 @@ public class OdbcCommandWrapper : IWrapper
             // The active database can be changed on an open connection (ChangeDatabase
             // or a USE statement) without the connection string changing, so trust the
             // live value over the parsed one when they disagree.
-            connectionInfo = ConnectionInfoResolver.ResolveWithLiveDatabase(transaction, connectionInfo, connectionString, connection.Database);
+            connectionInfo = ConnectionInfoResolver.ResolveWithLiveDatabase(connectionInfo, connection.Database);
 
             var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, odbcCommand.CommandType, sql);
 

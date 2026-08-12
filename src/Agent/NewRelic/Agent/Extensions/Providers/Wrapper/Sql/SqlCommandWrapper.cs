@@ -108,7 +108,7 @@ public abstract class SqlCommandWrapperBase : IWrapper
         // The active database can be changed on an open connection (ChangeDatabase,
         // ChangeDatabaseAsync, or a USE statement) without the connection string
         // changing, so trust the live value over the parsed one when they disagree.
-        connectionInfo = ConnectionInfoResolver.ResolveWithLiveDatabase(transaction, connectionInfo, connectionString, connection.Database);
+        connectionInfo = ConnectionInfoResolver.ResolveWithLiveDatabase(connectionInfo, connection.Database);
 
         var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, sqlCommand.CommandType, sql);
 
