@@ -914,6 +914,67 @@ jobs:
           Start-Sleep 20 # Need to wait for install to finish -- takes only a few seconds, but we need to be sure.
         shell: powershell
 
+      # SQL Server Native Client 11.0 (installed above) is still needed by the OleDb tests,
+      # which connect with PROVIDER=SQLNCLI11, so this adds a driver rather than replacing one.
+      #
+      # The ODBC tests connect with DRIVER={ODBC Driver 18 for SQL Server}. The runner image
+      # ships the Visual Studio component Microsoft.VisualStudio.Component.MSODBC.SQL, but the
+      # image readme records only that component's Visual Studio version, never the ODBC driver
+      # version it delivers, and the readme's standalone driver list carries OLE DB drivers
+      # rather than ODBC ones. So probe for the driver by the exact name the connection string
+      # asks for and install only when it is missing: no-op on an image that already has it,
+      # self-repairing on one that does not. The listing also records what the image really
+      # provides, which is otherwise undocumented.
+      - name: Ensure Microsoft ODBC Driver 18 for SQL Server
+        if: matrix.namespace == 'MsSql'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Invoke-WebRequest is very slow on Windows PowerShell while it renders progress.
+          $ProgressPreference = 'SilentlyContinue'
+          $driverName = 'ODBC Driver 18 for SQL Server'
+
+          Write-Host "Registered 64-bit ODBC drivers on this image:"
+          Get-OdbcDriver -Platform '64-bit' | ForEach-Object { Write-Host "  $($_.Name)" }
+
+          if (Get-OdbcDriver -Name $driverName -Platform '64-bit' -ErrorAction SilentlyContinue) {
+            Write-Host "$driverName is already present. Nothing to install."
+            exit 0
+          }
+
+          # x64 only: the ODBC test fixtures (FWLatest, CoreLatest) both run 64-bit. This link
+          # resolves to the latest GA 18.x, so the installed patch version can move without
+          # notice. Pin the download.microsoft.com URL it redirects to if that ever matters.
+          $url = 'https://go.microsoft.com/fwlink/?linkid=2358430'
+          $msi = Join-Path $env:RUNNER_TEMP 'msodbcsql18.msi'
+
+          Write-Host "$driverName not found. Downloading from $url"
+          Invoke-WebRequest -Uri $url -OutFile $msi -UseBasicParsing
+
+          # A wrong or redirected-to-HTML URL yields a small text file that msiexec silently
+          # refuses, so fail here instead of hours later with a confusing IM002 in a test log.
+          $size = (Get-Item $msi).Length
+          Write-Host "Downloaded $size bytes"
+          if ($size -lt 1MB) {
+            throw "Expected an MSI of several MB but got $size bytes. The download URL is probably wrong."
+          }
+
+          $proc = Start-Process msiexec.exe -Wait -PassThru -ArgumentList @(
+            '/i', "`"$msi`"", '/quiet', '/qn', '/norestart', 'IACCEPTMSODBCSQLLICENSETERMS=YES'
+          )
+          if ($proc.ExitCode -ne 0) {
+            throw "msiexec failed with exit code $($proc.ExitCode)."
+          }
+
+          # Assert it registered. Without this the job goes green and the failure resurfaces as
+          # ERROR [IM002] Data source name not found, far away from its cause.
+          if (-not (Get-OdbcDriver -Name $driverName -Platform '64-bit' -ErrorAction SilentlyContinue)) {
+            Write-Host "Registered 64-bit ODBC drivers after install:"
+            Get-OdbcDriver -Platform '64-bit' | ForEach-Object { Write-Host "  $($_.Name)" }
+            throw "$driverName did not register. Try adding ADDLOCAL=ALL to the msiexec arguments."
+          }
+          Write-Host "$driverName installed."
+        shell: powershell
+
       - name: Set up secrets
         env:
           INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
