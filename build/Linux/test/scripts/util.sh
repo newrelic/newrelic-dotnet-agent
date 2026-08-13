@@ -1,5 +1,4 @@
 #!/bin/bash
-source /test/osht.sh
 
 PACKAGE_NAME='newrelic-dotnet-agent'
 
@@ -11,26 +10,34 @@ function check_deb_install_status {
     agent_version="$1"
     install_status=$(dpkg -s "${PACKAGE_NAME}" |grep Status)
     install_version=$(dpkg-query --showformat='${Version}' --show "${PACKAGE_NAME}")
-    IS "$install_status" == "Status: install ok installed"
-    if [ ! -z "$agent_version" ]; then
-        IS "$install_version" == "$agent_version"
+    if [[ "$install_status" != "Status: install ok installed" ]]; then
+        bad "Unexpected dpkg status for ${PACKAGE_NAME}: $install_status"
+    fi
+    if [[ -n "$agent_version" && "$install_version" != "$agent_version" ]]; then
+        bad "Installed version $install_version does not match expected version $agent_version"
     fi
 }
 
 function check_rpm_install_status {
     agent_version="$1"
     install_status=$(rpm -q --qf "%{VERSION}" "${PACKAGE_NAME}")
-    ISNT "$install_status" =~ "is not installed"
-    if [ ! -z "$agent_version" ]; then
-        IS "$agent_version" == "$install_status"
+    if [[ "$install_status" =~ "is not installed" ]]; then
+        bad "Package ${PACKAGE_NAME} is not installed"
+    fi
+    if [[ -n "$agent_version" && "$agent_version" != "$install_status" ]]; then
+        bad "Installed version $install_status does not match expected version $agent_version"
     fi
 }
 
 # install the .deb package
 function install_debian_no_env {
     latest_deb=$(ls -1 /release/${PACKAGE_NAME}*_amd64.deb |tail -n 1)
-    OK -n "$latest_deb"
-    IS "$latest_deb" =~ deb
+    if [[ -z "$latest_deb" ]]; then
+        bad "No .deb package found in /release"
+    fi
+    if [[ ! "$latest_deb" =~ deb ]]; then
+        bad "$latest_deb does not look like a .deb package"
+    fi
     dpkg -i "$latest_deb"
     check_deb_install_status
 }
@@ -38,8 +45,12 @@ function install_debian_no_env {
 # install the .rpm package
 function install_rpm_no_env {
     latest_rpm=$(ls -1 /release/${PACKAGE_NAME}*.x86_64.rpm |tail -n 1)
-    OK -n "$latest_rpm"
-    IS "$latest_rpm" =~ rpm
+    if [[ -z "$latest_rpm" ]]; then
+        bad "No .rpm package found in /release"
+    fi
+    if [[ ! "$latest_rpm" =~ rpm ]]; then
+        bad "$latest_rpm does not look like an .rpm package"
+    fi
     rpm -ivh "$latest_rpm"
     check_rpm_install_status
 }
@@ -67,8 +78,12 @@ function install_tarball {
     pushd "$install_path"
     latest_tarball=$(ls -1 /release/${PACKAGE_NAME}*.tar.gz |tail -n 1)
     echo "latest_tarball=$latest_tarball"
-    OK -n "$latest_tarball"
-    IS "$latest_tarball" =~ tar
+    if [[ -z "$latest_tarball" ]]; then
+        bad "No tarball found in /release"
+    fi
+    if [[ ! "$latest_tarball" =~ tar ]]; then
+        bad "$latest_tarball does not look like a tarball"
+    fi
     tar xvfz "$latest_tarball"
     popd
     export CORECLR_NEW_RELIC_HOME="${install_path}/${PACKAGE_NAME}"
@@ -83,7 +98,9 @@ function add_apt_repo {
     wget -O- https://download.newrelic.com/548C16BF.gpg | apt-key add -
     apt-get update
     cache_search=$(apt-cache search "${PACKAGE_NAME}")
-    IS "$cache_search" =~ "${PACKAGE_NAME}"
+    if [[ ! "$cache_search" =~ ${PACKAGE_NAME} ]]; then
+        bad "${PACKAGE_NAME} was not found in apt-cache search results"
+    fi
 }
 
 function add_yum_repo {
@@ -98,7 +115,9 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-NewRelic
 HERE
     wget -O- https://download.newrelic.com/548C16BF.gpg | tee /etc/pki/rpm-gpg/RPM-GPG-KEY-NewRelic
     cache_search=$(yum search "${PACKAGE_NAME}")
-    ISNT "$cache_search" =~ "Warning"
+    if [[ "$cache_search" =~ Warning ]]; then
+        bad "yum search for ${PACKAGE_NAME} returned a warning: $cache_search"
+    fi
 }
 
 function install_agent_from_repo_no_env {
@@ -129,9 +148,11 @@ function bad {
 }
 
 function verify_no_logs {
-    log_dir="${CORECLR_NEW_RELIC_HOME}/logs"
+    if [[ -z "$CORECLR_NEWRELIC_HOME" ]]; then
+        bad "CORECLR_NEWRELIC_HOME is not set"
+    fi
+    log_dir="${CORECLR_NEWRELIC_HOME}/logs"
     log_file_count=$(ls -A1 "$log_dir" |wc -l)
-    IS "$log_file_count" == 0
     if [[ "$log_file_count" -gt 0 ]]; then
         bad "$log_dir is not empty"
     else
@@ -140,9 +161,8 @@ function verify_no_logs {
 }
 
 function verify_logs_exist {
-    log_dir="${CORECLR_NEW_RELIC_HOME}/logs"
+    log_dir="${CORECLR_NEWRELIC_HOME}/logs"
     log_file_count=$(ls -A1 "$log_dir" |wc -l)
-    IS "$log_file_count" != 0
     if [[ "$log_file_count" -gt 0 ]]; then
         good "Verified log files were created"
     else
@@ -153,7 +173,6 @@ function verify_logs_exist {
 function verify_agent_log_exists {
     app_name="$1"
     logfile_name="$CORECLR_NEW_RELIC_HOME/logs/newrelic_agent_${app_name}.log"
-    OK -e "$logfile_name"
     if [[ -e "$logfile_name" ]]; then
         good "Verified agent log file $logfile_name was created"
     else
@@ -163,7 +182,6 @@ function verify_agent_log_exists {
 
 function verify_agent_log_grep {
     count=$(grep "$1" ${CORECLR_NEW_RELIC_HOME}/logs/* |wc -l)
-    IS "$count" != 0
     if [[ "$count" -gt 0 ]]; then
         good "$1 was in the log files"
     else
