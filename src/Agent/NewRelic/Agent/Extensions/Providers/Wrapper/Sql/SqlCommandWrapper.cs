@@ -83,7 +83,8 @@ public abstract class SqlCommandWrapperBase : IWrapper
 
         var sql = sqlCommand.CommandText ?? string.Empty;
 
-        if (agent.Configuration.TransactionTracerSqlMetadataCommentsEnabled)
+        if (agent.Configuration.TransactionTracerSqlMetadataCommentsEnabled &&
+            !SqlMetadataCommentBuilder.ShouldSkipCommentForCommandType(sqlCommand.CommandType))
         {
             var comment = SqlMetadataCommentBuilder.BuildComment(agent.Configuration.EntityGuid);
             var commentedSql = SqlMetadataCommentBuilder.PrependCommentToSql(sql, comment);
