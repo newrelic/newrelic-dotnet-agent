@@ -571,6 +571,46 @@ public class ContinuousProfilingServiceTests
         Mock.Assert(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Never());
     }
 
+    [Test]
+    public void DrainOnce_after_Dispose_reads_nothing_and_ships_nothing()
+    {
+        // Regression test for the missing _disposed gate: AgentManager disposes CP before the container-
+        // owned Scheduler, so a queued drain tick can fire after Dispose has already joined the native
+        // worker thread. Without the gate it P/Invokes into a dead sampler and ships one last profile.
+        var (service, transport) = NewConnectedService();
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+
+        service.Dispose();
+        service.DrainOnce();
+
+        Mock.Assert(() => _source.ReadBatch(Arg.IsAny<byte[]>()), Occurs.Never(), "a drain after Dispose must not touch the native sample buffer");
+        Mock.Assert(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Never(), "a drain after Dispose must not ship a profile");
+    }
+
+    [Test]
+    public void AgentConnected_landing_after_Dispose_does_not_set_the_endpoint()
+    {
+        // Regression test for the missing _disposed gate in OnAgentConnected. Reproduces the exact race
+        // window -- _disposed already set, but base.Dispose() hasn't yet removed the subscription -- by
+        // publishing the connect from inside the mocked _native.Shutdown(), which Dispose calls after
+        // setting _disposed and before unsubscribing. Without the gate this would set _isConnected and the
+        // profiles endpoint on an already-disposed service, letting a queued drain ship a profile.
+        var transport = Mock.Create<IProfilesTransport>();
+        var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        Mock.Arrange(() => _native.Shutdown()).DoInstead(() =>
+            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo }));
+
+        service.Dispose();
+
+        Mock.Assert(() => transport.UpdateEndpoint(Arg.IsAny<string>()), Occurs.Never(), "a connect landing after _disposed is set must not resolve/set the profiles endpoint");
+    }
+
     #endregion
 
     #region Send-failure backoff

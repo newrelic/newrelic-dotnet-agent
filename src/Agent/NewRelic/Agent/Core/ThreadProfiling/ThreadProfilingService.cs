@@ -26,7 +26,10 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     // Set (optionally via ctor, otherwise post-construction by AgentManager) so the thread profiler can
     // refuse to start while continuous profiling is active. Nullable: no reference wired == no guard.
     private IContinuousProfilingSessionControl _continuousProfilingSessionControl;
-    private ThreadProfilingSampler _sampler;
+    // volatile: assigned on the collector-command thread that starts a session, read on the
+    // continuous-profiling scheduler thread through IsThreadProfilingActive. Without the release/acquire
+    // that read could see a stale null and report "no thread-profiling session" while one is starting.
+    private volatile IThreadProfilingSampler _sampler;
     private int _profileSessionId;
     private DateTime _startSessionTime;
     private DateTime _stopSessionTime;
@@ -73,12 +76,13 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
 
     #region Construction and Initializations
 
-    public ThreadProfilingService(IDataTransportService dataTransportService, INativeMethods nativeMethods, int maxAggregatedNodes = 20000, IContinuousProfilingSessionControl continuousProfilingSessionControl = null)
+    public ThreadProfilingService(IDataTransportService dataTransportService, INativeMethods nativeMethods, int maxAggregatedNodes = 20000, IContinuousProfilingSessionControl continuousProfilingSessionControl = null, IThreadProfilingSampler sampler = null)
     {
         _dataTransportService = dataTransportService;
         _maxAggregatedNodes = maxAggregatedNodes;
         _nativeMethods = nativeMethods;
         _continuousProfilingSessionControl = continuousProfilingSessionControl;
+        _sampler = sampler;
 
         _threadProfilingBucket = new ThreadProfilingBucket(this);
         PruningList = new ArrayList();
@@ -95,10 +99,15 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     }
 
     /// <summary>
-    /// True while a thread-profiling session is in-flight. Read by the continuous-profiling service so it
-    /// can defer its own start rather than run concurrently.
+    /// True while the sampling worker is actually running. Derived from the sampler's own running flag,
+    /// not the reported session id (<see cref="_profileSessionId"/>): the session id is set at request
+    /// time and only cleared at completion time, so it does not track the worker's real lifetime. It can
+    /// latch non-zero if aggregation throws before clearing it (stranding it for the process lifetime),
+    /// and it reads clear the instant a stop request lands even though the worker keeps running until it
+    /// winds down. Read by the continuous-profiling service so it can defer its own start rather than run
+    /// concurrently. Null sampler (no session ever started) reads as not active.
     /// </summary>
-    public bool IsThreadProfilingActive => _profileSessionId != InvalidSessionId;
+    public bool IsThreadProfilingActive => _sampler?.IsRunning == true;
 
     #endregion
 
@@ -180,10 +189,12 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
 
             if (startedNewSession)
             {
-                // Publish the session id first, ahead of the bookkeeping below: it is what
-                // ContinuousProfilingService's reverse guard reads, so the sooner it is visible after the
-                // sampler actually starts, the narrower the concurrent-start window (see the guard comment
-                // above for why the native SuspendMutex, not this ordering, is the real backstop).
+                // The reverse mutual-exclusion guard (ContinuousProfilingService reading
+                // IsThreadProfilingActive) derives liveness from the sampler's own running flag, which the
+                // sampler sets atomically inside Start() before its worker walks any threads -- so it is
+                // already published by the time we get here. The assignments below are session bookkeeping
+                // for the reported wire model, not part of the mutual-exclusion handshake; the native
+                // SuspendMutex remains the real backstop (see the guard comment above).
                 _profileSessionId = profileSessionId;
                 _startSessionTime = DateTime.UtcNow;
                 _numberSamplesInSession = 0;

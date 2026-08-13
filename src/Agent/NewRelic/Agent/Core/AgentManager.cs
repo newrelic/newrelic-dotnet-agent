@@ -163,64 +163,92 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
         EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
 
-        //Initialize the extensions loader with extensions folder based on the the install path
-        ExtensionsLoader.Initialize(AgentInstallConfiguration.InstallPathExtensionsDirectory);
-
-        // Resolve all services once we've ensured that the agent is enabled
-        // The AgentApiImplementation needs to be resolved before the WrapperService, because
-        // resolving the WrapperService triggers an agent connect but it doesn't instantiate
-        // the CustomEventAggregator, so we need to resolve the AgentApiImplementation to
-        // get the CustomEventAggregator instantiated before the connect process is triggered.
-        // If that doesn't happen the CustomEventAggregator will not start its harvest timer
-        // when the agent connect response comes back. The agent DI, startup, and connect
-        // process really needs to be refactored so that it's more explicit in its behavior.
-        var agentApi = _container.Resolve<IAgentApi>();
-        _wrapperService = _container.Resolve<IWrapperService>();
-
-        if (Configuration.OpenTelemetryEnabled)
+        // Everything below starts background work that must be torn down if startup fails partway:
+        // the continuous-profiling native sampler thread, the thread profiler, the connection manager,
+        // and every other service resolved from the container. This whole instance is being constructed
+        // inside AgentSingleton.CreateInstance -- whose catch swaps in the DisabledAgentManager but never
+        // gets a reference to this half-built manager, so it cannot clean any of that up. Guard the
+        // startup sequence here and route a failure through the same Shutdown(false) the config-validation
+        // and shutdown-event paths use, so a throw stops/disposes whatever already started before the
+        // exception falls through to the DisabledAgentManager fallback.
+        try
         {
-            _container.Resolve<OpenTelemetryBridge.Tracing.ActivityBridge>().Start();
+            //Initialize the extensions loader with extensions folder based on the the install path
+            ExtensionsLoader.Initialize(AgentInstallConfiguration.InstallPathExtensionsDirectory);
 
+            // Resolve all services once we've ensured that the agent is enabled
+            // The AgentApiImplementation needs to be resolved before the WrapperService, because
+            // resolving the WrapperService triggers an agent connect but it doesn't instantiate
+            // the CustomEventAggregator, so we need to resolve the AgentApiImplementation to
+            // get the CustomEventAggregator instantiated before the connect process is triggered.
+            // If that doesn't happen the CustomEventAggregator will not start its harvest timer
+            // when the agent connect response comes back. The agent DI, startup, and connect
+            // process really needs to be refactored so that it's more explicit in its behavior.
+            var agentApi = _container.Resolve<IAgentApi>();
+            _wrapperService = _container.Resolve<IWrapperService>();
+
+            if (Configuration.OpenTelemetryEnabled)
+            {
+                _container.Resolve<OpenTelemetryBridge.Tracing.ActivityBridge>().Start();
+
+                if (!bootstrapConfig.ServerlessModeEnabled)
+                {
+                    // We need to resolve the MeterListenerBridge before the connect event is triggered so that
+                    // the MeterListenerBridge is ready to receive the connect event and start listening for
+                    // metrics.
+                    _container.Resolve<OpenTelemetryBridge.Metrics.MeterListenerBridge>().Start();
+                }
+            }
+
+            // Continuous profiling, when enabled, must be constructed -- and therefore subscribed to
+            // AgentConnectedEvent -- BEFORE AttemptAutoStart() below. ConnectionManager.Start() schedules the
+            // actual connect asynchronously (IScheduler.ExecuteOnce, TimeSpan.Zero) rather than connecting
+            // synchronously, so a fast connect can publish AgentConnectedEvent before a later-constructed
+            // subscriber ever attaches; EventBus does not replay missed events, so that subscriber would
+            // silently and permanently miss its connected state with no error logged. Same reason the
+            // MeterListenerBridge is resolved above, before this point. The factory gates on configuration and
+            // swallows any construction failure, returning null -- see ContinuousProfilingServiceFactory for
+            // why that matters here. Mutual exclusion with the thread profiler is wired later in Initialize(),
+            // once ThreadProfilingService also exists.
+            _continuousProfilingService = ContinuousProfilingServiceFactory.TryCreate(_container, Configuration, _agentHealthReporter);
+            _continuousProfilingService?.StartIfEnabled();
+
+            // Attempt to auto start the agent once all services have resolved, except in serverless mode
             if (!bootstrapConfig.ServerlessModeEnabled)
             {
-                // We need to resolve the MeterListenerBridge before the connect event is triggered so that
-                // the MeterListenerBridge is ready to receive the connect event and start listening for
-                // metrics.
-                _container.Resolve<OpenTelemetryBridge.Metrics.MeterListenerBridge>().Start();
+                _container.Resolve<IConnectionManager>().AttemptAutoStart();
             }
+            else
+            {
+                Log.Info("The New Relic agent is operating in serverless mode.");
+            }
+
+            AgentServices.StartServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
+
+            // Setup the internal API first so that AgentApi can use it.
+            InternalApi.SetAgentApiImplementation(agentApi);
+            AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
+
+            Initialize(bootstrapConfig.ServerlessModeEnabled);
+            _isInitialized = true;
         }
-
-        // Continuous profiling, when enabled, must be constructed -- and therefore subscribed to
-        // AgentConnectedEvent -- BEFORE AttemptAutoStart() below. ConnectionManager.Start() schedules the
-        // actual connect asynchronously (IScheduler.ExecuteOnce, TimeSpan.Zero) rather than connecting
-        // synchronously, so a fast connect can publish AgentConnectedEvent before a later-constructed
-        // subscriber ever attaches; EventBus does not replay missed events, so that subscriber would
-        // silently and permanently miss its connected state with no error logged. Same reason the
-        // MeterListenerBridge is resolved above, before this point. The factory gates on configuration and
-        // swallows any construction failure, returning null -- see ContinuousProfilingServiceFactory for
-        // why that matters here. Mutual exclusion with the thread profiler is wired later in Initialize(),
-        // once ThreadProfilingService also exists.
-        _continuousProfilingService = ContinuousProfilingServiceFactory.TryCreate(_container, Configuration, _agentHealthReporter);
-        _continuousProfilingService?.StartIfEnabled();
-
-        // Attempt to auto start the agent once all services have resolved, except in serverless mode
-        if (!bootstrapConfig.ServerlessModeEnabled)
+        catch
         {
-            _container.Resolve<IConnectionManager>().AttemptAutoStart();
+            // Drop the KillAgentEvent subscription so this abandoned manager isn't kept alive (and called)
+            // by the static event bus after we hand back the DisabledAgentManager.
+            EventBus<KillAgentEvent>.Unsubscribe(OnShutdownAgent);
+
+            try
+            {
+                Shutdown(false);
+            }
+            catch
+            {
+                // ignored -- a cleanup failure must never mask the original startup exception below
+            }
+
+            throw;
         }
-        else
-        {
-            Log.Info("The New Relic agent is operating in serverless mode.");
-        }
-
-        AgentServices.StartServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
-
-        // Setup the internal API first so that AgentApi can use it.
-        InternalApi.SetAgentApiImplementation(agentApi);
-        AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
-
-        Initialize(bootstrapConfig.ServerlessModeEnabled);
-        _isInitialized = true;
     }
 
     private void Initialize(bool serverlessModeEnabled)

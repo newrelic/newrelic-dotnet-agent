@@ -78,9 +78,32 @@ public class BufferParserTests
     public void Parse_truncated_buffer_returns_completed_samples_without_throwing()
     {
         var buf = OneSampleBatch("worker", 1, 0, 0, 0, new[] { "F()" });
-        // pass a length that cuts off mid-batch
+        // `length` cuts off exactly at the frame terminator + EndBatch (the last 3 bytes), so the
+        // one sample never finishes reading -- it must not throw out to the caller, and since the
+        // physical array still holds those 3 bytes past `length`, this also proves the reader
+        // won't cross the logical bound to complete it anyway.
         var samples = BufferParser.Parse(buf, buf.Length - 3);
-        Assert.That(samples, Is.Not.Null); // no throw; partial tolerated
+        Assert.That(samples, Is.Empty); // no throw; incomplete sample discarded, not fabricated
+    }
+
+    [Test]
+    public void Parse_logical_length_shorter_than_buffer_stops_before_reading_stale_bytes()
+    {
+        // The physical array is a complete, valid batch -- only `length` is short, cutting off
+        // partway through the thread name's own string bytes. Everything past that cut point is
+        // physically present (the sample's remaining fields), so a field reader that bound-checks
+        // only against the array -- not against `length` -- would happily read through the cut and
+        // fabricate a corrupted name instead of stopping. Position derivation: StartBatch(1) +
+        // version(1) + timestamp(8) + StartSample(1) + charCount header(2) = 13 bytes before the
+        // name's own UTF-16 bytes begin; "workername" is 10 chars = 20 bytes, so cutting at +10
+        // stops exactly halfway through them.
+        var buf = OneSampleBatch("workername", 1, 0, 0, 0, new[] { "F()" });
+        const int nameBytesStart = 13;
+        var cutLength = nameBytesStart + 10;
+
+        var samples = BufferParser.Parse(buf, cutLength);
+
+        Assert.That(samples, Is.Empty); // truncated before the sample completed; no fabricated name
     }
 
     [Test]

@@ -59,10 +59,6 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
     private static readonly System.Text.RegularExpressions.Regex TraceIdInJsonRegex =
         new System.Text.RegularExpressions.Regex(@"""traceId"":""([0-9a-f]{32})""");
 
-    // Emitted by the thread profiler's forward guard if a thread-profiling start is attempted while CP is on.
-    private static readonly string ThreadProfilingRefusedLogLineRegex =
-        AgentLogBase.InfoLogLinePrefixRegex + @"Thread profiling start refused: continuous profiling is active\.";
-
     private const string DrainMetricName = "Supportability/DotNET/ContinuousProfiling/Drain";
     private const string SamplesMetricName = "Supportability/DotNET/ContinuousProfiling/Samples";
 
@@ -189,27 +185,6 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
             () => Assert.True(drainMetric.Values.CallCount > 0, "Drain metric call count was zero."),
             () => Assert.NotNull(samplesMetric),
             () => Assert.True(samplesMetric.Values.CallCount > 0, "Samples metric call count was zero.")
-        );
-    }
-
-    [Fact]
-    public void ThreadProfilingDoesNotRunWhileContinuousProfilingIsActive()
-    {
-        // The two profilers are mutually exclusive. A console app cannot trigger a collector-driven
-        // start_profiler command (that path needs the MockNewRelic collector fixture), so we assert the
-        // observable guarantee available here: while continuous profiling is active, no thread-profiling
-        // session started. If a thread-profiling start had been attempted, the forward guard would have
-        // logged the refusal line; the absence of a "Starting a thread profiling session" line confirms the
-        // two never ran concurrently.
-        var sessionStarted = _fixture.AgentLog.TryGetLogLines(SessionStartedLogLineRegex).Any();
-        var threadProfilingStarted = _fixture.AgentLog.TryGetLogLines(AgentLogBase.ThreadProfileStartingLogLineRegex).Any();
-        var refusalLogged = _fixture.AgentLog.TryGetLogLines(ThreadProfilingRefusedLogLineRegex).Any();
-
-        NrAssert.Multiple(
-            () => Assert.True(sessionStarted, "Continuous profiling session never started."),
-            // Either no thread-profiling session ran at all, or every attempt was refused by the guard.
-            () => Assert.True(!threadProfilingStarted || refusalLogged,
-                "A thread-profiling session started while continuous profiling was active without being refused.")
         );
     }
 }

@@ -65,14 +65,14 @@ public static class BufferParser
                         pos += 8; // timestamp (int64)
                         break;
                     case StartSample:
-                        samples.Add(ReadSample(buffer, ref pos, frameDictionary, version));
+                        samples.Add(ReadSample(buffer, ref pos, frameDictionary, version, length));
                         break;
                     case BatchStatsOpcode:
                         {
-                            var micros = ReadLong(buffer, ref pos);   // microsSuspended (int64)
-                            var threads = ReadInt(buffer, ref pos);   // threads
-                            var frames = ReadInt(buffer, ref pos);    // frames
-                            var skipped = ReadInt(buffer, ref pos);   // skipped
+                            var micros = ReadLong(buffer, ref pos, length);   // microsSuspended (int64)
+                            var threads = ReadInt(buffer, ref pos, length);   // threads
+                            var frames = ReadInt(buffer, ref pos, length);    // frames
+                            var skipped = ReadInt(buffer, ref pos, length);   // skipped
                             stats = new BatchStats(micros, threads, frames, skipped);
                             break;
                         }
@@ -90,23 +90,23 @@ public static class BufferParser
         return samples;
     }
 
-    private static ManagedThreadSample ReadSample(byte[] b, ref int pos, Dictionary<int, string> dict, int version)
+    private static ManagedThreadSample ReadSample(byte[] b, ref int pos, Dictionary<int, string> dict, int version, int length)
     {
-        var threadName = ReadString(b, ref pos);
-        var osThreadId = ReadLong(b, ref pos);
-        var traceHigh = ReadLong(b, ref pos);
-        var traceLow = ReadLong(b, ref pos);
-        var spanId = ReadLong(b, ref pos);
-        var onCpu = version >= 2 && ReadBool(b, ref pos);
+        var threadName = ReadString(b, ref pos, length);
+        var osThreadId = ReadLong(b, ref pos, length);
+        var traceHigh = ReadLong(b, ref pos, length);
+        var traceLow = ReadLong(b, ref pos, length);
+        var spanId = ReadLong(b, ref pos, length);
+        var onCpu = version >= 2 && ReadBool(b, ref pos, length);
 
         var frames = new List<string>();
         while (true)
         {
-            var code = ReadShort(b, ref pos);
+            var code = ReadShort(b, ref pos, length);
             if (code == 0) break;
             if (code < 0)
             {
-                var value = ReadString(b, ref pos);
+                var value = ReadString(b, ref pos, length);
                 dict[-code] = value;
                 frames.Add(value);
             }
@@ -118,40 +118,54 @@ public static class BufferParser
         return new ManagedThreadSample(threadName, osThreadId, traceHigh, traceLow, spanId, frames, onCpu);
     }
 
-    private static bool ReadBool(byte[] b, ref int pos)
+    // `length` is the logical bound for this parse and may be smaller than the physical buffer
+    // (a reused, oversized array). Field reads must stay inside it -- not just inside the array --
+    // so a future writer that ever emits a partial record can't read stale bytes from a prior batch.
+    private static void RequireBound(int pos, int size, int length)
     {
+        if (pos + size > length)
+            throw new IndexOutOfRangeException();
+    }
+
+    private static bool ReadBool(byte[] b, ref int pos, int length)
+    {
+        RequireBound(pos, 1, length);
         var v = b[pos];
         pos += 1;
         return v != 0;
     }
 
-    private static short ReadShort(byte[] b, ref int pos)
+    private static short ReadShort(byte[] b, ref int pos, int length)
     {
+        RequireBound(pos, 2, length);
         var v = (short)((b[pos] << 8) | b[pos + 1]);
         pos += 2;
         return v;
     }
 
-    private static int ReadInt(byte[] b, ref int pos)
+    private static int ReadInt(byte[] b, ref int pos, int length)
     {
+        RequireBound(pos, 4, length);
         var v = 0;
         for (var i = 0; i < 4; i++) v = (v << 8) | b[pos + i];
         pos += 4;
         return v;
     }
 
-    private static long ReadLong(byte[] b, ref int pos)
+    private static long ReadLong(byte[] b, ref int pos, int length)
     {
+        RequireBound(pos, 8, length);
         long v = 0;
         for (var i = 0; i < 8; i++) v = (v << 8) | b[pos + i];
         pos += 8;
         return v;
     }
 
-    private static string ReadString(byte[] b, ref int pos)
+    private static string ReadString(byte[] b, ref int pos, int length)
     {
-        var charCount = ReadShort(b, ref pos);
+        var charCount = ReadShort(b, ref pos, length);
         var byteCount = charCount * 2;
+        RequireBound(pos, byteCount, length);
         var s = Encoding.Unicode.GetString(b, pos, byteCount);
         pos += byteCount;
         return s;

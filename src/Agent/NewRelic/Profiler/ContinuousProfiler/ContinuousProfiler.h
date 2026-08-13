@@ -495,7 +495,19 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                     LogDebug(L"CP: CaptureAllThreads called without ICorProfilerInfo10; skipping sample.");
                     return;
                 }
-                _corProfilerInfo10->SuspendRuntime();
+                const HRESULT suspendHr = _corProfilerInfo10->SuspendRuntime();
+                if (FAILED(suspendHr))
+                {
+                    // A busy suspend (e.g. CORPROF_E_SUSPENSION_IN_PROGRESS -- the CLR's own GC is
+                    // already suspending) means the runtime never actually stopped. Walking it now
+                    // would read a moving target, and ResumeRuntime would resume a suspend we never
+                    // own. Bail out exactly like the missing-ICorProfilerInfo10 case above: publish
+                    // nothing and leave the prior buffer state intact.
+                    LogDebug(L"CP: SuspendRuntime failed: ", std::hex, std::showbase, suspendHr,
+                        std::resetiosflags(std::ios_base::basefield | std::ios_base::showbase),
+                        L"; skipping this tick's sample.");
+                    return;
+                }
 #endif
 
                 const auto suspendStart = std::chrono::steady_clock::now();

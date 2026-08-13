@@ -31,6 +31,8 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
         _nativeMethods = nativeMethods;
     }
 
+    public bool IsRunning => Volatile.Read(ref _workerRunning) == 1;
+
     public bool Start(uint frequencyInMsec, uint durationInMsec, ISampleSink sampleSink, INativeMethods nativeMethods)
     {
         _shutdownEvent.Reset();
@@ -116,7 +118,12 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
             sampleSink.SamplingComplete();
 
             nativeMethods.ShutdownNativeThreadProfiler();
-            _workerRunning = 0;
+
+            // Release write, paired with IsRunning's Volatile.Read: a reader that sees 0 is then also
+            // guaranteed to see the ShutdownNativeThreadProfiler above it. A plain store carries no such
+            // ordering, so the mutual-exclusion guard could observe "not running" while the native
+            // profiler was still being torn down.
+            Volatile.Write(ref _workerRunning, 0);
         }
     }
 

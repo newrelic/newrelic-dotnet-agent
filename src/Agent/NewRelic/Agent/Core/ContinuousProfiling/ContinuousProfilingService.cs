@@ -162,6 +162,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// </summary>
     private void OnAgentConnected(AgentConnectedEvent agentConnectedEvent)
     {
+        // Lock-free volatile read, matching DrainOnce's gate: Dispose only unsubscribes via base.Dispose(),
+        // so a connect can still land in the window after Dispose. Skip it -- setting the endpoint and
+        // flipping _isConnected true post-dispose would let a queued drain tick ship one last profile.
+        if (_disposed)
+            return;
+
         var endpoint = ProfilesEndpointResolver.ResolveFromConnectionInfo(agentConnectedEvent.ConnectInfo);
         if (endpoint == null)
         {
@@ -332,6 +338,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// </summary>
     public void DrainOnce()
     {
+        // Lock-free volatile read (this path deliberately doesn't take _lifecycleLock -- see the locking-
+        // posture note above). Dispose has joined the native worker thread, so a drain landing after it
+        // would P/Invoke into a dead sampler and ship a profile through an already-disposed reporter.
+        if (_disposed)
+            return;
+
         if (Interlocked.CompareExchange(ref _drainInFlight, 1, 0) != 0)
             return; // another drain is already in flight (retune overlap) -- skip this tick rather than race the shared buffer
 

@@ -79,15 +79,64 @@ public class ThreadProfilingServiceTests
     }
 
     [Test]
-    public void IsThreadProfilingActive_ReflectsRunningSession()
+    public void IsThreadProfilingActive_TracksSamplerRunningFlag()
     {
-        Assert.That(((IThreadProfilingStatus)_threadProfilingService).IsThreadProfilingActive, Is.False);
+        var sampler = Mock.Create<IThreadProfilingSampler>();
+        Mock.Arrange(() => sampler.Start(Arg.IsAny<uint>(), Arg.IsAny<uint>(), Arg.IsAny<ISampleSink>(), Arg.IsAny<INativeMethods>())).Returns(true);
+        var service = new ThreadProfilingService(_dataTransportService, _nativeMethods, sampler: sampler);
+        var status = (IThreadProfilingStatus)service;
 
-        _threadProfilingService.StartThreadProfilingSession(1, 100, 1000);
-        Assert.That(((IThreadProfilingStatus)_threadProfilingService).IsThreadProfilingActive, Is.True);
+        Mock.Arrange(() => sampler.IsRunning).Returns(false);
+        Assert.That(status.IsThreadProfilingActive, Is.False);
 
-        _threadProfilingService.StopThreadProfilingSession(1);
-        Assert.That(((IThreadProfilingStatus)_threadProfilingService).IsThreadProfilingActive, Is.False);
+        service.StartThreadProfilingSession(1, 100, 1000);
+        Mock.Arrange(() => sampler.IsRunning).Returns(true);
+        Assert.That(status.IsThreadProfilingActive, Is.True);
+
+        Mock.Arrange(() => sampler.IsRunning).Returns(false);
+        Assert.That(status.IsThreadProfilingActive, Is.False);
+
+        service.Dispose();
+    }
+
+    [Test]
+    public void IsThreadProfilingActive_False_WhenSamplerNotRunning_EvenWithNonZeroSessionId()
+    {
+        // Failure mode (a): a session started (so the reported session id is non-zero) but the sampler
+        // worker is not running -- e.g. PerformAggregation threw before clearing the id, stranding it for
+        // the process lifetime. IsThreadProfilingActive must follow the sampler, not the stranded id, or
+        // continuous profiling's deferred-start guard would refuse to start forever.
+        var sampler = Mock.Create<IThreadProfilingSampler>();
+        Mock.Arrange(() => sampler.Start(Arg.IsAny<uint>(), Arg.IsAny<uint>(), Arg.IsAny<ISampleSink>(), Arg.IsAny<INativeMethods>())).Returns(true);
+        Mock.Arrange(() => sampler.IsRunning).Returns(false);
+        var service = new ThreadProfilingService(_dataTransportService, _nativeMethods, sampler: sampler);
+        var status = (IThreadProfilingStatus)service;
+
+        service.StartThreadProfilingSession(1, 100, 1000); // sets the non-zero reported session id
+
+        Assert.That(status.IsThreadProfilingActive, Is.False);
+
+        service.Dispose();
+    }
+
+    [Test]
+    public void IsThreadProfilingActive_True_AfterStop_WhileSamplerWorkerStillRunning()
+    {
+        // Failure mode (b): a normal stop_profiler clears the reported session id immediately, but the
+        // sampler worker keeps running until it winds down. IsThreadProfilingActive must stay true so
+        // continuous profiling keeps deferring instead of starting concurrently in that window.
+        var sampler = Mock.Create<IThreadProfilingSampler>();
+        Mock.Arrange(() => sampler.Start(Arg.IsAny<uint>(), Arg.IsAny<uint>(), Arg.IsAny<ISampleSink>(), Arg.IsAny<INativeMethods>())).Returns(true);
+        Mock.Arrange(() => sampler.IsRunning).Returns(true); // worker still running after the stop request
+        var service = new ThreadProfilingService(_dataTransportService, _nativeMethods, sampler: sampler);
+        var status = (IThreadProfilingStatus)service;
+
+        service.StartThreadProfilingSession(1, 100, 1000);
+        service.StopThreadProfilingSession(1); // clears the reported session id immediately
+
+        Assert.That(status.IsThreadProfilingActive, Is.True);
+
+        service.Dispose();
     }
 
     [Test]
