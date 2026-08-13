@@ -286,6 +286,23 @@ public sealed class AgentManager : IAgentManager, IDisposable
                 new StopThreadProfilerCommand(_threadProfilingService),
                 new InstrumentationUpdateCommand(instrumentationService)
             );
+
+            // _continuousProfilingService is null only if its own construction threw (see
+            // ContinuousProfilingServiceFactory.TryCreate) -- in that case there is nothing to start/stop,
+            // so the commands are simply not registered; CommandService.ProcessCommands already handles an
+            // unknown command name gracefully (logs + returns an error dictionary) if one arrives anyway.
+            //
+            // Wired to the plain-ack formatter for now -- the DACI's only DECIDED response requirement.
+            // Swap to DetailedContinuousProfilerResponseFormatter here once the DACI's (still-open)
+            // detailed-response section is confirmed; nothing else in this call chain needs to change.
+            if (_continuousProfilingService != null)
+            {
+                var continuousProfilerResponseFormatter = new AckOnlyContinuousProfilerResponseFormatter();
+                commandService.AddCommands(
+                    new StartContinuousProfilerCommand(_continuousProfilingService, continuousProfilerResponseFormatter),
+                    new StopContinuousProfilerCommand(_continuousProfilingService, continuousProfilerResponseFormatter)
+                );
+            }
         }
 
         StartServices();

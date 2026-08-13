@@ -155,6 +155,150 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void StartFromCommand_with_cpu_starts_the_sampler_using_local_config_interval_by_default()
+    {
+        ArrangeEnabled(10000);
+
+        var result = _service.StartFromCommand(new[] { "cpu" }, sampleIntervalMs: null, cpuReportIntervalMs: null);
+
+        Mock.Assert(() => _native.Start(10000), Occurs.Once());
+        Assert.Multiple(() =>
+        {
+            Assert.That(_service.IsActive, Is.True);
+            Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "cpu" }));
+            Assert.That(result.Exceptions, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void StartFromCommand_with_cpu_report_interval_overrides_local_config_and_clamps_to_bounds()
+    {
+        ArrangeEnabled(10000);
+
+        var result = _service.StartFromCommand(new[] { "cpu" }, sampleIntervalMs: null, cpuReportIntervalMs: 500);
+
+        // 500ms is below the 1000ms floor -- clamped up, matching DefaultConfiguration's own clamp.
+        Mock.Assert(() => _native.Start(1000), Occurs.Once());
+        Assert.That(result.SampleIntervalMs, Is.EqualTo(1000));
+        Assert.That(result.CpuReportIntervalMs, Is.EqualTo(1000));
+    }
+
+    [Test]
+    public void StartFromCommand_while_already_active_is_an_idempotent_noop()
+    {
+        ArrangeEnabled(10000);
+        _service.StartFromCommand(new[] { "cpu" }, null, null);
+
+        var result = _service.StartFromCommand(new[] { "cpu" }, sampleIntervalMs: null, cpuReportIntervalMs: 30000);
+
+        // Already running -- a repeat start does not retune, per the spec's idempotent-no-op requirement.
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Once());
+        Assert.That(result.Exceptions, Is.Empty);
+    }
+
+    [Test]
+    public void StartFromCommand_with_heap_reports_not_supported_and_does_not_start_anything()
+    {
+        ArrangeEnabled(10000);
+
+        var result = _service.StartFromCommand(new[] { "heap" }, null, null);
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Assert.Multiple(() =>
+        {
+            Assert.That(_service.IsActive, Is.False);
+            Assert.That(result.Exceptions["heap"], Is.EqualTo("not supported"));
+        });
+    }
+
+    [Test]
+    public void StartFromCommand_with_all_starts_cpu_and_reports_heap_as_not_supported()
+    {
+        ArrangeEnabled(10000);
+
+        var result = _service.StartFromCommand(new[] { "all" }, null, null);
+
+        Mock.Assert(() => _native.Start(10000), Occurs.Once());
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "cpu" }));
+            Assert.That(result.Exceptions["heap"], Is.EqualTo("not supported"));
+        });
+    }
+
+    [Test]
+    public void StartFromCommand_with_unknown_token_reports_it_as_not_supported()
+    {
+        ArrangeEnabled(10000);
+
+        var result = _service.StartFromCommand(new[] { "bogus" }, null, null);
+
+        Assert.That(result.Exceptions["bogus"], Is.EqualTo("not supported"));
+    }
+
+    [Test]
+    public void StartFromCommand_with_empty_include_is_a_query_that_changes_nothing()
+    {
+        ArrangeEnabled(10000);
+
+        var result = _service.StartFromCommand(Array.Empty<string>(), null, null);
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Assert.That(_service.IsActive, Is.False);
+        Assert.That(result.ActiveTypes, Is.Empty);
+    }
+
+    [Test]
+    public void StopFromCommand_with_cpu_stops_an_active_session()
+    {
+        ArrangeEnabled(10000);
+        _service.StartFromCommand(new[] { "cpu" }, null, null);
+
+        var result = _service.StopFromCommand(new[] { "cpu" });
+
+        Mock.Assert(() => _native.Stop(), Occurs.Once());
+        Assert.Multiple(() =>
+        {
+            Assert.That(_service.IsActive, Is.False);
+            Assert.That(result.ActiveTypes, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void StopFromCommand_while_not_active_is_an_idempotent_noop()
+    {
+        ArrangeEnabled(10000);
+
+        var result = _service.StopFromCommand(new[] { "cpu" });
+
+        Mock.Assert(() => _native.Stop(), Occurs.Never());
+        Assert.That(result.Exceptions, Is.Empty);
+    }
+
+    [Test]
+    public void A_command_started_session_is_immune_to_an_unrelated_config_update_until_explicitly_stopped()
+    {
+        ArrangeEnabled(10000);
+        _service.StartFromCommand(new[] { "cpu" }, null, null);
+
+        // Simulate an unrelated config-update event (e.g. a reconnect, or an SSC push for something else)
+        // that would otherwise stop CP because local config still reports it disabled.
+        var disabledConfig = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => disabledConfig.ContinuousProfilingEnabled).Returns(false);
+        _service.OverrideConfigForTesting(disabledConfig);
+        _service.ApplyConfigChange();
+
+        Mock.Assert(() => _native.Stop(), Occurs.Never());
+        Assert.That(_service.IsActive, Is.True);
+
+        // An explicit stop command releases ownership; a subsequent config update can act again.
+        _service.StopFromCommand(new[] { "cpu" });
+        _service.ApplyConfigChange(); // config still says disabled -- this is now a legitimate no-op stop path, already stopped
+
+        Mock.Assert(() => _native.Stop(), Occurs.Once());
+    }
+
+    [Test]
     public void StartLocked_starts_the_native_profiler_at_the_configured_interval()
     {
         ArrangeEnabled(10000);

@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 /// A reconnect that arrives while backing off resumes immediately instead of waiting out the remaining
 /// delay (<see cref="ResumeAfterReconnect"/>), since the reconnect itself is the likely fix.
 /// </summary>
-public class ContinuousProfilingService : ConfigurationBasedService, IContinuousProfilingSessionControl
+public class ContinuousProfilingService : ConfigurationBasedService, IContinuousProfilingSessionControl, IContinuousProfilingCommandTarget
 {
     // Must be >= native's MaxBufferBytes (Profiler/ContinuousProfiler/ContinuousProfiler.h) -- native
     // already caps a batch at that ceiling (truncate + count on its own side), but ReadThreadSamples
@@ -146,6 +146,23 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // visibility -- without it DrainOnce could read a stale 0 and emit a profile with period=0.
     private volatile int _activeIntervalMs;
 
+    // Profile-type tokens ("cpu") currently owned by an agent command rather than local/server config.
+    // ApplyConfigChange must not start/stop/retune a type present here -- only a matching StopFromCommand
+    // call or process restart releases it (see StartFromCommand/StopFromCommand below). Modeled as a set,
+    // not a bool, because the command spec is per-type ("all"/"cpu"/"heap"): today only "cpu" can ever be
+    // a member (heap/allocations isn't implemented), but this generalizes once a second independently
+    // toggleable type exists, without another redesign of the guard.
+    private readonly HashSet<string> _commandControlledTypes = new HashSet<string>();
+
+    private static readonly IReadOnlyDictionary<string, string> EmptyCommandExceptions = new Dictionary<string, string>();
+
+    // Command-provided interval bounds mirror DefaultConfiguration's ContinuousProfilingSamplingIntervalMs
+    // clamp (DefaultConfiguration.cs: MinContinuousProfilingSamplingIntervalMs/MaxContinuousProfilingSamplingIntervalMs,
+    // currently 1000/60000) -- duplicated here because a command-supplied interval is a runtime value that
+    // never flows through IConfiguration, so it can't reuse that private clamp.
+    private const int MinCommandIntervalMs = 1000;
+    private const int MaxCommandIntervalMs = 60000;
+
     // Accessed exclusively via Interlocked.Read/Exchange. It's a 64-bit value written from DrainOnce's
     // scheduler thread AND from EndBackoffProbeIfCurrent/ResumeAfterReconnect (both under _lifecycleLock,
     // but DrainOnce's read+write is NOT), so a plain read/write could tear on 32-bit and races cross-thread.
@@ -233,6 +250,13 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             if (_disposed)
                 return;
 
+            // An agent command owns the cpu bundle until a matching stop command or process restart --
+            // an incidental config-update event (an unrelated SSC push, a reconnect) must not silently
+            // override an operator's explicit start/stop_continuous_profiler command. See
+            // _commandControlledTypes and StartFromCommand/StopFromCommand.
+            if (_commandControlledTypes.Contains(ContinuousProfilingCommandTypes.Cpu))
+                return;
+
             var enabled = _configuration.ContinuousProfilingEnabled;
 
             if (!enabled)
@@ -257,6 +281,99 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 StartLocked(intervalMs);
             }
         }
+    }
+
+    /// <summary>
+    /// Starts (or no-ops if already running) continuous profiling for the requested "include" tokens.
+    /// See <see cref="IContinuousProfilingCommandTarget"/>.
+    /// </summary>
+    public ContinuousProfilingCommandResult StartFromCommand(IReadOnlyList<string> requestedTypes, int? sampleIntervalMs, int? cpuReportIntervalMs)
+    {
+        lock (_lifecycleLock)
+        {
+            if (_disposed || requestedTypes.Count == 0)
+                return BuildCommandResultLocked(EmptyCommandExceptions);
+
+            var exceptions = new Dictionary<string, string>();
+            var startCpuBundle = false;
+
+            foreach (var token in requestedTypes)
+            {
+                ContinuousProfilingCommandTypes.Classify(token, out var startsCpuBundle, out var requestsHeap);
+                startCpuBundle |= startsCpuBundle;
+
+                if (requestsHeap)
+                    exceptions[ContinuousProfilingCommandTypes.Heap] = "not supported";
+                else if (!startsCpuBundle)
+                    exceptions[token] = "not supported"; // unrecognized token
+            }
+
+            if (startCpuBundle)
+            {
+                _commandControlledTypes.Add(ContinuousProfilingCommandTypes.Cpu);
+
+                if (!_isActive)
+                {
+                    var requested = cpuReportIntervalMs ?? sampleIntervalMs ?? _configuration.ContinuousProfilingSamplingIntervalMs;
+                    var clamped = Math.Min(MaxCommandIntervalMs, Math.Max(MinCommandIntervalMs, requested));
+                    StartLocked(clamped);
+                }
+                // else: already running -- idempotent no-op per spec; a repeat start does not retune.
+            }
+
+            return BuildCommandResultLocked(exceptions);
+        }
+    }
+
+    /// <summary>
+    /// Stops (or no-ops if not running) continuous profiling for the requested "include" tokens, and
+    /// releases command ownership of those types back to config control. See
+    /// <see cref="IContinuousProfilingCommandTarget"/>.
+    /// </summary>
+    public ContinuousProfilingCommandResult StopFromCommand(IReadOnlyList<string> requestedTypes)
+    {
+        lock (_lifecycleLock)
+        {
+            if (_disposed || requestedTypes.Count == 0)
+                return BuildCommandResultLocked(EmptyCommandExceptions);
+
+            var exceptions = new Dictionary<string, string>();
+            var stopCpuBundle = false;
+
+            foreach (var token in requestedTypes)
+            {
+                ContinuousProfilingCommandTypes.Classify(token, out var startsCpuBundle, out var requestsHeap);
+                stopCpuBundle |= startsCpuBundle;
+
+                if (requestsHeap)
+                    exceptions[ContinuousProfilingCommandTypes.Heap] = "not supported";
+                else if (!startsCpuBundle)
+                    exceptions[token] = "not supported"; // unrecognized token
+            }
+
+            if (stopCpuBundle)
+            {
+                // Release command ownership regardless of whether it was actually active -- a stop always
+                // hands the type back to config control, matching "stop while not profiling is a no-op
+                // success".
+                _commandControlledTypes.Remove(ContinuousProfilingCommandTypes.Cpu);
+
+                if (_isActive)
+                    StopLocked();
+            }
+
+            return BuildCommandResultLocked(exceptions);
+        }
+    }
+
+    private ContinuousProfilingCommandResult BuildCommandResultLocked(IReadOnlyDictionary<string, string> exceptions)
+    {
+        var activeTypes = _isActive
+            ? new[] { ContinuousProfilingCommandTypes.Cpu }
+            : Array.Empty<string>();
+        var intervalMs = _isActive ? _activeIntervalMs : _configuration.ContinuousProfilingSamplingIntervalMs;
+
+        return new ContinuousProfilingCommandResult(activeTypes, intervalMs, intervalMs, exceptions);
     }
 
     private void StartLocked(int intervalMs)
