@@ -3,6 +3,7 @@
 
 #pragma once
 #include <atomic>
+#include <cstdint>
 #include <cor.h>
 #include <corprof.h>
 
@@ -68,10 +69,11 @@ namespace NewRelic { namespace Profiler {
 
     typedef std::set<xstring_t> FilePaths;
 
-    class CorProfilerCallbackImpl : public ICorProfilerCallback4 {
+    class CorProfilerCallbackImpl : public ICorProfilerCallback10 {
 
     private:
         std::atomic<int> _referenceCount;
+        std::atomic<std::uint64_t> _eventPipeEventsDelivered;
 
 #ifndef PAL_STDCPP_COMPAT
         std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
@@ -80,6 +82,7 @@ namespace NewRelic { namespace Profiler {
     public:
         CorProfilerCallbackImpl()
             : _referenceCount(0)
+            , _eventPipeEventsDelivered(0)
         {
             _systemCalls = std::make_shared<SystemCalls>();
             GetSingletonish() = this;
@@ -177,6 +180,59 @@ namespace NewRelic { namespace Profiler {
         virtual HRESULT __stdcall ReJITError(ModuleID moduleId, mdMethodDef methodId, FunctionID functionId, HRESULT hrStatus) override { return S_OK; }
         virtual HRESULT __stdcall MovedReferences2(ULONG cMovedObjectIDRanges, ObjectID oldObjectIDRangeStart[], ObjectID newObjectIDRangeStart[], SIZE_T cObjectIDRangeLength[]) override { return S_OK; }
         virtual HRESULT __stdcall SurvivingReferences2(ULONG cSurvivingObjectIDRanges, ObjectID objectIDRangeStart[], SIZE_T cObjectIDRangeLength[]) override { return S_OK; }
+
+        // Unimplemented ICorProfilerCallback5
+        virtual HRESULT __stdcall ConditionalWeakTableElementReferences(ULONG cRootRefs, ObjectID keyRefIds[], ObjectID valueRefIds[], GCHandleID rootIds[]) override { return S_OK; }
+
+        // Unimplemented ICorProfilerCallback6
+        virtual HRESULT __stdcall GetAssemblyReferences(const WCHAR* wszAssemblyPath, ICorProfilerAssemblyReferenceProvider* pAsmRefProvider) override { return S_OK; }
+
+        // Unimplemented ICorProfilerCallback7
+        virtual HRESULT __stdcall ModuleInMemorySymbolsUpdated(ModuleID moduleId) override { return S_OK; }
+
+        // Unimplemented ICorProfilerCallback8
+        virtual HRESULT __stdcall DynamicMethodJITCompilationStarted(FunctionID functionId, BOOL fIsSafeToBlock, LPCBYTE pILHeader, ULONG cbILHeader) override { return S_OK; }
+        virtual HRESULT __stdcall DynamicMethodJITCompilationFinished(FunctionID functionId, HRESULT hrStatus, BOOL fIsSafeToBlock) override { return S_OK; }
+
+        // Unimplemented ICorProfilerCallback9
+        virtual HRESULT __stdcall DynamicMethodUnloaded(FunctionID functionId) override { return S_OK; }
+
+        // Unimplemented ICorProfilerCallback10
+        virtual HRESULT __stdcall EventPipeProviderCreated(EVENTPIPE_PROVIDER provider) override { return S_OK; }
+
+        // ICorProfilerCallback10
+        // Invoked by the CLR for every event delivered on an EventPipe session this profiler subscribes to.
+        // Nothing subscribes yet, so in practice this is never called today; it is implemented here so the
+        // class genuinely satisfies (and can advertise) ICorProfilerCallback10.
+        virtual HRESULT __stdcall EventPipeEventDelivered(
+            EVENTPIPE_PROVIDER provider,
+            DWORD eventId,
+            DWORD eventVersion,
+            ULONG cbMetadataBlob,
+            LPCBYTE metadataBlob,
+            ULONG cbEventData,
+            LPCBYTE eventData,
+            LPCGUID pActivityId,
+            LPCGUID pRelatedActivityId,
+            ThreadID eventThread,
+            ULONG numStackFrames,
+            UINT_PTR stackFrames[]) override
+        {
+            // Keep this method allocation-free, non-blocking and free of per-event logging: it runs on the
+            // thread that raised the event, inside the runtime's EventPipe dispatch, and a verbose
+            // AllocationTick subscription delivers events at ~10^5/second. Only the first delivery is
+            // logged, as a one-time "the CLR is calling us" diagnostic.
+            const auto deliveredCount = _eventPipeEventsDelivered.fetch_add(1, std::memory_order_relaxed) + 1;
+
+            if (deliveredCount == 1) {
+                LogDebug(L"First EventPipe event delivered to the profiler. eventId: ", eventId);
+            }
+
+            // TODO(Task 3): route Microsoft-Windows-DotNETRuntime AllocationTick events to AllocationSampler.
+            // Dispatch will key off the provider handle captured when the session is created plus eventId.
+
+            return S_OK;
+        }
 
         // Base profiler initialization method
         virtual HRESULT __stdcall Initialize(IUnknown* pICorProfilerInfoUnk) override
@@ -374,10 +430,10 @@ namespace NewRelic { namespace Profiler {
             {
                 // register for events that we are interested in getting callbacks for
 // SetEventMask2 requires ICorProfilerInfo5. It allows setting the high-order bits of the profiler event mask.
-// 0x8 = COR_PRF_HIGH_DISABLE_TIERED_COMPILATION <- this was introduced in ICorProfilerCallback9 which we're not currently implementing
+// 0x8 = COR_PRF_HIGH_DISABLE_TIERED_COMPILATION
 // see this PR: https://github.com/dotnet/coreclr/pull/14643/files#diff-e7d550d94de30cdf5e7f3a25647a2ae1R626
-// Just passing in the hardcoded 0x8 seems to actually disable tiered compilation,
-// but we should see about actually referencing and implementing ICorProfilerCallback9
+// The hardcoded 0x8 is retained deliberately rather than switched to the corprof.h enum value:
+// it is the shipped, proven behavior and this is not the place to change it.
 
                 CComPtr<ICorProfilerInfo5> _corProfilerInfo5;
                 const DWORD COR_PRF_HIGH_DISABLE_TIERED_COMPILATION = 0x8;
@@ -438,8 +494,12 @@ namespace NewRelic { namespace Profiler {
 
         virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject) override
         {
+            // ICorProfilerCallbackN is a single-inheritance chain, so one vtable satisfies every version
+            // in it -- returning `this` for any of these IIDs is correct. The CLR asks for the highest
+            // version it knows about and only invokes callbacks belonging to the version it gets back,
+            // so ICorProfilerCallback10 must be advertised here for EventPipeEventDelivered to ever fire.
             if (
-                riid == __uuidof(ICorProfilerCallback4) || riid == __uuidof(ICorProfilerCallback3) || riid == __uuidof(ICorProfilerCallback2) || riid == __uuidof(ICorProfilerCallback) || riid == IID_IUnknown) {
+                riid == __uuidof(ICorProfilerCallback10) || riid == __uuidof(ICorProfilerCallback9) || riid == __uuidof(ICorProfilerCallback8) || riid == __uuidof(ICorProfilerCallback7) || riid == __uuidof(ICorProfilerCallback6) || riid == __uuidof(ICorProfilerCallback5) || riid == __uuidof(ICorProfilerCallback4) || riid == __uuidof(ICorProfilerCallback3) || riid == __uuidof(ICorProfilerCallback2) || riid == __uuidof(ICorProfilerCallback) || riid == IID_IUnknown) {
                 *ppvObject = this;
                 this->AddRef();
                 return S_OK;
