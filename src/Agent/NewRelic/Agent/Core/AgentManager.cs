@@ -209,8 +209,20 @@ public sealed class AgentManager : IAgentManager, IDisposable
             // is resolved above, before this point. The factory swallows any construction failure, returning
             // null -- see ContinuousProfilingServiceFactory for why that matters here. Mutual exclusion with
             // the thread profiler is wired later in Initialize(), once ThreadProfilingService also exists.
-            _continuousProfilingService = ContinuousProfilingServiceFactory.TryCreate(_container, Configuration, _agentHealthReporter);
-            _continuousProfilingService?.StartIfEnabled();
+            //
+            // Mirrors the MeterListenerBridge guard above: never construct in serverless mode. In serverless,
+            // AttemptAutoStart() never runs (below) -- the connect that flips _isConnected comes solely from
+            // ConnectionHandler's per-invocation path -- so a constructed-and-started CP would run full
+            // stop-the-world sampling sweeps on every tick with every drain permanently no-op'ing on
+            // !_isConnected until (if ever) that connect arrives: pure overhead, no data ever shipped. Also
+            // forecloses CP's StartFromCommand/StopFromCommand agent commands in serverless (registered only
+            // when _continuousProfilingService != null, below) -- deliberate: this guard blocks the feature
+            // entirely in serverless, not just its default-on path.
+            if (!bootstrapConfig.ServerlessModeEnabled)
+            {
+                _continuousProfilingService = ContinuousProfilingServiceFactory.TryCreate(_container, Configuration, _agentHealthReporter);
+                _continuousProfilingService?.StartIfEnabled();
+            }
 
             // Attempt to auto start the agent once all services have resolved, except in serverless mode
             if (!bootstrapConfig.ServerlessModeEnabled)

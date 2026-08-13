@@ -49,3 +49,12 @@ public class ContinuousProfilingUbuntuArm64ContainerTestFixture : ContinuousProf
 
     public ContinuousProfilingUbuntuArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
 }
+
+public class ContinuousProfilingAlpineX64ContainerTestFixture : ContinuousProfilingContainerTestFixtureBase
+{
+    private const string Dockerfile = "SmokeTestApp/Dockerfile.continuousprofiling";
+    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private const string DistroTag = "alpine";
+
+    public ContinuousProfilingAlpineX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+}

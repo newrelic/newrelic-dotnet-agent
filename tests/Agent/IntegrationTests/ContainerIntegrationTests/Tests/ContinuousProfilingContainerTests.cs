@@ -163,3 +163,13 @@ public class ContinuousProfilingUbuntuArm64ContainerTest : ContinuousProfilingCo
     {
     }
 }
+
+[Trait("Architecture", "amd64")]
+[Trait("Distro", "Alpine")]
+public class ContinuousProfilingAlpineX64ContainerTest : ContinuousProfilingContainerTest<ContinuousProfilingAlpineX64ContainerTestFixture>
+{
+    public ContinuousProfilingAlpineX64ContainerTest(ContinuousProfilingAlpineX64ContainerTestFixture fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}

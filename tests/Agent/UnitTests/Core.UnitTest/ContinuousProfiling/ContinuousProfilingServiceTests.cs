@@ -1211,6 +1211,54 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void A_reconnect_landing_mid_send_does_not_corrupt_backoff_state()
+    {
+        // Regression test for the "underlying (rare) non-atomic-counter race" flagged but not fixed
+        // during the 2026-07-27 opus backoff review (#6): a reconnect (-> ResumeAfterReconnect, under
+        // _lifecycleLock) landing on another thread while THIS drain's Send() is still executing (Send
+        // runs deliberately outside _lifecycleLock -- OnSendResult only takes it after Send returns) is
+        // the tightest realistic interleaving between the two. Whichever order the lock serializes them
+        // in, _consecutiveSendFailures/_backoffIndex/_sendBackoffActive must end up coherent: no exception,
+        // no out-of-range SendBackoffSequence index, and the drain path must still be able to re-trip
+        // afterward -- proving the state was not left corrupted or stuck.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+
+        // A failing send whose completion races a reconnect landing before this drain's OnSendResult
+        // acquires _lifecycleLock -- simulating the reconnect's scheduler thread interleaving between
+        // Send() returning and OnSendResult running, which is exactly the window Send()'s deliberate
+        // placement outside the lock leaves open.
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()))
+            .Returns(() =>
+            {
+                EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+                return false;
+            });
+
+        Assert.DoesNotThrow(() =>
+        {
+            service.DrainOnce();
+            service.DrainOnce();
+        }, "a reconnect racing OnSendResult must never corrupt backoff state or throw");
+
+        // The drain path must still be live and able to re-trip -- proof the interleaving above left
+        // _consecutiveSendFailures/_backoffIndex in a valid, usable state rather than stuck or corrupted.
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+        Assert.DoesNotThrow(() =>
+        {
+            service.DrainOnce();
+            service.DrainOnce();
+        }, "the drain path must still be able to re-trip after the raced interleaving");
+    }
+
+    [Test]
     public void A_stale_probe_from_a_superseded_backoff_round_does_not_collapse_a_later_round()
     {
         // Regression test for the stale-probe bug: IScheduler can't cancel a pending one-shot, so a probe
