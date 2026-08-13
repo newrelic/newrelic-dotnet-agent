@@ -35,6 +35,7 @@
 #include "../SignatureParser/SignatureParser.h"
 #include "../SignatureParser/SignatureFormatting.h"
 #include "../Profiler/CorTokenResolver.h"
+#include "SampleBufferQueue.h"
 #include "SampleBufferWriter.h"
 #include "SuspendMutex.h"
 #include "TraceContextMap.h"
@@ -142,11 +143,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             }
         }
 
-        // Drain one filled sample buffer into the caller's array. This IS the native side of the managed
-        // ISampleSource.ReadBatch contract: claim a filled double-buffer slot, memcpy up to `len` bytes
-        // into `buf`, free the slot, and return the number of bytes written (0 if no buffer is ready or
-        // args are invalid). The managed BufferParser then decodes those bytes. The extern "C" export
-        // that P/Invoke calls wraps this member (Task 5). Never throws.
+        // Drain the oldest filled sample buffer into the caller's array. This IS the native side of the
+        // managed ISampleSource.ReadBatch contract: claim the oldest filled double-buffer slot, memcpy up
+        // to `len` bytes into `buf`, free the slot, and return the number of bytes written (0 if no buffer
+        // is ready or args are invalid). The managed BufferParser then decodes those bytes. The extern "C"
+        // export that P/Invoke calls wraps this member (Task 5). Never throws.
         int32_t ReadThreadSamples(int32_t len, unsigned char* buf) noexcept
         {
             if (buf == nullptr || len <= 0)
@@ -156,28 +157,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
             try
             {
-                std::lock_guard<std::mutex> l(_mtx_buffers);
-                for (auto& slot : _sampleBuffers)
-                {
-                    if (!slot.Filled)
-                    {
-                        continue;
-                    }
-
-                    // Copy up to `len` bytes. A batch larger than the caller's array is truncated (the
-                    // managed parser tolerates a truncated tail, Global Constraint: never throw); the
-                    // slot is freed regardless so the producer can reuse it.
-                    const size_t available = slot.Bytes.size();
-                    const size_t toCopy = available < static_cast<size_t>(len) ? available : static_cast<size_t>(len);
-                    if (toCopy > 0)
-                    {
-                        std::memcpy(buf, slot.Bytes.data(), toCopy);
-                    }
-
-                    slot.Bytes.clear();
-                    slot.Filled = false;
-                    return static_cast<int32_t>(toCopy);
-                }
+                return _sampleBuffers.Read(len, buf);
             }
             catch (...)
             {
@@ -245,9 +225,14 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         using PreallocTypeName = NewRelic::Profiler::ThreadProfiler::PreallocTypeName;
         using PreallocMethodName = NewRelic::Profiler::ThreadProfiler::PreallocMethodName;
 
-        // How many stack frames we support per thread. Walking truncates (keeping the root) beyond this.
-        // Matches ThreadProfiler::MaxStackFramesSupported (ThreadProfiler.h:280).
-        static constexpr size_t MaxStackFramesSupported = 1337;
+        // How many stack frames we support per thread. Walking stops (keeping the leaf-most frames) beyond
+        // this; see StaticStackFrameCallback. Deliberately NOT ThreadProfiler's 1337 -- that value was
+        // inherited by an early copy of this file and never re-derived. This cap is what sizes the two
+        // permanently-resident scratch allocations (_stackwalk = cap StackFrames, ~4.4 KB each, and each of
+        // _capture's ThreadCountForReservation slots reserving cap FunctionIds + cap xstring_t), so 1337 cost
+        // ~12 MB resident for the life of the process, versus roughly 1 MB at 128. Observed managed stacks
+        // average under 5 frames deep, and the deepest depth budgeted for this feature is 60 frames.
+        static constexpr size_t MaxStackFramesSupported = 128;
 
         // A guess at how many threads we will see; used to reserve the per-tick capture vector.
         static constexpr size_t ThreadCountForReservation = 100;
@@ -265,6 +250,9 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         struct StackFrame
         {
             FunctionID functionId{};
+            // Defining module of functionId. Half of the type-name cache key: an mdTypeDef token is only
+            // unique within its own module (see namecache.h).
+            ModuleID moduleId{};
             mdTypeDef typeDef{};
             PreallocTypeName typeName{};
             PreallocMethodName methodName{};
@@ -294,7 +282,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             NameCache& _nameCache;
             StackWalk& _stackwalk;
             StackWalk::iterator _frameNext{};
-            HRESULT _errorCode{};
+            // Set by StaticStackFrameCallback when the stack is deeper than MaxStackFramesSupported and the
+            // walk was aborted on purpose. Lets ProfileAllThreads tell a deliberate abort (frames captured,
+            // keep them) apart from a genuine DoStackSnapshot failure (no frames, drop the thread), without
+            // depending on which HRESULT the CLR maps the abort to.
+            bool _truncated{};
             ThreadID _managedTID;
             ThreadProfile(ThreadID managedTID, ICorProfilerInfo4* corProfilerInfo, NameCache& nameCache, StackWalk& stackwalk) :
                 _corProfilerInfo(corProfilerInfo), _nameCache(nameCache), _stackwalk(stackwalk), _frameNext(std::begin(_stackwalk)), _managedTID(managedTID)
@@ -437,7 +429,18 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // also guards) -- a failure here must never crash or hang the host.
         void CaptureAllThreads()
         {
-            // Preallocate the large per-thread frame buffer ONCE (several MB), reused every tick. Done
+            // BACK-PRESSURE FIRST: if the managed reader has not drained, this tick's batch has nowhere
+            // to go, so skip the whole cycle instead of suspending the runtime, walking every stack and
+            // encoding a batch we would only discard at publish time. Suspending the app to produce
+            // output we know we must drop is the most expensive possible no-op. Safe as a gate because
+            // this thread is the only producer -- see SampleBufferQueue::HasFreeSlot.
+            if (!_sampleBuffers.HasFreeSlot())
+            {
+                LogTrace(L"CP: sample buffers full; skipping tick without suspending (reader has not drained)");
+                return;
+            }
+
+            // Preallocate the per-thread frame buffer ONCE (MaxStackFramesSupported frames), reused every tick. Done
             // here -- outside the suspend window and before taking the shared mutex -- so no allocation
             // ever happens while the runtime is suspended.
             if (!_stackwalk)
@@ -466,6 +469,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             uint32_t failedSnapshotCount = 0;
             uint32_t overflowCount = 0;
             uint32_t exceptionCount = 0;
+            uint32_t truncatedStackCount = 0;
             bool captureThrew = false;
 
             // Wall-clock stamp for the batch, and the suspend-window duration reported in BatchStats.
@@ -513,7 +517,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 const auto suspendStart = std::chrono::steady_clock::now();
                 try
                 {
-                    ProfileAllThreads(failedSnapshotCount, overflowCount, exceptionCount);
+                    ProfileAllThreads(failedSnapshotCount, overflowCount, exceptionCount, truncatedStackCount);
                 }
                 catch (...)
                 {
@@ -565,13 +569,23 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                     static_cast<size_t>(ThreadCountForReservation), L"-slot capture buffer");
             }
 
+            if (truncatedStackCount != 0)
+            {
+                // Honest truncation signal for the OTHER truncation axis: these threads' stacks were deeper
+                // than the per-thread frame cap, so the walk was aborted and only the leaf-most
+                // MaxStackFramesSupported frames were kept. The samples are still published.
+                LogTrace(L"CP: stack depth truncated for ", truncatedStackCount, L" thread(s); kept the leaf-most ",
+                    static_cast<size_t>(MaxStackFramesSupported), L" frame(s)");
+            }
+
             EncodeAndPublish(failedSnapshotCount, batchTimestamp, microsSuspended);
         }
 
         // Encode this tick's captured stacks into the byte-opcode format BufferParser decodes and hand
         // the result to a free double-buffer slot. Runs AFTER ResumeRuntime, so allocation is fine here.
         // Applies back-pressure: if both buffers are still full (the managed reader has not drained),
-        // the tick is DROPPED and logged rather than blocking the app or growing memory.
+        // the batch is DROPPED and logged rather than blocking the app or growing memory. CaptureAllThreads
+        // gates on the same condition before suspending, so this is the residual-race path only.
         void EncodeAndPublish(uint32_t failedSnapshotCount, int64_t batchTimestamp, int64_t microsSuspended)
         {
             try
@@ -612,28 +626,12 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                     static_cast<int32_t>(failedSnapshotCount));
                 writer.WriteEndBatch();
 
-                // Hand the encoded bytes to a free slot; drop (back-pressure) if both are full.
+                // Hand the encoded bytes to a free slot; drop (back-pressure) if both are full. The
+                // CaptureAllThreads gate normally catches saturation before we pay the suspend cost, so
+                // reaching this drop means the queue filled during this tick -- still never blocks.
+                if (!_sampleBuffers.TryPublish(_encodeScratch))
                 {
-                    std::lock_guard<std::mutex> l(_mtx_buffers);
-                    SampleBuffer* freeSlot = nullptr;
-                    for (auto& slot : _sampleBuffers)
-                    {
-                        if (!slot.Filled)
-                        {
-                            freeSlot = &slot;
-                            break;
-                        }
-                    }
-
-                    if (freeSlot == nullptr)
-                    {
-                        LogTrace(L"CP: sample buffers full; dropping tick (reader has not drained)");
-                        _encodeScratch.clear();
-                        return;
-                    }
-
-                    freeSlot->Bytes.swap(_encodeScratch);
-                    freeSlot->Filled = true;
+                    LogTrace(L"CP: sample buffers full; dropping tick (reader has not drained)");
                 }
                 _encodeScratch.clear();
             }
@@ -881,6 +879,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
                 auto& scratch = _resolveScratch;
                 scratch.functionId = functionId;
+                scratch.moduleId = 0;
                 scratch.typeDef = 0;
                 scratch.sigBlobLength = 0;
 
@@ -895,6 +894,13 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 if (scratch.typeDef == 0)
                     return; // no owning type -> leave uncached (AssembleFrameName emits UnknownMethod(<id>))
 
+                // The defining module completes the type-name cache key -- an mdTypeDef token alone is only
+                // unique within its own module. One extra call per cache-missing function, not per frame.
+                ClassID classId = 0;
+                mdToken functionToken = 0;
+                if (FAILED(_corProfilerInfo->GetFunctionInfo(functionId, &classId, &scratch.moduleId, &functionToken)) || scratch.moduleId == 0)
+                    return;
+
                 if (pSigBlob != nullptr && sigBlobLength > 0 && sigBlobLength <= MaxSigBlobBytes)
                 {
                     std::memcpy(scratch.sigBlob.data(), pSigBlob, sigBlobLength);
@@ -902,11 +908,15 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 }
 
                 auto& typeName = scratch.typeName;
-                auto& cachedTypeName = _nameCache.typename_for(scratch.typeDef);
+                const auto cachedTypeName = _nameCache.typename_for(scratch.moduleId, scratch.typeDef);
                 if (cachedTypeName == TypeAndMethodNames::GetUnknownTypeName())
                 {
                     DWORD typeFlags = 0;
-                    metaData->GetTypeDefProps(scratch.typeDef, &typeName.first.front(), static_cast<ULONG>(typeName.first.size()), &typeName.second, &typeFlags, nullptr);
+                    // Bail on failure rather than caching: typeName still holds the PREVIOUS resolve's name
+                    // (only functionId/moduleId/typeDef/sigBlobLength are reset per call), which would
+                    // otherwise be cached under this type's key. Uncached -> UnknownMethod(<id>).
+                    if (FAILED(metaData->GetTypeDefProps(scratch.typeDef, &typeName.first.front(), static_cast<ULONG>(typeName.first.size()), &typeName.second, &typeFlags, nullptr)))
+                        return;
 
                     // GetTypeDefProps returns only the innermost name for a NESTED type (e.g. the compiler
                     // closure "<>c"), dropping the declaring type -- unusable on its own since every type's
@@ -923,7 +933,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 }
 
                 AppendSignature(scratch); // fold the parameter list into the method name
-                _nameCache.insert(scratch.functionId, scratch.typeDef, scratch.typeName, scratch.methodName);
+                _nameCache.insert(scratch.moduleId, scratch.functionId, scratch.typeDef, scratch.typeName, scratch.methodName);
             }
             catch (...)
             {
@@ -1077,12 +1087,14 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // threads land in _capture[0.._capturedCount), each slot updated in place (no emplace_back, no
         // reserve/resize) so nothing here can allocate. A tick with more successfully-walked threads than
         // slots drops the extras (overflowCount) instead of growing the buffer under suspend.
-        void ProfileAllThreads(uint32_t& failedSnapshotCount, uint32_t& overflowCount, uint32_t& exceptionCount)
+        void ProfileAllThreads(uint32_t& failedSnapshotCount, uint32_t& overflowCount, uint32_t& exceptionCount,
+            uint32_t& truncatedStackCount)
         {
             _capturedCount = 0;
             failedSnapshotCount = 0;
             overflowCount = 0;
             exceptionCount = 0;
+            truncatedStackCount = 0;
 
             // _threadList was populated by EnumerateThreadsInto() BEFORE the suspend window opened -- no
             // enumeration or allocation happens here, under suspend.
@@ -1111,7 +1123,15 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                     // A managed thread with no managed frames (e.g. an idle thread-pool thread), or a
                     // thread that died between Enum and snapshot (CORPROF_E_STACKSNAPSHOT_INVALID_TGT_THREAD),
                     // fails here -- record it and skip, never fatal (mirror ThreadProfiler.h:590-596).
-                    if (FAILED(result))
+                    //
+                    // A stack deeper than MaxStackFramesSupported also reports failure
+                    // (CORPROF_E_STACKSNAPSHOT_ABORTED) because our callback deliberately aborted the walk.
+                    // Those frames are good -- keep the sample and count the truncation.
+                    if (threadProfile._truncated)
+                    {
+                        ++truncatedStackCount;
+                    }
+                    else if (FAILED(result))
                     {
                         ++failedSnapshotCount;
                         continue;
@@ -1235,6 +1255,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // name/type/signature resolution is deferred to the post-resume ResolveCapturedFrames pass. ZERO
         // heap allocation, NO metadata calls, NO locks here -- the runtime is suspended (CoreCLR) / the
         // target thread is suspended by DoStackSnapshot. Do not log here (logging can allocate/lock -> deadlock).
+        //
+        // Returning anything other than S_OK makes the CLR abort the walk (ProfilerStackWalkCallback maps a
+        // non-S_OK return to SWA_ABORT, and DoStackSnapshot then returns CORPROF_E_STACKSNAPSHOT_ABORTED),
+        // which is how the overflow path below stops a too-deep walk. Frames already written to the buffer
+        // survive the abort.
         static HRESULT __stdcall StaticStackFrameCallback(uintptr_t functionId, uintptr_t /* instructionPointer */, uintptr_t /* frameInfo */, uint32_t /* contextSize */, uint8_t[] /* context */, void* clientData)
         {
             try
@@ -1243,12 +1268,20 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
                 ThreadProfile& threadProfile = *static_cast<ThreadProfile*>(clientData);
 
-                // We must keep the root of the stack but can afford to lose leaves: if we overflow the
-                // preallocated array, reset to the start and count again (mirror ThreadProfiler.h:678-683).
+                // The CLR walks leaf (last-pushed) frame first, root/Main last, so the frames already in the
+                // buffer when we hit the cap are the leaf-most MaxStackFramesSupported of the stack -- exactly
+                // the end worth keeping, since that is where the CPU time being sampled actually is. Abort the
+                // walk rather than paying the rest of the suspend window for frames we would discard.
+                //
+                // The previous behavior (inherited from ThreadProfiler.h) wrapped _frameNext back to begin() to
+                // keep the root instead. That silently lost frames: ProfileAllThreads reads
+                // [begin, _frameNext), so after a wrap only the ((depth - 1) mod cap) + 1 most recently
+                // written frames were read back -- as few as ONE frame out of an arbitrarily deep stack --
+                // and the sample was still reported as a normal, successful capture with no counter or log.
                 if (threadProfile._frameNext == std::end(threadProfile._stackwalk))
                 {
-                    threadProfile._frameNext = std::begin(threadProfile._stackwalk);
-                    threadProfile._errorCode = StackTooDeep;
+                    threadProfile._truncated = true;
+                    return StackTooDeep;
                 }
 
                 // Record ONLY the FunctionID here. All name/type/signature resolution is deferred to the
@@ -1343,22 +1376,14 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // so it needs no lock of its own.
         std::vector<uint8_t> _encodeScratch;
 
-        // One slot of the producer/consumer double-buffer. Bytes holds an encoded batch; Filled marks
-        // it ready for the managed reader to drain via ReadThreadSamples.
-        struct SampleBuffer
-        {
-            std::vector<uint8_t> Bytes;
-            bool Filled{ false };
-        };
-
         // Hard ceiling on a single encoded batch (fixed max buffer size). A batch that would exceed this
         // is truncated + stat-counted rather than growing without bound.
         static constexpr size_t MaxBufferBytes = 4 * 1024 * 1024;
 
-        // Two-slot double-buffer (mirror OTel cpu_buffer_a/b): the producer fills a free slot after
-        // resume; the managed reader drains a filled slot. When both are filled the producer applies
-        // back-pressure by DROPPING the tick (never blocks the app). Guarded by _mtx_buffers.
-        std::mutex _mtx_buffers;
-        std::array<SampleBuffer, 2> _sampleBuffers;
+        // Two-slot FIFO double-buffer (mirror OTel cpu_buffer_a/b): after resume the producer publishes
+        // this tick's batch into a free slot; the managed reader drains the OLDEST filled slot. When both
+        // slots are filled the producer applies back-pressure by SKIPPING the tick before it suspends
+        // anything (never blocks the app). Owns its own lock -- see SampleBufferQueue.h.
+        SampleBufferQueue _sampleBuffers;
     };
 }}}

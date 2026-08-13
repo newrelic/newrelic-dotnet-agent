@@ -33,16 +33,14 @@ public class ContinuousProfilingServiceFactoryTests
     }
 
     [Test]
-    public void TryCreate_NeverResolvesNativeMethods_WhenContinuousProfilingIsDisabled()
+    public void TryCreate_AlwaysConstructsTheService_RegardlessOfConfiguration()
     {
         Mock.Arrange(() => _configuration.ContinuousProfilingEnabled).Returns(false);
-        Mock.Arrange(() => _container.Resolve<INativeMethods>())
-            .Throws(new InvalidOperationException("INativeMethods must not be resolved while continuous profiling is disabled"));
 
         var result = ContinuousProfilingServiceFactory.TryCreate(_container, _configuration, _agentHealthReporter);
 
-        Assert.That(result, Is.Null);
-        Mock.Assert(() => _container.Resolve<INativeMethods>(), Occurs.Never());
+        Assert.That(result, Is.Not.Null);
+        Mock.Assert(() => _container.Resolve<INativeMethods>(), Occurs.Once());
     }
 
     [Test]

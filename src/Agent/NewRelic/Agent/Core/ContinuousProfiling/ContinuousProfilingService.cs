@@ -36,8 +36,12 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 /// </summary>
 public class ContinuousProfilingService : ConfigurationBasedService, IContinuousProfilingSessionControl
 {
-    // Generous fixed buffer reused across drains; a batch of stack samples is well under this.
-    private const int DrainBufferSize = 1024 * 1024;
+    // Must be >= native's MaxBufferBytes (Profiler/ContinuousProfiler/ContinuousProfiler.h) -- native
+    // already caps a batch at that ceiling (truncate + count on its own side), but ReadThreadSamples
+    // copies min(available, len) and frees the native slot regardless of fit, so a smaller managed
+    // buffer here would silently lose the tail of any batch between the two sizes (BatchStats is
+    // written last, so it's the first casualty). If you change either constant, check the other file.
+    private const int DrainBufferSize = 4 * 1024 * 1024;
 
     // How long to wait before re-attempting a start that was deferred because a thread-profiling
     // session was in-flight. Thread-profiling sessions are short and time-boxed, so a modest retry
@@ -47,6 +51,7 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     private const string SupportabilityDrainMetric = "Supportability/DotNET/ContinuousProfiling/Drain";
     private const string SupportabilitySamplesMetric = "Supportability/DotNET/ContinuousProfiling/Samples";
     private const string SupportabilityErrorMetric = "Supportability/DotNET/ContinuousProfiling/Error";
+    private const string SupportabilityDrainBufferBoundaryMetric = "Supportability/DotNET/ContinuousProfiling/DrainBufferBoundary";
 
     // Send-failure backoff, generally modeled on ConnectionManager.ConnectionRetryBackoffSequence (same
     // values as the collector-response-handling reconnect schedule) -- but, unlike that sequence, this one
@@ -392,6 +397,17 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                     return;
                 }
 
+                // The managed buffer matches native's own cap (see DrainBufferSize), so this can't fire
+                // today -- native already truncates to at most that many bytes before ReadThreadSamples
+                // ever copies. It's a tripwire against the two constants drifting apart again: if native's
+                // cap is ever raised past ours without a matching change here, this is what would catch
+                // the resulting silent loss of BatchStats/tail samples instead of shipping corrupted data.
+                if (bytesRead >= _drainBuffer.Length)
+                {
+                    Log.Debug("[ContinuousProfiling] ReadBatch filled the entire {0}-byte drain buffer; the batch may have been truncated.", _drainBuffer.Length);
+                    _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilityDrainBufferBoundaryMetric);
+                }
+
                 var samples = BufferParser.Parse(_drainBuffer, bytesRead, out var batchStats);
 
                 // Surface the native BatchStats for CP overhead/fidelity analysis (and OTel FinalStats parity):
@@ -447,7 +463,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         }
         finally
         {
-            _drainInFlight = 0;
+            // Interlocked, matching the acquire side's CompareExchange above -- a plain store is not a
+            // full barrier on every platform (arm64 permits reordering a plain store ahead of the writes
+            // this drain just did to _drainBuffer), which could let the next tick's CompareExchange
+            // succeed before those writes are visible to it. x86/x64 TSO happens to mask this, which is
+            // why a plain store here was never observed to fail.
+            Interlocked.Exchange(ref _drainInFlight, 0);
         }
     }
 

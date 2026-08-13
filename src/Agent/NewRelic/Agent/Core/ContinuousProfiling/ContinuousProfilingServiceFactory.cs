@@ -11,28 +11,26 @@ using NewRelic.Agent.Extensions.Logging;
 namespace NewRelic.Agent.Core.ContinuousProfiling;
 
 /// <summary>
-/// Builds the continuous-profiling object graph for <see cref="AgentManager"/>. Continuous profiling is
-/// a prototype feature that is off by default, and <c>AgentManager</c>'s own construction is wrapped in
-/// a catch-all that swaps in the <c>DisabledAgentManager</c> -- so an unguarded throw from anything in
-/// this graph (e.g. a P/Invoke resolution failure resolving <see cref="INativeMethods"/>) would cost a
-/// customer who never opted in their entire telemetry pipeline. Hence: gate on config first, then
-/// catch-log-continue so the worst case degrades to "no continuous profiling" instead of "no agent."
+/// Builds the continuous-profiling object graph for <see cref="AgentManager"/>. Construction is always
+/// attempted regardless of configuration, matching the convention every other native-adjacent service in
+/// the agent follows (<c>ThreadProfilingService</c>, <c>SamplerFactory</c>, the GC/CPU/memory samplers,
+/// <c>MeterListenerBridge</c>): construct unconditionally, defer the risky/expensive work to a method
+/// invoked later, and react to live config via <c>ConfigurationBasedService.OnConfigurationUpdated</c>.
+/// Nothing built here touches native code -- <see cref="NativeContinuousProfilerSampleSource"/>'s ctor
+/// just stores an <see cref="INativeMethods"/> reference, and .NET does not bind a P/Invoke's native
+/// entry point until the method is actually called, which only happens inside
+/// <see cref="ContinuousProfilingService"/>'s own try/catch around <c>_native.Start</c>. The try/catch
+/// below is cheap insurance around construction, not a safety net for a known risk.
 /// </summary>
 public static class ContinuousProfilingServiceFactory
 {
     /// <summary>
-    /// Returns a constructed <see cref="ContinuousProfilingService"/>, or <c>null</c> when continuous
-    /// profiling is disabled by configuration or its construction failed. Callers must treat a null
-    /// result as "no continuous profiling for the lifetime of this process."
+    /// Returns a constructed <see cref="ContinuousProfilingService"/>, or <c>null</c> if construction
+    /// failed. Callers must treat a null result as "no continuous profiling for the lifetime of this
+    /// process."
     /// </summary>
     public static ContinuousProfilingService TryCreate(IContainer container, IConfiguration configuration, IAgentHealthReporter agentHealthReporter)
     {
-        if (!configuration.ContinuousProfilingEnabled)
-        {
-            Log.Debug("[ContinuousProfiling] Continuous profiling is disabled by configuration; it will not be initialized. Enabling it later via a live newrelic.config change requires a process restart to take effect.");
-            return null;
-        }
-
         try
         {
             // Plan B wires the native sampler-backed source, which both drives the native lifecycle

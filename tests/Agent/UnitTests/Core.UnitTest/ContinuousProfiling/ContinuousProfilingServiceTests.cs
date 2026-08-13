@@ -210,6 +210,28 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void A_service_constructed_while_disabled_can_still_be_live_enabled_later()
+    {
+        // Regression test: the factory now always constructs the service, even when continuous profiling
+        // is disabled at startup. This mirrors that -- construction (via SetUp) plus a disabled config --
+        // and proves the object still reacts to a later live config change, exactly as ApplyConfigChange
+        // is invoked from OnConfigurationUpdated for every other config-reactive service.
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(false);
+        _service.OverrideConfigForTesting(_config);
+
+        _service.StartIfEnabled();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Assert.That(_service.IsActive, Is.False);
+
+        ArrangeEnabled(10000);
+        _service.ApplyConfigChange();
+
+        Mock.Assert(() => _native.Start(10000), Occurs.Once());
+        Assert.That(_service.IsActive, Is.True);
+    }
+
+    [Test]
     public void ApplyConfigChange_enabling_from_disabled_starts()
     {
         Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(false);
@@ -301,6 +323,30 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void Drain_tick_that_fills_the_entire_drain_buffer_reports_the_boundary_metric()
+    {
+        // Simulates native having filled (or exceeded, then been clamped by ReadBatch itself) the whole
+        // managed buffer -- the tripwire for the two buffer-size constants drifting apart again.
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) => dest.Length);
+
+        _service.DrainOnce();
+
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/DrainBufferBoundary"), Occurs.Once());
+    }
+
+    [Test]
+    public void Drain_tick_with_a_small_batch_does_not_report_the_boundary_metric()
+    {
+        ArrangeEnabled(10000);
+        _service.StartIfEnabled();
+        ArrangeReadableBatch();
+
+        _service.DrainOnce();
+
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/DrainBufferBoundary"), Occurs.Never());
+    }
+
+    [Test]
     public void Drain_tick_never_throws_when_source_throws()
     {
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Throws(new InvalidOperationException("boom"));
@@ -357,6 +403,22 @@ public class ContinuousProfilingServiceTests
 
         Assert.That(innerDrainRan, Is.True, "the test setup itself should have triggered the nested call");
         Assert.That(readCount, Is.EqualTo(1), "the nested/concurrent DrainOnce must not have read the buffer a second time");
+    }
+
+    [Test]
+    public void DrainOnce_releases_the_in_flight_guard_so_the_next_tick_is_not_skipped()
+    {
+        // The release (now Interlocked.Exchange, matching the acquire side's CompareExchange) must still
+        // clear the guard back to "idle" so a normal, non-overlapping next tick is never mistaken for a
+        // still-in-flight drain and skipped.
+        ArrangeEnabled(10000);
+        _service.StartIfEnabled();
+        ArrangeReadableBatch();
+
+        _service.DrainOnce();
+        _service.DrainOnce();
+
+        Mock.Assert(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Exactly(2));
     }
 
     [Test]

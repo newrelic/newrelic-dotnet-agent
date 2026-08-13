@@ -200,16 +200,15 @@ public sealed class AgentManager : IAgentManager, IDisposable
                 }
             }
 
-            // Continuous profiling, when enabled, must be constructed -- and therefore subscribed to
-            // AgentConnectedEvent -- BEFORE AttemptAutoStart() below. ConnectionManager.Start() schedules the
-            // actual connect asynchronously (IScheduler.ExecuteOnce, TimeSpan.Zero) rather than connecting
-            // synchronously, so a fast connect can publish AgentConnectedEvent before a later-constructed
-            // subscriber ever attaches; EventBus does not replay missed events, so that subscriber would
-            // silently and permanently miss its connected state with no error logged. Same reason the
-            // MeterListenerBridge is resolved above, before this point. The factory gates on configuration and
-            // swallows any construction failure, returning null -- see ContinuousProfilingServiceFactory for
-            // why that matters here. Mutual exclusion with the thread profiler is wired later in Initialize(),
-            // once ThreadProfilingService also exists.
+            // Continuous profiling must be constructed -- and therefore subscribed to AgentConnectedEvent --
+            // BEFORE AttemptAutoStart() below. ConnectionManager.Start() schedules the actual connect
+            // asynchronously (IScheduler.ExecuteOnce, TimeSpan.Zero) rather than connecting synchronously, so
+            // a fast connect can publish AgentConnectedEvent before a later-constructed subscriber ever
+            // attaches; EventBus does not replay missed events, so that subscriber would silently and
+            // permanently miss its connected state with no error logged. Same reason the MeterListenerBridge
+            // is resolved above, before this point. The factory swallows any construction failure, returning
+            // null -- see ContinuousProfilingServiceFactory for why that matters here. Mutual exclusion with
+            // the thread profiler is wired later in Initialize(), once ThreadProfilingService also exists.
             _continuousProfilingService = ContinuousProfilingServiceFactory.TryCreate(_container, Configuration, _agentHealthReporter);
             _continuousProfilingService?.StartIfEnabled();
 
@@ -260,15 +259,20 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
         _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
 
-        // Mutually exclude the two profilers. ContinuousProfilingService, if enabled, was already
-        // constructed (and started, and subscribed to AgentConnectedEvent) earlier in Start(), before
-        // AttemptAutoStart() -- see the comment there for why. The references point both ways, so we wire
-        // them here, post-construction, rather than through constructors -- mutual constructor injection
-        // would be a construction cycle. The thread profiler refuses to start while continuous profiling is
-        // active; continuous profiling defers its start while a thread-profiling session is in-flight.
-        // A disabled or failed-to-construct continuous profiler leaves the field null, which the thread
-        // profiler's forward guard already treats as "no continuous profiling running."
+        // Mutually exclude the two profilers. ContinuousProfilingService was already constructed (and
+        // started, and subscribed to AgentConnectedEvent) earlier in Start(), before AttemptAutoStart() --
+        // see the comment there for why. The references point both ways, so we wire them here,
+        // post-construction, rather than through constructors -- mutual constructor injection would be a
+        // construction cycle. The thread profiler refuses to start while continuous profiling is active;
+        // continuous profiling defers its start while a thread-profiling session is in-flight.
+        // ContinuousProfilingService is always constructed now (a disabled instance is simply inactive,
+        // mirroring how its own IsActive/IsThreadProfilingActive guards already key off state rather than
+        // null-ness) -- a failed construction still leaves the field null, which the thread profiler's
+        // forward guard already treats as "no continuous profiling running."
         _threadProfilingService.SetContinuousProfilingSessionControl(_continuousProfilingService);
+        // ContinuousProfilingServiceFactory.TryCreate can still return null if construction itself threw
+        // (its own catch-log-return-null block) -- a disabled instance is always constructed now, but a
+        // *failed* construction is not, and must not crash agent startup over a feature nobody asked for.
         if (_continuousProfilingService != null)
             _continuousProfilingService.ThreadProfilingStatus = _threadProfilingService;
 
