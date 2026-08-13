@@ -948,14 +948,26 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 // Both sample types are read into the SAME buffer, sequentially -- and the allocation source
                 // is read repeatedly, so a single drain buffer serves several reads in a row. Deliberate: the buffer is
                 // sized for native's 4 MB thread-batch cap, and a second dedicated buffer would double that
-                // permanent per-process footprint for allocation batches native caps at 256 KB
+                // permanent per-process footprint for allocation batches native caps at 128 KB
                 // (AllocationSampler::MaxAllocationBufferBytes). It is safe because the reads are strictly
                 // sequential and each parse fully materializes its results before the next read overwrites the
                 // bytes -- BufferParser copies every string out (Encoding.Unicode.GetString), so no parsed
                 // object aliases the buffer -- and because _drainInFlight already makes this the only drain
                 // touching it.
+                //
+                // Gated on _isActive for the same reason the allocation read below is gated on
+                // _allocationActive: the shared drain timer can be armed by EITHER sampler, so in an
+                // allocation-only configuration (which this feature supports, and which its own integration
+                // test uses) an ungated read would P/Invoke into a never-started thread sampler on every tick
+                // for the life of the process.
+                //
+                // Nothing is lost by skipping a stopped sampler's residual batch: StopLocked clears
+                // _activeIntervalMs along with _isActive, so periodNanos is 0 by the time such a batch could be
+                // drained and OtlpProfileBuilder emits no cpu/off_cpu profile without a period -- those samples
+                // were already unreportable. It also closes the one path that could ship a profile-LESS payload
+                // (residual thread samples + no allocation samples + no period => a request with zero profiles).
                 var samples = EmptyThreadSamples;
-                if (TryReadIntoDrainBuffer(_sampleSource, out var bytesRead))
+                if (_isActive && TryReadIntoDrainBuffer(_sampleSource, out var bytesRead))
                 {
                     samples = BufferParser.Parse(_drainBuffer, bytesRead, out var batchStats);
 
@@ -968,9 +980,10 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                             batchStats.MicrosSuspended, batchStats.Threads, batchStats.Frames, batchStats.Skipped, CountOnCpu(samples), samples.Count);
                 }
 
-                // Gated on _allocationActive, unlike the thread read above: the drain timer can be armed by
-                // the thread sampler alone, and in that (default) case an ungated read would P/Invoke into a
-                // never-started allocation sampler on every single tick for the life of the process.
+                // Gated on _allocationActive, the mirror of the thread read's _isActive gate above: the drain
+                // timer can be armed by the thread sampler alone, and in that (default) case an ungated read
+                // would P/Invoke into a never-started allocation sampler on every tick for the life of the
+                // process.
                 var allocationSamples = EmptyAllocationSamples;
                 var allocationSamplesDropped = 0;
                 if (_allocationActive)

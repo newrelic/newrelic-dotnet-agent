@@ -226,7 +226,7 @@ public static class OtlpProfileBuilder
                 // rather than wrap: an unchecked cast of a garbage/misparsed size would emit a NEGATIVE byte
                 // count, which is meaningless to the ingest.
                 var allocatedSize = allocation.AllocatedSize > long.MaxValue ? long.MaxValue : (long)allocation.AllocatedSize;
-                resolvedAllocations.Add(new ResolvedAllocationSample(stackIndex, threadIdAttr, threadNameAttr, typeNameAttr, linkIndex, allocatedSize));
+                resolvedAllocations.Add(new ResolvedAllocationSample(stackIndex, threadIdAttr, threadNameAttr, typeNameAttr, linkIndex, allocatedSize, allocation.TimestampMillis));
             }
 
             if (resolvedAllocations.Count > 0)
@@ -326,7 +326,12 @@ public static class OtlpProfileBuilder
         public readonly int LinkIndex;
         public readonly long AllocatedSize;
 
-        public ResolvedAllocationSample(int stackIndex, int threadIdAttr, int threadNameAttr, int typeNameAttr, int linkIndex, long allocatedSize)
+        // When the allocation actually happened (native's AllocationTick timestamp, ms since the UNIX epoch),
+        // carried through so each emitted Sample can stamp its own event time instead of inheriting the drain's
+        // window. See BuildAllocationProfile.
+        public readonly long TimestampMillis;
+
+        public ResolvedAllocationSample(int stackIndex, int threadIdAttr, int threadNameAttr, int typeNameAttr, int linkIndex, long allocatedSize, long timestampMillis)
         {
             StackIndex = stackIndex;
             ThreadIdAttr = threadIdAttr;
@@ -334,6 +339,7 @@ public static class OtlpProfileBuilder
             TypeNameAttr = typeNameAttr;
             LinkIndex = linkIndex;
             AllocatedSize = allocatedSize;
+            TimestampMillis = timestampMillis;
         }
     }
 
@@ -344,6 +350,15 @@ public static class OtlpProfileBuilder
     // No period_type/period is set: allocation sampling is event-driven, so there is no sampling interval to
     // report. (BuildProfile's `periodNanos > 0` gate models the same "omit when not applicable" rule for the
     // timer-driven profiles; this is a separate function so the CPU path keeps its own shape.)
+    //
+    // Each Sample DOES carry its own timestamps_unix_nano -- the one place in this builder that does. It is
+    // load-bearing, not decoration: a drain can deliver a backlog spanning MANY intervals (batches accumulated
+    // under back-pressure survive the pre-connect window and send-backoff pauses of up to 300s), and the
+    // profile-level [time_unix_nano, +duration_nano) window belongs to the DRAIN, not to the allocations. Without
+    // a per-sample time, every sample in such a backlog is attributed to the moment it was drained: an
+    // allocation-rate chart shows a spike at drain time and a hole where the workload actually allocated. One
+    // timestamp per value, per the proto ("If both fields are populated, they MUST contain the same number of
+    // elements"). The cpu/off_cpu profiles have no equivalent per-sample time to report, so they emit none.
     private static Profile BuildAllocationProfile(ProfilesDictionary dictionary, Dictionary<string, int> stringTable,
         long startUnixNano, long durationNano, string sampleTypeName, string sampleTypeUnit,
         List<ResolvedAllocationSample> resolved, System.Func<ResolvedAllocationSample, long> valueForSample)
@@ -363,6 +378,7 @@ public static class OtlpProfileBuilder
         {
             var protoSample = new Sample { StackIndex = r.StackIndex, LinkIndex = r.LinkIndex };
             protoSample.Values.Add(valueForSample(r));
+            AddSampleTimestamp(protoSample, r.TimestampMillis);
             protoSample.AttributeIndices.Add(r.ThreadIdAttr);
             protoSample.AttributeIndices.Add(r.ThreadNameAttr);
             protoSample.AttributeIndices.Add(r.TypeNameAttr);
@@ -370,6 +386,22 @@ public static class OtlpProfileBuilder
         }
 
         return profile;
+    }
+
+    // Stamps one allocation Sample with the time the allocation actually happened (see BuildAllocationProfile
+    // for why that is not the drain's window). Called once per emitted Sample, so allocated_objects and
+    // allocated_space each carry their own copy -- Sample.timestamps_unix_nano is per-Sample, and the two
+    // profiles hold distinct Sample messages for the same event.
+    private static void AddSampleTimestamp(Sample protoSample, long timestampMillis)
+    {
+        // Only a real timestamp is emitted. A non-positive value cannot have come from the native encoder
+        // (it stamps every sample off the clock), so it means a malformed/unset value: 0 would place the
+        // sample at the epoch and a negative one would wrap through the unsigned cast into the year 584 --
+        // both worse for a consumer than falling back to the profile-level window. Leaving
+        // timestamps_unix_nano empty for such a sample is spec-legal: `values` is always populated, and the
+        // "same number of elements" rule only applies when BOTH fields are.
+        if (timestampMillis > 0)
+            protoSample.TimestampsUnixNano.Add((ulong)timestampMillis * 1_000_000UL);
     }
 
     // Emits one Profile (off_cpu:nanoseconds or cpu:nanoseconds) from the already-resolved samples, applying

@@ -442,6 +442,11 @@ public class ContinuousProfilingServiceTests
     [Test]
     public void Drain_tick_with_no_data_does_not_send()
     {
+        // Started, because the thread-sample read is gated on an active session (an allocation-only
+        // deployment must not P/Invoke into a never-started thread sampler every tick). Without the start
+        // this would assert nothing: the read would be skipped and "no data" would be true by default.
+        ArrangeEnabled(10000);
+        _service.StartIfEnabled();
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
 
         _service.DrainOnce();
@@ -509,6 +514,9 @@ public class ContinuousProfilingServiceTests
     [Test]
     public void Drain_tick_with_bytesRead_exceeding_buffer_length_is_discarded()
     {
+        // Started so the gated thread-sample read actually happens (see Drain_tick_with_no_data_does_not_send).
+        ArrangeEnabled(10000);
+        _service.StartIfEnabled();
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) => dest.Length + 1);
 
         Assert.DoesNotThrow(() => _service.DrainOnce());
@@ -520,6 +528,9 @@ public class ContinuousProfilingServiceTests
     {
         // Simulates native having filled (or exceeded, then been clamped by ReadBatch itself) the whole
         // managed buffer -- the tripwire for the two buffer-size constants drifting apart again.
+        // Started so the gated thread-sample read actually happens (see Drain_tick_with_no_data_does_not_send).
+        ArrangeEnabled(10000);
+        _service.StartIfEnabled();
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) => dest.Length);
 
         _service.DrainOnce();
@@ -542,6 +553,10 @@ public class ContinuousProfilingServiceTests
     [Test]
     public void Drain_tick_never_throws_when_source_throws()
     {
+        // Started so the gated thread-sample read actually happens (see Drain_tick_with_no_data_does_not_send)
+        // and the source therefore gets the chance to throw.
+        ArrangeEnabled(10000);
+        _service.StartIfEnabled();
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Throws(new InvalidOperationException("boom"));
 
         Assert.DoesNotThrow(() => _service.DrainOnce());
@@ -844,6 +859,10 @@ public class ContinuousProfilingServiceTests
         // so this proves the pre-connect gate, not just "nothing to drain."
         using var service = new ContinuousProfilingService(_source, _native, _allocationSource, _transport, _scheduler, _health);
 
+        // Sampling IS started (it is decoupled from connect, which is the whole point of the pre-connect
+        // gate), so the read is not skipped by the session gate -- only by the pre-connect one.
+        EnableAndStart(service);
+
         service.DrainOnce();
 
         Mock.Assert(() => _source.ReadBatch(Arg.IsAny<byte[]>()), Occurs.Never());
@@ -946,6 +965,8 @@ public class ContinuousProfilingServiceTests
     {
         var (service, transport) = NewConnectedService();
         using var _ = service;
+        // Started so the gated thread-sample read happens and a real send (and failure) can occur.
+        EnableAndStart(service);
         ArrangeReadableBatch();
         Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
 
@@ -960,6 +981,8 @@ public class ContinuousProfilingServiceTests
     {
         var (service, transport) = NewConnectedService();
         using var _ = service;
+        // Started so the gated thread-sample read happens and a real send (and failure) can occur.
+        EnableAndStart(service);
         ArrangeReadableBatch();
         Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
 
@@ -976,6 +999,8 @@ public class ContinuousProfilingServiceTests
     {
         var (service, transport) = NewConnectedService();
         using var _ = service;
+        // Started so the gated thread-sample read happens and a real send (and throw) can occur.
+        EnableAndStart(service);
         ArrangeReadableBatch();
         Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()))
             .Throws(new InvalidOperationException("send failed"));
@@ -1032,6 +1057,9 @@ public class ContinuousProfilingServiceTests
     {
         var (service, transport) = NewConnectedService();
         using var _ = service;
+        // Started so the first two drains really read/send; the third drain is then skipped by the backoff
+        // gate alone (_isActive stays true across a backoff pause, so the session gate is not what stops it).
+        EnableAndStart(service);
 
         var readCount = 0;
         var batch = OneSampleBatch("worker-1", 1, 0, 0, 0, new[] { "F()" });

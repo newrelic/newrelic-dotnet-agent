@@ -4699,7 +4699,7 @@ public class DefaultConfigurationTests
         _localConfig.continuousProfiling.enabled = threadSamplingEnabled;
         _localConfig.continuousProfiling.allocation.enabled = allocationEnabled;
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         return defaultConfig.ContinuousProfilingAllocationEnabled;
     }
 
@@ -4714,7 +4714,7 @@ public class DefaultConfigurationTests
         _localConfig.continuousProfiling.enabled = threadSamplingEnabled;
         _localConfig.continuousProfiling.allocation.enabled = true;
 
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(_defaultConfig.ContinuousProfilingAllocationEnabled, Is.False);
     }
@@ -4729,7 +4729,7 @@ public class DefaultConfigurationTests
         _localConfig.continuousProfiling.allocation.enabled = true;
         _serverConfig.RpmConfig.ContinuousProfilingEnabled = false;
 
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(_defaultConfig.ContinuousProfilingAllocationEnabled, Is.False);
     }
@@ -4743,7 +4743,7 @@ public class DefaultConfigurationTests
         _localConfig.continuousProfiling.allocation.enabled = false;
         _serverConfig.RpmConfig.ContinuousProfilingEnabled = true;
 
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(_defaultConfig.ContinuousProfilingAllocationEnabled, Is.False);
     }
@@ -4764,7 +4764,7 @@ public class DefaultConfigurationTests
             _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingAllocationEnabled", value = appSettingsValue });
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_ENABLED")).Returns(envValue);
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         return defaultConfig.ContinuousProfilingAllocationEnabled;
     }
 
@@ -4797,7 +4797,7 @@ public class DefaultConfigurationTests
             _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingAllocationMaxSamplesPerMinute", value = appSettingsValue });
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_MAX_SAMPLES_PER_MINUTE")).Returns(envValue);
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         return defaultConfig.ContinuousProfilingAllocationMaxSamplesPerMinute;
     }
 

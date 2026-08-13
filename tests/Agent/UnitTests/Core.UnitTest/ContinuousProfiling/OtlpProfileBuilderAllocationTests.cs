@@ -343,6 +343,92 @@ public class OtlpProfileBuilderAllocationTests
     }
 
     [Test]
+    public void Build_allocation_sample_carries_its_own_capture_timestamp_in_both_profiles()
+    {
+        // Sample.timestamps_unix_nano must round-trip AllocationSample.TimestampMillis (ms -> ns), because the
+        // profile-level [time_unix_nano, +duration_nano) window belongs to the DRAIN: one drain can carry a
+        // backlog batched across many intervals (pre-connect window, send backoff), and without a per-sample
+        // time every one of those samples would be attributed to the moment it was drained.
+        var allocation = new AllocationSample("alloc-thread", 42, 0, 0, 0, 1_700_000_000_123L, 4096UL,
+            "MyApp.Widget", new[] { "MyApp.Widget.Create()" });
+
+        var req = OtlpProfileBuilder.Build(new List<ManagedThreadSample>(), startUnixNano: 1_800_000_000_000_000_000L,
+            durationNano: 10_000_000_000L, serviceName: "svc", periodNanos: PeriodNanos, includeAgentCode: true,
+            allocationSamples: new[] { allocation });
+
+        Assert.Multiple(() =>
+        {
+            foreach (var sampleTypeName in new[] { "allocated_objects", "allocated_space" })
+            {
+                var sample = ProfileOfType(req, sampleTypeName).Samples.Single();
+                // One timestamp per value: the proto requires equal element counts when both are populated.
+                Assert.That(sample.TimestampsUnixNano, Is.EqualTo(new[] { 1_700_000_000_123_000_000UL }), sampleTypeName);
+                Assert.That(sample.TimestampsUnixNano, Has.Count.EqualTo(sample.Values.Count), sampleTypeName);
+            }
+        });
+    }
+
+    [Test]
+    public void Build_allocation_samples_each_keep_their_own_timestamp_even_when_they_share_a_stack()
+    {
+        // Two samples of the same shape (identical interned stack/attributes) taken at different times: the
+        // timestamp is per-observation data, so it must NOT be collapsed the way the dictionary entries are.
+        var frames = new[] { "MyApp.Widget.Create()" };
+        var allocations = new[]
+        {
+            new AllocationSample("t", 1, 0, 0, 0, 1_700_000_000_000L, 16UL, "MyApp.Widget", frames),
+            new AllocationSample("t", 1, 0, 0, 0, 1_700_000_005_000L, 32UL, "MyApp.Widget", frames),
+        };
+
+        var req = OtlpProfileBuilder.Build(new List<ManagedThreadSample>(), 0, 0, "svc", PeriodNanos,
+            includeAgentCode: true, allocationSamples: allocations);
+
+        Assert.That(ProfileOfType(req, "allocated_space").Samples.Select(s => s.TimestampsUnixNano.Single()),
+            Is.EqualTo(new[] { 1_700_000_000_000_000_000UL, 1_700_000_005_000_000_000UL }));
+    }
+
+    [TestCase(0L)]
+    [TestCase(-1L)]
+    public void Build_allocation_sample_with_a_non_positive_timestamp_emits_no_per_sample_timestamp(long timestampMillis)
+    {
+        // Native stamps every sample off the clock, so a non-positive value is malformed/unset. Emitting it
+        // would place the sample at the epoch (0) or, through the unsigned cast, in the year 584 (negative) --
+        // both worse than leaving timestamps_unix_nano empty and letting the consumer fall back to the
+        // profile window. Legal because `values` is always populated.
+        var allocation = new AllocationSample("t", 1, 0, 0, 0, timestampMillis, 8UL, "MyApp.Widget",
+            new[] { "MyApp.Widget.Create()" });
+
+        var req = OtlpProfileBuilder.Build(new List<ManagedThreadSample>(), 0, 0, "svc", PeriodNanos,
+            includeAgentCode: true, allocationSamples: new[] { allocation });
+
+        Assert.Multiple(() =>
+        {
+            foreach (var sampleTypeName in new[] { "allocated_objects", "allocated_space" })
+            {
+                var sample = ProfileOfType(req, sampleTypeName).Samples.Single();
+                Assert.That(sample.TimestampsUnixNano, Is.Empty, sampleTypeName);
+                Assert.That(sample.Values, Has.Count.EqualTo(1), sampleTypeName);
+            }
+        });
+    }
+
+    [Test]
+    public void Build_thread_samples_carry_no_per_sample_timestamps()
+    {
+        // Documents the scope boundary: only allocation samples have a capture time to report. The cpu/off_cpu
+        // samples have none, so their Samples stay timestamp-free and are read against the profile window.
+        var req = OtlpProfileBuilder.Build(new[] { ThreadSample(onCpu: true), ThreadSample(onCpu: false) },
+            1000, 5000, "svc", PeriodNanos, includeAgentCode: true,
+            allocationSamples: new[] { Allocation("MyApp.Widget", 8UL) });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ProfileOfType(req, "cpu").Samples.Single().TimestampsUnixNano, Is.Empty);
+            Assert.That(ProfileOfType(req, "off_cpu").Samples.Single().TimestampsUnixNano, Is.Empty);
+        });
+    }
+
+    [Test]
     public void Build_allocation_samples_are_not_subject_to_the_agent_code_filter()
     {
         // includeAgentCode governs the thread sampler's own-thread noise. Allocation samples are attributed to

@@ -722,6 +722,22 @@ public class ContinuousProfilingServiceAllocationTests
     }
 
     [Test]
+    public void Drain_tick_does_not_read_the_thread_source_while_thread_sampling_is_inactive()
+    {
+        // The mirror of the gate above, for the configuration this feature explicitly supports: an
+        // allocation-only deployment arms the shared drain itself, so an ungated thread-sample read would
+        // P/Invoke a never-started thread sampler on every tick for the life of the process.
+        ArrangeAllocationOnly();
+        _service.StartIfEnabled();
+        ArrangeReadableAllocationBatch();
+
+        _service.DrainOnce();
+
+        Mock.Assert(() => _source.ReadBatch(Arg.IsAny<byte[]>()), Occurs.Never());
+        Mock.Assert(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Once());
+    }
+
+    [Test]
     public void Drain_tick_reports_the_allocation_samples_supportability_metric()
     {
         ArrangeAllocationOnly();
