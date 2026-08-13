@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -135,5 +136,34 @@ public class ThreadProfilingSamplerTests
 
         // Assert
         Mock.Assert(() => _nativeMethods.ShutdownNativeThreadProfiler(), Occurs.Never());
+    }
+
+    [Test]
+    public void Stop_WhenWorkerIsRunning_SignalsAndJoinsWorker()
+    {
+        // Arrange: a long duration so the worker won't self-terminate on its own,
+        // with a short sampling frequency so it's parked in its wait loop. That way
+        // it is Stop()'s shutdown signal -- not the elapsed duration -- that ends it.
+        uint frequencyInMsec = 50;
+        uint durationInMsec = 600000; // 10 minutes; far longer than the test could ever wait
+
+        Mock.Arrange(() => _nativeMethods.ShutdownNativeThreadProfiler()).OccursOnce();
+
+        _threadProfiler.Start(frequencyInMsec, durationInMsec, _sampleSink, _nativeMethods);
+
+        // Make sure the worker is actually up before we ask it to stop.
+        var started = SpinWait.SpinUntil(() => _threadProfiler.IsRunning, TimeSpan.FromSeconds(5));
+        Assert.That(started, Is.True, "worker thread did not start running");
+
+        // Act
+        _threadProfiler.Stop();
+
+        // Assert: Stop() signals shutdown and joins the worker, so by the time it
+        // returns the worker has fully wound down -- IsRunning is false and the native
+        // profiler was torn down -- long before the configured 10-minute duration. On
+        // the pre-fix inverted condition Stop() would no-op, leaving IsRunning true and
+        // ShutdownNativeThreadProfiler uncalled.
+        Assert.That(_threadProfiler.IsRunning, Is.False);
+        Mock.Assert(_nativeMethods);
     }
 }

@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 /// building a profile with nowhere to send it.
 ///
 /// Repeated send failures pause native sampling and retry via a single-attempt probe on a backoff
-/// schedule (<see cref="OnSendResult"/>/<see cref="TripBackoffAndScheduleProbeLocked"/>/<see cref="EndBackoffProbe"/>)
+/// schedule (<see cref="OnSendResult"/>/<see cref="TripBackoffAndScheduleProbeLocked"/>/<see cref="EndBackoffProbeIfCurrent"/>)
 /// rather than retrying the send itself -- a dropped profile can't be held over like a harvest payload can.
 /// A reconnect that arrives while backing off resumes immediately instead of waiting out the remaining
 /// delay (<see cref="ResumeAfterReconnect"/>), since the reconnect itself is the likely fix.
@@ -89,6 +89,13 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     private int _consecutiveSendFailures;
     private int _backoffIndex;
 
+    // Identifies the current backoff round. Bumped (under _lifecycleLock) whenever a round is started,
+    // superseded, or abandoned -- a trip schedules a probe carrying the round's generation, and the probe
+    // no-ops if that generation is no longer current when it fires. IScheduler has no cancellation, so a
+    // probe scheduled by an earlier round always fires; this counter is what stops a stale probe from
+    // resuming sampling (and clearing _sendBackoffActive) in the middle of a later, legitimate round.
+    private int _backoffGeneration;
+
     // Managed->native trace-context push seam. Armed while a session is active (published as the process-wide
     // ContinuousProfilingContext.Instance so the wrapper hot path can reach it), disarmed when it stops.
     private readonly ContinuousProfilingContext _continuousProfilingContext = new ContinuousProfilingContext();
@@ -129,7 +136,15 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // restarting a native sampler whose worker thread Dispose already joined.
     private volatile bool _disposed;
 
-    private int _activeIntervalMs;
+    // volatile: written under _lifecycleLock (StartLocked/StopLocked), read lock-free by DrainOnce on the
+    // scheduler thread. An int write is already atomic on every platform, so this is purely for cross-thread
+    // visibility -- without it DrainOnce could read a stale 0 and emit a profile with period=0.
+    private volatile int _activeIntervalMs;
+
+    // Accessed exclusively via Interlocked.Read/Exchange. It's a 64-bit value written from DrainOnce's
+    // scheduler thread AND from EndBackoffProbeIfCurrent/ResumeAfterReconnect (both under _lifecycleLock,
+    // but DrainOnce's read+write is NOT), so a plain read/write could tear on 32-bit and races cross-thread.
+    // Interlocked gives both atomicity and a full fence; volatile alone would not fix the 64-bit tearing.
     private long _lastDrainTimestamp;
 
     public bool IsActive => _isActive;
@@ -275,6 +290,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // old order (flag first) published nothing. Matches ResumeAfterReconnect's order.
             _consecutiveSendFailures = 0;
             _backoffIndex = 0;
+            // Supersede any probe still pending from a previous session (e.g. a retune's stop/start), so it
+            // no-ops instead of resuming sampling this fresh session didn't schedule.
+            _backoffGeneration++;
             _sendBackoffActive = false;
 
             // Arm the reverse-guard flag BEFORE starting native sampling (not after) -- narrows the
@@ -288,7 +306,7 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             _native.Start(intervalMs);
             _scheduler.ExecuteEvery(_drainAction, TimeSpan.FromMilliseconds(intervalMs));
             _activeIntervalMs = intervalMs;
-            _lastDrainTimestamp = Stopwatch.GetTimestamp();
+            Interlocked.Exchange(ref _lastDrainTimestamp, Stopwatch.GetTimestamp());
 
             // Arm trace-context correlation only now that native sampling is running, and publish the seam so
             // the wrapper hot path starts pushing the current trace/span on each app thread.
@@ -389,8 +407,8 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
                 var now = Stopwatch.GetTimestamp();
                 var startUnixNano = ToUnixNano(DateTime.UtcNow);
-                var durationNano = ElapsedNanos(_lastDrainTimestamp, now);
-                _lastDrainTimestamp = now;
+                var durationNano = ElapsedNanos(Interlocked.Read(ref _lastDrainTimestamp), now);
+                Interlocked.Exchange(ref _lastDrainTimestamp, now);
 
                 // The sampling interval (ms) is the profile's period; convert to nanoseconds for period_type=cpu/ns.
                 var periodNanos = (long)_activeIntervalMs * 1_000_000L;
@@ -486,10 +504,14 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         _sendBackoffActive = true;
         _native.Stop();
 
+        // Open a new backoff round and tag the probe with its generation. Any probe from a prior round
+        // (which IScheduler cannot cancel) is now stale and will no-op when it fires -- otherwise it could
+        // resume sampling and clear _sendBackoffActive in the middle of this round, collapsing it early.
+        var generation = ++_backoffGeneration;
         var delay = SendBackoffSequence[_backoffIndex];
         Log.Info("[ContinuousProfiling] {0} consecutive send failures; pausing sampling, retrying in {1}s.",
             failuresAtTrip, delay.TotalSeconds);
-        _scheduler.ExecuteOnce(EndBackoffProbe, delay);
+        _scheduler.ExecuteOnce(() => EndBackoffProbeIfCurrent(generation), delay);
         _backoffIndex = Math.Min(_backoffIndex + 1, SendBackoffSequence.Length - 1);
     }
 
@@ -508,22 +530,31 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             return false;
 
         _native.Start(_activeIntervalMs);
-        _lastDrainTimestamp = Stopwatch.GetTimestamp();
+        Interlocked.Exchange(ref _lastDrainTimestamp, Stopwatch.GetTimestamp());
         return true;
     }
 
     /// <summary>
-    /// Scheduled by <see cref="TripBackoffAndScheduleProbeLocked"/>. Deliberately leaves
+    /// Scheduled by <see cref="TripBackoffAndScheduleProbeLocked"/> with the generation of the backoff round
+    /// that scheduled it. No-ops if that round is no longer current (a later trip, a reconnect resume, or a
+    /// session (re)start has since bumped <see cref="_backoffGeneration"/>) -- IScheduler cannot cancel the
+    /// stale timer, so this generation check is what prevents it from resuming sampling and clearing
+    /// <see cref="_sendBackoffActive"/> in the middle of a different round. Otherwise deliberately leaves
     /// <see cref="_consecutiveSendFailures"/>/<see cref="_backoffIndex"/> alone -- if this probe's resumed
     /// send also fails, <see cref="OnSendResult"/> continues the escalation from where the trip left the
     /// index, rather than starting over.
     /// </summary>
-    private void EndBackoffProbe()
+    private void EndBackoffProbeIfCurrent(int generation)
     {
         bool resumed;
         lock (_lifecycleLock)
         {
             if (_disposed)
+                return;
+
+            // Stale probe from a superseded round -- the round that scheduled it is gone, so resuming now
+            // would clear the gate for a round it has no business ending.
+            if (generation != _backoffGeneration)
                 return;
 
             resumed = TryResumeSamplingLocked();
@@ -537,7 +568,7 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
     /// <summary>
     /// Called from <see cref="OnAgentConnected"/> when a (re)connect arrives while backing off. Unlike
-    /// <see cref="EndBackoffProbe"/>, this fully resets the backoff state -- same as a successful send --
+    /// <see cref="EndBackoffProbeIfCurrent"/>, this fully resets the backoff state -- same as a successful send --
     /// because the reconnect itself is the likely fix, and there's no reason to make CP wait out the rest
     /// of a delay picked for a problem that may no longer exist.
     /// </summary>
@@ -554,6 +585,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             {
                 _consecutiveSendFailures = 0;
                 _backoffIndex = 0;
+                // Supersede the pending probe from the round this reconnect is ending early, so it can't
+                // fire later and collapse a subsequent backoff round.
+                _backoffGeneration++;
                 _sendBackoffActive = false;
             }
         }

@@ -267,8 +267,10 @@ public class ContinuousProfilingServiceTests
 
         _service.DrainOnce();
 
-        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/Drain", Arg.IsAny<long>()), Occurs.AtLeast(1));
-        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/Samples", Arg.IsAny<long>()), Occurs.AtLeast(1));
+        // Pin the exact counts: the batch carries one sample, so Samples must report 1 (not "any long"),
+        // and Drain reports its default count of 1. Occurs.Once() also catches a duplicate report.
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/Drain", 1), Occurs.Once());
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/Samples", 1), Occurs.Once());
     }
 
     [Test]
@@ -1000,6 +1002,55 @@ public class ContinuousProfilingServiceTests
         service.DrainOnce();
         service.DrainOnce();
         Mock.Assert(() => _native.Stop(), Occurs.Exactly(2)); // the original trip + this new one
+    }
+
+    [Test]
+    public void A_stale_probe_from_a_superseded_backoff_round_does_not_collapse_a_later_round()
+    {
+        // Regression test for the stale-probe bug: IScheduler can't cancel a pending one-shot, so a probe
+        // from round 1 stays scheduled after a reconnect ends round 1 early. When a later round 2 trips and
+        // that stale probe finally fires, it must NOT resume sampling / clear the backoff gate for round 2.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+
+        var probes = new List<Action>();
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => probes.Add(action));
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        // Round 1 trips (2 failures) and schedules probe A.
+        service.DrainOnce();
+        service.DrainOnce();
+        Assert.That(probes, Has.Count.EqualTo(1));
+
+        // A reconnect resumes sampling early, ending round 1 -- probe A stays pending (it can't be cancelled).
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        // Sends keep failing -> round 2 trips (grace reset by the reconnect) and schedules probe B.
+        service.DrainOnce();
+        service.DrainOnce();
+        Assert.That(probes, Has.Count.EqualTo(2));
+
+        // Start count so far: EnableAndStart (1) + the reconnect's resume (2). Round 2's trip re-stopped it.
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Exactly(2));
+
+        // The stale probe A fires in the middle of round 2. It must be a no-op.
+        probes[0].Invoke();
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Exactly(2), "the stale probe must not resume native sampling");
+
+        // Round 2's backoff gate must still be closed: a drain stays gated, so no further send happens.
+        service.DrainOnce();
+        Mock.Assert(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Exactly(4), "the stale probe must not have reopened the backoff gate");
+
+        // The current probe B does resume sampling.
+        probes[1].Invoke();
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Exactly(3), "the current round's probe resumes sampling");
     }
 
     #endregion

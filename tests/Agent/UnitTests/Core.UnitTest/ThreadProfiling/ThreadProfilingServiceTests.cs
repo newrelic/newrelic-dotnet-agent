@@ -248,7 +248,9 @@ public class ThreadProfilingServiceTests
         _threadProfilingService.Start();
         _threadProfilingService.StartThreadProfilingSession(1, 60000, 120000);
         _threadProfilingService.SampleAcquired(threadSnapshots);
-        _threadProfilingService.SamplingComplete();
+        // Stop() signals and joins the sampling worker, whose finally block performs the single
+        // aggregation/send via SamplingComplete -- so we must not call SamplingComplete manually
+        // here or the data would be aggregated twice.
         _threadProfilingService.Stop();
 
         // Assert

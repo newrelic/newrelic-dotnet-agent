@@ -55,7 +55,7 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
     public void Stop()
     {
         //if we have already asked for termination or the background thread is not operational, we are done here.
-        if (_shutdownEvent.Wait(0) || 1 == _workerRunning)
+        if (_shutdownEvent.Wait(0) || 0 == Volatile.Read(ref _workerRunning))
             return;
 
         //signal sampling worker to terminate
