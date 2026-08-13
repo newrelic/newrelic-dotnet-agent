@@ -30,4 +30,8 @@ public class NativeContinuousProfilerSampleSource : ISampleSource, INativeContin
     public void SetTraceContext(long traceIdHigh, long traceIdLow, long spanId) => _nativeMethods.ContinuousProfilerSetTraceContext(traceIdHigh, traceIdLow, spanId);
 
     public void ResetTraceContext() => _nativeMethods.ContinuousProfilerResetTraceContext();
+
+    public void SetAgentWork() => _nativeMethods.ContinuousProfilerSetAgentWork();
+
+    public void ResetAgentWork() => _nativeMethods.ContinuousProfilerResetAgentWork();
 }

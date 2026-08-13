@@ -98,6 +98,7 @@ public static class BufferParser
         var traceLow = ReadLong(b, ref pos, length);
         var spanId = ReadLong(b, ref pos, length);
         var onCpu = version >= 2 && ReadBool(b, ref pos, length);
+        var isAgentWork = version >= 3 && ReadBool(b, ref pos, length);
 
         var frames = new List<string>();
         while (true)
@@ -115,7 +116,7 @@ public static class BufferParser
                 frames.Add(dict.TryGetValue(code, out var v) ? v : "<unknown>");
             }
         }
-        return new ManagedThreadSample(threadName, osThreadId, traceHigh, traceLow, spanId, frames, onCpu);
+        return new ManagedThreadSample(threadName, osThreadId, traceHigh, traceLow, spanId, frames, onCpu, isAgentWork);
     }
 
     // `length` is the logical bound for this parse and may be smaller than the physical buffer

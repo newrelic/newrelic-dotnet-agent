@@ -266,6 +266,60 @@ public class ContinuousProfilingContextTests
     }
 
     [Test]
+    public void SetAgentWork_does_nothing_when_disabled()
+    {
+        _context.SetAgentWork();
+
+        Mock.Assert(() => _native.SetAgentWork(), Occurs.Never());
+    }
+
+    [Test]
+    public void ResetAgentWork_does_nothing_when_disabled()
+    {
+        _context.ResetAgentWork();
+
+        Mock.Assert(() => _native.ResetAgentWork(), Occurs.Never());
+    }
+
+    [Test]
+    public void SetAgentWork_forwards_to_native_when_enabled()
+    {
+        _context.Enable(_native);
+
+        _context.SetAgentWork();
+
+        Mock.Assert(() => _native.SetAgentWork(), Occurs.Once());
+    }
+
+    [Test]
+    public void ResetAgentWork_forwards_to_native_when_enabled()
+    {
+        _context.Enable(_native);
+
+        _context.ResetAgentWork();
+
+        Mock.Assert(() => _native.ResetAgentWork(), Occurs.Once());
+    }
+
+    [Test]
+    public void SetAgentWork_never_throws_when_native_throws()
+    {
+        _context.Enable(_native);
+        Mock.Arrange(() => _native.SetAgentWork()).Throws(new InvalidOperationException("boom"));
+
+        Assert.DoesNotThrow(() => _context.SetAgentWork());
+    }
+
+    [Test]
+    public void ResetAgentWork_never_throws_when_native_throws()
+    {
+        _context.Enable(_native);
+        Mock.Arrange(() => _native.ResetAgentWork()).Throws(new InvalidOperationException("boom"));
+
+        Assert.DoesNotThrow(() => _context.ResetAgentWork());
+    }
+
+    [Test]
     public void ResetTraceContext_clears_change_detection_guard()
     {
         _context.Enable(_native);

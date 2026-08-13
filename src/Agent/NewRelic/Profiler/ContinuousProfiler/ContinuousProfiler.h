@@ -39,6 +39,7 @@
 #include "SampleBufferWriter.h"
 #include "SuspendMutex.h"
 #include "TraceContextMap.h"
+#include "AgentWorkMap.h"
 
 // ContinuousProfiler is the always-on counterpart to the collector-driven ThreadProfiler. Where the
 // ThreadProfiler takes a single time-boxed profile on demand (RequestProfile), the ContinuousProfiler
@@ -65,11 +66,20 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // Called during Profiler Initialize. Like ThreadProfiler::Init, this does no heavy lifting --
         // it only stores the ICorProfilerInfo4 interface and probes for ICorProfilerInfo10 (needed for
         // SuspendRuntime/ResumeRuntime on CoreCLR). It never starts threads or allocates resources.
-        void Init(ICorProfilerInfo4* corProfilerInfo) noexcept
+        //
+        // isCoreClr comes from CorProfilerCallbackImpl::SetClrType (GetRuntimeInformation), decided
+        // BEFORE this call on every platform -- this is what CaptureAllThreads gates SuspendRuntime on,
+        // NOT PAL_STDCPP_COMPAT/OS. ICorProfilerInfo10::SuspendRuntime is a corprof.h COM API available
+        // on Windows CoreCLR exactly as on Linux CoreCLR; the previous OS-based gate left Windows
+        // CoreCLR never calling it, unlike OTel's ClrRuntimeCapture (which suspends on every OS for
+        // CoreCLR). .NET Framework (Windows-only) has no runtime-wide suspend and keeps relying on
+        // DoStackSnapshot's own per-thread suspend, matching OTel's NetFxRuntimeCapture.
+        void Init(ICorProfilerInfo4* corProfilerInfo, bool isCoreClr) noexcept
         {
             LogInfo(L"Initializing ContinuousProfiler");
 
             _corProfilerInfo = corProfilerInfo;
+            _isCoreClr = isCoreClr;
 
             HRESULT corProfilerInfoInitResult = corProfilerInfo->QueryInterface(__uuidof(ICorProfilerInfo10), (void**)&_corProfilerInfo10);
             if (SUCCEEDED(corProfilerInfoInitResult)) {
@@ -194,6 +204,20 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             _traceContexts.Reset(CurrentManagedThreadId());
         }
 
+        // Mark the calling managed thread as one level deeper into agent-owned background dispatch
+        // (Scheduler wraps its own timer-callback invocation with this -- see AgentWorkMap.h for why
+        // thread IDENTITY, not frame text, is needed to catch parked agent threads). Nesting-safe.
+        void SetAgentWork() noexcept
+        {
+            _agentWork.Increment(CurrentManagedThreadId());
+        }
+
+        // Mark the calling managed thread one level shallower. Must be paired 1:1 with SetAgentWork.
+        void ResetAgentWork() noexcept
+        {
+            _agentWork.Decrement(CurrentManagedThreadId());
+        }
+
         // NOTE: intentionally NOT declared `noexcept = default`. clang/libstdc++ computes the implicit
         // default ctor's exception spec from the members (some -- e.g. the reused NameCache / vector
         // buffers -- allocate and are therefore not noexcept), so `noexcept = default` is a hard compile
@@ -288,8 +312,18 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             // depending on which HRESULT the CLR maps the abort to.
             bool _truncated{};
             ThreadID _managedTID;
-            ThreadProfile(ThreadID managedTID, ICorProfilerInfo4* corProfilerInfo, NameCache& nameCache, StackWalk& stackwalk) :
-                _corProfilerInfo(corProfilerInfo), _nameCache(nameCache), _stackwalk(stackwalk), _frameNext(std::begin(_stackwalk)), _managedTID(managedTID)
+            // Trace-context read-back, plumbed through so StaticStackFrameCallback can stamp it on the
+            // FIRST callback invocation -- i.e. while the CLR is still inside DoStackSnapshot for this
+            // thread, which is the only suspension guarantee that holds on EVERY platform (global
+            // SuspendRuntime is CoreCLR/Linux-only; see CaptureAllThreads). _contextCaptured ensures
+            // the read happens exactly once per walk regardless of frame count.
+            TraceContextMap& _traceContexts;
+            TraceContext& _contextOut;
+            bool _contextCaptured{};
+            ThreadProfile(ThreadID managedTID, ICorProfilerInfo4* corProfilerInfo, NameCache& nameCache, StackWalk& stackwalk,
+                TraceContextMap& traceContexts, TraceContext& contextOut) :
+                _corProfilerInfo(corProfilerInfo), _nameCache(nameCache), _stackwalk(stackwalk), _frameNext(std::begin(_stackwalk)),
+                _managedTID(managedTID), _traceContexts(traceContexts), _contextOut(contextOut)
             {}
             ~ThreadProfile() = default;
             ThreadProfile(ThreadProfile&&) = default;
@@ -307,8 +341,9 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             ThreadID ManagedThreadId{};
             DWORD OsThreadId{};
             xstring_t ThreadName;   // resolved AFTER resume (may allocate); "" when the OS has no name.
-            TraceContext Context{}; // stamped AFTER resume from the lock-free trace-context map.
+            TraceContext Context{}; // stamped INSIDE StaticStackFrameCallback, while DoStackSnapshot has this thread suspended.
             bool OnCpu{}; // set post-resume from CPU-time delta since last tick; false on the first tick.
+            bool IsAgentWork{}; // stamped INSIDE the suspend window from AgentWorkMap -- see its read site.
             // Function IDs captured leaf->root UNDER SUSPEND (cheap copy from the walk buffer, no metadata).
             std::vector<FunctionID> FunctionIds;
             // Fully-qualified frame names, resolved leaf->root AFTER resume from FunctionIds (metadata +
@@ -488,31 +523,55 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 // process-wide. Held across the entire suspend->walk->resume sequence.
                 std::lock_guard<NewRelic::Profiler::SuspendMutex> suspendLock(NewRelic::Profiler::SuspendMutex::Shared());
 
-#ifdef PAL_STDCPP_COMPAT
-                // CoreCLR: explicitly suspend the runtime around the walk (mirror ThreadProfiler.h:650).
-                // On .NET Framework / Windows the runtime is not explicitly suspended; DoStackSnapshot
-                // suspends each target thread itself.
-                if (!_corProfilerInfo10)
+                // Stop-the-world on CoreCLR, on EVERY OS -- mirrors OTel's ClrRuntimeCapture (calls
+                // ICorProfilerInfo::SuspendRuntime uniformly on Windows and Linux CoreCLR; only
+                // .NET Framework, which has no runtime-wide suspend API, gets per-thread-only handling).
+                // Gated on _isCoreClr (set in Init from CorProfilerCallbackImpl::SetClrType's
+                // GetRuntimeInformation result), NOT on PAL_STDCPP_COMPAT/OS -- ICorProfilerInfo10 is a
+                // corprof.h COM interface available on Windows CoreCLR exactly as on Linux CoreCLR.
+                // The previous OS-based gate left Windows CoreCLR never stopping the world at all, out of
+                // step with OTel and, per product direction, not "operating correctly" -- DoStackSnapshot's
+                // own per-thread suspend is not an accepted substitute for CoreCLR.
+                if (_isCoreClr)
                 {
-                    // Publish nothing and leave the prior buffer state intact -- an early return here
-                    // must not clobber a previously filled slot.
-                    LogDebug(L"CP: CaptureAllThreads called without ICorProfilerInfo10; skipping sample.");
-                    return;
+                    if (!_corProfilerInfo10)
+                    {
+                        // Publish nothing and leave the prior buffer state intact -- an early return here
+                        // must not clobber a previously filled slot. This runtime will never support
+                        // Continuous Profiling, so warn loudly ONCE (every subsequent tick would otherwise
+                        // hit this same branch forever and flood the log at the sampling interval).
+                        if (!_loggedUnsupportedRuntimeWarning)
+                        {
+                            LogWarn(L"Continuous Profiling: this runtime does not support ICorProfilerInfo10 "
+                                L"(required for SuspendRuntime/ResumeRuntime); Continuous Profiling cannot run "
+                                L"and will not collect samples for the lifetime of this process.");
+                            _loggedUnsupportedRuntimeWarning = true;
+                        }
+                        else
+                        {
+                            LogDebug(L"Continuous Profiling: CaptureAllThreads called without ICorProfilerInfo10; skipping sample.");
+                        }
+                        return;
+                    }
+                    const HRESULT suspendHr = _corProfilerInfo10->SuspendRuntime();
+                    if (FAILED(suspendHr))
+                    {
+                        // A busy suspend (e.g. CORPROF_E_SUSPENSION_IN_PROGRESS -- the CLR's own GC is
+                        // already suspending) means the runtime never actually stopped. Walking it now
+                        // would read a moving target, and ResumeRuntime would resume a suspend we never
+                        // own. Bail out exactly like the missing-ICorProfilerInfo10 case above: publish
+                        // nothing and leave the prior buffer state intact.
+                        LogDebug(L"CP: SuspendRuntime failed: ", std::hex, std::showbase, suspendHr,
+                            std::resetiosflags(std::ios_base::basefield | std::ios_base::showbase),
+                            L"; skipping this tick's sample.");
+                        return;
+                    }
                 }
-                const HRESULT suspendHr = _corProfilerInfo10->SuspendRuntime();
-                if (FAILED(suspendHr))
-                {
-                    // A busy suspend (e.g. CORPROF_E_SUSPENSION_IN_PROGRESS -- the CLR's own GC is
-                    // already suspending) means the runtime never actually stopped. Walking it now
-                    // would read a moving target, and ResumeRuntime would resume a suspend we never
-                    // own. Bail out exactly like the missing-ICorProfilerInfo10 case above: publish
-                    // nothing and leave the prior buffer state intact.
-                    LogDebug(L"CP: SuspendRuntime failed: ", std::hex, std::showbase, suspendHr,
-                        std::resetiosflags(std::ios_base::basefield | std::ios_base::showbase),
-                        L"; skipping this tick's sample.");
-                    return;
-                }
-#endif
+                // else: .NET Framework -- no runtime-wide suspend API exists; DoStackSnapshot's own
+                // per-target-thread suspend is the only mechanism, on Windows, same as OTel's
+                // NetFxRuntimeCapture. Trace-context correlation (StaticStackFrameCallback) does not
+                // depend on which branch ran here -- it reads during DoStackSnapshot's own per-thread
+                // suspend either way.
 
                 const auto suspendStart = std::chrono::steady_clock::now();
                 try
@@ -529,9 +588,10 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 microsSuspended = std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::steady_clock::now() - suspendStart).count();
 
-#ifdef PAL_STDCPP_COMPAT
-                _corProfilerInfo10->ResumeRuntime();
-#endif
+                if (_isCoreClr)
+                {
+                    _corProfilerInfo10->ResumeRuntime();
+                }
             }
 
             // AFTER ResumeRuntime, all outside the suspend window:
@@ -614,6 +674,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                     writer.WriteInt64Field(thread.Context.TraceIdLow);
                     writer.WriteInt64Field(thread.Context.SpanId);
                     writer.WriteBoolField(thread.OnCpu); // v2 per-sample on-CPU flag
+                    writer.WriteBoolField(thread.IsAgentWork); // v3 per-sample agent-work flag
                     for (const auto& frame : thread.Frames)
                     {
                         writer.WriteCodedFrameString(frame);
@@ -646,8 +707,9 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // and the (now populated) thread-name string.
         static size_t EstimateSampleBytes(const CapturedThread& thread) noexcept
         {
-            // 1 opcode + name len prefix(2) + 4 int64 fields(32) + onCpu byte(1) + frame terminator(2).
-            size_t bytes = 1 + 2 + 32 + 1 + 2;
+            // 1 opcode + name len prefix(2) + 4 int64 fields(32) + onCpu byte(1) + isAgentWork byte(1) +
+            // frame terminator(2).
+            size_t bytes = 1 + 2 + 32 + 1 + 1 + 2;
 
             // Thread name: capped at MaxStringChars, 2 bytes per UTF-16 code unit. Now that names are
             // populated this must be counted so WillFit cannot admit a sample that overflows the buffer.
@@ -664,10 +726,10 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         }
 
         // Post-resume enrichment: for each captured thread, resolve its OS thread name and tally whether
-        // it carries a trace context. The trace-context read happens earlier, under suspend, in
-        // ProfileAllThreads; this pass only does the name resolution, which allocates / reads /proc and is
-        // therefore NOT suspend-safe -- NEVER call this inside the suspend window. Returns the number of
-        // threads that carry a context (diagnostic).
+        // it carries a trace context. The trace-context read happens earlier, under suspend, inside
+        // StaticStackFrameCallback (see ProfileAllThreads/ThreadProfile); this pass only does the name
+        // resolution, which allocates / reads /proc and is therefore NOT suspend-safe -- NEVER call this
+        // inside the suspend window. Returns the number of threads that carry a context (diagnostic).
         uint32_t EnrichCapturedThreads()
         {
             uint32_t withContext = 0;
@@ -1112,8 +1174,18 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
                 try
                 {
+                    // Scratch slot for this thread's trace context, stamped by StaticStackFrameCallback on
+                    // its first invocation -- i.e. while DoStackSnapshot itself has this thread suspended.
+                    // That is the only suspension guarantee available on EVERY platform: global
+                    // SuspendRuntime only compiles under PAL_STDCPP_COMPAT (CoreCLR on Linux -- see
+                    // CaptureAllThreads); on Windows DoStackSnapshot's own per-target-thread suspend is the
+                    // sole freeze, and it ends the instant DoStackSnapshot returns below. Declared local
+                    // (not written to _capture directly) so an overflow/failure drop below simply discards
+                    // it along with everything else this walk produced.
+                    TraceContext threadContext{};
+
                     // Reset the preallocated per-thread walk state; no allocation happens here.
-                    ThreadProfile threadProfile(threadId, _corProfilerInfo, _nameCache, *_stackwalk);
+                    ThreadProfile threadProfile(threadId, _corProfilerInfo, _nameCache, *_stackwalk, _traceContexts, threadContext);
 
                     // If context is NULL, the walk begins at the last available managed frame for the
                     // target thread (mirror ThreadProfiler.h:585).
@@ -1158,18 +1230,21 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                     // occupant's id if the post-resume resolve fails.
                     captured.OsThreadId = 0;
 
-                    // Read the thread's active trace context HERE, INSIDE the suspend window, while every
-                    // app thread -- and therefore any writer of this slot -- is frozen. That quiescence is
-                    // exactly the stable-read precondition the lock-free seqlock in TraceContextMap is
-                    // built on (see its header). Reading post-resume (the previous location) raced live
-                    // re-pushes from the running app thread: the seqlock observed a write-in-progress /
-                    // changed seq on nearly every read and bailed per its wait-free contract, so the link
-                    // was dropped ~99% of the time. TryGet is wait-free, lock-free, allocation-free and
-                    // makes no CLR calls, so it is safe under suspend. TryGet unconditionally overwrites
-                    // captured.Context (zeroing it first), so no stale context from this slot's last
-                    // occupant can survive. Name/signature resolution runs post-resume in
-                    // ResolveCapturedFrames.
-                    _traceContexts.TryGet(threadId, captured.Context);
+                    // threadContext was stamped by StaticStackFrameCallback DURING DoStackSnapshot, while
+                    // this specific thread was suspended -- true on every platform, unlike a read gated on
+                    // global SuspendRuntime (CoreCLR/Linux only). If the walk failed before the
+                    // callback ever ran (rare: e.g. zero managed frames), threadContext stays the zero
+                    // value it was initialized to, same as a genuine TryGet miss. Plain copy here, not a
+                    // fresh TryGet -- re-reading now would be the exact post-resume race this replaces.
+                    captured.Context = threadContext;
+
+                    // Same suspend-window-safety argument as the trace-context read above: IsAgentWork is a
+                    // single wait-free atomic load, allocation-free and no CLR calls, so it is safe here.
+                    // This is the thread-IDENTITY signal follow-up #16 needs -- it is true for the whole
+                    // duration of a Scheduler-dispatched action regardless of what frames are on the stack,
+                    // so it catches agent threads parked in System.Threading.Monitor.Wait that no frame-text
+                    // predicate can see.
+                    captured.IsAgentWork = _agentWork.IsAgentWork(threadId);
 
                     // Copy the FunctionID sequence (leaf->root) out of the reused walk buffer -- the ONLY
                     // per-frame work left under suspend. Metadata + signature resolution happens post-resume;
@@ -1268,6 +1343,20 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
                 ThreadProfile& threadProfile = *static_cast<ThreadProfile*>(clientData);
 
+                // Stamp the trace context on the FIRST callback invocation for this thread, before any
+                // frame/overflow handling below (including the early truncation return) -- this is the
+                // one point in the whole capture that is guaranteed suspended on every platform: the CLR
+                // is calling back synchronously from inside DoStackSnapshot, which suspends exactly this
+                // target thread for the duration of the call, independent of whether global SuspendRuntime
+                // ran (CoreCLR/PAL_STDCPP_COMPAT only -- see CaptureAllThreads). TryGet is wait-free,
+                // lock-free, allocation-free and makes no CLR calls, so it is safe here. Guarded by
+                // _contextCaptured so a deep, multi-frame walk only pays for one read.
+                if (!threadProfile._contextCaptured)
+                {
+                    threadProfile._traceContexts.TryGet(threadProfile._managedTID, threadProfile._contextOut);
+                    threadProfile._contextCaptured = true;
+                }
+
                 // The CLR walks leaf (last-pushed) frame first, root/Main last, so the frames already in the
                 // buffer when we hit the cap are the leaf-most MaxStackFramesSupported of the stack -- exactly
                 // the end worth keeping, since that is where the CPU time being sampled actually is. Abort the
@@ -1323,6 +1412,16 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         CComPtr<ICorProfilerInfo4> _corProfilerInfo;
         CComPtr<ICorProfilerInfo10> _corProfilerInfo10;
 
+        // Set in Init from CorProfilerCallbackImpl::SetClrType (GetRuntimeInformation) -- decides whether
+        // CaptureAllThreads calls the runtime-wide SuspendRuntime/ResumeRuntime (CoreCLR, every OS) or
+        // relies solely on DoStackSnapshot's own per-thread suspend (.NET Framework, Windows-only).
+        bool _isCoreClr = false;
+
+        // Set once the first missing-ICorProfilerInfo10 tick has logged a Warn (see CaptureAllThreads).
+        // The condition is permanent for the process (this runtime will never support Continuous
+        // Profiling), so every subsequent tick logs at Debug instead of re-warning every sample interval.
+        bool _loggedUnsupportedRuntimeWarning = false;
+
         // Preallocated stack-frame buffer, reused across ticks. Allocated lazily on the first capture
         // (outside the suspend window). NEVER allocated while the runtime is suspended.
         std::unique_ptr<StackWalk> _stackwalk;
@@ -1362,6 +1461,12 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // the sampler (by CLR ManagedThreadId) while the runtime is suspended. Lock-free + wait-free
         // reads so it is safe to touch inside the suspend window without deadlock (see TraceContextMap.h).
         TraceContextMap _traceContexts;
+
+        // Per-thread agent-owned-dispatch depth counter, written by Scheduler's timer callbacks via
+        // Set/ResetAgentWork and read by the sampler (by CLR ThreadID) while the runtime is suspended.
+        // Lock-free + wait-free reads, same suspend-window-safety requirement as _traceContexts (see
+        // AgentWorkMap.h).
+        AgentWorkMap _agentWork;
 
         // Throttle counter for the SetTraceContext push diagnostic (see ShouldLogPushDiagnostic).
         std::atomic<uint32_t> _pushDiagnosticCount{ 0 };

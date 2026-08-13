@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DataTransport;
 using NUnit.Framework;
@@ -84,6 +85,26 @@ public class ThreadProfilingServiceTests
         Assert.That(result, Is.True);
 
         // TearDown disposes _threadProfilingService, which joins the real worker this test started.
+    }
+
+    [Test]
+    public void StartThreadProfilingSession_serializes_on_ProfilingMutualExclusionGate()
+    {
+        // Proves the guard-check-and-arm sequence actually takes ProfilingMutualExclusionGate.Lock --
+        // the same lock ContinuousProfilingService.StartLocked takes -- rather than merely documenting
+        // the intent in a comment.
+        Task<bool> startTask;
+
+        lock (ProfilingMutualExclusionGate.Lock)
+        {
+            startTask = Task.Run(() => _threadProfilingService.StartThreadProfilingSession(1, 100, 1000));
+
+            var completedWhileHeld = Task.WaitAny(new Task[] { startTask }, 200) == 0;
+            Assert.That(completedWhileHeld, Is.False, "StartThreadProfilingSession must block while the gate is held elsewhere.");
+        }
+
+        Assert.That(startTask.Wait(5000), Is.True, "StartThreadProfilingSession must complete once the gate is released.");
+        Assert.That(startTask.Result, Is.True);
     }
 
     [Test]

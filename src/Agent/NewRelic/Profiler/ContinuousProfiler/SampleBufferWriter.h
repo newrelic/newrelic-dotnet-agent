@@ -27,7 +27,7 @@
 //   * BatchStats payload: int64 microsSuspended + int32 threadCount + int32 frameCount + int32 skipped.
 //   * Per-sample payload (after StartSample): thread name (string) -> OS thread id (int64) ->
 //     traceIdHigh (int64) -> traceIdLow (int64) -> spanId (int64) -> [v2+] onCpu (1 byte 0/1) ->
-//     frame list -> terminator short 0.
+//     [v3+] isAgentWork (1 byte 0/1) -> frame list -> terminator short 0.
 //   * Frame list: 2-byte big-endian short codes terminated by 0. FIRST sight of a frame string writes
 //     a NEGATIVE short (-index, index starting at 1) then the UTF-16 string, and remembers the index;
 //     a SUBSEQUENT sight writes the POSITIVE index (a back-reference). This is the inverse of
@@ -51,9 +51,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
     class SampleBufferWriter
     {
     public:
-        // Batch format version. v2 adds a 1-byte on-CPU flag per sample (after spanId, before the frame list).
-        // Bumped only in lock-step with BufferParser (which branches on version >= 2).
-        static constexpr uint8_t BatchVersion = 2;
+        // Batch format version. v2 adds a 1-byte on-CPU flag per sample (after spanId, before the frame
+        // list). v3 adds a 1-byte agent-work flag per sample, right after the on-CPU flag (see
+        // AgentWorkMap.h / follow-up #16). Bumped only in lock-step with BufferParser (which branches on
+        // version >= 2 / >= 3).
+        static constexpr uint8_t BatchVersion = 3;
 
         // BufferParser.ReadString caps a string at 512 chars; we cap identically so the big-endian
         // int16 char-count prefix never goes negative and both sides agree on the truncation point.

@@ -2084,7 +2084,7 @@ public class DefaultConfigurationTests
         if (appSettingValue != null)
             _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingIncludeAgentCode", value = appSettingValue });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.ContinuousProfilingIncludeAgentCode, Is.EqualTo(expected));
     }
@@ -4609,7 +4609,7 @@ public class DefaultConfigurationTests
         _localConfig.continuousProfiling.enabled = true;
         _serverConfig.RpmConfig.ContinuousProfilingEnabled = false; // server disables despite env+local true
 
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
     }
@@ -4620,7 +4620,7 @@ public class DefaultConfigurationTests
         _localConfig.continuousProfiling.enabled = false;
         _serverConfig.RpmConfig.ContinuousProfilingEnabled = true;
 
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.True);
     }
@@ -4631,7 +4631,7 @@ public class DefaultConfigurationTests
         _localConfig.highSecurity.enabled = true;
         _serverConfig.RpmConfig.ContinuousProfilingEnabled = true; // server tries to enable
 
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
     }
@@ -4664,7 +4664,7 @@ public class DefaultConfigurationTests
             _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingEnabled", value = appSettingsValue });
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ENABLED")).Returns(envValue);
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         return defaultConfig.ContinuousProfilingEnabled;
     }
 
@@ -4683,7 +4683,7 @@ public class DefaultConfigurationTests
             _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingSamplingIntervalMs", value = appSettingsValue });
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")).Returns(envValue);
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         return defaultConfig.ContinuousProfilingSamplingIntervalMs;
     }
 

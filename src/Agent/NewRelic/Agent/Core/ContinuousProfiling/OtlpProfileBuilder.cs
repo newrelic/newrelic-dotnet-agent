@@ -125,8 +125,13 @@ public static class OtlpProfileBuilder
         var resolved = new List<ResolvedSample>(samples.Count);
         foreach (var sample in samples)
         {
-            // Drop the agent's own-thread samples unless explicitly included (default). See AgentFramePrefix.
-            if (!includeAgentCode && IsAgentThreadSample(sample.Frames))
+            // Drop the agent's own-thread samples unless explicitly included (default). Two independent
+            // signals, either one is sufficient: the frame-text match (AgentFramePrefix, catches customer
+            // threads mid-instrumented-call) OR the native thread-identity flag (IsAgentWork, catches agent
+            // threads parked in System.Threading.Monitor.Wait with no agent frame on the stack at all --
+            // frame text alone only reaches ~25-31% of those; see follow-up #16). Both stay gated by the
+            // same includeAgentCode toggle, so it keeps meaning exactly what it means today.
+            if (!includeAgentCode && (IsAgentThreadSample(sample.Frames) || sample.IsAgentWork))
                 continue;
 
             var stackIndex = InternStack(dictionary, stringTable, functionTable, locationTable, stackTable, attributeTable, sample.Frames);

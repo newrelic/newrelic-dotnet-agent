@@ -31,4 +31,18 @@ public interface IContinuousProfilingContext
     /// Never throws into the application.
     /// </summary>
     void ResetTraceContext();
+
+    /// <summary>
+    /// Marks the calling thread one level deeper into agent-owned background dispatch in the native
+    /// profiler, so the sampler can tag its samples by thread identity instead of frame text (follow-up
+    /// #16). A no-op while disabled. Never throws into the application. Nesting-safe; must be paired 1:1
+    /// with <see cref="ResetAgentWork"/>.
+    /// </summary>
+    void SetAgentWork();
+
+    /// <summary>
+    /// Marks the calling thread one level shallower. A no-op while disabled. Never throws into the
+    /// application. Must be paired 1:1 with <see cref="SetAgentWork"/>.
+    /// </summary>
+    void ResetAgentWork();
 }

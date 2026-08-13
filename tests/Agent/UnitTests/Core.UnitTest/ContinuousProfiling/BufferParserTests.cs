@@ -315,4 +315,96 @@ public class BufferParserTests
         var samples = BufferParser.Parse(truncated, truncated.Length);
         Assert.That(samples, Is.Empty);
     }
+
+    // --- batch v3 IsAgentWork flag ---
+
+    private static byte[] BuildV3Batch(bool onCpu, bool isAgentWork)
+    {
+        var b = new List<byte>();
+        b.Add(0x01);                       // StartBatch
+        b.Add(0x03);                       // version = 3
+        b.AddRange(Int64BE(123L));         // timestamp
+        b.Add(0x02);                       // StartSample
+        b.AddRange(Utf16Str("t1"));        // thread name
+        b.AddRange(Int64BE(4242L));        // osThreadId
+        b.AddRange(Int64BE(0L));           // traceHigh
+        b.AddRange(Int64BE(0L));           // traceLow
+        b.AddRange(Int64BE(0L));           // spanId
+        b.Add((byte)(onCpu ? 1 : 0));       // OnCpu (v2+)
+        b.Add((byte)(isAgentWork ? 1 : 0)); // IsAgentWork (v3+)
+        b.AddRange(ShortBE(-1));           // frame define, index 1
+        b.AddRange(Utf16Str("Frame.One"));
+        b.AddRange(ShortBE(0));            // frame terminator
+        b.Add(0x06);                       // EndBatch
+        return b.ToArray();
+    }
+
+    [Test]
+    public void Parse_v3_capturesIsAgentWorkTrue()
+    {
+        var buf = BuildV3Batch(onCpu: false, isAgentWork: true);
+        var samples = BufferParser.Parse(buf, buf.Length);
+        Assert.That(samples, Has.Count.EqualTo(1));
+        Assert.That(samples[0].IsAgentWork, Is.True);
+    }
+
+    [Test]
+    public void Parse_v3_capturesIsAgentWorkFalse()
+    {
+        var buf = BuildV3Batch(onCpu: false, isAgentWork: false);
+        var samples = BufferParser.Parse(buf, buf.Length);
+        Assert.That(samples[0].IsAgentWork, Is.False);
+    }
+
+    [Test]
+    public void Parse_v3_stillCapturesOnCpuAlongsideIsAgentWork()
+    {
+        var buf = BuildV3Batch(onCpu: true, isAgentWork: true);
+        var samples = BufferParser.Parse(buf, buf.Length);
+        Assert.Multiple(() =>
+        {
+            Assert.That(samples[0].OnCpu, Is.True);
+            Assert.That(samples[0].IsAgentWork, Is.True);
+        });
+    }
+
+    [Test]
+    public void Parse_v2_hasNoIsAgentWorkByte_defaultsFalse()
+    {
+        // v2 batch (built by the existing helper): OnCpu byte present, no IsAgentWork byte after it.
+        var buf = BuildV2Batch(onCpu: true);
+        var samples = BufferParser.Parse(buf, buf.Length);
+        Assert.Multiple(() =>
+        {
+            Assert.That(samples[0].OnCpu, Is.True);
+            Assert.That(samples[0].IsAgentWork, Is.False);
+        });
+    }
+
+    [Test]
+    public void Parse_v3_truncatedBeforeIsAgentWorkByte_returnsWhatParsed()
+    {
+        var full = BuildV3Batch(onCpu: true, isAgentWork: true);
+
+        // Same technique as the v2 truncation test: physically shorten the array right after the
+        // OnCpu byte (before the IsAgentWork byte) by rebuilding the prefix independently.
+        var prefix = new List<byte>();
+        prefix.Add(0x01);
+        prefix.Add(0x03);
+        prefix.AddRange(Int64BE(123L));
+        prefix.Add(0x02);
+        prefix.AddRange(Utf16Str("t1"));
+        prefix.AddRange(Int64BE(4242L));
+        prefix.AddRange(Int64BE(0L));
+        prefix.AddRange(Int64BE(0L));
+        prefix.AddRange(Int64BE(0L));
+        prefix.Add(1); // OnCpu byte
+        var cutLength = prefix.Count; // ends right before the IsAgentWork byte
+
+        var truncated = new byte[cutLength];
+        Array.Copy(full, truncated, cutLength);
+
+        var samples = BufferParser.Parse(truncated, truncated.Length);
+        Assert.That(samples, Is.Empty);
+    }
 }

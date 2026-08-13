@@ -27,6 +27,8 @@ public class NativeMethodsTests
     [TestCase("ContinuousProfilerReadThreadSamples", new[] { typeof(int), typeof(byte[]) }, typeof(int))]
     [TestCase("ContinuousProfilerSetTraceContext", new[] { typeof(long), typeof(long), typeof(long) }, typeof(void))]
     [TestCase("ContinuousProfilerResetTraceContext", new Type[0], typeof(void))]
+    [TestCase("ContinuousProfilerSetAgentWork", new Type[0], typeof(void))]
+    [TestCase("ContinuousProfilerResetAgentWork", new Type[0], typeof(void))]
     [TestCase("ContinuousProfilerShutdown", new Type[0], typeof(void))]
     public void INativeMethods_DeclaresExpectedContinuousProfilerMember(string methodName, Type[] parameterTypes, Type returnType)
     {

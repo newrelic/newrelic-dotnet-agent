@@ -27,4 +27,11 @@ public interface INativeContinuousProfiler
 
     /// <summary>Clears the calling thread's active distributed-tracing context in the native profiler.</summary>
     void ResetTraceContext();
+
+    /// <summary>Marks the calling thread one level deeper into agent-owned background dispatch in the
+    /// native profiler. Nesting-safe; must be paired 1:1 with <see cref="ResetAgentWork"/>.</summary>
+    void SetAgentWork();
+
+    /// <summary>Marks the calling thread one level shallower. Must be paired 1:1 with <see cref="SetAgentWork"/>.</summary>
+    void ResetAgentWork();
 }

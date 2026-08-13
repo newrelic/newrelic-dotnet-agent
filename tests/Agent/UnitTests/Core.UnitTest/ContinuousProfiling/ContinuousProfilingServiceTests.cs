@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.ContinuousProfiling;
@@ -81,7 +82,7 @@ public class ContinuousProfilingServiceTests
 
         _service.StartIfEnabled();
 
-        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(10000), Arg.IsAny<TimeSpan?>()), Occurs.Once());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(10000), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Once());
         Assert.That(_service.IsActive, Is.True);
     }
 
@@ -93,7 +94,7 @@ public class ContinuousProfilingServiceTests
 
         _service.StartIfEnabled();
 
-        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()), Occurs.Never());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Never());
         Assert.That(_service.IsActive, Is.False);
     }
 
@@ -105,7 +106,7 @@ public class ContinuousProfilingServiceTests
 
         _service.StartIfEnabled();
 
-        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()), Occurs.Once());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Once());
     }
 
     [Test]
@@ -131,7 +132,7 @@ public class ContinuousProfilingServiceTests
 
         _service.ApplyConfigChange();
 
-        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()), Occurs.Once());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Once());
         Mock.Assert(() => _scheduler.StopExecuting(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan?>()), Occurs.Never());
         Assert.That(_service.IsActive, Is.True);
     }
@@ -150,7 +151,7 @@ public class ContinuousProfilingServiceTests
         _service.ApplyConfigChange();
 
         Mock.Assert(() => _scheduler.StopExecuting(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan?>()), Occurs.Once());
-        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(20000), Arg.IsAny<TimeSpan?>()), Occurs.Once());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(20000), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Once());
         Assert.That(_service.IsActive, Is.True);
     }
 
@@ -386,7 +387,7 @@ public class ContinuousProfilingServiceTests
         ArrangeEnabled(10000);
         _service.ApplyConfigChange();
 
-        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(10000), Arg.IsAny<TimeSpan?>()), Occurs.Once());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(10000), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Once());
         Assert.That(_service.IsActive, Is.True);
     }
 
@@ -566,6 +567,28 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void StartIfEnabled_serializes_on_ProfilingMutualExclusionGate()
+    {
+        // Proves StartLocked's guard-check-and-arm sequence actually takes
+        // ProfilingMutualExclusionGate.Lock -- the same lock ThreadProfilingService.
+        // StartThreadProfilingSession takes -- rather than merely documenting the intent in a comment.
+        ArrangeEnabled(10000);
+
+        Task startTask;
+
+        lock (ProfilingMutualExclusionGate.Lock)
+        {
+            startTask = Task.Run(() => _service.StartIfEnabled());
+
+            var completedWhileHeld = Task.WaitAny(new Task[] { startTask }, 200) == 0;
+            Assert.That(completedWhileHeld, Is.False, "StartIfEnabled must block while the gate is held elsewhere.");
+        }
+
+        Assert.That(startTask.Wait(5000), Is.True, "StartIfEnabled must complete once the gate is released.");
+        Assert.That(_service.IsActive, Is.True);
+    }
+
+    [Test]
     public void StartIfEnabled_defers_when_thread_profiling_active()
     {
         ArrangeEnabled(10000);
@@ -577,7 +600,7 @@ public class ContinuousProfilingServiceTests
         _service.StartIfEnabled();
 
         // Deferred: no recurring drain scheduled, not active, but a retry was scheduled.
-        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()), Occurs.Never());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Never());
         Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()), Occurs.AtLeast(1));
         Assert.That(_service.IsActive, Is.False);
     }
@@ -593,7 +616,7 @@ public class ContinuousProfilingServiceTests
 
         _service.StartIfEnabled();
 
-        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(10000), Arg.IsAny<TimeSpan?>()), Occurs.Once());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(10000), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Once());
         Assert.That(_service.IsActive, Is.True);
     }
 
@@ -608,7 +631,7 @@ public class ContinuousProfilingServiceTests
 
         _service.ApplyConfigChange();
 
-        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()), Occurs.Never());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Never());
         Assert.That(_service.IsActive, Is.False);
     }
 
@@ -629,7 +652,7 @@ public class ContinuousProfilingServiceTests
         Mock.Arrange(() => tpStatus.IsThreadProfilingActive).Returns(false);
         _service.StartIfEnabled();
 
-        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(10000), Arg.IsAny<TimeSpan?>()), Occurs.Once());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(10000), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Once());
         Assert.That(_service.IsActive, Is.True);
     }
 
@@ -1142,7 +1165,7 @@ public class ContinuousProfilingServiceTests
         service.ApplyConfigChange();
 
         Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Once(), "only from EnableAndStart; the post-Dispose config change must not restart native sampling");
-        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()), Occurs.Once(), "the drain schedule must not be re-armed after Dispose");
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Once(), "the drain schedule must not be re-armed after Dispose");
         Assert.That(service.IsActive, Is.False);
         Assert.That(ContinuousProfilingContext.Instance.IsEnabled, Is.False, "the wrapper hot-path seam must stay disarmed after Dispose");
     }

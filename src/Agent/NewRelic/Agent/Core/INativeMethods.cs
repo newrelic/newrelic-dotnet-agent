@@ -23,5 +23,7 @@ public interface INativeMethods
     int ContinuousProfilerReadThreadSamples(int len, byte[] buffer);
     void ContinuousProfilerSetTraceContext(long traceIdHigh, long traceIdLow, long spanId);
     void ContinuousProfilerResetTraceContext();
+    void ContinuousProfilerSetAgentWork();
+    void ContinuousProfilerResetAgentWork();
     void ContinuousProfilerShutdown();
 }

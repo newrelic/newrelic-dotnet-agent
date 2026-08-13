@@ -245,7 +245,9 @@ namespace NewRelic { namespace Profiler {
                 //Init does not start threads or requires cleanup. RequestProfile will create the threads for the TP.
                 _threadProfiler.Init(_corProfilerInfo4);
                 //Init does not start threads or allocate. Start() will lazily create the CP sampling thread.
-                _continuousProfiler.Init(_corProfilerInfo4);
+                //_isCoreClr (set above by SetClrType) decides whether CP stops the world via
+                //SuspendRuntime/ResumeRuntime -- CoreCLR on every OS, matching OTel's ClrRuntimeCapture.
+                _continuousProfiler.Init(_corProfilerInfo4, _isCoreClr);
 
 
                 HRESULT corePathInitResult = InitializeAndSetAgentCoreDllPath(_productName);
@@ -874,6 +876,16 @@ namespace NewRelic { namespace Profiler {
             _continuousProfiler.ResetTraceContext();
         }
 
+        void ContinuousProfilerSetAgentWork() noexcept
+        {
+            _continuousProfiler.SetAgentWork();
+        }
+
+        void ContinuousProfilerResetAgentWork() noexcept
+        {
+            _continuousProfiler.ResetAgentWork();
+        }
+
         void ContinuousProfilerShutdown() noexcept
         {
             _continuousProfiler.Shutdown();
@@ -1499,6 +1511,30 @@ namespace NewRelic { namespace Profiler {
             return;
         }
         profiler->ContinuousProfilerResetTraceContext();
+    }
+
+    // called by managed code (Scheduler) to mark the calling thread one level deeper into
+    // agent-owned background dispatch -- see AgentWorkMap.h for why identity, not frame text.
+    extern "C" __declspec(dllexport) void __cdecl ContinuousProfilerSetAgentWork() noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"ContinuousProfilerSetAgentWork: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->ContinuousProfilerSetAgentWork();
+    }
+
+    // called by managed code (Scheduler) to mark the calling thread one level shallower. Must be
+    // paired 1:1 with ContinuousProfilerSetAgentWork.
+    extern "C" __declspec(dllexport) void __cdecl ContinuousProfilerResetAgentWork() noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"ContinuousProfilerResetAgentWork: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->ContinuousProfilerResetAgentWork();
     }
 
     // called by managed code to terminate the continuous profiler's worker thread and free resources

@@ -71,4 +71,20 @@ public class NativeContinuousProfilerSampleSourceTests
 
         Mock.Assert(() => _native.ContinuousProfilerResetTraceContext(), Occurs.Once());
     }
+
+    [Test]
+    public void SetAgentWork_forwards_to_ContinuousProfilerSetAgentWork()
+    {
+        _source.SetAgentWork();
+
+        Mock.Assert(() => _native.ContinuousProfilerSetAgentWork(), Occurs.Once());
+    }
+
+    [Test]
+    public void ResetAgentWork_forwards_to_ContinuousProfilerResetAgentWork()
+    {
+        _source.ResetAgentWork();
+
+        Mock.Assert(() => _native.ContinuousProfilerResetAgentWork(), Occurs.Once());
+    }
 }

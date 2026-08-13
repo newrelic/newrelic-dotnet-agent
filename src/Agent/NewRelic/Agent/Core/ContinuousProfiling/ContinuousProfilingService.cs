@@ -386,65 +386,75 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         // (short, time-boxed) thread-profiling session completes. The retry re-reads configuration via
         // ApplyConfigChange, so a disable-while-deferred simply causes the retry to no-op.
         //
-        // NOTE: this check and ThreadProfilingService's forward guard (IsActive) are read/written under
-        // different locks (this service's _lifecycleLock vs. no explicit lock on the thread-profiling
-        // side), so a narrow window exists where both services could decide to start concurrently. These
-        // managed guards are a cooperative, coarse gate on top of the real enforcement backstop: the
-        // native SuspendMutex (Profiler/ContinuousProfiler/SuspendMutex.h) serializes both profilers'
-        // suspend/walk, so even if this window lets both managed sessions start, the shared native mutex
-        // still prevents them from suspending/walking threads at the same time.
-        if (ThreadProfilingStatus?.IsThreadProfilingActive == true)
+        // Serialized against ThreadProfilingService's forward guard (IsActive) via
+        // ProfilingMutualExclusionGate.Lock, the same lock TP's StartThreadProfilingSession takes around
+        // its own guard-check-and-arm -- so at most one profiler can decide "the other isn't active" and
+        // arm itself at a time; the earlier narrow window this used to describe (checking/arming under
+        // different, unsynchronized state -- this service's _lifecycleLock vs. no explicit lock on the
+        // thread-profiling side) is closed. This method already runs under _lifecycleLock (held by every
+        // caller of StartLocked); ThreadProfilingService never takes _lifecycleLock, so the lock order is
+        // always _lifecycleLock -> ProfilingMutualExclusionGate.Lock, never the reverse -- no deadlock
+        // risk. The native SuspendMutex (Profiler/ContinuousProfiler/SuspendMutex.h) remains the backstop
+        // against concurrent suspend/walk, which this lock does not replace -- it only makes the two
+        // profilers' *liveness* mutually exclusive as well.
+        lock (ProfilingMutualExclusionGate.Lock)
         {
-            Log.Info("[ContinuousProfiling] Start deferred: a thread-profiling session is active; retrying in {0} ms.", (int)DeferredStartRetryInterval.TotalMilliseconds);
-            _scheduler.ExecuteOnce(ApplyConfigChange, DeferredStartRetryInterval);
-            return;
-        }
+            if (ThreadProfilingStatus?.IsThreadProfilingActive == true)
+            {
+                Log.Info("[ContinuousProfiling] Start deferred: a thread-profiling session is active; retrying in {0} ms.", (int)DeferredStartRetryInterval.TotalMilliseconds);
+                _scheduler.ExecuteOnce(ApplyConfigChange, DeferredStartRetryInterval);
+                return;
+            }
 
-        try
-        {
-            // A new session starts optimistic: clear any backoff state left over from a PREVIOUS session.
-            // Without this, disabling CP while a probe is pending and re-enabling later would leave
-            // _sendBackoffActive stuck true forever -- EndBackoffProbe's own !_isActive guard (below) means
-            // the probe that fires while disabled never clears it, and nothing else ever will.
-            //
-            // Ints first, then the volatile flag last -- a volatile write publishes everything written
-            // before it to another thread's next volatile read of the same field (release semantics). The
-            // old order (flag first) published nothing. Matches ResumeAfterReconnect's order.
-            _consecutiveSendFailures = 0;
-            _backoffIndex = 0;
-            // Supersede any probe still pending from a previous session (e.g. a retune's stop/start), so it
-            // no-ops instead of resuming sampling this fresh session didn't schedule.
-            _backoffGeneration++;
-            _sendBackoffActive = false;
+            try
+            {
+                // A new session starts optimistic: clear any backoff state left over from a PREVIOUS session.
+                // Without this, disabling CP while a probe is pending and re-enabling later would leave
+                // _sendBackoffActive stuck true forever -- EndBackoffProbe's own !_isActive guard (below) means
+                // the probe that fires while disabled never clears it, and nothing else ever will.
+                //
+                // Ints first, then the volatile flag last -- a volatile write publishes everything written
+                // before it to another thread's next volatile read of the same field (release semantics). The
+                // old order (flag first) published nothing. Matches ResumeAfterReconnect's order.
+                _consecutiveSendFailures = 0;
+                _backoffIndex = 0;
+                // Supersede any probe still pending from a previous session (e.g. a retune's stop/start), so it
+                // no-ops instead of resuming sampling this fresh session didn't schedule.
+                _backoffGeneration++;
+                _sendBackoffActive = false;
 
-            // Arm the reverse-guard flag BEFORE starting native sampling (not after) -- narrows the
-            // mutual-exclusion race window with ThreadProfilingService's forward guard, which reads this
-            // flag under a different lock. A failed start unwinds it (see the catch below).
-            _isActive = true;
+                // Arm the reverse-guard flag before starting native sampling, while still holding the gate
+                // above -- ThreadProfilingService's forward guard can only observe this flag after acquiring
+                // the same lock, so there is no window for it to see a stale "not active" value here.
+                _isActive = true;
 
-            // Start native sampling first, then begin draining it. Both run under _lifecycleLock, which is
-            // fine: lifecycle transitions are rare (config-driven), so the native call here does not touch
-            // the lock-free hot path (DrainOnce).
-            _native.Start(intervalMs);
-            _scheduler.ExecuteEvery(_drainAction, TimeSpan.FromMilliseconds(intervalMs));
-            _activeIntervalMs = intervalMs;
-            Interlocked.Exchange(ref _lastDrainTimestamp, Stopwatch.GetTimestamp());
+                // Start native sampling first, then begin draining it. Both run under _lifecycleLock, which is
+                // fine: lifecycle transitions are rare (config-driven), so the native call here does not touch
+                // the lock-free hot path (DrainOnce).
+                _native.Start(intervalMs);
+                // trackAsAgentWork: false -- this action IS the CP drain itself (reads the native sample
+                // pipeline this very flag exists to annotate). Marking this thread poisons its own read;
+                // see follow-up #16 / Scheduler.CreateExecuteEveryTimer.
+                _scheduler.ExecuteEvery(_drainAction, TimeSpan.FromMilliseconds(intervalMs), trackAsAgentWork: false);
+                _activeIntervalMs = intervalMs;
+                Interlocked.Exchange(ref _lastDrainTimestamp, Stopwatch.GetTimestamp());
 
-            // Arm trace-context correlation only now that native sampling is running, and publish the seam so
-            // the wrapper hot path starts pushing the current trace/span on each app thread.
-            _continuousProfilingContext.Enable(_native);
-            ContinuousProfilingContext.Instance = _continuousProfilingContext;
+                // Arm trace-context correlation only now that native sampling is running, and publish the seam so
+                // the wrapper hot path starts pushing the current trace/span on each app thread.
+                _continuousProfilingContext.Enable(_native);
+                ContinuousProfilingContext.Instance = _continuousProfilingContext;
 
-            Log.Info("[ContinuousProfiling] Session started; draining every {0} ms.", intervalMs);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "[ContinuousProfiling] Failed to start the drain schedule.");
+                Log.Info("[ContinuousProfiling] Session started; draining every {0} ms.", intervalMs);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[ContinuousProfiling] Failed to start the drain schedule.");
 
-            // _isActive is armed before the first call that can throw, so a half-started session has to be
-            // unwound here -- otherwise the flag stays true with nothing running, which both lies to
-            // IsActive and permanently blocks thread profiling via the guard above.
-            StopLocked();
+                // _isActive is armed before the first call that can throw, so a half-started session has to be
+                // unwound here -- otherwise the flag stays true with nothing running, which both lies to
+                // IsActive and permanently blocks thread profiling via the guard above.
+                StopLocked();
+            }
         }
     }
 
@@ -539,8 +549,11 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                     return;
 
                 var now = Stopwatch.GetTimestamp();
-                var startUnixNano = ToUnixNano(DateTime.UtcNow);
                 var durationNano = ElapsedNanos(Interlocked.Read(ref _lastDrainTimestamp), now);
+                // The window ends now; it started durationNano ago -- not the reverse. Getting this backwards
+                // makes every profile appear to cover [now, now + duration) instead of the interval actually
+                // sampled, [now - duration, now).
+                var startUnixNano = ToUnixNano(DateTime.UtcNow) - durationNano;
                 Interlocked.Exchange(ref _lastDrainTimestamp, now);
 
                 // The sampling interval (ms) is the profile's period; convert to nanoseconds for period_type=cpu/ns.

@@ -183,56 +183,60 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     /// <returns>true if a new thread profiling session is started. false if one already exists.</returns>
     public bool StartThreadProfilingSession(int profileSessionId, uint frequencyInMsec, uint durationInMsec)
     {
-        // Forward mutual-exclusion guard: refuse to start while continuous profiling is active. This
-        // check and ContinuousProfilingService's reverse guard (ThreadProfilingStatus.IsThreadProfilingActive)
-        // are read/written under different locks (no explicit lock here vs. that service's
-        // _lifecycleLock), so a narrow concurrent-start window exists. These managed guards are a
-        // cooperative, coarse gate on top of the real enforcement backstop: the native SuspendMutex
-        // (Profiler/ContinuousProfiler/SuspendMutex.h) serializes both profilers' suspend/walk, so even if
-        // this window lets both managed sessions start, the shared native mutex still prevents them from
-        // suspending/walking threads at the same time.
-        if (_continuousProfilingSessionControl?.IsActive == true)
+        // Forward mutual-exclusion guard: refuse to start while continuous profiling is active.
+        // Serialized against ContinuousProfilingService's reverse guard (ThreadProfilingStatus.
+        // IsThreadProfilingActive) via ProfilingMutualExclusionGate.Lock, the same lock CP's StartLocked
+        // takes around its own guard-check-and-arm -- so at most one profiler can decide "the other isn't
+        // active" and arm itself at a time; the earlier narrow concurrent-start window this used to
+        // describe (checking/arming under different, unsynchronized state) is closed. The native
+        // SuspendMutex (Profiler/ContinuousProfiler/SuspendMutex.h) remains the backstop against
+        // concurrent suspend/walk, which this lock does not replace -- it only makes the two profilers'
+        // *liveness* mutually exclusive as well.
+        lock (ProfilingMutualExclusionGate.Lock)
         {
-            Log.Info("Thread profiling start refused: continuous profiling is active.");
-            return false;
-        }
-
-        Log.Info($"Starting a thread profiling session {{ SessionId: {profileSessionId}, SamplePeriodMs: {frequencyInMsec}, DurationMs: {durationInMsec} }}");
-        var startedNewSession = false;
-
-        try
-        {
-            if (_sampler == null)
+            if (_continuousProfilingSessionControl?.IsActive == true)
             {
-                _sampler = new ThreadProfilingSampler(_nativeMethods);
+                Log.Info("Thread profiling start refused: continuous profiling is active.");
+                return false;
             }
 
-            // Remove existing data in tree and cache buffers
-            ResetCache();
+            Log.Info($"Starting a thread profiling session {{ SessionId: {profileSessionId}, SamplePeriodMs: {frequencyInMsec}, DurationMs: {durationInMsec} }}");
+            var startedNewSession = false;
 
-            _reportData = true;
-
-            startedNewSession = _sampler.Start(frequencyInMsec, durationInMsec, this, _nativeMethods);
-
-            if (startedNewSession)
+            try
             {
-                // The reverse mutual-exclusion guard (ContinuousProfilingService reading
-                // IsThreadProfilingActive) derives liveness from the sampler's own running flag, which the
-                // sampler sets atomically inside Start() before its worker walks any threads -- so it is
-                // already published by the time we get here. The assignments below are session bookkeeping
-                // for the reported wire model, not part of the mutual-exclusion handshake; the native
-                // SuspendMutex remains the real backstop (see the guard comment above).
-                _profileSessionId = profileSessionId;
-                _startSessionTime = DateTime.UtcNow;
-                _numberSamplesInSession = 0;
-            }
-        }
-        catch (Exception e)
-        {
-            Log.Error(e, "Failed to start thread profiler");
-        }
+                if (_sampler == null)
+                {
+                    _sampler = new ThreadProfilingSampler(_nativeMethods);
+                }
 
-        return startedNewSession;
+                // Remove existing data in tree and cache buffers
+                ResetCache();
+
+                _reportData = true;
+
+                startedNewSession = _sampler.Start(frequencyInMsec, durationInMsec, this, _nativeMethods);
+
+                if (startedNewSession)
+                {
+                    // The reverse mutual-exclusion guard (ContinuousProfilingService reading
+                    // IsThreadProfilingActive) derives liveness from the sampler's own running flag, which the
+                    // sampler sets atomically inside Start() before its worker walks any threads -- so it is
+                    // already published by the time we get here, and while still holding the gate above.
+                    // The assignments below are session bookkeeping for the reported wire model, not part of
+                    // the mutual-exclusion handshake.
+                    _profileSessionId = profileSessionId;
+                    _startSessionTime = DateTime.UtcNow;
+                    _numberSamplesInSession = 0;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to start thread profiler");
+            }
+
+            return startedNewSession;
+        }
     }
 
     public bool StopThreadProfilingSession(int profileId, bool reportData = true)

@@ -15,6 +15,9 @@ public class OtlpProfileBuilderTests
     private static ManagedThreadSample Sample(string name, long span, params string[] frames) =>
         new ManagedThreadSample(name, 1, 0, 0, span, frames, onCpu: false);
 
+    private static ManagedThreadSample AgentWorkSample(string name, long span, params string[] frames) =>
+        new ManagedThreadSample(name, 1, 0, 0, span, frames, onCpu: false, isAgentWork: true);
+
     [Test]
     public void Build_emits_one_sample_per_input_and_zero_index_empty_string()
     {
@@ -49,6 +52,64 @@ public class OtlpProfileBuilderTests
             Assert.That(dict.StringTable.Any(s => s.StartsWith("NewRelic.")), Is.False, "No agent frames should be interned.");
             Assert.That(dict.StringTable.Any(s => s.Contains("MyApp.Work")), Is.True, "The customer frame should survive.");
         });
+    }
+
+    [Test]
+    public void Build_drops_isAgentWork_flagged_samples_with_no_matching_frame_text_when_includeAgentCode_false()
+    {
+        // The exact gap follow-up #16 exists for: a thread parked in Monitor.Wait carries no agent frame
+        // anywhere on its captured stack, so frame-text matching alone cannot see it -- the thread-identity
+        // flag must drop it independently.
+        var samples = new[]
+        {
+            AgentWorkSample("agent-parked", 0, "System.Threading.Monitor.Wait()"),
+            Sample("app", 0, "MyApp.Work()"),
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var dict = req.Dictionary;
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(profile.Samples, Has.Count.EqualTo(1), "The isAgentWork-flagged sample should be dropped.");
+            Assert.That(dict.StringTable.Any(s => s.Contains("MyApp.Work")), Is.True, "The customer frame should survive.");
+        });
+    }
+
+    [Test]
+    public void Build_keeps_isAgentWork_flagged_samples_when_includeAgentCode_true()
+    {
+        // The new signal stays gated by the SAME includeAgentCode toggle as the existing frame-text check.
+        var samples = new[] { AgentWorkSample("agent-parked", 0, "System.Threading.Monitor.Wait()") };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: true);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void Build_drops_frame_matched_sample_that_is_not_isAgentWork_flagged_when_includeAgentCode_false()
+    {
+        // Existing frame-text behavior must survive unchanged now that it is OR'd with the new flag.
+        var samples = new[] { Sample("agent", 0, "NewRelic.Agent.Core.DataTransport.ConnectionManager.Connect()") };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        Assert.That(req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles, Is.Empty,
+            "The only sample was dropped -- no non-empty partition side to emit a profile for.");
+    }
+
+    [Test]
+    public void Build_keeps_customer_sample_that_is_neither_frame_matched_nor_isAgentWork_flagged()
+    {
+        var samples = new[] { Sample("app", 0, "MyApp.Work()") };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1));
     }
 
     [Test]

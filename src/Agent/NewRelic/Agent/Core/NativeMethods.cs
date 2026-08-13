@@ -106,6 +106,12 @@ public class LinuxNativeMethods : INativeMethods
     [DllImport(DllName, EntryPoint = "ContinuousProfilerResetTraceContext", CallingConvention = CallingConvention.Cdecl)]
     private static extern void ExternContinuousProfilerResetTraceContext();
 
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerSetAgentWork", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternContinuousProfilerSetAgentWork();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerResetAgentWork", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternContinuousProfilerResetAgentWork();
+
     [DllImport(DllName, EntryPoint = "ContinuousProfilerShutdown", CallingConvention = CallingConvention.Cdecl)]
     private static extern void ExternContinuousProfilerShutdown();
 
@@ -132,6 +138,16 @@ public class LinuxNativeMethods : INativeMethods
     public void ContinuousProfilerResetTraceContext()
     {
         ExternContinuousProfilerResetTraceContext();
+    }
+
+    public void ContinuousProfilerSetAgentWork()
+    {
+        ExternContinuousProfilerSetAgentWork();
+    }
+
+    public void ContinuousProfilerResetAgentWork()
+    {
+        ExternContinuousProfilerResetAgentWork();
     }
 
     public void ContinuousProfilerShutdown()
@@ -240,6 +256,12 @@ public class WindowsNativeMethods : INativeMethods
     [DllImport(DllName, EntryPoint = "ContinuousProfilerResetTraceContext", CallingConvention = CallingConvention.Cdecl)]
     private static extern void ExternContinuousProfilerResetTraceContext();
 
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerSetAgentWork", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternContinuousProfilerSetAgentWork();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerResetAgentWork", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternContinuousProfilerResetAgentWork();
+
     [DllImport(DllName, EntryPoint = "ContinuousProfilerShutdown", CallingConvention = CallingConvention.Cdecl)]
     private static extern void ExternContinuousProfilerShutdown();
 
@@ -266,6 +288,16 @@ public class WindowsNativeMethods : INativeMethods
     public void ContinuousProfilerResetTraceContext()
     {
         ExternContinuousProfilerResetTraceContext();
+    }
+
+    public void ContinuousProfilerSetAgentWork()
+    {
+        ExternContinuousProfilerSetAgentWork();
+    }
+
+    public void ContinuousProfilerResetAgentWork()
+    {
+        ExternContinuousProfilerResetAgentWork();
     }
 
     public void ContinuousProfilerShutdown()

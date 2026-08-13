@@ -128,6 +128,38 @@ public class ContinuousProfilingContext : IContinuousProfilingContext
         }
     }
 
+    public void SetAgentWork()
+    {
+        var native = _native;
+        if (native == null)
+            return;
+
+        try
+        {
+            native.SetAgentWork();
+        }
+        catch (Exception ex)
+        {
+            Log.Finest(ex, "[ContinuousProfiling] Failed to set agent-work flag in the native profiler.");
+        }
+    }
+
+    public void ResetAgentWork()
+    {
+        var native = _native;
+        if (native == null)
+            return;
+
+        try
+        {
+            native.ResetAgentWork();
+        }
+        catch (Exception ex)
+        {
+            Log.Finest(ex, "[ContinuousProfiling] Failed to reset agent-work flag in the native profiler.");
+        }
+    }
+
     /// <summary>
     /// Splits a 32-char hex trace id into its high and low 8-byte halves, each a big-endian long. Anything
     /// that is not exactly 32 hex chars (null, wrong length, non-hex) decomposes to (0, 0) == "no trace".
