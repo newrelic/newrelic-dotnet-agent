@@ -23,6 +23,8 @@ namespace NewRelic.Agent.Core.UnitTest.ContinuousProfiling;
 [TestFixture]
 public class ContinuousProfilingServiceTests
 {
+    private const int AllocationBudget = 200;
+
     private ISampleSource _source;
     private INativeContinuousProfiler _native;
     private IAllocationSampleSource _allocationSource;
@@ -74,6 +76,11 @@ public class ContinuousProfilingServiceTests
         Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(true);
         Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(intervalMs);
         Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        // Allocation sampling stays DISABLED in config here (this fixture covers the thread-sampling path;
+        // ContinuousProfilingServiceAllocationTests covers the other one), but the budget is arranged anyway
+        // because a heap agent command paces a command-started allocation sampler from this value regardless
+        // of the config enable flag.
+        Mock.Arrange(() => _config.ContinuousProfilingAllocationMaxSamplesPerMinute).Returns(AllocationBudget);
         _service.OverrideConfigForTesting(_config);
     }
 
@@ -200,32 +207,71 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
-    public void StartFromCommand_with_heap_reports_not_supported_and_does_not_start_anything()
+    public void StartFromCommand_with_heap_starts_only_allocation_sampling()
     {
+        // "heap" = allocations only, so the thread sampler must be left alone -- and IsActive, which reports
+        // the THREAD sampler (the thread-profiling mutual-exclusion guard reads it), stays false.
         ArrangeEnabled(10000);
 
         var result = _service.StartFromCommand(new[] { "heap" }, null, null);
 
         Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Mock.Assert(() => _allocationSource.Start(AllocationBudget), Occurs.Once());
         Assert.Multiple(() =>
         {
             Assert.That(_service.IsActive, Is.False);
-            Assert.That(result.Exceptions["heap"], Is.EqualTo("not supported"));
+            Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "heap" }));
+            Assert.That(result.Exceptions, Is.Empty);
         });
     }
 
     [Test]
-    public void StartFromCommand_with_all_starts_cpu_and_reports_heap_as_not_supported()
+    public void StartFromCommand_with_all_starts_both_the_cpu_bundle_and_allocation_sampling()
     {
         ArrangeEnabled(10000);
 
         var result = _service.StartFromCommand(new[] { "all" }, null, null);
 
         Mock.Assert(() => _native.Start(10000), Occurs.Once());
+        Mock.Assert(() => _allocationSource.Start(AllocationBudget), Occurs.Once());
         Assert.Multiple(() =>
         {
-            Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "cpu" }));
-            Assert.That(result.Exceptions["heap"], Is.EqualTo("not supported"));
+            Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "cpu", "heap" }));
+            Assert.That(result.Exceptions, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void StopFromCommand_with_all_stops_both_samplers()
+    {
+        ArrangeEnabled(10000);
+        _service.StartFromCommand(new[] { "all" }, null, null);
+
+        var result = _service.StopFromCommand(new[] { "all" });
+
+        Mock.Assert(() => _native.Stop(), Occurs.Once());
+        Mock.Assert(() => _allocationSource.Stop(), Occurs.Once());
+        Mock.Assert(() => _allocationSource.Shutdown(), Occurs.Never(), "a command stop must never be the terminal shutdown");
+        Assert.Multiple(() =>
+        {
+            Assert.That(_service.IsActive, Is.False);
+            Assert.That(result.ActiveTypes, Is.Empty);
+            Assert.That(result.Exceptions, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void StartFromCommand_with_an_unknown_token_alongside_heap_still_starts_allocation_sampling()
+    {
+        ArrangeEnabled(10000);
+
+        var result = _service.StartFromCommand(new[] { "heap", "bogus" }, null, null);
+
+        Mock.Assert(() => _allocationSource.Start(AllocationBudget), Occurs.Once());
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "heap" }));
+            Assert.That(result.Exceptions, Is.EqualTo(new Dictionary<string, string> { { "bogus", "not supported" } }));
         });
     }
 

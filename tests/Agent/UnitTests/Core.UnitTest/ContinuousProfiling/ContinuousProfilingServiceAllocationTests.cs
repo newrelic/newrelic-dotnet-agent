@@ -301,8 +301,9 @@ public class ContinuousProfilingServiceAllocationTests
     public void ApplyConfigChange_reconciles_allocation_even_while_the_cpu_bundle_is_command_owned()
     {
         // An agent command owns the cpu bundle until a matching stop, and ApplyConfigChange must not disturb
-        // it. Allocation sampling is not command-controllable yet, so its config-driven reconciliation has to
-        // run anyway -- it must not be nested inside the cpu ownership guard's early return.
+        // it. Command ownership is tracked PER TYPE, so a command that owns only the cpu bundle must leave
+        // allocation sampling under config control -- the guard must not be an early return out of the whole
+        // method.
         ArrangeThreadSamplingOnly();
         _service.StartFromCommand(new[] { "cpu" }, null, null);
 
@@ -323,6 +324,166 @@ public class ContinuousProfilingServiceAllocationTests
         _service.ApplyConfigChange();
 
         Mock.Assert(() => _allocationSource.Start(Arg.AnyInt), Occurs.Never());
+    }
+
+    #endregion
+
+    #region the heap agent-command token
+
+    [Test]
+    public void StartFromCommand_with_heap_starts_allocation_sampling_even_while_config_has_it_disabled()
+    {
+        // The point of an operator command: it starts a sampler the configuration does not enable. The BUDGET
+        // still comes from configuration, because the command carries none of its own (its two interval
+        // parameters are both cpu-shaped).
+        _service.OverrideConfigForTesting(NewConfig(threadSampling: false, allocation: false, budget: 275));
+
+        var result = _service.StartFromCommand(new[] { "heap" }, null, null);
+
+        Mock.Assert(() => _allocationSource.Start(275), Occurs.Once());
+        Mock.Assert(() => _native.Start(Arg.AnyInt), Occurs.Never(), "\"heap\" is allocations only");
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "heap" }));
+            Assert.That(result.Exceptions, Is.Empty, "allocation sampling is implemented now, so nothing is unsupported");
+        });
+    }
+
+    [Test]
+    public void StartFromCommand_with_heap_arms_the_shared_drain_schedule_and_the_trace_context_seam()
+    {
+        // The command path must go through the same StartAllocationLocked as the config path, not a shortcut
+        // that starts the native sampler with nothing draining it.
+        ArrangeAllocationOnly(intervalMs: 15000);
+
+        _service.StartFromCommand(new[] { "heap" }, null, null);
+
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(15000), Arg.IsAny<TimeSpan?>()), Occurs.Once());
+        Assert.That(ContinuousProfilingContext.Instance.IsEnabled, Is.True);
+    }
+
+    [Test]
+    public void StartFromCommand_with_heap_while_allocation_is_already_active_is_an_idempotent_noop()
+    {
+        ArrangeAllocationOnly(budget: 200);
+        _service.StartIfEnabled();
+
+        var result = _service.StartFromCommand(new[] { "heap" }, null, null);
+
+        Mock.Assert(() => _allocationSource.Start(Arg.AnyInt), Occurs.Once(), "a repeat start must not re-pace a running sampler");
+        Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "heap" }));
+    }
+
+    [Test]
+    public void StopFromCommand_with_heap_stops_allocation_sampling_and_releases_the_shared_drain()
+    {
+        ArrangeAllocationOnly();
+        _service.StartFromCommand(new[] { "heap" }, null, null);
+
+        var result = _service.StopFromCommand(new[] { "heap" });
+
+        Mock.Assert(() => _allocationSource.Stop(), Occurs.Once());
+        Mock.Assert(() => _allocationSource.Shutdown(), Occurs.Never(), "a command stop must never be the terminal shutdown");
+        Mock.Assert(() => _scheduler.StopExecuting(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan?>()), Occurs.Once(),
+            "nothing else is sampling, so the shared drain is released");
+        Assert.That(result.ActiveTypes, Is.Empty);
+    }
+
+    [Test]
+    public void StopFromCommand_with_heap_while_allocation_is_inactive_is_an_idempotent_noop()
+    {
+        ArrangeAllocationOnly();
+
+        var result = _service.StopFromCommand(new[] { "heap" });
+
+        Mock.Assert(() => _allocationSource.Stop(), Occurs.Never());
+        Assert.That(result.Exceptions, Is.Empty);
+    }
+
+    [Test]
+    public void A_command_started_allocation_sampler_is_immune_to_an_unrelated_config_update_until_explicitly_stopped()
+    {
+        // The heap mirror of the cpu ownership test in ContinuousProfilingServiceTests: an incidental
+        // config-update event must not silently undo an operator's explicit command.
+        ArrangeAllocationOnly();
+        _service.StartFromCommand(new[] { "heap" }, null, null);
+
+        _service.OverrideConfigForTesting(NewConfig(threadSampling: false, allocation: false));
+        _service.ApplyConfigChange();
+
+        Mock.Assert(() => _allocationSource.Stop(), Occurs.Never());
+
+        // An explicit stop command releases ownership; a subsequent config update can act again.
+        _service.StopFromCommand(new[] { "heap" });
+        _service.ApplyConfigChange(); // config still says disabled -- already stopped, so no second stop
+
+        Mock.Assert(() => _allocationSource.Stop(), Occurs.Once());
+    }
+
+    [Test]
+    public void ApplyConfigChange_does_not_repace_a_command_owned_allocation_sampler()
+    {
+        // Ownership covers the budget too, not just start/stop: a server-side budget push must not silently
+        // re-pace a sampler an operator started by command.
+        ArrangeAllocationOnly(budget: 200);
+        _service.StartFromCommand(new[] { "heap" }, null, null);
+
+        _service.OverrideConfigForTesting(NewConfig(threadSampling: false, allocation: true, budget: 900));
+        _service.ApplyConfigChange();
+
+        Mock.Assert(() => _allocationSource.Start(900), Occurs.Never());
+        Mock.Assert(() => _allocationSource.Start(200), Occurs.Once());
+    }
+
+    [Test]
+    public void ApplyConfigChange_still_reconciles_thread_sampling_while_allocation_is_command_owned()
+    {
+        // The other direction of the per-type guard: heap ownership must not freeze the thread sampler's
+        // config-driven reconciliation.
+        ArrangeAllocationOnly();
+        _service.StartFromCommand(new[] { "heap" }, null, null);
+
+        // Note this config also DISABLES allocation, which is exactly what the heap ownership guard has to
+        // ignore.
+        _service.OverrideConfigForTesting(NewConfig(threadSampling: true, allocation: false, intervalMs: 20000));
+        _service.ApplyConfigChange();
+
+        Mock.Assert(() => _native.Start(20000), Occurs.Once(), "the thread sampler is still config-controlled");
+        Mock.Assert(() => _allocationSource.Stop(), Occurs.Never(), "the command-owned allocation sampler must be left alone");
+        Assert.That(_service.IsActive, Is.True);
+
+        // And allocation sampling is genuinely still live, not merely un-stopped: the drain still reads it,
+        // which it only does while the allocation active flag is set.
+        ArrangeReadableAllocationBatch();
+        _service.DrainOnce();
+        Mock.Assert(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void An_empty_include_command_reports_a_config_started_allocation_sampler_as_active()
+    {
+        // The status-query shape of the command (empty include changes nothing): ActiveTypes must report the
+        // allocation sampler even though configuration, not a command, started it.
+        ArrangeAllocationOnly();
+        _service.StartIfEnabled();
+
+        var result = _service.StartFromCommand(Array.Empty<string>(), null, null);
+
+        Mock.Assert(() => _allocationSource.Start(Arg.AnyInt), Occurs.Once(), "an empty include must not start anything");
+        Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "heap" }));
+    }
+
+    [Test]
+    public void A_command_result_reports_both_samplers_when_both_are_active()
+    {
+        ArrangeBothEnabled();
+        _service.StartIfEnabled();
+
+        var result = _service.StopFromCommand(Array.Empty<string>());
+
+        Mock.Assert(() => _native.Stop(), Occurs.Never(), "an empty include must not stop anything");
+        Mock.Assert(() => _allocationSource.Stop(), Occurs.Never());
+        Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "cpu", "heap" }));
     }
 
     #endregion

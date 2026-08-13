@@ -192,12 +192,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // only under _lifecycleLock.
     private int _drainIntervalMs;
 
-    // Profile-type tokens ("cpu") currently owned by an agent command rather than local/server config.
-    // ApplyConfigChange must not start/stop/retune a type present here -- only a matching StopFromCommand
-    // call or process restart releases it (see StartFromCommand/StopFromCommand below). Modeled as a set,
-    // not a bool, because the command spec is per-type ("all"/"cpu"/"heap"): today only "cpu" can ever be
-    // a member (heap/allocations isn't implemented), but this generalizes once a second independently
-    // toggleable type exists, without another redesign of the guard.
+    // Profile-type tokens ("cpu", "heap") currently owned by an agent command rather than local/server config.
+    // ApplyConfigChange must not start/stop/retune/re-pace a type present here -- only a matching
+    // StopFromCommand call or process restart releases it (see StartFromCommand/StopFromCommand below).
+    // A set, not a bool, because the command spec is per-type ("all"/"cpu"/"heap") and the two samplers are
+    // independently toggleable: a command may own the cpu bundle, allocation sampling, or both, and each
+    // guard in ApplyConfigChange consults only its own token.
     private readonly HashSet<string> _commandControlledTypes = new HashSet<string>();
 
     private static readonly IReadOnlyDictionary<string, string> EmptyCommandExceptions = new Dictionary<string, string>();
@@ -319,19 +319,20 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             if (_disposed)
                 return;
 
-            // An agent command owns the cpu bundle until a matching stop command or process restart --
-            // an incidental config-update event (an unrelated SSC push, a reconnect) must not silently
-            // override an operator's explicit start/stop_continuous_profiler command. See
+            // An agent command owns whichever types it started until a matching stop command or process
+            // restart -- an incidental config-update event (an unrelated SSC push, a reconnect) must not
+            // silently override an operator's explicit start/stop_continuous_profiler command. See
             // _commandControlledTypes and StartFromCommand/StopFromCommand.
             //
-            // The guard covers the THREAD sampler only. Allocation sampling is not command-controllable yet,
-            // so its config-driven reconciliation must still run when the cpu bundle is command-owned --
-            // hence a guarded call rather than an early return out of the whole method. The thread sampler
-            // is reconciled first for the same reason as in StartIfEnabled (it owns the drain cadence).
+            // Ownership is tracked PER TYPE, so each sampler gets its own guard rather than one early return
+            // out of the whole method: a command owning only the cpu bundle must still leave allocation
+            // sampling reconciled from config, and vice versa. The thread sampler is reconciled first for the
+            // same reason as in StartIfEnabled (it owns the drain cadence).
             if (!_commandControlledTypes.Contains(ContinuousProfilingCommandTypes.Cpu))
                 ApplyThreadSamplingConfigChangeLocked();
 
-            ApplyAllocationConfigChangeLocked();
+            if (!_commandControlledTypes.Contains(ContinuousProfilingCommandTypes.Heap))
+                ApplyAllocationConfigChangeLocked();
         }
     }
 
@@ -398,15 +399,15 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
             var exceptions = new Dictionary<string, string>();
             var startCpuBundle = false;
+            var startHeap = false;
 
             foreach (var token in requestedTypes)
             {
                 ContinuousProfilingCommandTypes.Classify(token, out var startsCpuBundle, out var requestsHeap);
                 startCpuBundle |= startsCpuBundle;
+                startHeap |= requestsHeap;
 
-                if (requestsHeap)
-                    exceptions[ContinuousProfilingCommandTypes.Heap] = "not supported";
-                else if (!startsCpuBundle)
+                if (!startsCpuBundle && !requestsHeap)
                     exceptions[token] = "not supported"; // unrecognized token
             }
 
@@ -421,6 +422,22 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                     StartLocked(clamped);
                 }
                 // else: already running -- idempotent no-op per spec; a repeat start does not retune.
+            }
+
+            // Second, for the same reason StartIfEnabled orders the two this way: when a single command starts
+            // both ("all"), the thread sampler is the one that arms the shared drain, at its own interval.
+            if (startHeap)
+            {
+                _commandControlledTypes.Add(ContinuousProfilingCommandTypes.Heap);
+
+                // The command carries no allocation budget of its own (sampleIntervalMs/cpuReportIntervalMs are
+                // both cpu-shaped, and the command spec defines no per-command heap budget), so a command-started
+                // allocation sampler is paced from configuration exactly like a config-started one. No clamp here:
+                // the budget is normalized at the native P/Invoke boundary.
+                if (!_allocationActive)
+                    StartAllocationLocked(_configuration.ContinuousProfilingAllocationMaxSamplesPerMinute);
+                // else: already running -- idempotent no-op, matching the cpu bundle above; a repeat start does
+                // not re-pace.
             }
 
             return BuildCommandResultLocked(exceptions);
@@ -441,15 +458,15 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
             var exceptions = new Dictionary<string, string>();
             var stopCpuBundle = false;
+            var stopHeap = false;
 
             foreach (var token in requestedTypes)
             {
                 ContinuousProfilingCommandTypes.Classify(token, out var startsCpuBundle, out var requestsHeap);
                 stopCpuBundle |= startsCpuBundle;
+                stopHeap |= requestsHeap;
 
-                if (requestsHeap)
-                    exceptions[ContinuousProfilingCommandTypes.Heap] = "not supported";
-                else if (!startsCpuBundle)
+                if (!startsCpuBundle && !requestsHeap)
                     exceptions[token] = "not supported"; // unrecognized token
             }
 
@@ -464,15 +481,34 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                     StopLocked();
             }
 
+            if (stopHeap)
+            {
+                // Same ownership release as the cpu bundle above: unconditional, so a stop for a type that was
+                // never command-started (or is already stopped) still hands it back to config control.
+                _commandControlledTypes.Remove(ContinuousProfilingCommandTypes.Heap);
+
+                if (_allocationActive)
+                    StopAllocationLocked();
+            }
+
             return BuildCommandResultLocked(exceptions);
         }
     }
 
     private ContinuousProfilingCommandResult BuildCommandResultLocked(IReadOnlyDictionary<string, string> exceptions)
     {
-        var activeTypes = _isActive
-            ? new[] { ContinuousProfilingCommandTypes.Cpu }
-            : Array.Empty<string>();
+        // Built rather than a fixed single-element array: the two samplers are independently active, so any of
+        // the four combinations can be the answer. The allocation only happens on a command path (rare,
+        // operator-driven), never on the drain hot path.
+        var activeTypes = new List<string>(2);
+        if (_isActive)
+            activeTypes.Add(ContinuousProfilingCommandTypes.Cpu);
+        if (_allocationActive)
+            activeTypes.Add(ContinuousProfilingCommandTypes.Heap);
+
+        // Deliberately still cpu-only: both reported intervals describe the THREAD sampler (the allocation
+        // sampler's pacing is a per-minute sample budget, not an interval, and the response shape defined by the
+        // command spec has no field for it).
         var intervalMs = _isActive ? _activeIntervalMs : _configuration.ContinuousProfilingSamplingIntervalMs;
 
         return new ContinuousProfilingCommandResult(activeTypes, intervalMs, intervalMs, exceptions);
