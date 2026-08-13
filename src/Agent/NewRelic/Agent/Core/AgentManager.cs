@@ -191,6 +191,26 @@ public sealed class AgentManager : IAgentManager, IDisposable
             }
         }
 
+        // Continuous profiling (config-driven; inert while disabled) must be constructed -- and therefore
+        // subscribed to AgentConnectedEvent -- BEFORE AttemptAutoStart() below. ConnectionManager.Start()
+        // schedules the actual connect asynchronously (IScheduler.ExecuteOnce, TimeSpan.Zero) rather than
+        // connecting synchronously, so a fast connect can publish AgentConnectedEvent before a
+        // later-constructed subscriber ever attaches; EventBus does not replay missed events, so that
+        // subscriber would silently and permanently miss its connected state with no error logged. Same
+        // reason the MeterListenerBridge is resolved above, before this point. Plan B wires the native
+        // sampler-backed source, which both drives the native lifecycle (INativeContinuousProfiler) and
+        // drains its buffers (ISampleSource) -- one object, passed for both seams. The OTLP/HTTP dispatch is
+        // wired REAL (api-key protobuf POST); no endpoint is known yet -- it's resolved from the collector's
+        // connection once the agent connects (ContinuousProfilingService.OnAgentConnected); drains before
+        // that point are dropped without doing any work (see DrainOnce). Mutual exclusion with the thread
+        // profiler is wired later in Initialize(), once ThreadProfilingService also exists.
+        var nativeMethodsForContinuousProfiling = _container.Resolve<INativeMethods>();
+        var profilesDispatcher = new OtlpProfilesHttpDispatcher(Configuration);
+        var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, null, _agentHealthReporter);
+        var continuousProfilerSampleSource = new NativeContinuousProfilerSampleSource(nativeMethodsForContinuousProfiling);
+        _continuousProfilingService = new ContinuousProfilingService(continuousProfilerSampleSource, continuousProfilerSampleSource, profilesTransport, _container.Resolve<IScheduler>(), _agentHealthReporter);
+        _continuousProfilingService.StartIfEnabled();
+
         // Attempt to auto start the agent once all services have resolved, except in serverless mode
         if (!bootstrapConfig.ServerlessModeEnabled)
         {
@@ -220,28 +240,14 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
         _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
 
-        // Continuous profiling (config-driven; inert while disabled). Plan B wires the native sampler-backed
-        // source, which both drives the native lifecycle (INativeContinuousProfiler) and drains its buffers
-        // (ISampleSource) -- one object, passed for both seams. NoOpSampleSource remains for tests/fallback.
-        // Constructed here mirroring ThreadProfilingService.
-        //
-        // The OTLP/HTTP dispatch is wired REAL (api-key protobuf POST); the transport's no-send guard has
-        // been removed, so every drain POSTs the built profile. No endpoint is known yet -- it's resolved
-        // from the collector's connection once the agent connects (ContinuousProfilingService.OnAgentConnected);
-        // drains before that point are dropped without doing any work (see DrainOnce).
-        var profilesDispatcher = new OtlpProfilesHttpDispatcher(Configuration);
-        var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, null, _agentHealthReporter);
-        var continuousProfilerSampleSource = new NativeContinuousProfilerSampleSource(nativeMethods);
-        _continuousProfilingService = new ContinuousProfilingService(continuousProfilerSampleSource, continuousProfilerSampleSource, profilesTransport, _container.Resolve<IScheduler>(), _agentHealthReporter);
-
-        // Mutually exclude the two profilers. The references point both ways, so we wire them here,
+        // Mutually exclude the two profilers. ContinuousProfilingService was already constructed (and
+        // started, and subscribed to AgentConnectedEvent) earlier in Start(), before AttemptAutoStart() --
+        // see the comment there for why. The references point both ways, so we wire them here,
         // post-construction, rather than through constructors -- mutual constructor injection would be a
         // construction cycle. The thread profiler refuses to start while continuous profiling is active;
         // continuous profiling defers its start while a thread-profiling session is in-flight.
         _threadProfilingService.SetContinuousProfilingSessionControl(_continuousProfilingService);
         _continuousProfilingService.ThreadProfilingStatus = _threadProfilingService;
-
-        _continuousProfilingService.StartIfEnabled();
 
         if (!serverlessModeEnabled)
         {

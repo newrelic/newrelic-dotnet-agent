@@ -152,12 +152,28 @@ public abstract class ConsoleDynamicMethodFixtureCoreSpecificVersion : ConsoleDy
     /// Use this .ctor to specify a specific .net core version to target.
     /// </summary>
     /// <param name="targetFramework">The netcoreapp target use when publishing and running the application. This parameter must match one of the targetFramework values defined in ConsoleMultiFunctionApplicationCore.csproj </param>
-    public ConsoleDynamicMethodFixtureCoreSpecificVersion(string targetFramework) :
+    /// <param name="archOverride">Overrides the publish architecture away from the host machine's actual
+    /// architecture (e.g. "x86" to force a win-x86 self-contained publish). Null uses the machine's real
+    /// architecture, as before.</param>
+    public ConsoleDynamicMethodFixtureCoreSpecificVersion(string targetFramework, string archOverride = null) :
         base(ApplicationDirectoryName,
             ExecutableName,
             targetFramework,
             true,
-            DefaultTimeout)
+            DefaultTimeout,
+            archOverride)
+    {
+    }
+}
+
+/// <summary>
+/// Windows x86 (32-bit) CoreCLR. Forces a win-x86 self-contained publish so the process is genuinely 32-bit,
+/// regardless of the host machine's actual architecture -- for Continuous Profiling x86-Windows coverage.
+/// See claude-brain investigations/ContinuousProfiling/CP-x86-windows-support.md.
+/// </summary>
+public class ConsoleDynamicMethodFixtureCoreLatestX86 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+{
+    public ConsoleDynamicMethodFixtureCoreLatestX86() : base("net10.0", "x86")
     {
     }
 }
@@ -194,8 +210,8 @@ public abstract class ConsoleDynamicMethodFixture : RemoteApplicationFixture
         RemoteApplication.WriteToStandardInput(cmd);
     }
 
-    public ConsoleDynamicMethodFixture(string applicationDirectoryName, string executableName, string targetFramework, bool isCoreApp, TimeSpan timeout)
-        : base(new RemoteConsoleApplication(applicationDirectoryName, executableName, targetFramework, ApplicationType.Shared, isCoreApp, isCoreApp)
+    public ConsoleDynamicMethodFixture(string applicationDirectoryName, string executableName, string targetFramework, bool isCoreApp, TimeSpan timeout, string archOverride = null)
+        : base(new RemoteConsoleApplication(applicationDirectoryName, executableName, targetFramework, ApplicationType.Shared, isCoreApp, isCoreApp, archOverride)
             .SetTimeout(timeout)
             .ExposeStandardInput(true))
     {

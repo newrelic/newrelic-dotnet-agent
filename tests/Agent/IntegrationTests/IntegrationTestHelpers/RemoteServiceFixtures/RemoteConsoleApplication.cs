@@ -28,8 +28,8 @@ public class RemoteConsoleApplication : RemoteService
     {
     }
 
-    public RemoteConsoleApplication(string applicationDirectoryName, string executableName, string targetFramework, ApplicationType applicationType, bool isCoreApp = false, bool publishApp = false)
-        : base(applicationDirectoryName, executableName, targetFramework, applicationType, false, isCoreApp, publishApp)
+    public RemoteConsoleApplication(string applicationDirectoryName, string executableName, string targetFramework, ApplicationType applicationType, bool isCoreApp = false, bool publishApp = false, string archOverride = null)
+        : base(applicationDirectoryName, executableName, targetFramework, applicationType, false, isCoreApp, publishApp, archOverride)
     {
     }
 

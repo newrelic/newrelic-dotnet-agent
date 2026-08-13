@@ -33,6 +33,11 @@ public class RemoteService : RemoteApplication
 
     private readonly bool _publishApp;
 
+    // Overrides the publish/runtime architecture away from the host machine's actual OS architecture (e.g.
+    // "x86" to force a win-x86 self-contained publish for CP x86-Windows coverage). Null/empty means use the
+    // machine's real architecture, as before.
+    private readonly string _archOverride;
+
     protected override string SourceApplicationDirectoryPath
     {
         get
@@ -62,13 +67,14 @@ public class RemoteService : RemoteApplication
         return executableName;
     }
 
-    public RemoteService(string applicationDirectoryName, string executableName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false) : base(applicationType, isCoreApp)
+    public RemoteService(string applicationDirectoryName, string executableName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false, string archOverride = null) : base(applicationType, isCoreApp)
     {
         _publishApp = publishApp;
         _applicationDirectoryName = applicationDirectoryName;
         _executableName = SanitizeExecutableName(executableName);
         _createsPidFile = createsPidFile;
         _targetFramework = targetFramework ?? string.Empty;
+        _archOverride = archOverride;
     }
 
     public override void CopyToRemote()
@@ -76,7 +82,14 @@ public class RemoteService : RemoteApplication
         if (IsCoreApp && _publishApp)
         {
             PublishWithDotnetExe(string.IsNullOrWhiteSpace(_targetFramework) ? "net10.0" : _targetFramework);
-            CopyNewRelicHomeCoreClrDirectoryToRemote();
+            if (string.IsNullOrWhiteSpace(_archOverride))
+            {
+                CopyNewRelicHomeCoreClrDirectoryToRemote();
+            }
+            else
+            {
+                CopyNewRelicHomeCoreClrWindowsDirectoryToRemote(_archOverride);
+            }
         }
         else if (_publishApp)
         {
@@ -105,7 +118,7 @@ public class RemoteService : RemoteApplication
     private void PublishWithDotnetExe(string framework)
     {
         var deployPath = Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName);
-        var runtime = Utilities.CurrentRuntime;
+        var runtime = string.IsNullOrWhiteSpace(_archOverride) ? Utilities.CurrentRuntime : $"win-{_archOverride}";
 
         if (TryCopyPrebuiltPublishOutput(framework, runtime, deployPath))
         {

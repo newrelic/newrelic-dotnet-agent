@@ -747,6 +747,15 @@ public abstract class RemoteApplication : IDisposable
         CommonUtils.CopyDirectory(GetSourceDirectoryForHomeDir(Utilities.GetRuntimeHomeDirNameFor(arch, true)), DestinationNewRelicHomeDirectoryPath);
     }
 
+    // Windows sibling of CopyNewRelicHomeCoreClrLinuxDirectoryToRemote -- for a fixture that overrides the
+    // publish architecture (e.g. win-x86) away from the host machine's actual OS architecture, so it can't
+    // rely on the machine-arch-derived Utilities.RuntimeHomeDirName either.
+    protected void CopyNewRelicHomeCoreClrWindowsDirectoryToRemote(string arch)
+    {
+        Directory.CreateDirectory(DestinationNewRelicHomeDirectoryPath);
+        CommonUtils.CopyDirectory(GetSourceDirectoryForHomeDir(Utilities.GetRuntimeHomeDirNameFor(arch, false)), DestinationNewRelicHomeDirectoryPath);
+    }
+
     protected void CopyApplicationDirectoryToRemote()
     {
         Directory.CreateDirectory(DestinationApplicationDirectoryPath);
