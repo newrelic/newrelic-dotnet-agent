@@ -15,6 +15,7 @@
 #include "../SignatureParser/Exceptions.h"
 #include "../ThreadProfiler/ThreadProfiler.h"
 #include "../ContinuousProfiler/ContinuousProfiler.h"
+#include "../ContinuousProfiler/AllocationSampler.h"
 #include "../Common/FileUtils.h"
 #include "Function.h"
 #include "FunctionResolver.h"
@@ -201,9 +202,11 @@ namespace NewRelic { namespace Profiler {
         virtual HRESULT __stdcall EventPipeProviderCreated(EVENTPIPE_PROVIDER provider) override { return S_OK; }
 
         // ICorProfilerCallback10
-        // Invoked by the CLR for every event delivered on an EventPipe session this profiler subscribes to.
-        // Nothing subscribes yet, so in practice this is never called today; it is implemented here so the
-        // class genuinely satisfies (and can advertise) ICorProfilerCallback10.
+        // Invoked by the CLR for every event delivered on an EventPipe session THIS PROFILER started
+        // (via ICorProfilerInfo12::EventPipeStartSession -- the runtime does not forward other listeners'
+        // sessions here). Today the only such session is AllocationSampler's, which subscribes to the GC
+        // keyword of Microsoft-Windows-DotNETRuntime at verbose level, so every delivery lands on the
+        // dispatch below.
         virtual HRESULT __stdcall EventPipeEventDelivered(
             EVENTPIPE_PROVIDER provider,
             DWORD eventId,
@@ -228,8 +231,18 @@ namespace NewRelic { namespace Profiler {
                 LogDebug(L"First EventPipe event delivered to the profiler. eventId: ", eventId);
             }
 
-            // TODO(Task 3): route Microsoft-Windows-DotNETRuntime AllocationTick events to AllocationSampler.
-            // Dispatch will key off the provider handle captured when the session is created plus eventId.
+            // Route AllocationTick to the allocation sampler, filtered on event id + payload version.
+            // The `provider` handle is deliberately NOT part of the filter. It could be: EventPipeStartSession
+            // only returns a session id, but a handle could be resolved to a name via
+            // ICorProfilerInfo12::EventPipeGetProviderInfo from EventPipeProviderCreated and cached. That buys
+            // nothing today -- the runtime only delivers events for sessions THIS profiler started, and the
+            // only such session subscribes to exactly one provider -- while adding a metadata call plus cache
+            // on the startup path. The id+version pair is the real guard: it is exact (== 10, == v4),
+            // fail-closed, and AllocationSampler::OnAllocationTick re-checks it itself, so even a future
+            // second session could not silently feed the parser a foreign payload.
+            if (ContinuousProfiler::AllocationSampler::IsAllocationTickEvent(eventId, eventVersion)) {
+                _allocationSampler.OnAllocationTick(eventId, eventVersion, cbEventData, eventData);
+            }
 
             return S_OK;
         }
@@ -304,6 +317,11 @@ namespace NewRelic { namespace Profiler {
                 //_isCoreClr (set above by SetClrType) decides whether CP stops the world via
                 //SuspendRuntime/ResumeRuntime -- CoreCLR on every OS, matching OTel's ClrRuntimeCapture.
                 _continuousProfiler.Init(_corProfilerInfo4, _isCoreClr);
+                // Init opens no EventPipe session and starts no thread; it only probes for ICorProfilerInfo12
+                // and builds its frame-name resolver. The trace-context map is BORROWED from the continuous
+                // profiler (which owns it, and outlives this call): the single managed trace-context export
+                // writes that instance, so allocation samples can only be correlated by reading it too.
+                _allocationSampler.Init(_corProfilerInfo4, _continuousProfiler.SharedTraceContexts());
 
 
                 HRESULT corePathInitResult = InitializeAndSetAgentCoreDllPath(_productName);
@@ -443,8 +461,35 @@ namespace NewRelic { namespace Profiler {
                     ThrowOnError(_corProfilerInfo4->SetEventMask, _eventMask);
                 }
                 else {
-                    LogDebug(L"Calling SetEventMask2().");
-                    ThrowOnError(_corProfilerInfo5->SetEventMask2, _eventMask, COR_PRF_HIGH_DISABLE_TIERED_COMPILATION);
+                    // COR_PRF_HIGH_MONITOR_EVENT_PIPE (0x80) is what makes ICorProfilerCallback10::
+                    // EventPipeEventDelivered fire at all; without it the allocation sampler can open a
+                    // session but never receives a single event. It is only requested when the runtime
+                    // actually exposes the EventPipe profiling API (ICorProfilerInfo12, .NET 5+), which is
+                    // exactly the condition under which the sampler can be used.
+                    const DWORD highEventMask = COR_PRF_HIGH_DISABLE_TIERED_COMPILATION
+                        | (_allocationSampler.IsAvailable() ? (DWORD)COR_PRF_HIGH_MONITOR_EVENT_PIPE : 0u);
+
+                    LogDebug(L"Calling SetEventMask2(). High mask: ", std::hex, std::showbase, highEventMask,
+                        std::resetiosflags(std::ios_base::showbase | std::ios_base::basefield));
+                    HRESULT setEventMaskResult = _corProfilerInfo5->SetEventMask2(_eventMask, highEventMask);
+
+                    // Allocation sampling is optional; profiler activation is not. If the runtime rejects the
+                    // high mask (e.g. it does not know the EventPipe bit), retry with only the bit this
+                    // profiler has always set, so an unusable allocation sampler cannot cost us the agent.
+                    if (FAILED(setEventMaskResult) && highEventMask != COR_PRF_HIGH_DISABLE_TIERED_COMPILATION) {
+                        LogWarn(L"SetEventMask2() rejected COR_PRF_HIGH_MONITOR_EVENT_PIPE: ", std::hex, std::showbase, setEventMaskResult,
+                            std::resetiosflags(std::ios_base::showbase | std::ios_base::basefield),
+                            L". Retrying without it; allocation sampling will be unavailable.");
+                        setEventMaskResult = _corProfilerInfo5->SetEventMask2(_eventMask, COR_PRF_HIGH_DISABLE_TIERED_COMPILATION);
+                    }
+
+                    // Same outcome as the ThrowOnError macro this used to be -- open-coded because the macro
+                    // must wrap the call itself, and the retry above needs the HRESULT in hand first.
+                    if (FAILED(setEventMaskResult)) {
+                        LogError(L"Win32 function call failed.  Function: SetEventMask2  HRESULT: ",
+                            std::hex, std::showbase, setEventMaskResult, std::resetiosflags(std::ios_base::showbase | std::ios_base::basefield));
+                        throw NewRelic::Profiler::Win32Exception(setEventMaskResult);
+                    }
                 }
             }
             else
@@ -951,6 +996,32 @@ namespace NewRelic { namespace Profiler {
             _continuousProfiler.Shutdown();
         }
 
+        // Allocation sampling. Note the deliberate asymmetry with the continuous profiler above:
+        // AllocationSampler::Shutdown() is TERMINAL (it latches, and every later Start() is refused),
+        // whereas ContinuousProfiler::Shutdown() is restartable. So enabling/disabling allocation sampling
+        // at runtime -- config change, server-side command, reconnect -- must go through Stop()/Start();
+        // only true agent teardown may call Shutdown(). Wiring a disable to Shutdown() would silently and
+        // permanently end allocation sampling for the life of the process.
+        void AllocationSamplerStart(uint32_t maxSamplesPerMinute) noexcept
+        {
+            _allocationSampler.Start(maxSamplesPerMinute);
+        }
+
+        void AllocationSamplerStop() noexcept
+        {
+            _allocationSampler.Stop();
+        }
+
+        void AllocationSamplerShutdown() noexcept
+        {
+            _allocationSampler.Shutdown();
+        }
+
+        int32_t ContinuousProfilerReadAllocationSamples(int32_t len, unsigned char* buf) noexcept
+        {
+            return _allocationSampler.ReadAllocationSamples(len, buf);
+        }
+
         uintptr_t GetCurrentThreadId() noexcept
         {
             ThreadID tid;
@@ -972,6 +1043,9 @@ namespace NewRelic { namespace Profiler {
         CComPtr<ICorProfilerInfo4> _corProfilerInfo4;
         ThreadProfiler::ThreadProfiler _threadProfiler;
         ContinuousProfiler::ContinuousProfiler _continuousProfiler;
+        // Declared AFTER _continuousProfiler on purpose: it borrows that object's TraceContextMap, and
+        // members are destroyed in reverse declaration order, so the borrower dies first.
+        ContinuousProfiler::AllocationSampler _allocationSampler;
         std::shared_ptr<SystemCalls> _systemCalls;
         std::shared_ptr<FunctionResolver> _functionResolver;
         MethodRewriter::CustomInstrumentationBuilder _customInstrumentationBuilder;
@@ -1606,6 +1680,56 @@ namespace NewRelic { namespace Profiler {
             return;
         }
         profiler->ContinuousProfilerShutdown();
+    }
+
+    // called by managed code to start (or resume) allocation sampling at the given per-minute sample cap.
+    // Safe to call repeatedly -- this is the "enable" half of the runtime enable/disable pair (see
+    // AllocationSamplerStop). It does NOT undo AllocationSamplerShutdown, which is one-way.
+    extern "C" __declspec(dllexport) void __cdecl AllocationSamplerStart(int32_t maxSamplesPerMinute) noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"AllocationSamplerStart: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->AllocationSamplerStart(static_cast<uint32_t>(maxSamplesPerMinute));
+    }
+
+    // called by managed code to pause allocation sampling (the EventPipe session stays open, the handler
+    // returns immediately). This -- not AllocationSamplerShutdown -- is what a "disable" must call, so that
+    // a later AllocationSamplerStart can resume sampling.
+    extern "C" __declspec(dllexport) void __cdecl AllocationSamplerStop() noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"AllocationSamplerStop: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->AllocationSamplerStop();
+    }
+
+    // called by managed code EXACTLY ONCE, at agent teardown, to close the EventPipe session and drain any
+    // in-flight tick handler. TERMINAL: allocation sampling can never be restarted afterwards. Anything that
+    // may run more than once over the agent's lifetime must call AllocationSamplerStop instead.
+    extern "C" __declspec(dllexport) void __cdecl AllocationSamplerShutdown() noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"AllocationSamplerShutdown: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->AllocationSamplerShutdown();
+    }
+
+    // called by managed code to drain one filled allocation-sample buffer into the caller's array
+    extern "C" __declspec(dllexport) int32_t __cdecl ContinuousProfilerReadAllocationSamples(int32_t len, unsigned char* buf) noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"ContinuousProfilerReadAllocationSamples: entry point called before the profiler has been initialized");
+            return 0;
+        }
+        return profiler->ContinuousProfilerReadAllocationSamples(len, buf);
     }
 
     //This method is used only to verify thread profiling.  It is only used by tests in ProfiledMethod project.

@@ -30,6 +30,10 @@ public class NativeMethodsTests
     [TestCase("ContinuousProfilerSetAgentWork", new Type[0], typeof(void))]
     [TestCase("ContinuousProfilerResetAgentWork", new Type[0], typeof(void))]
     [TestCase("ContinuousProfilerShutdown", new Type[0], typeof(void))]
+    [TestCase("ContinuousProfilerReadAllocationSamples", new[] { typeof(int), typeof(byte[]) }, typeof(int))]
+    [TestCase("AllocationSamplerStart", new[] { typeof(int) }, typeof(void))]
+    [TestCase("AllocationSamplerStop", new Type[0], typeof(void))]
+    [TestCase("AllocationSamplerShutdown", new Type[0], typeof(void))]
     public void INativeMethods_DeclaresExpectedContinuousProfilerMember(string methodName, Type[] parameterTypes, Type returnType)
     {
         var method = typeof(INativeMethods).GetMethod(methodName, parameterTypes);
@@ -42,12 +46,13 @@ public class NativeMethodsTests
     [TestCase(typeof(WindowsNativeMethods))]
     public void NativeMethodsImplementation_ImplementsAllContinuousProfilerMembers(Type implementationType)
     {
-        var continuousProfilerMethods = typeof(INativeMethods).GetMethods()
-            .Where(m => m.Name.StartsWith("ContinuousProfiler", StringComparison.Ordinal));
+        var profilingMethods = typeof(INativeMethods).GetMethods()
+            .Where(m => m.Name.StartsWith("ContinuousProfiler", StringComparison.Ordinal)
+                || m.Name.StartsWith("AllocationSampler", StringComparison.Ordinal));
 
-        Assert.That(continuousProfilerMethods, Is.Not.Empty);
+        Assert.That(profilingMethods, Is.Not.Empty);
 
-        foreach (var interfaceMethod in continuousProfilerMethods)
+        foreach (var interfaceMethod in profilingMethods)
         {
             var parameterTypes = interfaceMethod.GetParameters().Select(p => p.ParameterType).ToArray();
             var implementedMethod = implementationType.GetMethod(interfaceMethod.Name, parameterTypes);

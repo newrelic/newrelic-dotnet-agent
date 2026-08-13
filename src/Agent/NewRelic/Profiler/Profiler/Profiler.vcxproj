@@ -139,7 +139,6 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
-      <BrowseInformation>true</BrowseInformation>
       <DisableSpecificWarnings>4091; 4467; 4458</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -154,9 +153,6 @@
       <Command>
       </Command>
     </PostBuildEvent>
-    <Bscmake>
-      <PreserveSbr>true</PreserveSbr>
-    </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
