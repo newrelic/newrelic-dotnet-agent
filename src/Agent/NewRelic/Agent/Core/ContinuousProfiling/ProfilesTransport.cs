@@ -26,16 +26,16 @@ public class ProfilesTransport : IProfilesTransport
     // the stable identifier tools grep on -- the integration test matches this literal.
     private const string ProfilesMethodName = "continuous_profiling";
 
-    // Compact, single-line protobuf-JSON (proto3 rules: bytes -> base64, enums -> names; default values emitted
-    // so the shape matches the OTel dump). No indentation -- like every other collector payload we log.
-    private static readonly JsonFormatter DiagnosticJsonFormatter =
-        new JsonFormatter(JsonFormatter.Settings.Default.WithFormatDefaultValues(true));
-
     // Destination/area for ReportSupportabilityDataUsage -- mirrors OtlpAuditHandler's ("OTLP", "Metrics")
     // for the Meter bridge, CP's closest sibling (same OTLP send shape). Produces a parallel
     // Supportability/DotNET/OTLP/Profiles/Output/Bytes metric alongside the existing .../OTLP/Metrics one.
     private const string DataUsageApi = "OTLP";
     private const string DataUsageArea = "Profiles";
+
+    // Compact, single-line protobuf-JSON (proto3 rules: bytes -> base64, enums -> names; default values emitted
+    // so the shape matches the OTel dump). No indentation -- like every other collector payload we log.
+    private static readonly JsonFormatter DiagnosticJsonFormatter =
+        new JsonFormatter(JsonFormatter.Settings.Default.WithFormatDefaultValues(true));
 
     private readonly Func<byte[], string, ProfilesSendResult> _httpPost;
     private readonly IAgentHealthReporter _agentHealthReporter;

@@ -835,6 +835,24 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void ApplyConfigChange_after_Dispose_does_not_resurrect_the_session()
+    {
+        var (service, _) = NewConnectedService();
+        EnableAndStart(service);
+
+        service.Dispose();
+
+        // Simulate a deferred ApplyConfigChange landing after Dispose (e.g. the 15s thread-profiling
+        // deferral, or a config-update event queued just before shutdown).
+        service.ApplyConfigChange();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Once(), "only from EnableAndStart; the post-Dispose config change must not restart native sampling");
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()), Occurs.Once(), "the drain schedule must not be re-armed after Dispose");
+        Assert.That(service.IsActive, Is.False);
+        Assert.That(ContinuousProfilingContext.Instance.IsEnabled, Is.False, "the wrapper hot-path seam must stay disarmed after Dispose");
+    }
+
+    [Test]
     public void A_reconnect_while_backing_off_resumes_immediately_and_fully_resets_state()
     {
         var (service, transport) = NewConnectedService();
@@ -860,6 +878,41 @@ public class ContinuousProfilingServiceTests
         service.DrainOnce();
 
         Mock.Assert(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Exactly(3), "2 failures + 1 recovery send, not gated waiting for the probe");
+    }
+
+    [Test]
+    public void A_reconnect_racing_a_backoff_trip_cannot_leave_native_stopped_with_a_cleared_gate()
+    {
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+
+        // Trip backoff normally (2 failures).
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+        service.DrainOnce();
+        service.DrainOnce();
+        Mock.Assert(() => _native.Stop(), Occurs.Once());
+
+        // A reconnect arrives "concurrently" -- with the fix, this can only run before or after the
+        // trip completes under the same lock, never in the middle of it.
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        // Whatever order the lock serialized these in, native must be running again (resumed by the
+        // reconnect, since it's the last state-changing event) -- not stopped with a cleared gate. Exactly
+        // 2, not AtLeastOnce: EnableAndStart already called Start once, so AtLeastOnce would pass on the
+        // fixture's own setup call even if the reconnect never resumed anything.
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Exactly(2), "once from EnableAndStart, once from the reconnect's resume");
+
+        // And the drain path must still be live: a subsequent failure must be able to re-trip.
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+        service.DrainOnce();
+        service.DrainOnce();
+        Mock.Assert(() => _native.Stop(), Occurs.Exactly(2)); // the original trip + this new one
     }
 
     #endregion

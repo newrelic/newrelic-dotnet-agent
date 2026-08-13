@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 /// building a profile with nowhere to send it.
 ///
 /// Repeated send failures pause native sampling and retry via a single-attempt probe on a backoff
-/// schedule (<see cref="OnSendResult"/>/<see cref="TripBackoffAndScheduleProbe"/>/<see cref="EndBackoffProbe"/>)
+/// schedule (<see cref="OnSendResult"/>/<see cref="TripBackoffAndScheduleProbeLocked"/>/<see cref="EndBackoffProbe"/>)
 /// rather than retrying the send itself -- a dropped profile can't be held over like a harvest payload can.
 /// A reconnect that arrives while backing off resumes immediately instead of waiting out the remaining
 /// delay (<see cref="ResumeAfterReconnect"/>), since the reconnect itself is the likely fix.
@@ -73,14 +73,17 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // Monotonic true after the first successful connect; never reset on a later disconnect.
     private volatile bool _isConnected;
 
-    // volatile: DrainOnce reads this every tick; EndBackoffProbe/ResumeAfterReconnect (separate scheduled/
-    // event-bus callbacks, not DrainOnce itself) flip it from other threads under _lifecycleLock. The
-    // volatile write is also what publishes _consecutiveSendFailures/_backoffIndex changes made under that
-    // lock to DrainOnce's unlocked reads (a volatile write happens-before the next volatile read of the
-    // same field). Outside Start/Resume, _consecutiveSendFailures/_backoffIndex are only touched from
-    // within DrainOnce's own call chain -- which does not re-enter itself except in the same narrow
-    // retune-overlap window the _drainBuffer comment above already calls out. TripBackoffAndScheduleProbe
-    // does not additionally guard against that overlap: tracked, not fixed here.
+    // volatile: DrainOnce reads this every tick as its gate, lock-free, and that unlocked read is the only
+    // one -- which is what the volatile buys. Every WRITE is under _lifecycleLock, from three directions:
+    // EndBackoffProbe and ResumeAfterReconnect (scheduled/event-bus callbacks on other threads) and
+    // DrainOnce's own OnSendResult -> TripBackoffAndScheduleProbeLocked chain. Serializing that last one is
+    // what stops a reconnect landing between the gate-set and the native stop.
+    //
+    // _consecutiveSendFailures/_backoffIndex need no volatile: every read and write of them is under
+    // _lifecycleLock, so the monitor publishes them. Writing the gate LAST (see StartLocked/
+    // ResumeAfterReconnect) is belt-and-braces on top of that -- a volatile write publishes everything
+    // written before it, so a thread seeing the cleared gate also sees the zeroed counters if anything ever
+    // starts reading them without the lock.
     private volatile bool _sendBackoffActive;
     private int _consecutiveSendFailures;
     private int _backoffIndex;
@@ -100,10 +103,13 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     private readonly byte[] _drainBuffer = new byte[DrainBufferSize];
 
     // Locking posture (deliberately minimal — this type runs inside every instrumented process):
-    //   * _lifecycleLock is the ONLY lock, and it guards ONLY the rare lifecycle transitions
-    //     (StartIfEnabled / ApplyConfigChange / Dispose). Start/StopLocked run under it (the *Locked
-    //     naming = "caller holds the lock").
-    //   * The hot path, DrainOnce (fires every 1-60 s), takes NO lock — no steady-state contention.
+    //   * _lifecycleLock is the ONLY lock. It guards the rare lifecycle transitions (StartIfEnabled /
+    //     ApplyConfigChange / Dispose) plus the backoff state they share with the drain path
+    //     (OnSendResult). Start/StopLocked and TripBackoffAndScheduleProbeLocked run under it (the
+    //     *Locked naming = "caller holds the lock").
+    //   * DrainOnce (fires every 1-60 s) takes it once per drain, in OnSendResult, and never for the
+    //     read/parse/build work — the gate check at the top is a lock-free volatile read. Contention is
+    //     nil in steady state: the only other contenders are config changes and teardown.
     //   * Lock ordering is always _lifecycleLock -> Scheduler's internal semaphore, never the reverse.
     private readonly object _lifecycleLock = new object();
 
@@ -111,6 +117,13 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // written under _lifecycleLock on the scheduler thread. volatile gives the cross-thread visibility the
     // mutual-exclusion guard needs without adding a lock to the read path.
     private volatile bool _isActive;
+
+    // volatile: Dispose sets this under _lifecycleLock; every other lock-holding entry point checks it
+    // immediately after acquiring the lock, so a deferred callback that lands after Dispose (the 15s
+    // thread-profiling-deferral retry, or a queued OnConfigurationUpdated) becomes a no-op instead of
+    // restarting a native sampler whose worker thread Dispose already joined.
+    private volatile bool _disposed;
+
     private int _activeIntervalMs;
     private long _lastDrainTimestamp;
 
@@ -186,6 +199,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     {
         lock (_lifecycleLock)
         {
+            if (_disposed)
+                return;
+
             var enabled = _configuration.ContinuousProfilingEnabled;
 
             if (!enabled)
@@ -242,9 +258,13 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // Without this, disabling CP while a probe is pending and re-enabling later would leave
             // _sendBackoffActive stuck true forever -- EndBackoffProbe's own !_isActive guard (below) means
             // the probe that fires while disabled never clears it, and nothing else ever will.
-            _sendBackoffActive = false;
+            //
+            // Ints first, then the volatile flag last -- a volatile write publishes everything written
+            // before it to another thread's next volatile read of the same field (release semantics). The
+            // old order (flag first) published nothing. Matches ResumeAfterReconnect's order.
             _consecutiveSendFailures = 0;
             _backoffIndex = 0;
+            _sendBackoffActive = false;
 
             // Start native sampling first, then begin draining it. Both run under _lifecycleLock, which is
             // fine: lifecycle transitions are rare (config-driven), so the native call here does not touch
@@ -387,22 +407,33 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// </summary>
     private void OnSendResult(bool sent)
     {
-        if (sent)
+        // Under _lifecycleLock: this mutates the same _consecutiveSendFailures/_backoffIndex/
+        // _sendBackoffActive state StartLocked/EndBackoffProbe/ResumeAfterReconnect write under that lock.
+        // Unlocked, a reconnect landing between the gate-set and the native stop in the trip below leaves
+        // native stopped with the gate already cleared -- DrainOnce then passes its gate forever with
+        // nothing sampling, so ReadBatch returns 0 every tick and this never runs again to recover.
+        lock (_lifecycleLock)
         {
-            _consecutiveSendFailures = 0;
-            _backoffIndex = 0;
-            return;
+            if (_disposed)
+                return;
+
+            if (sent)
+            {
+                _consecutiveSendFailures = 0;
+                _backoffIndex = 0;
+                return;
+            }
+
+            _consecutiveSendFailures++;
+
+            var graceCount = _backoffIndex == 0 ? SendFailureGraceCount : 1;
+            if (_consecutiveSendFailures < graceCount)
+                return;
+
+            var failuresAtTrip = _consecutiveSendFailures;
+            _consecutiveSendFailures = 0; // grace consumed; the next round starts fresh
+            TripBackoffAndScheduleProbeLocked(failuresAtTrip);
         }
-
-        _consecutiveSendFailures++;
-
-        var graceCount = _backoffIndex == 0 ? SendFailureGraceCount : 1;
-        if (_consecutiveSendFailures < graceCount)
-            return;
-
-        var failuresAtTrip = _consecutiveSendFailures;
-        _consecutiveSendFailures = 0; // grace consumed; the next round starts fresh
-        TripBackoffAndScheduleProbe(failuresAtTrip);
     }
 
     /// <summary>
@@ -410,8 +441,11 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// current <see cref="SendBackoffSequence"/> step. The recurring drain timer keeps ticking throughout
     /// (each tick is a cheap no-op via the <see cref="_sendBackoffActive"/> gate in <see cref="DrainOnce"/>)
     /// so no second timer is needed to pick the real send back up once the probe resumes sampling.
+    ///
+    /// The caller (<see cref="OnSendResult"/>) already holds <see cref="_lifecycleLock"/> -- the *Locked
+    /// suffix matches this file's convention (<c>StartLocked</c>/<c>StopLocked</c>).
     /// </summary>
-    private void TripBackoffAndScheduleProbe(int failuresAtTrip)
+    private void TripBackoffAndScheduleProbeLocked(int failuresAtTrip)
     {
         _sendBackoffActive = true;
         _native.Stop();
@@ -443,7 +477,7 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     }
 
     /// <summary>
-    /// Scheduled by <see cref="TripBackoffAndScheduleProbe"/>. Deliberately leaves
+    /// Scheduled by <see cref="TripBackoffAndScheduleProbeLocked"/>. Deliberately leaves
     /// <see cref="_consecutiveSendFailures"/>/<see cref="_backoffIndex"/> alone -- if this probe's resumed
     /// send also fails, <see cref="OnSendResult"/> continues the escalation from where the trip left the
     /// index, rather than starting over.
@@ -453,6 +487,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         bool resumed;
         lock (_lifecycleLock)
         {
+            if (_disposed)
+                return;
+
             resumed = TryResumeSamplingLocked();
             if (resumed)
                 _sendBackoffActive = false;
@@ -473,6 +510,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         bool resumed;
         lock (_lifecycleLock)
         {
+            if (_disposed)
+                return;
+
             resumed = TryResumeSamplingLocked();
             if (resumed)
             {
@@ -539,6 +579,8 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     {
         lock (_lifecycleLock)
         {
+            _disposed = true;
+
             if (_isActive)
                 StopLocked();
 

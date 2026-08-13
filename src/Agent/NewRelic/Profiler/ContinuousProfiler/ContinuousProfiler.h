@@ -84,7 +84,14 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             try
             {
                 _intervalMs.store(intervalMs);
-                _samplingActive.store(true);
+
+                // Publish under _mtx_wake and notify: an idle worker waits on _cv_wake with no timeout,
+                // so it only resumes if the flag change is visible to its predicate and it is signalled.
+                {
+                    std::lock_guard<std::mutex> l(_mtx_wake);
+                    _samplingActive.store(true);
+                }
+                _cv_wake.notify_one();
 
                 if (!_workerThread.joinable())
                 {
@@ -102,7 +109,10 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // thread is only torn down by Shutdown().
         void Stop() noexcept
         {
-            _samplingActive.store(false);
+            {
+                std::lock_guard<std::mutex> l(_mtx_wake);
+                _samplingActive.store(false);
+            }
             _cv_wake.notify_one();
         }
 
@@ -349,14 +359,20 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // Set _shuttingDown and wake the worker so it can observe the shutdown request.
         void SignalShutdown() noexcept
         {
-            _shuttingDown.store(true);
+            // Store under _mtx_wake so the notification cannot be lost against a worker that is between
+            // evaluating its wait predicate and blocking -- an idle worker waits with no timeout, so a
+            // lost shutdown signal would hang Shutdown()'s join() forever rather than delay it one tick.
+            {
+                std::lock_guard<std::mutex> l(_mtx_wake);
+                _shuttingDown.store(true);
+            }
             _cv_wake.notify_one();
         }
 
         // Worker thread entry point. Initializes the thread for calling the Execution Engine (required
-        // before suspending any thread), then loops: sleep for the sampling interval (or until woken by
-        // Stop()/Shutdown()), and while sampling is active capture a sample. Terminates when
-        // _shuttingDown is true.
+        // before suspending any thread), then loops: while sampling is active, wait up to the sampling
+        // interval (or until woken by Stop()/Shutdown()) and capture a sample; while paused, wait
+        // indefinitely for Start()/Shutdown() rather than polling. Terminates when _shuttingDown is true.
         void SamplingThreadStart()
         {
             LogTrace(L"CP: sampling thread started");
@@ -376,8 +392,20 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 {
                     {
                         std::unique_lock<std::mutex> l(_mtx_wake);
-                        _cv_wake.wait_for(l, std::chrono::milliseconds(_intervalMs.load()),
-                            [&]() noexcept { return _shuttingDown.load() || !_samplingActive.load(); });
+                        if (_samplingActive.load())
+                        {
+                            // Active: wake on the interval OR an explicit signal (Stop/Shutdown).
+                            _cv_wake.wait_for(l, std::chrono::milliseconds(_intervalMs.load()),
+                                [&]() noexcept { return _shuttingDown.load() || !_samplingActive.load(); });
+                        }
+                        else
+                        {
+                            // Paused: nothing to do until Start() or Shutdown() wakes us. Waiting with
+                            // no timeout (instead of re-polling wait_for every interval) is what makes
+                            // Stop() cheap -- an always-true predicate re-evaluated every _intervalMs
+                            // returns instantly each time, pegging a core for the whole paused duration.
+                            _cv_wake.wait(l, [&]() noexcept { return _shuttingDown.load() || _samplingActive.load(); });
+                        }
                     }
 
                     if (IsShutdownRequested())
@@ -437,6 +465,8 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
             uint32_t failedSnapshotCount = 0;
             uint32_t overflowCount = 0;
+            uint32_t exceptionCount = 0;
+            bool captureThrew = false;
 
             // Wall-clock stamp for the batch, and the suspend-window duration reported in BatchStats.
             const auto batchTimestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -471,12 +501,14 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 const auto suspendStart = std::chrono::steady_clock::now();
                 try
                 {
-                    ProfileAllThreads(failedSnapshotCount, overflowCount);
+                    ProfileAllThreads(failedSnapshotCount, overflowCount, exceptionCount);
                 }
                 catch (...)
                 {
-                    // The show must go on -- a failed sample is never fatal.
-                    LogTrace(L"CP: exception in CaptureAllThreads");
+                    // The show must go on -- a failed sample is never fatal. Flagged rather than logged:
+                    // this catch runs inside the suspend window, where taking StdLog's mutex could
+                    // deadlock against a frozen app thread. Reported after ResumeRuntime below.
+                    captureThrew = true;
                 }
                 microsSuspended = std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::steady_clock::now() - suspendStart).count();
@@ -495,9 +527,21 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             //    ProfileAllThreads (writers frozen -> stable seqlock read).
             const uint32_t threadsWithContext = EnrichCapturedThreads();
 
-            // Diagnostic: how many captured threads carried a trace context this tick. Cheap Finest line.
+            // Diagnostic: how many captured threads carried a trace context this tick, and how many
+            // snapshots failed. Cheap Finest line -- and it is HERE, post-resume, rather than inside
+            // ProfileAllThreads, because logging inside the suspend window risks a deadlock.
             LogTrace(L"[ContinuousProfiling] capture: ", _capturedCount, L" thread(s), ", threadsWithContext,
-                L" with trace context");
+                L" with trace context, ", failedSnapshotCount, L" snapshot failure(s)");
+
+            if (captureThrew)
+            {
+                LogTrace(L"CP: exception in CaptureAllThreads");
+            }
+
+            if (exceptionCount != 0)
+            {
+                LogTrace(L"CP: ", exceptionCount, L" exception(s) profiling individual threads this tick");
+            }
 
             if (overflowCount != 0)
             {
@@ -1021,17 +1065,23 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // threads land in _capture[0.._capturedCount), each slot updated in place (no emplace_back, no
         // reserve/resize) so nothing here can allocate. A tick with more successfully-walked threads than
         // slots drops the extras (overflowCount) instead of growing the buffer under suspend.
-        void ProfileAllThreads(uint32_t& failedSnapshotCount, uint32_t& overflowCount)
+        void ProfileAllThreads(uint32_t& failedSnapshotCount, uint32_t& overflowCount, uint32_t& exceptionCount)
         {
             _capturedCount = 0;
             failedSnapshotCount = 0;
             overflowCount = 0;
+            exceptionCount = 0;
 
             // _threadList was populated by EnumerateThreadsInto() BEFORE the suspend window opened -- no
             // enumeration or allocation happens here, under suspend.
             for (const auto threadId : _threadList)
             {
-                if (IsShutdownRequested())
+                // Read the flag directly rather than via IsShutdownRequested(): that helper logs, and
+                // LogStuff takes StdLog's shared mutex and allocates. A frozen app thread holding that
+                // mutex (or the CRT heap lock) would block the sampler here forever, ResumeRuntime would
+                // never be reached, and the whole process would hang. Shutdown is already logged by the
+                // IsShutdownRequested() call in SamplingThreadStart, outside the suspend window.
+                if (_shuttingDown.load())
                 {
                     break;
                 }
@@ -1111,14 +1161,17 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 catch (...)
                 {
                     // The show must go on -- a failure on one thread never stops the others
-                    // (mirror ThreadProfiler.h:611-615).
-                    LogTrace(L"CP: exception profiling a thread");
+                    // (mirror ThreadProfiler.h:611-615). Counted rather than logged: the caller reports
+                    // the tally post-resume, because logging here would take StdLog's mutex and allocate
+                    // inside the suspend window.
+                    ++exceptionCount;
                 }
             }
 
             // Capture is returned to CaptureAllThreads via _capturedCount/_capture; encoding to the byte
             // buffer happens there AFTER ResumeRuntime so no allocation occurs inside the suspend window.
-            LogTrace(L"CP: captured ", _capturedCount, L" thread(s); ", failedSnapshotCount, L" snapshot failure(s)");
+            // The per-tick diagnostics (captured/failed/exception/overflow counts) are likewise logged by
+            // the caller after ResumeRuntime -- nothing in this function may log.
         }
 
         // Enumerate all active managed threads via ICorProfilerInfo::EnumThreads in batches
