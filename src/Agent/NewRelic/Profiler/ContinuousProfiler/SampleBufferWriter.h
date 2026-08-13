@@ -22,12 +22,17 @@
 //   * Strings are a BIG-ENDIAN int16 CHAR count (capped at 512), followed by that many UTF-16LE code
 //     units (2 bytes each, low byte first). This matches BufferParser.ReadString: a big-endian short
 //     prefix then Encoding.Unicode (== UTF-16LE) over charCount*2 bytes.
-//   * Opcodes: StartBatch 0x01, StartSample 0x02, EndBatch 0x06, BatchStats 0x07.
+//   * Opcodes: StartBatch 0x01, StartSample 0x02, EndBatch 0x06, BatchStats 0x07, AllocationSample 0x08.
 //   * StartBatch payload: 1 version byte + int64 timestamp.
 //   * BatchStats payload: int64 microsSuspended + int32 threadCount + int32 frameCount + int32 skipped.
 //   * Per-sample payload (after StartSample): thread name (string) -> OS thread id (int64) ->
 //     traceIdHigh (int64) -> traceIdLow (int64) -> spanId (int64) -> [v2+] onCpu (1 byte 0/1) ->
 //     [v3+] isAgentWork (1 byte 0/1) -> frame list -> terminator short 0.
+//   * AllocationSample payload (after opcode 0x08): thread name (string) -> OS thread id (int64) ->
+//     traceIdHigh (int64) -> traceIdLow (int64) -> spanId (int64) -> timestampMillis (int64) ->
+//     allocatedSize (uint64 written via the int64 writer -- both sides agree on the bit pattern, not
+//     the signed value) -> typeName (string) -> frame list -> terminator short 0. Uses the SAME
+//     per-batch frame-interning table as thread samples (shares _frameCodes/_nextFrameIndex).
 //   * Frame list: 2-byte big-endian short codes terminated by 0. FIRST sight of a frame string writes
 //     a NEGATIVE short (-index, index starting at 1) then the UTF-16 string, and remembers the index;
 //     a SUBSEQUENT sight writes the POSITIVE index (a back-reference). This is the inverse of
@@ -46,6 +51,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         StartSample = 0x02,
         EndBatch = 0x06,
         BatchStats = 0x07,
+        AllocationSample = 0x08,
     };
 
     class SampleBufferWriter
@@ -133,6 +139,15 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             WriteOpcode(BufferOpcode::EndBatch);
         }
 
+        // AllocationSample 0x08. Field order matches BufferParser.ReadAllocationSample exactly: thread name,
+        // OS thread id, traceIdHigh, traceIdLow, spanId, timestampMillis, allocatedSize (uint64 reinterpreted
+        // as int64 -- both sides agree on the bit pattern, not the signed value), typeName, then a frame list
+        // using the SAME per-batch interning table as thread samples (shares _frameCodes/_nextFrameIndex).
+        void WriteStartAllocationSample()
+        {
+            WriteOpcode(BufferOpcode::AllocationSample);
+        }
+
         //
         // Per-sample field writers (call between WriteStartSample and WriteFrameListTerminator, in the
         // order BufferParser.ReadSample reads them).
@@ -148,6 +163,20 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         void WriteInt64Field(int64_t value)
         {
             WriteLong(value);
+        }
+
+        // allocatedSize is a uint64 on the producer side; reinterpret its bit pattern as an int64 so it
+        // round-trips through BufferParser.ReadAllocationSample's `unchecked((ulong)ReadLong(...))`.
+        void WriteUInt64Field(uint64_t value)
+        {
+            WriteLong(static_cast<int64_t>(value));
+        }
+
+        // Same-body alias of WriteThreadName -- used for allocation-sample fields that are a plain
+        // length-prefixed string but aren't a thread name (e.g. typeName), so the call site reads naturally.
+        void WriteStringField(const xstring_t& value)
+        {
+            WriteString(value);
         }
 
         // Per-sample on-CPU flag (v2+): a single 0/1 byte. Inverse of BufferParser.ReadBool.
