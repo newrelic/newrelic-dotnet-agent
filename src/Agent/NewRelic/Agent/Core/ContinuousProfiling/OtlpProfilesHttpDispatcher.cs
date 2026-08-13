@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Utilities;
@@ -24,7 +26,8 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 ///
 /// HTTP infrastructure reuse: the proxy comes from the agent's <see cref="ConnectionInfo"/> (same
 /// proxy config the collector wire uses) and the handler mirrors the
-/// <c>NRHttpClient.GetHttpHandler</c> SocketsHttpHandler-with-fallback pattern. A dedicated
+/// <c>NRHttpClient.GetHttpHandler</c> SocketsHttpHandler-with-fallback pattern, including its bounded
+/// pooled-connection lifetime so connections recycle across ingest DNS changes. A dedicated
 /// <see cref="HttpClient"/> is used rather than the collector's <c>IHttpClient</c> seam because the
 /// latter hard-codes the collector's <c>invoke_raw_method</c> query-string URI scheme and is
 /// unsuited to an absolute-URL OTLP POST.
@@ -117,9 +120,47 @@ public class OtlpProfilesHttpDispatcher
     {
         var connectionInfo = new ConnectionInfo(configuration);
 
-        var handler = new HttpClientHandler { Proxy = connectionInfo.Proxy };
+        var handler = CreateHandler(connectionInfo.Proxy);
         var httpClient = new HttpClient(handler, true) { Timeout = SendTimeout };
 
         return request => httpClient.SendAsync(request).ConfigureAwait(false).GetAwaiter().GetResult();
+    }
+
+    // Mirrors NRHttpClient.GetHttpHandler. This client lives for the process lifetime, and
+    // HttpClientHandler's default PooledConnectionLifetime is infinite, so a pooled connection would
+    // survive the ingest host's resolved IP rotating. Core targets net462/netstandard2.0, where
+    // SocketsHttpHandler does not exist at compile time -- hence the runtime version check and
+    // reflection, matching NRHttpClient rather than a TFM conditional.
+    [NrExcludeFromCodeCoverage]
+    private static HttpMessageHandler CreateHandler(IWebProxy proxy)
+    {
+        if (System.Environment.Version.Major >= 6)
+        {
+            try
+            {
+                var pooledConnectionLifetime = TimeSpan.FromMinutes(5); // an in-use connection will be closed and recycled after 5 minutes
+                var pooledConnectionIdleTimeout = TimeSpan.FromMinutes(1); // a connection that is idle for 1 minute will be closed and recycled
+
+                var assembly = Assembly.Load("System.Net.Http");
+                var handlerType = assembly.GetType("System.Net.Http.SocketsHttpHandler");
+                dynamic handler = Activator.CreateInstance(handlerType);
+
+                handler.PooledConnectionLifetime = pooledConnectionLifetime;
+                handler.PooledConnectionIdleTimeout = pooledConnectionIdleTimeout;
+                handler.ConnectTimeout = SendTimeout;
+                handler.Proxy = proxy;
+
+                Log.Debug("[ContinuousProfiling] Created a SocketsHttpHandler with PooledConnectionLifetime {0}, PooledConnectionIdleTimeout {1} and ConnectTimeout {2}.",
+                    pooledConnectionLifetime, pooledConnectionIdleTimeout, SendTimeout);
+
+                return (HttpMessageHandler)handler;
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e, "[ContinuousProfiling] Application runtime is .NET 6+ but an exception occurred trying to create SocketsHttpHandler. Falling back to HttpClientHandler.");
+            }
+        }
+
+        return new HttpClientHandler { Proxy = proxy };
     }
 }

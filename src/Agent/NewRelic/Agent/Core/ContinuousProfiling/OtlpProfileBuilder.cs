@@ -41,9 +41,11 @@ public static class OtlpProfileBuilder
     private const string PeriodTypeUnit = "nanoseconds";
 
     // profile.frame.type (OTel profiles semantic conventions): per-frame origin. Our managed stack walk
-    // yields .NET frames ("dotnet") except the single synthetic native thread-entry boundary frame the
-    // native sampler emits for functionId == 0, which is the one unmanaged frame ("native"). See
-    // https://opentelemetry.io/docs/specs/semconv/registry/attributes/profile/.
+    // yields .NET frames ("dotnet") except the synthetic frames the native sampler emits for
+    // functionId == 0, which are the unmanaged ones ("native"). One of those terminates essentially every
+    // walk (the thread-entry boundary -- every CLR thread starts in unmanaged code), but they are NOT
+    // limited to that position: real captures also show them mid-stack, at managed/unmanaged transitions.
+    // See https://opentelemetry.io/docs/specs/semconv/registry/attributes/profile/.
     private const string FrameTypeKey = "profile.frame.type";
     private const string FrameTypeDotnet = "dotnet";
     private const string FrameTypeNative = "native";
@@ -54,21 +56,34 @@ public static class OtlpProfileBuilder
     private const string NativeFrameName = "Native.Function Call";
 
     // The agent's own background threads (connect/harvest/scheduler/CP-drain) run agent-core code, so their
-    // stacks contain frames under "NewRelic.Agent.Core.". A sample with such a frame was taken on one of the
-    // agent's OWN threads -- a customer thread executing instrumented code does NOT have agent-core frames on
-    // its stack mid-method (the tracer runs before/after, not during). Used to drop agent-self samples unless
-    // includeAgentCode.
+    // OWNING frame is under "NewRelic.Agent.Core.". Matched against that frame only (see IsAgentThreadSample)
+    // to drop agent-self samples unless includeAgentCode.
     //
     // Deliberately Core-specific, NOT a broad "NewRelic." match: (1) "NewRelic.Api.Agent." is the public API a
     // customer thread may legitimately be executing (keep it); (2) "NewRelic.Providers." wrappers sit on
     // customer threads during instrumentation (keep them); (3) the integration-test harness dispatches
     // exercisers via "NewRelic.Agent.IntegrationTests.*", which a broad match wrongly dropped -- taking the
-    // correlated sample with it. The agent's own threads are always rooted in Core, so this still catches them.
+    // correlated sample with it. The agent's own threads' owning frame is always Core, so this still catches
+    // them.
     private const string AgentFramePrefix = "NewRelic.Agent.Core.";
 
-    // includeAgentCode: when false, samples taken on the agent's own threads (any frame under "NewRelic.") are
-    // dropped so the profile carries only the customer application. Defaults to true (no filtering) for
-    // callers/tests that don't care; the CP service passes the configured value, which defaults to false.
+    // Runtime thread/timer/threadpool dispatch scaffolding, which the CLR places OUTWARD of the frame that
+    // actually owns the work (Thread.StartCallback, PortableThreadPool+WorkerThread.WorkerThreadStart,
+    // ThreadPoolWorkQueue.Dispatch, TimerQueueTimer.Fire, ExecutionContext.RunInternal, ...). Skipped when
+    // locating a sample's owning frame -- see IsAgentThreadSample.
+    //
+    // Matched by namespace rather than an enumerated frame list on purpose: real captures show many shapes
+    // (TimerQueue.FireNextTimers, TimerQueueTimer.CallCallback, ExecutionContext.RunFromThreadPoolDispatchLoop,
+    // IThreadPoolWorkItem.Execute) and a fixed list would silently miss new ones as the BCL evolves. Kept
+    // narrow -- "System.Threading." only, NOT all of System.*/Microsoft.* -- because outer frames from other
+    // namespaces genuinely identify the owner: an ASP.NET Core request thread is rooted in
+    // "Microsoft.AspNetCore.*", and skipping that would misattribute customer request threads to the agent.
+    private const string ThreadPlumbingPrefix = "System.Threading.";
+
+    // includeAgentCode: when false, samples taken on the agent's own threads (owning frame under
+    // "NewRelic.Agent.Core.") are dropped so the profile carries only the customer application. Defaults to
+    // true (no filtering) for callers/tests that don't care; the CP service passes the configured value,
+    // which defaults to false.
     public static ExportProfilesServiceRequest Build(IReadOnlyList<ManagedThreadSample> samples, long startUnixNano, long durationNano, string serviceName, long periodNanos = 0, bool includeAgentCode = true)
     {
         var dictionary = new ProfilesDictionary();
@@ -175,15 +190,34 @@ public static class OtlpProfileBuilder
         return request;
     }
 
-    // A sample is "the agent's own" when any frame is under the NewRelic.* namespace. Customer application
-    // stacks never carry agent frames mid-method, so this cleanly identifies the agent's connect / harvest /
-    // scheduler / CP-worker threads (validated against real captures: no stack mixed customer + agent frames).
+    // A sample is "the agent's own" when the OWNING frame -- the outermost frame that is neither the native
+    // thread-entry marker nor runtime thread plumbing -- is under "NewRelic.Agent.Core.". Frames is leaf-first
+    // (see ManagedThreadSample.Frames), so we scan inward from the end.
+    //
+    // Matching the owning frame rather than ANY frame is deliberate: a customer thread executing instrumented
+    // code legitimately has agent-core frames as LEAF frames while the tracer runs (AgentShim, wrapper
+    // Finish/Start calls) -- an any-frame match wrongly discarded those customer samples entirely.
+    //
+    // Both skips are load-bearing, and both were measured against real captures (736 samples):
+    //   * NativeFrameName: every CLR thread starts in unmanaged code, so 736/736 samples ended with it. A
+    //     literal "last element" check therefore never matches and silently disables this filter entirely.
+    //   * ThreadPlumbingPrefix: the CLR's dispatch scaffolding sits OUTWARD of the frame that owns the work,
+    //     and which of those frames land on any given walk varies between samples of the SAME thread -- so
+    //     skipping only the native marker leaked 25 of 32 agent-owned samples, dropping the same agent thread
+    //     on one sweep and keeping it on the next.
+    //
+    // A stack consisting solely of plumbing (an idle threadpool/timer thread whose walk caught no owning
+    // frame) yields no owning frame and is NOT treated as the agent's -- it is ordinary BCL idle time, and
+    // discarding it would gut the profile rather than filter the agent out of it.
     private static bool IsAgentThreadSample(IReadOnlyList<string> frames)
     {
-        foreach (var frame in frames)
+        for (var i = frames.Count - 1; i >= 0; i--)
         {
-            if (frame != null && frame.StartsWith(AgentFramePrefix, System.StringComparison.Ordinal))
-                return true;
+            var frame = frames[i];
+            if (frame == null || frame == NativeFrameName || frame.StartsWith(ThreadPlumbingPrefix, System.StringComparison.Ordinal))
+                continue;
+
+            return frame.StartsWith(AgentFramePrefix, System.StringComparison.Ordinal);
         }
 
         return false;

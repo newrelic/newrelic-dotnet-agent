@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.ThreadProfiling;
@@ -95,12 +96,16 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // Stable delegate reference: ExecuteEvery and StopExecuting must be handed the same instance.
     private readonly Action _drainAction;
 
-    // Single reused drain buffer. Safe because drains never overlap: the Scheduler disables a recurring
-    // timer for the duration of each callback (see Scheduler.CreateExecuteEveryTimer), so DrainOnce can't
-    // re-enter itself. The only theoretical overlap is a retune (StopLocked then StartLocked reuse this
-    // buffer + delegate) if an old drain were still in-flight when the new timer first fires — practically
-    // impossible (drains are fast, interval >= 1000 ms). If that ever changes, give each session its own buffer.
+    // Single reused drain buffer. Overlapping drains would tear it, so DrainOnce is guarded by
+    // _drainInFlight below.
     private readonly byte[] _drainBuffer = new byte[DrainBufferSize];
+
+    // Interlocked-managed reentrancy guard. Normally DrainOnce cannot re-enter itself (the Scheduler
+    // disarms a recurring timer for the duration of its callback), but a retune's StopExecuting-without-
+    // wait followed immediately by a new timer registration (see ApplyConfigChange) can let an old,
+    // still-in-flight drain (e.g. blocked in a slow/hung synchronous send) overlap with the new timer's
+    // first tick -- both would otherwise race over the single shared _drainBuffer. 0 = idle, 1 = in flight.
+    private int _drainInFlight;
 
     // Locking posture (deliberately minimal — this type runs inside every instrumented process):
     //   * _lifecycleLock is the ONLY lock. It guards the rare lifecycle transitions (StartIfEnabled /
@@ -241,7 +246,7 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         // NOTE: this check and ThreadProfilingService's forward guard (IsActive) are read/written under
         // different locks (this service's _lifecycleLock vs. no explicit lock on the thread-profiling
         // side), so a narrow window exists where both services could decide to start concurrently. These
-        // managed guards are a cooperative, coarse gate on top of the real enforcement backstop: Plan B's
+        // managed guards are a cooperative, coarse gate on top of the real enforcement backstop: the
         // native SuspendMutex (Profiler/ContinuousProfiler/SuspendMutex.h) serializes both profilers'
         // suspend/walk, so even if this window lets both managed sessions start, the shared native mutex
         // still prevents them from suspending/walking threads at the same time.
@@ -266,13 +271,17 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             _backoffIndex = 0;
             _sendBackoffActive = false;
 
+            // Arm the reverse-guard flag BEFORE starting native sampling (not after) -- narrows the
+            // mutual-exclusion race window with ThreadProfilingService's forward guard, which reads this
+            // flag under a different lock. A failed start unwinds it (see the catch below).
+            _isActive = true;
+
             // Start native sampling first, then begin draining it. Both run under _lifecycleLock, which is
             // fine: lifecycle transitions are rare (config-driven), so the native call here does not touch
             // the lock-free hot path (DrainOnce).
             _native.Start(intervalMs);
             _scheduler.ExecuteEvery(_drainAction, TimeSpan.FromMilliseconds(intervalMs));
             _activeIntervalMs = intervalMs;
-            _isActive = true;
             _lastDrainTimestamp = Stopwatch.GetTimestamp();
 
             // Arm trace-context correlation only now that native sampling is running, and publish the seam so
@@ -285,6 +294,11 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         catch (Exception ex)
         {
             Log.Error(ex, "[ContinuousProfiling] Failed to start the drain schedule.");
+
+            // _isActive is armed before the first call that can throw, so a half-started session has to be
+            // unwound here -- otherwise the flag stays true with nothing running, which both lies to
+            // IsActive and permanently blocks thread profiling via the guard above.
+            StopLocked();
         }
     }
 
@@ -318,82 +332,92 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// </summary>
     public void DrainOnce()
     {
+        if (Interlocked.CompareExchange(ref _drainInFlight, 1, 0) != 0)
+            return; // another drain is already in flight (retune overlap) -- skip this tick rather than race the shared buffer
+
         try
         {
-            // Nowhere to send yet: skip read/parse/build entirely rather than doing the work and
-            // dropping the result. Native sampling still runs (StartLocked already started it,
-            // decoupled from connect); only the managed drain is deferred.
-            //
-            // _sendBackoffActive: sampling itself is paused (native Stop()'d) while backing off, so this
-            // is mostly a cheap no-op guard against the recurring timer's own ticks in the meantime.
-            if (!_isConnected || _sendBackoffActive)
-                return;
-
-            var bytesRead = _sampleSource.ReadBatch(_drainBuffer);
-            if (bytesRead <= 0)
-                return;
-
-            // Defensive clamp: a misbehaving native source could report more bytes than the buffer
-            // holds. Never trust it far enough to hand an out-of-range length to BufferParser.Parse,
-            // which would walk off the end of _drainBuffer.
-            if (bytesRead > _drainBuffer.Length)
-            {
-                Log.Debug("[ContinuousProfiling] ReadBatch reported {0} bytes, exceeding the {1}-byte buffer; discarding this drain.", bytesRead, _drainBuffer.Length);
-                SafeReportError();
-                return;
-            }
-
-            var samples = BufferParser.Parse(_drainBuffer, bytesRead, out var batchStats);
-
-            // Surface the native BatchStats for CP overhead/fidelity analysis (and OTel FinalStats parity):
-            // microsSuspended = the stop-the-world window this sweep; skipped = threads/frames the walk missed.
-            // onCpu/total is the live signal that the native on-CPU classification is working, since NR CP
-            // is no-send-guarded and has no other observation path for it.
-            if (batchStats != null && Log.IsFinestEnabled)
-                Log.Finest("[ContinuousProfiling] batch stats: microsSuspended={0} threads={1} frames={2} skipped={3} onCpu={4}/{5}",
-                    batchStats.MicrosSuspended, batchStats.Threads, batchStats.Frames, batchStats.Skipped, CountOnCpu(samples), samples.Count);
-
-            if (samples.Count == 0)
-                return;
-
-            var now = Stopwatch.GetTimestamp();
-            var startUnixNano = ToUnixNano(DateTime.UtcNow);
-            var durationNano = ElapsedNanos(_lastDrainTimestamp, now);
-            _lastDrainTimestamp = now;
-
-            // The sampling interval (ms) is the profile's period; convert to nanoseconds for period_type=cpu/ns.
-            var periodNanos = (long)_activeIntervalMs * 1_000_000L;
-            // Exclude the agent's own threads/frames unless the undocumented appSettings opt-in is set.
-            var request = OtlpProfileBuilder.Build(samples, startUnixNano, durationNano, ServiceName, periodNanos, _configuration.ContinuousProfilingIncludeAgentCode);
-
-            bool sent;
             try
             {
-                sent = _transport.Send(request);
+                // Nowhere to send yet: skip read/parse/build entirely rather than doing the work and
+                // dropping the result. Native sampling still runs (StartLocked already started it,
+                // decoupled from connect); only the managed drain is deferred.
+                //
+                // _sendBackoffActive: sampling itself is paused (native Stop()'d) while backing off, so this
+                // is mostly a cheap no-op guard against the recurring timer's own ticks in the meantime.
+                if (!_isConnected || _sendBackoffActive)
+                    return;
+
+                var bytesRead = _sampleSource.ReadBatch(_drainBuffer);
+                if (bytesRead <= 0)
+                    return;
+
+                // Defensive clamp: a misbehaving native source could report more bytes than the buffer
+                // holds. Never trust it far enough to hand an out-of-range length to BufferParser.Parse,
+                // which would walk off the end of _drainBuffer.
+                if (bytesRead > _drainBuffer.Length)
+                {
+                    Log.Debug("[ContinuousProfiling] ReadBatch reported {0} bytes, exceeding the {1}-byte buffer; discarding this drain.", bytesRead, _drainBuffer.Length);
+                    SafeReportError();
+                    return;
+                }
+
+                var samples = BufferParser.Parse(_drainBuffer, bytesRead, out var batchStats);
+
+                // Surface the native BatchStats for CP overhead/fidelity analysis (and OTel FinalStats parity):
+                // microsSuspended = the stop-the-world window this sweep; skipped = threads/frames the walk missed.
+                // onCpu/total is the live signal that the native on-CPU classification is working, since NR CP
+                // is no-send-guarded and has no other observation path for it.
+                if (batchStats != null && Log.IsFinestEnabled)
+                    Log.Finest("[ContinuousProfiling] batch stats: microsSuspended={0} threads={1} frames={2} skipped={3} onCpu={4}/{5}",
+                        batchStats.MicrosSuspended, batchStats.Threads, batchStats.Frames, batchStats.Skipped, CountOnCpu(samples), samples.Count);
+
+                if (samples.Count == 0)
+                    return;
+
+                var now = Stopwatch.GetTimestamp();
+                var startUnixNano = ToUnixNano(DateTime.UtcNow);
+                var durationNano = ElapsedNanos(_lastDrainTimestamp, now);
+                _lastDrainTimestamp = now;
+
+                // The sampling interval (ms) is the profile's period; convert to nanoseconds for period_type=cpu/ns.
+                var periodNanos = (long)_activeIntervalMs * 1_000_000L;
+                // Exclude the agent's own threads/frames unless the undocumented appSettings opt-in is set.
+                var request = OtlpProfileBuilder.Build(samples, startUnixNano, durationNano, ServiceName, periodNanos, _configuration.ContinuousProfilingIncludeAgentCode);
+
+                bool sent;
+                try
+                {
+                    sent = _transport.Send(request);
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "[ContinuousProfiling] Send threw; treating as a failed send.");
+                    sent = false;
+                }
+                OnSendResult(sent);
+
+                // A dropped profile isn't a healthy drain: only count Drain/Samples when the send was actually
+                // accepted, and route a failure to the same error metric the other defensive branches use.
+                if (sent)
+                {
+                    _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilityDrainMetric);
+                    _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilitySamplesMetric, samples.Count);
+                }
+                else
+                {
+                    SafeReportError();
+                }
             }
             catch (Exception ex)
             {
-                Log.Debug(ex, "[ContinuousProfiling] Send threw; treating as a failed send.");
-                sent = false;
-            }
-            OnSendResult(sent);
-
-            // A dropped profile isn't a healthy drain: only count Drain/Samples when the send was actually
-            // accepted, and route a failure to the same error metric the other defensive branches use.
-            if (sent)
-            {
-                _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilityDrainMetric);
-                _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilitySamplesMetric, samples.Count);
-            }
-            else
-            {
+                Log.Error(ex, "[ContinuousProfiling] Drain failed.");
                 SafeReportError();
             }
         }
-        catch (Exception ex)
+        finally
         {
-            Log.Error(ex, "[ContinuousProfiling] Drain failed.");
-            SafeReportError();
+            _drainInFlight = 0;
         }
     }
 

@@ -150,10 +150,11 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
         // Forward mutual-exclusion guard: refuse to start while continuous profiling is active. This
         // check and ContinuousProfilingService's reverse guard (ThreadProfilingStatus.IsThreadProfilingActive)
         // are read/written under different locks (no explicit lock here vs. that service's
-        // _lifecycleLock), so a narrow concurrent-start window exists. Accepted for the prototype: there
-        // is no shared native suspend path yet, so a concurrent start is harmless today. When Plan B
-        // lands a SHARED NATIVE SINGLE-SUSPEND SAMPLER, that shared resource becomes the real enforcement
-        // point and MUST get proper cross-service locking then.
+        // _lifecycleLock), so a narrow concurrent-start window exists. These managed guards are a
+        // cooperative, coarse gate on top of the real enforcement backstop: the native SuspendMutex
+        // (Profiler/ContinuousProfiler/SuspendMutex.h) serializes both profilers' suspend/walk, so even if
+        // this window lets both managed sessions start, the shared native mutex still prevents them from
+        // suspending/walking threads at the same time.
         if (_continuousProfilingSessionControl?.IsActive == true)
         {
             Log.Info("Thread profiling start refused: continuous profiling is active.");
@@ -179,8 +180,12 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
 
             if (startedNewSession)
             {
-                _startSessionTime = DateTime.UtcNow;
+                // Publish the session id first, ahead of the bookkeeping below: it is what
+                // ContinuousProfilingService's reverse guard reads, so the sooner it is visible after the
+                // sampler actually starts, the narrower the concurrent-start window (see the guard comment
+                // above for why the native SuspendMutex, not this ordering, is the real backstop).
                 _profileSessionId = profileSessionId;
+                _startSessionTime = DateTime.UtcNow;
                 _numberSamplesInSession = 0;
             }
         }

@@ -165,6 +165,20 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void StartLocked_unwinds_to_inactive_when_the_native_start_throws()
+    {
+        // IsActive is armed before the native start so the thread-profiling guard sees it as early as
+        // possible; a failed start must therefore unwind it, or nothing would ever start again.
+        Mock.Arrange(() => _native.Start(Arg.AnyInt)).Throws(new InvalidOperationException("boom"));
+        ArrangeEnabled(10000);
+
+        _service.StartIfEnabled();
+
+        Assert.That(_service.IsActive, Is.False);
+        Mock.Assert(() => _native.Stop(), Occurs.Once());
+    }
+
+    [Test]
     public void StopLocked_stops_the_native_profiler()
     {
         ArrangeEnabled(10000);
@@ -308,6 +322,38 @@ public class ContinuousProfilingServiceTests
             .Throws(new InvalidOperationException("send failed"));
 
         Assert.DoesNotThrow(() => _service.DrainOnce());
+    }
+
+    [Test]
+    public void A_second_concurrent_DrainOnce_is_a_no_op_while_one_is_already_in_flight()
+    {
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+
+        var readCount = 0;
+        var innerDrainRan = false;
+        var batch = OneSampleBatch("worker-1", 1, 0, 0, 0, new[] { "F()" });
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
+        {
+            readCount++;
+            // Simulate a second timer tick landing while this drain is still "in flight" -- the read
+            // itself is the earliest point at which a real concurrent drain would already be racing
+            // this one over _drainBuffer, so re-entering DrainOnce from here is the tightest simulation
+            // available without a real second thread.
+            if (readCount == 1)
+            {
+                service.DrainOnce();
+                innerDrainRan = true;
+            }
+            Array.Copy(batch, dest, batch.Length);
+            return batch.Length;
+        });
+
+        service.DrainOnce();
+
+        Assert.That(innerDrainRan, Is.True, "the test setup itself should have triggered the nested call");
+        Assert.That(readCount, Is.EqualTo(1), "the nested/concurrent DrainOnce must not have read the buffer a second time");
     }
 
     [Test]

@@ -78,6 +78,174 @@ public class OtlpProfileBuilderTests
     }
 
     [Test]
+    public void Build_keeps_a_customer_sample_whose_leaf_frame_only_is_inside_agent_instrumentation()
+    {
+        // Leaf-first: the sample was captured while the customer thread (rooted in MyApp.Controller.Action)
+        // was mid-call inside the agent's own tracer/AgentShim code. The root is the customer's own frame --
+        // this is NOT one of the agent's own background threads, and must not be dropped.
+        var samples = new[]
+        {
+            Sample("customer-in-tracer", 0,
+                "NewRelic.Agent.Core.Wrapper.AgentShim.Finish()",   // leaf: agent instrumentation
+                "MyApp.Controller.Action()"),                        // root: customer code
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1),
+            "A customer sample must survive even if its leaf frame is inside agent instrumentation -- only an agent-ROOTED thread should be dropped.");
+    }
+
+    [Test]
+    public void Build_drops_an_agent_thread_whose_stack_ends_in_the_native_thread_entry_frame()
+    {
+        // Real captures ALWAYS end in the synthetic native thread-entry frame -- every CLR thread starts in
+        // unmanaged code. So the agent's own background threads are rooted in "Native.Function Call", not in
+        // Core, and a literal last-element check would never drop them. The outermost MANAGED frame is what
+        // identifies the owner. Shape taken from a real capture: the agent's SignalableAction worker parked
+        // in Monitor.Wait.
+        var samples = new[]
+        {
+            Sample("agent-worker", 0,
+                "System.Threading.Monitor.Wait(System.Object)",                                   // leaf
+                "NewRelic.Agent.Core.Utilities.SignalableAction+<>c__DisplayClass4_0.<.ctor>g__Action|0()", // outermost managed
+                "Native.Function Call"),                                                          // root
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        Assert.That(req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles, Is.Empty,
+            "An agent-owned background thread must still be dropped even though its root frame is the native thread-entry marker.");
+    }
+
+    [Test]
+    public void Build_drops_an_agent_thread_under_runtime_thread_start_plumbing()
+    {
+        // Verbatim shape from a real capture. The SAME agent worker thread as the test above, sampled on a
+        // sweep where the walk also caught System.Threading.Thread.StartCallback OUTWARD of the agent frame.
+        // Runtime dispatch scaffolding is neither agent nor customer code, so it must be skipped when
+        // deciding ownership -- otherwise the identical thread is dropped on one sweep and kept on the next.
+        var samples = new[]
+        {
+            Sample("agent-worker", 0,
+                "System.Threading.Monitor.Wait(System.Object)",                                   // leaf
+                "NewRelic.Agent.Core.Utilities.SignalableAction+<>c__DisplayClass4_0.<.ctor>g__Action|0()", // owner
+                "System.Threading.Thread.StartCallback()",                                        // plumbing
+                "Native.Function Call"),                                                          // root
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        Assert.That(req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles, Is.Empty,
+            "An agent-owned thread must be dropped even when runtime thread-start plumbing sits outward of the agent frame.");
+    }
+
+    [Test]
+    public void Build_drops_the_agent_scheduler_thread_under_timer_and_threadpool_plumbing()
+    {
+        // Verbatim shape from a real capture: the agent's harvest/CP-drain scheduler timer, buried under six
+        // frames of timer + threadpool dispatch. Enumerating specific plumbing frames would miss shapes like
+        // this, which is why the whole System.Threading.* namespace is skipped.
+        var samples = new[]
+        {
+            Sample("agent-scheduler", 0,
+                "NewRelic.Agent.Core.Time.Scheduler+<>c__DisplayClass9_0.<CreateExecuteEveryTimer>b__0(System.Object)", // owner
+                "System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext)",
+                "System.Threading.TimerQueueTimer.Fire(System.Boolean)",
+                "System.Threading.TimerQueue.FireNextTimers()",
+                "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+                "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+                "Native.Function Call"),                                                          // root
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        Assert.That(req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles, Is.Empty,
+            "The agent's scheduler thread must be dropped through arbitrarily deep timer/threadpool plumbing.");
+    }
+
+    [Test]
+    public void Build_keeps_an_idle_threadpool_thread_that_has_no_owning_frame()
+    {
+        // A parked BCL threadpool thread: the walk caught only plumbing, so there is no owning frame at all.
+        // This is ordinary customer-process idle time, NOT the agent's -- treating "all plumbing" as agent-owned
+        // would discard the large majority of every profile (measured: 693 of 736 samples).
+        var samples = new[]
+        {
+            Sample("idle-pool-thread", 0,
+                "System.Threading.Monitor.Wait(System.Object)",
+                "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+                "Native.Function Call"),
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1),
+            "An idle threadpool thread with no owning frame is not the agent's and must be kept.");
+    }
+
+    [Test]
+    public void Build_keeps_a_customer_request_thread_rooted_in_a_non_threading_framework_frame()
+    {
+        // Guards the deliberate narrowness of the plumbing skip. An ASP.NET Core request thread is rooted in
+        // Microsoft.AspNetCore.*; if the skip were widened to all of System.*/Microsoft.*, this stack's owner
+        // would resolve to the agent-core frame and every instrumented request thread would be discarded.
+        var samples = new[]
+        {
+            Sample("customer-request", 0,
+                "MyApp.Controllers.HomeController.Index()",                                       // leaf
+                "NewRelic.Agent.Core.Wrapper.AgentShim.Finish()",                                 // agent, mid-stack
+                "Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol.ProcessRequests()", // owner
+                "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+                "Native.Function Call"),
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1),
+            "A framework-rooted customer request thread must survive; the plumbing skip is System.Threading.* only.");
+    }
+
+    [Test]
+    public void Build_keeps_a_customer_sample_that_ends_in_the_native_thread_entry_frame()
+    {
+        // Same real-capture shape, but the outermost managed frame is the customer's entry point and the
+        // agent-core frames sit mid-stack (thread caught inside instrumentation). Must survive.
+        var samples = new[]
+        {
+            Sample("customer", 0,
+                "ICSharpCode.SharpZipLib.Zip.Compression.Deflater.SetStrategy()",                 // leaf
+                "NewRelic.Agent.Core.DataTransport.RequestBodyCompressor.Compress()",             // mid: agent
+                "MyApp.Program.Main(System.String[])",                                            // outermost managed
+                "Native.Function Call"),                                                          // root
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1),
+            "A customer-rooted sample with agent frames mid-stack must survive.");
+    }
+
+    [Test]
+    public void Build_all_samples_agent_owned_yields_no_profiles_when_agent_code_excluded()
+    {
+        var samples = new[]
+        {
+            Sample("agent-1", 0, "NewRelic.Agent.Core.DataTransport.ConnectionManager.Connect()"),
+            Sample("agent-2", 0, "NewRelic.Agent.Core.Time.Scheduler.Tick()"),
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1_000_000, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        Assert.That(req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles, Is.Empty,
+            "when every sample is agent-owned and excluded, no Profile message should be emitted at all -- not an empty one.");
+    }
+
+    [Test]
     public void Build_keeps_agent_samples_when_includeAgentCode_true()
     {
         var samples = new[]
