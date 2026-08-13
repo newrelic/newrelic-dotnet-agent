@@ -45,6 +45,76 @@ public class BufferParserAllocationTests
         return bytes.ToArray();
     }
 
+    // Two 0x08 records in ONE batch, which is what the native sampler emits once back-pressure makes it
+    // accumulate several samples into a single published batch. The second sample's frame is a POSITIVE
+    // back-reference to the definition the first sample wrote -- the per-batch interning table is shared
+    // across every sample in the batch, so this is the shape a multi-sample batch really has, and the shape
+    // that would break if the native encoder ever reset its interning table mid-batch. The batch also carries
+    // a 0x07 BatchStats record, which is how the allocation sampler reports dropped samples in band.
+    private static byte[] EncodeTwoAllocationSamplesWithSharedFrameAndStats(int skipped)
+    {
+        var bytes = new List<byte>();
+        void WriteShort(short v) { bytes.Add((byte)((v >> 8) & 0xFF)); bytes.Add((byte)(v & 0xFF)); }
+        void WriteInt(int v) { for (var shift = 24; shift >= 0; shift -= 8) bytes.Add((byte)((v >> shift) & 0xFF)); }
+        void WriteLong(long v) { for (var shift = 56; shift >= 0; shift -= 8) bytes.Add((byte)((v >> shift) & 0xFF)); }
+        void WriteString(string s)
+        {
+            WriteShort((short)s.Length);
+            bytes.AddRange(Encoding.Unicode.GetBytes(s));
+        }
+        void WriteSampleFields(long osThreadId, ulong allocatedSize)
+        {
+            bytes.Add(0x08);
+            WriteString("worker-thread");
+            WriteLong(osThreadId);
+            WriteLong(111L); WriteLong(222L); WriteLong(333L);
+            WriteLong(1700000000000L);
+            WriteLong(unchecked((long)allocatedSize));
+            WriteString("MyApp.Widget");
+        }
+
+        bytes.Add(0x01); // StartBatch
+        bytes.Add(2);    // version
+        WriteLong(1000L);
+
+        WriteSampleFields(1, 1024UL);
+        WriteShort(-1); WriteString("MyApp.Widget.Create()"); // first sight -> define index 1
+        WriteShort(0);
+
+        WriteSampleFields(2, 2048UL);
+        WriteShort(1); // back-reference to the frame defined by the first sample
+        WriteShort(0);
+
+        bytes.Add(0x07); // BatchStats
+        WriteLong(0L);   // microsSuspended (not meaningful for an allocation batch)
+        WriteInt(0);     // threads
+        WriteInt(0);     // frames
+        WriteInt(skipped);
+
+        bytes.Add(0x06); // EndBatch
+        return bytes.ToArray();
+    }
+
+    [Test]
+    public void Parse_DecodesEveryAllocationSampleInAMultiSampleBatch_SharingTheFrameTable()
+    {
+        var buffer = EncodeTwoAllocationSamplesWithSharedFrameAndStats(skipped: 12);
+
+        var samples = BufferParser.Parse(buffer, buffer.Length, out var stats, out var allocations);
+
+        Assert.That(samples, Is.Empty);
+        Assert.That(allocations, Has.Count.EqualTo(2), "both allocation records in the batch must decode");
+        Assert.That(allocations[0].OsThreadId, Is.EqualTo(1L));
+        Assert.That(allocations[1].OsThreadId, Is.EqualTo(2L));
+        Assert.That(allocations[0].AllocatedSize, Is.EqualTo(1024UL));
+        Assert.That(allocations[1].AllocatedSize, Is.EqualTo(2048UL));
+        Assert.That(allocations[1].Frames, Is.EqualTo(new[] { "MyApp.Widget.Create()" }),
+            "the second sample's positive frame code must resolve through the batch's shared interning table");
+
+        Assert.That(stats, Is.Not.Null, "an allocation batch may carry BatchStats");
+        Assert.That(stats.Skipped, Is.EqualTo(12), "Skipped is how the native allocation sampler reports dropped samples");
+    }
+
     [Test]
     public void Parse_DecodesOneAllocationSample_WithTraceContextAndFrames()
     {

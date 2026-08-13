@@ -141,13 +141,43 @@ public class ContinuousProfilingServiceAllocationTests
         });
     }
 
+    // One readable allocation batch PER DRAIN. The drain reads this source until a read comes up empty, so a
+    // source that always returned the same bytes would be read until the loop's own cap -- and every
+    // per-drain sample count in this fixture would silently multiply. Alternating batch/empty models the
+    // native contract instead: a drain drains what is there, then stops.
     private void ArrangeReadableAllocationBatch()
     {
         var batch = OneAllocationSampleBatch();
+        var reads = 0;
         Mock.Arrange(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
         {
+            if (reads++ % 2 == 1)
+                return 0; // this drain has nothing more
+
             Array.Copy(batch, dest, batch.Length);
             return batch.Length;
+        });
+    }
+
+    // `batchesPerDrain` readable allocation batches, then an empty read to end the drain's read loop --
+    // which is what the native sampler produces once back-pressure has made it accumulate several batches.
+    // Each batch carries a distinct allocated size so the combined result can be checked for real
+    // per-batch content rather than a repeated first batch.
+    private void ArrangeMultipleReadableAllocationBatches(int batchesPerDrain, int droppedPerBatch = 0)
+    {
+        var batches = new byte[batchesPerDrain][];
+        for (var i = 0; i < batchesPerDrain; i++)
+            batches[i] = OneAllocationSampleBatch(allocatedSize: 1024 + i, droppedSamples: droppedPerBatch);
+
+        var reads = 0;
+        Mock.Arrange(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
+        {
+            var index = reads++ % (batchesPerDrain + 1);
+            if (index == batchesPerDrain)
+                return 0; // end of this drain's backlog
+
+            Array.Copy(batches[index], dest, batches[index].Length);
+            return batches[index].Length;
         });
     }
 
@@ -456,7 +486,9 @@ public class ContinuousProfilingServiceAllocationTests
         // which it only does while the allocation active flag is set.
         ArrangeReadableAllocationBatch();
         _service.DrainOnce();
-        Mock.Assert(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>()), Occurs.Once());
+        // Twice, not once: the drain reads until a read comes up empty (one batch here, then the empty read
+        // that ends the loop).
+        Mock.Assert(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>()), Occurs.Exactly(2));
     }
 
     [Test]
@@ -737,11 +769,230 @@ public class ContinuousProfilingServiceAllocationTests
         ArrangeAllocationOnly();
         _service.StartIfEnabled();
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
-        Mock.Arrange(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) => dest.Length);
+
+        // One buffer-filling batch, then empty -- the drain reads this source until it comes up empty, so a
+        // source that returned a full buffer forever would report the boundary once per read rather than once.
+        var reads = 0;
+        Mock.Arrange(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) => reads++ == 0 ? dest.Length : 0);
 
         _service.DrainOnce();
 
         Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/DrainBufferBoundary"), Occurs.Once());
+    }
+
+    [Test]
+    public void Drain_tick_reads_the_allocation_source_until_it_comes_up_empty()
+    {
+        // Half of the delivery-ceiling fix: a single ReadBatch per drain could free only one of the native
+        // queue's two slots per drain interval, so no configured budget above ~1 sample per interval could
+        // ever be delivered. The drain must keep reading while there is data.
+        ArrangeAllocationOnly();
+        _service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        ArrangeMultipleReadableAllocationBatches(batchesPerDrain: 3);
+
+        _service.DrainOnce();
+
+        // 3 batches + the empty read that ends the loop.
+        Mock.Assert(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>()), Occurs.Exactly(4));
+    }
+
+    [Test]
+    public void Drain_tick_ships_every_allocation_batch_it_read_in_one_request()
+    {
+        // Reading more batches must widen the PAYLOAD, not the number of exports: still one profile per
+        // drain, now carrying every sample the sampler had accumulated.
+        ArrangeAllocationOnly();
+        _service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        ArrangeMultipleReadableAllocationBatches(batchesPerDrain: 3);
+
+        ExportProfilesRequest captured = null;
+        Mock.Arrange(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns((ExportProfilesRequest r) =>
+        {
+            captured = r;
+            return true;
+        });
+
+        _service.DrainOnce();
+
+        Mock.Assert(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Once(),
+            "several batches must ride ONE request, not one request per batch");
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/AllocationSamples", 3), Occurs.Once(),
+            "all three batches' samples must be counted, not just the first batch's");
+
+        Assert.That(captured, Is.Not.Null);
+        var profiles = captured.ResourceProfiles[0].ScopeProfiles[0].Profiles;
+        Assert.That(profiles, Has.Count.EqualTo(2), "still just allocated_objects + allocated_space");
+        // One sample per batch per profile, and the three distinct allocated sizes prove the later batches'
+        // real content was carried rather than the first batch being counted three times.
+        Assert.That(profiles[0].Samples, Has.Count.EqualTo(3));
+        var allocatedSpace = profiles[1];
+        Assert.That(allocatedSpace.Samples.Count, Is.EqualTo(3));
+        Assert.That(new[] { allocatedSpace.Samples[0].Values[0], allocatedSpace.Samples[1].Values[0], allocatedSpace.Samples[2].Values[0] },
+            Is.EqualTo(new long[] { 1024, 1025, 1026 }));
+    }
+
+    [Test]
+    public void Drain_tick_stops_reading_the_allocation_source_at_the_first_empty_read()
+    {
+        // The loop's terminating condition, isolated: an empty read ends the sweep even though the source
+        // would happily return more data afterwards. Without this, a drain would always run to the read cap.
+        ArrangeAllocationOnly();
+        _service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+
+        var batch = OneAllocationSampleBatch();
+        var reads = 0;
+        Mock.Arrange(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
+        {
+            reads++;
+            if (reads == 2)
+                return 0; // the empty read that must end the loop
+
+            Array.Copy(batch, dest, batch.Length);
+            return batch.Length;
+        });
+
+        _service.DrainOnce();
+
+        Assert.That(reads, Is.EqualTo(2), "the drain must stop at the empty read rather than keep polling");
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/AllocationSamples", 1), Occurs.Once());
+    }
+
+    [Test]
+    public void Drain_tick_caps_how_many_allocation_batches_it_reads()
+    {
+        // A native source that never reports empty must not spin the drain thread: the loop is bounded.
+        ArrangeAllocationOnly();
+        _service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+
+        var batch = OneAllocationSampleBatch();
+        var reads = 0;
+        Mock.Arrange(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
+        {
+            reads++;
+            Array.Copy(batch, dest, batch.Length);
+            return batch.Length;
+        });
+
+        _service.DrainOnce();
+
+        Assert.That(reads, Is.EqualTo(8), "the read loop must stop at its cap");
+        Mock.Assert(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Drain_tick_stops_reading_once_it_has_capped_out_on_allocation_samples()
+    {
+        // Removing the delivery ceiling made a drain's sample count follow the configured budget, so the
+        // managed side needs its own bound on what it will build/serialize/POST. 5 batches of 400 reach the
+        // 2000 cap exactly: reading must STOP there (not continue to the read cap) and, because nothing was
+        // refused, nothing may be counted as dropped -- the samples still in the native queue are simply the
+        // next drain's.
+        ArrangeAllocationOnly();
+        _service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+
+        var batch = ManyAllocationSampleBatch(400);
+        var reads = 0;
+        Mock.Arrange(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
+        {
+            reads++;
+            Array.Copy(batch, dest, batch.Length);
+            return batch.Length;
+        });
+
+        ExportProfilesRequest captured = null;
+        Mock.Arrange(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns((ExportProfilesRequest r) =>
+        {
+            captured = r;
+            return true;
+        });
+
+        _service.DrainOnce();
+
+        Assert.That(reads, Is.EqualTo(5), "reading must stop once the cap is reached rather than run to the read cap");
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/AllocationSamples", 2000), Occurs.Once());
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/AllocationSamplesDropped", Arg.IsAny<long>()), Occurs.Never(),
+            "hitting the cap exactly discards nothing");
+        Assert.That(captured.ResourceProfiles[0].ScopeProfiles[0].Profiles[0].Samples, Has.Count.EqualTo(2000));
+    }
+
+    [Test]
+    public void Drain_tick_takes_the_part_of_a_batch_that_fits_under_the_cap()
+    {
+        // The partial-take path: 3 x 700 = 2100 against a 2000 cap, so the third batch contributes 600 and
+        // 100 are dropped -- a batch straddling the cap must not be discarded whole.
+        ArrangeAllocationOnly();
+        _service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+
+        var batch = ManyAllocationSampleBatch(700);
+        Mock.Arrange(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
+        {
+            Array.Copy(batch, dest, batch.Length);
+            return batch.Length;
+        });
+
+        _service.DrainOnce();
+
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/AllocationSamples", 2000), Occurs.Once());
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/AllocationSamplesDropped", 100), Occurs.Once());
+    }
+
+    [Test]
+    public void Drain_tick_reports_the_dropped_allocation_samples_metric_from_the_native_batch_stats()
+    {
+        // The supportability signal for the ceiling this task fixed: when the native sampler still has to
+        // drop samples (queue full AND pending batch full), the count reaches the metric rather than only a
+        // Finest-level native log line.
+        ArrangeAllocationOnly();
+        _service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        ArrangeMultipleReadableAllocationBatches(batchesPerDrain: 2, droppedPerBatch: 5);
+
+        _service.DrainOnce();
+
+        // Summed across every batch read in the sweep -- each carries its own delta.
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/AllocationSamplesDropped", 10), Occurs.Once());
+    }
+
+    [Test]
+    public void Drain_tick_does_not_report_the_dropped_metric_when_nothing_was_dropped()
+    {
+        ArrangeAllocationOnly();
+        _service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        ArrangeReadableAllocationBatch();
+
+        _service.DrainOnce();
+
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/AllocationSamplesDropped", Arg.AnyLong), Occurs.Never(),
+            "a zero drop count is noise");
+    }
+
+    [Test]
+    public void Drain_tick_reports_dropped_allocation_samples_even_when_the_send_fails()
+    {
+        // Unlike Drain/AllocationSamples, which describe the request that was accepted, a drop count is a
+        // fact about the native sampler that has already been consumed from its counter -- withholding it on
+        // a failed send would lose it permanently.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeAllocationOnly();
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        ArrangeMultipleReadableAllocationBatches(batchesPerDrain: 1, droppedPerBatch: 7);
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/AllocationSamplesDropped", 7), Occurs.Once());
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/AllocationSamples", Arg.AnyLong), Occurs.Never(),
+            "the send failed, so the per-request counts are not reported");
     }
 
     [Test]
@@ -1194,9 +1445,10 @@ public class ContinuousProfilingServiceAllocationTests
 
     #region batch builders (mirror BufferParserTests / BufferParserAllocationTests)
 
-    private const byte StartBatch = 0x01, StartSample = 0x02, EndBatch = 0x06, AllocationSample = 0x08;
+    private const byte StartBatch = 0x01, StartSample = 0x02, EndBatch = 0x06, BatchStats = 0x07, AllocationSample = 0x08;
 
     private static void WriteShort(MemoryStream s, short v) { s.WriteByte((byte)(v >> 8)); s.WriteByte((byte)v); }
+    private static void WriteInt(MemoryStream s, int v) { for (var i = 3; i >= 0; i--) s.WriteByte((byte)(v >> (i * 8))); }
     private static void WriteLong(MemoryStream s, long v) { for (var i = 7; i >= 0; i--) s.WriteByte((byte)(v >> (i * 8))); }
     private static void WriteString(MemoryStream s, string v)
     {
@@ -1218,8 +1470,11 @@ public class ContinuousProfilingServiceAllocationTests
         return s.ToArray();
     }
 
-    // One 0x08 allocation-sample record, in the field order the native SampleBufferWriter emits.
-    private static byte[] OneAllocationSampleBatch()
+    // One 0x08 allocation-sample record, in the field order the native SampleBufferWriter emits. When
+    // `droppedSamples` is non-zero the batch also carries a 0x07 BatchStats record, which is how the native
+    // allocation sampler reports samples it had to drop for lack of buffer space (its `skipped` field, the
+    // same one thread-sample batches use).
+    private static byte[] OneAllocationSampleBatch(long allocatedSize = 65536L, int droppedSamples = 0)
     {
         using var s = new MemoryStream();
         s.WriteByte(StartBatch); s.WriteByte(2); WriteLong(s, 123456789L); // version + timestamp
@@ -1228,10 +1483,51 @@ public class ContinuousProfilingServiceAllocationTests
         WriteLong(s, 4242L);                  // OS thread id
         WriteLong(s, 0x11); WriteLong(s, 0x22); WriteLong(s, 0x33); // traceIdHigh/Low, spanId
         WriteLong(s, 1700000000000L);         // timestampMillis
-        WriteLong(s, 65536L);                 // allocatedSize
+        WriteLong(s, allocatedSize);          // allocatedSize
         WriteString(s, "MyApp.Widget");       // type name
         WriteShort(s, -1); WriteString(s, "MyApp.Widget.Create()"); // frame, first sight -> define
         WriteShort(s, 0); // end of frames
+
+        if (droppedSamples != 0)
+        {
+            s.WriteByte(BatchStats);
+            WriteLong(s, 0L);   // microsSuspended -- not meaningful for allocation batches
+            WriteInt(s, 0);     // threads
+            WriteInt(s, 0);     // frames
+            WriteInt(s, droppedSamples);
+        }
+
+        s.WriteByte(EndBatch);
+        return s.ToArray();
+    }
+
+    // A batch of `count` 0x08 records sharing one interned frame -- the shape a real back-pressured native
+    // batch has (first sight defines the frame, every repeat is a positive back-reference).
+    private static byte[] ManyAllocationSampleBatch(int count)
+    {
+        using var s = new MemoryStream();
+        s.WriteByte(StartBatch); s.WriteByte(2); WriteLong(s, 123456789L);
+
+        for (var i = 0; i < count; i++)
+        {
+            s.WriteByte(AllocationSample);
+            WriteString(s, "worker-1");
+            WriteLong(s, 4242L);
+            WriteLong(s, 0x11); WriteLong(s, 0x22); WriteLong(s, 0x33);
+            WriteLong(s, 1700000000000L);
+            WriteLong(s, 1024L + i);
+            WriteString(s, "MyApp.Widget");
+            if (i == 0)
+            {
+                WriteShort(s, -1); WriteString(s, "MyApp.Widget.Create()"); // define
+            }
+            else
+            {
+                WriteShort(s, 1); // back-reference
+            }
+            WriteShort(s, 0);
+        }
+
         s.WriteByte(EndBatch);
         return s.ToArray();
     }

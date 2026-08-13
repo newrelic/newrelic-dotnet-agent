@@ -18,6 +18,7 @@
 
 #include "../Logging/Logger.h"
 #include "../ThreadProfiler/namecache.h"
+#include "AllocationBatchAccumulator.h"
 #include "AllocationSubSampler.h"
 #include "FrameNameResolver.h"
 #include "OsThreadName.h"
@@ -52,6 +53,12 @@
 // immediately. That also makes this class the single producer SampleBufferQueue::HasFreeSlot assumes,
 // and -- because nothing is ever QUEUED on a try_lock -- it is what lets Shutdown() drain in-flight
 // handlers deterministically before the owner destroys this object.
+//
+// ONE CONSEQUENCE OF THAT WORTH SPELLING OUT: the managed drain thread also publishes, via the
+// pending-batch flush in ReadAllocationSamples. SampleBufferQueue's "check HasFreeSlot, then TryPublish
+// later" gating is only sound with a single producer, so that flush takes _tickMutex (try_lock) too.
+// Every publish in this class -- from a tick handler or from the drain -- happens under _tickMutex, and
+// anything added later that publishes must do the same.
 //
 // Lifecycle contract for the owner (Task 4): call Init() once, Start()/Stop() as configuration dictates,
 // and Shutdown() EXPLICITLY while the process is still healthy. The destructor is only a diagnostic
@@ -299,6 +306,25 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // teardown lives in Shutdown(). The runtime keeps raising AllocationTick, but the handler returns
         // on its first branch.
         //
+        // SEALS AND PUBLISHES a pending (still-accumulating) batch on the way out, so the samples a tick
+        // added since the last managed read are handed over instead of sitting in a buffer nothing will look
+        // at again until some later Start(). Doing that needs _tickMutex, taken here with a BLOCKING lock
+        // exactly as Start() and Shutdown() already take it -- the real constraint is not "lifecycle calls
+        // never take _tickMutex" (they do) but the LOCK ORDER: _lifecycleMutex then _tickMutex, never the
+        // reverse, and never a blocking _tickMutex acquisition from the tick or read paths (they try_lock,
+        // which is what keeps Shutdown()'s drain deterministic -- nothing can be QUEUED ahead of it there).
+        // Since every lifecycle call holds _lifecycleMutex first, they serialize with each other before ever
+        // reaching _tickMutex, so this cannot queue behind another lifecycle call's hold of it either.
+        //
+        // COST, WHICH IS NEW AND NO LONGER SHUTDOWN-ONLY: acquiring _tickMutex can wait out one in-flight
+        // tick's full walk + name resolution + encode (the same bounded wait Shutdown()'s drain has always
+        // paid, described there). Stop() is not only called at teardown -- the managed side calls it on a
+        // config-driven disable, a heap stop command, and on a send-failure backoff trip, and that last one
+        // runs on the DRAIN thread while holding the managed service's own lifecycle lock. So a backoff trip
+        // can now block the drain thread for about one sample's work. That is a millisecond-scale wait on a
+        // path that is already doing I/O, and the alternative is stranding the accumulated batch, but it is
+        // worth knowing before adding anything heavier to the tick path.
+        //
         // Takes _lifecycleMutex for the same reason Shutdown() does: a bare store racing an in-progress
         // Start() can be overwritten by that Start()'s own arm, so Stop() would return having silently not
         // stopped. No use-after-free risk in that case (just a stale-enabled sampler), but "Stop() stops"
@@ -310,6 +336,23 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             {
                 std::lock_guard<std::mutex> lifecycleLock(_lifecycleMutex);
                 _sessionActive.store(false);
+
+                // Disarmed first, so this runs with no further ticks able to append: take _tickMutex (which
+                // also waits out the one tick that may be in flight) and hand over whatever accumulated.
+                // Publishes only if the queue has room; if it does not, the batch simply stays pending, which
+                // is no worse than before.
+                std::lock_guard<std::mutex> tickLock(_tickMutex);
+                try
+                {
+                    _pendingBatch.FlushIfPending();
+                }
+                catch (...)
+                {
+                    // Sealing writes to the buffer, so a throw can leave a partial tail that must never be
+                    // published (see EncodeAndPublish's phase-2 catch).
+                    _pendingBatch.AbandonBatch();
+                    LogTrace(L"AllocationSampler: exception flushing the pending allocation batch on stop; discarded it");
+                }
             }
             catch (const std::exception&)
             {
@@ -334,7 +377,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         //
         // 2. USE-AFTER-FREE. Clearing _sessionActive does not evict a handler that already passed that
         //    gate: it may be mid stack-walk, holding _tickMutex, using _frameNames / _nameCache /
-        //    _encodeScratch / _sampleBuffers. If the owner destroys this object right after Shutdown()
+        //    _pendingBatch / _sampleBuffers. If the owner destroys this object right after Shutdown()
         //    returns, those members would vanish underneath that thread. So Shutdown() ends by taking
         //    _tickMutex with a BLOCKING lock: since the handler only ever try_locks, nothing can be queued
         //    behind it, and acquiring it means the last in-flight handler has finished. This matters most
@@ -396,6 +439,10 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // Drain the oldest filled sample buffer into the caller's array; the allocation-sample counterpart
         // of ContinuousProfiler::ReadThreadSamples, decoded by the same managed BufferParser. Returns the
         // number of bytes written (0 when nothing is ready or the args are invalid). Never throws.
+        //
+        // The managed drain calls this REPEATEDLY until it returns 0, so one drain collects every batch
+        // the sampler is holding -- which is what makes multi-batch accumulation useful rather than just
+        // deferred.
         int32_t ReadAllocationSamples(int32_t len, unsigned char* buf) noexcept
         {
             if (buf == nullptr || len <= 0)
@@ -405,6 +452,35 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
             try
             {
+                // Hand over a batch still accumulating under back-pressure before reading, so a drain
+                // picks it up in THIS sweep. Without this it would sit unsealed until the next allocation
+                // tick noticed a free slot -- i.e. indefinitely once the workload stops allocating, losing
+                // the tail of every burst.
+                //
+                // try_lock, never lock: _tickMutex is held by tick handlers on customer threads, and
+                // Shutdown()'s drain depends on nothing ever QUEUEING on it. A lost race just defers the
+                // flush to the next read. The latch re-check under the lock keeps this off an object
+                // Shutdown() has already declared finished (and whose owner may be about to destroy it).
+                {
+                    std::unique_lock<std::mutex> flushLock(_tickMutex, std::try_to_lock);
+                    if (flushLock.owns_lock() && !_shutdownComplete.load())
+                    {
+                        // Caught HERE, not by the outer handler, for two reasons: a failed flush must not
+                        // cost the caller the batch that is already sitting in the queue (the read below
+                        // still has to happen), and sealing a batch is a write -- a throw mid-seal leaves a
+                        // partial tail that must never be published, so the batch is abandoned.
+                        try
+                        {
+                            _pendingBatch.FlushIfPending();
+                        }
+                        catch (...)
+                        {
+                            _pendingBatch.AbandonBatch();
+                            LogTrace(L"AllocationSampler: exception flushing the pending allocation batch; discarded it");
+                        }
+                    }
+                }
+
                 return _sampleBuffers.Read(len, buf);
             }
             catch (...)
@@ -471,12 +547,18 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                     return; // malformed / unexpected-version payload -- drop it, never guess
                 }
 
-                // Back-pressure before the expensive part: if the managed reader has not drained, this
-                // sample has nowhere to go, so skip the walk/resolve/encode instead of throwing the result
-                // away at publish time. Safe as a gate because _tickMutex makes this the single producer.
-                if (!_sampleBuffers.HasFreeSlot())
+                // Back-pressure before the expensive part -- but note what this gate does NOT test any
+                // more. "Both queue slots are full" is no longer a reason to drop a tick: the sample joins
+                // the PENDING batch instead, and that batch is published as soon as the reader frees a
+                // slot (see AllocationBatchAccumulator, which exists because dropping here capped delivery
+                // at one sample per drain interval regardless of the configured budget). Only the
+                // genuinely saturated state -- no free slot AND a pending batch with no room left -- is
+                // still dropped before the walk, because there is then nowhere for the result to go.
+                // Safe as a gate because _tickMutex makes this the single producer.
+                if (!_pendingBatch.CanAcceptSample())
                 {
-                    LogTrace(L"AllocationSampler: sample buffers full; skipping tick (reader has not drained)");
+                    _pendingBatch.RecordDroppedSample();
+                    LogTrace(L"AllocationSampler: sample buffers and pending batch both full; skipping tick (reader has not drained)");
                     return;
                 }
 
@@ -681,9 +763,34 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // actually happened. Bounds the walk on pathological/runaway recursion.
         static constexpr size_t MaxStackFramesSupported = 128;
 
-        // Hard ceiling on one encoded allocation sample. Far smaller than ContinuousProfiler's per-tick
-        // all-threads batch because this is a single sample.
-        static constexpr size_t MaxAllocationBufferBytes = 64 * 1024;
+        // Hard ceiling on one encoded allocation BATCH -- which, since a batch can now accumulate many
+        // samples under back-pressure, is also what bounds how many samples one drain interval can deliver
+        // (the sampler holds at most three batches between drains: two SampleBufferQueue slots plus the
+        // pending one). So it is a throughput knob, not just a safety cap, and the per-sample cost that
+        // divides into it is the MARGINAL cost of appending sample N to an ALREADY-OPEN batch -- NOT the size
+        // of a standalone one-sample batch, and not the size of the OTLP profile built from it. Two regimes,
+        // because the per-batch frame-interning table makes the difference enormous:
+        //
+        //   * REPEATED stacks (one allocating loop -- the common shape, and what the integration test
+        //     exercises): every frame after its first sight is a 2-byte back-reference, so a sample costs
+        //     opcode(1) + threadName(2+) + 6 int64s(48) + typeName(~28) + 2 bytes/frame + terminator(2)
+        //     ~= 95-150 bytes. Enforced, not assumed: AllocationBatchAccumulatorTest's
+        //     MarginalBytesPerAppendedSample_StaysSmallForARepeatedStack asserts it. 64 KB would already
+        //     hold ~500 such samples.
+        //   * DISTINCT stacks (a service allocating from many call sites): each new frame costs a full inline
+        //     definition, 4 + 2*chars bytes, so ~20 fresh 60-char frames put a sample at ~2.5 KB. THIS is the
+        //     regime that sizes the cap: the shipped defaults (200 samples/minute at a 10 s drain) demand
+        //     ~33 samples per interval, which at 2.5 KB is ~83 KB -- more than 64 KB, i.e. the old value
+        //     could not deliver the DEFAULT budget for a diverse workload even with batching. 128 KB covers
+        //     ~50 such samples, and ~1300 in the repeated-stack regime.
+        //
+        // Cost of the headroom is bounded and only paid under load: the buffers are std::vectors that grow to
+        // what is actually written, so the worst case (3 x this) only materializes while genuinely
+        // backpressured on a diverse workload; steady state stays at a few KB. Still far below
+        // ContinuousProfiler's 4 MB per-tick all-threads batch, and well inside the managed drain buffer
+        // (DrainBufferSize, 4 MB). A budget large enough to exceed this cap is now visible rather than silent
+        // (Supportability/DotNET/ContinuousProfiling/AllocationSamplesDropped).
+        static constexpr size_t MaxAllocationBufferBytes = 128 * 1024;
 
         // The sub-sampler's cycle length. maxSamplesPerMinute is a per-MINUTE budget, hence 60.
         static constexpr uint32_t SubSampleCycleSeconds = 60;
@@ -795,67 +902,136 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             return S_OK;
         }
 
-        // Resolve names and encode this ONE sample into its own batch, then publish it. Runs on the
-        // allocating thread with no lock held beyond _tickMutex: metadata calls, string building and
-        // allocation are all fine here (nothing is suspended). Never throws.
+        // Encoded size of a length-prefixed string field: the big-endian int16 char count plus the
+        // UTF-16LE code units, with the encoder's own 512-char cap applied (see WriteString).
+        static size_t EncodedStringBytes(const xstring_t& value) noexcept
+        {
+            const size_t chars = value.size() < SampleBufferWriter::MaxStringChars
+                ? value.size() : SampleBufferWriter::MaxStringChars;
+            return 2 + (chars * 2);
+        }
+
+        // Encoded size of one frame-list entry at its WORST case: a 2-byte code plus a full inline string
+        // definition (what a frame not yet interned in this batch costs).
+        static size_t EncodedFrameBytes(const xstring_t& frame) noexcept
+        {
+            return 2 + EncodedStringBytes(frame);
+        }
+
+        // Encoded size of everything in an allocation sample except its frame list: the 0x08 opcode, the
+        // thread name, six int64 fields (os thread id, traceIdHigh, traceIdLow, spanId, timestamp,
+        // allocated size), the type name, and the frame-list terminator.
+        static size_t AllocationSampleFixedBytes(const xstring_t& threadName, const xstring_t& typeName) noexcept
+        {
+            return 1 + EncodedStringBytes(threadName) + (6 * 8) + EncodedStringBytes(typeName) + 2;
+        }
+
+        // Resolve names and encode this sample into the pending batch, publishing that batch when there is
+        // a queue slot for it (see AllocationBatchAccumulator for why a batch can span several ticks).
+        // Runs on the allocating thread with no lock held beyond _tickMutex: metadata calls, string
+        // building and allocation are all fine here (nothing is suspended). Never throws.
         void EncodeAndPublish(ThreadID managedThreadId, const TraceContext& context, uint64_t allocatedSize,
             const xstring_t& typeName, const std::vector<FunctionID>& functionIds) noexcept
         {
+            // PHASE 1 -- resolve, in its own try/catch, because NOTHING here touches the pending batch and
+            // this is where nearly all of this function's allocation happens (thread-name lookup, frame-name
+            // building, NameCache inserts, the scratch vector's growth). A bad_alloc here must cost ONE
+            // sample, exactly as it did before batching existed. Sharing the catch below would instead
+            // discard an accumulated batch of up to hundreds of already-encoded, perfectly good samples --
+            // the fix would have multiplied the blast radius of an allocation failure by the batch size.
+            DWORD osThreadId = 0;
+            int64_t nowNanos = 0;
+            xstring_t threadName;
             try
             {
                 // Not error-checked, exactly as in ContinuousProfiler::EnrichCapturedThreads: on failure
                 // the id stays 0 and ResolveOsThreadName treats that as "no name".
-                DWORD osThreadId = 0;
                 _corProfilerInfo->GetThreadInfo(managedThreadId, &osThreadId);
 
-                const auto nowNanos = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    std::chrono::system_clock::now().time_since_epoch()).count();
+                nowNanos = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count());
 
-                SampleBufferWriter writer(_encodeScratch, MaxAllocationBufferBytes);
-                writer.BeginBatch();
-                writer.WriteStartBatch(nowNanos);
-                writer.WriteStartAllocationSample();
-                writer.WriteThreadName(ResolveOsThreadName(osThreadId));
-                writer.WriteInt64Field(static_cast<int64_t>(osThreadId));
-                writer.WriteInt64Field(context.TraceIdHigh);
-                writer.WriteInt64Field(context.TraceIdLow);
-                writer.WriteInt64Field(context.SpanId);
-                writer.WriteInt64Field(nowNanos / 1000000); // sample timestamp, milliseconds
-                writer.WriteUInt64Field(allocatedSize);
-                writer.WriteStringField(typeName);
+                threadName = ResolveOsThreadName(osThreadId);
 
+                // Resolve every frame name BEFORE touching the batch, into a reused scratch vector. That
+                // makes this sample's exact worst-case encoded size known up front, which is what lets the
+                // accumulator decide at a SAMPLE boundary whether the sample fits the open batch -- rather
+                // than starting to write it and truncating its frame list at the buffer's edge.
+                _frameScratch.clear();
                 for (const auto functionId : functionIds)
                 {
-                    const xstring_t frame = _frameNames ? _frameNames->ResolveFrameName(functionId) : xstring_t();
+                    _frameScratch.push_back(_frameNames ? _frameNames->ResolveFrameName(functionId) : xstring_t());
+                }
+            }
+            catch (...)
+            {
+                // One sample lost, the open batch untouched and still deliverable.
+                _pendingBatch.RecordDroppedSample();
+                LogTrace(L"AllocationSampler: exception resolving allocation sample names; dropping this sample only");
+                return;
+            }
 
-                    // Keep the encoded sample inside the fixed buffer instead of growing it without bound.
-                    // The reservation covers this frame's worst case (a fresh, uninterned definition) plus
-                    // the list terminator, so there is always room to close the frame list.
-                    const size_t chars = frame.size() < SampleBufferWriter::MaxStringChars
-                        ? frame.size() : SampleBufferWriter::MaxStringChars;
-                    if (!writer.WillFit(2 + 2 + (chars * 2) + 2))
+            // PHASE 2 -- encode into the batch. Every statement below either touches the batch or is
+            // arithmetic that cannot throw, so this catch can abandon unconditionally: there is no way to
+            // reach it without having been inside the encoder. (That is precisely why the resolve work was
+            // lifted out above rather than guarded by a "did we start writing?" flag -- the split makes the
+            // distinction structural instead of something a later edit could get wrong.)
+            try
+            {
+                size_t requiredBytes = AllocationSampleFixedBytes(threadName, typeName);
+                for (const auto& frame : _frameScratch)
+                {
+                    requiredBytes += EncodedFrameBytes(frame);
+                }
+
+                SampleBufferWriter* writer = _pendingBatch.BeginSample(requiredBytes, nowNanos);
+                if (writer == nullptr)
+                {
+                    // Saturated: no slot to publish into and no room left in the pending batch. Already
+                    // counted as a drop by the accumulator.
+                    LogTrace(L"AllocationSampler: sample buffers and pending batch both full; dropping allocation sample");
+                    return;
+                }
+
+                writer->WriteStartAllocationSample();
+                writer->WriteThreadName(threadName);
+                writer->WriteInt64Field(static_cast<int64_t>(osThreadId));
+                writer->WriteInt64Field(context.TraceIdHigh);
+                writer->WriteInt64Field(context.TraceIdLow);
+                writer->WriteInt64Field(context.SpanId);
+                writer->WriteInt64Field(nowNanos / 1000000); // sample timestamp, milliseconds
+                writer->WriteUInt64Field(allocatedSize);
+                writer->WriteStringField(typeName);
+
+                for (const auto& frame : _frameScratch)
+                {
+                    // Only reachable for a sample whose frames alone exceed the whole buffer cap -- the
+                    // accumulator has already guaranteed room for every other sample. The reservation
+                    // covers this frame's worst case (a fresh, uninterned definition), the list
+                    // terminator, and the batch's own closing records, so the batch can always be sealed.
+                    if (!writer->WillFit(EncodedFrameBytes(frame) + 2 + AllocationBatchAccumulator::BatchTailBytes))
                     {
                         LogTrace(L"AllocationSampler: sample buffer full mid-sample; truncating the frame list");
                         break;
                     }
 
-                    writer.WriteCodedFrameString(frame);
+                    writer->WriteCodedFrameString(frame);
                 }
 
-                writer.WriteFrameListTerminator();
-                writer.WriteEndBatch();
+                writer->WriteFrameListTerminator();
 
-                // The OnAllocationTick gate normally catches saturation before any of the above is paid
-                // for, so reaching this drop means the queue filled while this sample was being built.
-                if (!_sampleBuffers.TryPublish(_encodeScratch))
-                {
-                    LogTrace(L"AllocationSampler: sample buffers full; dropping allocation sample");
-                }
-                _encodeScratch.clear();
+                // Publishes now if a slot is free (the common case, byte-identical to the old
+                // one-sample-per-batch behavior); otherwise the batch stays open and the next tick appends
+                // to it instead of being dropped.
+                _pendingBatch.EndSample();
             }
             catch (...)
             {
-                LogTrace(L"AllocationSampler: exception encoding allocation sample");
+                // A throw can leave a HALF-WRITTEN record in the open batch, and the encoder cannot roll
+                // one back -- a partial record desynchronizes the managed decoder for every sample after
+                // it. Discarding the whole pending batch (counted as dropped) is the only safe response.
+                _pendingBatch.AbandonBatch();
+                LogTrace(L"AllocationSampler: exception encoding allocation sample; discarded the pending batch");
             }
         }
 
@@ -913,12 +1089,20 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // Frame-name resolution over _nameCache. This sampler's own instance -- see the note in Init().
         std::unique_ptr<FrameNameResolver> _frameNames;
 
-        // Scratch buffer the encoder writes into before the bytes are swapped into a filled queue slot.
-        std::vector<uint8_t> _encodeScratch;
+        // Resolved frame names for the sample being encoded. A member so the vector's storage is reused
+        // across ticks; resolution happens up front so the sample's exact encoded size is known before the
+        // batch is touched (see EncodeAndPublish).
+        std::vector<xstring_t> _frameScratch;
 
         // Two-slot FIFO hand-off to the managed reader (its own lock -- see SampleBufferQueue.h). Separate
         // from ContinuousProfiler's queue so allocation samples and thread samples cannot starve each
-        // other, and so each is drained by its own managed reader.
+        // other, and so each is drained by its own managed reader. Declared BEFORE _pendingBatch, which
+        // holds a reference to it.
         SampleBufferQueue _sampleBuffers;
+
+        // Owns the encode buffer, the batch's writer (one instance, so frame interning stays consistent
+        // across a multi-tick batch) and the accumulate/flush decision. Guarded by _tickMutex like every
+        // other state member here, including on the FlushIfPending call the drain path makes.
+        AllocationBatchAccumulator _pendingBatch{ _sampleBuffers, MaxAllocationBufferBytes };
     };
 }}}

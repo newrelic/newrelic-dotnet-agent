@@ -35,25 +35,23 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 public abstract class ContinuousProfilingAllocationTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
 {
     // With thread sampling off this is ONLY the shared drain cadence (there is no thread-sampling interval to
-    // set). 1000 ms is the minimum the agent clamps to, so a short exercise window spans many drains -- and it
-    // is load-bearing for this test's runtime, because the delivered allocation-sample rate is currently one
-    // sample per drain (see MaxSamplesPerMinute), not the configured budget.
+    // set). 1000 ms is the minimum the agent clamps to, so a short exercise window spans many drains.
     private const int DrainIntervalMs = 1000;
 
     // Well above the shipped default of 200/minute so the configured budget is never the binding constraint
     // inside the test window.
     //
-    // MEASURED, not assumed: the budget is not in fact what limits delivery today. The native sampler
-    // publishes ONE sample per SampleBufferQueue slot and the managed drain frees one slot per tick, so the
-    // delivered rate is capped at one allocation sample per drain interval regardless of the budget -- this
-    // run selected ~1600 samples and delivered 18, dropping the rest with "sample buffers full" (a native
-    // Trace line). The assertions below deliberately do not depend on any per-payload sample count, only on
-    // at least one drain producing a profile; see the task-9 report for the throughput finding.
+    // HISTORY WORTH KEEPING, because it is what AllocationSamplingDeliversManySamplesPerDrain guards: this
+    // test's first run measured ~1600 sub-sampled ticks SELECTED and only 18 delivered -- one per drain,
+    // exactly -- because the native sampler published a single-sample batch per tick into a two-slot queue
+    // and the managed drain read that queue once per tick. The fix (native batch accumulation under
+    // back-pressure + a drain that reads until the source is empty) removed that ceiling; the throughput
+    // fact below asserts it stays removed, since nothing else here would notice its return.
     private const int MaxSamplesPerMinute = 6000;
 
-    // How long the exerciser allocates for. At one delivered sample per drain interval this is many more
-    // drains than the assertions need; the margin is for slower/loaded hosts, where the allocation rate (and
-    // therefore the time to the first captured sample) is lower.
+    // How long the exerciser allocates for. Many more drains than the assertions need; the margin is for
+    // slower/loaded hosts, where the allocation rate (and therefore the time to the first captured sample)
+    // is lower.
     private const int AllocateSeconds = 30;
 
     protected readonly TFixture _fixture;
@@ -95,6 +93,7 @@ public abstract class ContinuousProfilingAllocationTestsBase<TFixture> : NewReli
     private const string DrainMetricName = "Supportability/DotNET/ContinuousProfiling/Drain";
     private const string AllocationSamplesMetricName = "Supportability/DotNET/ContinuousProfiling/AllocationSamples";
     private const string ThreadSamplesMetricName = "Supportability/DotNET/ContinuousProfiling/Samples";
+    private const string AllocationSamplesDroppedMetricName = "Supportability/DotNET/ContinuousProfiling/AllocationSamplesDropped";
 
     protected ContinuousProfilingAllocationTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
@@ -267,6 +266,43 @@ public abstract class ContinuousProfilingAllocationTestsBase<TFixture> : NewReli
             () => Assert.NotNull(allocationSamplesMetric),
             () => Assert.True(allocationSamplesMetric.Values.CallCount > 0, "AllocationSamples metric call count was zero."),
             () => Assert.Null(threadSamplesMetric)
+        );
+    }
+
+    [Fact]
+    public void AllocationSamplingDeliversManySamplesPerDrain()
+    {
+        // THE THROUGHPUT REGRESSION GUARD. Both supportability metrics are count metrics, so their harvested
+        // CallCount IS the reported count: AllocationSamples totals the samples delivered, Drain totals the
+        // drains that delivered them. Their ratio is therefore the delivered samples per drain -- the exact
+        // number that used to be pinned at 1 no matter what budget was configured (see MaxSamplesPerMinute).
+        //
+        // Summed across every harvest in the run rather than taken from the first: one harvest window can be
+        // short (the run's first) and would understate the rate.
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+        // CallCount is a ulong (no LINQ Sum overload for it); a count that could overflow long is impossible here.
+        var drains = metrics.Where(x => x.MetricSpec.Name == DrainMetricName).Sum(x => (long)x.Values.CallCount);
+        var delivered = metrics.Where(x => x.MetricSpec.Name == AllocationSamplesMetricName).Sum(x => (long)x.Values.CallCount);
+        var dropped = metrics.Where(x => x.MetricSpec.Name == AllocationSamplesDroppedMetricName).Sum(x => (long)x.Values.CallCount);
+
+        var samplesPerDrain = drains > 0 ? delivered / (double)drains : 0d;
+
+        // Logged so the numbers land in the test output, where a regression's magnitude is visible rather
+        // than just its verdict.
+        _fixture.TestLogger?.WriteLine(
+            $"Allocation delivery: {delivered} samples over {drains} drains = {samplesPerDrain:F1}/drain (native dropped: {dropped}).");
+
+        // ONLY the > 1.0 check, deliberately. Pre-fix, samples/drain was pinned at exactly 1 by the queue
+        // mechanics, independently of how fast the host allocated -- so "more than one per drain" is a
+        // rate-INDEPENDENT statement of the fix and cannot flake on a slow or loaded CI host. A higher
+        // hardcoded floor (an earlier draft used 3) would have been rate-DEPENDENT: post-fix the ratio tracks
+        // the delivered AllocationTick rate, so a host yielding few ticks per second could fail it while the
+        // fix is working perfectly. The measured magnitude is logged above instead of asserted.
+        NrAssert.Multiple(
+            () => Assert.True(drains > 0, "No drains were reported, so throughput cannot be measured."),
+            () => Assert.True(samplesPerDrain > 1.0,
+                $"Delivered {samplesPerDrain:F2} allocation samples per drain ({delivered} over {drains} drains) -- at or below the pre-fix ceiling of one per drain.")
         );
     }
 }

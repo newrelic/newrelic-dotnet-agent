@@ -31,7 +31,8 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 /// managed-&gt;native trace-context seam, which both samplers correlate through. They also share the
 /// send-failure backoff, since one drain produces one request carrying both sample types.
 ///
-/// Each drain reads one batch from each active source into a reused buffer, parses them,
+/// Each drain reads one batch from the thread sampler and EVERY pending batch from the allocation
+/// sampler (see <see cref="ReadAllAllocationBatches"/>) into a reused buffer, parses them,
 /// builds a single OTLP request carrying both sample types, and hands it to the
 /// <see cref="IProfilesTransport"/>. All drain work is
 /// wrapped so a failure is logged and metered but never propagates into the customer's application.
@@ -69,6 +70,17 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // count would tell you nothing about either. This is also the only observation path for allocation
     // sampling actually producing data in the field.
     private const string SupportabilityAllocationSamplesMetric = "Supportability/DotNET/ContinuousProfiling/AllocationSamples";
+
+    // Sub-sampled allocation samples that were TAKEN but never reached a profile. One number, because the
+    // operator's question is one question -- "is the budget I configured actually arriving?" -- and it is the
+    // signal the previous behavior lacked entirely (drop every backpressured tick, log at Finest). Two
+    // contributing causes, distinguished in the log rather than by separate metrics:
+    //   * native: no free queue slot AND a full pending batch (see AllocationBatchAccumulator), or a batch
+    //     abandoned/unpublishable, reported in band via BatchStats.Skipped;
+    //   * managed: this drain's own MaxAllocationSamplesPerDrain truncation, below.
+    // It does NOT count samples never taken in the first place -- a failed stack walk, a lost suspend-lock
+    // race -- which are pre-existing fidelity events with different causes and different remedies.
+    private const string SupportabilityAllocationSamplesDroppedMetric = "Supportability/DotNET/ContinuousProfiling/AllocationSamplesDropped";
 
     // Send-failure backoff, generally modeled on ConnectionManager.ConnectionRetryBackoffSequence (same
     // values as the collector-response-handling reconnect schedule) -- but, unlike that sequence, this one
@@ -213,6 +225,33 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // never flows through IConfiguration, so it can't reuse that private clamp.
     private const int MinCommandIntervalMs = 1000;
     private const int MaxCommandIntervalMs = 60000;
+
+    // Upper bound on ReadBatch calls against the ALLOCATION source in one drain. The drain must read that
+    // source until it comes up empty, not once: the native side publishes a batch per subsampled tick when
+    // it can, so a single read per drain capped delivery at one batch per drain interval no matter how many
+    // samples the budget allowed (the defect this and AllocationBatchAccumulator fix together).
+    //
+    // Sized off the native queue rather than picked round: two slots means two reads clear a steady-state
+    // backlog and a third confirms empty, plus headroom for the batch the native side flushes DURING this
+    // loop (its read frees a slot, which lets a pending accumulated batch publish immediately -- see
+    // AllocationSampler::ReadAllocationSamples). A cap at all, rather than "loop until zero", so a
+    // misbehaving native source can never spin the drain thread indefinitely.
+    private const int MaxAllocationBatchReadsPerDrain = 8;
+
+    // Ceiling on allocation samples carried by ONE drain's profile. The native side is now bounded by its own
+    // batch cap, but that bound is expressed in BYTES and the per-sample cost differs by ~25x between a
+    // repeated stack (~98 bytes, interned) and wholly distinct ones (~2.5 KB), so it does not bound the
+    // sample COUNT this side has to build, serialize and POST. This does.
+    //
+    // Sized against the wire, not the budget: at the ~90 bytes/sample an OTLP profile costs for a repeated
+    // stack (measured: a 1-sample drain was 2101 bytes, an 84-sample drain 9384), 2000 samples is ~180 KB,
+    // comfortably inside ProfilesTransport.MaxPayloadBytes; a maximally diverse workload interns far more
+    // string data per sample, which is what that ceiling is there to catch. It is also ~60x the demand of the
+    // shipped defaults (200/minute at a 10 s drain = ~33 per drain), so a normal deployment never meets it.
+    // Excess samples are dropped, counted on SupportabilityAllocationSamplesDroppedMetric and logged --
+    // deliberately NOT held over for the next drain, which would just move the backlog managed-side and
+    // stretch every subsequent profile's time window.
+    private const int MaxAllocationSamplesPerDrain = 2000;
 
     // Accessed exclusively via Interlocked.Read/Exchange. It's a 64-bit value written from DrainOnce's
     // scheduler thread AND from EndBackoffProbeIfCurrent/ResumeAfterReconnect (both under _lifecycleLock,
@@ -879,8 +918,8 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     }
 
     /// <summary>
-    /// Drains at most one batch and ships it. Catches everything: a drain failure must never surface
-    /// in the instrumented application.
+    /// Drains both sample sources and ships ONE profile carrying whatever they produced. Catches everything:
+    /// a drain failure must never surface in the instrumented application.
     /// </summary>
     public void DrainOnce()
     {
@@ -906,9 +945,10 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 if (!_isConnected || _sendBackoffActive)
                     return;
 
-                // Both sample types are read into the SAME buffer, sequentially. Deliberate: the buffer is
+                // Both sample types are read into the SAME buffer, sequentially -- and the allocation source
+                // is read repeatedly, so a single drain buffer serves several reads in a row. Deliberate: the buffer is
                 // sized for native's 4 MB thread-batch cap, and a second dedicated buffer would double that
-                // permanent per-process footprint for allocation batches native caps at 64 KB
+                // permanent per-process footprint for allocation batches native caps at 256 KB
                 // (AllocationSampler::MaxAllocationBufferBytes). It is safe because the reads are strictly
                 // sequential and each parse fully materializes its results before the next read overwrites the
                 // bytes -- BufferParser copies every string out (Encoding.Unicode.GetString), so no parsed
@@ -932,8 +972,17 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 // the thread sampler alone, and in that (default) case an ungated read would P/Invoke into a
                 // never-started allocation sampler on every single tick for the life of the process.
                 var allocationSamples = EmptyAllocationSamples;
-                if (_allocationActive && TryReadIntoDrainBuffer(_allocationSampleSource, out var allocationBytesRead))
-                    BufferParser.Parse(_drainBuffer, allocationBytesRead, out _, out allocationSamples);
+                var allocationSamplesDropped = 0;
+                if (_allocationActive)
+                    allocationSamples = ReadAllAllocationBatches(out allocationSamplesDropped);
+
+                // Reported before the empty-sweep early-return below and regardless of whether this drain's
+                // send succeeds -- unlike Drain/Samples, which describe THIS request. A drop count is a fact
+                // about the native sampler that has already been consumed from its counter, so skipping the
+                // report on a failed send (or an otherwise empty sweep) would lose it silently, which is
+                // exactly the blind spot this metric exists to close.
+                if (allocationSamplesDropped > 0)
+                    _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilityAllocationSamplesDroppedMetric, allocationSamplesDropped);
 
                 // Either sample type alone is worth a payload: an allocation-only sweep is normal whenever the
                 // thread sampler is stopped, and a thread-only sweep is the common case. Only a sweep that
@@ -1004,6 +1053,92 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // why a plain store here was never observed to fail.
             Interlocked.Exchange(ref _drainInFlight, 0);
         }
+    }
+
+    /// <summary>
+    /// Drains EVERY allocation batch the native sampler currently holds -- reading until a read comes up
+    /// empty (bounded by <see cref="MaxAllocationBatchReadsPerDrain"/>) -- and returns all of their samples
+    /// as one list, plus the native dropped-sample count they carry.
+    ///
+    /// Reading once per drain was half of a delivery ceiling of ~1 allocation sample per drain interval: the
+    /// native queue holds two batches and each read frees one slot, so a single read could never keep up with
+    /// a sampler producing a batch per subsampled tick. Every batch read here still rides ONE profile/export
+    /// for this drain -- this widens what a drain collects, not how often it sends.
+    ///
+    /// The shared <see cref="_drainBuffer"/> is safe to reuse across iterations for the same reason it is
+    /// safe to share between the two sample sources: <see cref="BufferParser"/> copies every string out, so
+    /// no parsed sample aliases the buffer once the parse returns.
+    /// </summary>
+    private IReadOnlyList<AllocationSample> ReadAllAllocationBatches(out int droppedSamples)
+    {
+        droppedSamples = 0;
+
+        // Only allocated when a second non-empty batch actually shows up: the common (non-backpressured)
+        // case is one batch per drain, whose parsed list can be handed on as-is.
+        IReadOnlyList<AllocationSample> firstBatch = null;
+        List<AllocationSample> combined = null;
+
+        var kept = 0;
+        for (var reads = 0; reads < MaxAllocationBatchReadsPerDrain; reads++)
+        {
+            if (!TryReadIntoDrainBuffer(_allocationSampleSource, out var bytesRead))
+                break; // nothing left (or a batch this method already reported as an error)
+
+            BufferParser.Parse(_drainBuffer, bytesRead, out var stats, out var batch);
+
+            // Native reports its dropped-sample delta IN BAND, as BatchStats.Skipped on each allocation
+            // batch (the same field the thread sampler uses for samples its walk missed) -- so no extra
+            // P/Invoke, and a drop count can never arrive without a batch to carry it.
+            if (stats != null)
+                droppedSamples += stats.Skipped;
+
+            if (batch.Count == 0)
+                continue;
+
+            // Per-drain ceiling. Counted as dropped (same metric, same question) and logged with its own
+            // cause so a reader can tell it apart from a native buffer-space drop; reading stops here, since
+            // anything further read would only be dropped too -- and leaving it in the native queue means the
+            // NEXT drain delivers it instead of it being lost.
+            if (kept + batch.Count > MaxAllocationSamplesPerDrain)
+            {
+                var dropped = kept + batch.Count - MaxAllocationSamplesPerDrain;
+                droppedSamples += dropped;
+                Log.Debug("[ContinuousProfiling] Allocation samples exceeded the {0}-per-drain cap; dropping {1} from this drain.",
+                    MaxAllocationSamplesPerDrain, dropped);
+
+                // `room` is always >= 1 here: the loop breaks as soon as `kept` REACHES the cap, so a batch
+                // that straddles it is partially taken rather than refused whole.
+                var room = MaxAllocationSamplesPerDrain - kept;
+
+                // Take the part that fits, then stop.
+                var partial = new List<AllocationSample>(room);
+                for (var i = 0; i < room; i++)
+                    partial.Add(batch[i]);
+                batch = partial;
+            }
+
+            kept += batch.Count;
+
+            if (firstBatch == null)
+            {
+                firstBatch = batch;
+            }
+            else
+            {
+                if (combined == null)
+                {
+                    combined = new List<AllocationSample>(firstBatch.Count + batch.Count);
+                    combined.AddRange(firstBatch);
+                }
+
+                combined.AddRange(batch);
+            }
+
+            if (kept >= MaxAllocationSamplesPerDrain)
+                break;
+        }
+
+        return combined ?? firstBatch ?? EmptyAllocationSamples;
     }
 
     /// <summary>
