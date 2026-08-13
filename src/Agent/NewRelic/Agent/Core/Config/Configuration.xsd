@@ -2242,6 +2242,9 @@
                             <xs:annotation>
                                 <xs:documentation>
                                     Set this to "true" to enable continuous profiling. The default is false.
+                                    This setting is read only once, at agent initialization: enabling it after
+                                    agent startup via a live configuration-file change requires a process
+                                    restart to take effect.
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>

@@ -550,7 +550,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 // persistent slots hold, so the extras were dropped rather than growing the capture buffer
                 // under suspend.
                 LogTrace(L"CP: thread capture overflow; dropped ", overflowCount, L" thread(s) beyond the ",
-                    ThreadCountForReservation, L"-slot capture buffer");
+                    static_cast<size_t>(ThreadCountForReservation), L"-slot capture buffer");
             }
 
             EncodeAndPublish(failedSnapshotCount, batchTimestamp, microsSuspended);

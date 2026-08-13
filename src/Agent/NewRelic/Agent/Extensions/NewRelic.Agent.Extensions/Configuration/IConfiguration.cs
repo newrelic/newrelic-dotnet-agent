@@ -303,9 +303,12 @@ public interface IConfiguration
 
     /// <summary>
     /// Gets whether continuous profiling includes New Relic agent code (samples whose stack is the agent's own
-    /// threads/frames). Defaults to false, so agent-internal samples are dropped from the profile. Enabled via
-    /// the undocumented appSettings key "NewRelic.ContinuousProfilingIncludeAgentCode" (deliberately NOT in the
-    /// XSD). Temporary stand-in until the CP UI ships a self-frames filter (like the thread profiler's).
+    /// threads/frames). Defaults to false, so detected agent-internal samples are dropped from the profile.
+    /// Note: frame-text matching cannot catch every agent-owned sample -- agent threads parked in runtime/BCL
+    /// code with no agent-core frame on the walked stack are not detected (measured ~25-31% recall; a
+    /// thread-identity-based filter is the tracked follow-up). Enabled via the undocumented appSettings key
+    /// "NewRelic.ContinuousProfilingIncludeAgentCode" (deliberately NOT in the XSD). Temporary stand-in until
+    /// the CP UI ships a self-frames filter (like the thread profiler's).
     /// </summary>
     bool ContinuousProfilingIncludeAgentCode { get; }
 }

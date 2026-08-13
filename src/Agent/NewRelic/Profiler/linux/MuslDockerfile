@@ -19,6 +19,7 @@ RUN apk add --no-cache \
     make \
     musl-dev \
     g++ \
+    binutils \
     linux-headers \
     bash \
     dos2unix

@@ -267,7 +267,8 @@ public class ContinuousProfilingServiceTests
 
         _service.DrainOnce();
 
-        Mock.Assert(() => _health.ReportSupportabilityCountMetric(Arg.IsAny<string>(), Arg.IsAny<long>()), Occurs.AtLeast(1));
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/Drain", Arg.IsAny<long>()), Occurs.AtLeast(1));
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/Samples", Arg.IsAny<long>()), Occurs.AtLeast(1));
     }
 
     [Test]

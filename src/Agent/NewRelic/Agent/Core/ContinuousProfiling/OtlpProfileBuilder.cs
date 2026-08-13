@@ -209,6 +209,12 @@ public static class OtlpProfileBuilder
     // A stack consisting solely of plumbing (an idle threadpool/timer thread whose walk caught no owning
     // frame) yields no owning frame and is NOT treated as the agent's -- it is ordinary BCL idle time, and
     // discarding it would gut the profile rather than filter the agent out of it.
+    //
+    // Scope, so this is not over-trusted: fixing the leak above did NOT make this a reliable agent-thread
+    // detector. Most agent-owned samples still go uncaught -- agent threads spend the bulk of their time
+    // parked in runtime/BCL code (e.g. Monitor.Wait) with no agent-core frame anywhere on the walked stack,
+    // which no frame-text predicate can see (measured recall ~25-31%). This predicate narrows false-drops of
+    // CUSTOMER data; identifying agent threads reliably needs thread identity, not frame text.
     private static bool IsAgentThreadSample(IReadOnlyList<string> frames)
     {
         for (var i = frames.Count - 1; i >= 0; i--)

@@ -28,7 +28,10 @@ public static class ContinuousProfilingServiceFactory
     public static ContinuousProfilingService TryCreate(IContainer container, IConfiguration configuration, IAgentHealthReporter agentHealthReporter)
     {
         if (!configuration.ContinuousProfilingEnabled)
+        {
+            Log.Debug("[ContinuousProfiling] Continuous profiling is disabled by configuration; it will not be initialized. Enabling it later via a live newrelic.config change requires a process restart to take effect.");
             return null;
+        }
 
         try
         {
