@@ -10,4 +10,4 @@ RUN apt-get update && \
 
 RUN dotnet new mvc && \
     dotnet restore && \
-    dotnet build
+    dotnet publish -c Release -o ./publish
