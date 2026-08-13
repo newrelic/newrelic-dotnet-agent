@@ -32,9 +32,8 @@
 
 #include "../Logging/Logger.h"
 #include "../ThreadProfiler/namecache.h"
-#include "../SignatureParser/SignatureParser.h"
-#include "../SignatureParser/SignatureFormatting.h"
-#include "../Profiler/CorTokenResolver.h"
+#include "FrameNameResolver.h"
+#include "OsThreadName.h"
 #include "SampleBufferQueue.h"
 #include "SampleBufferWriter.h"
 #include "SuspendMutex.h"
@@ -84,6 +83,19 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             HRESULT corProfilerInfoInitResult = corProfilerInfo->QueryInterface(__uuidof(ICorProfilerInfo10), (void**)&_corProfilerInfo10);
             if (SUCCEEDED(corProfilerInfoInitResult)) {
                 LogInfo(L"CP: ICorProfilerInfo10 available");
+            }
+
+            // The name resolver needs the (now-known) ICorProfilerInfo4, so it is created here rather than
+            // at construction. It borrows _nameCache, which is declared ahead of it and therefore outlives
+            // it. Created before any thread exists, so no lock is needed around this store; the sampling
+            // thread only reads it, and only from Start() onwards.
+            try
+            {
+                _frameNames.reset(new FrameNameResolver(_nameCache, corProfilerInfo));
+            }
+            catch (const std::exception&)
+            {
+                LogError(L"CP: failed to create the frame name resolver; sampling will be skipped");
             }
         }
 
@@ -243,11 +255,13 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
     private:
         // Reuse the ThreadProfiler's preallocated name-cache machinery verbatim (same suspend-safe
-        // constraints apply): NameCache, the prealloc name buffers, and the type/method name holder.
+        // constraints apply). The prealloc name buffers, the type/method name holder and the frame struct
+        // that holds them now live with the name resolution they exist for -- see FrameNameResolver.h.
         using NameCache = NewRelic::Profiler::ThreadProfiler::NameCache;
-        using TypeAndMethodNames = NewRelic::Profiler::ThreadProfiler::TypeAndMethodNames;
-        using PreallocTypeName = NewRelic::Profiler::ThreadProfiler::PreallocTypeName;
-        using PreallocMethodName = NewRelic::Profiler::ThreadProfiler::PreallocMethodName;
+
+        // The preallocated per-frame walk slot. Owned by FrameNameResolver (it is that class's scratch
+        // type); the walk buffer below is an array of them.
+        using StackFrame = FrameNameResolver::StackFrame;
 
         // How many stack frames we support per thread. Walking stops (keeping the leaf-most frames) beyond
         // this; see StaticStackFrameCallback. Deliberately NOT ThreadProfiler's 1337 -- that value was
@@ -260,38 +274,6 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
         // A guess at how many threads we will see; used to reserve the per-tick capture vector.
         static constexpr size_t ThreadCountForReservation = 100;
-
-        // Upper bound on a captured method-signature blob. Signatures larger than this fall back to a
-        // name-only frame (no parameter list) rather than allocating in the snapshot callback.
-        static constexpr size_t MaxSigBlobBytes = 256;
-
-        // Defensive bound on the nested-type enclosing-chain walk in QualifyNestedTypeName. Real nesting is
-        // shallow (a handful of levels at most); this only stops a pathological or corrupt-metadata loop.
-        static constexpr size_t MaxTypeNestingDepth = 16;
-
-        // One preallocated stack frame. All name storage is preallocated so the snapshot callback never
-        // allocates. Mirrors ThreadProfiler::StackFrame (ThreadProfiler.h:290-302).
-        struct StackFrame
-        {
-            FunctionID functionId{};
-            // Defining module of functionId. Half of the type-name cache key: an mdTypeDef token is only
-            // unique within its own module (see namecache.h).
-            ModuleID moduleId{};
-            mdTypeDef typeDef{};
-            PreallocTypeName typeName{};
-            PreallocMethodName methodName{};
-
-            // Raw COR method-signature blob captured under suspend (zero-alloc memcpy); parsed + formatted
-            // into the method name during the post-walk fold. sigBlobLength == 0 means "no signature".
-            std::array<uint8_t, MaxSigBlobBytes> sigBlob{};
-            uint32_t sigBlobLength{};
-
-            StackFrame() = default;
-            StackFrame(const StackFrame&) = delete;
-            StackFrame(StackFrame&&) = delete;
-            StackFrame& operator=(const StackFrame&) = delete;
-            StackFrame& operator=(StackFrame&&) = delete;
-        };
 
         // Preallocated array of frames -- avoids dynamic allocation during the walk
         // (mirror ThreadProfiler.h:305).
@@ -758,7 +740,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 _corProfilerInfo->GetThreadInfo(thread.ManagedThreadId, &osThreadId);
                 thread.OsThreadId = osThreadId;
 
-                thread.ThreadName = ResolveThreadName(thread.OsThreadId);
+                thread.ThreadName = ResolveOsThreadName(thread.OsThreadId);
 
                 // On-CPU classification: a thread is on-CPU this tick if its cumulative CPU time grew
                 // since the last tick's baseline. No baseline yet (first tick this thread was seen, or
@@ -776,67 +758,8 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             return withContext;
         }
 
-        // Resolve an OS thread's name (empty string when it has none). Windows: GetThreadDescription on a
-        // handle opened for the OS thread id. Linux: read /proc/self/task/<tid>/comm (comm caps names at
-        // ~15 chars). Both paths run AFTER ResumeRuntime (they allocate / do syscalls) and never throw.
-        static xstring_t ResolveThreadName(DWORD osThreadId) noexcept
-        {
-            try
-            {
-#ifdef PAL_STDCPP_COMPAT
-                // Linux: pthread_getname_np needs a pthread_t we do not have for an arbitrary sampled OS
-                // thread id, so read the kernel-exposed comm file keyed directly by tid.
-                char path[64] = { 0 };
-                std::snprintf(path, sizeof(path), "/proc/self/task/%u/comm", static_cast<unsigned>(osThreadId));
-
-                std::FILE* f = std::fopen(path, "r");
-                if (f == nullptr)
-                {
-                    return xstring_t(); // thread gone or comm unreadable -> "".
-                }
-
-                char name[64] = { 0 };
-                const size_t read = std::fread(name, 1, sizeof(name) - 1, f);
-                std::fclose(f);
-
-                // comm is newline-terminated; trim the trailing '\n' and any tail.
-                size_t len = read;
-                while (len > 0 && (name[len - 1] == '\n' || name[len - 1] == '\r'))
-                {
-                    --len;
-                }
-                name[len] = '\0';
-
-                return ToWideString(name);
-#else
-                // Windows: GetThreadDescription (Win 10+). THREAD_QUERY_LIMITED_INFORMATION is the minimal
-                // right needed and succeeds for threads in our own process.
-                xstring_t result;
-                HANDLE hThread = ::OpenThread(THREAD_QUERY_LIMITED_INFORMATION, FALSE, osThreadId);
-                if (hThread == nullptr)
-                {
-                    return xstring_t();
-                }
-
-                PWSTR description = nullptr;
-                const HRESULT hr = ::GetThreadDescription(hThread, &description);
-                if (SUCCEEDED(hr) && description != nullptr)
-                {
-                    result.assign(description);
-                    ::LocalFree(description);
-                }
-                ::CloseHandle(hThread);
-                return result;
-#endif
-            }
-            catch (...)
-            {
-                return xstring_t();
-            }
-        }
-
         // Cumulative CPU time (user+kernel) for an OS thread, in microseconds; -1 if unavailable (thread
-        // gone, or the read failed). Runs POST-resume only, same as ResolveThreadName -- both allocate /
+        // gone, or the read failed). Runs POST-resume only, same as ResolveOsThreadName -- both allocate /
         // do syscalls and are therefore not suspend-safe. Never throws.
         static int64_t ReadThreadCpuMicros(DWORD osThreadId) noexcept
         {
@@ -922,166 +845,17 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             }
         }
 
-        // POST-RESUME: resolve one FunctionID's type + method name (+ signature) into the name cache, if not
-        // already cached. Mirrors what the snapshot callback used to do under suspend, moved here so all
-        // metadata calls + allocation happen after ResumeRuntime. functionId==0 and unresolvable functions
-        // are left uncached (AssembleFrameName then emits "Native.Function Call" / "UnknownMethod(<id>)").
-        // Never throws.
-        void ResolveIntoCache(FunctionID functionId) noexcept
-        {
-            if (functionId == 0 || _nameCache.has_fid(functionId))
-                return;
-
-            try
-            {
-                CComPtr<IMetaDataImport2> metaData;
-                mdToken methodToken{};
-                if (FAILED(_corProfilerInfo->GetTokenAndMetaDataFromFunction(functionId, IID_IMetaDataImport2, (IUnknown**)&metaData, &methodToken)) || metaData == nullptr)
-                    return;
-
-                auto& scratch = _resolveScratch;
-                scratch.functionId = functionId;
-                scratch.moduleId = 0;
-                scratch.typeDef = 0;
-                scratch.sigBlobLength = 0;
-
-                auto& methodName = scratch.methodName;
-                PCCOR_SIGNATURE pSigBlob = nullptr;
-                ULONG sigBlobLength = 0;
-                if (FAILED(metaData->GetMethodProps(methodToken, &scratch.typeDef,
-                    &methodName.first.front(), (ULONG)methodName.first.size(), &methodName.second,
-                    nullptr, &pSigBlob, &sigBlobLength, nullptr, nullptr)))
-                    return;
-
-                if (scratch.typeDef == 0)
-                    return; // no owning type -> leave uncached (AssembleFrameName emits UnknownMethod(<id>))
-
-                // The defining module completes the type-name cache key -- an mdTypeDef token alone is only
-                // unique within its own module. One extra call per cache-missing function, not per frame.
-                ClassID classId = 0;
-                mdToken functionToken = 0;
-                if (FAILED(_corProfilerInfo->GetFunctionInfo(functionId, &classId, &scratch.moduleId, &functionToken)) || scratch.moduleId == 0)
-                    return;
-
-                if (pSigBlob != nullptr && sigBlobLength > 0 && sigBlobLength <= MaxSigBlobBytes)
-                {
-                    std::memcpy(scratch.sigBlob.data(), pSigBlob, sigBlobLength);
-                    scratch.sigBlobLength = sigBlobLength;
-                }
-
-                auto& typeName = scratch.typeName;
-                const auto cachedTypeName = _nameCache.typename_for(scratch.moduleId, scratch.typeDef);
-                if (cachedTypeName == TypeAndMethodNames::GetUnknownTypeName())
-                {
-                    DWORD typeFlags = 0;
-                    // Bail on failure rather than caching: typeName still holds the PREVIOUS resolve's name
-                    // (only functionId/moduleId/typeDef/sigBlobLength are reset per call), which would
-                    // otherwise be cached under this type's key. Uncached -> UnknownMethod(<id>).
-                    if (FAILED(metaData->GetTypeDefProps(scratch.typeDef, &typeName.first.front(), static_cast<ULONG>(typeName.first.size()), &typeName.second, &typeFlags, nullptr)))
-                        return;
-
-                    // GetTypeDefProps returns only the innermost name for a NESTED type (e.g. the compiler
-                    // closure "<>c"), dropping the declaring type -- unusable on its own since every type's
-                    // closures share that name. Walk the enclosing chain and rebuild "Outer+...+Inner" so the
-                    // frame is attributable. Cached per typeDef (below), so this runs once per type.
-                    if (IsTdNested(typeFlags))
-                    {
-                        QualifyNestedTypeName(metaData, scratch.typeDef, typeFlags, typeName);
-                    }
-                }
-                else
-                {
-                    wcscpy_s(typeName.first.data(), static_cast<ULONG>(typeName.first.size()), cachedTypeName->c_str());
-                }
-
-                AppendSignature(scratch); // fold the parameter list into the method name
-                _nameCache.insert(scratch.moduleId, scratch.functionId, scratch.typeDef, scratch.typeName, scratch.methodName);
-            }
-            catch (...)
-            {
-                // Leave uncached -> name-only / UnknownMethod(<id>). Never crash the sampler.
-            }
-        }
-
-        // POST-RESUME: rewrite a nested type's prealloc name from the bare innermost name GetTypeDefProps
-        // returns (e.g. the compiler closure "<>c") to the fully-qualified "Outer+...+Inner", walking the
-        // enclosing chain via GetNestedClassProps and prepending each encloser with '+' (the CLR nested-type
-        // separator, matching Function.h). Uses IsTdNested -- ALL nested visibilities -- so tdNestedPrivate/
-        // tdNestedAssembly compiler closures are qualified too (a tdNestedPublic|tdNestedFamily mask misses
-        // them). Bounded and never throws; on any failure the bare innermost name is left as-is.
-        void QualifyNestedTypeName(IMetaDataImport2* metaData, mdTypeDef typeDef, DWORD typeFlags, PreallocTypeName& out) noexcept
-        {
-            try
-            {
-                xstring_t qualified(out.first.data()); // innermost name GetTypeDefProps just wrote
-                mdTypeDef current = typeDef;
-                DWORD flags = typeFlags;
-
-                for (size_t depth = 0; IsTdNested(flags) && depth < MaxTypeNestingDepth; ++depth)
-                {
-                    mdTypeDef enclosing = 0;
-                    if (FAILED(metaData->GetNestedClassProps(current, &enclosing)) || enclosing == 0)
-                        break;
-
-                    ULONG nameLen = 0;
-                    metaData->GetTypeDefProps(enclosing, nullptr, 0, &nameLen, nullptr, nullptr);
-                    if (nameLen == 0)
-                        break;
-
-                    std::vector<xchar_t> buffer(nameLen);
-                    DWORD enclosingFlags = 0;
-                    if (FAILED(metaData->GetTypeDefProps(enclosing, buffer.data(), nameLen, &nameLen, &enclosingFlags, nullptr)))
-                        break;
-
-                    qualified = xstring_t(buffer.data()) + _X("+") + qualified;
-                    current = enclosing;
-                    flags = enclosingFlags;
-                }
-
-                // Copy back into the prealloc buffer, truncating to capacity. PreallocTypeName.second is the
-                // length INCLUDING the null terminator (NameCache::insert stores .second - 1 chars).
-                const size_t maxChars = out.first.size() - 1;
-                const size_t n = qualified.size() < maxChars ? qualified.size() : maxChars;
-                std::copy_n(qualified.c_str(), n, out.first.data());
-                out.first[n] = 0;
-                out.second = static_cast<ULONG>(n + 1);
-            }
-            catch (...)
-            {
-                // Leave the bare innermost name as-is; never crash the sampler.
-            }
-        }
-
-        // POST-RESUME: assemble one frame's fully-qualified name from the (now-populated) cache, mirroring
-        // the thread profiler's three-case handling: functionId==0 -> "Native.Function Call"; resolved ->
-        // "Type.Method(params)"; real-but-unresolvable -> "UnknownClass.UnknownMethod(<id>)".
-        xstring_t AssembleFrameName(FunctionID functionId)
-        {
-            if (functionId == 0)
-            {
-                // NOTE: the managed PprofProfileBuilder.NativeFrameName constant MUST match this exact
-                // string -- it keys profile.frame.type = "native" off it. Change both together.
-                return _X("Native.Function Call");
-            }
-            if (!_nameCache.has_fid(functionId))
-            {
-                xstring_t frameName(_X("UnknownClass.UnknownMethod("));
-                frameName.append(to_xstring((unsigned long)functionId));
-                frameName.append(_X(")"));
-                return frameName;
-            }
-            const auto& names = _nameCache[functionId];
-            xstring_t frameName(names.TypeName());
-            frameName.append(_X("."));
-            frameName.append(names.MethodName());
-            return frameName;
-        }
-
         // POST-RESUME: resolve every captured thread's FunctionID sequence into fully-qualified frame names.
-        // All metadata + signature + string work happens here, out of the suspend window. Runs on the
-        // sampling thread after ResumeRuntime.
+        // All metadata + signature + string work happens here, out of the suspend window (it is done by
+        // FrameNameResolver -- see that header for why none of it is suspend-safe). Runs on the sampling
+        // thread after ResumeRuntime.
         void ResolveCapturedFrames()
         {
+            if (!_frameNames)
+            {
+                return; // Init() failed to create the resolver; leave the frames empty rather than crash.
+            }
+
             for (size_t i = 0; i < _capturedCount; ++i)
             {
                 auto& thread = _capture[i];
@@ -1090,51 +864,8 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 // though this runs post-resume.
                 for (const auto functionId : thread.FunctionIds)
                 {
-                    ResolveIntoCache(functionId);
-                    thread.Frames.emplace_back(AssembleFrameName(functionId));
+                    thread.Frames.emplace_back(_frameNames->ResolveFrameName(functionId));
                 }
-            }
-        }
-
-        // Format the frame's captured method signature and append its parameter list to the method name,
-        // turning "Type.Method" into "Type.Method(System.Object, System.Int32)" -- OTel-shaped, so a
-        // customer migrating OTel->NR sees identical frames and overloads are distinguishable. Runs during
-        // post-resume resolution (ResolveIntoCache), once per newly-resolved functionId. Any failure (parse
-        // error, unresolvable token, would-overflow the name buffer) leaves the name-only method name --
-        // never throws, never crashes the sampler.
-        void AppendSignature(StackFrame& frame) noexcept
-        {
-            if (frame.sigBlobLength == 0)
-                return;
-
-            try
-            {
-                // Re-fetch the defining module's metadata reader so signature type tokens resolve in the
-                // correct scope. Cheap: this runs only for frames being inserted fresh into the cache.
-                CComPtr<IMetaDataImport2> metaData;
-                mdToken methodToken{};
-                if (FAILED(_corProfilerInfo->GetTokenAndMetaDataFromFunction(frame.functionId, IID_IMetaDataImport2, (IUnknown**)&metaData, &methodToken)) || metaData == nullptr)
-                    return;
-
-                ByteVector bytes(frame.sigBlob.begin(), frame.sigBlob.begin() + frame.sigBlobLength);
-                auto iterator = bytes.cbegin();
-                auto methodSignature = SignatureParser::SignatureParser::ParseMethodSignature(iterator, bytes.cend());
-                auto resolver = std::make_shared<CorTokenResolver>(metaData);
-                const auto params = SignatureParser::FormatParameterList(methodSignature, resolver); // "(...)"
-
-                // methodName.second is the current length INCLUDING the null terminator (NameCache convention).
-                auto& buffer = frame.methodName.first;
-                const size_t nameLength = frame.methodName.second == 0 ? 0 : frame.methodName.second - 1;
-                if (nameLength + params.size() + 1 <= buffer.size())
-                {
-                    std::copy(params.begin(), params.end(), buffer.begin() + nameLength);
-                    buffer[nameLength + params.size()] = _X('\0');
-                    frame.methodName.second = static_cast<ULONG>(nameLength + params.size() + 1);
-                }
-            }
-            catch (...)
-            {
-                // Keep the name-only method name.
             }
         }
 
@@ -1449,13 +1180,16 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         std::vector<ThreadID> _threadList;
 
         // Type/method name cache, reused across ticks. Populated post-resume in ResolveCapturedFrames
-        // (never touched inside the snapshot callback, which now only records FunctionIDs).
+        // (never touched inside the snapshot callback, which now only records FunctionIDs). Declared
+        // BEFORE _frameNames, which borrows it: reverse-order destruction then guarantees the resolver
+        // dies first.
         NameCache _nameCache;
 
-        // Reusable scratch frame for post-resume name/signature resolution (prealloc name + sig buffers),
-        // so ResolveIntoCache does not allocate ~4 KB per resolved function. Touched only by the sampling
-        // thread, after resume.
-        StackFrame _resolveScratch;
+        // Post-resume frame-name resolution (metadata + signature formatting into _nameCache). Created in
+        // Init() once ICorProfilerInfo4 is known. Touched only by the sampling thread, only after resume --
+        // it is not thread safe, which is also why AllocationSampler owns its own instance rather than
+        // sharing this one (see FrameNameResolver.h).
+        std::unique_ptr<FrameNameResolver> _frameNames;
 
         // Per-thread active trace context, written by app threads via Set/ResetTraceContext and read by
         // the sampler (by CLR ManagedThreadId) while the runtime is suspended. Lock-free + wait-free

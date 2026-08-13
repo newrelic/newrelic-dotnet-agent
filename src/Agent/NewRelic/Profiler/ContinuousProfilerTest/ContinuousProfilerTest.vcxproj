@@ -18,6 +18,11 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <PropertyGroup>
+    <!-- Same vendored CoreCLR profiling-API headers Profiler.vcxproj consumes, so the ContinuousProfiler
+         headers under test see the SAME corprof.h (ICorProfilerInfo12 etc.) as the real build. -->
+    <CoreClrVendoredHeaders>$(SolutionDir)externals\coreclr-headers</CoreClrVendoredHeaders>
+  </PropertyGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D8A5E4F2-92B1-4E3D-A6C5-9F3E8C2D1B0A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -75,21 +80,29 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)bin\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <IncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)bin\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <IncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)bin\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <IncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)bin\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <IncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CoreClrVendoredHeaders)\src\pal\prebuilt\inc;$(CoreClrVendoredHeaders)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -116,16 +129,12 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UseFullPaths>true</UseFullPaths>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
-      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <Bscmake>
-      <PreserveSbr>true</PreserveSbr>
-    </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -178,6 +187,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="AllocationSubSamplerTest.cpp" />
+    <ClCompile Include="AllocationTickPayloadTest.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
