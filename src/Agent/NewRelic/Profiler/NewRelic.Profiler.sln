@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SignatureParser", "Signatur
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SignatureParserTest", "SignatureParserTest\SignatureParserTest.vcxproj", "{C73C1AF5-E6F0-4632-9FD8-B67628B65DAF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ContinuousProfilerTest", "ContinuousProfilerTest\ContinuousProfilerTest.vcxproj", "{D8A5E4F2-92B1-4E3D-A6C5-9F3E8C2D1B0A}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ModuleInjector", "ModuleInjector\ModuleInjector.vcxproj", "{56D5651F-A24B-4369-B9FC-1BD5B1959C0B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Configuration", "Configuration\Configuration.vcxproj", "{E6F0388D-31E5-44A4-8144-162219474ED4}"
@@ -129,6 +131,14 @@ Global
 		{C73C1AF5-E6F0-4632-9FD8-B67628B65DAF}.Release|Win32.Build.0 = Release|Win32
 		{C73C1AF5-E6F0-4632-9FD8-B67628B65DAF}.Release|x64.ActiveCfg = Release|x64
 		{C73C1AF5-E6F0-4632-9FD8-B67628B65DAF}.Release|x64.Build.0 = Release|x64
+		{D8A5E4F2-92B1-4E3D-A6C5-9F3E8C2D1B0A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D8A5E4F2-92B1-4E3D-A6C5-9F3E8C2D1B0A}.Debug|Win32.Build.0 = Debug|Win32
+		{D8A5E4F2-92B1-4E3D-A6C5-9F3E8C2D1B0A}.Debug|x64.ActiveCfg = Debug|x64
+		{D8A5E4F2-92B1-4E3D-A6C5-9F3E8C2D1B0A}.Debug|x64.Build.0 = Debug|x64
+		{D8A5E4F2-92B1-4E3D-A6C5-9F3E8C2D1B0A}.Release|Win32.ActiveCfg = Release|Win32
+		{D8A5E4F2-92B1-4E3D-A6C5-9F3E8C2D1B0A}.Release|Win32.Build.0 = Release|Win32
+		{D8A5E4F2-92B1-4E3D-A6C5-9F3E8C2D1B0A}.Release|x64.ActiveCfg = Release|x64
+		{D8A5E4F2-92B1-4E3D-A6C5-9F3E8C2D1B0A}.Release|x64.Build.0 = Release|x64
 		{56D5651F-A24B-4369-B9FC-1BD5B1959C0B}.Debug|Win32.ActiveCfg = Debug|Win32
 		{56D5651F-A24B-4369-B9FC-1BD5B1959C0B}.Debug|Win32.Build.0 = Debug|Win32
 		{56D5651F-A24B-4369-B9FC-1BD5B1959C0B}.Debug|x64.ActiveCfg = Debug|x64
