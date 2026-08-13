@@ -225,11 +225,12 @@ public sealed class AgentManager : IAgentManager, IDisposable
         // (ISampleSource) -- one object, passed for both seams. NoOpSampleSource remains for tests/fallback.
         // Constructed here mirroring ThreadProfilingService.
         //
-        // The OTLP/HTTP dispatch is wired REAL (region-aware endpoint + api-key protobuf POST); the
-        // transport's no-send guard has been removed, so every drain POSTs the built profile.
-        var profilesEndpoint = ProfilesEndpointResolver.Resolve(Configuration, new SharedInterfaces.Environment().GetEnvironmentVariable);
+        // The OTLP/HTTP dispatch is wired REAL (api-key protobuf POST); the transport's no-send guard has
+        // been removed, so every drain POSTs the built profile. No endpoint is known yet -- it's resolved
+        // from the collector's connection once the agent connects (ContinuousProfilingService.OnAgentConnected);
+        // drains before that point are dropped without doing any work (see DrainOnce).
         var profilesDispatcher = new OtlpProfilesHttpDispatcher(Configuration);
-        var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, profilesEndpoint);
+        var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, null);
         var continuousProfilerSampleSource = new NativeContinuousProfilerSampleSource(nativeMethods);
         _continuousProfilingService = new ContinuousProfilingService(continuousProfilerSampleSource, continuousProfilerSampleSource, profilesTransport, _container.Resolve<IScheduler>(), _agentHealthReporter);
 

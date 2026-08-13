@@ -69,6 +69,39 @@ public class ProfilesTransportTests
         Assert.That(() => transport.Send(new ExportProfilesServiceRequest()), Throws.Nothing);
     }
 
+    [Test]
+    public void UpdateEndpoint_changes_the_endpoint_subsequent_sends_post_to()
+    {
+        string dispatchedEndpoint = null;
+        var transport = new ProfilesTransport((bytes, endpoint) =>
+        {
+            dispatchedEndpoint = endpoint;
+            return new ProfilesSendResult(true, 200, string.Empty);
+        }, "https://otlp.nr-data.net/v1/profiles");
+
+        transport.UpdateEndpoint("https://collector.eu01.nr-data.net/v1/profiles");
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(dispatchedEndpoint, Is.EqualTo("https://collector.eu01.nr-data.net/v1/profiles"));
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    public void UpdateEndpoint_ignores_a_null_or_empty_value(string newEndpoint)
+    {
+        string dispatchedEndpoint = null;
+        var transport = new ProfilesTransport((bytes, endpoint) =>
+        {
+            dispatchedEndpoint = endpoint;
+            return new ProfilesSendResult(true, 200, string.Empty);
+        }, "https://otlp.nr-data.net/v1/profiles");
+
+        transport.UpdateEndpoint(newEndpoint);
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(dispatchedEndpoint, Is.EqualTo("https://otlp.nr-data.net/v1/profiles"));
+    }
+
     // The Finest diagnostic log line carries ToDiagnosticJson(request); testing the serialization directly
     // avoids capturing the static logger while still pinning the payload's shape.
 

@@ -29,11 +29,22 @@ public class ProfilesTransport : IProfilesTransport
         new JsonFormatter(JsonFormatter.Settings.Default.WithFormatDefaultValues(true));
 
     private readonly Func<byte[], string, ProfilesSendResult> _httpPost;
-    private readonly string _endpoint;
+
+    // volatile: swapped by UpdateEndpoint (e.g. on AgentConnectedEvent) on a different thread than the
+    // scheduler thread that reads it in Send; a plain field would risk a stale read across cores.
+    private volatile string _endpoint;
 
     public ProfilesTransport(Func<byte[], string, ProfilesSendResult> httpPost, string endpoint)
     {
         _httpPost = httpPost;
+        _endpoint = endpoint;
+    }
+
+    public void UpdateEndpoint(string endpoint)
+    {
+        if (string.IsNullOrEmpty(endpoint))
+            return;
+
         _endpoint = endpoint;
     }
 

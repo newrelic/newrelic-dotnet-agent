@@ -8,8 +8,11 @@ using System.Text;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.ContinuousProfiling;
+using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -36,6 +39,16 @@ public class ContinuousProfilingServiceTests
         _health = Mock.Create<IAgentHealthReporter>();
         _config = Mock.Create<IConfiguration>();
         _service = new ContinuousProfilingService(_source, _native, _transport, _scheduler, _health);
+
+        // DrainOnce is gated on having connected -- put _service into the connected state so every
+        // existing test below (none of which care about the pre-connect gate) keeps exercising
+        // "already connected" behavior. The pre-connect gate itself is tested separately, against a
+        // service instance that deliberately never receives this event.
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
     }
 
     [TearDown]
@@ -437,6 +450,56 @@ public class ContinuousProfilingServiceTests
         var samples = new List<ManagedThreadSample> { new ManagedThreadSample("a", 1, 0, 0, 0, new[] { "F" }, onCpu: false) };
         Assert.That(ContinuousProfilingService.CountOnCpu(samples), Is.EqualTo(0));
     }
+
+    #region AgentConnectedEvent -- collector-endpoint resolution
+
+    [Test]
+    public void AgentConnected_updates_the_transport_to_the_collector_endpoint()
+    {
+        // A dedicated transport mock: _transport is shared with _service (already connected in SetUp),
+        // whose own handler would also fire on this test's Publish call and double-count the assertion.
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.eu01.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        Mock.Assert(() => transport.UpdateEndpoint("https://collector.eu01.nr-data.net:443/v1/profiles"), Occurs.Once());
+    }
+
+    [Test]
+    public void AgentConnected_does_not_update_the_transport_when_connect_info_has_no_host()
+    {
+        // Dedicated transport mock -- see note above.
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.Host).Returns(string.Empty);
+
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        Mock.Assert(() => transport.UpdateEndpoint(Arg.IsAny<string>()), Occurs.Never());
+    }
+
+    [Test]
+    public void DrainOnce_before_the_agent_has_connected_drops_without_reading_the_native_buffer()
+    {
+        // A fresh, never-connected instance -- distinct from _service (SetUp already connects it) --
+        // so this proves the pre-connect gate, not just "nothing to drain."
+        using var service = new ContinuousProfilingService(_source, _native, _transport, _scheduler, _health);
+
+        service.DrainOnce();
+
+        Mock.Assert(() => _source.ReadBatch(Arg.IsAny<byte[]>()), Occurs.Never());
+        Mock.Assert(() => _transport.Send(Arg.IsAny<global::OpenTelemetry.Proto.Collector.Profiles.V1Development.ExportProfilesServiceRequest>()), Occurs.Never());
+    }
+
+    #endregion
 
     #region Task-3-format batch builder (mirrors BufferParserTests)
 

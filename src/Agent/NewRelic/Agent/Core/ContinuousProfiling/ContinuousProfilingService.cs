@@ -22,6 +22,10 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 /// Each drain reads one batch from the <see cref="ISampleSource"/> into a reused buffer, parses it,
 /// builds an OTLP profile, and hands it to the <see cref="IProfilesTransport"/>. All drain work is
 /// wrapped so a failure is logged and metered but never propagates into the customer's application.
+///
+/// Drains are gated on the agent having connected (<see cref="OnAgentConnected"/>): the profiles
+/// endpoint is only known post-preconnect, so a drain before that point does nothing rather than
+/// building a profile with nowhere to send it.
 /// </summary>
 public class ContinuousProfilingService : ConfigurationBasedService, IContinuousProfilingSessionControl
 {
@@ -42,6 +46,11 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     private readonly IProfilesTransport _transport;
     private readonly IScheduler _scheduler;
     private readonly IAgentHealthReporter _agentHealthReporter;
+
+    // volatile: set on the event-bus thread (OnAgentConnected), read on the scheduler thread
+    // (DrainOnce) -- gives the cross-thread visibility DrainOnce's early-out needs without a lock.
+    // Monotonic true after the first successful connect; never reset on a later disconnect.
+    private volatile bool _isConnected;
 
     // Managed->native trace-context push seam. Armed while a session is active (published as the process-wide
     // ContinuousProfilingContext.Instance so the wrapper hot path can reach it), disarmed when it stops.
@@ -91,6 +100,27 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         _scheduler = scheduler;
         _agentHealthReporter = agentHealthReporter;
         _drainAction = DrainOnce;
+
+        _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
+    }
+
+    /// <summary>
+    /// Resolves the profiles endpoint from the collector's connection (post-preconnect) and arms
+    /// <see cref="_isConnected"/> so drains start doing real work. Before this fires, <see cref="DrainOnce"/>
+    /// drops every tick without touching the native sample buffer -- there is nowhere to send to yet.
+    /// </summary>
+    private void OnAgentConnected(AgentConnectedEvent agentConnectedEvent)
+    {
+        var endpoint = ProfilesEndpointResolver.ResolveFromConnectionInfo(agentConnectedEvent.ConnectInfo);
+        if (endpoint == null)
+        {
+            Log.Debug("[ContinuousProfiling] AgentConnectedEvent had no usable connection info; profiles will not be sent.");
+            return;
+        }
+
+        _transport.UpdateEndpoint(endpoint);
+        _isConnected = true;
+        Log.Debug("[ContinuousProfiling] Connected; profiles endpoint set to {0}.", endpoint);
     }
 
     /// <summary>
@@ -223,6 +253,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     {
         try
         {
+            // Nowhere to send yet: skip read/parse/build entirely rather than doing the work and
+            // dropping the result. Native sampling still runs (StartLocked already started it,
+            // decoupled from connect); only the managed drain is deferred.
+            if (!_isConnected)
+                return;
+
             var bytesRead = _sampleSource.ReadBatch(_drainBuffer);
             if (bytesRead <= 0)
                 return;
