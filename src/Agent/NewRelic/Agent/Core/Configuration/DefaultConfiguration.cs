@@ -2963,9 +2963,20 @@ public class DefaultConfiguration : IConfiguration
     private const int MaxContinuousProfilingSamplingIntervalMs = 60000;
 
     private bool? _continuousProfilingEnabled;
-    // Precedence: env var > newrelic.config <appSettings> key > local <continuousProfiling enabled> element.
-    // The appSettings layer keeps this setting consistent with sibling toggles that also honor it.
-    public bool ContinuousProfilingEnabled => _continuousProfilingEnabled ??= EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingEnabled", _localConfiguration.continuousProfiling.enabled), "NEW_RELIC_CONTINUOUS_PROFILING_ENABLED");
+    // Precedence, matching AiMonitoringEnabled's shape: HSM kills it unconditionally (defense-in-depth,
+    // same as AI monitoring -- there is no server-side "strip the key" backstop for this setting the way
+    // there is for AIM, so the local guard here is the only enforcement). Below that, agent_config
+    // continuous_profiling.enabled (full override, in either direction) > env var > newrelic.config
+    // <appSettings> key > local <continuousProfiling enabled> element.
+    //
+    // NOTE: this is deliberately separate from ContinuousProfilingService._commandControlledTypes -- a
+    // start_continuous_profiler/stop_continuous_profiler agent command overrides this property's effect
+    // downstream (ApplyConfigChange skips command-owned types entirely), it does not change what this
+    // property itself resolves to.
+    public bool ContinuousProfilingEnabled => _continuousProfilingEnabled ??=
+        !HighSecurityModeEnabled &&
+        ServerOverrides(_serverConfiguration.RpmConfig.ContinuousProfilingEnabled,
+            EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingEnabled", _localConfiguration.continuousProfiling.enabled), "NEW_RELIC_CONTINUOUS_PROFILING_ENABLED"));
 
     private int? _continuousProfilingSamplingIntervalMs;
     public int ContinuousProfilingSamplingIntervalMs

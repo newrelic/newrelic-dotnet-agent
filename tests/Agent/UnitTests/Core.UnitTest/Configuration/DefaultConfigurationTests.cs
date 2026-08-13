@@ -4593,6 +4593,49 @@ public class DefaultConfigurationTests
         Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
     }
 
+    [Test]
+    public void ContinuousProfilingDisabledWhenHighSecurityModeEnabled()
+    {
+        _localConfig.highSecurity.enabled = true;
+        _localConfig.continuousProfiling.enabled = true;
+
+        Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
+    }
+
+    [Test]
+    public void ContinuousProfilingEnabled_server_overrides_local_and_env()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ENABLED")).Returns("true");
+        _localConfig.continuousProfiling.enabled = true;
+        _serverConfig.RpmConfig.ContinuousProfilingEnabled = false; // server disables despite env+local true
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
+    }
+
+    [Test]
+    public void ContinuousProfilingEnabled_server_can_enable_when_local_disabled()
+    {
+        _localConfig.continuousProfiling.enabled = false;
+        _serverConfig.RpmConfig.ContinuousProfilingEnabled = true;
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.True);
+    }
+
+    [Test]
+    public void ContinuousProfilingEnabled_HSM_overrides_server_enable()
+    {
+        _localConfig.highSecurity.enabled = true;
+        _serverConfig.RpmConfig.ContinuousProfilingEnabled = true; // server tries to enable
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
+    }
+
     [TestCase(null, 10000)]   // unset -> default
     [TestCase(500, 1000)]     // below floor -> clamp up
     [TestCase(99999, 60000)]  // above ceiling -> clamp down
