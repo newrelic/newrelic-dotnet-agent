@@ -83,3 +83,78 @@ public class ContinuousProfilerAgentCommandTests : NewRelicIntegrationTest<AspNe
         );
     }
 }
+
+/// <summary>
+/// The "heap" counterpart to <see cref="ContinuousProfilerAgentCommandTests"/>: the same collector-driven
+/// start/stop command path, but for the ALLOCATION sampler rather than the thread sampler. The two profile
+/// types are independently toggleable by the command, so each token needs its own coverage -- and the
+/// allocation sampler's own start/stop log lines (not the thread sampler's "Session started/stopped") are what
+/// prove the heap token reached it.
+///
+/// Allocation sampling is left disabled in local config (no
+/// <c>NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_ENABLED</c>) so a start is proof the command turned it on.
+/// This asserts the command path only; that the sampler then produces real allocation profiles end to end is
+/// covered by <c>ContinuousProfilingAllocationTests</c>.
+/// </summary>
+public class ContinuousProfilerHeapAgentCommandTests : NewRelicIntegrationTest<AspNetCoreWebApiWithCollectorFixture>
+{
+    private readonly AspNetCoreWebApiWithCollectorFixture _fixture;
+    private int _commandAcksSent;
+
+    private static readonly string AllocationStartedLogLineRegex =
+        AgentLogBase.InfoLogLinePrefixRegex + @"\[ContinuousProfiling\] Allocation sampling started; up to (\d+) samples/minute\.";
+
+    private static readonly string AllocationStoppedLogLineRegex =
+        AgentLogBase.InfoLogLinePrefixRegex + @"\[ContinuousProfiling\] Allocation sampling stopped\.";
+
+    // The command carries no allocation budget of its own, so a command-started sampler is paced from
+    // configuration -- which here is the shipped default, since nothing overrides it.
+    private const int DefaultMaxSamplesPerMinute = 200;
+
+    public ContinuousProfilerHeapAgentCommandTests(AspNetCoreWebApiWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
+    {
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+
+        _fixture.AddActions(
+            setupConfiguration: () =>
+            {
+                var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                configModifier.SetLogLevel("finest");
+                configModifier.ConfigureFasterGetAgentCommandsCycle(10);
+                // Deliberately no NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_ENABLED -- allocation sampling must
+                // start from the command alone.
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.Get();
+
+                _fixture.TriggerStartContinuousProfiler(include: "heap");
+                _fixture.AgentLog.WaitForLogLine(AllocationStartedLogLineRegex, TimeSpan.FromMinutes(1));
+
+                _fixture.TriggerStopContinuousProfiler(include: "heap");
+                _fixture.AgentLog.WaitForLogLine(AllocationStoppedLogLineRegex, TimeSpan.FromMinutes(1));
+
+                // Read back inside exerciseApplication -- see the note in ContinuousProfilerAgentCommandTests.
+                _commandAcksSent = _fixture.GetCollectedRequests()
+                    .Count(r => r.Querystring.Any(qs => qs.Key == "method" && qs.Value == "agent_command_results"));
+            }
+        );
+
+        _fixture.Initialize();
+    }
+
+    [Fact]
+    public void HeapStartAndStopCommandsControlAllocationSampling()
+    {
+        var startMatch = _fixture.AgentLog.TryGetLogLines(AllocationStartedLogLineRegex).FirstOrDefault();
+        var stopped = _fixture.AgentLog.TryGetLogLines(AllocationStoppedLogLineRegex).Any();
+
+        NrAssert.Multiple(
+            () => Assert.NotNull(startMatch),
+            () => Assert.Equal(DefaultMaxSamplesPerMinute, int.Parse(startMatch.Groups[1].Value)),
+            () => Assert.True(stopped, "stop_continuous_profiler (heap) did not stop allocation sampling."),
+            () => Assert.True(_commandAcksSent >= 2, $"Expected at least 2 agent_command_results posts (start + stop), got {_commandAcksSent}.")
+        );
+    }
+}
