@@ -17,6 +17,7 @@
 
 #include "namecache.h"
 #include "../Logging/Logger.h"
+#include "../ContinuousProfiler/SuspendMutex.h"
 
 #include <corprof.h>
 
@@ -646,13 +647,19 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
                         break;
                     }
 
+                    {
+                        // Serialize the runtime suspend/stack-walk with the always-on ContinuousProfiler:
+                        // both share the single native stack-walk machinery and must never suspend the
+                        // runtime concurrently. This lock is the only coordination between them.
+                        std::lock_guard<NewRelic::Profiler::SuspendMutex> suspendLock(NewRelic::Profiler::SuspendMutex::Shared());
 #ifdef PAL_STDCPP_COMPAT
-                    _corProfilerInfo10->SuspendRuntime();
+                        _corProfilerInfo10->SuspendRuntime();
 #endif
-                    ProfileAllThreads();
+                        ProfileAllThreads();
 #ifdef PAL_STDCPP_COMPAT
-                    _corProfilerInfo10->ResumeRuntime();
+                        _corProfilerInfo10->ResumeRuntime();
 #endif
+                    }
 
                     SignalProfileCompleted();
                 }

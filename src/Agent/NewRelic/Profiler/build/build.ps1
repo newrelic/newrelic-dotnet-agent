@@ -21,10 +21,12 @@ function ExitIfFailLastExitCode {
 
 $rootDirectory = Resolve-Path "$(Split-Path -Parent $PSCommandPath)\..\..\..\..\.."
 $vsWhere = (Resolve-Path "$rootDirectory\build\Tools\vswhere.exe").Path
-$msBuildPath = & "$vsWhere" -products 'Microsoft.VisualStudio.Product.BuildTools' -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
-if (!$msBuildPath) {
-    $msBuildPath = & "$vsWhere" -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
-}
+# Use the newest installed MSBuild of ANY VS product so the profiler's required Platform Toolset
+# (currently v145) is present. -products '*' considers both full VS (Community/Pro/Enterprise) and
+# the Build Tools SKU; -latest picks the highest version. This avoids locking onto an older Build
+# Tools install (e.g. VS2019 Build Tools) on a machine whose newer VS is an Enterprise/full SKU,
+# while still resolving to Build Tools on CI images that only have that SKU.
+$msBuildPath = & "$vsWhere" -products '*' -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
 
 Write-Host "Building Platform=$Platform and Configuration=$Configuration"
 

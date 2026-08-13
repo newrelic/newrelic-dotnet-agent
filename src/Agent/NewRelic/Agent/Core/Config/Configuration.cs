@@ -98,6 +98,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationCodeLevelMetrics codeLevelMetricsField;
         
+        private configurationContinuousProfiling continuousProfilingField;
+        
         private configurationCloud cloudField;
         
         private configurationOpenTelemetry openTelemetryField;
@@ -127,6 +129,7 @@ namespace NewRelic.Agent.Core.Config
         {
             this.openTelemetryField = new configurationOpenTelemetry();
             this.cloudField = new configurationCloud();
+            this.continuousProfilingField = new configurationContinuousProfiling();
             this.codeLevelMetricsField = new configurationCodeLevelMetrics();
             this.processHostField = new configurationProcessHost();
             this.utilizationField = new configurationUtilization();
@@ -603,6 +606,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.codeLevelMetricsField = value;
+            }
+        }
+        
+        public configurationContinuousProfiling continuousProfiling
+        {
+            get
+            {
+                return this.continuousProfilingField;
+            }
+            set
+            {
+                this.continuousProfilingField = value;
             }
         }
         
@@ -6651,6 +6666,65 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationCodeLevelMetrics Clone()
         {
             return ((configurationCodeLevelMetrics)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationContinuousProfiling
+    {
+        
+        private bool enabledField;
+        
+        private int samplingIntervalMsField;
+        
+        /// <summary>
+        /// configurationContinuousProfiling class constructor
+        /// </summary>
+        public configurationContinuousProfiling()
+        {
+            this.enabledField = false;
+            this.samplingIntervalMsField = 10000;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(10000)]
+        public int samplingIntervalMs
+        {
+            get
+            {
+                return this.samplingIntervalMsField;
+            }
+            set
+            {
+                this.samplingIntervalMsField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationContinuousProfiling object
+        /// </summary>
+        public virtual configurationContinuousProfiling Clone()
+        {
+            return ((configurationContinuousProfiling)(this.MemberwiseClone()));
         }
         #endregion
     }

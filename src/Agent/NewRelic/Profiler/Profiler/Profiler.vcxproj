@@ -228,6 +228,9 @@
     <ClInclude Include="FunctionResolver.h" />
     <ClInclude Include="guids.h" />
     <ClInclude Include="CorProfilerCallbackImpl.h" />
+    <ClInclude Include="..\ContinuousProfiler\ContinuousProfiler.h" />
+    <ClInclude Include="..\ContinuousProfiler\SampleBufferWriter.h" />
+    <ClInclude Include="..\ContinuousProfiler\SuspendMutex.h" />
     <ClInclude Include="CommonDefinitions.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="OpCodes.h" />

@@ -9,6 +9,7 @@
 #include "TestTemplates.h"
 #include "ByteVectorMacro.h"
 #include "../SignatureParser/SignatureParser.h"
+#include "../SignatureParser/SignatureFormatting.h"
 #include "MockTokenResolver.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -367,6 +368,51 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser { namespace 
 
             MethodSignaturePtr expectedSignature(new MethodSignature(false, false, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT, std::make_shared<VoidReturnType>(), parameters, 0));
             ParseAndVerifyMethodSignature(signatureBytes, expectedSignature);
+        }
+
+        // --- FormatParameterList (OTel-shaped method-signature param list) ---
+
+        TEST_METHOD(format_parameter_list_no_params)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x00, // 0 parameters
+                ELEMENT_TYPE_VOID,
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(std::wstring(L"()"), FormatParameterList(method, resolver));
+        }
+
+        TEST_METHOD(format_parameter_list_two_primitives)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x20, // HASTHIS (instance method)
+                0x02, // 2 parameters
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_OBJECT,
+                ELEMENT_TYPE_I4,
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(std::wstring(L"(System.Object, System.Int32)"), FormatParameterList(method, resolver));
+        }
+
+        TEST_METHOD(format_parameter_list_single_szarray)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x01, // 1 parameter
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_SZARRAY,
+                ELEMENT_TYPE_STRING,
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(std::wstring(L"(System.String[])"), FormatParameterList(method, resolver));
         }
     };
 }}}}
