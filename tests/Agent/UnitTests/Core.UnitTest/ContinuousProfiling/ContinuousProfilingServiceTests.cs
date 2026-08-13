@@ -25,6 +25,7 @@ public class ContinuousProfilingServiceTests
 {
     private ISampleSource _source;
     private INativeContinuousProfiler _native;
+    private IAllocationSampleSource _allocationSource;
     private IProfilesTransport _transport;
     private IScheduler _scheduler;
     private IAgentHealthReporter _health;
@@ -36,6 +37,7 @@ public class ContinuousProfilingServiceTests
     {
         _source = Mock.Create<ISampleSource>();
         _native = Mock.Create<INativeContinuousProfiler>();
+        _allocationSource = Mock.Create<IAllocationSampleSource>();
         _transport = Mock.Create<IProfilesTransport>();
         _scheduler = Mock.Create<IScheduler>();
         _health = Mock.Create<IAgentHealthReporter>();
@@ -46,7 +48,7 @@ public class ContinuousProfilingServiceTests
         // the send-failure backoff after two drains and pause native sampling mid-test.
         Mock.Arrange(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(true);
 
-        _service = new ContinuousProfilingService(_source, _native, _transport, _scheduler, _health);
+        _service = new ContinuousProfilingService(_source, _native, _allocationSource, _transport, _scheduler, _health);
 
         // DrainOnce is gated on having connected -- put _service into the connected state so every
         // existing test below (none of which care about the pre-connect gate) keeps exercising
@@ -762,7 +764,7 @@ public class ContinuousProfilingServiceTests
         // A dedicated transport mock: _transport is shared with _service (already connected in SetUp),
         // whose own handler would also fire on this test's Publish call and double-count the assertion.
         var transport = Mock.Create<IProfilesTransport>();
-        using var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+        using var service = new ContinuousProfilingService(_source, _native, _allocationSource, transport, _scheduler, _health);
 
         var connectionInfo = Mock.Create<IConnectionInfo>();
         Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
@@ -779,7 +781,7 @@ public class ContinuousProfilingServiceTests
     {
         // Dedicated transport mock -- see note above.
         var transport = Mock.Create<IProfilesTransport>();
-        using var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+        using var service = new ContinuousProfilingService(_source, _native, _allocationSource, transport, _scheduler, _health);
 
         var connectionInfo = Mock.Create<IConnectionInfo>();
         Mock.Arrange(() => connectionInfo.Host).Returns(string.Empty);
@@ -794,7 +796,7 @@ public class ContinuousProfilingServiceTests
     {
         // A fresh, never-connected instance -- distinct from _service (SetUp already connects it) --
         // so this proves the pre-connect gate, not just "nothing to drain."
-        using var service = new ContinuousProfilingService(_source, _native, _transport, _scheduler, _health);
+        using var service = new ContinuousProfilingService(_source, _native, _allocationSource, _transport, _scheduler, _health);
 
         service.DrainOnce();
 
@@ -828,7 +830,7 @@ public class ContinuousProfilingServiceTests
         // setting _disposed and before unsubscribing. Without the gate this would set _isConnected and the
         // profiles endpoint on an already-disposed service, letting a queued drain ship a profile.
         var transport = Mock.Create<IProfilesTransport>();
-        var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+        var service = new ContinuousProfilingService(_source, _native, _allocationSource, transport, _scheduler, _health);
 
         var connectionInfo = Mock.Create<IConnectionInfo>();
         Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
@@ -854,7 +856,7 @@ public class ContinuousProfilingServiceTests
     private (ContinuousProfilingService Service, IProfilesTransport Transport) NewConnectedService()
     {
         var transport = Mock.Create<IProfilesTransport>();
-        var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+        var service = new ContinuousProfilingService(_source, _native, _allocationSource, transport, _scheduler, _health);
 
         // DrainOnce reads _configuration (ApplicationNames, ContinuousProfilingIncludeAgentCode) on its
         // way to Send. Without this, the service falls back to the real DefaultConfiguration.Instance

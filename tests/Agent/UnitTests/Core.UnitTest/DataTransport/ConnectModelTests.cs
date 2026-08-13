@@ -442,7 +442,9 @@ public class ConnectModelTests
                                                     "hybrid_http_context_storage.enabled":false,
                                                     "continuous_profiling.enabled":true,
                                                     "continuous_profiling.sampling_interval_ms":30000,
-                                                    "continuous_profiling.include_agent_code":true
+                                                    "continuous_profiling.include_agent_code":true,
+                                                    "continuous_profiling.allocation.enabled":true,
+                                                    "continuous_profiling.allocation.max_samples_per_minute":500
                                                 },
                                                 "metadata": {
                                                     "hello": "there"

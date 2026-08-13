@@ -465,7 +465,12 @@ namespace NewRelic { namespace Profiler {
                     // EventPipeEventDelivered fire at all; without it the allocation sampler can open a
                     // session but never receives a single event. It is only requested when the runtime
                     // actually exposes the EventPipe profiling API (ICorProfilerInfo12, .NET 5+), which is
-                    // exactly the condition under which the sampler can be used.
+                    // exactly the condition under which the sampler can be used -- and, since Info12 and
+                    // this mask bit both shipped in .NET 5 while MinimumDotnetVersionCheck already requires
+                    // Info11, that probe is the real gate. It has to be: CoreCLR was measured to SILENTLY
+                    // ACCEPT unknown high-mask bits (setting 0x40000000 alongside succeeds), so a runtime
+                    // too old to know 0x80 would not report an error here either -- it would just never
+                    // deliver events. Do not rely on the failure branch below to catch a version mismatch.
                     const DWORD highEventMask = COR_PRF_HIGH_DISABLE_TIERED_COMPILATION
                         | (_allocationSampler.IsAvailable() ? (DWORD)COR_PRF_HIGH_MONITOR_EVENT_PIPE : 0u);
 
@@ -474,20 +479,36 @@ namespace NewRelic { namespace Profiler {
                     HRESULT setEventMaskResult = _corProfilerInfo5->SetEventMask2(_eventMask, highEventMask);
 
                     // Allocation sampling is optional; profiler activation is not. If the runtime rejects the
-                    // high mask (e.g. it does not know the EventPipe bit), retry with only the bit this
-                    // profiler has always set, so an unusable allocation sampler cannot cost us the agent.
+                    // high mask for ANY reason, retry with only the bit this profiler has always set, so an
+                    // unusable allocation sampler can never cost us the agent. (Verified by temporarily
+                    // forcing this branch: the retry succeeds, the profiler still initializes, no session is
+                    // ever opened, and every Start() no-ops with a reason.)
                     if (FAILED(setEventMaskResult) && highEventMask != COR_PRF_HIGH_DISABLE_TIERED_COMPILATION) {
                         LogWarn(L"SetEventMask2() rejected COR_PRF_HIGH_MONITOR_EVENT_PIPE: ", std::hex, std::showbase, setEventMaskResult,
                             std::resetiosflags(std::ios_base::showbase | std::ios_base::basefield),
-                            L". Retrying without it; allocation sampling will be unavailable.");
+                            L". Retrying without it.");
                         setEventMaskResult = _corProfilerInfo5->SetEventMask2(_eventMask, COR_PRF_HIGH_DISABLE_TIERED_COMPILATION);
+
+                        // Load-bearing, not just bookkeeping: without the mask bit the runtime never calls
+                        // EventPipeEventDelivered, so a session opened later would make the CLR generate
+                        // AllocationTick events at full cost and deliver none of them. Telling the sampler
+                        // turns that into a clean "unavailable" (Start() no-ops) instead of paying for the
+                        // whole feature and silently producing nothing.
+                        _allocationSampler.MarkUnavailable();
                     }
 
-                    // Same outcome as the ThrowOnError macro this used to be -- open-coded because the macro
-                    // must wrap the call itself, and the retry above needs the HRESULT in hand first.
-                    if (FAILED(setEventMaskResult)) {
-                        LogError(L"Win32 function call failed.  Function: SetEventMask2  HRESULT: ",
-                            std::hex, std::showbase, setEventMaskResult, std::resetiosflags(std::ios_base::showbase | std::ios_base::basefield));
+                    // Same outcome as the ThrowOnError macro this replaces -- open-coded because the macro
+                    // must wrap the call itself, and the retry above needs the HRESULT in hand first. The
+                    // log lines are kept character-for-character identical to the macro's, including the
+                    // symbolic CORPROF_E_UNSUPPORTED_CALL_SEQUENCE branch, in case anything scrapes them.
+                    if (setEventMaskResult == CORPROF_E_UNSUPPORTED_CALL_SEQUENCE) {
+                        LogError("Win32 function call failed.  Function: _corProfilerInfo5->SetEventMask2  HRESULT: CORPROF_E_UNSUPPORTED_CALL_SEQUENCE");
+                        throw NewRelic::Profiler::Win32Exception(setEventMaskResult);
+                    }
+                    else if (FAILED(setEventMaskResult)) {
+                        LogError("Win32 function call failed.  Function: _corProfilerInfo5->SetEventMask2  HRESULT: ",
+                            std::hex, std::showbase, setEventMaskResult,
+                            std::resetiosflags(std::ios_base::showbase | std::ios_base::basefield));
                         throw NewRelic::Profiler::Win32Exception(setEventMaskResult);
                     }
                 }
@@ -1002,9 +1023,30 @@ namespace NewRelic { namespace Profiler {
         // at runtime -- config change, server-side command, reconnect -- must go through Stop()/Start();
         // only true agent teardown may call Shutdown(). Wiring a disable to Shutdown() would silently and
         // permanently end allocation sampling for the life of the process.
-        void AllocationSamplerStart(uint32_t maxSamplesPerMinute) noexcept
+        // Takes the budget as SIGNED, exactly as it crosses the P/Invoke boundary, and validates before any
+        // cast. This export is a trust boundary: it defends itself rather than assuming the managed caller
+        // validated, because a blind static_cast<uint32_t> of a non-positive value is a performance hazard,
+        // not a no-op (see AllocationSampler::TryNormalizeMaxSamplesPerMinute for the mechanism). Task 5/6's
+        // config validation is a second layer, not the only one.
+        void AllocationSamplerStart(int32_t maxSamplesPerMinute) noexcept
         {
-            _allocationSampler.Start(maxSamplesPerMinute);
+            uint32_t budget = 0;
+            if (!ContinuousProfiler::AllocationSampler::TryNormalizeMaxSamplesPerMinute(maxSamplesPerMinute, budget))
+            {
+                LogWarn(L"AllocationSamplerStart ignored: maxSamplesPerMinute must be positive, got ",
+                    maxSamplesPerMinute, L". Allocation sampling not started -- a zero or negative budget "
+                    L"cannot produce samples, so opening an EventPipe session would cost the runtime's "
+                    L"AllocationTick generation for no benefit.");
+                return;
+            }
+
+            if (budget != static_cast<uint32_t>(maxSamplesPerMinute))
+            {
+                LogWarn(L"AllocationSamplerStart: requested maxSamplesPerMinute of ", maxSamplesPerMinute,
+                    L" exceeds the supported ceiling; clamping to ", budget);
+            }
+
+            _allocationSampler.Start(budget);
         }
 
         void AllocationSamplerStop() noexcept
@@ -1685,6 +1727,8 @@ namespace NewRelic { namespace Profiler {
     // called by managed code to start (or resume) allocation sampling at the given per-minute sample cap.
     // Safe to call repeatedly -- this is the "enable" half of the runtime enable/disable pair (see
     // AllocationSamplerStop). It does NOT undo AllocationSamplerShutdown, which is one-way.
+    // maxSamplesPerMinute is forwarded SIGNED and validated there; nothing here casts it (see
+    // CorProfilerCallbackImpl::AllocationSamplerStart for why a blind cast is a performance hazard).
     extern "C" __declspec(dllexport) void __cdecl AllocationSamplerStart(int32_t maxSamplesPerMinute) noexcept
     {
         auto profiler = CorProfilerCallbackImpl::GetSingletonish();
@@ -1692,7 +1736,7 @@ namespace NewRelic { namespace Profiler {
             LogError(L"AllocationSamplerStart: entry point called before the profiler has been initialized");
             return;
         }
-        profiler->AllocationSamplerStart(static_cast<uint32_t>(maxSamplesPerMinute));
+        profiler->AllocationSamplerStart(maxSamplesPerMinute);
     }
 
     // called by managed code to pause allocation sampling (the EventPipe session stays open, the handler

@@ -2238,6 +2238,45 @@
                     </xs:annotation>
 
                     <xs:complexType>
+                        <xs:all>
+                            <xs:element name="allocation" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Controls allocation sampling within continuous profiling. Allocation
+                                        sampling is driven by CLR AllocationTick events rather than by the
+                                        periodic thread sampler, so it has its own enable flag and its own
+                                        sample budget. It requires continuous profiling itself to be enabled.
+                                        Available only on .NET 5+ (it needs the runtime's EventPipe profiling
+                                        API); on .NET Framework it is silently unavailable.
+                                    </xs:documentation>
+                                </xs:annotation>
+
+                                <xs:complexType>
+                                    <xs:attribute name="enabled" type="xs:boolean" default="false">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Set this to "true" to enable allocation sampling. The default is
+                                                false. Environment variable:
+                                                NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_ENABLED
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                    <xs:attribute name="maxSamplesPerMinute" type="xs:int" default="200">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Upper bound on the number of allocation samples captured per
+                                                minute. Each sample costs a stack walk on the allocating
+                                                application thread, so this is the feature's main overhead
+                                                control. The value is clamped to the range [1, 60000]. The
+                                                default is 200. Environment variable:
+                                                NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_MAX_SAMPLES_PER_MINUTE
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:all>
+
                         <xs:attribute name="enabled" type="xs:boolean" default="false">
                             <xs:annotation>
                                 <xs:documentation>

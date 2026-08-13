@@ -3004,6 +3004,52 @@ public class DefaultConfiguration : IConfiguration
     public bool ContinuousProfilingIncludeAgentCode =>
         TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingIncludeAgentCode", false);
 
+    // The native AllocationSampler refuses a non-positive budget outright and clamps at
+    // MaxSupportedSamplesPerMinute (Profiler/ContinuousProfiler/AllocationSampler.h, currently 60000). These
+    // mirror that accepted range so a typo (0, -1) can't resolve to a value the native side will reject --
+    // which would leave the managed side believing allocation sampling is running while no session was ever
+    // opened. The native validation stays the trust boundary; this is the belt to its braces. Keep the ceiling
+    // in step with AllocationSampler::MaxSupportedSamplesPerMinute.
+    private const int MinContinuousProfilingAllocationMaxSamplesPerMinute = 1;
+    private const int MaxContinuousProfilingAllocationMaxSamplesPerMinute = 60000;
+
+    private bool? _continuousProfilingAllocationEnabled;
+    // Allocation sampling is a SUB-FEATURE of continuous profiling, matching its nested position in the XSD
+    // (<continuousProfiling><allocation/></continuousProfiling>) and the precedent set by
+    // OpenTelemetryMetricsEnabled/OpenTelemetryTracingEnabled: the child flag is ANDed with its parent, so
+    // turning continuous profiling off turns allocation sampling off too. That also inherits the parent's
+    // high-security-mode kill and its server-side-config override for free; there is deliberately no
+    // allocation-specific server-side key, since the parent's already lets the server disable the whole
+    // feature.
+    //
+    // This flag is about the FEATURE being wanted, not about the thread sampler running: the two samplers'
+    // lifecycles are independent inside ContinuousProfilingService (allocation sampling is AllocationTick-
+    // driven and needs no periodic thread walk), so "allocation sampling active while the thread sampler is
+    // stopped" is a legitimate, reachable state -- e.g. after a stop_continuous_profiler command for "cpu".
+    public bool ContinuousProfilingAllocationEnabled => _continuousProfilingAllocationEnabled ??=
+        ContinuousProfilingEnabled &&
+        EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingAllocationEnabled", _localConfiguration.continuousProfiling.allocation.enabled), "NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_ENABLED");
+
+    private int? _continuousProfilingAllocationMaxSamplesPerMinute;
+    public int ContinuousProfilingAllocationMaxSamplesPerMinute
+    {
+        get
+        {
+            if (_continuousProfilingAllocationMaxSamplesPerMinute.HasValue)
+                return _continuousProfilingAllocationMaxSamplesPerMinute.Value;
+
+            // Same env > appSettings > element precedence (and same clamp-last shape) as
+            // ContinuousProfilingSamplingIntervalMs. EnvironmentOverrides falls back to the (non-null)
+            // appSettings-or-element value, so the result is never null.
+            var configured = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("NewRelic.ContinuousProfilingAllocationMaxSamplesPerMinute", _localConfiguration.continuousProfiling.allocation.maxSamplesPerMinute), "NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_MAX_SAMPLES_PER_MINUTE")
+                .GetValueOrDefault();
+
+            var clamped = Math.Min(MaxContinuousProfilingAllocationMaxSamplesPerMinute, Math.Max(MinContinuousProfilingAllocationMaxSamplesPerMinute, configured));
+            _continuousProfilingAllocationMaxSamplesPerMinute = clamped;
+            return clamped;
+        }
+    }
+
     public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
     {
         return EnvironmentOverrides(environment, localLogConfiguration.enabled, "NEW_RELIC_LOG_ENABLED");

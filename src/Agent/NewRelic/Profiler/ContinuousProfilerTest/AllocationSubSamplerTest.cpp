@@ -80,4 +80,38 @@ public:
         Assert::IsTrue(sampledCycle2 > 0,
                        L"cycle 2 must resume sampling immediately after rollover; if _sampledThisCycle wasn't reset, this would be 0");
     }
+
+    // Documents WHY AllocationSampler::TryNormalizeMaxSamplesPerMinute must reject a non-positive budget
+    // instead of casting it. This class deliberately does not clamp _targetPerCycle, so the value a blind
+    // static_cast<uint32_t>(-1) produces is not "a very high cap" -- it makes the odds computation saturate
+    // and every single tick gets sampled, i.e. a full stack walk + name resolution on an application thread
+    // per AllocationTick. The first cycle hides it (startup pacing divides by target*1000); the damage
+    // starts at the first cycle boundary, which is why this test has to roll the clock.
+    TEST_METHOD(ShouldSample_UnclampedHugeTarget_SamplesEveryTickAfterFirstCycle)
+    {
+        const uint32_t castOfNegativeOne = static_cast<uint32_t>(-1); // 4294967295
+
+        auto now = std::chrono::steady_clock::now();
+        AllocationSubSampler sampler(castOfNegativeOne, 1);
+        sampler.SetClockFunction([&now]() { return now; });
+
+        // Cycle 1: establish a tick history so cycle 2 uses the real estimate.
+        for (int i = 0; i < 2000; ++i)
+        {
+            sampler.ShouldSample();
+        }
+
+        now += std::chrono::seconds(2);
+
+        int sampledCycle2 = 0;
+        for (int i = 0; i < 2000; ++i)
+        {
+            if (sampler.ShouldSample()) { ++sampledCycle2; }
+        }
+
+        // Not "more than the target" -- literally everything.
+        Assert::AreEqual(2000, sampledCycle2,
+            L"an unclamped huge target samples 100% of ticks, which is the incident the export-boundary "
+            L"guard exists to prevent");
+    }
 };

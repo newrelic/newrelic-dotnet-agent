@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "CppUnitTest.h"
+#include <limits>
 #include "../ContinuousProfiler/AllocationSampler.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -140,5 +141,52 @@ public:
         Assert::IsFalse(AllocationSampler::IsAllocationTickEvent(10, 3));
         Assert::IsFalse(AllocationSampler::IsAllocationTickEvent(10, 5));
         Assert::IsFalse(AllocationSampler::IsAllocationTickEvent(9, 4));
+    }
+
+    // The budget arrives from managed code as a SIGNED int. A non-positive value must not be started at
+    // all: casting it would produce a huge unsigned target that AllocationSubSampler does not clamp,
+    // which degrades into sampling every single AllocationTick on application threads.
+    TEST_METHOD(TryNormalizeMaxSamplesPerMinute_RejectsNonPositiveInsteadOfWrappingToHuge)
+    {
+        uint32_t budget = 0xFFFFFFFFu;
+        Assert::IsFalse(AllocationSampler::TryNormalizeMaxSamplesPerMinute(-1, budget));
+        Assert::AreEqual(0u, budget, L"a rejected budget must not leave a usable value behind");
+
+        budget = 0xFFFFFFFFu;
+        Assert::IsFalse(AllocationSampler::TryNormalizeMaxSamplesPerMinute(0, budget));
+        Assert::AreEqual(0u, budget);
+
+        budget = 0xFFFFFFFFu;
+        Assert::IsFalse(AllocationSampler::TryNormalizeMaxSamplesPerMinute(
+            (std::numeric_limits<int32_t>::min)(), budget));
+        Assert::AreEqual(0u, budget);
+    }
+
+    TEST_METHOD(TryNormalizeMaxSamplesPerMinute_PassesSaneValuesThrough)
+    {
+        uint32_t budget = 0;
+        Assert::IsTrue(AllocationSampler::TryNormalizeMaxSamplesPerMinute(1, budget));
+        Assert::AreEqual(1u, budget);
+
+        Assert::IsTrue(AllocationSampler::TryNormalizeMaxSamplesPerMinute(200, budget));
+        Assert::AreEqual(200u, budget, L"the shipped default must survive unmodified");
+    }
+
+    TEST_METHOD(TryNormalizeMaxSamplesPerMinute_ClampsAboveTheCeiling)
+    {
+        // Copied to a local: the ceiling is a static constexpr member, and passing it straight to
+        // Assert::AreEqual (which takes a const reference) would odr-use it.
+        const int32_t ceiling = AllocationSampler::MaxSupportedSamplesPerMinute;
+
+        uint32_t budget = 0;
+        Assert::IsTrue(AllocationSampler::TryNormalizeMaxSamplesPerMinute(ceiling, budget));
+        Assert::AreEqual(static_cast<uint32_t>(ceiling), budget, L"the ceiling itself is accepted as-is");
+
+        Assert::IsTrue(AllocationSampler::TryNormalizeMaxSamplesPerMinute(ceiling + 1, budget));
+        Assert::AreEqual(static_cast<uint32_t>(ceiling), budget);
+
+        Assert::IsTrue(AllocationSampler::TryNormalizeMaxSamplesPerMinute(
+            (std::numeric_limits<int32_t>::max)(), budget));
+        Assert::AreEqual(static_cast<uint32_t>(ceiling), budget);
     }
 };

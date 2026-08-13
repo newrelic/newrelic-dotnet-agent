@@ -12,7 +12,7 @@ using ProtoValueType = OpenTelemetry.Proto.Profiles.V1Development.ValueType;
 namespace NewRelic.Agent.Core.ContinuousProfiling;
 
 /// <summary>
-/// Maps collected <see cref="ManagedThreadSample"/>s into an OTLP
+/// Maps collected <see cref="ManagedThreadSample"/>s and <see cref="AllocationSample"/>s into a single OTLP
 /// <see cref="ExportProfilesServiceRequest"/>. Strings, functions, locations, stacks,
 /// attributes, and links are interned into the shared <see cref="ProfilesDictionary"/>
 /// tables (index 0 of every table is the zero value per the OTLP spec).
@@ -24,6 +24,10 @@ public static class OtlpProfileBuilder
     private const string ThreadIdKey = "thread.id";
     private const string ThreadNameKey = "thread.name";
 
+    // Allocation samples carry the allocated object's type as an OTel-semconv-shaped attribute so the UI can
+    // group "what was allocated" independently of "where it was allocated" (the stack).
+    private const string TypeNameKey = "type.name";
+
     // OTLP-idiomatic on/off-CPU split: profiles.proto documents ONLY `cpu`/`off_cpu`/`allocated_objects`/
     // `allocated_space` as sample types (:291-295, :317) -- no Google-pprof-style "samples:count" convention.
     // `Profile.sample_type` is singular, so cpu + off_cpu are two separate Profile messages that SHARE this
@@ -32,6 +36,14 @@ public static class OtlpProfileBuilder
     private const string OffCpuSampleTypeName = "off_cpu";
     private const string CpuSampleTypeName = "cpu";
     private const string NanosecondsUnit = "nanoseconds"; // == PeriodTypeUnit
+
+    // Allocation sampling (AllocationTick-driven) contributes two more of profiles.proto's documented sample
+    // types. Unlike cpu/off_cpu these are NOT a partition: every allocation sample appears in BOTH profiles --
+    // they are two measurements of the same event set (how many objects, how many bytes).
+    private const string AllocatedObjectsSampleTypeName = "allocated_objects";
+    private const string CountUnit = "count";
+    private const string AllocatedSpaceSampleTypeName = "allocated_space";
+    private const string BytesUnit = "bytes";
 
     // period_type describes the cadence of periodic sampling. We take an all-thread stack snapshot every
     // configured interval, so period = interval in nanoseconds. Type "cpu" / unit "nanoseconds" mirrors the
@@ -83,8 +95,12 @@ public static class OtlpProfileBuilder
     // includeAgentCode: when false, samples taken on the agent's own threads (owning frame under
     // "NewRelic.Agent.Core.") are dropped so the profile carries only the customer application. Defaults to
     // true (no filtering) for callers/tests that don't care; the CP service passes the configured value,
-    // which defaults to false.
-    public static ExportProfilesServiceRequest Build(IReadOnlyList<ManagedThreadSample> samples, long startUnixNano, long durationNano, string serviceName, long periodNanos = 0, bool includeAgentCode = true)
+    // which defaults to false. It applies to the THREAD sampler only -- allocation samples are attributed to
+    // the allocating call site, not to a sampled thread, and are reported as-is.
+    //
+    // allocationSamples: optional AllocationTick-driven samples. When non-empty they add the
+    // allocated_objects/allocated_space profiles to this same request, interned into this same dictionary.
+    public static ExportProfilesServiceRequest Build(IReadOnlyList<ManagedThreadSample> samples, long startUnixNano, long durationNano, string serviceName, long periodNanos = 0, bool includeAgentCode = true, IReadOnlyList<AllocationSample> allocationSamples = null)
     {
         var dictionary = new ProfilesDictionary();
 
@@ -179,6 +195,50 @@ public static class OtlpProfileBuilder
                     CpuSampleTypeName, NanosecondsUnit, resolved, valueForSample: _ => periodNanos, includeSample: r => r.OnCpu));
         }
 
+        // allocated_objects:count + allocated_space:bytes. Emitted independently of periodNanos: allocation
+        // sampling is event-driven (fires on AllocationTick), so neither profile is time-valued and there is no
+        // sampling cadence to report -- period_type/period are deliberately left unset on both (see
+        // BuildAllocationProfile). Resolve dictionary indices ONCE through the SAME caches the thread-sample
+        // path used above, so a stack/string/attribute/link shared with a thread sample is interned once for
+        // the whole request. Both profiles are emitted or neither is: they always carry the same sample count,
+        // and the OTLP profiles ingest rejects a Profile with zero samples ("no_samples" drop).
+        if (allocationSamples != null && allocationSamples.Count > 0)
+        {
+            var resolvedAllocations = new List<ResolvedAllocationSample>(allocationSamples.Count);
+            foreach (var allocation in allocationSamples)
+            {
+                // Defensive: a sample with no frames cannot be interned into a stack. Skip it rather than throw
+                // and lose the entire drain's payload (thread samples included) to one malformed sample.
+                if (allocation?.Frames == null)
+                    continue;
+
+                var stackIndex = InternStack(dictionary, stringTable, functionTable, locationTable, stackTable, attributeTable, allocation.Frames);
+                var threadIdAttr = InternAttribute(dictionary, stringTable, attributeTable, ThreadIdKey, new AnyValue { IntValue = allocation.OsThreadId });
+                var threadNameAttr = InternAttribute(dictionary, stringTable, attributeTable, ThreadNameKey, new AnyValue { StringValue = allocation.ThreadName ?? string.Empty });
+                var typeNameAttr = InternAttribute(dictionary, stringTable, attributeTable, TypeNameKey, new AnyValue { StringValue = allocation.TypeName ?? string.Empty });
+                // Trace/span context is a required part of an allocation sample (it is captured at the
+                // allocating call site, inside the transaction). A sample taken outside any transaction still
+                // resolves to the reserved index-0 "no link" sentinel, same as on the thread path.
+                var linkIndex = InternLink(dictionary, linkTable, allocation.TraceIdHigh, allocation.TraceIdLow, allocation.SpanId);
+
+                // Sample.values is int64 while AllocatedSize is uint64 (the native side reinterprets the raw
+                // ETW/AllocationTick bytes). A real allocation never exceeds long.MaxValue bytes, but saturate
+                // rather than wrap: an unchecked cast of a garbage/misparsed size would emit a NEGATIVE byte
+                // count, which is meaningless to the ingest.
+                var allocatedSize = allocation.AllocatedSize > long.MaxValue ? long.MaxValue : (long)allocation.AllocatedSize;
+                resolvedAllocations.Add(new ResolvedAllocationSample(stackIndex, threadIdAttr, threadNameAttr, typeNameAttr, linkIndex, allocatedSize));
+            }
+
+            if (resolvedAllocations.Count > 0)
+            {
+                scopeProfiles.Profiles.Add(BuildAllocationProfile(dictionary, stringTable, startUnixNano, durationNano,
+                    AllocatedObjectsSampleTypeName, CountUnit, resolvedAllocations, valueForSample: _ => 1L));
+
+                scopeProfiles.Profiles.Add(BuildAllocationProfile(dictionary, stringTable, startUnixNano, durationNano,
+                    AllocatedSpaceSampleTypeName, BytesUnit, resolvedAllocations, valueForSample: r => r.AllocatedSize));
+            }
+        }
+
         var resourceProfiles = new ResourceProfiles
         {
             Resource = new Resource(),
@@ -251,6 +311,65 @@ public static class OtlpProfileBuilder
             LinkIndex = linkIndex;
             OnCpu = onCpu;
         }
+    }
+
+    // A single allocation sample's shared-dictionary indices, resolved once and reused by both allocation
+    // profiles. Deliberately separate from ResolvedSample rather than a shared/generic type: the two carry
+    // different payloads (type.name + allocated size vs. on/off-CPU) and keeping them apart leaves the
+    // hot CPU path untouched.
+    private readonly struct ResolvedAllocationSample
+    {
+        public readonly int StackIndex;
+        public readonly int ThreadIdAttr;
+        public readonly int ThreadNameAttr;
+        public readonly int TypeNameAttr;
+        public readonly int LinkIndex;
+        public readonly long AllocatedSize;
+
+        public ResolvedAllocationSample(int stackIndex, int threadIdAttr, int threadNameAttr, int typeNameAttr, int linkIndex, long allocatedSize)
+        {
+            StackIndex = stackIndex;
+            ThreadIdAttr = threadIdAttr;
+            ThreadNameAttr = threadNameAttr;
+            TypeNameAttr = typeNameAttr;
+            LinkIndex = linkIndex;
+            AllocatedSize = allocatedSize;
+        }
+    }
+
+    // Emits one Profile (allocated_objects:count or allocated_space:bytes) from the already-resolved allocation
+    // samples. Every resolved sample is included -- these two profiles are not a partition of the input the way
+    // cpu/off_cpu are, only the per-sample VALUE differs between them.
+    //
+    // No period_type/period is set: allocation sampling is event-driven, so there is no sampling interval to
+    // report. (BuildProfile's `periodNanos > 0` gate models the same "omit when not applicable" rule for the
+    // timer-driven profiles; this is a separate function so the CPU path keeps its own shape.)
+    private static Profile BuildAllocationProfile(ProfilesDictionary dictionary, Dictionary<string, int> stringTable,
+        long startUnixNano, long durationNano, string sampleTypeName, string sampleTypeUnit,
+        List<ResolvedAllocationSample> resolved, System.Func<ResolvedAllocationSample, long> valueForSample)
+    {
+        var profile = new Profile
+        {
+            TimeUnixNano = (ulong)startUnixNano,
+            DurationNano = (ulong)durationNano,
+            SampleType = new ProtoValueType
+            {
+                TypeStrindex = InternString(dictionary, stringTable, sampleTypeName),
+                UnitStrindex = InternString(dictionary, stringTable, sampleTypeUnit),
+            },
+        };
+
+        foreach (var r in resolved)
+        {
+            var protoSample = new Sample { StackIndex = r.StackIndex, LinkIndex = r.LinkIndex };
+            protoSample.Values.Add(valueForSample(r));
+            protoSample.AttributeIndices.Add(r.ThreadIdAttr);
+            protoSample.AttributeIndices.Add(r.ThreadNameAttr);
+            protoSample.AttributeIndices.Add(r.TypeNameAttr);
+            profile.Samples.Add(protoSample);
+        }
+
+        return profile;
     }
 
     // Emits one Profile (off_cpu:nanoseconds or cpu:nanoseconds) from the already-resolved samples, applying

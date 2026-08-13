@@ -20,8 +20,20 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 /// starts the native sampler and schedules a periodic drain; when disabled it stops both; when
 /// the sampling interval changes while running it retunes the drain schedule.
 ///
-/// Each drain reads one batch from the <see cref="ISampleSource"/> into a reused buffer, parses it,
-/// builds an OTLP profile, and hands it to the <see cref="IProfilesTransport"/>. All drain work is
+/// TWO INDEPENDENT SAMPLERS, ONE DRAIN. The timer-driven thread sampler
+/// (<see cref="INativeContinuousProfiler"/> + <see cref="ISampleSource"/>, state: <see cref="_isActive"/> /
+/// <see cref="_activeIntervalMs"/>) and the AllocationTick-driven allocation sampler
+/// (<see cref="IAllocationSampleSource"/>, state: <see cref="_allocationActive"/> /
+/// <see cref="_allocationMaxSamplesPerMinute"/>) start and stop on their own config flags, in either
+/// combination. They SHARE one recurring drain tick, whose arming is therefore refcounted on
+/// "either sampler is running" (<see cref="ArmDrainScheduleLocked"/> /
+/// <see cref="DisarmDrainScheduleIfIdleLocked"/>) rather than owned by the thread-sampling path -- as is the
+/// managed-&gt;native trace-context seam, which both samplers correlate through. They also share the
+/// send-failure backoff, since one drain produces one request carrying both sample types.
+///
+/// Each drain reads one batch from each active source into a reused buffer, parses them,
+/// builds a single OTLP request carrying both sample types, and hands it to the
+/// <see cref="IProfilesTransport"/>. All drain work is
 /// wrapped so a failure is logged and metered but never propagates into the customer's application.
 ///
 /// Drains are gated on the agent having connected (<see cref="OnAgentConnected"/>): the profiles
@@ -52,6 +64,11 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     private const string SupportabilitySamplesMetric = "Supportability/DotNET/ContinuousProfiling/Samples";
     private const string SupportabilityErrorMetric = "Supportability/DotNET/ContinuousProfiling/Error";
     private const string SupportabilityDrainBufferBoundaryMetric = "Supportability/DotNET/ContinuousProfiling/DrainBufferBoundary";
+    // Allocation samples are counted separately from thread samples: the two come from different native
+    // sources at wildly different cadences (timer-driven sweep vs. subsampled AllocationTick), so a combined
+    // count would tell you nothing about either. This is also the only observation path for allocation
+    // sampling actually producing data in the field.
+    private const string SupportabilityAllocationSamplesMetric = "Supportability/DotNET/ContinuousProfiling/AllocationSamples";
 
     // Send-failure backoff, generally modeled on ConnectionManager.ConnectionRetryBackoffSequence (same
     // values as the collector-response-handling reconnect schedule) -- but, unlike that sequence, this one
@@ -70,6 +87,13 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
     private readonly ISampleSource _sampleSource;
     private readonly INativeContinuousProfiler _native;
+
+    // The allocation sampler: an INDEPENDENT native sampler with its own config gate, its own EventPipe
+    // session and its own buffer queue, drained through the SAME drain tick as the thread sampler so both
+    // sample types ride one wire payload per drain (see OtlpProfileBuilder.Build's allocationSamples
+    // parameter). Its Shutdown() is terminal -- see StopAllocationLocked/Dispose.
+    private readonly IAllocationSampleSource _allocationSampleSource;
+
     private readonly IProfilesTransport _transport;
     private readonly IScheduler _scheduler;
     private readonly IAgentHealthReporter _agentHealthReporter;
@@ -144,7 +168,29 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // volatile: written under _lifecycleLock (StartLocked/StopLocked), read lock-free by DrainOnce on the
     // scheduler thread. An int write is already atomic on every platform, so this is purely for cross-thread
     // visibility -- without it DrainOnce could read a stale 0 and emit a profile with period=0.
+    //
+    // Strictly the THREAD sampler's interval: it is the profile period for the cpu/off_cpu profiles, and 0
+    // means "no thread sampling", which is what suppresses those profiles. It is deliberately NOT the drain
+    // cadence (that is _drainIntervalMs), because the drain can be running for the allocation sampler alone.
     private volatile int _activeIntervalMs;
+
+    // Whether the allocation sampler is currently started. Fully separate from _isActive: the two samplers
+    // have independent lifecycles (independent config flags, and allocation sampling is AllocationTick-driven
+    // so it needs no periodic thread walk), and either one alone is enough to keep the shared drain running.
+    //
+    // volatile for the same reason as _isActive/_activeIntervalMs: every write is under _lifecycleLock, but
+    // DrainOnce reads it lock-free on the scheduler thread to decide whether to touch the allocation buffer.
+    private volatile bool _allocationActive;
+
+    // The budget the allocation sampler was last started with, so a backoff probe can resume it at the same
+    // pacing and ApplyConfigChange can detect a live budget change. Read/written only under _lifecycleLock.
+    private int _allocationMaxSamplesPerMinute;
+
+    // The interval the recurring drain timer is currently armed at; 0 == not armed. The drain timer is SHARED
+    // by both samplers, so its arm/disarm is refcounted on (_isActive || _allocationActive) rather than owned
+    // by the thread-sampling path -- see ArmDrainScheduleLocked/DisarmDrainScheduleIfIdleLocked. Read/written
+    // only under _lifecycleLock.
+    private int _drainIntervalMs;
 
     // Profile-type tokens ("cpu") currently owned by an agent command rather than local/server config.
     // ApplyConfigChange must not start/stop/retune a type present here -- only a matching StopFromCommand
@@ -155,6 +201,11 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     private readonly HashSet<string> _commandControlledTypes = new HashSet<string>();
 
     private static readonly IReadOnlyDictionary<string, string> EmptyCommandExceptions = new Dictionary<string, string>();
+
+    // Allocation-free stand-ins for "this sweep read nothing of this type", so a drain that skips one source
+    // still has a non-null, zero-count list to test and to hand to OtlpProfileBuilder.
+    private static readonly IReadOnlyList<ManagedThreadSample> EmptyThreadSamples = new ManagedThreadSample[0];
+    private static readonly IReadOnlyList<AllocationSample> EmptyAllocationSamples = new AllocationSample[0];
 
     // Command-provided interval bounds mirror DefaultConfiguration's ContinuousProfilingSamplingIntervalMs
     // clamp (DefaultConfiguration.cs: MinContinuousProfilingSamplingIntervalMs/MaxContinuousProfilingSamplingIntervalMs,
@@ -169,6 +220,14 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // Interlocked gives both atomicity and a full fence; volatile alone would not fix the 64-bit tearing.
     private long _lastDrainTimestamp;
 
+    /// <summary>
+    /// Whether the THREAD sampler is running. Deliberately not widened to include allocation sampling: this
+    /// is what <c>ThreadProfilingService</c>'s forward guard reads to avoid running concurrently with a
+    /// profiler that suspends threads, and allocation sampling suspends nothing (its tick handler walks only
+    /// the current thread, and try_locks the shared native SuspendMutex so it yields to a thread-profiling
+    /// walk rather than colliding with it). Reporting allocation-only as "active" here would block thread
+    /// profiling for no reason.
+    /// </summary>
     public bool IsActive => _isActive;
 
     /// <summary>
@@ -180,10 +239,11 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// </summary>
     public IThreadProfilingStatus ThreadProfilingStatus { get; set; }
 
-    public ContinuousProfilingService(ISampleSource sampleSource, INativeContinuousProfiler native, IProfilesTransport transport, IScheduler scheduler, IAgentHealthReporter agentHealthReporter)
+    public ContinuousProfilingService(ISampleSource sampleSource, INativeContinuousProfiler native, IAllocationSampleSource allocationSampleSource, IProfilesTransport transport, IScheduler scheduler, IAgentHealthReporter agentHealthReporter)
     {
         _sampleSource = sampleSource;
         _native = native;
+        _allocationSampleSource = allocationSampleSource;
         _transport = transport;
         _scheduler = scheduler;
         _agentHealthReporter = agentHealthReporter;
@@ -224,17 +284,26 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     }
 
     /// <summary>
-    /// Starts the drain schedule if continuous profiling is enabled in the current configuration.
-    /// Safe to call more than once; a no-op while already active.
+    /// Starts whichever samplers the current configuration enables, and the drain schedule they share.
+    /// Safe to call more than once; a no-op for anything already active.
     /// </summary>
     public void StartIfEnabled()
     {
         lock (_lifecycleLock)
         {
-            if (!_configuration.ContinuousProfilingEnabled)
+            if (_disposed)
                 return;
 
-            StartLocked(_configuration.ContinuousProfilingSamplingIntervalMs);
+            // Each sampler consults its OWN enabled flag, so a disabled thread sampler must not short-circuit
+            // the allocation sampler (or vice versa). The thread sampler goes first so that, when both are
+            // enabled, it is the one that arms the shared drain timer -- at ITS interval, which is also the
+            // profile period -- instead of the allocation path arming it and the thread start having to retune
+            // it a moment later.
+            if (_configuration.ContinuousProfilingEnabled)
+                StartLocked(_configuration.ContinuousProfilingSamplingIntervalMs);
+
+            if (_configuration.ContinuousProfilingAllocationEnabled)
+                StartAllocationLocked(_configuration.ContinuousProfilingAllocationMaxSamplesPerMinute);
         }
     }
 
@@ -254,32 +323,70 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // an incidental config-update event (an unrelated SSC push, a reconnect) must not silently
             // override an operator's explicit start/stop_continuous_profiler command. See
             // _commandControlledTypes and StartFromCommand/StopFromCommand.
-            if (_commandControlledTypes.Contains(ContinuousProfilingCommandTypes.Cpu))
-                return;
+            //
+            // The guard covers the THREAD sampler only. Allocation sampling is not command-controllable yet,
+            // so its config-driven reconciliation must still run when the cpu bundle is command-owned --
+            // hence a guarded call rather than an early return out of the whole method. The thread sampler
+            // is reconciled first for the same reason as in StartIfEnabled (it owns the drain cadence).
+            if (!_commandControlledTypes.Contains(ContinuousProfilingCommandTypes.Cpu))
+                ApplyThreadSamplingConfigChangeLocked();
 
-            var enabled = _configuration.ContinuousProfilingEnabled;
+            ApplyAllocationConfigChangeLocked();
+        }
+    }
 
-            if (!enabled)
-            {
-                if (_isActive)
-                    StopLocked();
-                return;
-            }
-
-            var intervalMs = _configuration.ContinuousProfilingSamplingIntervalMs;
-
-            if (!_isActive)
-            {
-                StartLocked(intervalMs);
-                return;
-            }
-
-            if (intervalMs != _activeIntervalMs)
-            {
-                // Retune: stop the current recurrence and reschedule at the new interval.
+    private void ApplyThreadSamplingConfigChangeLocked()
+    {
+        if (!_configuration.ContinuousProfilingEnabled)
+        {
+            if (_isActive)
                 StopLocked();
-                StartLocked(intervalMs);
-            }
+            return;
+        }
+
+        var intervalMs = _configuration.ContinuousProfilingSamplingIntervalMs;
+
+        if (!_isActive)
+        {
+            StartLocked(intervalMs);
+            return;
+        }
+
+        if (intervalMs != _activeIntervalMs)
+        {
+            // Retune: stop the current recurrence and reschedule at the new interval.
+            StopLocked();
+            StartLocked(intervalMs);
+        }
+    }
+
+    /// <summary>
+    /// Reconciles the allocation sampler with the current configuration: start, stop, or re-pace it.
+    /// </summary>
+    private void ApplyAllocationConfigChangeLocked()
+    {
+        if (!_configuration.ContinuousProfilingAllocationEnabled)
+        {
+            if (_allocationActive)
+                StopAllocationLocked();
+            return;
+        }
+
+        var maxSamplesPerMinute = _configuration.ContinuousProfilingAllocationMaxSamplesPerMinute;
+
+        if (!_allocationActive)
+        {
+            StartAllocationLocked(maxSamplesPerMinute);
+            return;
+        }
+
+        if (maxSamplesPerMinute != _allocationMaxSamplesPerMinute)
+        {
+            // Re-pace in place: the native sampler's Start is idempotent and replaces its sub-sampler at the
+            // new budget WITHOUT reopening its session, so unlike the thread sampler's retune this needs no
+            // stop/start and never touches the shared drain timer (the budget is a per-minute sample cap, not
+            // a drain cadence). Without this, a live budget change would silently do nothing.
+            StartOrRepaceAllocationLocked(maxSamplesPerMinute);
         }
     }
 
@@ -432,17 +539,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 // fine: lifecycle transitions are rare (config-driven), so the native call here does not touch
                 // the lock-free hot path (DrainOnce).
                 _native.Start(intervalMs);
-                // trackAsAgentWork: false -- this action IS the CP drain itself (reads the native sample
-                // pipeline this very flag exists to annotate). Marking this thread poisons its own read;
-                // see follow-up #16 / Scheduler.CreateExecuteEveryTimer.
-                _scheduler.ExecuteEvery(_drainAction, TimeSpan.FromMilliseconds(intervalMs), trackAsAgentWork: false);
                 _activeIntervalMs = intervalMs;
-                Interlocked.Exchange(ref _lastDrainTimestamp, Stopwatch.GetTimestamp());
 
-                // Arm trace-context correlation only now that native sampling is running, and publish the seam so
-                // the wrapper hot path starts pushing the current trace/span on each app thread.
-                _continuousProfilingContext.Enable(_native);
-                ContinuousProfilingContext.Instance = _continuousProfilingContext;
+                // The thread sampler's interval is the authoritative drain cadence (it doubles as the profile
+                // period), so this retunes a timer the allocation path may already have armed at the config
+                // interval.
+                ArmDrainScheduleLocked(intervalMs);
 
                 Log.Info("[ContinuousProfiling] Session started; draining every {0} ms.", intervalMs);
             }
@@ -462,12 +564,15 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     {
         try
         {
-            // Disarm correlation first so the wrapper hot path stops pushing before native sampling stops.
-            // Restore the inert default instance so IsEnabled is false again everywhere.
-            _continuousProfilingContext.Disable();
-            ContinuousProfilingContext.Instance = new ContinuousProfilingContext();
+            // Cleared BEFORE the disarm below, not just in the finally: the shared drain schedule is released
+            // only when NEITHER sampler needs it, so an _isActive still reading true at that point would make
+            // the release a no-op and leave the timer armed with nothing running. (This also has to be right
+            // on the StartLocked-unwind path, where StopLocked is called with _isActive still true.) The
+            // finally is kept as a redundant guarantee that a throw anywhere below cannot leave them stale.
+            _isActive = false;
+            _activeIntervalMs = 0;
 
-            _scheduler.StopExecuting(_drainAction);
+            DisarmDrainScheduleIfIdleLocked();
             _native.Stop();
             Log.Info("[ContinuousProfiling] Session stopped.");
         }
@@ -479,6 +584,153 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         {
             _isActive = false;
             _activeIntervalMs = 0;
+        }
+    }
+
+    /// <summary>
+    /// Starts the allocation sampler, unless it is already running. A no-op while already active -- use
+    /// <see cref="StartOrRepaceAllocationLocked"/> to change the budget of a running sampler.
+    /// </summary>
+    private void StartAllocationLocked(int maxSamplesPerMinute)
+    {
+        if (_allocationActive)
+            return;
+
+        // Deliberately NO equivalent of StartLocked's thread-profiling deferral. That guard exists because the
+        // thread sampler suspends the runtime to walk every thread, which must not overlap a thread-profiling
+        // session. Allocation sampling walks only the allocating thread and try_locks the same native
+        // SuspendMutex, so a tick that collides with either walker is simply dropped -- the enforcement is
+        // already in the native tick path, and deferring here would add a state machine that buys nothing.
+        StartOrRepaceAllocationLocked(maxSamplesPerMinute);
+    }
+
+    /// <summary>
+    /// Starts the allocation sampler, or re-paces it at a new budget if it is already running (the native
+    /// sampler's Start is idempotent and re-pacing does not reopen its session).
+    /// </summary>
+    private void StartOrRepaceAllocationLocked(int maxSamplesPerMinute)
+    {
+        var wasActive = _allocationActive;
+
+        try
+        {
+            // Armed before the call that can throw, and unwound in the catch -- same shape as StartLocked, so
+            // a half-started allocation sampler cannot leave the flag lying true with nothing sampling (which
+            // would also pin the shared drain timer open forever).
+            _allocationActive = true;
+            _allocationMaxSamplesPerMinute = maxSamplesPerMinute;
+
+            // Stop(), never Shutdown(), is the disable -- so Start() here is always legal to call again. See
+            // IAllocationSampleSource.Shutdown for why getting that backwards is unrecoverable.
+            _allocationSampleSource.Start(maxSamplesPerMinute);
+
+            // Only arm the shared drain timer if nothing has armed it yet: when the thread sampler is running,
+            // ITS interval is the authoritative cadence and must not be overwritten by the config interval
+            // (which can differ -- an agent command can start the thread sampler at a command-supplied one).
+            if (_drainIntervalMs == 0)
+                ArmDrainScheduleLocked(_configuration.ContinuousProfilingSamplingIntervalMs);
+
+            Log.Info(wasActive
+                ? "[ContinuousProfiling] Allocation sampling re-paced to at most {0} samples/minute."
+                : "[ContinuousProfiling] Allocation sampling started; up to {0} samples/minute.", maxSamplesPerMinute);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[ContinuousProfiling] Failed to start allocation sampling.");
+            StopAllocationLocked();
+        }
+    }
+
+    private void StopAllocationLocked()
+    {
+        try
+        {
+            // Cleared first, for the same reason as in StopLocked: the drain-schedule release is refcounted on
+            // this flag.
+            _allocationActive = false;
+            _allocationMaxSamplesPerMinute = 0;
+
+            DisarmDrainScheduleIfIdleLocked();
+
+            // Stop(), NOT Shutdown(): this runs on every config-driven disable, and the native sampler's
+            // Shutdown is a terminal latch that would refuse every later Start for the life of the process.
+            _allocationSampleSource.Stop();
+            Log.Info("[ContinuousProfiling] Allocation sampling stopped.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[ContinuousProfiling] Failed to stop allocation sampling.");
+        }
+        finally
+        {
+            _allocationActive = false;
+            _allocationMaxSamplesPerMinute = 0;
+        }
+    }
+
+    /// <summary>
+    /// Arms (or retunes) the drain timer both samplers share, and arms the managed-&gt;native trace-context
+    /// push. Called after a sampler has actually started, so correlation is only ever armed while something
+    /// is sampling.
+    /// </summary>
+    private void ArmDrainScheduleLocked(int intervalMs)
+    {
+        if (_drainIntervalMs != intervalMs)
+        {
+            // IScheduler has no "reschedule", so a cadence change is a stop followed by a fresh registration.
+            // StopExecuting does not wait for an in-flight drain, which is exactly the overlap _drainInFlight
+            // guards (see that field).
+            if (_drainIntervalMs != 0)
+                _scheduler.StopExecuting(_drainAction);
+
+            // Marked un-armed for the duration of the swap, so if ExecuteEvery throws, this reads "no timer"
+            // rather than still claiming the cadence it just stopped -- otherwise the next Arm call would see a
+            // matching interval, skip re-registering, and leave the drain silently dead.
+            _drainIntervalMs = 0;
+            // trackAsAgentWork: false -- this action IS the CP drain itself (reads the native sample
+            // pipeline this very flag exists to annotate). Marking this thread poisons its own read;
+            // see follow-up #16 / Scheduler.CreateExecuteEveryTimer.
+            _scheduler.ExecuteEvery(_drainAction, TimeSpan.FromMilliseconds(intervalMs), trackAsAgentWork: false);
+            _drainIntervalMs = intervalMs;
+        }
+
+        Interlocked.Exchange(ref _lastDrainTimestamp, Stopwatch.GetTimestamp());
+
+        // Publish the seam so the wrapper hot path starts pushing the current trace/span on each app thread.
+        // Guarded on IsEnabled so the second sampler to start doesn't re-Enable an already-armed context: that
+        // would bump the push-change-detection epoch for no reason (nothing cleared the native map), costing
+        // one redundant push per app thread.
+        //
+        // The push target is the THREAD sampler's native seam even when only allocation sampling is running.
+        // That is correct, not a shortcut: the native ContinuousProfiler owns the per-thread trace-context map
+        // and AllocationSampler reads that same instance, and the native SetTraceContext is unconditional --
+        // it does not require the thread sampler's session to be started. Without arming this, allocation
+        // samples would silently lose all trace/span correlation whenever the thread sampler is stopped.
+        if (!_continuousProfilingContext.IsEnabled)
+        {
+            _continuousProfilingContext.Enable(_native);
+            ContinuousProfilingContext.Instance = _continuousProfilingContext;
+        }
+    }
+
+    /// <summary>
+    /// Releases the shared drain timer and the trace-context seam, but only once NEITHER sampler is running.
+    /// Callers clear their own active flag first (see <see cref="StopLocked"/>/<see cref="StopAllocationLocked"/>).
+    /// </summary>
+    private void DisarmDrainScheduleIfIdleLocked()
+    {
+        if (_isActive || _allocationActive)
+            return; // the other sampler still needs the shared drain
+
+        // Disarm correlation first so the wrapper hot path stops pushing before native sampling stops.
+        // Restore the inert default instance so IsEnabled is false again everywhere.
+        _continuousProfilingContext.Disable();
+        ContinuousProfilingContext.Instance = new ContinuousProfilingContext();
+
+        if (_drainIntervalMs != 0)
+        {
+            _scheduler.StopExecuting(_drainAction);
+            _drainIntervalMs = 0;
         }
     }
 
@@ -510,42 +762,39 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 if (!_isConnected || _sendBackoffActive)
                     return;
 
-                var bytesRead = _sampleSource.ReadBatch(_drainBuffer);
-                if (bytesRead <= 0)
-                    return;
-
-                // Defensive clamp: a misbehaving native source could report more bytes than the buffer
-                // holds. Never trust it far enough to hand an out-of-range length to BufferParser.Parse,
-                // which would walk off the end of _drainBuffer.
-                if (bytesRead > _drainBuffer.Length)
+                // Both sample types are read into the SAME buffer, sequentially. Deliberate: the buffer is
+                // sized for native's 4 MB thread-batch cap, and a second dedicated buffer would double that
+                // permanent per-process footprint for allocation batches native caps at 64 KB
+                // (AllocationSampler::MaxAllocationBufferBytes). It is safe because the reads are strictly
+                // sequential and each parse fully materializes its results before the next read overwrites the
+                // bytes -- BufferParser copies every string out (Encoding.Unicode.GetString), so no parsed
+                // object aliases the buffer -- and because _drainInFlight already makes this the only drain
+                // touching it.
+                var samples = EmptyThreadSamples;
+                if (TryReadIntoDrainBuffer(_sampleSource, out var bytesRead))
                 {
-                    Log.Debug("[ContinuousProfiling] ReadBatch reported {0} bytes, exceeding the {1}-byte buffer; discarding this drain.", bytesRead, _drainBuffer.Length);
-                    SafeReportError();
-                    return;
+                    samples = BufferParser.Parse(_drainBuffer, bytesRead, out var batchStats);
+
+                    // Surface the native BatchStats for CP overhead/fidelity analysis (and OTel FinalStats parity):
+                    // microsSuspended = the stop-the-world window this sweep; skipped = threads/frames the walk missed.
+                    // onCpu/total is the live signal that the native on-CPU classification is working, since NR CP
+                    // is no-send-guarded and has no other observation path for it.
+                    if (batchStats != null && Log.IsFinestEnabled)
+                        Log.Finest("[ContinuousProfiling] batch stats: microsSuspended={0} threads={1} frames={2} skipped={3} onCpu={4}/{5}",
+                            batchStats.MicrosSuspended, batchStats.Threads, batchStats.Frames, batchStats.Skipped, CountOnCpu(samples), samples.Count);
                 }
 
-                // The managed buffer matches native's own cap (see DrainBufferSize), so this can't fire
-                // today -- native already truncates to at most that many bytes before ReadThreadSamples
-                // ever copies. It's a tripwire against the two constants drifting apart again: if native's
-                // cap is ever raised past ours without a matching change here, this is what would catch
-                // the resulting silent loss of BatchStats/tail samples instead of shipping corrupted data.
-                if (bytesRead >= _drainBuffer.Length)
-                {
-                    Log.Debug("[ContinuousProfiling] ReadBatch filled the entire {0}-byte drain buffer; the batch may have been truncated.", _drainBuffer.Length);
-                    _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilityDrainBufferBoundaryMetric);
-                }
+                // Gated on _allocationActive, unlike the thread read above: the drain timer can be armed by
+                // the thread sampler alone, and in that (default) case an ungated read would P/Invoke into a
+                // never-started allocation sampler on every single tick for the life of the process.
+                var allocationSamples = EmptyAllocationSamples;
+                if (_allocationActive && TryReadIntoDrainBuffer(_allocationSampleSource, out var allocationBytesRead))
+                    BufferParser.Parse(_drainBuffer, allocationBytesRead, out _, out allocationSamples);
 
-                var samples = BufferParser.Parse(_drainBuffer, bytesRead, out var batchStats);
-
-                // Surface the native BatchStats for CP overhead/fidelity analysis (and OTel FinalStats parity):
-                // microsSuspended = the stop-the-world window this sweep; skipped = threads/frames the walk missed.
-                // onCpu/total is the live signal that the native on-CPU classification is working, since NR CP
-                // is no-send-guarded and has no other observation path for it.
-                if (batchStats != null && Log.IsFinestEnabled)
-                    Log.Finest("[ContinuousProfiling] batch stats: microsSuspended={0} threads={1} frames={2} skipped={3} onCpu={4}/{5}",
-                        batchStats.MicrosSuspended, batchStats.Threads, batchStats.Frames, batchStats.Skipped, CountOnCpu(samples), samples.Count);
-
-                if (samples.Count == 0)
+                // Either sample type alone is worth a payload: an allocation-only sweep is normal whenever the
+                // thread sampler is stopped, and a thread-only sweep is the common case. Only a sweep that
+                // produced neither is dropped.
+                if (samples.Count == 0 && allocationSamples.Count == 0)
                     return;
 
                 var now = Stopwatch.GetTimestamp();
@@ -556,10 +805,14 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 var startUnixNano = ToUnixNano(DateTime.UtcNow) - durationNano;
                 Interlocked.Exchange(ref _lastDrainTimestamp, now);
 
-                // The sampling interval (ms) is the profile's period; convert to nanoseconds for period_type=cpu/ns.
+                // The THREAD sampling interval (ms) is the profile's period; convert to nanoseconds for
+                // period_type=cpu/ns. Zero when the thread sampler is stopped, which is what suppresses the
+                // cpu/off_cpu profiles on an allocation-only sweep; the allocation profiles carry no period
+                // (they are event-driven, not time-valued) and so are emitted regardless.
                 var periodNanos = (long)_activeIntervalMs * 1_000_000L;
                 // Exclude the agent's own threads/frames unless the undocumented appSettings opt-in is set.
-                var request = OtlpProfileBuilder.Build(samples, startUnixNano, durationNano, ServiceName, periodNanos, _configuration.ContinuousProfilingIncludeAgentCode);
+                // Both sample types go into ONE request, so a drain is still one wire payload.
+                var request = OtlpProfileBuilder.Build(samples, startUnixNano, durationNano, ServiceName, periodNanos, _configuration.ContinuousProfilingIncludeAgentCode, allocationSamples);
 
                 bool sent;
                 try
@@ -578,7 +831,14 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 if (sent)
                 {
                     _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilityDrainMetric);
-                    _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilitySamplesMetric, samples.Count);
+
+                    // Each count is reported only when that sample type actually contributed, so an
+                    // allocation-only sweep doesn't emit a meaningless "0 thread samples" data point (and vice
+                    // versa).
+                    if (samples.Count > 0)
+                        _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilitySamplesMetric, samples.Count);
+                    if (allocationSamples.Count > 0)
+                        _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilityAllocationSamplesMetric, allocationSamples.Count);
                 }
                 else
                 {
@@ -600,6 +860,46 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // why a plain store here was never observed to fail.
             Interlocked.Exchange(ref _drainInFlight, 0);
         }
+    }
+
+    /// <summary>
+    /// Reads one batch from <paramref name="source"/> into the shared <see cref="_drainBuffer"/> and validates
+    /// its length. Returns false -- with <paramref name="bytesRead"/> zeroed -- when there was nothing to read
+    /// or the batch must be discarded, so a caller can never parse an unvalidated length.
+    /// </summary>
+    private bool TryReadIntoDrainBuffer(ISampleSource source, out int bytesRead)
+    {
+        bytesRead = source.ReadBatch(_drainBuffer);
+
+        if (bytesRead <= 0)
+        {
+            bytesRead = 0;
+            return false;
+        }
+
+        // Defensive clamp: a misbehaving native source could report more bytes than the buffer
+        // holds. Never trust it far enough to hand an out-of-range length to BufferParser.Parse,
+        // which would walk off the end of _drainBuffer.
+        if (bytesRead > _drainBuffer.Length)
+        {
+            Log.Debug("[ContinuousProfiling] ReadBatch reported {0} bytes, exceeding the {1}-byte buffer; discarding this drain.", bytesRead, _drainBuffer.Length);
+            SafeReportError();
+            bytesRead = 0;
+            return false;
+        }
+
+        // The managed buffer matches native's own cap (see DrainBufferSize), so this can't fire
+        // today -- native already truncates to at most that many bytes before ReadThreadSamples
+        // ever copies. It's a tripwire against the two constants drifting apart again: if native's
+        // cap is ever raised past ours without a matching change here, this is what would catch
+        // the resulting silent loss of BatchStats/tail samples instead of shipping corrupted data.
+        if (bytesRead >= _drainBuffer.Length)
+        {
+            Log.Debug("[ContinuousProfiling] ReadBatch filled the entire {0}-byte drain buffer; the batch may have been truncated.", _drainBuffer.Length);
+            _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilityDrainBufferBoundaryMetric);
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -655,6 +955,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         _sendBackoffActive = true;
         _native.Stop();
 
+        // Pause allocation sampling too: both sample types ride the one request that just failed, so there is
+        // nothing to gain from continuing to pay for allocation stack walks on customer threads while the drain
+        // is gated off. Stop(), never Shutdown() -- the probe below has to be able to resume it.
+        if (_allocationActive)
+            _allocationSampleSource.Stop();
+
         // Open a new backoff round and tag the probe with its generation. Any probe from a prior round
         // (which IScheduler cannot cancel) is now stale and will no-op when it fires -- otherwise it could
         // resume sampling and clear _sendBackoffActive in the middle of this round, collapsing it early.
@@ -677,10 +983,19 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// </summary>
     private bool TryResumeSamplingLocked()
     {
-        if (!_isActive)
+        // Resume whatever is still wanted -- either sampler alone is enough to make resuming worthwhile, and
+        // only "neither" means the session was disabled while backing off and must stay stopped.
+        if (!_isActive && !_allocationActive)
             return false;
 
-        _native.Start(_activeIntervalMs);
+        if (_isActive)
+            _native.Start(_activeIntervalMs);
+
+        // Re-pacing at the same budget: the native sampler's Start re-arms the handler and resets the
+        // sub-sampler without reopening its session, which is exactly right after a paused window.
+        if (_allocationActive)
+            _allocationSampleSource.Start(_allocationMaxSamplesPerMinute);
+
         Interlocked.Exchange(ref _lastDrainTimestamp, Stopwatch.GetTimestamp());
         return true;
     }
@@ -805,6 +1120,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             if (_isActive)
                 StopLocked();
 
+            if (_allocationActive)
+                StopAllocationLocked();
+
             // Explicit, deterministic join of the native worker thread on normal teardown. The native
             // destructor also guards against a never-joined thread (defense in depth against
             // std::terminate), but Dispose is the clean path -- never let a failure here escape Dispose.
@@ -815,6 +1133,22 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             catch (Exception ex)
             {
                 Log.Error(ex, "[ContinuousProfiling] Failed to shut down the native profiler.");
+            }
+
+            // The ONLY place the allocation sampler may be shut down. Its native Shutdown closes the EventPipe
+            // session, drains any in-flight tick handler, and then LATCHES: every subsequent Start is refused
+            // for the life of the process. That is why nothing else in this class calls it -- a disable, a
+            // retune or a backoff pause must use Stop, or allocation sampling would end permanently the first
+            // time it was toggled. Unconditional (like _native.Shutdown above) so the native session is closed
+            // deterministically even if this service never started sampling, and separately try/caught so a
+            // failure in one shutdown cannot skip the other.
+            try
+            {
+                _allocationSampleSource.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[ContinuousProfiling] Failed to shut down the native allocation sampler.");
             }
         }
 

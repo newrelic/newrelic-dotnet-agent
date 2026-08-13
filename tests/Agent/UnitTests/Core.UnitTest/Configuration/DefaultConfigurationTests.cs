@@ -4687,4 +4687,101 @@ public class DefaultConfigurationTests
         return defaultConfig.ContinuousProfilingSamplingIntervalMs;
     }
 
+    // Allocation sampling is a SUB-FEATURE: the child flag is ANDed with continuousProfiling.enabled, matching
+    // its nested position in the XSD and the OpenTelemetryMetricsEnabled precedent.
+    [TestCase(false, false, ExpectedResult = false)]
+    [TestCase(false, true, ExpectedResult = false)]  // parent off kills the child, even when the child asks for it
+    [TestCase(true, false, ExpectedResult = false)]
+    [TestCase(true, true, ExpectedResult = true)]
+    public bool ContinuousProfilingAllocationEnabled_requires_the_parent_feature(bool parentEnabled, bool allocationEnabled)
+    {
+        _localConfig.continuousProfiling.enabled = parentEnabled;
+        _localConfig.continuousProfiling.allocation.enabled = allocationEnabled;
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        return defaultConfig.ContinuousProfilingAllocationEnabled;
+    }
+
+    [Test]
+    public void ContinuousProfilingAllocationEnabled_is_killed_by_high_security_mode()
+    {
+        // Inherited from the parent flag, which HSM disables unconditionally -- allocation samples carry stacks
+        // and allocated type names, the same class of data.
+        _localConfig.highSecurity.enabled = true;
+        _localConfig.continuousProfiling.enabled = true;
+        _localConfig.continuousProfiling.allocation.enabled = true;
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.ContinuousProfilingAllocationEnabled, Is.False);
+    }
+
+    [Test]
+    public void ContinuousProfilingAllocationEnabled_can_be_disabled_by_server_side_config_via_the_parent()
+    {
+        // There is deliberately no allocation-specific server-side key: the parent's already lets the server
+        // disable the whole feature.
+        _localConfig.continuousProfiling.enabled = true;
+        _localConfig.continuousProfiling.allocation.enabled = true;
+        _serverConfig.RpmConfig.ContinuousProfilingEnabled = false;
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.ContinuousProfilingAllocationEnabled, Is.False);
+    }
+
+    // Same env > appSettings > element layering as the sibling continuous-profiling settings.
+    [TestCase("true", "false", false, ExpectedResult = true)]   // env wins over appSettings + element
+    [TestCase("false", "true", true, ExpectedResult = false)]   // env wins over appSettings + element
+    [TestCase(null, "true", false, ExpectedResult = true)]      // appSettings over element
+    [TestCase(null, "false", true, ExpectedResult = false)]     // appSettings over element
+    [TestCase(null, null, true, ExpectedResult = true)]         // element when no env/appSettings
+    [TestCase(null, null, false, ExpectedResult = false)]       // default
+    [TestCase("xyz", "true", false, ExpectedResult = true)]     // unparseable env -> appSettings
+    [TestCase(null, "xyz", true, ExpectedResult = true)]        // unparseable appSettings -> element
+    public bool ContinuousProfilingAllocationEnabled_precedence(string envValue, string appSettingsValue, bool localElement)
+    {
+        _localConfig.continuousProfiling.enabled = true; // the parent, so only the child's layering is under test
+        _localConfig.continuousProfiling.allocation.enabled = localElement;
+        if (appSettingsValue != null)
+            _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingAllocationEnabled", value = appSettingsValue });
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_ENABLED")).Returns(envValue);
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        return defaultConfig.ContinuousProfilingAllocationEnabled;
+    }
+
+    // The clamp keeps the value inside the range the native AllocationSampler accepts, so a typo cannot resolve
+    // to a budget the native side rejects outright (which would leave allocation sampling silently dead).
+    [TestCase(null, 200)]      // unset -> default
+    [TestCase(0, 1)]           // native refuses <= 0 -> clamp up to the floor
+    [TestCase(-5, 1)]          // ditto for negatives
+    [TestCase(999999, 60000)]  // above the native ceiling -> clamp down
+    [TestCase(1000, 1000)]     // in range -> verbatim
+    public void ContinuousProfilingAllocationMaxSamplesPerMinute_clamps(int? configured, int expected)
+    {
+        if (configured.HasValue)
+            _localConfig.continuousProfiling.allocation.maxSamplesPerMinute = configured.Value;
+        Assert.That(_defaultConfig.ContinuousProfilingAllocationMaxSamplesPerMinute, Is.EqualTo(expected));
+    }
+
+    // Same layering as the interval, with the [1, 60000] clamp applied last.
+    [TestCase("300", "500", 700, ExpectedResult = 300)]     // env wins, in range
+    [TestCase(null, "500", 700, ExpectedResult = 500)]      // appSettings over element
+    [TestCase(null, null, 700, ExpectedResult = 700)]       // element when no env/appSettings
+    [TestCase(null, "0", 700, ExpectedResult = 1)]          // appSettings below floor -> clamp up
+    [TestCase("999999", null, 700, ExpectedResult = 60000)] // env above ceiling -> clamp down
+    [TestCase("xyz", "400", 700, ExpectedResult = 400)]     // unparseable env -> appSettings
+    [TestCase(null, "xyz", 700, ExpectedResult = 700)]      // unparseable appSettings -> element
+    public int ContinuousProfilingAllocationMaxSamplesPerMinute_precedence(string envValue, string appSettingsValue, int localElement)
+    {
+        _localConfig.continuousProfiling.allocation.maxSamplesPerMinute = localElement;
+        if (appSettingsValue != null)
+            _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingAllocationMaxSamplesPerMinute", value = appSettingsValue });
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_MAX_SAMPLES_PER_MINUTE")).Returns(envValue);
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        return defaultConfig.ContinuousProfilingAllocationMaxSamplesPerMinute;
+    }
+
 }

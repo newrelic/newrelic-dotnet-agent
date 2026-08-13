@@ -549,4 +549,6 @@ public class ExhaustiveTestConfiguration : IConfiguration
     public bool ContinuousProfilingEnabled => true;
     public int ContinuousProfilingSamplingIntervalMs => 30000;
     public bool ContinuousProfilingIncludeAgentCode => true;
+    public bool ContinuousProfilingAllocationEnabled => true;
+    public int ContinuousProfilingAllocationMaxSamplesPerMinute => 500;
 }

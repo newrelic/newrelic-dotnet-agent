@@ -44,7 +44,14 @@ public static class ContinuousProfilingServiceFactory
             var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, null, agentHealthReporter);
             var sampleSource = new NativeContinuousProfilerSampleSource(nativeMethods);
 
-            return new ContinuousProfilingService(sampleSource, sampleSource, profilesTransport, container.Resolve<IScheduler>(), agentHealthReporter);
+            // The allocation sampler is a SEPARATE native object with its own EventPipe session and buffer
+            // queue, so it gets its own adapter here rather than sharing the thread sampler's. Constructed
+            // unconditionally for the same reason everything else here is: it only stores the INativeMethods
+            // reference, and no P/Invoke is bound until ContinuousProfilingService actually starts it (which it
+            // does only when allocation sampling is configured on).
+            var allocationSampleSource = new NativeContinuousProfilerAllocationSampleSource(nativeMethods);
+
+            return new ContinuousProfilingService(sampleSource, sampleSource, allocationSampleSource, profilesTransport, container.Resolve<IScheduler>(), agentHealthReporter);
         }
         catch (Exception ex)
         {

@@ -88,6 +88,43 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // the correct failure mode for telemetry.
         static constexpr DWORD AllocationTickSupportedVersion = 4;
 
+        // Upper bound on an accepted sample budget, 300x the shipped default of 200/minute. Not a tuned
+        // performance limit -- it is the point past which the number stops meaning anything: each sample
+        // costs a stack walk plus frame-name resolution ON THE ALLOCATING APPLICATION THREAD, and the
+        // two-slot SampleBufferQueue plus the managed drain interval, not this cap, become the binding
+        // constraint well below 1000/second. Anything larger is indistinguishable from "unbounded".
+        static constexpr int32_t MaxSupportedSamplesPerMinute = 60000;
+
+        // Validates a sample budget as it arrives from managed code -- SIGNED, because that is how it
+        // crosses the P/Invoke boundary -- and converts it to the unsigned value Start() takes. Returns
+        // false when sampling must not be started at all.
+        //
+        // This exists because a blind static_cast<uint32_t> of a non-positive value is NOT a harmless
+        // no-op: -1 becomes 4294967295, AllocationSubSampler does not clamp its target, and its odds
+        // computation then saturates to >= 1 -- so every single AllocationTick (~10^5/second in an
+        // allocation-heavy app) would take the tick mutex, walk the stack, resolve frame names and encode,
+        // on customer threads. A configuration mistake would become a performance incident. Zero is
+        // rejected rather than treated as "sample nothing", because a session opened for a zero budget
+        // still makes the CLR generate every AllocationTick for no benefit.
+        //
+        // Lives here, next to the sub-sampler it protects, so the rule is unit-testable and cannot drift
+        // from the state it guards; the export layer only logs and forwards.
+        static bool TryNormalizeMaxSamplesPerMinute(int32_t requested, uint32_t& normalized) noexcept
+        {
+            if (requested <= 0)
+            {
+                normalized = 0;
+                return false;
+            }
+
+            // Local copy, same reason as StopSessionWithBoundedWait's: a conditional expression whose
+            // operands are both lvalues yields an lvalue, which risks odr-using this static constexpr
+            // member -- and C++11/14 (the Linux build) has no way to define one in a header-only class.
+            const int32_t ceiling = MaxSupportedSamplesPerMinute;
+            normalized = static_cast<uint32_t>(requested < ceiling ? requested : ceiling);
+            return true;
+        }
+
         // Dispatch predicate for CorProfilerCallbackImpl::EventPipeEventDelivered. Provider identity is
         // the caller's business (it holds the EVENTPIPE_PROVIDER handle for the session it created); this
         // only answers "is this the event we can parse?".
@@ -106,7 +143,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // allocation samples can only be correlated by reading the same instance.
         void Init(ICorProfilerInfo4* corProfilerInfo, TraceContextMap* sharedTraceContexts) noexcept
         {
-            LogInfo(L"Initializing AllocationSampler");
+            LogDebug(L"Initializing AllocationSampler");
 
             _corProfilerInfo = corProfilerInfo;
             _traceContexts = sharedTraceContexts;
@@ -117,13 +154,16 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             }
 
             HRESULT hr = corProfilerInfo->QueryInterface(__uuidof(ICorProfilerInfo12), (void**)&_corProfilerInfo12);
+            // Debug, not Info: every .NET Framework process would otherwise log two lines at Info about a
+            // feature it can never use. The lines still exist for diagnosing "why no allocation samples?",
+            // which is a debug-level question by then.
             if (SUCCEEDED(hr))
             {
-                LogInfo(L"AllocationSampler: ICorProfilerInfo12 available");
+                LogDebug(L"AllocationSampler: ICorProfilerInfo12 available");
             }
             else
             {
-                LogInfo(L"AllocationSampler: ICorProfilerInfo12 unavailable (.NET Framework or old CoreCLR) -- allocation sampling disabled");
+                LogDebug(L"AllocationSampler: ICorProfilerInfo12 unavailable (.NET Framework or old CoreCLR) -- allocation sampling disabled");
             }
 
             try
@@ -141,12 +181,32 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             }
         }
 
-        // Whether allocation sampling can work in this process at all (i.e. the runtime is new enough to
-        // expose the EventPipe profiling API). Lets the caller skip setting COR_PRF_HIGH_MONITOR_EVENT_PIPE
-        // and skip Start() entirely on .NET Framework.
+        // Whether allocation sampling can work in this process at all. Two independent preconditions:
+        //   1. the runtime exposes the EventPipe profiling API (ICorProfilerInfo12) -- absent on .NET
+        //      Framework and pre-.NET 5 CoreCLR; and
+        //   2. the profiler actually holds COR_PRF_HIGH_MONITOR_EVENT_PIPE, without which the runtime
+        //      never delivers EventPipeEventDelivered (see MarkUnavailable).
+        // The owner checks this before setting the mask bit and before calling Start().
         bool IsAvailable() const noexcept
         {
-            return _corProfilerInfo12 != nullptr;
+            return _corProfilerInfo12 != nullptr && !_eventDeliveryUnavailable.load();
+        }
+
+        // Called by the owner when it could NOT enable COR_PRF_HIGH_MONITOR_EVENT_PIPE (SetEventMask2
+        // rejected it, so the mask was re-applied without it). Without this, the sampler would have no way
+        // to know, and Start() would happily open an EventPipe session that makes the CLR generate
+        // AllocationTick events at full cost while EventPipeEventDelivered is never invoked for them --
+        // paying the entire overhead of the feature for exactly zero samples, which is strictly worse than
+        // not having it. Disarms permanently: it describes a fact about this process, fixed at startup.
+        //
+        // Deliberately does NOT clear _corProfilerInfo12: Stop()/Shutdown() still need that interface if a
+        // session somehow exists, and conflating "the interface is missing" with "the mask bit is missing"
+        // would make the two failure modes indistinguishable in the logs.
+        void MarkUnavailable() noexcept
+        {
+            _eventDeliveryUnavailable.store(true);
+            LogWarn(L"AllocationSampler: EventPipe event delivery is unavailable in this process; "
+                L"allocation sampling is disabled and Start() will be ignored");
         }
 
         // Open the AllocationTick EventPipe session and arm the handler. No-op (logged) when
@@ -166,9 +226,14 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // and resuming; Shutdown() is one-way.
         void Start(uint32_t maxSamplesPerMinute) noexcept
         {
-            if (!_corProfilerInfo12)
+            // Both preconditions, not just the interface: opening a session the runtime will never deliver
+            // events for costs the full AllocationTick generation overhead and yields nothing (see
+            // MarkUnavailable).
+            if (!IsAvailable())
             {
-                LogDebug(L"AllocationSampler: Start ignored; the EventPipe profiling API is unavailable in this runtime");
+                LogDebug(L"AllocationSampler: Start ignored; allocation sampling is unavailable in this process ",
+                    L"(either the runtime has no EventPipe profiling API, or the profiler could not subscribe "
+                    L"to EventPipe events -- see the startup logs for which)");
                 return;
             }
 
@@ -829,6 +894,12 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // that has been shut down stays shut down; Stop()/Start() is the pause/resume pair. Atomic because
         // it is also read on the (unlocked) destructor path.
         std::atomic<bool> _shutdownComplete{ false };
+
+        // Set once, at startup, by MarkUnavailable() when the owner could not enable
+        // COR_PRF_HIGH_MONITOR_EVENT_PIPE. Distinct from _shutdownComplete: that one means "this sampler
+        // is finished", this one means "this process can never deliver events to it". Atomic only because
+        // IsAvailable() is called from lifecycle threads other than the one that set it.
+        std::atomic<bool> _eventDeliveryUnavailable{ false };
 
         // The open EventPipe session, or 0 when none is open. Atomic, and claimed via exchange(0) on the
         // teardown paths, so two lifecycle callers can never both believe they own the same session (a
