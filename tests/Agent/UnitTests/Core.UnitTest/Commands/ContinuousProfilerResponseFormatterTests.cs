@@ -14,7 +14,9 @@ public class ContinuousProfilerResponseFormatterTests
     [Test]
     public void AckOnly_always_returns_an_empty_dictionary()
     {
-        var result = new ContinuousProfilingCommandResult(new[] { "cpu" }, 10000, 10000, new Dictionary<string, string> { { "heap", "not supported" } });
+        // "bogus" rather than "heap": every recognized token ("all"/"cpu"/"heap") is acted on now, so an
+        // unrecognized token is the only thing that produces an exception entry.
+        var result = new ContinuousProfilingCommandResult(new[] { "cpu" }, 10000, 10000, new Dictionary<string, string> { { "bogus", "not supported" } });
 
         var response = new AckOnlyContinuousProfilerResponseFormatter().Format(result);
 
@@ -40,7 +42,7 @@ public class ContinuousProfilerResponseFormatterTests
     [Test]
     public void Detailed_includes_exceptions_key_when_present()
     {
-        var exceptions = new Dictionary<string, string> { { "heap", "not supported" } };
+        var exceptions = new Dictionary<string, string> { { "bogus", "not supported" } };
         var result = new ContinuousProfilingCommandResult(new[] { "cpu" }, 10000, 10000, exceptions);
 
         var response = new DetailedContinuousProfilerResponseFormatter().Format(result);

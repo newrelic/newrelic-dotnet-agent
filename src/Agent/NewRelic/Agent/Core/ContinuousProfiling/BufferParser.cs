@@ -13,6 +13,7 @@ public static class BufferParser
     private const byte StartSample = 0x02;
     private const byte EndBatch = 0x06;
     private const byte BatchStatsOpcode = 0x07;
+    private const byte AllocationSampleOpcode = 0x08;
 
     /// <summary>
     /// Per-sweep native BatchStats (opcode 0x07). <see cref="MicrosSuspended"/> is the actual runtime-suspend
@@ -44,9 +45,19 @@ public static class BufferParser
     /// none). Callers use it to surface the suspend-window / coverage counters.
     /// </summary>
     public static IReadOnlyList<ManagedThreadSample> Parse(byte[] buffer, int length, out BatchStats stats)
+        => Parse(buffer, length, out stats, out _);
+
+    /// <summary>
+    /// Parse overload that also captures allocation samples (opcode 0x08), which share the same
+    /// per-batch frame-interning table as thread samples.
+    /// </summary>
+    public static IReadOnlyList<ManagedThreadSample> Parse(byte[] buffer, int length, out BatchStats stats,
+        out IReadOnlyList<AllocationSample> allocations)
     {
         stats = null;
         var samples = new List<ManagedThreadSample>();
+        var allocationSamples = new List<AllocationSample>();
+        allocations = allocationSamples;
         if (buffer == null || length <= 0)
             return samples;
 
@@ -66,6 +77,9 @@ public static class BufferParser
                         break;
                     case StartSample:
                         samples.Add(ReadSample(buffer, ref pos, frameDictionary, version, length));
+                        break;
+                    case AllocationSampleOpcode:
+                        allocationSamples.Add(ReadAllocationSample(buffer, ref pos, frameDictionary, length));
                         break;
                     case BatchStatsOpcode:
                         {
@@ -88,6 +102,37 @@ public static class BufferParser
             // truncated/garbage past `length`: return what parsed cleanly (Global Constraint: never throw)
         }
         return samples;
+    }
+
+    private static AllocationSample ReadAllocationSample(byte[] b, ref int pos, Dictionary<int, string> dict, int length)
+    {
+        var threadName = ReadString(b, ref pos, length);
+        var osThreadId = ReadLong(b, ref pos, length);
+        var traceHigh = ReadLong(b, ref pos, length);
+        var traceLow = ReadLong(b, ref pos, length);
+        var spanId = ReadLong(b, ref pos, length);
+        var timestampMillis = ReadLong(b, ref pos, length);
+        var allocatedSize = unchecked((ulong)ReadLong(b, ref pos, length));
+        var typeName = ReadString(b, ref pos, length);
+
+        var frames = new List<string>();
+        while (true)
+        {
+            var code = ReadShort(b, ref pos, length);
+            if (code == 0) break;
+            if (code < 0)
+            {
+                var value = ReadString(b, ref pos, length);
+                dict[-code] = value;
+                frames.Add(value);
+            }
+            else
+            {
+                frames.Add(dict.TryGetValue(code, out var v) ? v : "<unknown>");
+            }
+        }
+        return new AllocationSample(threadName, osThreadId, traceHigh, traceLow, spanId, timestampMillis,
+            allocatedSize, typeName, frames);
     }
 
     private static ManagedThreadSample ReadSample(byte[] b, ref int pos, Dictionary<int, string> dict, int version, int length)

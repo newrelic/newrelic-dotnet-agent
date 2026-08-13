@@ -154,6 +154,41 @@ public class LinuxNativeMethods : INativeMethods
     {
         ExternContinuousProfilerShutdown();
     }
+
+    // Allocation sampling. Note the asymmetry with the continuous profiler above: AllocationSamplerShutdown
+    // is TERMINAL native-side (every later Start is refused), while ContinuousProfilerShutdown is
+    // restartable. Enable/disable must therefore use AllocationSamplerStop/AllocationSamplerStart.
+    [DllImport(DllName, EntryPoint = "AllocationSamplerStart", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternAllocationSamplerStart(int maxSamplesPerMinute);
+
+    [DllImport(DllName, EntryPoint = "AllocationSamplerStop", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternAllocationSamplerStop();
+
+    [DllImport(DllName, EntryPoint = "AllocationSamplerShutdown", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternAllocationSamplerShutdown();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerReadAllocationSamples", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerReadAllocationSamples(int len, byte[] buffer);
+
+    public void AllocationSamplerStart(int maxSamplesPerMinute)
+    {
+        ExternAllocationSamplerStart(maxSamplesPerMinute);
+    }
+
+    public void AllocationSamplerStop()
+    {
+        ExternAllocationSamplerStop();
+    }
+
+    public void AllocationSamplerShutdown()
+    {
+        ExternAllocationSamplerShutdown();
+    }
+
+    public int ContinuousProfilerReadAllocationSamples(int len, byte[] buffer)
+    {
+        return ExternContinuousProfilerReadAllocationSamples(len, buffer);
+    }
 }
 
 public class WindowsNativeMethods : INativeMethods
@@ -303,5 +338,40 @@ public class WindowsNativeMethods : INativeMethods
     public void ContinuousProfilerShutdown()
     {
         ExternContinuousProfilerShutdown();
+    }
+
+    // Allocation sampling. Note the asymmetry with the continuous profiler above: AllocationSamplerShutdown
+    // is TERMINAL native-side (every later Start is refused), while ContinuousProfilerShutdown is
+    // restartable. Enable/disable must therefore use AllocationSamplerStop/AllocationSamplerStart.
+    [DllImport(DllName, EntryPoint = "AllocationSamplerStart", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternAllocationSamplerStart(int maxSamplesPerMinute);
+
+    [DllImport(DllName, EntryPoint = "AllocationSamplerStop", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternAllocationSamplerStop();
+
+    [DllImport(DllName, EntryPoint = "AllocationSamplerShutdown", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void ExternAllocationSamplerShutdown();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerReadAllocationSamples", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerReadAllocationSamples(int len, byte[] buffer);
+
+    public void AllocationSamplerStart(int maxSamplesPerMinute)
+    {
+        ExternAllocationSamplerStart(maxSamplesPerMinute);
+    }
+
+    public void AllocationSamplerStop()
+    {
+        ExternAllocationSamplerStop();
+    }
+
+    public void AllocationSamplerShutdown()
+    {
+        ExternAllocationSamplerShutdown();
+    }
+
+    public int ContinuousProfilerReadAllocationSamples(int len, byte[] buffer)
+    {
+        return ExternContinuousProfilerReadAllocationSamples(len, buffer);
     }
 }

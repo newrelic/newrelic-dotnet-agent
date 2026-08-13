@@ -8,10 +8,10 @@ namespace NewRelic.Agent.Core.Commands;
 
 /// <summary>
 /// The detailed response proposed in the DACI's "Additional Notes" section (not yet decided): the profile
-/// types currently profiling, the effective intervals, and any per-type exceptions ("not supported" for
-/// heap/allocations, since that isn't implemented yet). Only adds the "exceptions" key when there is at
-/// least one exception, matching the proposed spec's "the agent response payload includes exceptions if
-/// present" wording.
+/// types currently profiling, the effective intervals, and any per-type exceptions ("not supported" for a
+/// token this agent does not recognize). Only adds the "exceptions" key when there is at least one
+/// exception, matching the proposed spec's "the agent response payload includes exceptions if present"
+/// wording.
 /// </summary>
 public class DetailedContinuousProfilerResponseFormatter : IContinuousProfilerCommandResponseFormatter
 {

@@ -3004,6 +3004,58 @@ public class DefaultConfiguration : IConfiguration
     public bool ContinuousProfilingIncludeAgentCode =>
         TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingIncludeAgentCode", false);
 
+    // The native AllocationSampler refuses a non-positive budget outright and clamps at
+    // MaxSupportedSamplesPerMinute (Profiler/ContinuousProfiler/AllocationSampler.h, currently 60000). These
+    // mirror that accepted range so a typo (0, -1) can't resolve to a value the native side will reject --
+    // which would leave the managed side believing allocation sampling is running while no session was ever
+    // opened. The native validation stays the trust boundary; this is the belt to its braces. Keep the ceiling
+    // in step with AllocationSampler::MaxSupportedSamplesPerMinute.
+    private const int MinContinuousProfilingAllocationMaxSamplesPerMinute = 1;
+    private const int MaxContinuousProfilingAllocationMaxSamplesPerMinute = 60000;
+
+    private bool? _continuousProfilingAllocationEnabled;
+    // INDEPENDENT of ContinuousProfilingEnabled, deliberately: allocation sampling is driven by CLR
+    // AllocationTick events, not by the periodic thread walk, so it neither needs nor implies the thread
+    // sampler. "Allocation sampling on, thread sampling off" is a supported, durable configuration.
+    //
+    // It is NOT independent of the two GUARDS that flag consults, and this checks them directly rather than
+    // ANDing with that sibling property's value:
+    //   * !HighSecurityModeEnabled -- allocation samples carry stack frames and allocated type names, exactly
+    //     the class of data HSM disables continuous profiling for. Same defense-in-depth reasoning as there:
+    //     no server-side "strip the key" backstop exists for this setting, so the local guard is the only
+    //     enforcement.
+    //   * The server-side continuous-profiling kill switch. Read as "has the server disabled continuous
+    //     profiling?" -- a server FALSE turns allocation sampling off too, while a server TRUE is not treated
+    //     as turning it on, because that key is about the feature as a whole and says nothing about whether
+    //     this customer wants allocation sampling specifically. (There is deliberately no allocation-specific
+    //     server-side key; add one only if per-signal server control is actually needed.)
+    // Reaching those guards by ANDing ContinuousProfilingEnabled would have coupled allocation's availability
+    // to the thread sampler's local `enabled` flag, which is the opposite of the independence above.
+    public bool ContinuousProfilingAllocationEnabled => _continuousProfilingAllocationEnabled ??=
+        !HighSecurityModeEnabled &&
+        _serverConfiguration.RpmConfig.ContinuousProfilingEnabled != false &&
+        EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingAllocationEnabled", _localConfiguration.continuousProfiling.allocation.enabled), "NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_ENABLED");
+
+    private int? _continuousProfilingAllocationMaxSamplesPerMinute;
+    public int ContinuousProfilingAllocationMaxSamplesPerMinute
+    {
+        get
+        {
+            if (_continuousProfilingAllocationMaxSamplesPerMinute.HasValue)
+                return _continuousProfilingAllocationMaxSamplesPerMinute.Value;
+
+            // Same env > appSettings > element precedence (and same clamp-last shape) as
+            // ContinuousProfilingSamplingIntervalMs. EnvironmentOverrides falls back to the (non-null)
+            // appSettings-or-element value, so the result is never null.
+            var configured = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("NewRelic.ContinuousProfilingAllocationMaxSamplesPerMinute", _localConfiguration.continuousProfiling.allocation.maxSamplesPerMinute), "NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_MAX_SAMPLES_PER_MINUTE")
+                .GetValueOrDefault();
+
+            var clamped = Math.Min(MaxContinuousProfilingAllocationMaxSamplesPerMinute, Math.Max(MinContinuousProfilingAllocationMaxSamplesPerMinute, configured));
+            _continuousProfilingAllocationMaxSamplesPerMinute = clamped;
+            return clamped;
+        }
+    }
+
     public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
     {
         return EnvironmentOverrides(environment, localLogConfiguration.enabled, "NEW_RELIC_LOG_ENABLED");

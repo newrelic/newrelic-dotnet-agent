@@ -6677,6 +6677,8 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationContinuousProfiling
     {
         
+        private configurationContinuousProfilingAllocation allocationField;
+        
         private bool enabledField;
         
         private int samplingIntervalMsField;
@@ -6686,8 +6688,21 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configurationContinuousProfiling()
         {
+            this.allocationField = new configurationContinuousProfilingAllocation();
             this.enabledField = false;
             this.samplingIntervalMsField = 10000;
+        }
+        
+        public configurationContinuousProfilingAllocation allocation
+        {
+            get
+            {
+                return this.allocationField;
+            }
+            set
+            {
+                this.allocationField = value;
+            }
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -6725,6 +6740,65 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationContinuousProfiling Clone()
         {
             return ((configurationContinuousProfiling)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationContinuousProfilingAllocation
+    {
+        
+        private bool enabledField;
+        
+        private int maxSamplesPerMinuteField;
+        
+        /// <summary>
+        /// configurationContinuousProfilingAllocation class constructor
+        /// </summary>
+        public configurationContinuousProfilingAllocation()
+        {
+            this.enabledField = false;
+            this.maxSamplesPerMinuteField = 200;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(200)]
+        public int maxSamplesPerMinute
+        {
+            get
+            {
+                return this.maxSamplesPerMinuteField;
+            }
+            set
+            {
+                this.maxSamplesPerMinuteField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationContinuousProfilingAllocation object
+        /// </summary>
+        public virtual configurationContinuousProfilingAllocation Clone()
+        {
+            return ((configurationContinuousProfilingAllocation)(this.MemberwiseClone()));
         }
         #endregion
     }

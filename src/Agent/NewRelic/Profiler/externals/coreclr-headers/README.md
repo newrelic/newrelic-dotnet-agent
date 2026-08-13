@@ -4,10 +4,38 @@ This directory contains a frozen copy of CLR profiling-API headers from `dotnet/
 
 ## Provenance
 
+Base set (everything except the per-file overrides listed below):
+
 - Upstream repository: https://github.com/dotnet/coreclr
 - Upstream branch: `release/3.1`
 - Upstream commit: `1b04187394cd1de5b316c40a3ad9d9189f4cb5b0` (2023-01-20) — the final commit on `release/3.1` before the repository was archived
 - License: MIT (see `LICENSE.TXT` in this directory)
+
+### Per-file overrides
+
+`dotnet/coreclr` was archived at .NET Core 3.1, so headers describing
+profiling-API surface added after 3.1 must come from `dotnet/runtime`. Files
+refreshed from there are listed individually so the rest of the set stays
+pinned to the base commit above:
+
+| File | Source repository | Tag | Commit | Blob SHA-1 | Reason |
+|------|-------------------|-----|--------|-----------|--------|
+| `src/pal/prebuilt/inc/corprof.h` | https://github.com/dotnet/runtime | `v5.0.17` | `6a984143635bde23e728abaaccbde52f5ea8fa3e` | `9a1e4b490a66f5a88a34e814c3d4c01256a937f0` | Adds `ICorProfilerCallback10` and `ICorProfilerInfo12` (EventPipe profiling API), needed for allocation sampling |
+
+Upstream path for that file at that tag is
+`src/coreclr/src/pal/prebuilt/inc/corprof.h` (the `src/coreclr/src` → `src/coreclr`
+flattening happened after .NET 5, so newer tags use `src/coreclr/pal/prebuilt/inc/`).
+The copy is byte-identical to upstream — verify with
+`git hash-object src/pal/prebuilt/inc/corprof.h`, which must print the Blob SHA-1
+above.
+
+`v5.0.17` is deliberately chosen over a newer tag: .NET 5 is the release that
+introduced `ICorProfilerCallback10` / `ICorProfilerInfo12`, and it is the last
+release whose `corprof.h` stops there. Pinning to its final servicing tag gives
+the required surface as a whole-file (never hand-edited) copy without dragging in
+later API surface (`ICorProfilerCallback11`, `ICorProfilerInfo13`+) that the
+profiler does not use. Bump this pin only when a newer interface is actually
+needed.
 
 ## Why this is vendored
 
@@ -51,8 +79,11 @@ The equivalent headers live under `src/coreclr/inc/` and
    directives from the new entry point).
 2. Copying only the required files into this vendored tree, preserving the
    upstream path layout.
-3. Updating the "Upstream repository" and "Upstream commit" lines in the
-   **Provenance** section above to reflect the new source and SHA.
+3. Pinning the source to a **tagged release**, never a moving branch, and
+   recording it in the **Per-file overrides** table in the **Provenance**
+   section above (file, repo, tag, commit, blob SHA-1, reason). Prefer the
+   oldest tag that contains the needed surface, so the refresh does not pull in
+   unrelated newer API.
 4. Updates to `licenses/THIRD_PARTY_NOTICES.txt` if license text or
    attribution changed (`dotnet/runtime` is also MIT).
 

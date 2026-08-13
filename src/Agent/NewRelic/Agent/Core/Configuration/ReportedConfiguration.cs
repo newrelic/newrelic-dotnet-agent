@@ -829,5 +829,11 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("continuous_profiling.include_agent_code")]
     public bool ContinuousProfilingIncludeAgentCode => _configuration.ContinuousProfilingIncludeAgentCode;
 
+    [JsonProperty("continuous_profiling.allocation.enabled")]
+    public bool ContinuousProfilingAllocationEnabled => _configuration.ContinuousProfilingAllocationEnabled;
+
+    [JsonProperty("continuous_profiling.allocation.max_samples_per_minute")]
+    public int ContinuousProfilingAllocationMaxSamplesPerMinute => _configuration.ContinuousProfilingAllocationMaxSamplesPerMinute;
+
     #endregion
 }

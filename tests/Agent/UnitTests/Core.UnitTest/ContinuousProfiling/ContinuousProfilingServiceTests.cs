@@ -23,8 +23,11 @@ namespace NewRelic.Agent.Core.UnitTest.ContinuousProfiling;
 [TestFixture]
 public class ContinuousProfilingServiceTests
 {
+    private const int AllocationBudget = 200;
+
     private ISampleSource _source;
     private INativeContinuousProfiler _native;
+    private IAllocationSampleSource _allocationSource;
     private IProfilesTransport _transport;
     private IScheduler _scheduler;
     private IAgentHealthReporter _health;
@@ -36,6 +39,7 @@ public class ContinuousProfilingServiceTests
     {
         _source = Mock.Create<ISampleSource>();
         _native = Mock.Create<INativeContinuousProfiler>();
+        _allocationSource = Mock.Create<IAllocationSampleSource>();
         _transport = Mock.Create<IProfilesTransport>();
         _scheduler = Mock.Create<IScheduler>();
         _health = Mock.Create<IAgentHealthReporter>();
@@ -46,7 +50,7 @@ public class ContinuousProfilingServiceTests
         // the send-failure backoff after two drains and pause native sampling mid-test.
         Mock.Arrange(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(true);
 
-        _service = new ContinuousProfilingService(_source, _native, _transport, _scheduler, _health);
+        _service = new ContinuousProfilingService(_source, _native, _allocationSource, _transport, _scheduler, _health);
 
         // DrainOnce is gated on having connected -- put _service into the connected state so every
         // existing test below (none of which care about the pre-connect gate) keeps exercising
@@ -72,6 +76,11 @@ public class ContinuousProfilingServiceTests
         Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(true);
         Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(intervalMs);
         Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        // Allocation sampling stays DISABLED in config here (this fixture covers the thread-sampling path;
+        // ContinuousProfilingServiceAllocationTests covers the other one), but the budget is arranged anyway
+        // because a heap agent command paces a command-started allocation sampler from this value regardless
+        // of the config enable flag.
+        Mock.Arrange(() => _config.ContinuousProfilingAllocationMaxSamplesPerMinute).Returns(AllocationBudget);
         _service.OverrideConfigForTesting(_config);
     }
 
@@ -198,32 +207,71 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
-    public void StartFromCommand_with_heap_reports_not_supported_and_does_not_start_anything()
+    public void StartFromCommand_with_heap_starts_only_allocation_sampling()
     {
+        // "heap" = allocations only, so the thread sampler must be left alone -- and IsActive, which reports
+        // the THREAD sampler (the thread-profiling mutual-exclusion guard reads it), stays false.
         ArrangeEnabled(10000);
 
         var result = _service.StartFromCommand(new[] { "heap" }, null, null);
 
         Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Mock.Assert(() => _allocationSource.Start(AllocationBudget), Occurs.Once());
         Assert.Multiple(() =>
         {
             Assert.That(_service.IsActive, Is.False);
-            Assert.That(result.Exceptions["heap"], Is.EqualTo("not supported"));
+            Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "heap" }));
+            Assert.That(result.Exceptions, Is.Empty);
         });
     }
 
     [Test]
-    public void StartFromCommand_with_all_starts_cpu_and_reports_heap_as_not_supported()
+    public void StartFromCommand_with_all_starts_both_the_cpu_bundle_and_allocation_sampling()
     {
         ArrangeEnabled(10000);
 
         var result = _service.StartFromCommand(new[] { "all" }, null, null);
 
         Mock.Assert(() => _native.Start(10000), Occurs.Once());
+        Mock.Assert(() => _allocationSource.Start(AllocationBudget), Occurs.Once());
         Assert.Multiple(() =>
         {
-            Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "cpu" }));
-            Assert.That(result.Exceptions["heap"], Is.EqualTo("not supported"));
+            Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "cpu", "heap" }));
+            Assert.That(result.Exceptions, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void StopFromCommand_with_all_stops_both_samplers()
+    {
+        ArrangeEnabled(10000);
+        _service.StartFromCommand(new[] { "all" }, null, null);
+
+        var result = _service.StopFromCommand(new[] { "all" });
+
+        Mock.Assert(() => _native.Stop(), Occurs.Once());
+        Mock.Assert(() => _allocationSource.Stop(), Occurs.Once());
+        Mock.Assert(() => _allocationSource.Shutdown(), Occurs.Never(), "a command stop must never be the terminal shutdown");
+        Assert.Multiple(() =>
+        {
+            Assert.That(_service.IsActive, Is.False);
+            Assert.That(result.ActiveTypes, Is.Empty);
+            Assert.That(result.Exceptions, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void StartFromCommand_with_an_unknown_token_alongside_heap_still_starts_allocation_sampling()
+    {
+        ArrangeEnabled(10000);
+
+        var result = _service.StartFromCommand(new[] { "heap", "bogus" }, null, null);
+
+        Mock.Assert(() => _allocationSource.Start(AllocationBudget), Occurs.Once());
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.ActiveTypes, Is.EqualTo(new[] { "heap" }));
+            Assert.That(result.Exceptions, Is.EqualTo(new Dictionary<string, string> { { "bogus", "not supported" } }));
         });
     }
 
@@ -394,6 +442,11 @@ public class ContinuousProfilingServiceTests
     [Test]
     public void Drain_tick_with_no_data_does_not_send()
     {
+        // Started, because the thread-sample read is gated on an active session (an allocation-only
+        // deployment must not P/Invoke into a never-started thread sampler every tick). Without the start
+        // this would assert nothing: the read would be skipped and "no data" would be true by default.
+        ArrangeEnabled(10000);
+        _service.StartIfEnabled();
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
 
         _service.DrainOnce();
@@ -461,6 +514,9 @@ public class ContinuousProfilingServiceTests
     [Test]
     public void Drain_tick_with_bytesRead_exceeding_buffer_length_is_discarded()
     {
+        // Started so the gated thread-sample read actually happens (see Drain_tick_with_no_data_does_not_send).
+        ArrangeEnabled(10000);
+        _service.StartIfEnabled();
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) => dest.Length + 1);
 
         Assert.DoesNotThrow(() => _service.DrainOnce());
@@ -472,6 +528,9 @@ public class ContinuousProfilingServiceTests
     {
         // Simulates native having filled (or exceeded, then been clamped by ReadBatch itself) the whole
         // managed buffer -- the tripwire for the two buffer-size constants drifting apart again.
+        // Started so the gated thread-sample read actually happens (see Drain_tick_with_no_data_does_not_send).
+        ArrangeEnabled(10000);
+        _service.StartIfEnabled();
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) => dest.Length);
 
         _service.DrainOnce();
@@ -494,6 +553,10 @@ public class ContinuousProfilingServiceTests
     [Test]
     public void Drain_tick_never_throws_when_source_throws()
     {
+        // Started so the gated thread-sample read actually happens (see Drain_tick_with_no_data_does_not_send)
+        // and the source therefore gets the chance to throw.
+        ArrangeEnabled(10000);
+        _service.StartIfEnabled();
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Throws(new InvalidOperationException("boom"));
 
         Assert.DoesNotThrow(() => _service.DrainOnce());
@@ -762,7 +825,7 @@ public class ContinuousProfilingServiceTests
         // A dedicated transport mock: _transport is shared with _service (already connected in SetUp),
         // whose own handler would also fire on this test's Publish call and double-count the assertion.
         var transport = Mock.Create<IProfilesTransport>();
-        using var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+        using var service = new ContinuousProfilingService(_source, _native, _allocationSource, transport, _scheduler, _health);
 
         var connectionInfo = Mock.Create<IConnectionInfo>();
         Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
@@ -779,7 +842,7 @@ public class ContinuousProfilingServiceTests
     {
         // Dedicated transport mock -- see note above.
         var transport = Mock.Create<IProfilesTransport>();
-        using var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+        using var service = new ContinuousProfilingService(_source, _native, _allocationSource, transport, _scheduler, _health);
 
         var connectionInfo = Mock.Create<IConnectionInfo>();
         Mock.Arrange(() => connectionInfo.Host).Returns(string.Empty);
@@ -794,7 +857,11 @@ public class ContinuousProfilingServiceTests
     {
         // A fresh, never-connected instance -- distinct from _service (SetUp already connects it) --
         // so this proves the pre-connect gate, not just "nothing to drain."
-        using var service = new ContinuousProfilingService(_source, _native, _transport, _scheduler, _health);
+        using var service = new ContinuousProfilingService(_source, _native, _allocationSource, _transport, _scheduler, _health);
+
+        // Sampling IS started (it is decoupled from connect, which is the whole point of the pre-connect
+        // gate), so the read is not skipped by the session gate -- only by the pre-connect one.
+        EnableAndStart(service);
 
         service.DrainOnce();
 
@@ -828,7 +895,7 @@ public class ContinuousProfilingServiceTests
         // setting _disposed and before unsubscribing. Without the gate this would set _isConnected and the
         // profiles endpoint on an already-disposed service, letting a queued drain ship a profile.
         var transport = Mock.Create<IProfilesTransport>();
-        var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+        var service = new ContinuousProfilingService(_source, _native, _allocationSource, transport, _scheduler, _health);
 
         var connectionInfo = Mock.Create<IConnectionInfo>();
         Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
@@ -854,7 +921,7 @@ public class ContinuousProfilingServiceTests
     private (ContinuousProfilingService Service, IProfilesTransport Transport) NewConnectedService()
     {
         var transport = Mock.Create<IProfilesTransport>();
-        var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+        var service = new ContinuousProfilingService(_source, _native, _allocationSource, transport, _scheduler, _health);
 
         // DrainOnce reads _configuration (ApplicationNames, ContinuousProfilingIncludeAgentCode) on its
         // way to Send. Without this, the service falls back to the real DefaultConfiguration.Instance
@@ -898,6 +965,8 @@ public class ContinuousProfilingServiceTests
     {
         var (service, transport) = NewConnectedService();
         using var _ = service;
+        // Started so the gated thread-sample read happens and a real send (and failure) can occur.
+        EnableAndStart(service);
         ArrangeReadableBatch();
         Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
 
@@ -912,6 +981,8 @@ public class ContinuousProfilingServiceTests
     {
         var (service, transport) = NewConnectedService();
         using var _ = service;
+        // Started so the gated thread-sample read happens and a real send (and failure) can occur.
+        EnableAndStart(service);
         ArrangeReadableBatch();
         Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
 
@@ -928,6 +999,8 @@ public class ContinuousProfilingServiceTests
     {
         var (service, transport) = NewConnectedService();
         using var _ = service;
+        // Started so the gated thread-sample read happens and a real send (and throw) can occur.
+        EnableAndStart(service);
         ArrangeReadableBatch();
         Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()))
             .Throws(new InvalidOperationException("send failed"));
@@ -984,6 +1057,9 @@ public class ContinuousProfilingServiceTests
     {
         var (service, transport) = NewConnectedService();
         using var _ = service;
+        // Started so the first two drains really read/send; the third drain is then skipped by the backoff
+        // gate alone (_isActive stays true across a backoff pause, so the session gate is not what stops it).
+        EnableAndStart(service);
 
         var readCount = 0;
         var batch = OneSampleBatch("worker-1", 1, 0, 0, 0, new[] { "F()" });

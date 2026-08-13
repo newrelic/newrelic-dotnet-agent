@@ -48,6 +48,13 @@ Vendored copy: dotnet/coreclr @ commit 1b04187394cd1de5b316c40a3ad9d9189f4cb5b0
 src/Agent/NewRelic/Profiler/externals/coreclr-headers/. Used to supply CLR
 profiling-API headers to the native profiler build.
 
+One file in that directory, src/pal/prebuilt/inc/corprof.h, is instead taken
+from '.NET Runtime' (https://github.com/dotnet/runtime) @ tag v5.0.17, commit
+6a984143635bde23e728abaaccbde52f5ea8fa3e, because dotnet/coreclr was archived
+before the EventPipe profiling API (ICorProfilerCallback10 /
+ICorProfilerInfo12) was added. dotnet/runtime is released under the same MIT
+license, reproduced below.
+
 The MIT License (MIT)
 
 Copyright (c) .NET Foundation and Contributors

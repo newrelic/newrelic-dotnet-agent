@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -21,6 +22,19 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.ContinuousProfili
 [Library]
 public class ContinuousProfilingExerciser
 {
+    // Allocations per pass before the live-reference window is released (see CorrelatedAllocate). Sized so a
+    // pass moves a few MB: the CLR raises AllocationTick only once per ~100 KB allocated, so real allocation
+    // VOLUME -- hundreds of MB -- is what produces sampled ticks inside a short test window. Raising the
+    // configured samples/minute budget alone does not: the tick rate is what the native sub-sampler paces
+    // against, and the delivered rate is capped downstream of it at one sample per drain interval.
+    private const int AllocationsPerPass = 256;
+
+    // Rotated so the captured samples carry a MIX of allocated sizes (and therefore a mix of
+    // allocated_space values), rather than one repeated constant. All below the 85 KB large-object
+    // threshold on purpose: this should look like ordinary gen0 pressure from a real application, not one
+    // giant LOH/pinned buffer.
+    private static readonly int[] AllocationSizes = { 1024, 4 * 1024, 16 * 1024, 48 * 1024, 64 * 1024 };
+
     /// <summary>
     /// Spins up <paramref name="threadCount"/> background threads that each run CPU-busy transactions for
     /// <paramref name="runSeconds"/> seconds. With a small sampling interval (e.g. 1000 ms) this comfortably
@@ -139,6 +153,72 @@ public class ContinuousProfilingExerciser
         if (acc < 0)
         {
             ConsoleMFLogger.Info($"[ContinuousProfilingExerciser] Unreachable {acc}.");
+        }
+    }
+
+    /// <summary>
+    /// The allocation-sampling counterpart to <see cref="RunCorrelatedBusyWork"/>: a SINGLE-THREADED,
+    /// synchronous loop that runs inline on the CALLING thread, inside one instrumented
+    /// [Transaction]/[Trace] method, allocating for <paramref name="runSeconds"/> seconds. Same
+    /// no-thread-handoff shape and for the same reason -- allocation samples are captured on the
+    /// allocating thread and read that thread's own trace context, so only allocations made while this
+    /// thread is inside the instrumented method can render a trace/span link.
+    /// </summary>
+    [LibraryMethod]
+    public void RunCorrelatedAllocatingWork(int runSeconds)
+    {
+        ConsoleMFLogger.Info($"[ContinuousProfilingExerciser] Starting single-threaded correlated allocating work for {runSeconds}s.");
+
+        CorrelatedAllocatingTransaction(runSeconds);
+
+        ConsoleMFLogger.Info("[ContinuousProfilingExerciser] Correlated allocating work complete.");
+    }
+
+    [Transaction]
+    [Trace]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void CorrelatedAllocatingTransaction(int runSeconds)
+    {
+        CorrelatedAllocate(runSeconds);
+    }
+
+    [Trace]
+    private void CorrelatedAllocate(int runSeconds)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(runSeconds);
+
+        // A short rolling window of live references, released once per pass. Two purposes: the arrays
+        // actually survive briefly, so the GC sees real pressure (matching production allocation patterns)
+        // rather than immediately-dead garbage; and the reference escaping into this list is what stops the
+        // JIT from stack-allocating the array outright (.NET 9+ does that for small non-escaping arrays),
+        // which would produce no AllocationTick at all.
+        var live = new List<byte[]>(AllocationsPerPass);
+        long consumed = 0;
+        var n = 0;
+
+        // The deadline is checked once per pass, not per allocation: DateTime.UtcNow costs more than the
+        // allocations it would gate, and throttling the loop would starve it of the volume it needs.
+        do
+        {
+            for (var i = 0; i < AllocationsPerPass; i++)
+            {
+                var buffer = new byte[AllocationSizes[n++ % AllocationSizes.Length]];
+
+                // Write then read both ends so the allocation cannot be elided as unused.
+                buffer[0] = (byte)n;
+                buffer[buffer.Length - 1] = (byte)i;
+                consumed += buffer[0] + buffer[buffer.Length - 1];
+
+                live.Add(buffer);
+            }
+
+            live.Clear();
+        }
+        while (DateTime.UtcNow < deadline);
+
+        if (consumed < 0)
+        {
+            ConsoleMFLogger.Info($"[ContinuousProfilingExerciser] Unreachable {consumed}.");
         }
     }
 }

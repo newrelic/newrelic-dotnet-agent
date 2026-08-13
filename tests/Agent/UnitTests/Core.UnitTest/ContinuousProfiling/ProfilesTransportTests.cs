@@ -260,4 +260,153 @@ public class ProfilesTransportTests
         request.ResourceProfiles.Add(resourceProfiles);
         return request;
     }
+
+    #region payload ceiling and diagnostic-dump bounding
+
+    // A request whose serialized size exceeds MaxPayloadBytes, built from one long string-table entry so the
+    // size comes from real payload content rather than a fabricated byte array.
+    private static ExportProfilesServiceRequest BuildOversizedRequest()
+    {
+        var request = BuildNonEmptyRequest();
+        request.Dictionary.StringTable.Add(new string('x', ProfilesTransport.MaxPayloadBytes + 1024));
+        return request;
+    }
+
+    private static ExportProfilesServiceRequest BuildRequestWithSamples(int sampleCount)
+    {
+        var request = BuildNonEmptyRequest();
+        var profile = request.ResourceProfiles[0].ScopeProfiles[0].Profiles[0];
+        while (profile.Samples.Count < sampleCount)
+        {
+            var sample = new Sample { StackIndex = 1 };
+            sample.Values.Add(profile.Samples.Count);
+            profile.Samples.Add(sample);
+        }
+        return request;
+    }
+
+    [Test]
+    public void Send_drops_a_payload_that_exceeds_the_size_ceiling_instead_of_posting_it()
+    {
+        // Removing the allocation-sample delivery ceiling made a drain's payload scale with the configured
+        // budget, so this path needed an upper bound of its own rather than trusting the producer.
+        var dispatched = false;
+        var health = Mock.Create<IAgentHealthReporter>();
+        var transport = new ProfilesTransport((bytes, endpoint) => { dispatched = true; return new ProfilesSendResult(true, 200, string.Empty); }, "http://unused", health);
+
+        var accepted = transport.Send(BuildOversizedRequest());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(dispatched, Is.False, "an oversized payload must not be POSTed at all");
+            Assert.That(accepted, Is.False, "reported as a failed send, which is what feeds the service's backoff");
+        });
+        Mock.Assert(() => health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/PayloadTooLarge", 1), Occurs.Once());
+        Mock.Assert(() => health.ReportSupportabilityDataUsage(Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<long>(), Arg.IsAny<long>()), Occurs.Never(),
+            "nothing was sent, so no data usage was incurred");
+    }
+
+    // A request that serializes to EXACTLY `targetBytes`, by padding a string-table entry and correcting for
+    // protobuf's own length-prefix growth until the total lands on the target. Needed for a real boundary
+    // test: a payload merely "under" the ceiling would pass just as happily against a `>=` comparison.
+    private static ExportProfilesServiceRequest BuildRequestOfExactSize(int targetBytes)
+    {
+        var padLength = targetBytes;
+        for (var attempt = 0; attempt < 12; attempt++)
+        {
+            var request = BuildNonEmptyRequest();
+            request.Dictionary.StringTable.Add(new string('x', padLength));
+            var size = request.ToByteArray().Length;
+
+            if (size == targetBytes)
+                return request;
+
+            padLength += targetBytes - size;
+            if (padLength < 0)
+                break;
+        }
+
+        Assert.Fail($"could not build a request of exactly {targetBytes} bytes");
+        return null;
+    }
+
+    [Test]
+    public void Send_posts_a_payload_of_exactly_the_size_ceiling()
+    {
+        // The comparison is strictly-greater, so a payload landing exactly ON the ceiling must still be
+        // POSTed. Asserted at the exact boundary rather than somewhere below it, so a `>=` regression fails
+        // here instead of silently costing one drain per occurrence in the field.
+        var request = BuildRequestOfExactSize(ProfilesTransport.MaxPayloadBytes);
+        var dispatchedBytes = 0;
+        var transport = new ProfilesTransport((bytes, endpoint) => { dispatchedBytes = bytes.Length; return new ProfilesSendResult(true, 200, string.Empty); }, "http://unused", null);
+
+        Assert.That(transport.Send(request), Is.True);
+        Assert.That(dispatchedBytes, Is.EqualTo(ProfilesTransport.MaxPayloadBytes));
+    }
+
+    [Test]
+    public void Send_drops_a_payload_one_byte_over_the_size_ceiling()
+    {
+        // The other side of the same boundary, so the pair pins the comparison exactly.
+        var request = BuildRequestOfExactSize(ProfilesTransport.MaxPayloadBytes + 1);
+        var dispatched = false;
+        var transport = new ProfilesTransport((bytes, endpoint) => { dispatched = true; return new ProfilesSendResult(true, 200, string.Empty); }, "http://unused", null);
+
+        Assert.That(transport.Send(request), Is.False);
+        Assert.That(dispatched, Is.False);
+    }
+
+    [Test]
+    public void TruncateSamplesForDiagnostics_caps_samples_per_profile_and_reports_what_it_omitted()
+    {
+        var request = BuildRequestWithSamples(40);
+
+        var truncated = ProfilesTransport.TruncateSamplesForDiagnostics(request, 25, out var omitted);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(omitted, Is.EqualTo(15));
+            Assert.That(truncated.ResourceProfiles[0].ScopeProfiles[0].Profiles[0].Samples, Has.Count.EqualTo(25));
+            // The REAL request must be untouched -- this is a diagnostic-only copy.
+            Assert.That(request.ResourceProfiles[0].ScopeProfiles[0].Profiles[0].Samples, Has.Count.EqualTo(40));
+            // Everything else survives, so the dump stays a valid document with all frame names and links.
+            Assert.That(truncated.Dictionary.StringTable, Is.EqualTo(request.Dictionary.StringTable));
+        });
+    }
+
+    [Test]
+    public void TruncateSamplesForDiagnostics_returns_the_same_instance_when_nothing_needs_truncating()
+    {
+        var request = BuildRequestWithSamples(5);
+
+        var truncated = ProfilesTransport.TruncateSamplesForDiagnostics(request, 25, out var omitted);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(omitted, Is.Zero);
+            Assert.That(truncated, Is.SameAs(request), "the common case must not pay for a clone");
+        });
+    }
+
+    [Test]
+    public void TruncateSamplesForDiagnostics_tolerates_a_null_request()
+    {
+        Assert.That(ProfilesTransport.TruncateSamplesForDiagnostics(null, 25, out var omitted), Is.Null);
+        Assert.That(omitted, Is.Zero);
+    }
+
+    [Test]
+    public void Send_still_posts_every_sample_when_the_diagnostic_dump_is_capped()
+    {
+        // The cap is a LOGGING policy, never a wire policy: the POST must carry the whole payload.
+        byte[] dispatchedBytes = null;
+        var request = BuildRequestWithSamples(ProfilesTransport.MaxDiagnosticSamplesPerProfile * 3);
+        var transport = new ProfilesTransport((bytes, endpoint) => { dispatchedBytes = bytes; return new ProfilesSendResult(true, 200, string.Empty); }, "http://unused", null);
+
+        transport.Send(request);
+
+        Assert.That(dispatchedBytes, Is.EqualTo(request.ToByteArray()));
+    }
+
+    #endregion
 }

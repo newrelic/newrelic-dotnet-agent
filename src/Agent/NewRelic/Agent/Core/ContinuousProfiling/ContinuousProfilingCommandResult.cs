@@ -16,7 +16,7 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 /// </summary>
 public class ContinuousProfilingCommandResult
 {
-    /// <summary>Profile-type tokens ("cpu") currently profiling, after this command was applied.</summary>
+    /// <summary>Profile-type tokens ("cpu", "heap") currently profiling, after this command was applied.</summary>
     public IReadOnlyList<string> ActiveTypes { get; }
 
     public int SampleIntervalMs { get; }
@@ -24,8 +24,9 @@ public class ContinuousProfilingCommandResult
     public int CpuReportIntervalMs { get; }
 
     /// <summary>
-    /// Profile-type token (or unrecognized token) -> reason it could not be started/stopped, e.g.
-    /// "heap" -> "not supported". Empty when nothing requested was unsupported.
+    /// Requested token -> reason it could not be started/stopped, e.g. an unrecognized "cpus" ->
+    /// "not supported". Empty when everything requested was acted on, which is now the case for every
+    /// recognized token ("all"/"cpu"/"heap").
     /// </summary>
     public IReadOnlyDictionary<string, string> Exceptions { get; }
 

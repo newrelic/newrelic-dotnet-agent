@@ -311,4 +311,19 @@ public interface IConfiguration
     /// the CP UI ships a self-frames filter (like the thread profiler's).
     /// </summary>
     bool ContinuousProfilingIncludeAgentCode { get; }
+
+    /// <summary>
+    /// Gets whether allocation sampling is enabled. Independent of <see cref="ContinuousProfilingEnabled"/>:
+    /// allocation sampling is driven by CLR AllocationTick events rather than by the periodic thread sampler,
+    /// so either signal can be enabled without the other. It does, however, respect the same two guards that
+    /// flag does -- high security mode disables it, and so does a server-side continuous-profiling disable --
+    /// because allocation samples carry stack frames and allocated type names. Defaults to false.
+    /// </summary>
+    bool ContinuousProfilingAllocationEnabled { get; }
+
+    /// <summary>
+    /// Gets the per-minute allocation-sample budget, clamped to [1, 60000]. Each sample costs a stack walk on
+    /// the allocating application thread, so this is the feature's primary overhead control. Defaults to 200.
+    /// </summary>
+    int ContinuousProfilingAllocationMaxSamplesPerMinute { get; }
 }

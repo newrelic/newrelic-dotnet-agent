@@ -21,6 +21,7 @@ public class ContinuousProfilingServiceDisposeTests
 {
     private ISampleSource _source;
     private INativeContinuousProfiler _native;
+    private IAllocationSampleSource _allocationSource;
     private IProfilesTransport _transport;
     private IScheduler _scheduler;
     private IAgentHealthReporter _health;
@@ -32,12 +33,13 @@ public class ContinuousProfilingServiceDisposeTests
     {
         _source = Mock.Create<ISampleSource>();
         _native = Mock.Create<INativeContinuousProfiler>();
+        _allocationSource = Mock.Create<IAllocationSampleSource>();
         _transport = Mock.Create<IProfilesTransport>();
         _scheduler = Mock.Create<IScheduler>();
         _health = Mock.Create<IAgentHealthReporter>();
         _config = Mock.Create<IConfiguration>();
 
-        _service = new ContinuousProfilingService(_source, _native, _transport, _scheduler, _health);
+        _service = new ContinuousProfilingService(_source, _native, _allocationSource, _transport, _scheduler, _health);
     }
 
     [TearDown]
