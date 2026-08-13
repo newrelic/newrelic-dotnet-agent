@@ -230,6 +230,18 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             _agentWork.Decrement(CurrentManagedThreadId());
         }
 
+        // The per-thread trace-context map this sampler owns, for OTHER samplers to read from.
+        // AllocationSampler MUST use this instance rather than one of its own: there is a single managed
+        // trace-context export, and it writes here (via SetTraceContext above), so an allocation sample can
+        // only be correlated by reading the same map. Safe to share -- unlike the name cache, TraceContextMap
+        // is lock-free and wait-free by design (see its header), so concurrent readers on app threads and
+        // the sampling thread are exactly what it is built for. Never null; owned by this object, so it
+        // outlives any sampler the profiler callback holds alongside it.
+        TraceContextMap* SharedTraceContexts() noexcept
+        {
+            return &_traceContexts;
+        }
+
         // NOTE: intentionally NOT declared `noexcept = default`. clang/libstdc++ computes the implicit
         // default ctor's exception spec from the members (some -- e.g. the reused NameCache / vector
         // buffers -- allocate and are therefore not noexcept), so `noexcept = default` is a hard compile

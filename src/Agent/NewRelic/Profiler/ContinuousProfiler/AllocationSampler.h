@@ -35,17 +35,40 @@
 //   * The CLR raises AllocationTick roughly every 100 KB allocated -- ~10^5/second in an allocation-heavy
 //     app -- so the handler bails as early and as cheaply as possible. Order: session gate -> tick
 //     try-lock -> sub-sample -> payload parse -> back-pressure -> stack walk -> encode.
-//   * It NEVER blocks the app thread. Every lock it takes is a try_lock; a lost race costs one allocation
-//     sample, which is statistically irrelevant to a subsampled profile and is never a correctness issue.
+//   * The TICK PATH never blocks an app thread. Every lock it takes there is a try_lock; a lost race
+//     costs one allocation sample, which is statistically irrelevant to a subsampled profile and is never
+//     a correctness issue. (The LIFECYCLE calls -- Start/Stop/Shutdown -- do block, by design; they run
+//     on the agent's own threads. See Shutdown() for exactly how long it can wait and why.)
 //   * It NEVER throws. This is a COM callback boundary; an escaping exception would propagate into the
 //     runtime's EventPipe dispatch.
-//   * Session teardown must NEVER block agent shutdown -- see the Shutdown() comment.
+//   * Session teardown must never block agent shutdown INDEFINITELY -- the stop call is bounded by a
+//     timeout and then abandoned. It is not instantaneous, though: see the Shutdown() comment for the
+//     one in-flight sample it may still wait out.
 //
 // Concurrency model: allocation ticks arrive on MANY app threads at once, but almost all of this class's
 // state (the sub-sampler's RNG, the name cache, the frame resolver's scratch frame, the encode buffer)
 // is single-threaded-only. Rather than sprinkling locks over each, one try_lock'd _tickMutex makes the
 // whole handler mutually exclusive: exactly one thread handles a tick at a time and the rest return
-// immediately. That also makes this class the single producer SampleBufferQueue::HasFreeSlot assumes.
+// immediately. That also makes this class the single producer SampleBufferQueue::HasFreeSlot assumes,
+// and -- because nothing is ever QUEUED on a try_lock -- it is what lets Shutdown() drain in-flight
+// handlers deterministically before the owner destroys this object.
+//
+// Lifecycle contract for the owner (Task 4): call Init() once, Start()/Stop() as configuration dictates,
+// and Shutdown() EXPLICITLY while the process is still healthy. The destructor is only a diagnostic
+// safety net -- it cannot stop the session, because it may run under process/DLL teardown (see there).
+// Two guarantees, and they are different things:
+//   * MUTUAL EXCLUSION between concurrent Start/Stop/Shutdown calls -- they serialize internally on
+//     _lifecycleMutex, so the owner needs no lock of its own.
+//   * Shutdown() is TERMINAL. A Start() arriving after Shutdown() has returned (not just racing it) is
+//     refused rather than opening a fresh session on a torn-down object. Together with the in-flight drain
+//     Shutdown() performs, that is what makes "Shutdown() then destroy" safe without the owner having to
+//     prove no Start() is still in flight anywhere.
+// Note the deliberate divergence from ContinuousProfiler::Shutdown, which is restartable (it resets its
+// flags so a later Start() spins up a fresh worker thread). Here Shutdown() is one-way: pausing and
+// resuming is Stop()/Start(), and a genuine restart-after-shutdown would need a new AllocationSampler.
+// The asymmetry is intentional -- an EventPipe session cannot be reopened as cheaply or as safely as a
+// worker thread can be respawned -- but Task 4 should wire the managed enable/disable path to Stop()/
+// Start(), NOT to Shutdown()/Start().
 namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 {
     class AllocationSampler
@@ -130,6 +153,17 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // ICorProfilerInfo12 is unavailable. Idempotent: a second Start() after a Stop() re-arms the
         // handler and resets the sub-sampler WITHOUT opening a second session -- overwriting _sessionId
         // would orphan the first session (nothing could ever stop it) and double the runtime's event cost.
+        //
+        // Serialized against Shutdown() (and against another Start()) by _lifecycleMutex, so the
+        // check-then-open of the session below cannot interleave with a claim-then-stop. Lifecycle callers
+        // may block on that mutex; the tick path never touches it.
+        //
+        // REFUSES to arm once Shutdown() has completed. Mutual exclusion alone is not enough: a Start()
+        // that runs strictly AFTER Shutdown() returned would open a brand-new session and re-arm an object
+        // the owner considers dead and is about to destroy -- and no further Shutdown() is coming to close
+        // that session. The _shutdownComplete latch makes Shutdown() terminal, which is what lets the owner
+        // shut down without first proving that no Start() can still arrive. Use Stop()/Start() for pausing
+        // and resuming; Shutdown() is one-way.
         void Start(uint32_t maxSamplesPerMinute) noexcept
         {
             if (!_corProfilerInfo12)
@@ -140,6 +174,15 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
             try
             {
+                std::lock_guard<std::mutex> lifecycleLock(_lifecycleMutex);
+
+                if (_shutdownComplete.load())
+                {
+                    LogDebug(L"AllocationSampler: Start ignored; Shutdown() has already run and is terminal "
+                        L"(use Stop()/Start() to pause and resume instead)");
+                    return;
+                }
+
                 {
                     // Held so a tick in flight can never observe a half-replaced sub-sampler. Start() runs
                     // on the agent's own thread, where a brief wait is fine (unlike the tick path, which
@@ -148,7 +191,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                     _subSampler.reset(new AllocationSubSampler(maxSamplesPerMinute, SubSampleCycleSeconds));
                 }
 
-                if (_sessionId != 0)
+                if (_sessionId.load() != 0)
                 {
                     _sessionActive.store(true);
                     LogTrace(L"AllocationSampler: re-armed the existing EventPipe session");
@@ -175,7 +218,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
                 // Publish the id BEFORE arming the handler so Shutdown() can always find a session that
                 // ticks may already be arriving on.
-                _sessionId = sessionId;
+                _sessionId.store(sessionId);
                 _sessionActive.store(true);
                 LogInfo(L"AllocationSampler: EventPipe session started");
             }
@@ -190,65 +233,98 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // semantics (which parks its worker thread rather than destroying it): the expensive/risky
         // teardown lives in Shutdown(). The runtime keeps raising AllocationTick, but the handler returns
         // on its first branch.
+        //
+        // Takes _lifecycleMutex for the same reason Shutdown() does: a bare store racing an in-progress
+        // Start() can be overwritten by that Start()'s own arm, so Stop() would return having silently not
+        // stopped. No use-after-free risk in that case (just a stale-enabled sampler), but "Stop() stops"
+        // is worth making true rather than documenting an exception to. Blocking here is fine -- this is a
+        // lifecycle call off any hot path -- though it does mean Stop() waits out a concurrent Shutdown().
         void Stop() noexcept
         {
-            _sessionActive.store(false);
-        }
-
-        // Close the EventPipe session. NEVER blocks agent shutdown indefinitely: EventPipeStopSession has
-        // to rendezvous with the runtime's own EventPipe machinery, so it is run on a DETACHED thread with
-        // a bounded wait. On timeout the call is abandoned (the detached thread keeps its own references
-        // alive, so nothing dangles) instead of hanging the agent's shutdown path behind the runtime.
-        //
-        // std::async is deliberately NOT used here: the std::future it returns has a BLOCKING destructor,
-        // so the "bounded wait" would be silently undone by the future going out of scope -- the exact
-        // hang this is written to avoid.
-        void Shutdown() noexcept
-        {
-            _sessionActive.store(false);
-
-            if (!_corProfilerInfo12 || _sessionId == 0)
-            {
-                return;
-            }
-
-            // Claim the session so a second Shutdown() (the destructor always calls it as a safety net)
-            // cannot stop the same session twice.
-            const EVENTPIPE_SESSION sessionId = _sessionId;
-            _sessionId = 0;
-
             try
             {
-                auto signal = std::make_shared<StopSessionSignal>();
-                CComPtr<ICorProfilerInfo12> info12 = _corProfilerInfo12; // keeps the interface alive for the detached thread
-
-                std::thread stopper([info12, sessionId, signal]() {
-                    info12->EventPipeStopSession(sessionId);
-                    {
-                        std::lock_guard<std::mutex> l(signal->Mtx);
-                        signal->Done = true;
-                    }
-                    signal->Cv.notify_all();
-                });
-                stopper.detach();
-
-                std::unique_lock<std::mutex> l(signal->Mtx);
-                const bool stopped = signal->Cv.wait_for(l, std::chrono::seconds(StopSessionTimeoutSeconds),
-                    [signal]() { return signal->Done; });
-
-                if (stopped)
-                {
-                    LogTrace(L"AllocationSampler: EventPipe session stopped");
-                }
-                else
-                {
-                    LogError(L"AllocationSampler: EventPipeStopSession did not return within ",
-                        static_cast<uint32_t>(StopSessionTimeoutSeconds), L"s; abandoning it rather than blocking shutdown");
-                }
+                std::lock_guard<std::mutex> lifecycleLock(_lifecycleMutex);
+                _sessionActive.store(false);
             }
             catch (const std::exception&)
             {
-                LogError(L"AllocationSampler: exception stopping the EventPipe session");
+                // A lock_guard on a valid mutex does not throw in practice; if it somehow did, fall back to
+                // the unsynchronized store so Stop() still disarms in the common (uncontended) case.
+                _sessionActive.store(false);
+            }
+        }
+
+        // Close the EventPipe session and DRAIN any tick handler still in flight. Must be called
+        // explicitly (the destructor cannot do this job -- see ~AllocationSampler) and only from a thread
+        // that is allowed to block for a bounded time, i.e. the agent's own shutdown path -- never from a
+        // tick handler.
+        //
+        // Two distinct hazards are handled here:
+        //
+        // 1. HANG. EventPipeStopSession has to rendezvous with the runtime's own EventPipe machinery, so it
+        //    runs on a DETACHED thread under a bounded wait. On timeout the call is abandoned (the detached
+        //    thread holds its own references, so nothing dangles) instead of hanging agent shutdown behind
+        //    the runtime. std::async is deliberately NOT used: the std::future it returns has a BLOCKING
+        //    destructor, which would silently undo the bounded wait -- the exact hang this avoids.
+        //
+        // 2. USE-AFTER-FREE. Clearing _sessionActive does not evict a handler that already passed that
+        //    gate: it may be mid stack-walk, holding _tickMutex, using _frameNames / _nameCache /
+        //    _encodeScratch / _sampleBuffers. If the owner destroys this object right after Shutdown()
+        //    returns, those members would vanish underneath that thread. So Shutdown() ends by taking
+        //    _tickMutex with a BLOCKING lock: since the handler only ever try_locks, nothing can be queued
+        //    behind it, and acquiring it means the last in-flight handler has finished. This matters most
+        //    in the timeout case above, where the session is still OPEN and ticks keep arriving -- they
+        //    then bounce off the _sessionActive gate (and off the re-check inside the lock) without
+        //    touching any member.
+        //
+        // The disarm below MUST happen under _lifecycleMutex, not before taking it. Clearing
+        // _sessionActive first and then blocking on the mutex lets a concurrent Start() win the lock,
+        // re-arm the handler, and return -- so this method would drain once and then hand back an object
+        // that is still armed, with ticks free to run a full walk/encode against members the owner is now
+        // entitled to destroy. That is hazard 2 all over again, entered through the lifecycle door.
+        void Shutdown() noexcept
+        {
+            try
+            {
+                std::lock_guard<std::mutex> lifecycleLock(_lifecycleMutex);
+
+                // Authoritative disarm + terminal latch, both set before anything else in the critical
+                // section. Any Start() racing this is either queued on this same mutex (and will then
+                // observe _shutdownComplete and refuse to arm) or already finished before we got here, so
+                // _sessionActive cannot be resurrected between this store and the drain below -- and no
+                // LATER Start() can resurrect it either. Setting the latch first also means the degraded
+                // paths below (a stop that times out, or an exception) still leave the object terminal.
+                _sessionActive.store(false);
+                _shutdownComplete.store(true);
+
+                // Claim the session so a concurrent/second Shutdown() cannot stop the same session twice.
+                const EVENTPIPE_SESSION sessionId = _sessionId.exchange(0);
+                if (_corProfilerInfo12 && sessionId != 0)
+                {
+                    StopSessionWithBoundedWait(sessionId);
+                }
+
+                // Drain: see hazard 2 above. This is NOT instantaneous and is not hard-bounded by a
+                // timeout: it can wait for one in-flight tick's full stack walk + name resolution +
+                // encode, and if the periodic sampler suspends the runtime while that handler is in its
+                // (unserialized) resolve/encode phase, for that suspend window too. It is bounded in
+                // practice -- one sample's work -- and is the price of handing back an object the owner can
+                // safely destroy.
+                std::lock_guard<std::mutex> drainLock(_tickMutex);
+            }
+            catch (const std::exception&)
+            {
+                // Reachable only if locking itself fails (a pathological std::system_error), i.e. before
+                // the stores above ran. Disarm and latch anyway: this is the path where the owner is about
+                // to destroy the object, so returning with the sampler still armed -- and still re-armable
+                // by a later Start() -- is the worst possible outcome. Mirrors Stop()'s fallback. NOTE: no
+                // drain happens on this path (the mutex that failed is the one guarding it), so a handler
+                // in flight at that instant is not waited for; nothing better is available if the runtime
+                // can no longer lock a mutex.
+                _sessionActive.store(false);
+                _shutdownComplete.store(true);
+                LogError(L"AllocationSampler: exception stopping the EventPipe session; the sampler is disarmed "
+                    L"but its EventPipe session (if any) could not be closed");
             }
         }
 
@@ -275,10 +351,21 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         }
 
         // Handle one AllocationTick. Runs ON THE ALLOCATING APP THREAD inside the runtime's EventPipe
-        // dispatch (see the class comment). Callers must have already filtered the event with
-        // IsAllocationTickEvent. Never throws, never blocks.
-        void OnAllocationTick(ULONG dataLen, LPCBYTE data) noexcept
+        // dispatch (see the class comment). Never throws, never blocks.
+        //
+        // Takes eventId/eventVersion and re-checks them itself rather than trusting the caller's filter.
+        // The check is two integer comparisons, and this is the ONE place in the feature where getting it
+        // wrong produces silently WRONG telemetry instead of none: ParseAllocationTickPayload reads
+        // AllocatedSize from the END of the buffer, so a v2/v3 payload parses "successfully" into a slice
+        // of the Address field. Defense in depth against a future caller or refactor that forgets to
+        // pre-filter.
+        void OnAllocationTick(DWORD eventId, DWORD eventVersion, ULONG dataLen, LPCBYTE data) noexcept
         {
+            if (!IsAllocationTickEvent(eventId, eventVersion))
+            {
+                return;
+            }
+
             if (!_sessionActive.load())
             {
                 return;
@@ -287,9 +374,18 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             try
             {
                 // Serialize tick handling across app threads (see the class comment). try_lock, never
-                // lock: a concurrent tick is dropped, not queued behind another thread's stack walk.
+                // lock: a concurrent tick is dropped, not queued behind another thread's stack walk. It is
+                // also what lets Shutdown() drain safely -- nothing is ever queued on this mutex.
                 std::unique_lock<std::mutex> tickLock(_tickMutex, std::try_to_lock);
                 if (!tickLock.owns_lock())
+                {
+                    return;
+                }
+
+                // Re-check under the lock: Stop()/Shutdown() may have fired between the gate above and
+                // acquiring the mutex, and past this point the handler touches shared state that Shutdown()
+                // is entitled to consider quiesced.
+                if (!_sessionActive.load())
                 {
                     return;
                 }
@@ -447,12 +543,52 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // constructor (clang computes the implicit spec from members that allocate, MSVC does not).
         AllocationSampler() = default;
 
-        // Safety net for the case where managed code never calls Shutdown() explicitly: leaving an
-        // EventPipe session open costs the process the runtime's verbose GC event traffic forever.
-        // Shutdown() is idempotent (it zeroes _sessionId), so this is safe after an explicit call.
+        // TEARDOWN-SAFE, and deliberately NOT a call to Shutdown().
+        //
+        // This destructor can run while the CLR/loader is tearing the process down (DLL_PROCESS_DETACH, or
+        // after ExitProcess has already terminated every other thread), where Shutdown()'s machinery is not
+        // merely slow but wrong:
+        //   * Creating a thread under the loader lock is illegal, and a thread created during
+        //     DLL_PROCESS_DETACH cannot even begin to run until DllMain returns -- so the stopper thread
+        //     could never reach EventPipeStopSession and the bounded wait would be GUARANTEED to burn its
+        //     full timeout. Same outcome after ExitProcess: the other threads are already gone.
+        //   * Calling EventPipeStopSession inline is no better -- it rendezvouses with runtime threads that
+        //     may no longer exist.
+        //   * Blocking on _tickMutex is unsafe too: a thread terminated by ExitProcess while holding it
+        //     would never release it, deadlocking process exit.
+        // So this path is INSTANT: no thread, no timed wait, no blocking lock. The session (if any) is
+        // simply abandoned -- it dies with the process, which is the only scenario this path can be in.
+        //
+        // Consequence: Task 4's owner MUST call Shutdown() explicitly while the process is still healthy.
+        // Reaching the log line below means that did not happen.
+        //
+        // Residual, knowingly accepted: the LogError calls below take the global logger's mutex, which is
+        // the same class of hazard this path avoids elsewhere (a thread killed mid-teardown while holding
+        // that mutex would hang us here). They are kept because this is the only signal that Shutdown()
+        // was skipped, and because ContinuousProfiler's own destructor already logs on this same path --
+        // so it is pre-existing precedent, not a new risk. It is NOT fully solved; if teardown hangs are
+        // ever observed here, dropping these two lines is the fix.
         ~AllocationSampler() noexcept
         {
-            Shutdown();
+            // Disarm and latch (no lock -- see above; a Start() racing destruction is already unrecoverable,
+            // but the latch means one that merely queued behind us cannot arm a half-destroyed object).
+            _sessionActive.store(false);
+            _shutdownComplete.store(true);
+
+            if (_sessionId.exchange(0) != 0)
+            {
+                LogError(L"AllocationSampler: destroyed with an EventPipe session still open -- Shutdown() was never "
+                    L"called. Abandoning the session instead of stopping it, because this path may be running under "
+                    L"process/DLL teardown where stopping it cannot succeed and would hang.");
+            }
+
+            // Best-effort drain only (try_lock, never block -- see above). Under normal teardown no tick
+            // can be in flight; if one somehow is, there is nothing safe left to do about it here.
+            std::unique_lock<std::mutex> drainLock(_tickMutex, std::try_to_lock);
+            if (!drainLock.owns_lock())
+            {
+                LogError(L"AllocationSampler: destroyed while an allocation tick was still in flight");
+            }
         }
 
         AllocationSampler(const AllocationSampler&) = delete;
@@ -499,6 +635,56 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             std::condition_variable Cv;
             bool Done{ false };
         };
+
+        // Run EventPipeStopSession on a detached thread and wait a bounded time for it. Called only from
+        // the explicit Shutdown() path (never the destructor -- see ~AllocationSampler for why). The
+        // detached thread holds its own CComPtr + shared signal, so abandoning it on timeout dangles
+        // nothing.
+        void StopSessionWithBoundedWait(EVENTPIPE_SESSION sessionId) noexcept
+        {
+            try
+            {
+                auto signal = std::make_shared<StopSessionSignal>();
+                CComPtr<ICorProfilerInfo12> info12 = _corProfilerInfo12; // keeps the interface alive for the detached thread
+
+                std::thread stopper([info12, sessionId, signal]() {
+                    info12->EventPipeStopSession(sessionId);
+                    {
+                        std::lock_guard<std::mutex> l(signal->Mtx);
+                        signal->Done = true;
+                    }
+                    signal->Cv.notify_all();
+                });
+                stopper.detach();
+
+                std::unique_lock<std::mutex> l(signal->Mtx);
+                // Copied into a local on purpose. std::chrono::duration's converting constructor takes its
+                // argument by CONST REFERENCE, which odr-uses StopSessionTimeoutSeconds -- and the Linux
+                // build is C++11/14, where a static constexpr member that is odr-used needs an out-of-line
+                // definition no header-only class can provide (there are no inline variables before C++17).
+                // Passing a local avoids that: MSVC elides it either way, clang would otherwise leave an
+                // undefined symbol in libNewRelicProfiler.so that only surfaces at load time.
+                const uint32_t stopTimeoutSeconds = StopSessionTimeoutSeconds;
+                const bool stopped = signal->Cv.wait_for(l, std::chrono::seconds(stopTimeoutSeconds),
+                    [signal]() { return signal->Done; });
+
+                if (stopped)
+                {
+                    LogTrace(L"AllocationSampler: EventPipe session stopped");
+                }
+                else
+                {
+                    LogError(L"AllocationSampler: EventPipeStopSession did not return within ",
+                        static_cast<uint32_t>(StopSessionTimeoutSeconds), L"s; abandoning it rather than blocking "
+                        L"shutdown. The session stays open, so ticks may keep arriving -- they are gated off by "
+                        L"_sessionActive and cannot touch sampler state.");
+                }
+            }
+            catch (const std::exception&)
+            {
+                LogError(L"AllocationSampler: exception stopping the EventPipe session");
+            }
+        }
 
         // Context for the stack-walk callback: where to append FunctionIDs, and whether the walk was
         // deliberately aborted at the frame cap (vs. having genuinely failed).
@@ -620,18 +806,34 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         TraceContextMap* _traceContexts{ nullptr };
 
         // Serializes the whole tick handler across app threads; every state member below it is
-        // single-threaded-only and protected by it. Only ever try_lock'd on the tick path.
+        // single-threaded-only and protected by it. Only ever try_lock'd on the tick path (which is what
+        // both keeps app threads unblocked and lets Shutdown() drain deterministically).
         std::mutex _tickMutex;
+
+        // Serializes session lifecycle (Start/Shutdown) so a check-then-open can never interleave with a
+        // claim-then-stop. Taken ONLY by lifecycle callers, which are allowed to block; never by the tick
+        // path, and never by the destructor (blocking there could deadlock process exit).
+        std::mutex _lifecycleMutex;
 
         // Rate limiter. Created by Start() (so a restart re-paces from zero) under _tickMutex.
         std::unique_ptr<AllocationSubSampler> _subSampler;
 
         // Whether the handler should produce samples. Toggled by Start()/Stop()/Shutdown() and read on
-        // every tick, so it is the one member that is deliberately atomic rather than _tickMutex-guarded.
+        // every tick before any lock is taken, so it is atomic rather than _tickMutex-guarded. It is the
+        // gate that makes a post-Shutdown tick harmless (it returns before touching any other member).
         std::atomic<bool> _sessionActive{ false };
 
-        // The open EventPipe session, or 0 when none is open. Written only by Start()/Shutdown().
-        EVENTPIPE_SESSION _sessionId{ 0 };
+        // One-way latch set by Shutdown() (and the destructor) under _lifecycleMutex. Once true, Start()
+        // refuses to arm, so Shutdown() is TERMINAL rather than merely momentary: no later Start() can
+        // open a fresh session on an object its owner has already torn down. Never cleared -- a sampler
+        // that has been shut down stays shut down; Stop()/Start() is the pause/resume pair. Atomic because
+        // it is also read on the (unlocked) destructor path.
+        std::atomic<bool> _shutdownComplete{ false };
+
+        // The open EventPipe session, or 0 when none is open. Atomic, and claimed via exchange(0) on the
+        // teardown paths, so two lifecycle callers can never both believe they own the same session (a
+        // double EventPipeStopSession) nor both open one (an orphaned session nothing can ever stop).
+        std::atomic<EVENTPIPE_SESSION> _sessionId{ 0 };
 
         // Type/method name cache. Declared BEFORE _frameNames, which borrows it, so reverse-order
         // destruction tears the resolver down first.
