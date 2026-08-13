@@ -4687,28 +4687,31 @@ public class DefaultConfigurationTests
         return defaultConfig.ContinuousProfilingSamplingIntervalMs;
     }
 
-    // Allocation sampling is a SUB-FEATURE: the child flag is ANDed with continuousProfiling.enabled, matching
-    // its nested position in the XSD and the OpenTelemetryMetricsEnabled precedent.
+    // Allocation sampling is INDEPENDENT of the thread-sampling flag in both directions -- it is
+    // AllocationTick-driven and needs no periodic thread walk. In particular the (false, true) case must be a
+    // durable, supported configuration: allocation sampling with thread sampling off.
     [TestCase(false, false, ExpectedResult = false)]
-    [TestCase(false, true, ExpectedResult = false)]  // parent off kills the child, even when the child asks for it
-    [TestCase(true, false, ExpectedResult = false)]
+    [TestCase(false, true, ExpectedResult = true)]   // thread sampling off, allocation on
+    [TestCase(true, false, ExpectedResult = false)]  // thread sampling on, allocation off
     [TestCase(true, true, ExpectedResult = true)]
-    public bool ContinuousProfilingAllocationEnabled_requires_the_parent_feature(bool parentEnabled, bool allocationEnabled)
+    public bool ContinuousProfilingAllocationEnabled_is_independent_of_the_thread_sampling_flag(bool threadSamplingEnabled, bool allocationEnabled)
     {
-        _localConfig.continuousProfiling.enabled = parentEnabled;
+        _localConfig.continuousProfiling.enabled = threadSamplingEnabled;
         _localConfig.continuousProfiling.allocation.enabled = allocationEnabled;
 
         var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         return defaultConfig.ContinuousProfilingAllocationEnabled;
     }
 
-    [Test]
-    public void ContinuousProfilingAllocationEnabled_is_killed_by_high_security_mode()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ContinuousProfilingAllocationEnabled_is_killed_by_high_security_mode(bool threadSamplingEnabled)
     {
-        // Inherited from the parent flag, which HSM disables unconditionally -- allocation samples carry stacks
-        // and allocated type names, the same class of data.
+        // Checked directly, NOT inherited by ANDing ContinuousProfilingEnabled -- so it must hold regardless of
+        // the thread-sampling flag. Allocation samples carry stacks and allocated type names, the same class of
+        // data HSM disables continuous profiling for.
         _localConfig.highSecurity.enabled = true;
-        _localConfig.continuousProfiling.enabled = true;
+        _localConfig.continuousProfiling.enabled = threadSamplingEnabled;
         _localConfig.continuousProfiling.allocation.enabled = true;
 
         _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
@@ -4716,14 +4719,29 @@ public class DefaultConfigurationTests
         Assert.That(_defaultConfig.ContinuousProfilingAllocationEnabled, Is.False);
     }
 
-    [Test]
-    public void ContinuousProfilingAllocationEnabled_can_be_disabled_by_server_side_config_via_the_parent()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ContinuousProfilingAllocationEnabled_is_disabled_by_a_server_side_continuous_profiling_disable(bool threadSamplingEnabled)
     {
-        // There is deliberately no allocation-specific server-side key: the parent's already lets the server
-        // disable the whole feature.
-        _localConfig.continuousProfiling.enabled = true;
+        // Also checked directly, so it holds independently of the thread-sampling flag. There is deliberately no
+        // allocation-specific server-side key; this one lets the server disable the whole feature.
+        _localConfig.continuousProfiling.enabled = threadSamplingEnabled;
         _localConfig.continuousProfiling.allocation.enabled = true;
         _serverConfig.RpmConfig.ContinuousProfilingEnabled = false;
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.ContinuousProfilingAllocationEnabled, Is.False);
+    }
+
+    [Test]
+    public void ContinuousProfilingAllocationEnabled_is_not_turned_on_by_a_server_side_continuous_profiling_enable()
+    {
+        // The server-side key is about continuous profiling as a whole and says nothing about whether this
+        // customer wants allocation sampling, so it is read as a kill switch only -- a server TRUE must not
+        // override a local allocation opt-out.
+        _localConfig.continuousProfiling.allocation.enabled = false;
+        _serverConfig.RpmConfig.ContinuousProfilingEnabled = true;
 
         _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
@@ -4741,7 +4759,6 @@ public class DefaultConfigurationTests
     [TestCase(null, "xyz", true, ExpectedResult = true)]        // unparseable appSettings -> element
     public bool ContinuousProfilingAllocationEnabled_precedence(string envValue, string appSettingsValue, bool localElement)
     {
-        _localConfig.continuousProfiling.enabled = true; // the parent, so only the child's layering is under test
         _localConfig.continuousProfiling.allocation.enabled = localElement;
         if (appSettingsValue != null)
             _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingAllocationEnabled", value = appSettingsValue });

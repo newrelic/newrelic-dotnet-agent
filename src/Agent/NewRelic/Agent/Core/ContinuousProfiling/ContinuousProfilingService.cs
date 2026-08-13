@@ -380,14 +380,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             return;
         }
 
+        // Without this, a live budget change would silently do nothing.
         if (maxSamplesPerMinute != _allocationMaxSamplesPerMinute)
-        {
-            // Re-pace in place: the native sampler's Start is idempotent and replaces its sub-sampler at the
-            // new budget WITHOUT reopening its session, so unlike the thread sampler's retune this needs no
-            // stop/start and never touches the shared drain timer (the budget is a per-minute sample cap, not
-            // a drain cadence). Without this, a live budget change would silently do nothing.
-            StartOrRepaceAllocationLocked(maxSamplesPerMinute);
-        }
+            RepaceAllocationLocked(maxSamplesPerMinute);
     }
 
     /// <summary>
@@ -515,25 +510,26 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
             try
             {
-                // A new session starts optimistic: clear any backoff state left over from a PREVIOUS session.
-                // Without this, disabling CP while a probe is pending and re-enabling later would leave
-                // _sendBackoffActive stuck true forever -- EndBackoffProbe's own !_isActive guard (below) means
-                // the probe that fires while disabled never clears it, and nothing else ever will.
-                //
-                // Ints first, then the volatile flag last -- a volatile write publishes everything written
-                // before it to another thread's next volatile read of the same field (release semantics). The
-                // old order (flag first) published nothing. Matches ResumeAfterReconnect's order.
-                _consecutiveSendFailures = 0;
-                _backoffIndex = 0;
-                // Supersede any probe still pending from a previous session (e.g. a retune's stop/start), so it
-                // no-ops instead of resuming sampling this fresh session didn't schedule.
-                _backoffGeneration++;
-                _sendBackoffActive = false;
+                var wasBackingOff = ClearSendBackoffForFreshStartLocked();
 
                 // Arm the reverse-guard flag before starting native sampling, while still holding the gate
                 // above -- ThreadProfilingService's forward guard can only observe this flag after acquiring
                 // the same lock, so there is no window for it to see a stale "not active" value here.
                 _isActive = true;
+
+                // Clearing the gate above superseded the pending probe -- the only thing that would ever have
+                // resumed the OTHER sampler if a trip had paused it. Resume it here or it stays Stop()'d forever
+                // with _allocationActive still reading true, so nothing ever tries again and DrainOnce reads a dead
+                // sampler indefinitely.
+                //
+                // ORDER IS LOAD-BEARING: this MUST come before this sampler's own native start, which can throw.
+                // There is no data dependency between the two, and if the resume sat after the throwing call, an
+                // own-start failure would skip it entirely -- leaving the other sampler stopped with its flag true
+                // and the gate now permanently clear (no probe left to fire), which is unrecoverable short of a
+                // stop command or a process restart. The catch below only unwinds THIS sampler, so it cannot repair
+                // that. Debt to the other sampler is paid first, then this one takes its own risk.
+                if (wasBackingOff && _allocationActive)
+                    ResumeAllocationAfterBackoffLocked();
 
                 // Start native sampling first, then begin draining it. Both run under _lifecycleLock, which is
                 // fine: lifecycle transitions are rare (config-driven), so the native call here does not touch
@@ -589,7 +585,7 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
     /// <summary>
     /// Starts the allocation sampler, unless it is already running. A no-op while already active -- use
-    /// <see cref="StartOrRepaceAllocationLocked"/> to change the budget of a running sampler.
+    /// <see cref="RepaceAllocationLocked"/> to change the budget of a running sampler.
     /// </summary>
     private void StartAllocationLocked(int maxSamplesPerMinute)
     {
@@ -601,24 +597,27 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         // session. Allocation sampling walks only the allocating thread and try_locks the same native
         // SuspendMutex, so a tick that collides with either walker is simply dropped -- the enforcement is
         // already in the native tick path, and deferring here would add a state machine that buys nothing.
-        StartOrRepaceAllocationLocked(maxSamplesPerMinute);
-    }
-
-    /// <summary>
-    /// Starts the allocation sampler, or re-paces it at a new budget if it is already running (the native
-    /// sampler's Start is idempotent and re-pacing does not reopen its session).
-    /// </summary>
-    private void StartOrRepaceAllocationLocked(int maxSamplesPerMinute)
-    {
-        var wasActive = _allocationActive;
-
         try
         {
+            // Same optimistic reset the thread sampler's start performs, for the same reason and with the same
+            // hazard if omitted: a probe pending from a previous session would otherwise leave the gate stuck
+            // true forever (TryResumeSamplingLocked's "neither sampler active" guard means a probe firing while
+            // disabled never clears it, and nothing else ever will), so allocation sampling would run with every
+            // drain silently gated off.
+            var wasBackingOff = ClearSendBackoffForFreshStartLocked();
+
             // Armed before the call that can throw, and unwound in the catch -- same shape as StartLocked, so
             // a half-started allocation sampler cannot leave the flag lying true with nothing sampling (which
             // would also pin the shared drain timer open forever).
             _allocationActive = true;
             _allocationMaxSamplesPerMinute = maxSamplesPerMinute;
+
+            // Mirror of StartLocked, including the ordering requirement: this start just superseded the probe
+            // that would have resumed the thread sampler, so resume it here -- BEFORE this sampler's own
+            // throwing native call -- rather than risk leaving it paused forever with _isActive still true.
+            // See the equivalent comment in StartLocked for why the order is load-bearing.
+            if (wasBackingOff && _isActive)
+                ResumeThreadSamplingAfterBackoffLocked();
 
             // Stop(), never Shutdown(), is the disable -- so Start() here is always legal to call again. See
             // IAllocationSampleSource.Shutdown for why getting that backwards is unrecoverable.
@@ -630,13 +629,44 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             if (_drainIntervalMs == 0)
                 ArmDrainScheduleLocked(_configuration.ContinuousProfilingSamplingIntervalMs);
 
-            Log.Info(wasActive
-                ? "[ContinuousProfiling] Allocation sampling re-paced to at most {0} samples/minute."
-                : "[ContinuousProfiling] Allocation sampling started; up to {0} samples/minute.", maxSamplesPerMinute);
+            Log.Info("[ContinuousProfiling] Allocation sampling started; up to {0} samples/minute.", maxSamplesPerMinute);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "[ContinuousProfiling] Failed to start allocation sampling.");
+            StopAllocationLocked();
+        }
+    }
+
+    /// <summary>
+    /// Changes the budget of an ALREADY-RUNNING allocation sampler. Unlike the thread sampler's retune this
+    /// needs no stop/start and never touches the shared drain timer: the native sampler's Start is idempotent
+    /// and replaces its sub-sampler at the new budget without reopening its session, and the budget is a
+    /// per-minute sample cap rather than a drain cadence.
+    /// </summary>
+    private void RepaceAllocationLocked(int maxSamplesPerMinute)
+    {
+        try
+        {
+            _allocationMaxSamplesPerMinute = maxSamplesPerMinute;
+
+            // Deliberately does NOT clear the backoff gate the way a fresh start does: a budget edit is no
+            // evidence that a broken send path has recovered, so collapsing a legitimate backoff round on one
+            // would be wrong. While backing off, the sampler is intentionally paused and the drain is gated, so
+            // re-arming it here would buy real stack walks on customer threads whose output is discarded.
+            // Recording the budget is sufficient -- the probe resumes at _allocationMaxSamplesPerMinute.
+            if (_sendBackoffActive)
+            {
+                Log.Debug("[ContinuousProfiling] Allocation budget recorded as {0} samples/minute; it takes effect when sampling resumes after the current send backoff.", maxSamplesPerMinute);
+                return;
+            }
+
+            _allocationSampleSource.Start(maxSamplesPerMinute);
+            Log.Info("[ContinuousProfiling] Allocation sampling re-paced to at most {0} samples/minute.", maxSamplesPerMinute);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[ContinuousProfiling] Failed to re-pace allocation sampling.");
             StopAllocationLocked();
         }
     }
@@ -665,6 +695,84 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         {
             _allocationActive = false;
             _allocationMaxSamplesPerMinute = 0;
+        }
+    }
+
+    /// <summary>
+    /// A sampler is starting, so the session becomes optimistic again: clears any send-failure backoff state
+    /// left over from before this start and supersedes the pending probe. Returns whether a backoff was in fact
+    /// in progress -- the caller MUST then resume the other sampler if that sampler is active, because the
+    /// superseded probe was the only thing that would ever have done so.
+    ///
+    /// Shared by BOTH start paths so backoff entry and exit stay symmetric across the two samplers: the trip
+    /// (<see cref="TripBackoffAndScheduleProbeLocked"/>) pauses both, so any start that cancels the recovery
+    /// owes both a resume.
+    /// </summary>
+    private bool ClearSendBackoffForFreshStartLocked()
+    {
+        // Without this, disabling a sampler while a probe is pending and re-enabling it later would leave
+        // _sendBackoffActive stuck true forever -- TryResumeSamplingLocked's "neither sampler active" guard
+        // means the probe that fires while disabled never clears it, and nothing else ever will.
+        //
+        // Ints first, then the volatile flag last -- a volatile write publishes everything written
+        // before it to another thread's next volatile read of the same field (release semantics). The
+        // old order (flag first) published nothing. Matches ResumeAfterReconnect's order.
+        _consecutiveSendFailures = 0;
+        _backoffIndex = 0;
+        // Supersede any probe still pending from a previous session (e.g. a retune's stop/start), so it
+        // no-ops instead of resuming sampling this fresh session didn't schedule.
+        _backoffGeneration++;
+
+        var wasBackingOff = _sendBackoffActive;
+        _sendBackoffActive = false;
+        return wasBackingOff;
+    }
+
+    /// <summary>
+    /// Resumes the allocation sampler that a backoff trip paused, on behalf of a thread-sampler start that has
+    /// just superseded the probe. Self-contained error handling on purpose: a failure to resume allocation
+    /// sampling must fail only allocation sampling, not unwind the thread-sampler start that called it.
+    /// </summary>
+    private void ResumeAllocationAfterBackoffLocked()
+    {
+        try
+        {
+            _allocationSampleSource.Start(_allocationMaxSamplesPerMinute);
+
+            // Every resume path owns this reset (see TryResumeSamplingLocked/ArmDrainScheduleLocked): without
+            // it the first profile after the resume reports a duration spanning the entire paused window --
+            // up to the 300s backoff cap -- instead of one real drain interval. Kept here rather than relying
+            // on a caller's trailing ArmDrainScheduleLocked, so the guarantee holds no matter who calls this.
+            Interlocked.Exchange(ref _lastDrainTimestamp, Stopwatch.GetTimestamp());
+            Log.Info("[ContinuousProfiling] Allocation sampling resumed after backoff; up to {0} samples/minute.", _allocationMaxSamplesPerMinute);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[ContinuousProfiling] Failed to resume allocation sampling after backoff.");
+            StopAllocationLocked();
+        }
+    }
+
+    /// <summary>
+    /// The mirror of <see cref="ResumeAllocationAfterBackoffLocked"/>: resumes the paused thread sampler on
+    /// behalf of an allocation start that has just superseded the probe, without letting a failure there unwind
+    /// the allocation start.
+    /// </summary>
+    private void ResumeThreadSamplingAfterBackoffLocked()
+    {
+        try
+        {
+            _native.Start(_activeIntervalMs);
+
+            // See the note in ResumeAllocationAfterBackoffLocked -- this path is the one that most needs it,
+            // since the thread-sample profiles are the time-valued ones whose period/duration is read directly.
+            Interlocked.Exchange(ref _lastDrainTimestamp, Stopwatch.GetTimestamp());
+            Log.Info("[ContinuousProfiling] Thread sampling resumed after backoff.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[ContinuousProfiling] Failed to resume thread sampling after backoff.");
+            StopLocked();
         }
     }
 

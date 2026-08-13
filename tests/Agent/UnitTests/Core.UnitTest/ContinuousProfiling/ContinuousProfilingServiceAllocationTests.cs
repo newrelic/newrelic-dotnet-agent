@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.ContinuousProfiling;
@@ -709,6 +710,295 @@ public class ContinuousProfilingServiceAllocationTests
         Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(true);
         service.DrainOnce();
         Mock.Assert(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Exactly(3));
+    }
+
+    [Test]
+    public void Starting_thread_sampling_during_a_backoff_pause_also_resumes_the_paused_allocation_sampler()
+    {
+        // Regression test for a silent, PERMANENT failure: the trip pauses both natives but leaves both active
+        // flags true, and the pending probe is the only thing that ever resumes them. A thread-sampler start
+        // clears the backoff gate and bumps the generation, superseding that probe -- so unless it resumes
+        // allocation itself, allocation stays Stop()'d forever with _allocationActive still reading true, and
+        // nothing ever tries again.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeAllocationOnly(budget: 300);
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        ArrangeReadableAllocationBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff: allocation native Stop()'d, flag still true, probe pending
+        Mock.Assert(() => _allocationSource.Stop(), Occurs.Once());
+
+        // The thread sampler starts later (by command here; a config enable takes the same path).
+        service.StartFromCommand(new[] { "cpu" }, null, null);
+
+        // Once from the original start, once from this start's resume-the-other-sampler step.
+        Mock.Assert(() => _allocationSource.Start(300), Occurs.Exactly(2),
+            "the start that superseded the probe owes the paused allocation sampler a resume");
+    }
+
+    [Test]
+    public void Starting_allocation_during_a_backoff_pause_also_resumes_the_paused_thread_sampler()
+    {
+        // The mirror of the above: an allocation start clears the same shared gate and supersedes the same
+        // probe, so it owes the paused thread sampler a resume.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeThreadSamplingOnly(intervalMs: 11000);
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+        ArrangeReadableThreadBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff: thread native Stop()'d, _isActive still true
+        Mock.Assert(() => _native.Stop(), Occurs.Once());
+
+        service.OverrideConfigForTesting(NewConfig(threadSampling: true, allocation: true, intervalMs: 11000));
+        service.ApplyConfigChange();
+
+        Mock.Assert(() => _native.Start(11000), Occurs.Exactly(2),
+            "the allocation start that superseded the probe owes the paused thread sampler a resume");
+    }
+
+    [Test]
+    public void Starting_thread_sampling_resumes_the_paused_allocation_sampler_even_when_its_own_native_start_throws()
+    {
+        // Regression test for the exception path of the resume fix. The start clears the gate and supersedes the
+        // probe BEFORE doing anything else, so the debt owed to the other sampler must be paid before this
+        // sampler takes its own risk. If the resume sat after the throwing own-start, the catch (which only
+        // unwinds THIS sampler) would leave allocation stopped with its flag true and no probe left to fire --
+        // permanently stranded.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeAllocationOnly(budget: 300);
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        ArrangeReadableAllocationBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff: allocation paused, flag still true, probe pending
+
+        // The thread sampler's own native start fails.
+        Mock.Arrange(() => _native.Start(Arg.AnyInt)).Throws(new InvalidOperationException("boom"));
+
+        Assert.DoesNotThrow(() => service.StartFromCommand(new[] { "cpu" }, null, null));
+
+        Mock.Assert(() => _allocationSource.Start(300), Occurs.Exactly(2),
+            "allocation must be resumed even though the thread sampler's own start threw");
+        Assert.That(service.IsActive, Is.False, "the failed thread start still unwinds itself");
+    }
+
+    [Test]
+    public void Starting_allocation_resumes_the_paused_thread_sampler_even_when_its_own_native_start_throws()
+    {
+        // The mirror direction of the above.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeThreadSamplingOnly(intervalMs: 11000);
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+        ArrangeReadableThreadBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff: thread sampler paused, _isActive still true, probe pending
+
+        // The allocation sampler's own native start fails.
+        Mock.Arrange(() => _allocationSource.Start(Arg.AnyInt)).Throws(new InvalidOperationException("boom"));
+
+        service.OverrideConfigForTesting(NewConfig(threadSampling: true, allocation: true, intervalMs: 11000));
+        Assert.DoesNotThrow(() => service.ApplyConfigChange());
+
+        Mock.Assert(() => _native.Start(11000), Occurs.Exactly(2),
+            "thread sampling must be resumed even though the allocation sampler's own start threw");
+    }
+
+    [Test]
+    public void Resuming_after_backoff_resets_the_drain_timestamp_so_the_next_profile_is_not_stretched_over_the_pause()
+    {
+        // Each resume helper owns its own _lastDrainTimestamp reset; without it the first profile after the
+        // resume reports a duration spanning the whole paused window (up to the 300s backoff cap) rather than
+        // one real interval. This exercises the thread-sampling resume specifically, because in this scenario
+        // the drain timer is already armed -- so StartAllocationLocked's trailing ArmDrainScheduleLocked (which
+        // also resets the timestamp) is NOT reached, and only the helper's own reset can save it.
+        const int PauseMs = 300;
+
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeThreadSamplingOnly();
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+        ArrangeReadableThreadBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff; _lastDrainTimestamp is left at this moment
+
+        // Stand in for waiting out a real backoff delay.
+        Thread.Sleep(PauseMs);
+
+        // Enabling allocation resumes the paused thread sampler.
+        service.OverrideConfigForTesting(NewConfig(threadSampling: true, allocation: true));
+        service.ApplyConfigChange();
+
+        // Re-arranging this locally-created mock works (the existing backoff tests flip false -> true the same
+        // way); only SetUp's arrangement on the shared _transport can't be overridden in a test body.
+        ExportProfilesRequest captured = null;
+        Mock.Arrange(() => _allocationSource.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns((ExportProfilesRequest r) =>
+        {
+            captured = r;
+            return true;
+        });
+
+        service.DrainOnce();
+
+        Assert.That(captured, Is.Not.Null);
+        var durationNano = captured.ResourceProfiles[0].ScopeProfiles[0].Profiles[0].DurationNano;
+
+        // Generous threshold: with the reset this is the few ms of mock/build work since the resume; without it
+        // this would be at least the full PauseMs. Half the pause leaves a wide margin against CI jitter.
+        Assert.That(durationNano, Is.LessThan((ulong)PauseMs / 2 * 1_000_000UL),
+            "the first profile after a resume must not be stretched over the backoff pause");
+    }
+
+    [Test]
+    public void A_failure_to_resume_allocation_after_backoff_does_not_unwind_the_thread_sampler_start()
+    {
+        // Isolation, the other direction: the resume helper owns its errors, so a broken allocation sampler
+        // fails only allocation sampling. The thread-sampler start that triggered the resume must still succeed.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeAllocationOnly();
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        ArrangeReadableAllocationBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff
+
+        // Only the RESUME attempt throws; the original start above already succeeded.
+        Mock.Arrange(() => _allocationSource.Start(Arg.AnyInt)).Throws(new InvalidOperationException("boom"));
+
+        Assert.DoesNotThrow(() => service.StartFromCommand(new[] { "cpu" }, null, null));
+
+        Assert.That(service.IsActive, Is.True, "the thread sampler start must not be unwound by a failed allocation resume");
+        // Once from the backoff trip's pause, once from the failed resume unwinding allocation (fail closed).
+        Mock.Assert(() => _allocationSource.Stop(), Occurs.Exactly(2));
+        Mock.Assert(() => _scheduler.StopExecuting(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan?>()), Occurs.Never(),
+            "the thread sampler is running, so the shared drain must stay armed");
+    }
+
+    [Test]
+    public void A_failure_to_resume_thread_sampling_after_backoff_does_not_unwind_the_allocation_start()
+    {
+        // And the mirror: a broken thread sampler must not take the allocation start down with it.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeThreadSamplingOnly();
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+        ArrangeReadableThreadBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff
+
+        // Only the RESUME attempt throws; the original start above already succeeded.
+        Mock.Arrange(() => _native.Start(Arg.AnyInt)).Throws(new InvalidOperationException("boom"));
+
+        service.OverrideConfigForTesting(NewConfig(threadSampling: true, allocation: true, budget: 275));
+        Assert.DoesNotThrow(() => service.ApplyConfigChange());
+
+        Mock.Assert(() => _allocationSource.Start(275), Occurs.Once(),
+            "the allocation start must not be unwound by a failed thread-sampling resume");
+        Assert.That(service.IsActive, Is.False, "the thread sampler failed to resume and is stopped");
+
+        // And allocation is genuinely live: it re-armed the shared drain and a drain ships its samples.
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        ArrangeReadableAllocationBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(true);
+        service.DrainOnce();
+        Mock.Assert(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Exactly(3));
+    }
+
+    [Test]
+    public void Disabling_and_re_enabling_allocation_while_backing_off_clears_the_stuck_gate()
+    {
+        // Same stuck-gate hazard the thread-sampling path was already fixed for: a probe that fires while
+        // nothing is active cannot clear _sendBackoffActive, so without the allocation start performing the
+        // optimistic reset, re-enabling allocation would sample forever with every drain silently gated off.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeAllocationOnly();
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        ArrangeReadableAllocationBatch();
+
+        Action probe = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => probe = action);
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff, schedules a probe
+
+        service.OverrideConfigForTesting(NewConfig(threadSampling: false, allocation: false));
+        service.ApplyConfigChange();
+
+        probe.Invoke(); // fires while nothing is active -- cannot clear the gate
+
+        service.OverrideConfigForTesting(_config);
+        service.ApplyConfigChange(); // re-enable allocation
+
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(true);
+        service.DrainOnce();
+
+        // 2 failures before the disable + 1 recovery send after re-enabling. Without the reset this third send
+        // would never happen, because the drain would still be gated.
+        Mock.Assert(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Exactly(3));
+    }
+
+    [Test]
+    public void A_budget_change_during_a_backoff_pause_does_not_re_arm_sampling_or_collapse_the_round()
+    {
+        // A budget edit is no evidence the send path recovered, so it must neither clear the gate nor re-arm the
+        // native -- re-arming would buy real stack walks on customer threads whose output the gated drain
+        // discards. The new budget is recorded and takes effect when the probe resumes.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeAllocationOnly(budget: 200);
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns(0);
+        ArrangeReadableAllocationBatch();
+
+        Action probe = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => probe = action);
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff
+
+        service.OverrideConfigForTesting(NewConfig(threadSampling: false, allocation: true, budget: 900));
+        service.ApplyConfigChange();
+
+        Mock.Assert(() => _allocationSource.Start(900), Occurs.Never(), "sampling must stay paused while backing off");
+
+        // The probe resumes at the NEW budget, so the edit was recorded rather than dropped.
+        probe.Invoke();
+        Mock.Assert(() => _allocationSource.Start(900), Occurs.Once());
     }
 
     [Test]

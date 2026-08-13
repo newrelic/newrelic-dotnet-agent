@@ -3014,20 +3014,26 @@ public class DefaultConfiguration : IConfiguration
     private const int MaxContinuousProfilingAllocationMaxSamplesPerMinute = 60000;
 
     private bool? _continuousProfilingAllocationEnabled;
-    // Allocation sampling is a SUB-FEATURE of continuous profiling, matching its nested position in the XSD
-    // (<continuousProfiling><allocation/></continuousProfiling>) and the precedent set by
-    // OpenTelemetryMetricsEnabled/OpenTelemetryTracingEnabled: the child flag is ANDed with its parent, so
-    // turning continuous profiling off turns allocation sampling off too. That also inherits the parent's
-    // high-security-mode kill and its server-side-config override for free; there is deliberately no
-    // allocation-specific server-side key, since the parent's already lets the server disable the whole
-    // feature.
+    // INDEPENDENT of ContinuousProfilingEnabled, deliberately: allocation sampling is driven by CLR
+    // AllocationTick events, not by the periodic thread walk, so it neither needs nor implies the thread
+    // sampler. "Allocation sampling on, thread sampling off" is a supported, durable configuration.
     //
-    // This flag is about the FEATURE being wanted, not about the thread sampler running: the two samplers'
-    // lifecycles are independent inside ContinuousProfilingService (allocation sampling is AllocationTick-
-    // driven and needs no periodic thread walk), so "allocation sampling active while the thread sampler is
-    // stopped" is a legitimate, reachable state -- e.g. after a stop_continuous_profiler command for "cpu".
+    // It is NOT independent of the two GUARDS that flag consults, and this checks them directly rather than
+    // ANDing with that sibling property's value:
+    //   * !HighSecurityModeEnabled -- allocation samples carry stack frames and allocated type names, exactly
+    //     the class of data HSM disables continuous profiling for. Same defense-in-depth reasoning as there:
+    //     no server-side "strip the key" backstop exists for this setting, so the local guard is the only
+    //     enforcement.
+    //   * The server-side continuous-profiling kill switch. Read as "has the server disabled continuous
+    //     profiling?" -- a server FALSE turns allocation sampling off too, while a server TRUE is not treated
+    //     as turning it on, because that key is about the feature as a whole and says nothing about whether
+    //     this customer wants allocation sampling specifically. (There is deliberately no allocation-specific
+    //     server-side key; add one only if per-signal server control is actually needed.)
+    // Reaching those guards by ANDing ContinuousProfilingEnabled would have coupled allocation's availability
+    // to the thread sampler's local `enabled` flag, which is the opposite of the independence above.
     public bool ContinuousProfilingAllocationEnabled => _continuousProfilingAllocationEnabled ??=
-        ContinuousProfilingEnabled &&
+        !HighSecurityModeEnabled &&
+        _serverConfiguration.RpmConfig.ContinuousProfilingEnabled != false &&
         EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingAllocationEnabled", _localConfiguration.continuousProfiling.allocation.enabled), "NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_ENABLED");
 
     private int? _continuousProfilingAllocationMaxSamplesPerMinute;

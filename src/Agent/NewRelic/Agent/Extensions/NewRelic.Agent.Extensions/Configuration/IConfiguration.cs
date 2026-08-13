@@ -313,11 +313,11 @@ public interface IConfiguration
     bool ContinuousProfilingIncludeAgentCode { get; }
 
     /// <summary>
-    /// Gets whether allocation sampling is enabled. Allocation sampling is a sub-feature of continuous
-    /// profiling: this is false whenever <see cref="ContinuousProfilingEnabled"/> is false, regardless of the
-    /// allocation-specific setting. Defaults to false. Note that the two SAMPLERS have independent lifecycles
-    /// even though the config flags are hierarchical -- allocation sampling is event-driven (CLR
-    /// AllocationTick) and does not need the periodic thread sampler to be running.
+    /// Gets whether allocation sampling is enabled. Independent of <see cref="ContinuousProfilingEnabled"/>:
+    /// allocation sampling is driven by CLR AllocationTick events rather than by the periodic thread sampler,
+    /// so either signal can be enabled without the other. It does, however, respect the same two guards that
+    /// flag does -- high security mode disables it, and so does a server-side continuous-profiling disable --
+    /// because allocation samples carry stack frames and allocated type names. Defaults to false.
     /// </summary>
     bool ContinuousProfilingAllocationEnabled { get; }
 

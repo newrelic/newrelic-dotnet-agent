@@ -2245,7 +2245,10 @@
                                         Controls allocation sampling within continuous profiling. Allocation
                                         sampling is driven by CLR AllocationTick events rather than by the
                                         periodic thread sampler, so it has its own enable flag and its own
-                                        sample budget. It requires continuous profiling itself to be enabled.
+                                        sample budget, and it can be enabled independently of the
+                                        continuousProfiling "enabled" attribute (which controls thread
+                                        sampling). It is still disabled by high security mode, and by a
+                                        server-side setting that disables continuous profiling.
                                         Available only on .NET 5+ (it needs the runtime's EventPipe profiling
                                         API); on .NET Framework it is silently unavailable.
                                     </xs:documentation>
@@ -2256,7 +2259,8 @@
                                         <xs:annotation>
                                             <xs:documentation>
                                                 Set this to "true" to enable allocation sampling. The default is
-                                                false. Environment variable:
+                                                false. This does not require the continuousProfiling "enabled"
+                                                attribute to be true. Environment variable:
                                                 NEW_RELIC_CONTINUOUS_PROFILING_ALLOCATION_ENABLED
                                             </xs:documentation>
                                         </xs:annotation>
