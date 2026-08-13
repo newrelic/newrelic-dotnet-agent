@@ -230,7 +230,7 @@ public sealed class AgentManager : IAgentManager, IDisposable
         // from the collector's connection once the agent connects (ContinuousProfilingService.OnAgentConnected);
         // drains before that point are dropped without doing any work (see DrainOnce).
         var profilesDispatcher = new OtlpProfilesHttpDispatcher(Configuration);
-        var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, null);
+        var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, null, _agentHealthReporter);
         var continuousProfilerSampleSource = new NativeContinuousProfilerSampleSource(nativeMethods);
         _continuousProfilingService = new ContinuousProfilingService(continuousProfilerSampleSource, continuousProfilerSampleSource, profilesTransport, _container.Resolve<IScheduler>(), _agentHealthReporter);
 

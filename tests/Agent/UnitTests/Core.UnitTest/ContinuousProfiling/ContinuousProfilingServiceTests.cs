@@ -15,6 +15,7 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 using Telerik.JustMock;
+using ExportProfilesRequest = OpenTelemetry.Proto.Collector.Profiles.V1Development.ExportProfilesServiceRequest;
 
 namespace NewRelic.Agent.Core.UnitTest.ContinuousProfiling;
 
@@ -38,6 +39,12 @@ public class ContinuousProfilingServiceTests
         _scheduler = Mock.Create<IScheduler>();
         _health = Mock.Create<IAgentHealthReporter>();
         _config = Mock.Create<IConfiguration>();
+
+        // Send now returns bool; default to "accepted" so every existing Drain_tick_* test below keeps
+        // exercising healthy-send behavior. Otherwise an unarranged mock returns false, which would trip
+        // the send-failure backoff after two drains and pause native sampling mid-test.
+        Mock.Arrange(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(true);
+
         _service = new ContinuousProfilingService(_source, _native, _transport, _scheduler, _health);
 
         // DrainOnce is gated on having connected -- put _service into the connected state so every
@@ -210,7 +217,7 @@ public class ContinuousProfilingServiceTests
 
         _service.DrainOnce();
 
-        Mock.Assert(() => _transport.Send(Arg.IsAny<global::OpenTelemetry.Proto.Collector.Profiles.V1Development.ExportProfilesServiceRequest>()), Occurs.Never());
+        Mock.Assert(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Never());
     }
 
     [Test]
@@ -228,7 +235,7 @@ public class ContinuousProfilingServiceTests
 
         _service.DrainOnce();
 
-        Mock.Assert(() => _transport.Send(Arg.IsAny<global::OpenTelemetry.Proto.Collector.Profiles.V1Development.ExportProfilesServiceRequest>()), Occurs.Once());
+        Mock.Assert(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Once());
     }
 
     [Test]
@@ -250,12 +257,30 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void Drain_tick_with_a_failed_send_reports_the_error_metric_not_drain_or_samples()
+    {
+        // A dropped profile isn't a healthy drain -- Drain/Samples must not fire on a failed send, and the
+        // failure should route to the same error metric the other defensive branches use.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/Error"), Occurs.Once());
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/Drain"), Occurs.Never());
+        Mock.Assert(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/Samples", Arg.IsAny<long>()), Occurs.Never());
+    }
+
+    [Test]
     public void Drain_tick_with_bytesRead_exceeding_buffer_length_is_discarded()
     {
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) => dest.Length + 1);
 
         Assert.DoesNotThrow(() => _service.DrainOnce());
-        Mock.Assert(() => _transport.Send(Arg.IsAny<global::OpenTelemetry.Proto.Collector.Profiles.V1Development.ExportProfilesServiceRequest>()), Occurs.Never());
+        Mock.Assert(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Never());
     }
 
     [Test]
@@ -264,7 +289,7 @@ public class ContinuousProfilingServiceTests
         Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Throws(new InvalidOperationException("boom"));
 
         Assert.DoesNotThrow(() => _service.DrainOnce());
-        Mock.Assert(() => _transport.Send(Arg.IsAny<global::OpenTelemetry.Proto.Collector.Profiles.V1Development.ExportProfilesServiceRequest>()), Occurs.Never());
+        Mock.Assert(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Never());
     }
 
     [Test]
@@ -279,7 +304,7 @@ public class ContinuousProfilingServiceTests
             Array.Copy(batch, dest, batch.Length);
             return batch.Length;
         });
-        Mock.Arrange(() => _transport.Send(Arg.IsAny<global::OpenTelemetry.Proto.Collector.Profiles.V1Development.ExportProfilesServiceRequest>()))
+        Mock.Arrange(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>()))
             .Throws(new InvalidOperationException("send failed"));
 
         Assert.DoesNotThrow(() => _service.DrainOnce());
@@ -468,7 +493,7 @@ public class ContinuousProfilingServiceTests
 
         EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
 
-        Mock.Assert(() => transport.UpdateEndpoint("https://collector.eu01.nr-data.net:443/v1/profiles"), Occurs.Once());
+        Mock.Assert(() => transport.UpdateEndpoint("https://collector.eu01.nr-data.net/v1/profiles"), Occurs.Once());
     }
 
     [Test]
@@ -496,7 +521,345 @@ public class ContinuousProfilingServiceTests
         service.DrainOnce();
 
         Mock.Assert(() => _source.ReadBatch(Arg.IsAny<byte[]>()), Occurs.Never());
-        Mock.Assert(() => _transport.Send(Arg.IsAny<global::OpenTelemetry.Proto.Collector.Profiles.V1Development.ExportProfilesServiceRequest>()), Occurs.Never());
+        Mock.Assert(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Never());
+    }
+
+    #endregion
+
+    #region Send-failure backoff
+
+    // A dedicated (service, transport) pair per test, already connected: SetUp's blanket
+    // `_transport.Send(...) => true` arrangement is a fixture-wide default these tests need to override
+    // per call, and re-arranging the SAME shared mock in a test body does not take precedence over the
+    // arrangement already registered in SetUp (empirically -- the earlier-registered match wins). A fresh
+    // transport mock has no prior arrangement to compete with.
+    private (ContinuousProfilingService Service, IProfilesTransport Transport) NewConnectedService()
+    {
+        var transport = Mock.Create<IProfilesTransport>();
+        var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+
+        // DrainOnce reads _configuration (ApplicationNames, ContinuousProfilingIncludeAgentCode) on its
+        // way to Send. Without this, the service falls back to the real DefaultConfiguration.Instance
+        // (unsafe outside the full agent harness) and DrainOnce's outer catch silently swallows the
+        // resulting exception -- Send is never reached, and every test here would look like it passed
+        // for the wrong reason (no failure ever recorded because no send ever happened).
+        Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        Mock.Arrange(() => _config.ContinuousProfilingIncludeAgentCode).Returns(false);
+        service.OverrideConfigForTesting(_config);
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        return (service, transport);
+    }
+
+    private void ArrangeReadableBatch()
+    {
+        var batch = OneSampleBatch("worker-1", 1, 0, 0, 0, new[] { "F()" });
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
+        {
+            Array.Copy(batch, dest, batch.Length);
+            return batch.Length;
+        });
+    }
+
+    private void EnableAndStart(ContinuousProfilingService service, int intervalMs = 10000)
+    {
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(true);
+        Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(intervalMs);
+        Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+    }
+
+    [Test]
+    public void One_send_failure_alone_does_not_trip_backoff()
+    {
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeReadableBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+
+        Mock.Assert(() => _native.Stop(), Occurs.Never());
+        Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Two_consecutive_send_failures_trip_backoff_at_the_first_step()
+    {
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeReadableBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce();
+
+        Mock.Assert(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Exactly(2));
+        Mock.Assert(() => _native.Stop(), Occurs.Once());
+        Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), TimeSpan.FromSeconds(15)), Occurs.Once());
+    }
+
+    [Test]
+    public void A_thrown_send_exception_counts_as_a_failure()
+    {
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        ArrangeReadableBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()))
+            .Throws(new InvalidOperationException("send failed"));
+
+        service.DrainOnce();
+        service.DrainOnce();
+
+        Mock.Assert(() => _native.Stop(), Occurs.Once());
+        Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), TimeSpan.FromSeconds(15)), Occurs.Once());
+    }
+
+    [Test]
+    public void A_success_after_tripping_fully_resets_the_backoff_index()
+    {
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(true);
+        Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(10000);
+        Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+
+        ArrangeReadableBatch();
+
+        Action probe = null;
+        var delays = new List<TimeSpan>();
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => { probe = action; delays.Add(delay); });
+
+        // First trip: two failures -> backs off at the first step (15s).
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+        service.DrainOnce();
+        service.DrainOnce();
+        Assert.That(delays, Is.EqualTo(new[] { TimeSpan.FromSeconds(15) }));
+
+        // The probe fires: resumes sampling, clears the gate.
+        probe.Invoke();
+
+        // A single successful drain resets the failure/backoff state.
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(true);
+        service.DrainOnce();
+
+        // Two more failures should back off at the FIRST step again (15s), not an advanced one.
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+        service.DrainOnce();
+        service.DrainOnce();
+
+        Assert.That(delays, Is.EqualTo(new[] { TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15) }));
+    }
+
+    [Test]
+    public void DrainOnce_while_backoff_is_active_drops_without_reading_the_native_buffer()
+    {
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+
+        var readCount = 0;
+        var batch = OneSampleBatch("worker-1", 1, 0, 0, 0, new[] { "F()" });
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
+        {
+            readCount++;
+            Array.Copy(batch, dest, batch.Length);
+            return batch.Length;
+        });
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce(); // failure 1
+        service.DrainOnce(); // failure 2 -> trips backoff
+        Assert.That(readCount, Is.EqualTo(2));
+
+        service.DrainOnce(); // gated -- must not touch the native buffer
+
+        Assert.That(readCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void Repeated_trips_without_success_follow_the_full_backoff_sequence_and_clamp_at_the_cap()
+    {
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+
+        Action probe = null;
+        var delays = new List<TimeSpan>();
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => { probe = action; delays.Add(delay); });
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        // No intervening success: the first trip needs the 2-failure grace (starting from _backoffIndex
+        // == 0); every retrip after that needs only 1, since we're already in the failing regime (each
+        // round's probe is invoked to resume sampling -- EndBackoffProbe deliberately leaves the index
+        // alone, so the next round's trip continues the escalation instead of restarting it).
+        service.DrainOnce();
+        service.DrainOnce();
+        probe.Invoke();
+
+        for (var i = 0; i < 6; i++)
+        {
+            service.DrainOnce();
+            probe.Invoke();
+        }
+
+        Assert.That(delays, Is.EqualTo(new[]
+        {
+            TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(120), TimeSpan.FromSeconds(300),
+            TimeSpan.FromSeconds(300),
+        }));
+    }
+
+    [Test]
+    public void A_single_failure_after_a_probe_retrips_immediately_without_a_fresh_grace_period()
+    {
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+
+        Action probe = null;
+        var delays = new List<TimeSpan>();
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => { probe = action; delays.Add(delay); });
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // first trip needs the 2-failure grace
+        probe.Invoke();
+
+        service.DrainOnce(); // a single failure here must retrip immediately -- no fresh grace
+
+        Assert.That(delays, Is.EqualTo(new[] { TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15) }));
+    }
+
+    [Test]
+    public void Disabling_and_re_enabling_while_backing_off_clears_the_stuck_gate()
+    {
+        // Regression test: before the fix, a probe firing while disabled left _sendBackoffActive true
+        // forever -- StartLocked had nothing to clear it, so re-enabling never resumed drains.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+
+        Action probe = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => probe = action);
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff, schedules a probe
+
+        var disabled = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => disabled.ContinuousProfilingEnabled).Returns(false);
+        service.OverrideConfigForTesting(disabled);
+        service.ApplyConfigChange();
+        Assert.That(service.IsActive, Is.False);
+
+        // The pending probe fires while disabled -- must not resurrect anything.
+        probe.Invoke();
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Once(), "the probe must not resume native sampling while disabled");
+
+        EnableAndStart(service);
+        Assert.That(service.IsActive, Is.True);
+
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(true);
+        service.DrainOnce();
+
+        // 2 failures before disable + 1 recovery send after re-enable: without the fix, this last drain
+        // would still be gated and Send would never reach a 3rd call.
+        Mock.Assert(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Exactly(3));
+    }
+
+    [Test]
+    public void EndBackoffProbe_resumes_native_sampling_at_the_active_interval_and_clears_the_gate()
+    {
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service, 12345);
+        ArrangeReadableBatch();
+
+        Action probe = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => probe = action);
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce();
+
+        probe.Invoke();
+
+        Mock.Assert(() => _native.Start(12345), Occurs.Exactly(2), "once from EnableAndStart, once from the probe resume");
+
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(true);
+        service.DrainOnce();
+
+        Mock.Assert(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Exactly(3), "the gate must be clear for this drain to reach Send");
+    }
+
+    [Test]
+    public void A_probe_firing_after_dispose_does_not_resurrect_native_sampling()
+    {
+        // Regression test: AgentManager disposes the CP service before the container-owned Scheduler, so a
+        // pending probe can fire after Dispose. It must see the post-Dispose state and stay stopped.
+        var (service, transport) = NewConnectedService();
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+
+        Action probe = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => probe = action);
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips, schedules the probe
+
+        service.Dispose();
+
+        probe.Invoke();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Once(), "only the original EnableAndStart call; the post-Dispose probe must not resume sampling");
+    }
+
+    [Test]
+    public void A_reconnect_while_backing_off_resumes_immediately_and_fully_resets_state()
+    {
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff
+
+        // A reconnect arrives (e.g. a new redirect host) while still waiting out the backoff delay.
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.eu01.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        Mock.Assert(() => transport.UpdateEndpoint("https://collector.eu01.nr-data.net/v1/profiles"), Occurs.Once());
+
+        // Resumed immediately -- no need to wait for the scheduled probe.
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(true);
+        service.DrainOnce();
+
+        Mock.Assert(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Exactly(3), "2 failures + 1 recovery send, not gated waiting for the probe");
     }
 
     #endregion

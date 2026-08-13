@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using Google.Protobuf;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.ContinuousProfiling;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -9,6 +10,7 @@ using OpenTelemetry.Proto.Collector.Profiles.V1Development;
 using OpenTelemetry.Proto.Common.V1;
 using OpenTelemetry.Proto.Profiles.V1Development;
 using OpenTelemetry.Proto.Resource.V1;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.UnitTest.ContinuousProfiling;
 
@@ -25,7 +27,7 @@ public class ProfilesTransportTests
             dispatchedBytes = bytes;
             dispatchedEndpoint = endpoint;
             return new ProfilesSendResult(true, 200, string.Empty);
-        }, "https://otlp.nr-data.net/v1/profiles");
+        }, "https://otlp.nr-data.net/v1/profiles", null);
 
         var request = BuildNonEmptyRequest();
         transport.Send(request);
@@ -41,7 +43,7 @@ public class ProfilesTransportTests
     public void Send_invokes_http_dispatch_even_for_an_empty_request()
     {
         var dispatched = false;
-        var transport = new ProfilesTransport((bytes, endpoint) => { dispatched = true; return new ProfilesSendResult(true, 200, string.Empty); }, "http://unused");
+        var transport = new ProfilesTransport((bytes, endpoint) => { dispatched = true; return new ProfilesSendResult(true, 200, string.Empty); }, "http://unused", null);
 
         transport.Send(new ExportProfilesServiceRequest());
 
@@ -51,21 +53,68 @@ public class ProfilesTransportTests
     [Test]
     public void Send_does_not_throw_when_the_dispatch_reports_failure()
     {
-        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 500, "error"), "http://unused");
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 500, "error"), "http://unused", null);
+        Assert.That(() => transport.Send(BuildNonEmptyRequest()), Throws.Nothing);
+    }
+
+    [Test]
+    public void Send_returns_true_when_the_dispatch_reports_accepted()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
+        Assert.That(transport.Send(BuildNonEmptyRequest()), Is.True);
+    }
+
+    [Test]
+    public void Send_returns_false_when_the_dispatch_reports_not_accepted()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 500, "error"), "http://unused", null);
+        Assert.That(transport.Send(BuildNonEmptyRequest()), Is.False);
+    }
+
+    [Test]
+    public void Send_reports_data_usage_on_acceptance_same_as_other_otlp_and_collector_sends()
+    {
+        var health = Mock.Create<IAgentHealthReporter>();
+        var request = BuildNonEmptyRequest();
+        var expectedBytesSent = request.ToByteArray().Length;
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, "ok"), "http://unused", health);
+
+        transport.Send(request);
+
+        // "OTLP"/"Profiles" mirrors OtlpAuditHandler's ("OTLP", "Metrics") for the Meter bridge -- CP's
+        // closest sibling send path.
+        Mock.Assert(() => health.ReportSupportabilityDataUsage("OTLP", "Profiles", expectedBytesSent, 2), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_does_not_report_data_usage_when_not_accepted()
+    {
+        var health = Mock.Create<IAgentHealthReporter>();
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 500, "error"), "http://unused", health);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => health.ReportSupportabilityDataUsage(Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<long>(), Arg.IsAny<long>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Send_tolerates_a_null_agent_health_reporter()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, "ok"), "http://unused", null);
         Assert.That(() => transport.Send(BuildNonEmptyRequest()), Throws.Nothing);
     }
 
     [Test]
     public void Send_constructs_without_throwing_given_endpoint_and_dispatch_delegate()
     {
-        Assert.That(() => new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "https://otlp.nr-data.net/v1/profiles"),
+        Assert.That(() => new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "https://otlp.nr-data.net/v1/profiles", null),
             Throws.Nothing);
     }
 
     [Test]
     public void Send_handles_null_resource_profiles_without_throwing()
     {
-        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused");
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
         Assert.That(() => transport.Send(new ExportProfilesServiceRequest()), Throws.Nothing);
     }
 
@@ -77,7 +126,7 @@ public class ProfilesTransportTests
         {
             dispatchedEndpoint = endpoint;
             return new ProfilesSendResult(true, 200, string.Empty);
-        }, "https://otlp.nr-data.net/v1/profiles");
+        }, "https://otlp.nr-data.net/v1/profiles", null);
 
         transport.UpdateEndpoint("https://collector.eu01.nr-data.net/v1/profiles");
         transport.Send(BuildNonEmptyRequest());
@@ -94,7 +143,7 @@ public class ProfilesTransportTests
         {
             dispatchedEndpoint = endpoint;
             return new ProfilesSendResult(true, 200, string.Empty);
-        }, "https://otlp.nr-data.net/v1/profiles");
+        }, "https://otlp.nr-data.net/v1/profiles", null);
 
         transport.UpdateEndpoint(newEndpoint);
         transport.Send(BuildNonEmptyRequest());

@@ -26,6 +26,12 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 /// Drains are gated on the agent having connected (<see cref="OnAgentConnected"/>): the profiles
 /// endpoint is only known post-preconnect, so a drain before that point does nothing rather than
 /// building a profile with nowhere to send it.
+///
+/// Repeated send failures pause native sampling and retry via a single-attempt probe on a backoff
+/// schedule (<see cref="OnSendResult"/>/<see cref="TripBackoffAndScheduleProbe"/>/<see cref="EndBackoffProbe"/>)
+/// rather than retrying the send itself -- a dropped profile can't be held over like a harvest payload can.
+/// A reconnect that arrives while backing off resumes immediately instead of waiting out the remaining
+/// delay (<see cref="ResumeAfterReconnect"/>), since the reconnect itself is the likely fix.
 /// </summary>
 public class ContinuousProfilingService : ConfigurationBasedService, IContinuousProfilingSessionControl
 {
@@ -41,6 +47,21 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     private const string SupportabilitySamplesMetric = "Supportability/DotNET/ContinuousProfiling/Samples";
     private const string SupportabilityErrorMetric = "Supportability/DotNET/ContinuousProfiling/Error";
 
+    // Send-failure backoff, generally modeled on ConnectionManager.ConnectionRetryBackoffSequence (same
+    // values as the collector-response-handling reconnect schedule) -- but, unlike that sequence, this one
+    // resets fully to index 0 on a single successful send: a dropped profile can't be recovered later like
+    // a held-over harvest cycle can, so there's no reason to stay pessimistic once sending works again.
+    private static readonly TimeSpan[] SendBackoffSequence = new[]
+    {
+        TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(30),
+        TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(120), TimeSpan.FromSeconds(300)
+    };
+
+    // Consecutive send failures tolerated before pausing sampling THE FIRST TIME a failure streak starts
+    // -- a single blip doesn't trip it. Once already escalated (see OnSendResult), a single failure
+    // re-trips immediately; this grace is not paid again on every retry.
+    private const int SendFailureGraceCount = 2;
+
     private readonly ISampleSource _sampleSource;
     private readonly INativeContinuousProfiler _native;
     private readonly IProfilesTransport _transport;
@@ -51,6 +72,18 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // (DrainOnce) -- gives the cross-thread visibility DrainOnce's early-out needs without a lock.
     // Monotonic true after the first successful connect; never reset on a later disconnect.
     private volatile bool _isConnected;
+
+    // volatile: DrainOnce reads this every tick; EndBackoffProbe/ResumeAfterReconnect (separate scheduled/
+    // event-bus callbacks, not DrainOnce itself) flip it from other threads under _lifecycleLock. The
+    // volatile write is also what publishes _consecutiveSendFailures/_backoffIndex changes made under that
+    // lock to DrainOnce's unlocked reads (a volatile write happens-before the next volatile read of the
+    // same field). Outside Start/Resume, _consecutiveSendFailures/_backoffIndex are only touched from
+    // within DrainOnce's own call chain -- which does not re-enter itself except in the same narrow
+    // retune-overlap window the _drainBuffer comment above already calls out. TripBackoffAndScheduleProbe
+    // does not additionally guard against that overlap: tracked, not fixed here.
+    private volatile bool _sendBackoffActive;
+    private int _consecutiveSendFailures;
+    private int _backoffIndex;
 
     // Managed->native trace-context push seam. Armed while a session is active (published as the process-wide
     // ContinuousProfilingContext.Instance so the wrapper hot path can reach it), disarmed when it stops.
@@ -121,6 +154,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         _transport.UpdateEndpoint(endpoint);
         _isConnected = true;
         Log.Debug("[ContinuousProfiling] Connected; profiles endpoint set to {0}.", endpoint);
+
+        // A (re)connect is itself evidence the send path may have changed (e.g. a new redirect host) --
+        // don't make CP wait out the rest of an unrelated backoff window when the most likely fix for it
+        // just arrived.
+        if (_sendBackoffActive)
+            ResumeAfterReconnect();
     }
 
     /// <summary>
@@ -199,6 +238,14 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
         try
         {
+            // A new session starts optimistic: clear any backoff state left over from a PREVIOUS session.
+            // Without this, disabling CP while a probe is pending and re-enabling later would leave
+            // _sendBackoffActive stuck true forever -- EndBackoffProbe's own !_isActive guard (below) means
+            // the probe that fires while disabled never clears it, and nothing else ever will.
+            _sendBackoffActive = false;
+            _consecutiveSendFailures = 0;
+            _backoffIndex = 0;
+
             // Start native sampling first, then begin draining it. Both run under _lifecycleLock, which is
             // fine: lifecycle transitions are rare (config-driven), so the native call here does not touch
             // the lock-free hot path (DrainOnce).
@@ -256,7 +303,10 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // Nowhere to send yet: skip read/parse/build entirely rather than doing the work and
             // dropping the result. Native sampling still runs (StartLocked already started it,
             // decoupled from connect); only the managed drain is deferred.
-            if (!_isConnected)
+            //
+            // _sendBackoffActive: sampling itself is paused (native Stop()'d) while backing off, so this
+            // is mostly a cheap no-op guard against the recurring timer's own ticks in the meantime.
+            if (!_isConnected || _sendBackoffActive)
                 return;
 
             var bytesRead = _sampleSource.ReadBatch(_drainBuffer);
@@ -295,16 +345,145 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             var periodNanos = (long)_activeIntervalMs * 1_000_000L;
             // Exclude the agent's own threads/frames unless the undocumented appSettings opt-in is set.
             var request = OtlpProfileBuilder.Build(samples, startUnixNano, durationNano, ServiceName, periodNanos, _configuration.ContinuousProfilingIncludeAgentCode);
-            _transport.Send(request);
 
-            _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilityDrainMetric);
-            _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilitySamplesMetric, samples.Count);
+            bool sent;
+            try
+            {
+                sent = _transport.Send(request);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "[ContinuousProfiling] Send threw; treating as a failed send.");
+                sent = false;
+            }
+            OnSendResult(sent);
+
+            // A dropped profile isn't a healthy drain: only count Drain/Samples when the send was actually
+            // accepted, and route a failure to the same error metric the other defensive branches use.
+            if (sent)
+            {
+                _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilityDrainMetric);
+                _agentHealthReporter.ReportSupportabilityCountMetric(SupportabilitySamplesMetric, samples.Count);
+            }
+            else
+            {
+                SafeReportError();
+            }
         }
         catch (Exception ex)
         {
             Log.Error(ex, "[ContinuousProfiling] Drain failed.");
             SafeReportError();
         }
+    }
+
+    /// <summary>
+    /// Tracks consecutive send failures. The <see cref="SendFailureGraceCount"/> grace (tolerate one blip)
+    /// applies only the FIRST time a failure streak starts (<see cref="_backoffIndex"/> == 0) -- once
+    /// already escalated by a prior trip, a single failure re-trips immediately rather than paying the
+    /// grace again every retry, which would double the cost of every backoff round for no benefit. A
+    /// single success fully resets both the failure count and the backoff index -- a dropped profile
+    /// can't be recovered, so there's no reason to stay pessimistic once sending works again.
+    /// </summary>
+    private void OnSendResult(bool sent)
+    {
+        if (sent)
+        {
+            _consecutiveSendFailures = 0;
+            _backoffIndex = 0;
+            return;
+        }
+
+        _consecutiveSendFailures++;
+
+        var graceCount = _backoffIndex == 0 ? SendFailureGraceCount : 1;
+        if (_consecutiveSendFailures < graceCount)
+            return;
+
+        var failuresAtTrip = _consecutiveSendFailures;
+        _consecutiveSendFailures = 0; // grace consumed; the next round starts fresh
+        TripBackoffAndScheduleProbe(failuresAtTrip);
+    }
+
+    /// <summary>
+    /// Pauses native sampling (no stop-the-world cost while paused) and schedules a single probe at the
+    /// current <see cref="SendBackoffSequence"/> step. The recurring drain timer keeps ticking throughout
+    /// (each tick is a cheap no-op via the <see cref="_sendBackoffActive"/> gate in <see cref="DrainOnce"/>)
+    /// so no second timer is needed to pick the real send back up once the probe resumes sampling.
+    /// </summary>
+    private void TripBackoffAndScheduleProbe(int failuresAtTrip)
+    {
+        _sendBackoffActive = true;
+        _native.Stop();
+
+        var delay = SendBackoffSequence[_backoffIndex];
+        Log.Info("[ContinuousProfiling] {0} consecutive send failures; pausing sampling, retrying in {1}s.",
+            failuresAtTrip, delay.TotalSeconds);
+        _scheduler.ExecuteOnce(EndBackoffProbe, delay);
+        _backoffIndex = Math.Min(_backoffIndex + 1, SendBackoffSequence.Length - 1);
+    }
+
+    /// <summary>
+    /// Re-checks <see cref="_isActive"/> and resumes native sampling under <see cref="_lifecycleLock"/> --
+    /// the same lock <see cref="StartLocked"/>/<see cref="StopLocked"/> use, so a config-driven disable (or
+    /// <see cref="Dispose"/>) racing a pending probe can no longer resurrect sampling with a stale/zeroed
+    /// <see cref="_activeIntervalMs"/> after teardown. Also resets <see cref="_lastDrainTimestamp"/> so the
+    /// first post-resume profile's duration doesn't span the whole paused window. Returns whether it
+    /// actually resumed (false if the session was disabled while backing off, in which case it stays
+    /// stopped -- reviving a session the config no longer wants would be wrong).
+    /// </summary>
+    private bool TryResumeSamplingLocked()
+    {
+        if (!_isActive)
+            return false;
+
+        _native.Start(_activeIntervalMs);
+        _lastDrainTimestamp = Stopwatch.GetTimestamp();
+        return true;
+    }
+
+    /// <summary>
+    /// Scheduled by <see cref="TripBackoffAndScheduleProbe"/>. Deliberately leaves
+    /// <see cref="_consecutiveSendFailures"/>/<see cref="_backoffIndex"/> alone -- if this probe's resumed
+    /// send also fails, <see cref="OnSendResult"/> continues the escalation from where the trip left the
+    /// index, rather than starting over.
+    /// </summary>
+    private void EndBackoffProbe()
+    {
+        bool resumed;
+        lock (_lifecycleLock)
+        {
+            resumed = TryResumeSamplingLocked();
+            if (resumed)
+                _sendBackoffActive = false;
+        }
+
+        if (resumed)
+            Log.Info("[ContinuousProfiling] Resuming sampling after backoff.");
+    }
+
+    /// <summary>
+    /// Called from <see cref="OnAgentConnected"/> when a (re)connect arrives while backing off. Unlike
+    /// <see cref="EndBackoffProbe"/>, this fully resets the backoff state -- same as a successful send --
+    /// because the reconnect itself is the likely fix, and there's no reason to make CP wait out the rest
+    /// of a delay picked for a problem that may no longer exist.
+    /// </summary>
+    private void ResumeAfterReconnect()
+    {
+        bool resumed;
+        lock (_lifecycleLock)
+        {
+            resumed = TryResumeSamplingLocked();
+            if (resumed)
+            {
+                _consecutiveSendFailures = 0;
+                _backoffIndex = 0;
+                _sendBackoffActive = false;
+            }
+        }
+
+        if (resumed)
+            Log.Info("[ContinuousProfiling] Reconnected while backing off; resuming sampling immediately.");
     }
 
     /// <summary>

@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Text;
 using Google.Protobuf;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport.Client;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Logging;
@@ -14,7 +16,8 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 
 /// <summary>
 /// Serializes an <see cref="ExportProfilesServiceRequest"/> and dispatches it to the collector
-/// via an injected HTTP POST delegate.
+/// via an injected HTTP POST delegate. Reports a data-usage supportability metric on acceptance,
+/// same as every other collector/OTLP send path (<c>HttpCollectorWire.SendData</c>, <c>OtlpAuditHandler</c>).
 /// </summary>
 public class ProfilesTransport : IProfilesTransport
 {
@@ -28,16 +31,24 @@ public class ProfilesTransport : IProfilesTransport
     private static readonly JsonFormatter DiagnosticJsonFormatter =
         new JsonFormatter(JsonFormatter.Settings.Default.WithFormatDefaultValues(true));
 
+    // Destination/area for ReportSupportabilityDataUsage -- mirrors OtlpAuditHandler's ("OTLP", "Metrics")
+    // for the Meter bridge, CP's closest sibling (same OTLP send shape). Produces a parallel
+    // Supportability/DotNET/OTLP/Profiles/Output/Bytes metric alongside the existing .../OTLP/Metrics one.
+    private const string DataUsageApi = "OTLP";
+    private const string DataUsageArea = "Profiles";
+
     private readonly Func<byte[], string, ProfilesSendResult> _httpPost;
+    private readonly IAgentHealthReporter _agentHealthReporter;
 
     // volatile: swapped by UpdateEndpoint (e.g. on AgentConnectedEvent) on a different thread than the
     // scheduler thread that reads it in Send; a plain field would risk a stale read across cores.
     private volatile string _endpoint;
 
-    public ProfilesTransport(Func<byte[], string, ProfilesSendResult> httpPost, string endpoint)
+    public ProfilesTransport(Func<byte[], string, ProfilesSendResult> httpPost, string endpoint, IAgentHealthReporter agentHealthReporter)
     {
         _httpPost = httpPost;
         _endpoint = endpoint;
+        _agentHealthReporter = agentHealthReporter;
     }
 
     public void UpdateEndpoint(string endpoint)
@@ -48,7 +59,7 @@ public class ProfilesTransport : IProfilesTransport
         _endpoint = endpoint;
     }
 
-    public void Send(ExportProfilesServiceRequest request)
+    public bool Send(ExportProfilesServiceRequest request)
     {
         var bytes = request.ToByteArray();
         var requestGuid = Guid.NewGuid();
@@ -77,6 +88,16 @@ public class ProfilesTransport : IProfilesTransport
             Log.Debug("Request({0}): Invocation of \"{1}\" was not accepted (status {2}).", requestGuid, ProfilesMethodName, result.StatusCode);
 
         DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Received, DataTransportAuditLogger.AuditLogSource.Collector, result.ResponseContent);
+
+        // Data-usage supportability metric, same as every other OTLP/collector send (HttpCollectorWire.
+        // SendData, OtlpAuditHandler) -- reported on acceptance only, matching both of those.
+        if (result.Accepted)
+        {
+            var bytesReceived = Encoding.UTF8.GetByteCount(result.ResponseContent ?? string.Empty);
+            _agentHealthReporter?.ReportSupportabilityDataUsage(DataUsageApi, DataUsageArea, bytes.Length, bytesReceived);
+        }
+
+        return result.Accepted;
     }
 
     // Compact single-line protobuf-JSON for the payload log line + audit log. Public + static so it can be

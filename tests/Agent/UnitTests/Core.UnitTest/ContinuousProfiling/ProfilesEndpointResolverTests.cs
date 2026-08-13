@@ -12,8 +12,10 @@ namespace NewRelic.Agent.Core.UnitTest.ContinuousProfiling;
 public class ProfilesEndpointResolverTests
 {
     [Test]
-    public void ResolveFromConnectionInfo_builds_the_profiles_path_on_the_collectors_host_and_port()
+    public void ResolveFromConnectionInfo_builds_the_profiles_path_on_the_collectors_host()
     {
+        // Standard port (443 for https) is omitted, same as MeterBridgeConfiguration.BuildOtlpEndpoint's
+        // UriBuilder-based endpoint -- not written out explicitly like a non-default port would be.
         var connectionInfo = Mock.Create<IConnectionInfo>();
         Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
         Mock.Arrange(() => connectionInfo.Host).Returns("collector.eu01.nr-data.net");
@@ -21,7 +23,20 @@ public class ProfilesEndpointResolverTests
 
         var endpoint = ProfilesEndpointResolver.ResolveFromConnectionInfo(connectionInfo);
 
-        Assert.That(endpoint, Is.EqualTo("https://collector.eu01.nr-data.net:443/v1/profiles"));
+        Assert.That(endpoint, Is.EqualTo("https://collector.eu01.nr-data.net/v1/profiles"));
+    }
+
+    [Test]
+    public void ResolveFromConnectionInfo_includes_a_non_default_port()
+    {
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.eu01.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(8080);
+
+        var endpoint = ProfilesEndpointResolver.ResolveFromConnectionInfo(connectionInfo);
+
+        Assert.That(endpoint, Is.EqualTo("https://collector.eu01.nr-data.net:8080/v1/profiles"));
     }
 
     [Test]

@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using NewRelic.Agent.Core.DataTransport;
 
 namespace NewRelic.Agent.Core.ContinuousProfiling;
@@ -25,13 +26,15 @@ public static class ProfilesEndpointResolver
     /// <summary>
     /// Builds the profiles endpoint from the collector connection's resolved host+port -- the same
     /// <see cref="IConnectionInfo"/> published on <c>AgentConnectedEvent</c> after preconnect. Null if
-    /// <paramref name="connectionInfo"/> or its host is unavailable.
+    /// <paramref name="connectionInfo"/> or its host is unavailable. Uses <see cref="UriBuilder"/>, same
+    /// as <c>MeterBridgeConfiguration.BuildOtlpEndpoint</c>, so a standard port (443 for https) is omitted
+    /// from the result rather than always written out explicitly.
     /// </summary>
     public static string ResolveFromConnectionInfo(IConnectionInfo connectionInfo)
     {
         if (connectionInfo == null || string.IsNullOrEmpty(connectionInfo.Host))
             return null;
 
-        return $"{connectionInfo.HttpProtocol}://{connectionInfo.Host}:{connectionInfo.Port}{ProfilesPath}";
+        return new UriBuilder(connectionInfo.HttpProtocol, connectionInfo.Host, connectionInfo.Port, ProfilesPath).Uri.ToString();
     }
 }
