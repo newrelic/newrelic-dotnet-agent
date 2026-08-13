@@ -288,6 +288,34 @@ function RemoveDeprecatedInstrumentationFiles($newRelicInstallPath)
 	Remove-Item "$newRelicInstallPath\extensions\NewRelic.Providers.Wrapper.Asp35.dll" -ErrorAction Ignore
 }
 
+function GetLatestPackageVersion($packageId, $maxVersion, $repoUrl)
+{
+	# FindPackagesById() paginates at 100 entries per page (oldest-first, not sorted by version),
+	# so the newest versions of a long-lived package are often on a later page. Follow every
+	# rel="next" link and collect all versions before picking the max -- using Invoke-WebRequest
+	# here (rather than Invoke-RestMethod) so the feed-level <link> elements survive; RestMethod's
+	# Atom auto-deserialization keeps only the <entry> nodes and discards them.
+	$uri = "$($repoUrl)FindPackagesById()?id='$packageId'"
+	$allVersions = @()
+
+	while ($uri)
+	{
+		$response = Invoke-WebRequest -Uri $uri -UseBasicParsing
+		[xml]$feed = $response.Content
+
+		$allVersions += $feed.feed.entry.properties.Version
+
+		$nextLink = $feed.feed.link | Where-Object { $_.rel -eq "next" } | Select-Object -First 1
+		$uri = if ($nextLink) { $nextLink.href } else { $null }
+	}
+
+	$versions = $allVersions |
+		Where-Object { $_ -notmatch '-' } |
+		Where-Object { [string]::IsNullOrEmpty($maxVersion) -or [System.Version]$_ -le [System.Version]$maxVersion }
+
+	return ($versions | Sort-Object { [System.Version]$_ } | Select-Object -Last 1)
+}
+
 try
 {
 	WriteToInstallLog "Start executing install.ps1"
@@ -296,8 +324,6 @@ try
 	[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bOR [Net.SecurityProtocolType]::Tls12
 
 	#Loading helper assemblies.
-	[Reflection.Assembly]::LoadFile((Get-ChildItem NuGet.Core.dll).FullName)
-	[Reflection.Assembly]::LoadFile((Get-ChildItem NewRelic.NuGetHelper.dll).FullName)
 	[Reflection.Assembly]::LoadFile((Get-ChildItem Microsoft.Web.XmlTransform.dll).FullName)
 
 	$nugetSource = "https://www.nuget.org/api/v2/"
@@ -343,13 +369,11 @@ try
 	elseif ($is35App -eq $TRUE)
 	{
 		$MAX_6X_AGENT_VERSION = "6.999.999"
-		$latest6XPackage = [NewRelic.NuGetHelper.Utils]::FindPackage($nugetPackageForFrameworkApp, $MAX_6X_AGENT_VERSION, $nugetSource)
-		$agentVersion = $latest6XPackage.Version
+		$agentVersion = GetLatestPackageVersion $nugetPackageForFrameworkApp $MAX_6X_AGENT_VERSION $nugetSource
 	}
 	else
 	{
-		$latestPackage = [NewRelic.NuGetHelper.Utils]::FindPackage($nugetPackageForFrameworkApp,[NullString]::Value, $nugetSource)
-		$agentVersion = $latestPackage.Version
+		$agentVersion = GetLatestPackageVersion $nugetPackageForFrameworkApp $null $nugetSource
 	}
 
 
