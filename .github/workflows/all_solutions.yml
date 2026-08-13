@@ -433,6 +433,36 @@ jobs:
           }
           Write-Host "Pre-publish complete: $published succeeded, $skipped skipped (libraries), $failed failed"
 
+          # Additionally pre-publish win-x86 for the one project ConsoleDynamicMethodFixtureCoreLatestX86
+          # (ContinuousProfilingTestsCoreLatestX86) needs -- a self-contained win-x86 publish, forcing a
+          # genuinely 32-bit process regardless of the runner's actual architecture, for CP x86-Windows
+          # coverage. RemoteService.TryCopyPrebuiltPublishOutput falls back to a live `dotnet publish` at
+          # test time if this isn't here, which works but forgoes the parallel-execution lock-collision
+          # protection the rest of this step exists for. Scoped to just this one project/TFM/RID -- every
+          # other test app only needs win-x64, so publishing all of them for x86 too would be pure waste.
+          $x86Runtime = "win-x86"
+          $x86Projects = @("ConsoleMultiFunctionApplicationCore")
+          $x86Tfm = "net10.0"
+          $x86Published = 0; $x86Failed = 0
+          foreach ($searchPath in $searchPaths) {
+            $fullPath = Join-Path $basePath $searchPath
+            if (-not (Test-Path $fullPath)) { continue }
+            Get-ChildItem -Path $fullPath -Filter "*.csproj" -Recurse |
+              Where-Object { $x86Projects -contains $_.BaseName } |
+              ForEach-Object {
+                Write-Host "Pre-publishing $($_.Name) for $x86Tfm/$x86Runtime"
+                $output = dotnet publish --configuration Release --runtime $x86Runtime --framework $x86Tfm $_.FullName 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                  Write-Warning "Failed to pre-publish $($_.Name) for $x86Tfm/$x86Runtime"
+                  $output | Where-Object { $_ -match "error" } | ForEach-Object { Write-Host "  $_" }
+                  $x86Failed++
+                } else {
+                  $x86Published++
+                }
+              }
+          }
+          Write-Host "x86 pre-publish complete: $x86Published succeeded, $x86Failed failed"
+
           # Clean up intermediate RID-specific build artifacts to reduce artifact size.
           # dotnet publish --runtime creates large intermediate files alongside the publish/
           # subdirectory (including self-contained runtime copies). Only publish/ is needed.
@@ -441,6 +471,10 @@ jobs:
             $fullPath = Join-Path $basePath $searchPath
             if (-not (Test-Path $fullPath)) { continue }
             Get-ChildItem -Path $fullPath -Directory -Recurse -Filter $runtime | ForEach-Object {
+              Get-ChildItem -Path $_.FullName -Exclude "publish" | Remove-Item -Recurse -Force
+              $cleaned++
+            }
+            Get-ChildItem -Path $fullPath -Directory -Recurse -Filter $x86Runtime | ForEach-Object {
               Get-ChildItem -Path $_.FullName -Exclude "publish" | Remove-Item -Recurse -Force
               $cleaned++
             }
