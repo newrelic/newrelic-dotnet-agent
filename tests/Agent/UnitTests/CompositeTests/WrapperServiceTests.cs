@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
 using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace CompositeTests;
 
@@ -51,6 +53,27 @@ public class WrapperServiceTests
                 Assert.That(afterWrappedMethod, Is.EqualTo(Delegates.NoOp), "AfterWrappedMethod was not the NoOp delegate.");
                 Assert.That(logging.HasMessageThatContains("Transaction has already ended, skipping method"), Is.True, "Expected log message was not found.");
             });
+        }
+    }
+
+    [Test]
+    public void EndingATransaction_ResetsTheContinuousProfilingContextOnTheCompletingThread()
+    {
+        // Bug A regression: a finished transaction must clear this thread's native trace/span context so a
+        // later unrelated CPU sample on the (often pooled) thread is not misattributed to the finished span.
+        var original = ContinuousProfilingContext.Instance;
+        var cpContext = Mock.Create<IContinuousProfilingContext>();
+        ContinuousProfilingContext.Instance = cpContext;
+        try
+        {
+            var transaction = _agent.CreateTransaction(true, "category", "name", true);
+            transaction.End();
+
+            Mock.Assert(() => cpContext.ResetTraceContext(), Occurs.Once());
+        }
+        finally
+        {
+            ContinuousProfilingContext.Instance = original;
         }
     }
 }

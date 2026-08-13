@@ -49,9 +49,9 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // freezes this thread mid-write leaves the slot at an odd seq, which the reader treats as "none".
         void Set(ThreadID threadId, int64_t hi, int64_t lo, int64_t span) noexcept
         {
-            if (threadId == EmptyKey)
+            if (threadId == EmptyKey || threadId == TombstoneKey)
             {
-                return; // reserve 0 as the "empty slot" sentinel; a real ThreadID is never 0.
+                return; // reserve 0 and all-ones as slot sentinels; a real ThreadID is never either.
             }
 
             Slot* slot = FindOrClaimSlot(threadId);
@@ -63,13 +63,17 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             WriteSlot(*slot, hi, lo, span);
         }
 
-        // Clear the calling thread's context (transaction/segment ended). Publishes zeros under the same
-        // seqlock so a subsequent read returns "no context". The slot is left claimed (Key stays set) so
-        // a thread that repeatedly starts/ends transactions reuses one slot rather than exhausting the
-        // table; only genuinely distinct ThreadIDs consume new slots.
+        // Clear the calling thread's context (transaction/segment ended) AND free its slot for reuse.
+        // First publishes zeros under the seqlock so any read that still matches this Key returns "no
+        // context", then tombstones the slot (Key -> TombstoneKey) so a later distinct ThreadID can
+        // reclaim it. Freeing is what keeps the open-addressed table from filling permanently over a
+        // process lifetime of thread-pool churn -- without it, every distinct ThreadID that ever pushed a
+        // context would consume a slot forever. Single-writer-per-slot (the slot's Key is this calling
+        // thread's own ThreadID) makes the plain-store tombstone safe: no other thread writes this slot's
+        // Key while we own it -- other threads only ever CAS a slot whose Key is Empty or Tombstone.
         void Reset(ThreadID threadId) noexcept
         {
-            if (threadId == EmptyKey)
+            if (threadId == EmptyKey || threadId == TombstoneKey)
             {
                 return;
             }
@@ -80,7 +84,12 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 return; // never set for this thread -> nothing to clear.
             }
 
+            // Zero the payload under the seqlock BEFORE tombstoning, so a reader that observes the old Key
+            // (tombstone store not yet visible to it) reads zeros -> no link, never stale context. The
+            // release on the Key store below then hands the zeroed, seq-even slot to whichever thread later
+            // reclaims it, so that thread's relaxed seq load in WriteSlot still sees a settled value.
             WriteSlot(*slot, 0, 0, 0);
+            slot->Key.store(TombstoneKey, std::memory_order_release);
         }
 
         // Read the context stored for a CLR ThreadID. Called by the SAMPLER while the runtime is
@@ -92,7 +101,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         {
             out = TraceContext{};
 
-            if (threadId == EmptyKey)
+            if (threadId == EmptyKey || threadId == TombstoneKey)
             {
                 return false;
             }
@@ -139,13 +148,31 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // 0 is reserved as the empty-slot sentinel. A valid CLR ThreadID is never 0.
         static constexpr ThreadID EmptyKey = 0;
 
+        // All-ones is reserved as the tombstone sentinel: a slot whose owning thread's context was Reset
+        // and is now free for a different ThreadID to reclaim. A valid CLR ThreadID (a pointer-sized value)
+        // is never all-ones. Distinct from EmptyKey because a tombstone must NOT terminate a probe chain
+        // (a live key may sit past it), whereas an empty slot does terminate the chain.
+        static constexpr ThreadID TombstoneKey = static_cast<ThreadID>(~static_cast<uint64_t>(0));
+
         // Fixed slot count. Power of two so the hash maps with a mask. Sized well above the number of
-        // threads a process realistically parks a trace context on; slots are reclaimed by ThreadID reuse
-        // in Reset (see above) and by re-Set overwriting the same ThreadID, so churn does not grow the
-        // table. Open addressing means a claimed slot is never freed, but the ceiling bounds total memory
-        // to a few KB and keeps every operation allocation-free (safe to touch on any thread at any time).
+        // threads a process realistically parks a trace context on. Slots are freed (tombstoned) by Reset
+        // when a thread's transaction ends and reclaimed by any later distinct ThreadID, so thread-pool
+        // churn does not grow the table without bound. The ceiling still bounds total memory to a few KB
+        // and keeps every operation allocation-free (safe to touch on any thread at any time).
         static constexpr size_t SlotCount = 4096;
         static constexpr size_t SlotMask = SlotCount - 1;
+        static constexpr int SlotBits = 12; // log2(SlotCount); used to take the HIGH hash bits.
+        static_assert(SlotCount == (static_cast<size_t>(1) << SlotBits), "SlotBits must equal log2(SlotCount)");
+
+        // Cap on how many slots any single lookup/claim probes before giving up. Bounds the READER's cost
+        // inside the suspend window to O(MaxProbes) atomic loads per thread regardless of table state -- the
+        // pre-fix code probed all SlotCount slots on a miss, which under a degraded/full table would scan
+        // 4096 slots per sampled thread every tick while the runtime is stopped. With the high-bit hash and
+        // realistic live-thread counts the true chain length is a handful; the bound only caps pathological
+        // clustering. A key is always found within MaxProbes because it is inserted within MaxProbes of its
+        // home (claim and lookup share this bound). Exceeding it degrades gracefully to "no link" / "drop",
+        // which the design already tolerates -- never to a stall.
+        static constexpr size_t MaxProbes = 64;
 
         struct Slot
         {
@@ -156,19 +183,24 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             std::atomic<int64_t> Span{ 0 };
         };
 
-        // Cheap integer hash (Knuth multiplicative) folded to the slot index. ThreadID is pointer-sized,
-        // so mix with the 64-bit Knuth constant (falls back cleanly on 32-bit where size_t is 32-bit).
+        // Knuth multiplicative hash folded to a slot index. The mixing in a multiplicative hash lands in the
+        // HIGH bits of the product, so we take the top SlotBits (>> (64 - SlotBits)). Masking the LOW bits
+        // instead (the previous bug) discarded the mixing entirely: CLR ThreadIDs are >=16-byte-aligned
+        // pointers, so their low 4 bits are always 0, which collapsed the reachable home buckets to just
+        // 1/16th of the table (256 of 4096) and defeated the whole point of hashing.
         static size_t HashOf(ThreadID key) noexcept
         {
-            return static_cast<size_t>((static_cast<uint64_t>(key) * 0x9E3779B97F4A7C15ull) & SlotMask);
+            return static_cast<size_t>((static_cast<uint64_t>(key) * 0x9E3779B97F4A7C15ull) >> (64 - SlotBits));
         }
 
         // Locate an existing slot for `key` via linear probing. Returns nullptr if not present. Const so
-        // the suspend-window reader can call it. Probes at most SlotCount slots then gives up.
+        // the suspend-window reader can call it. A tombstone does NOT terminate the scan (a live key may sit
+        // beyond a freed slot); only an empty slot does. Bounded by MaxProbes so the suspend-window cost is
+        // O(MaxProbes) even under a degraded table.
         const Slot* FindSlot(ThreadID key) const noexcept
         {
             size_t idx = HashOf(key);
-            for (size_t probe = 0; probe < SlotCount; ++probe)
+            for (size_t probe = 0; probe < MaxProbes; ++probe)
             {
                 const Slot& slot = _slots[idx];
                 const ThreadID k = slot.Key.load(std::memory_order_acquire);
@@ -178,11 +210,12 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 }
                 if (k == EmptyKey)
                 {
-                    return nullptr; // hit an empty slot -> key was never inserted.
+                    return nullptr; // hit an empty slot -> key was never inserted (empty terminates the chain).
                 }
+                // TombstoneKey or a different key -> keep probing.
                 idx = (idx + 1) & SlotMask;
             }
-            return nullptr;
+            return nullptr; // probe budget exhausted -> treat as absent (no link), never a stall.
         }
 
         Slot* FindSlot(ThreadID key) noexcept
@@ -191,37 +224,85 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         }
 
         // Locate the slot for `key`, claiming a free slot for it if not already present. Called only from
-        // writer (app-thread) context, so a CAS race between two threads claiming different keys is fine;
-        // the loser simply advances to the next probe slot. Returns nullptr only if the table is full.
+        // writer (app-thread) context. A CAS race between two threads claiming different keys is fine; the
+        // loser keeps probing. Returns nullptr only if the probe budget is exhausted without a free slot.
+        //
+        // Tombstone reuse: a slot freed by Reset can be reclaimed here. Because a given key is only ever
+        // inserted by its own owning thread (single-writer-per-key), the key can appear in at most one slot,
+        // and no other thread can insert it behind us. So we scan the whole chain for the key first --
+        // remembering the earliest tombstone we pass -- and only reclaim that tombstone once we confirm the
+        // key is absent (we hit an empty slot, which terminates the chain). This avoids ever creating a
+        // duplicate entry for a key whose live slot sits past an earlier tombstone.
         Slot* FindOrClaimSlot(ThreadID key) noexcept
         {
             size_t idx = HashOf(key);
-            for (size_t probe = 0; probe < SlotCount; ++probe)
+            Slot* firstTombstone = nullptr;
+            for (size_t probe = 0; probe < MaxProbes; ++probe, idx = (idx + 1) & SlotMask)
             {
                 Slot& slot = _slots[idx];
                 ThreadID k = slot.Key.load(std::memory_order_acquire);
+
                 if (k == key)
+                {
+                    return &slot; // already present.
+                }
+
+                if (k == TombstoneKey)
+                {
+                    if (firstTombstone == nullptr)
+                    {
+                        firstTombstone = &slot; // reuse candidate; keep scanning in case the key is live ahead.
+                    }
+                    continue;
+                }
+
+                if (k != EmptyKey)
+                {
+                    continue; // occupied by a different live key -> keep probing.
+                }
+
+                // Empty slot: the chain ends here, so the key is absent. Prefer reclaiming the earliest
+                // tombstone we saw; otherwise claim this empty slot.
+                if (firstTombstone != nullptr)
+                {
+                    ThreadID expected = TombstoneKey;
+                    if (firstTombstone->Key.compare_exchange_strong(expected, key, std::memory_order_acq_rel))
+                    {
+                        return firstTombstone;
+                    }
+                    if (expected == key)
+                    {
+                        return firstTombstone;
+                    }
+                    firstTombstone = nullptr; // tombstone taken by another key -> fall back to the empty slot.
+                }
+
+                ThreadID expected = EmptyKey;
+                if (slot.Key.compare_exchange_strong(expected, key, std::memory_order_acq_rel))
                 {
                     return &slot;
                 }
-                if (k == EmptyKey)
+                if (expected == key)
                 {
-                    // Try to claim this empty slot for our key.
-                    ThreadID expected = EmptyKey;
-                    if (slot.Key.compare_exchange_strong(expected, key, std::memory_order_acq_rel))
-                    {
-                        return &slot;
-                    }
-                    // Lost the race; `expected` now holds the winner's key.
-                    if (expected == key)
-                    {
-                        return &slot; // another thread claimed it for the SAME key -> reuse it.
-                    }
-                    // Different key won this slot; keep probing.
+                    return &slot; // another thread claimed it for the SAME key -> reuse it.
                 }
-                idx = (idx + 1) & SlotMask;
+                // A different key won this slot; it is now occupied -> keep probing.
             }
-            return nullptr;
+
+            // Probe budget exhausted. If we passed a tombstone, make one last attempt to reclaim it.
+            if (firstTombstone != nullptr)
+            {
+                ThreadID expected = TombstoneKey;
+                if (firstTombstone->Key.compare_exchange_strong(expected, key, std::memory_order_acq_rel))
+                {
+                    return firstTombstone;
+                }
+                if (expected == key)
+                {
+                    return firstTombstone;
+                }
+            }
+            return nullptr; // table effectively full within the probe window -> caller drops (no link).
         }
 
         // Publish a value into a slot under the per-slot seqlock. Writer-only.

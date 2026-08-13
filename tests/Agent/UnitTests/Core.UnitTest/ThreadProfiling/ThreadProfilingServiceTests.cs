@@ -55,6 +55,8 @@ public class ThreadProfilingServiceTests
         var result = service.StartThreadProfilingSession(1, 100, 1000);
 
         Assert.That(result, Is.False);
+
+        service.Dispose();
     }
 
     [Test]
@@ -67,6 +69,10 @@ public class ThreadProfilingServiceTests
         var result = service.StartThreadProfilingSession(1, 100, 1000);
 
         Assert.That(result, Is.True);
+
+        // Dispose deterministically joins the real sampling worker this test started, so it can't leak a
+        // live worker thread into whatever test runs next.
+        service.Dispose();
     }
 
     [Test]
@@ -76,6 +82,8 @@ public class ThreadProfilingServiceTests
         var result = _threadProfilingService.StartThreadProfilingSession(1, 100, 1000);
 
         Assert.That(result, Is.True);
+
+        // TearDown disposes _threadProfilingService, which joins the real worker this test started.
     }
 
     [Test]
@@ -177,6 +185,81 @@ public class ThreadProfilingServiceTests
     }
 
     [Test]
+    public void Dispose_WithActiveSession_StopsSampler()
+    {
+        // Mock sampler keeps this deterministic (no real worker thread): Dispose must route through the
+        // stop path and stop the sampler, so a disposed service never orphans a live sampling worker.
+        var sampler = Mock.Create<IThreadProfilingSampler>();
+        Mock.Arrange(() => sampler.Start(Arg.IsAny<uint>(), Arg.IsAny<uint>(), Arg.IsAny<ISampleSink>(), Arg.IsAny<INativeMethods>())).Returns(true);
+        var service = new ThreadProfilingService(_dataTransportService, _nativeMethods, sampler: sampler);
+
+        service.StartThreadProfilingSession(1, 100, 1000);
+        service.Dispose();
+
+        Mock.Assert(() => sampler.Stop(), Occurs.Once());
+    }
+
+    [Test]
+    public void Dispose_CalledTwice_StopsSamplerOnlyOnce()
+    {
+        // The _disposed guard makes a second Dispose a no-op -- TearDown/shutdown may dispose more than
+        // once, and base.Dispose() releases subscriptions that must not be released twice.
+        var sampler = Mock.Create<IThreadProfilingSampler>();
+        Mock.Arrange(() => sampler.Start(Arg.IsAny<uint>(), Arg.IsAny<uint>(), Arg.IsAny<ISampleSink>(), Arg.IsAny<INativeMethods>())).Returns(true);
+        var service = new ThreadProfilingService(_dataTransportService, _nativeMethods, sampler: sampler);
+
+        service.StartThreadProfilingSession(1, 100, 1000);
+        service.Dispose();
+        Assert.DoesNotThrow(() => service.Dispose());
+
+        Mock.Assert(() => sampler.Stop(), Occurs.Once());
+    }
+
+    [Test]
+    public void Dispose_WithNoSession_DoesNotThrow()
+    {
+        // No session was ever started (no sampler), so Dispose must be a safe no-op. TearDown disposes
+        // the same instance again -- the guard keeps that safe too.
+        Assert.DoesNotThrow(() => _threadProfilingService.Dispose());
+    }
+
+    [Test]
+    public void Stop_ShutdownPath_SuppressesReportSend()
+    {
+        // Stop() is the agent-shutdown path (AgentManager.StopServices). It must still stop the sampler
+        // but must NOT send data -- a synchronous collector POST on shutdown could stall CLR exit.
+        // SamplingComplete stands in for the worker's finally block, which is what actually reports.
+        var sampler = Mock.Create<IThreadProfilingSampler>();
+        Mock.Arrange(() => sampler.Start(Arg.IsAny<uint>(), Arg.IsAny<uint>(), Arg.IsAny<ISampleSink>(), Arg.IsAny<INativeMethods>())).Returns(true);
+        var service = new ThreadProfilingService(_dataTransportService, _nativeMethods, sampler: sampler);
+
+        service.StartThreadProfilingSession(1, 100, 1000);
+        service.Stop();
+        service.SamplingComplete();
+
+        Mock.Assert(() => sampler.Stop(), Occurs.Once());
+        Mock.Assert(() => _dataTransportService.SendThreadProfilingData(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()), Occurs.Never());
+    }
+
+    [Test]
+    public void StopThreadProfilingSession_CommandPath_ReportsData()
+    {
+        // The stop_profiler collector-command path (reportData defaults true) must still report, so the
+        // shutdown suppression above does not regress the normal collector-requested stop.
+        var sampler = Mock.Create<IThreadProfilingSampler>();
+        Mock.Arrange(() => sampler.Start(Arg.IsAny<uint>(), Arg.IsAny<uint>(), Arg.IsAny<ISampleSink>(), Arg.IsAny<INativeMethods>())).Returns(true);
+        var service = new ThreadProfilingService(_dataTransportService, _nativeMethods, sampler: sampler);
+
+        service.StartThreadProfilingSession(1, 100, 1000);
+        service.StopThreadProfilingSession(1);
+        service.SamplingComplete();
+
+        Mock.Assert(() => _dataTransportService.SendThreadProfilingData(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()), Occurs.Once());
+
+        service.Dispose();
+    }
+
+    [Test]
     public void SampleAcquired_AllErrorCode0_UpdatesTreeWithThreadSnapshots()
     {
         // Arrange
@@ -248,10 +331,11 @@ public class ThreadProfilingServiceTests
         _threadProfilingService.Start();
         _threadProfilingService.StartThreadProfilingSession(1, 60000, 120000);
         _threadProfilingService.SampleAcquired(threadSnapshots);
-        // Stop() signals and joins the sampling worker, whose finally block performs the single
-        // aggregation/send via SamplingComplete -- so we must not call SamplingComplete manually
-        // here or the data would be aggregated twice.
-        _threadProfilingService.Stop();
+        // The stop_profiler collector-command path (reportData defaults true) signals and joins the
+        // sampling worker, whose finally block performs the single aggregation/send via SamplingComplete
+        // -- so we must not call SamplingComplete manually here or the data would be aggregated twice.
+        // (Note: Stop(), the agent-shutdown path, suppresses the send and is covered separately.)
+        _threadProfilingService.StopThreadProfilingSession(1);
 
         // Assert
         Mock.Assert(() => _dataTransportService.SendThreadProfilingData(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()), Occurs.Once());

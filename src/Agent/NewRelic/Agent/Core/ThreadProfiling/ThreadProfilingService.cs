@@ -48,6 +48,10 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     /// </summary>
     private volatile bool _reportData = true;
 
+    // Guards Dispose() against running its teardown more than once (TearDown/shutdown can dispose twice,
+    // and base.Dispose() releases subscriptions that must not be released again).
+    private volatile bool _disposed;
+
     // i.e.,  this is a dictionary of ManagedThreadId, Total Call Count
     private readonly Dictionary<UIntPtr, int> _managedThreadsFromProfiler = new Dictionary<UIntPtr, int>();
 
@@ -128,13 +132,36 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     }
 
     /// <summary>
-    /// Stops the <see cref="ThreadProfilingService"/> service. This will halt a 
+    /// Stops the <see cref="ThreadProfilingService"/> service. This will halt a
     /// thread profiling session that might be running.
     /// </summary>
     public void Stop()
     {
-        // Shutdown a running thread profiling session.
-        StopThreadProfilingSession(_profileSessionId);
+        // Agent-shutdown path (AgentManager.StopServices). Signal and join any running sampling worker,
+        // but suppress the outbound profile report: SamplingComplete's send is a synchronous collector
+        // POST, and a slow or hung network call on process shutdown would stall CLR exit. The
+        // stop_profiler collector command keeps its own reportData behavior by calling
+        // StopThreadProfilingSession directly (StopThreadProfilerCommand), so this suppression is
+        // specific to shutdown and does not change how a collector-requested stop reports.
+        StopThreadProfilingSession(_profileSessionId, reportData: false);
+    }
+
+    /// <summary>
+    /// Deterministically stops any in-flight session so a disposed service never orphans a live sampling
+    /// worker thread, then chains <see cref="ConfigurationBasedService.Dispose"/>. Idempotent: safe to call
+    /// with no session active and safe to call more than once.
+    /// </summary>
+    public override void Dispose()
+    {
+        if (_disposed)
+            return;
+        _disposed = true;
+
+        // Stop() signals+joins the worker and suppresses the report send (shutdown path), so disposal
+        // never blocks CLR exit on a synchronous collector POST.
+        Stop();
+
+        base.Dispose();
     }
 
     protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
