@@ -21,8 +21,11 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 /// already stamped on the request body by <see cref="OtlpProfileBuilder"/>.
 ///
 /// It is wired as the <c>httpPost</c> delegate of <see cref="ProfilesTransport"/>, whose no-send guard
-/// has been removed, so this dispatch is invoked on every drain. The semantics are best-effort: any
-/// failure is logged and dropped, returning <c>false</c>; it never throws and never retries.
+/// has been removed, so this dispatch is invoked on every drain. The semantics are best-effort: the real
+/// send path retries transient failures a bounded number of times via
+/// <see cref="NewRelic.Agent.Core.DataTransport.CustomRetryHandler"/>, but once that budget is exhausted
+/// (or for a non-retryable outcome) the failure is logged and the batch is dropped, returning
+/// <c>false</c>; it never throws.
 ///
 /// HTTP infrastructure reuse: the proxy comes from the agent's <see cref="ConnectionInfo"/> (same
 /// proxy config the collector wire uses) and the handler mirrors the
