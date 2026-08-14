@@ -9,8 +9,6 @@ namespace ArtifactBuilder.Artifacts;
 
 public class AzureSiteExtension : Artifact
 {
-    private const string XmlLibraryName = "Microsoft.Web.XmlTransform.dll";
-
     private string _version;
     private string _nuGetPackageName;
 
@@ -24,7 +22,6 @@ public class AzureSiteExtension : Artifact
         _version = ReadVersionFromFile();
         var package = new NugetPackage(StagingDirectory, OutputDirectory);
         package.CopyAll($@"{PackageDirectory}");
-        package.CopyToContent(Path.Combine(FileHelpers.GetExecutingAssemblyDirectory(), XmlLibraryName));
         package.SetVersion(_version);
         _nuGetPackageName = package.Pack();
     }
@@ -92,7 +89,6 @@ public class AzureSiteExtension : Artifact
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, "applicationHost.xdt");
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, "install.cmd");
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, "install.ps1");
-        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, XmlLibraryName);
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, "uninstall.cmd");
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, "web.config");
 

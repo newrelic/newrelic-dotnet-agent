@@ -7,12 +7,6 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <!-- Vendored solely so Microsoft.Web.XmlTransform.dll is available in our build output to bundle into the Azure Site Extension package.
-         Pinned to 3.1.0: it's the last version whose only asset groups are net40/netstandard2.0. install.ps1 loads this DLL via
-         Assembly.LoadFile from Windows PowerShell, which runs on .NET Framework, not this project's own net10.0 target. Versions
-         3.2.0+ add a net10.0-specific asset that NuGet prefers for this net10.0 project, which Assembly.LoadFile cannot load under
-         .NET Framework. Do not bump past 3.1.x without confirming the resolved asset is still netstandard2.0 (or net4x). -->
-    <PackageReference Include="Microsoft.Web.Xdt" Version="3.1.0" />
   </ItemGroup>
 
 </Project>

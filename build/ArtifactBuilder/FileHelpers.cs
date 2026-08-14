@@ -70,14 +70,10 @@ public static class FileHelpers
 
     public static string GetRepoRootDirectory()
     {
-        var sourceDirectory = new DirectoryInfo(Path.Combine(GetExecutingAssemblyDirectory(), @"..\..\..\..\.."));
-        return sourceDirectory.FullName;
-    }
-
-    public static string GetExecutingAssemblyDirectory()
-    {
         var exe = System.Reflection.Assembly.GetExecutingAssembly().Location;
-        return Path.GetDirectoryName(exe);
+        var exeDirectory = Path.GetDirectoryName(exe);
+        var sourceDirectory = new DirectoryInfo(Path.Combine(exeDirectory, @"..\..\..\..\.."));
+        return sourceDirectory.FullName;
     }
 
     public static string GetHomeRootDirectory()

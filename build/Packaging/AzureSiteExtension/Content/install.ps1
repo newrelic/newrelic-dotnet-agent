@@ -323,9 +323,6 @@ try
 	#Using Tls12
 	[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bOR [Net.SecurityProtocolType]::Tls12
 
-	#Loading helper assemblies.
-	[Reflection.Assembly]::LoadFile((Get-ChildItem Microsoft.Web.XmlTransform.dll).FullName)
-
 	$nugetSource = "https://www.nuget.org/api/v2/"
 
 	$nugetPackageForFrameworkApp = "NewRelic.Azure.WebSites"
