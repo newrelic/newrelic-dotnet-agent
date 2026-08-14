@@ -144,8 +144,47 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     //   * DrainOnce (fires every 1-60 s) takes it once per drain, in OnSendResult, and never for the
     //     read/parse/build work — the gate check at the top is a lock-free volatile read. Contention is
     //     nil in steady state: the only other contenders are config changes and teardown.
+    //   * StopLocked calls drainTask.Wait(...) to bound how long it waits for an in-flight drain before
+    //     _native.Stop(). If it held _lifecycleLock for the WHOLE wait, a racing drain's OnSendResult
+    //     (which also takes _lifecycleLock once past its own _stopSignaled fast-exit) could never finish --
+    //     a self-deadlock bounded only by the wait's own timeout, proven by a failing regression test, not
+    //     just a theoretical concern. StopLocked closes this by temporarily dropping _lifecycleLock (via
+    //     Monitor.Exit/Monitor.Enter, not the `lock` statement) for exactly the duration of the wait --
+    //     legal because Monitor supports same-thread recursive acquire/release, so every existing caller's
+    //     own `lock (_lifecycleLock) { StopLocked(); }` continues to work unchanged. _stopInProgress guards
+    //     the narrower race this reopens: a SECOND thread's Stop-triggering call (Dispose/ApplyConfigChange/
+    //     StartFromCommand/StopFromCommand) landing in that now-widened window must wait for the first
+    //     stop's real completion (native.Stop() having actually run) rather than racing it or returning
+    //     early while _isActive is still (briefly) true -- see StopLocked for the mechanism.
     //   * Lock ordering is always _lifecycleLock -> Scheduler's internal semaphore, never the reverse.
     private readonly object _lifecycleLock = new object();
+
+    // Lock-free early-exit for OnSendResult while a stop/retune is tearing down. Volatile: written under
+    // _lifecycleLock (set true near the top of StopLocked, before the bounded drain wait; reset false near
+    // the top of StartLocked for the next session), read lock-free by OnSendResult on whatever thread the
+    // dispatched drain landed on.
+    //
+    // NOTE: this is now an optimization, not a correctness mechanism -- the actual lock-ordering-inversion
+    // closure is StopLocked's Monitor.Exit/Monitor.Enter drop-and-reacquire around its bounded wait (see the
+    // _lifecycleLock locking-posture note above), which means OnSendResult's ordinary `lock (_lifecycleLock)`
+    // will simply succeed once the lock is dropped, deadlock or not. _stopSignaled still saves a drain that's
+    // stopping anyway the pointless cost of acquiring the lock just to touch backoff bookkeeping nobody
+    // needs once a stop/retune has already signaled.
+    //
+    // Deliberately NOT reusing _isActive for this: _isActive's contract (false only once _native.Stop() has
+    // actually finished, see StopLocked's finally) is load-bearing for ThreadProfilingService's forward
+    // mutual-exclusion guard (ProfilingMutualExclusionGate.Lock, StartThreadProfilingSession), which treats
+    // IsActive==false as "safe to start sampling, CP's native sampler is not running". Flipping _isActive
+    // any earlier than native.Stop() actually completing would let a thread-profiling session start while
+    // CP's native sampler is still live -- a real regression, not a fix.
+    private volatile bool _stopSignaled;
+
+    // Coordinates a second concurrent call into StopLocked landing while another thread's StopLocked has
+    // deliberately dropped _lifecycleLock during its bounded drain wait (see StopLocked). Null when no stop
+    // is in progress. Plain field, not volatile: every access happens either while holding _lifecycleLock or
+    // immediately after (re)acquiring it via Monitor.Enter, which is a full memory barrier -- see the
+    // _lifecycleLock locking-posture note above.
+    private TaskCompletionSource<bool> _stopInProgress;
 
     // volatile: read lock-free by ThreadProfilingService's forward guard on a different (collector) thread,
     // written under _lifecycleLock on the scheduler thread. volatile gives the cross-thread visibility the
@@ -447,6 +486,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 // no-ops instead of resuming sampling this fresh session didn't schedule.
                 _backoffGeneration++;
                 _sendBackoffActive = false;
+                // Reset for this fresh session -- a previous StopLocked (this session's own aborted start
+                // below, or a prior session entirely) may have left this true. See the field comment.
+                _stopSignaled = false;
 
                 // Arm the reverse-guard flag before starting native sampling, while still holding the gate
                 // above -- ThreadProfilingService's forward guard can only observe this flag after acquiring
@@ -485,6 +527,34 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
     private void StopLocked()
     {
+        // A second concurrent call landing while another thread's StopLocked has deliberately dropped
+        // _lifecycleLock below (during its own bounded drain wait). Wait for that stop to genuinely finish
+        // -- not just return early -- so a caller like Dispose never proceeds to _native.Shutdown() while a
+        // different thread's _native.Stop() is still in flight. This wait ALSO drops _lifecycleLock for its
+        // duration (same reason as the drain wait below): the first stopper needs to reacquire the lock to
+        // finish, and this thread is currently holding it via its own ambient `lock (_lifecycleLock) {
+        // StopLocked(); }` call site.
+        var inProgress = _stopInProgress;
+        if (inProgress != null)
+        {
+            Monitor.Exit(_lifecycleLock);
+            try
+            {
+                if (!inProgress.Task.Wait(_drainShutdownWaitTimeout))
+                {
+                    Log.Warn("[ContinuousProfiling] Timed out after {0} waiting for a concurrent stop already in progress.", _drainShutdownWaitTimeout);
+                }
+            }
+            finally
+            {
+                Monitor.Enter(_lifecycleLock);
+            }
+            return;
+        }
+
+        var myStop = new TaskCompletionSource<bool>();
+        _stopInProgress = myStop;
+
         try
         {
             // Disarm correlation first so the wrapper hot path stops pushing before native sampling stops.
@@ -494,6 +564,11 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
             _scheduler.StopExecuting(_drainAction);
 
+            // Signal, lock-free, BEFORE the bounded wait below -- lets a racing drain's OnSendResult skip
+            // pointless backoff bookkeeping once a stop is underway. See _stopSignaled's field comment: this
+            // is an optimization now, not what makes the wait below safe -- the Monitor.Exit/Enter drop is.
+            _stopSignaled = true;
+
             // StopExecuting only guarantees the SCHEDULER considers the action finished -- since
             // _drainAction just dispatches DrainOnce via Task.Run and returns immediately, that happens
             // almost instantly regardless of whether the real drain (including a retried send) is still
@@ -501,9 +576,30 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // drain could still be reading the sample buffer or calling into the native profiler after
             // this method (and Dispose, which calls it) has torn it down.
             var drainTask = _lastDrainTask;
-            if (!drainTask.IsCompleted && !drainTask.Wait(_drainShutdownWaitTimeout))
+            if (!drainTask.IsCompleted)
             {
-                Log.Warn("[ContinuousProfiling] Timed out after {0} waiting for an in-flight drain to finish before stopping native sampling.", _drainShutdownWaitTimeout);
+                // Temporarily release _lifecycleLock for exactly this wait. Every caller already holds it
+                // via `lock (_lifecycleLock) { StopLocked(); }`; Monitor supports same-thread recursive
+                // acquire/release, so dropping it here and reacquiring below is legal as long as it's held
+                // again by the time this method returns (the caller's own `lock` statement's compiler-
+                // generated Monitor.Exit must see it still owned to unwind correctly -- it will, since the
+                // finally below reacquires unconditionally). Without this drop, a racing drain's OnSendResult
+                // -- once past its _stopSignaled fast-exit, or if it read that flag before this line set it
+                // -- could never acquire _lifecycleLock while this thread holds it for the whole wait, which
+                // is exactly the self-deadlock a regression test proved: bounded only by _drainShutdownWaitTimeout,
+                // every time, not a rare theoretical race.
+                Monitor.Exit(_lifecycleLock);
+                try
+                {
+                    if (!drainTask.Wait(_drainShutdownWaitTimeout))
+                    {
+                        Log.Warn("[ContinuousProfiling] Timed out after {0} waiting for an in-flight drain to finish before stopping native sampling.", _drainShutdownWaitTimeout);
+                    }
+                }
+                finally
+                {
+                    Monitor.Enter(_lifecycleLock);
+                }
             }
 
             _native.Stop();
@@ -517,6 +613,8 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         {
             _isActive = false;
             _activeIntervalMs = 0;
+            _stopInProgress = null;
+            myStop.SetResult(true);
         }
     }
 
@@ -526,9 +624,11 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// </summary>
     public void DrainOnce()
     {
-        // Lock-free volatile read (this path deliberately doesn't take _lifecycleLock -- see the locking-
-        // posture note above). Dispose has joined the native worker thread, so a drain landing after it
-        // would P/Invoke into a dead sampler and ship a profile through an already-disposed reporter.
+        // Lock-free volatile read. This initial gate is the only part of DrainOnce that doesn't take
+        // _lifecycleLock -- OnSendResult below DOES take it (once a real send has happened), guarded by its
+        // own _stopSignaled fast exit; see the locking-posture note above. Dispose has joined the native
+        // worker thread, so a drain landing after this check would P/Invoke into a dead sampler and ship a
+        // profile through an already-disposed reporter.
         if (_disposed)
             return;
 
@@ -650,6 +750,17 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// </summary>
     private void OnSendResult(bool sent)
     {
+        // Lock-free fast exit, checked BEFORE _lifecycleLock: once a stop/retune has signaled (StopLocked,
+        // just before its own bounded wait for this very drain), this drain's send outcome is moot -- the
+        // session is stopping/stopped. Skipping the backoff bookkeeping below in that case is correct, not
+        // just convenient: nothing else (a fresh StartLocked resets it all; a stale probe no-ops on
+        // generation) needs the failure/backoff counters this drain would otherwise update. Without this
+        // check, taking _lifecycleLock here unconditionally races StopLocked's drainTask.Wait, which
+        // already holds that lock -- see the _lifecycleLock locking-posture note and _stopSignaled's field
+        // comment for the lock-ordering-inversion this closes.
+        if (_stopSignaled)
+            return;
+
         // Under _lifecycleLock: this mutates the same _consecutiveSendFailures/_backoffIndex/
         // _sendBackoffActive state StartLocked/EndBackoffProbe/ResumeAfterReconnect write under that lock.
         // Unlocked, a reconnect landing between the gate-set and the native stop in the trip below leaves
