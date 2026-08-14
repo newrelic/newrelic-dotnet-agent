@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.ThreadProfiling;
@@ -108,6 +109,22 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // Stable delegate reference: ExecuteEvery and StopExecuting must be handed the same instance.
     private readonly Action _drainAction;
 
+    // The Task most recently dispatched by _drainAction. Interlocked.Exchange, not a plain assignment:
+    // ExecuteEvery no longer serializes ticks against real drain duration (see _drainAction below), so
+    // back-to-back ticks CAN dispatch concurrently and race this write. StopLocked reads it to wait for
+    // an in-flight drain before tearing down native sampling -- see _drainShutdownWaitTimeout.
+    private Task _lastDrainTask = Task.CompletedTask;
+
+    // Bounds StopLocked's wait for an in-flight drain. Sized above OtlpProfilesHttpDispatcher.
+    // TotalSendTimeoutWithRetries (45s) -- the worst-case CustomRetryHandler-driven send -- with margin
+    // for the read+parse+build steps that run before the send and for scheduling jitter. A timeout here
+    // is logged and teardown proceeds anyway: never let a stuck drain block shutdown indefinitely.
+    //
+    // Test-injectable via the constructor's optional drainShutdownWaitTimeout parameter (defaults to the
+    // 60s production value below) so unit tests can exercise the timeout-then-proceed branch without
+    // actually waiting out 60 real seconds.
+    private readonly TimeSpan _drainShutdownWaitTimeout;
+
     // Single reused drain buffer. Overlapping drains would tear it, so DrainOnce is guarded by
     // _drainInFlight below.
     private readonly byte[] _drainBuffer = new byte[DrainBufferSize];
@@ -180,14 +197,22 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// </summary>
     public IThreadProfilingStatus ThreadProfilingStatus { get; set; }
 
-    public ContinuousProfilingService(ISampleSource sampleSource, INativeContinuousProfiler native, IProfilesTransport transport, IScheduler scheduler, IAgentHealthReporter agentHealthReporter)
+    public ContinuousProfilingService(ISampleSource sampleSource, INativeContinuousProfiler native, IProfilesTransport transport, IScheduler scheduler, IAgentHealthReporter agentHealthReporter, TimeSpan? drainShutdownWaitTimeout = null)
     {
         _sampleSource = sampleSource;
         _native = native;
         _transport = transport;
         _scheduler = scheduler;
         _agentHealthReporter = agentHealthReporter;
-        _drainAction = DrainOnce;
+        _drainShutdownWaitTimeout = drainShutdownWaitTimeout ?? TimeSpan.FromSeconds(60);
+
+        // ExecuteEvery pauses the recurring timer only until this delegate RETURNS -- dispatching via
+        // Task.Run (rather than calling DrainOnce inline) frees the shared Scheduler thread immediately,
+        // so CustomRetryHandler's multi-attempt retry budget (see OtlpProfilesHttpDispatcher) never blocks
+        // harvest/samplers/health-reporter. DrainOnce's own _drainInFlight guard (pre-existing, added for
+        // the retune-overlap case) now also covers the more common case this introduces: back-to-back
+        // ticks dispatching before the previous drain's send has finished.
+        _drainAction = () => Interlocked.Exchange(ref _lastDrainTask, Task.Run(DrainOnce));
 
         _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
     }
@@ -468,6 +493,19 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             ContinuousProfilingContext.Instance = new ContinuousProfilingContext();
 
             _scheduler.StopExecuting(_drainAction);
+
+            // StopExecuting only guarantees the SCHEDULER considers the action finished -- since
+            // _drainAction just dispatches DrainOnce via Task.Run and returns immediately, that happens
+            // almost instantly regardless of whether the real drain (including a retried send) is still
+            // running. Wait for it explicitly, bounded, before _native.Stop() -- otherwise a detached
+            // drain could still be reading the sample buffer or calling into the native profiler after
+            // this method (and Dispose, which calls it) has torn it down.
+            var drainTask = _lastDrainTask;
+            if (!drainTask.IsCompleted && !drainTask.Wait(_drainShutdownWaitTimeout))
+            {
+                Log.Warn("[ContinuousProfiling] Timed out after {0} waiting for an in-flight drain to finish before stopping native sampling.", _drainShutdownWaitTimeout);
+            }
+
             _native.Stop();
             Log.Info("[ContinuousProfiling] Session stopped.");
         }

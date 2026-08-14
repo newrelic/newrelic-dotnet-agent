@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -84,6 +85,41 @@ public class ContinuousProfilingServiceTests
 
         Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(10000), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Once());
         Assert.That(_service.IsActive, Is.True);
+    }
+
+    [Test]
+    public void The_drain_action_registered_with_the_scheduler_dispatches_DrainOnce_asynchronously_instead_of_running_it_inline()
+    {
+        // ArrangeEnabled: StartIfEnabled is a no-op (and never registers a drain action) against an
+        // unarranged config mock, whose ContinuousProfilingEnabled defaults to false -- not called out in
+        // the brief's literal test body, added here so the test actually reaches ExecuteEvery.
+        ArrangeEnabled(10000);
+
+        Action drainAction = null;
+        Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()))
+            .DoInstead((Action action, TimeSpan interval, TimeSpan? initialDelay, bool trackAsAgentWork) => drainAction = action);
+
+        _service.StartIfEnabled();
+
+        Assert.That(drainAction, Is.Not.Null);
+
+        // Calling the registered action must return promptly even though DrainOnce itself would block on
+        // _sampleSource.ReadBatch/_transport.Send -- proving it's dispatched, not invoked inline. Arrange a
+        // slow ReadBatch to make an inline call observably hang if this regresses.
+        var readBatchStarted = new ManualResetEventSlim(false);
+        var releaseReadBatch = new ManualResetEventSlim(false);
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>()))
+            .DoInstead(() => { readBatchStarted.Set(); releaseReadBatch.Wait(TimeSpan.FromSeconds(5)); })
+            .Returns(0);
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        drainAction();
+        sw.Stop();
+
+        Assert.That(sw.Elapsed, Is.LessThan(TimeSpan.FromSeconds(1)), "the registered action must dispatch, not block, the calling thread");
+        Assert.That(readBatchStarted.Wait(TimeSpan.FromSeconds(5)), Is.True, "the dispatched drain must actually run on some thread");
+
+        releaseReadBatch.Set();
     }
 
     [Test]
