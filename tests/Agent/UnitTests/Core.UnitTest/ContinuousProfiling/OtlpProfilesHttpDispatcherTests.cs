@@ -30,14 +30,29 @@ public class OtlpProfilesHttpDispatcherTests
     }
 
     [Test]
-    public void SendTimeout_is_short_and_bounded_well_below_the_collector_timeout()
+    public void AttemptConnectTimeout_is_short_and_bounded_well_below_the_collector_timeout()
     {
-        // CP sends are best-effort and never retried; a hung endpoint must not park the drain ThreadPool
-        // thread for the 120s collector default. This regresses if someone rewires it back to CollectorTimeout.
+        // Per-attempt connect bound must stay well under the 120s collector default --
+        // a hung connect on one retry attempt must not itself eat the whole budget.
         Assert.Multiple(() =>
         {
-            Assert.That(OtlpProfilesHttpDispatcher.SendTimeout, Is.GreaterThan(TimeSpan.Zero));
-            Assert.That(OtlpProfilesHttpDispatcher.SendTimeout, Is.LessThanOrEqualTo(TimeSpan.FromSeconds(30)));
+            Assert.That(OtlpProfilesHttpDispatcher.AttemptConnectTimeout, Is.GreaterThan(TimeSpan.Zero));
+            Assert.That(OtlpProfilesHttpDispatcher.AttemptConnectTimeout, Is.LessThanOrEqualTo(TimeSpan.FromSeconds(30)));
+        });
+    }
+
+    [Test]
+    public void TotalSendTimeoutWithRetries_covers_the_full_multi_attempt_budget()
+    {
+        // Must be strictly larger than a single AttemptConnectTimeout (room for retries + backoff)
+        // and stay well under ContinuousProfilingService.DrainShutdownWaitTimeout so Dispose's
+        // bounded wait for an in-flight drain always has margin over this send-side ceiling.
+        Assert.Multiple(() =>
+        {
+            Assert.That(OtlpProfilesHttpDispatcher.TotalSendTimeoutWithRetries,
+                Is.GreaterThan(OtlpProfilesHttpDispatcher.AttemptConnectTimeout));
+            Assert.That(OtlpProfilesHttpDispatcher.TotalSendTimeoutWithRetries,
+                Is.LessThanOrEqualTo(TimeSpan.FromSeconds(45)));
         });
     }
 
@@ -169,5 +184,19 @@ public class OtlpProfilesHttpDispatcherTests
             Assert.That(captured.Content.Headers.ContentType.MediaType, Is.EqualTo("application/x-protobuf"));
             Assert.That(captured.Headers.GetValues("api-key").Single(), Is.EqualTo(LicenseKey));
         });
+    }
+
+    [Test]
+    public void Post_using_the_real_send_pipeline_does_not_throw_when_constructed_without_an_injected_send()
+    {
+        // Exercises CreateRealSend/CreateHandler end-to-end (the CustomRetryHandler wiring included) via the
+        // public single-arg constructor, without making a real network call -- BuildRequestMessage validation
+        // short-circuits before any socket work for a malformed endpoint, same guard Post_returns_false_and_
+        // does_not_throw_when_the_endpoint_is_not_a_valid_uri already relies on.
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration);
+
+        var result = default(ProfilesSendResult);
+        Assert.That(() => result = dispatcher.Post(new byte[] { 1 }, "not a uri"), Throws.Nothing);
+        Assert.That(result.Accepted, Is.False);
     }
 }

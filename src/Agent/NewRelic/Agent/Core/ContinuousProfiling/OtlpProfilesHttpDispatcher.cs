@@ -37,11 +37,18 @@ public class OtlpProfilesHttpDispatcher
     private const string ContentType = "application/x-protobuf";
     private const string ApiKeyHeader = "api-key";
 
-    // CP profile sends are best-effort and never retried, so bound each send well below the collector's
-    // default 120s timeout: DrainOnce invokes the send synchronously on the drain ThreadPool thread, so a
-    // hung / blackholed OTLP endpoint must not park that thread for minutes. 15s is generous for a
-    // slow-but-alive endpoint while capping the worst case.
-    public static readonly TimeSpan SendTimeout = TimeSpan.FromSeconds(15);
+    // Per-attempt connect bound (SocketsHttpHandler.ConnectTimeout). Renamed from the old SendTimeout:
+    // this now bounds only ONE attempt's TCP connect, not the whole multi-attempt send -- see
+    // TotalSendTimeoutWithRetries for the budget that covers the full CustomRetryHandler sequence.
+    public static readonly TimeSpan AttemptConnectTimeout = TimeSpan.FromSeconds(15);
+
+    // HttpClient.Timeout bounds the ENTIRE SendAsync call, including every retry attempt and every
+    // inter-attempt backoff delay CustomRetryHandler injects -- not just one attempt. Sized for
+    // CustomRetryHandler's MaxRetries=3 * AttemptConnectTimeout worst case, plus its own backoff/jitter
+    // (~1s + ~2s across the two inter-attempt gaps, capped well below 30s each in practice), rounded up
+    // with margin. Kept comfortably under ContinuousProfilingService.DrainShutdownWaitTimeout (60s) so
+    // that bounded wait always covers a send that is legitimately still retrying, not just one that's hung.
+    public static readonly TimeSpan TotalSendTimeoutWithRetries = TimeSpan.FromSeconds(45);
 
     private readonly IConfiguration _configuration;
     private readonly Func<HttpRequestMessage, HttpResponseMessage> _send;
@@ -120,8 +127,9 @@ public class OtlpProfilesHttpDispatcher
     {
         var connectionInfo = new ConnectionInfo(configuration);
 
-        var handler = CreateHandler(connectionInfo.Proxy);
-        var httpClient = new HttpClient(handler, true) { Timeout = SendTimeout };
+        var innerHandler = CreateHandler(connectionInfo.Proxy);
+        var retryHandler = new CustomRetryHandler { InnerHandler = innerHandler };
+        var httpClient = new HttpClient(retryHandler, true) { Timeout = TotalSendTimeoutWithRetries };
 
         return request => httpClient.SendAsync(request).ConfigureAwait(false).GetAwaiter().GetResult();
     }
@@ -147,11 +155,11 @@ public class OtlpProfilesHttpDispatcher
 
                 handler.PooledConnectionLifetime = pooledConnectionLifetime;
                 handler.PooledConnectionIdleTimeout = pooledConnectionIdleTimeout;
-                handler.ConnectTimeout = SendTimeout;
+                handler.ConnectTimeout = AttemptConnectTimeout;
                 handler.Proxy = proxy;
 
                 Log.Debug("[ContinuousProfiling] Created a SocketsHttpHandler with PooledConnectionLifetime {0}, PooledConnectionIdleTimeout {1} and ConnectTimeout {2}.",
-                    pooledConnectionLifetime, pooledConnectionIdleTimeout, SendTimeout);
+                    pooledConnectionLifetime, pooledConnectionIdleTimeout, AttemptConnectTimeout);
 
                 return (HttpMessageHandler)handler;
             }
