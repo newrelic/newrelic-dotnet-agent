@@ -591,7 +591,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             if (!completed)
             {
                 // That stop outran the bound -- it's wedged somewhere in the drain wait or in native. Piling a
-                // second concurrent stop on top of it would make things worse, not better.
+                // second concurrent stop on top of it would make things worse, not better. Returning here means
+                // this caller's own stop/retune request silently no-ops -- e.g. a retune's StopLocked call
+                // takes this branch, and the StartLocked that would follow it never runs, so the config change
+                // it was applying is dropped too. Only the Warn above records that anything happened. Accepted:
+                // the alternative (retrying the stop, or proceeding to start over a wedged native session) is
+                // worse than a config change that has to be re-applied on the next config event.
                 Log.Warn("[ContinuousProfiling] Timed out after {0} waiting for a concurrent stop already in progress.", _drainShutdownWaitTimeout);
                 return;
             }
