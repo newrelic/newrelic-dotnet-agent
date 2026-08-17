@@ -78,7 +78,8 @@ public abstract class RemoteApplication : IDisposable
             {
                 return _sourceNewRelicHomeCoreClrDirectoryPath;
             }
-            return GetSourceDirectoryForHomeDir(Utilities.RuntimeHomeDirName);
+            _sourceNewRelicHomeCoreClrDirectoryPath = GetSourceDirectoryForHomeDir(Utilities.RuntimeHomeDirName);
+            return _sourceNewRelicHomeCoreClrDirectoryPath;
         }
         set
         {
@@ -86,18 +87,25 @@ public abstract class RemoteApplication : IDisposable
         }
     }
 
+    // Deliberately does NOT write into _sourceNewRelicHomeCoreClrDirectoryPath -- that field is the
+    // machine-arch memo for the property above ONLY. This helper is also called directly for
+    // arch-override/Linux home dirs (CopyNewRelicHomeCoreClrWindowsDirectoryToRemote,
+    // CopyNewRelicHomeCoreClrLinuxDirectoryToRemote); it used to write its result into that same shared
+    // static field regardless of which homeDirName was passed, so whichever fixture ran first in a test
+    // process (e.g. an x86-override class) silently poisoned the cache for every later machine-arch
+    // fixture in that process -- they'd get the wrong-architecture native profiler copied with no error,
+    // just a profiler that fails to load. Each call here recomputes fresh; the string concat is cheap
+    // enough that losing memoization for the override paths costs nothing measurable.
     private static string GetSourceDirectoryForHomeDir(string homeDirName)
     {
         var homeRootPath = Environment.GetEnvironmentVariable("NR_DEV_HOMEROOT");
 
         if (!string.IsNullOrWhiteSpace(homeRootPath) && Directory.Exists(homeRootPath))
         {
-            _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(homeRootPath, homeDirName);
-            return _sourceNewRelicHomeCoreClrDirectoryPath;
+            return Path.Combine(homeRootPath, homeDirName);
         }
 
-        _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", homeDirName);
-        return _sourceNewRelicHomeCoreClrDirectoryPath;
+        return Path.Combine(RepositoryRootPath, "src", "Agent", homeDirName);
     }
 
     private static readonly string SourceApplicationLauncherProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "ApplicationLauncher");
