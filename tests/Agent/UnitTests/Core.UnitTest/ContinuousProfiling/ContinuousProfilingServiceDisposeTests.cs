@@ -198,6 +198,69 @@ public class ContinuousProfilingServiceDisposeTests
         Assert.That(nativeStopOrder, Does.Contain("native-stop"), "Dispose must still reach _native.Stop() after the bounded wait times out");
     }
 
+    [Test]
+    public void A_burst_of_ticks_that_lose_the_in_flight_guard_does_not_clobber_the_handle_to_the_real_drain()
+    {
+        // Regression test for the _lastDrainTask staleness finding: _drainAction used to publish a task
+        // into _lastDrainTask on EVERY tick, including ticks that lose DrainOnce's _drainInFlight guard and
+        // return almost instantly as a no-op. Because the recurring timer keeps firing regardless of how
+        // long the real drain takes, a burst of such skipped ticks racing a slow real drain would overwrite
+        // _lastDrainTask with an already-completed skip-task, making StopLocked's bounded wait below think
+        // there was nothing to wait for (drainTask.IsCompleted == true) -- no wait, no timeout, no Warn, and
+        // _native.Stop()/Shutdown() would tear down native sampling while the real drain was still running
+        // detached. The fix: only DrainOnce (never _drainAction) writes _lastDrainTask, and only after it
+        // has actually won the _drainInFlight guard -- a losing tick returns before ever touching the field.
+        //
+        // Same BlockingSampleSource + short-timeout-service technique as the test above (needed so the real
+        // drain stays genuinely in-flight, unserialized by a JustMock DoInstead lock, across the bounded wait).
+        var drainReachedReadBatch = new ManualResetEventSlim(false);
+        var releaseReadBatch = new ManualResetEventSlim(false);
+        var blockingSource = new BlockingSampleSource(drainReachedReadBatch, releaseReadBatch);
+        var shortTimeoutService = new ContinuousProfilingService(blockingSource, _native, _transport, _scheduler, _health, TimeSpan.FromMilliseconds(50));
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(true);
+        Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(10000);
+        Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        shortTimeoutService.OverrideConfigForTesting(_config);
+
+        Action drainAction = null;
+        Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()))
+            .DoInstead((Action action, TimeSpan interval, TimeSpan? initialDelay, bool trackAsAgentWork) => drainAction = action);
+
+        shortTimeoutService.StartIfEnabled();
+        Assert.That(drainAction, Is.Not.Null);
+
+        var nativeStopOrder = new List<string>();
+        Mock.Arrange(() => _native.Stop()).DoInstead(() => nativeStopOrder.Add("native-stop"));
+
+        drainAction(); // real drain: dispatches DrainOnce, which wins the guard and blocks in ReadBatch below
+
+        Assert.That(drainReachedReadBatch.Wait(TimeSpan.FromSeconds(5)), Is.True, "the real dispatched drain must actually reach ReadBatch (be in-flight) before the burst of skipped ticks below");
+
+        // Simulate the recurring timer firing several more times while the real drain is still blocked in
+        // ReadBatch -- every one of these loses the _drainInFlight guard inside DrainOnce and must return
+        // without touching _lastDrainTask. Give each a moment to actually run and return on the thread pool.
+        for (var i = 0; i < 10; i++)
+        {
+            drainAction();
+        }
+        Thread.Sleep(TimeSpan.FromMilliseconds(200));
+
+        shortTimeoutService.Dispose();
+
+        releaseReadBatch.Set(); // let the real drain unwind now that the assertions' precondition is met
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("Timed out")), Arg.IsAny<object[]>()), Occurs.Once(),
+            "StopLocked must still have waited on (and timed out on) the REAL drain -- if the burst of skipped ticks had clobbered _lastDrainTask with a completed skip-task, this wait (and its Warn) would have been silently skipped entirely");
+        Assert.That(nativeStopOrder, Does.Contain("native-stop"), "Dispose must still reach _native.Stop() after the bounded wait times out");
+    }
+
     /// <summary>
     /// A real (non-mock) <see cref="ISampleSource"/> whose ReadBatch signals that the drain has entered it
     /// and then blocks until released, returning 0 (no batch) so DrainOnce returns right after. Deliberately

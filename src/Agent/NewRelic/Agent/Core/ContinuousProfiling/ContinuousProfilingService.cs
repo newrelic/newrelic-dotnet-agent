@@ -109,10 +109,16 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // Stable delegate reference: ExecuteEvery and StopExecuting must be handed the same instance.
     private readonly Action _drainAction;
 
-    // The Task most recently dispatched by _drainAction. Interlocked.Exchange, not a plain assignment:
-    // ExecuteEvery no longer serializes ticks against real drain duration (see _drainAction below), so
-    // back-to-back ticks CAN dispatch concurrently and race this write. StopLocked reads it to wait for
-    // an in-flight drain before tearing down native sampling -- see _drainShutdownWaitTimeout.
+    // The task tracking whichever drain most recently WON the _drainInFlight guard below. Published only
+    // from inside DrainOnce, after that CompareExchange succeeds -- never from _drainAction. ExecuteEvery
+    // no longer serializes ticks against real drain duration (see _drainAction below), so back-to-back
+    // ticks fire regardless of how long a real drain's send takes; every tick that loses the guard must
+    // return WITHOUT touching this field, or it overwrites the handle to the real in-flight drain with an
+    // already-completed skip-task -- which is exactly what let StopLocked's bounded wait below silently
+    // no-op while a real send was still retrying (see the field's history/incident notes if this
+    // regresses). StopLocked reads it to wait for an in-flight drain before tearing down native sampling --
+    // see _drainShutdownWaitTimeout. Interlocked.Exchange, not a plain assignment, since concurrent ticks
+    // can still race this write for the guard itself.
     private Task _lastDrainTask = Task.CompletedTask;
 
     // Bounds StopLocked's wait for an in-flight drain. Sized above OtlpProfilesHttpDispatcher.
@@ -251,8 +257,11 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         // so CustomRetryHandler's multi-attempt retry budget (see OtlpProfilesHttpDispatcher) never blocks
         // harvest/samplers/health-reporter. DrainOnce's own _drainInFlight guard (pre-existing, added for
         // the retune-overlap case) now also covers the more common case this introduces: back-to-back
-        // ticks dispatching before the previous drain's send has finished.
-        _drainAction = () => Interlocked.Exchange(ref _lastDrainTask, Task.Run(DrainOnce));
+        // ticks dispatching before the previous drain's send has finished. Deliberately does NOT touch
+        // _lastDrainTask here -- only DrainOnce publishes to it, and only after winning the guard, so a
+        // tick that loses the guard (the common case while a real send is still in flight) can never
+        // clobber the handle to the drain that's actually running.
+        _drainAction = () => Task.Run(DrainOnce);
 
         _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
     }
@@ -688,6 +697,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         if (Interlocked.CompareExchange(ref _drainInFlight, 1, 0) != 0)
             return; // another drain is already in flight (retune overlap) -- skip this tick rather than race the shared buffer
 
+        // Publish a task tracking THIS drain only now that the guard above is actually won -- see
+        // _lastDrainTask's field comment for why a skipped tick (the return just above) must never
+        // reach this line.
+        var drainCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Interlocked.Exchange(ref _lastDrainTask, drainCompletion.Task);
+
         try
         {
             try
@@ -790,6 +805,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // succeed before those writes are visible to it. x86/x64 TSO happens to mask this, which is
             // why a plain store here was never observed to fail.
             Interlocked.Exchange(ref _drainInFlight, 0);
+            // Completes drainCompletion.Task -- the same task StopLocked may currently be Wait()-ing on
+            // via _lastDrainTask -- so it is safe to signal after the guard release above.
+            drainCompletion.SetResult(true);
         }
     }
 
