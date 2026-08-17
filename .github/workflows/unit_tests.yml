@@ -89,8 +89,8 @@ jobs:
             path: ${{ env.test_results_path }} # Directory containing files to upload
 
   # Posts the dispatched run's result back onto the Dependabot pull request as a
-  # commit status. See the matching job in all_solutions.yml for why this reports
-  # from inside the run, and why it must not become a required check.
+  # commit status and a pull request comment. There's a matching job in
+  # all_solutions.yml with similar logic, intentially duplicated.
   report-dependabot-status:
     name: Report full CI result on the Dependabot pull request
     needs: [run-unit-tests]
@@ -99,6 +99,7 @@ jobs:
     permissions:
       actions: read
       statuses: write
+      pull-requests: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -106,31 +107,33 @@ jobs:
           disable-sudo: true
           egress-policy: audit
 
-      - name: Post commit status
+      - name: Determine run result
+        id: result
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
-          HEAD_SHA: ${{ github.sha }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          WORKFLOW_NAME: ${{ github.workflow }}
         run: |
           set -o pipefail
 
           # Every job in this run that has finished; this job is still in progress.
-          conclusions="$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs" --paginate \
-            --jq '.jobs[] | select(.conclusion != null) | .conclusion' | sort -u)"
+          all="$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs" --paginate \
+            --jq '.jobs[] | select(.conclusion != null) | .conclusion')"
 
-          if [ -z "$conclusions" ]; then
+          if [ -z "$all" ]; then
             echo "::error::Could not read job conclusions for run $RUN_ID"
             exit 1
           fi
+
+          conclusions="$(sort -u <<<"$all")"
           echo "Job conclusions in this run: $(echo $conclusions | tr '\n' ' ')"
 
           # A cancelled job means this run was superseded by a Dependabot
           # force-push rebase; a replacement run is already on its way.
           if grep -qx cancelled <<<"$conclusions"; then
             echo "Run was cancelled (superseded); not reporting."
+            echo "should-report=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -140,10 +143,77 @@ jobs:
             state=success
           fi
 
-          echo "Reporting '$state' for $HEAD_SHA ($WORKFLOW_NAME)"
+          # Job tally for the comment, e.g. "3 success".
+          tally="$(sort <<<"$all" | uniq -c | sort -rn \
+            | awk '{ printf "%s%s %s", sep, $1, $2; sep = ", " } END { print "" }')"
+
+          echo "should-report=true" >> "$GITHUB_OUTPUT"
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+          echo "tally=$tally" >> "$GITHUB_OUTPUT"
+
+      - name: Post commit status
+        if: steps.result.outputs.should-report == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          STATE: ${{ steps.result.outputs.state }}
+        run: |
+          set -o pipefail
+          echo "Reporting '$STATE' for $HEAD_SHA ($WORKFLOW_NAME)"
           gh api -X POST "repos/$REPO/statuses/$HEAD_SHA" \
-            -f state="$state" \
+            -f state="$STATE" \
             -f context="full-ci (dependabot) / $WORKFLOW_NAME" \
             -f target_url="$RUN_URL" \
-            -f description="$WORKFLOW_NAME: $state"
+            -f description="$WORKFLOW_NAME: $STATE"
+
+      - name: Comment on the Dependabot pull request
+        if: steps.result.outputs.should-report == 'true'
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          STATE: ${{ steps.result.outputs.state }}
+          TALLY: ${{ steps.result.outputs.tally }}
+        run: |
+          set -o pipefail
+
+          # A dispatched run has no pull request context, so resolve the pull
+          # request from the head SHA. Open only: a force-pushed SHA can also
+          # belong to a closed one.
+          pr="$(gh api "repos/$REPO/commits/$HEAD_SHA/pulls" \
+            --jq 'map(select(.state == "open")) | .[0].number // empty')"
+
+          if [ -z "$pr" ]; then
+            echo "::warning::No pull request found for $HEAD_SHA; commit status posted, comment skipped."
+            exit 0
+          fi
+
+          # Marker is keyed per workflow: the two dispatched workflows run
+          # concurrently and would race a shared comment. Re-runs update in place.
+          marker="<!-- dependabot-full-ci: $WORKFLOW_NAME -->"
+          body="$marker
+          **$WORKFLOW_NAME: $STATE** -- [full CI run]($RUN_URL)
+
+          Jobs: $TALLY. Dispatched runs are not attached to the pull request, so
+          these results do not appear in the Checks tab above."
+
+          existing="$(gh api --paginate --slurp "repos/$REPO/issues/$pr/comments?per_page=100" \
+            | jq -r --arg m "$marker" \
+              'flatten | map(select(.body != null and (.body | contains($m)))) | .[0].id // empty')"
+
+          if [ -n "$existing" ]; then
+            echo "Updating existing comment $existing on pull request #$pr"
+            jq -n --arg body "$body" '{body: $body}' \
+              | gh api -X PATCH "repos/$REPO/issues/comments/$existing" --input - --silent
+          else
+            echo "Creating comment on pull request #$pr"
+            jq -n --arg body "$body" '{body: $body}' \
+              | gh api -X POST "repos/$REPO/issues/$pr/comments" --input - --silent
+          fi
