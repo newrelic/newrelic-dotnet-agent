@@ -12,7 +12,6 @@ build/
 ├── Packaging/                # Per-artifact packaging (NuGet, MSI, DownloadSite, AzureSiteExtension, ...)
 ├── Linux/                    # Linux .deb / .rpm build (Docker-driven)
 ├── Scripts/                  # PowerShell helpers (see below)
-├── NewRelic.NuGetHelper/     # NuGet package utilities
 ├── NugetValidator/           # Validates built NuGet packages
 ├── NugetVersionDeprecator/   # Marks old NuGet versions deprecated
 ├── S3Validator/              # Validates uploaded artifacts on the download site

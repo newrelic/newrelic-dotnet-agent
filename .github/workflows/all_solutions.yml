@@ -1328,14 +1328,6 @@ jobs:
           name: rpm-build-artifacts
           path: src/_build/CoreArtifacts
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
-        
-      - name: Build NewRelic.NuGetHelper
-        run: |
-          MSBuild.exe -restore -m -p:Configuration=Release ${{ github.workspace }}\build\NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj  
-        shell: powershell
-
       - name: Run ArtifactBuilder
         run: |
           ${{ github.workspace }}\build\package.ps1 -configuration Release -IncludeDownloadSite
