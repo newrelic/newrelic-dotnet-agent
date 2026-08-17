@@ -155,7 +155,8 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     //     the narrower race this reopens: a SECOND thread's Stop-triggering call (Dispose/ApplyConfigChange/
     //     StartFromCommand/StopFromCommand) landing in that now-widened window must wait for the first
     //     stop's real completion (native.Stop() having actually run) rather than racing it or returning
-    //     early while _isActive is still (briefly) true -- see StopLocked for the mechanism.
+    //     early while _isActive is still (briefly) true -- then re-check _isActive and, if a start slipped in
+    //     while it waited, perform its own stop rather than swallowing it. See StopLocked for the mechanism.
     //   * Lock ordering is always _lifecycleLock -> Scheduler's internal semaphore, never the reverse.
     private readonly object _lifecycleLock = new object();
 
@@ -442,6 +443,17 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
     private void StartLocked(int intervalMs)
     {
+        // Never (re)start a session on a disposed service. Reachable without any deferred callback: StopLocked
+        // transiently drops _lifecycleLock during its bounded drain wait, so a retune's
+        // `lock (_lifecycleLock) { StopLocked(); StartLocked(); }` pair can have Dispose run in that window --
+        // setting _disposed, waiting out this thread's stop via _stopInProgress -- and then this StartLocked
+        // resumes and arms a fresh session that Dispose's _native.Shutdown() immediately invalidates. The
+        // result is not a crash (Shutdown is idempotent) but a permanently stuck _isActive == true: thread
+        // profiling is blocked forever by the reverse guard below, a drain timer stays armed, and
+        // ContinuousProfilingContext.Instance keeps pushing trace context into a shut-down profiler.
+        if (_disposed)
+            return;
+
         if (_isActive)
             return;
 
@@ -458,7 +470,19 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         // thread-profiling side) is closed. This method already runs under _lifecycleLock (held by every
         // caller of StartLocked); ThreadProfilingService never takes _lifecycleLock, so the lock order is
         // always _lifecycleLock -> ProfilingMutualExclusionGate.Lock, never the reverse -- no deadlock
-        // risk. The native SuspendMutex (Profiler/ContinuousProfiler/SuspendMutex.h) remains the backstop
+        // risk.
+        //
+        // ONE EXCEPTION to that ordering claim: the catch block below calls StopLocked while still inside this
+        // `lock (ProfilingMutualExclusionGate.Lock)`, and StopLocked transiently drops _lifecycleLock (see its
+        // Monitor.Exit/Enter) -- so that thread holds the Gate while re-acquiring _lifecycleLock, the reverse
+        // order. Confirmed safe, and load-bearing on _isActive staying true for the whole of StopLocked
+        // (cleared only in its finally): any other thread that grabs _lifecycleLock in that dropped window and
+        // heads for a start sees _isActive == true and returns above WITHOUT taking the Gate, and any thread
+        // heading for a stop parks on _stopInProgress, also without taking the Gate. So no thread ever holds
+        // _lifecycleLock while waiting on the Gate, and the cycle never closes. Flipping _isActive earlier, or
+        // taking the Gate anywhere else under _lifecycleLock, would make it deadlockable.
+        //
+        // The native SuspendMutex (Profiler/ContinuousProfiler/SuspendMutex.h) remains the backstop
         // against concurrent suspend/walk, which this lock does not replace -- it only makes the two
         // profilers' *liveness* mutually exclusive as well.
         lock (ProfilingMutualExclusionGate.Lock)
@@ -534,22 +558,46 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         // duration (same reason as the drain wait below): the first stopper needs to reacquire the lock to
         // finish, and this thread is currently holding it via its own ambient `lock (_lifecycleLock) {
         // StopLocked(); }` call site.
-        var inProgress = _stopInProgress;
-        if (inProgress != null)
+        //
+        // A completed wait does NOT automatically satisfy this caller's own stop request, though: a start can
+        // have run in between (a retune's `StopLocked(); StartLocked();` pair holds _lifecycleLock across both,
+        // so its StartLocked always beats this thread's Monitor.Enter below), leaving _isActive true again.
+        // Returning then would silently drop a real stop -- ApplyConfigChange's disable branch or
+        // StopFromCommand would report a stopped session while native sampling ran on. So: return only if the
+        // session is genuinely stopped, otherwise fall through and perform the stop as the new first stopper.
+        //
+        // The loop exists solely for the case where a THIRD thread published a new _stopInProgress in the gap
+        // between the first stop completing and this thread reacquiring the lock. Waiting that one out too is
+        // required before publishing our own below -- two stops running concurrently would each clear
+        // _stopInProgress in their finally, so a later caller would stop waiting for a stop still in flight.
+        // Each iteration either returns or waits on a strictly newer TaskCompletionSource, so it cannot spin.
+        while (true)
         {
+            var inProgress = _stopInProgress;
+            if (inProgress == null)
+                break;
+
             Monitor.Exit(_lifecycleLock);
+            bool completed;
             try
             {
-                if (!inProgress.Task.Wait(_drainShutdownWaitTimeout))
-                {
-                    Log.Warn("[ContinuousProfiling] Timed out after {0} waiting for a concurrent stop already in progress.", _drainShutdownWaitTimeout);
-                }
+                completed = inProgress.Task.Wait(_drainShutdownWaitTimeout);
             }
             finally
             {
                 Monitor.Enter(_lifecycleLock);
             }
-            return;
+
+            if (!completed)
+            {
+                // That stop outran the bound -- it's wedged somewhere in the drain wait or in native. Piling a
+                // second concurrent stop on top of it would make things worse, not better.
+                Log.Warn("[ContinuousProfiling] Timed out after {0} waiting for a concurrent stop already in progress.", _drainShutdownWaitTimeout);
+                return;
+            }
+
+            if (!_isActive)
+                return;
         }
 
         var myStop = new TaskCompletionSource<bool>();

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.ContinuousProfiling;
@@ -268,9 +267,14 @@ public class ContinuousProfilingServiceDisposeTests
         Assert.That(sendStarted.Wait(TimeSpan.FromSeconds(5)), Is.True, "the dispatched drain must actually reach Send");
 
         // Dispose on its own thread: it will enter StopLocked, take _lifecycleLock, and block in
-        // drainTask.Wait(...) since the drain above hasn't returned from Send yet.
+        // drainTask.Wait(...) since the drain above hasn't returned from Send yet. A dedicated thread rather than
+        // Task.Run because it begins executing immediately: a queued thread-pool item may not start within the
+        // 200ms positioning window below on a constrained runner, in which case the drain's OnSendResult would run
+        // to completion before Dispose ever entered StopLocked -- the interleaving under test never happens and the
+        // pre-fix production code would pass too, making this a silent false negative that still shows green.
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        var disposeTask = Task.Run(() => _service.Dispose());
+        var dispose = new Thread(() => _service.Dispose()) { IsBackground = true };
+        dispose.Start();
 
         // Give Dispose time to actually enter the bounded wait before releasing Send -- this is what
         // positions the drain's later OnSendResult call to race StopLocked's wait rather than run to
@@ -278,7 +282,7 @@ public class ContinuousProfilingServiceDisposeTests
         Thread.Sleep(TimeSpan.FromMilliseconds(200));
         releaseSend.Set();
 
-        Assert.That(disposeTask.Wait(TimeSpan.FromSeconds(5)), Is.True, "Dispose must complete promptly once the racing drain's send finishes");
+        Assert.That(dispose.Join(TimeSpan.FromSeconds(5)), Is.True, "Dispose must complete promptly once the racing drain's send finishes");
         sw.Stop();
 
         Assert.That(sw.Elapsed, Is.LessThan(TimeSpan.FromSeconds(5)),
@@ -342,12 +346,19 @@ public class ContinuousProfilingServiceDisposeTests
 
         // First stopper: enters StopLocked, publishes _stopInProgress, then drops _lifecycleLock and blocks
         // in its bounded wait for the still-in-flight drain.
-        var firstStop = Task.Run(() => service.Dispose());
+        // Dedicated threads rather than Task.Run for both stoppers: a raw thread begins executing immediately,
+        // whereas a queued thread-pool work item can sit unstarted past the 200ms positioning window below on a
+        // busy/constrained runner (pool thread-injection delay). If the second stopper never entered StopLocked
+        // inside that window the race would simply not happen -- and the pre-fix production code would pass too,
+        // making this test a silent false negative that still shows green.
+        var firstStop = new Thread(() => service.Dispose()) { IsBackground = true };
+        firstStop.Start();
         Assert.That(firstStopperInStopLocked.Wait(TimeSpan.FromSeconds(5)), Is.True, "the first stopper must reach StopLocked");
 
         // Second stopper: acquires _lifecycleLock the moment the first drops it at its wait, enters
         // StopLocked, sees _stopInProgress != null, and waits for the first stop to genuinely finish.
-        var secondStop = Task.Run(() => service.Dispose());
+        var secondStop = new Thread(() => service.Dispose()) { IsBackground = true };
+        secondStop.Start();
 
         // Give the second stopper time to enter its _stopInProgress wait BEFORE the first stop completes --
         // release too early and the first stop would clear _stopInProgress before the second observed it,
@@ -356,9 +367,185 @@ public class ContinuousProfilingServiceDisposeTests
         Thread.Sleep(TimeSpan.FromMilliseconds(200));
         releaseReadBatch.Set();
 
-        Assert.That(Task.WaitAll(new[] { firstStop, secondStop }, TimeSpan.FromSeconds(10)), Is.True,
+        Assert.That(firstStop.Join(TimeSpan.FromSeconds(10)) && secondStop.Join(TimeSpan.FromSeconds(10)), Is.True,
             "both concurrent stops must complete without deadlocking");
         Assert.That(nativeStopCount, Is.EqualTo(1), "_native.Stop() must run exactly once across two concurrent stops -- the second must defer to the first, not race it");
+    }
+
+    [Test]
+    public void A_start_after_dispose_does_not_arm_a_session()
+    {
+        // StartLocked's own _disposed guard, exercised through its simplest reachable caller: nothing else on
+        // the StartIfEnabled path checks _disposed, so before the guard this armed a fresh session (native
+        // Start + drain timer + trace-context seam) on a service whose native worker Dispose had already
+        // joined. The interleaving test below covers the concurrent form the drop-and-reacquire window opens.
+        ArrangeEnabled(10000);
+
+        _service.Dispose();
+
+        _service.StartIfEnabled();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Never());
+        Assert.That(_service.IsActive, Is.False, "a disposed service must never report an active session");
+        Assert.That(ContinuousProfilingContext.Instance.IsEnabled, Is.False, "the trace-context seam must stay disarmed after dispose");
+    }
+
+    [Test]
+    public void A_retunes_start_that_resumes_after_a_racing_dispose_does_not_arm_a_new_session()
+    {
+        // Regression test for the window StopLocked's Monitor.Exit/Enter drop-and-reacquire opens for
+        // StartLocked. A retune runs `lock (_lifecycleLock) { StopLocked(); StartLocked(); }`; StopLocked drops
+        // the lock for its bounded drain wait, so Dispose can acquire it in that window, set _disposed, park on
+        // _stopInProgress, and let the retune finish -- after which the retune's StartLocked runs and, without
+        // the _disposed guard, arms native sampling and a drain timer that Dispose's immediately-following
+        // _native.Shutdown() invalidates. Not a crash (Shutdown is idempotent) but a permanently stuck session:
+        // _isActive true forever, blocking thread profiling, with a live drain timer and an armed trace-context
+        // seam pushing into a shut-down profiler.
+        //
+        // Real (non-mock) blocking source, same reason as the tests above: an in-flight drain held inside a
+        // mocked ReadBatch's DoInstead would serialize the stopper's own pre-wait mock calls behind it and
+        // collapse the window this test needs.
+        var drainReachedReadBatch = new ManualResetEventSlim(false);
+        var releaseReadBatch = new ManualResetEventSlim(false);
+        var blockingSource = new BlockingSampleSource(drainReachedReadBatch, releaseReadBatch);
+        var intervalMs = 10000;
+        var service = CreateConnectedService(blockingSource, () => intervalMs);
+
+        Action drainAction = null;
+        var executeEveryCount = 0;
+        Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()))
+            .DoInstead((Action action, TimeSpan interval, TimeSpan? initialDelay, bool trackAsAgentWork) =>
+            {
+                drainAction = action;
+                Interlocked.Increment(ref executeEveryCount);
+            });
+
+        // Fires from inside the retune's StopLocked, after it published _stopInProgress and while it still holds
+        // _lifecycleLock -- so once this signals, Dispose is guaranteed to observe _stopInProgress != null.
+        var retuneReachedStopLocked = new ManualResetEventSlim(false);
+        Mock.Arrange(() => _scheduler.StopExecuting(Arg.IsAny<Action>()))
+            .DoInstead(() => retuneReachedStopLocked.Set());
+
+        var nativeStartCount = 0;
+        Mock.Arrange(() => _native.Start(Arg.IsAny<int>())).DoInstead(() => Interlocked.Increment(ref nativeStartCount));
+
+        service.StartIfEnabled();
+        Assert.That(drainAction, Is.Not.Null);
+        Assert.That(nativeStartCount, Is.EqualTo(1), "precondition: the first session started");
+
+        drainAction(); // dispatch the drain; it blocks in the stub's ReadBatch, keeping itself in-flight
+        Assert.That(drainReachedReadBatch.Wait(TimeSpan.FromSeconds(5)), Is.True, "the drain must be in-flight before the retune runs");
+
+        intervalMs = 20000; // an interval change is what makes ApplyConfigChange a StopLocked-then-StartLocked retune
+        // Dedicated threads rather than Task.Run, same reason as the two-stoppers test above: a queued thread-pool
+        // item may not start executing within the 200ms positioning window on a constrained runner, in which case
+        // the interleaving under test never occurs and the test passes vacuously. A raw thread starts immediately.
+        var retune = new Thread(() => service.ApplyConfigChange()) { IsBackground = true };
+        retune.Start();
+        Assert.That(retuneReachedStopLocked.Wait(TimeSpan.FromSeconds(5)), Is.True, "the retune must reach StopLocked");
+
+        var dispose = new Thread(() => service.Dispose()) { IsBackground = true };
+        dispose.Start();
+
+        // Let Dispose acquire the lock the retune dropped at its bounded wait, set _disposed, and park on
+        // _stopInProgress BEFORE the retune's stop can complete. Releasing earlier would let the retune finish
+        // its stop and its StartLocked before Dispose ever ran, which is not the interleaving under test. Same
+        // 200ms positioning heuristic the two tests above use.
+        Thread.Sleep(TimeSpan.FromMilliseconds(200));
+        releaseReadBatch.Set();
+
+        Assert.That(retune.Join(TimeSpan.FromSeconds(10)) && dispose.Join(TimeSpan.FromSeconds(10)), Is.True,
+            "the retune and the racing dispose must both complete without deadlocking");
+
+        Assert.That(nativeStartCount, Is.EqualTo(1),
+            "the retune's StartLocked resumed after Dispose set _disposed -- it must not have started native sampling again");
+        Assert.That(executeEveryCount, Is.EqualTo(1), "no new drain timer may be armed after dispose");
+        Assert.That(service.IsActive, Is.False, "_isActive must not be left stuck true, which would block thread profiling for the process lifetime");
+        Assert.That(ContinuousProfilingContext.Instance.IsEnabled, Is.False, "the trace-context seam must not be left armed against a shut-down profiler");
+    }
+
+    [Test]
+    public void A_second_stop_whose_wait_is_followed_by_a_start_still_stops_native()
+    {
+        // The complement of A_second_concurrent_stop_waits_for_the_first_to_finish_and_does_not_stop_native_twice:
+        // deferring to an in-flight stop is only correct while that stop leaves the session stopped. Here the
+        // first stopper is a RETUNE, which holds _lifecycleLock across `StopLocked(); StartLocked();` -- so by
+        // the time the second caller's wait on _stopInProgress returns and it can reacquire the lock, _isActive
+        // is true again. Returning at that point (the original behavior) silently swallowed the second caller's
+        // own stop request: StopFromCommand/ApplyConfigChange's disable branch would report a stopped session
+        // while native sampling ran on until the next lifecycle transition. It must instead re-check _isActive
+        // and perform the stop itself.
+        var drainReachedReadBatch = new ManualResetEventSlim(false);
+        var releaseReadBatch = new ManualResetEventSlim(false);
+        var blockingSource = new BlockingSampleSource(drainReachedReadBatch, releaseReadBatch);
+        var intervalMs = 10000;
+        var service = CreateConnectedService(blockingSource, () => intervalMs);
+
+        Action drainAction = null;
+        Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()))
+            .DoInstead((Action action, TimeSpan interval, TimeSpan? initialDelay, bool trackAsAgentWork) => drainAction = action);
+
+        var retuneReachedStopLocked = new ManualResetEventSlim(false);
+        Mock.Arrange(() => _scheduler.StopExecuting(Arg.IsAny<Action>()))
+            .DoInstead(() => retuneReachedStopLocked.Set());
+
+        var nativeStopCount = 0;
+        Mock.Arrange(() => _native.Stop()).DoInstead(() => Interlocked.Increment(ref nativeStopCount));
+
+        service.StartIfEnabled();
+        Assert.That(drainAction, Is.Not.Null);
+
+        drainAction(); // dispatch the drain; it blocks in the stub's ReadBatch, keeping itself in-flight
+        Assert.That(drainReachedReadBatch.Wait(TimeSpan.FromSeconds(5)), Is.True, "the drain must be in-flight before either stop runs");
+
+        intervalMs = 20000; // retune: StopLocked (drops the lock at its bounded wait) then StartLocked
+        // Dedicated threads rather than Task.Run, same reason as the two tests above: a queued thread-pool item may
+        // not start executing within the 200ms positioning window on a constrained runner, which would skip the
+        // interleaving under test entirely and pass vacuously. A raw thread starts immediately.
+        var retune = new Thread(() => service.ApplyConfigChange()) { IsBackground = true };
+        retune.Start();
+        Assert.That(retuneReachedStopLocked.Wait(TimeSpan.FromSeconds(5)), Is.True, "the retune must reach StopLocked");
+
+        // Second caller with its own genuine stop intent, landing in the retune's dropped-lock window: it sees
+        // _stopInProgress != null and waits for the retune's stop to finish.
+        var commandStop = new Thread(() => service.StopFromCommand(new[] { ContinuousProfilingCommandTypes.Cpu })) { IsBackground = true };
+        commandStop.Start();
+
+        Thread.Sleep(TimeSpan.FromMilliseconds(200));
+        releaseReadBatch.Set();
+
+        Assert.That(retune.Join(TimeSpan.FromSeconds(10)) && commandStop.Join(TimeSpan.FromSeconds(10)), Is.True,
+            "the retune and the concurrent command stop must both complete without deadlocking");
+
+        Assert.That(nativeStopCount, Is.EqualTo(2),
+            "the command stop resumed to find the retune had restarted the session -- it must have stopped native sampling itself instead of returning");
+        Assert.That(service.IsActive, Is.False, "the command stop's intent must be reflected in the session state");
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("Timed out")), Arg.IsAny<object[]>()), Occurs.Never(),
+            "neither bounded wait should have timed out in this interleaving");
+    }
+
+    /// <summary>
+    /// Builds a service on the shared mocks with a caller-supplied sample source and a live sampling-interval
+    /// accessor (so a test can flip the interval to make ApplyConfigChange a retune), publishes an
+    /// AgentConnectedEvent so drains do real work, and installs the shared config mock.
+    /// </summary>
+    private ContinuousProfilingService CreateConnectedService(ISampleSource source, Func<int> samplingIntervalMs)
+    {
+        var service = new ContinuousProfilingService(source, _native, _transport, _scheduler, _health, TimeSpan.FromSeconds(30));
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(true);
+        Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(samplingIntervalMs);
+        Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        service.OverrideConfigForTesting(_config);
+
+        return service;
     }
 
     private const byte StartBatch = 0x01, StartSample = 0x02, EndBatch = 0x06;
