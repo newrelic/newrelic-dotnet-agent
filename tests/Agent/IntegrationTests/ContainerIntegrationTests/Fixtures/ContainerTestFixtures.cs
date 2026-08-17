@@ -14,8 +14,9 @@ public abstract class ContainerTestFixtureBase : RemoteApplicationFixture
 
     protected override int MaxTries => 1;
 
-    protected ContainerTestFixtureBase(string distroTag, ContainerApplication.Architecture containerArchitecture, string dockerfile) :
-        base(new ContainerApplication(distroTag, containerArchitecture, DotnetVersion, dockerfile))
+    protected ContainerTestFixtureBase(string distroTag, ContainerApplication.Architecture containerArchitecture, string dockerfile,
+        string dockerComposeFile = "docker-compose.yml") :
+        base(new ContainerApplication(distroTag, containerArchitecture, DotnetVersion, dockerfile, dockerComposeFile))
     {
     }
 

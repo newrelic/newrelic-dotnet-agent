@@ -22,20 +22,18 @@ services:
             - ./keys:/keys
         working_dir: /data
 
-    test_debian: 
+    test_debian:
         build: ./test/distros/debian
         command: bash -c "dos2unix /test/test.sh &>/dev/null && chmod 777 /test/test.sh && /test/test.sh"
         volumes:
             - ../../src/_build/CoreArtifacts:/release
             - ./test/scripts:/test
-            - ./test/applications:/apps
         working_dir: /data
 
-    test_centos: 
-        build: ./test/distros/centos
+    test_rockylinux:
+        build: ./test/distros/rockylinux
         command: bash -c "dos2unix /test/test.sh &>/dev/null && chmod 777 /test/test.sh && /test/test.sh"
         volumes:
             - ../../src/_build/CoreArtifacts:/release
             - ./test/scripts:/test
-            - ./test/applications:/apps
         working_dir: /data

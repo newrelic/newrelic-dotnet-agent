@@ -93,6 +93,15 @@ namespace sicily {
             scanner.Expect(TOK_GT);
         }
 
+        //
+        // A signature that ends here, with no argument list, names a field. `instance` and
+        // generic arguments are method-only, so a signature carrying either is malformed --
+        // fall through and let the argument list expectation below reject it.
+        //
+        if (scanner.Peek(sem) == TOK_END && !instanceMethod && genericTypes == nullptr) {
+            return std::make_shared<ast::FieldType>(ast::FieldType(targetType, name, returnType));
+        }
+
         scanner.Expect(TOK_LBRACKET);
         if (!scanner.Maybe(TOK_RBRACKET)) {
             argTypes = ParseTypeList(scanner);
@@ -124,6 +133,9 @@ namespace sicily {
                 break;
             case TOK_UINT32:
                 result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kU4);
+                break;
+            case TOK_INT32:
+                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kI4);
                 break;
             case TOK_STRING:
                 result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kSTRING);

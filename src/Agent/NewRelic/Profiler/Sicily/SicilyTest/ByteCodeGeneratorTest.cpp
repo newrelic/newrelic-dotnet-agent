@@ -5,6 +5,7 @@
 #include "UnreferencedFunctions.h"
 
 #include "NullTokenizer.h"
+#include "RecordingTokenizer.h"
 #include "TestTemplates.h"
 #include "../codegen/ByteCodeGenerator.h"
 #include "../ast/Types.h"
@@ -164,6 +165,36 @@ namespace sicily
                     // (0x20 | 0x10) 0x01 0x01 0x01 0x02
                     BYTEVECTOR(expectedBytes, 0x30, 0x01, 0x01, 0x01, 0x02);
                     Assert::AreEqual(expectedBytes, actualBytes);
+                }
+
+                // TypeToToken's field-type branch is the generator's only field path: it
+                // tokens the target class, then requests a field definition token
+                // for (targetTypeToken, fieldName). NullTokenizer returns a hardcoded zero
+                // regardless of arguments, so it cannot show the right values were threaded
+                // through; RecordingTokenizer wraps a RealisticTokenizer and records the field
+                // definition requests made of it so the test can assert on that instead.
+                TEST_METHOD(TestFieldTypeToToken)
+                {
+                    auto tokenizer = std::make_shared<RecordingTokenizer>();
+                    ast::ClassTypePtr targetType(new ast::ClassType(L"MyClass", L"MyAssembly"));
+                    ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kI4));
+                    ast::TypePtr type(new ast::FieldType(targetType, L"MyField", returnType));
+
+                    ByteCodeGenerator generator(tokenizer);
+                    auto actualFieldToken = generator.TypeToToken(type);
+
+                    // Compare against the token the tokenizer actually handed out for the target
+                    // type, captured during the call above. Re-requesting it here would NOT work:
+                    // RealisticTokenizer::GetToken is not idempotent for the first entry in a table
+                    // (it treats index 0 as "not found" and pushes a duplicate), so a second lookup
+                    // of the same type returns a different token.
+                    auto targetTypeToken = tokenizer->LastTypeRefToken();
+                    Assert::AreNotEqual(uint32_t(0), targetTypeToken, L"the target class should have been tokenized");
+                    Assert::IsTrue(tokenizer->FieldDefinitionTokenized(targetTypeToken, L"MyField"), L"should request a field definition token for the target type's token and the field name");
+
+                    // A real (non-zero) token must be threaded back out as the result. NullTokenizer
+                    // returns a hardcoded zero here, which is what made this branch untestable before.
+                    Assert::AreNotEqual(uint32_t(0), actualFieldToken, L"the field token should be returned to the caller");
                 }
 
                 TEST_METHOD(TestGenericMethodInstantiationToSignature)

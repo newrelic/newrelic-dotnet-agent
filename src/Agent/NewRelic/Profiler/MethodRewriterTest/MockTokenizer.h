@@ -19,6 +19,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             _typeSpecToken(0),
             _memberRefOrDefToken(0),
             _methodDefinitionToken(0),
+            _fieldDefinitionToken(0),
             _methodSpecToken(0),
             _stringToken(0),
             _instantiationSignature(nullptr),
@@ -82,6 +83,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             name;
             signature;
             return _methodDefinitionToken;
+        }
+
+        uint32_t _fieldDefinitionToken;
+        virtual uint32_t GetFieldDefinitionToken(const uint32_t& typeDefinitionToken, const std::wstring& name) override
+        {
+            typeDefinitionToken;
+            name;
+            return _fieldDefinitionToken;
         }
 
         uint32_t _methodSpecToken;

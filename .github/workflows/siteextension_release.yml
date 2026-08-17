@@ -26,7 +26,6 @@ jobs:
 
     env:
       artifacts_script_path: ${{ github.workspace }}\build
-      nuget_helper_project_path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj
 
     steps:
       - name: Checkout
@@ -47,13 +46,6 @@ jobs:
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
-
-      - name: Build NewRelic.NuGetHelper
-        run: |
-          Write-Host "Build NewRelic.NuGetHelper"
-          dotnet nuget list source
-          dotnet build --configuration Release ${{ env.nuget_helper_project_path }}
-        shell: powershell
 
       - name: Run ArtifactBuilder
         run: |

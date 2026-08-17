@@ -38,12 +38,14 @@ on:
     types: [completed]
 
 permissions:
-  actions: write
+  contents: read
 
 jobs:
   dispatch:
     name: Dispatch All Solutions Build for the Dependabot branch
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     if: >-
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.actor.login == 'dependabot[bot]' &&

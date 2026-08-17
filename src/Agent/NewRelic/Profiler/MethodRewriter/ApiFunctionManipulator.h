@@ -14,8 +14,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     class ApiFunctionManipulator : FunctionManipulator
     {
     public:
-        ApiFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) :
-            FunctionManipulator(function),
+        ApiFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) :
+            FunctionManipulator(function, isCoreClr, agentCallStrategy),
             _instrumentationSettings(instrumentationSettings)
         {
             Initialize();
@@ -45,13 +45,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             TryCatch(
                 [&]()
                 {
-                    // delegate = System.CannotUnloadAppDomainException.GetMethodFromAppDomainStorageOrReflectionOrThrow("NewRelic_Delegate_API_<function name><function signature>", "C:\path\to\NewRelic.Agent.Core", "NewRelic.Core.AgentApi", "<function name>", new object[] { <method parameter types> })
-                    LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentApi"), _function->GetFunctionName(), _function->GetFunctionId(), GetArrayOfTypeParametersLamdba(), !_function->IsCoreClr());
-                    
-                    _instructions->Append(_X("ldnull"));
-                    BuildObjectArrayOfParameters();
-
-                    _instructions->Append(_X("call   instance object [mscorlib]System.Reflection.MethodBase::Invoke(object, object[])"));
+                    if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainFallbackCache)
+                    {
+                        BuildManagedInvokerCall();
+                    }
+                    else
+                    {
+                        BuildReflectionCall();
+                    }
 
                     if (_methodSignature->_returnType->_kind == SignatureParser::ReturnType::Kind::VOID_RETURN_TYPE)
                     {
@@ -88,6 +89,46 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 _instructions->AppendLoadLocal(resultLocalIndex);
             }
             _instructions->Append(CEE_RET);
+        }
+
+        // AppDomainFallbackCache: dispatch through the injected InvokeAgentMethodInvokerFunc
+        // helper, which resolves a delegate cached per method on the managed side. This
+        // replaces the generic MethodInfo getter, which called AppDomain.GetData on every
+        // call. On .NET Core that maps to AppContext.GetData, whose store is guarded by a
+        // single process-wide monitor, so every API call took that lock.
+        void BuildManagedInvokerCall()
+        {
+            const xstring_t className = _X("NewRelic.Agent.Core.AgentApi");
+            // The function id is a tie-breaker so overloads get distinct cache entries.
+            const xstring_t keyName = className + _X(".") + _function->GetFunctionName() + _X("_") + to_xstring((unsigned long)_function->GetFunctionId());
+
+            _instructions->AppendString(_instrumentationSettings->GetCorePath());
+            _instructions->AppendString(keyName);
+            _instructions->AppendString(className);
+            _instructions->AppendString(_function->GetFunctionName());
+
+            auto loadTypeParameters = GetArrayOfTypeParametersLamdba();
+            loadTypeParameters();
+
+            // Pushes a System.Type for the return type, or null when the method returns void.
+            _instructions->AppendTypeOfArgument(_methodSignature->_returnType);
+
+            BuildObjectArrayOfParameters();
+
+            _instructions->Append(CEE_CALL, _X("object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::InvokeAgentMethodInvokerFunc(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[],class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type,object[])"));
+        }
+
+        // Reflection: self-contained IL that resolves the target itself and dispatches
+        // through MethodBase.Invoke. This is the graceful-degradation path used when core
+        // library helper injection fails, so it must never call an injected helper.
+        void BuildReflectionCall()
+        {
+            LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentApi"), _function->GetFunctionName(), _function->GetFunctionId(), GetArrayOfTypeParametersLamdba());
+
+            _instructions->Append(_X("ldnull"));
+            BuildObjectArrayOfParameters();
+
+            _instructions->Append(_X("call   instance object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodBase::Invoke(object, object[])"));
         }
 
     };
