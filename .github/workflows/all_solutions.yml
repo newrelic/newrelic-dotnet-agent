@@ -281,6 +281,7 @@ jobs:
             "Logging.StructuredLogArgContextData",
             "Logging.ZeroMaxSamplesStored",
             "MassTransit",
+            "MultiAppDomain",
             "OpenTelemetry",
             "Owin",
             "ReJit.NetCore",
@@ -651,7 +652,7 @@ jobs:
           matrix.namespace == 'CatInbound' || matrix.namespace == 'CatOutbound' || matrix.namespace == 'CodeLevelMetrics' ||
           matrix.namespace == 'CustomAttributes' || matrix.namespace == 'CustomInstrumentation' || matrix.namespace == 'DataTransmission' || 
           matrix.namespace == 'DistributedTracing' || matrix.namespace == 'Errors' || matrix.namespace == 'HSM' || matrix.namespace == 'HttpClientInstrumentation' || matrix.namespace == 'HybridHttpContextStorage' ||
-          matrix.namespace == 'LLM' || matrix.namespace == 'Rejit.NetFramework' || matrix.namespace == 'RequestHandling' || matrix.namespace == 'RequestHeadersCapture.AspNet' ||
+          matrix.namespace == 'LLM' || matrix.namespace == 'MultiAppDomain' || matrix.namespace == 'Rejit.NetFramework' || matrix.namespace == 'RequestHandling' || matrix.namespace == 'RequestHeadersCapture.AspNet' ||
           matrix.namespace == 'RequestHeadersCapture.AspNetCore' || matrix.namespace == 'RequestHeadersCapture.EnvironmentVariables' ||
           matrix.namespace == 'RequestHeadersCapture.WCF' || matrix.namespace == 'WCF.Client.IIS.ASPDisabled' ||
           matrix.namespace == 'WCF.Client.IIS.ASPEnabled' || matrix.namespace == 'WCF.Service.IIS.ASPDisabled' ||

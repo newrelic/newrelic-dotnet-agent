@@ -12,17 +12,30 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching;
 public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
     where TFixture : ConsoleDynamicMethodFixture
 {
+    private const string TransactionCategory = "AppDomainCachingGroup";
+    private const string OriginalTransactionName = "OriginalName";
+    private const string RenamedTransactionName = "RenamedName";
+
     private readonly TFixture _fixture;
     private bool _appDomainCachingDisabled;
+    private readonly string _expectedCallingStrategy;
 
-    public AppDomainCachingTestsBase(TFixture fixture, ITestOutputHelper output, bool appDomainCachingDisabled) : base(fixture)
+    public AppDomainCachingTestsBase(TFixture fixture, ITestOutputHelper output, bool appDomainCachingDisabled, string expectedCallingStrategy) : base(fixture)
     {
         _fixture = fixture;
         _appDomainCachingDisabled = appDomainCachingDisabled;
+        _expectedCallingStrategy = expectedCallingStrategy;
         _fixture.SetTimeout(TimeSpan.FromMinutes(2));
         _fixture.TestLogger = output;
 
         _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
+
+        // Exercises the Agent API path in addition to the instrumented-method path above. The two use
+        // different cache shapes: instrumented methods resolve one shared agent-shim MethodInfo from an
+        // injected static field, while an API call goes through a cached invoker delegate plus a managed
+        // per-method delegate cache. Without this command the API path is only covered incidentally by
+        // other suites, and never side by side under both calling strategies.
+        _fixture.AddCommand($"ApiCalls TestSetTransactionName {TransactionCategory} {OriginalTransactionName},{RenamedTransactionName}");
 
         if(_appDomainCachingDisabled)
         {
@@ -52,14 +65,22 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
     [Fact]
     public void ProfilerObservesEnvironmentVariable()
     {
-        if( _appDomainCachingDisabled)
-        {
-            Assert.Contains("The use of AppDomain for method information caching is disabled", _fixture.ProfilerLog.GetFullLogAsString());
-        }
-        else
-        {
-            Assert.DoesNotContain("The use of AppDomain for method information caching is disabled", _fixture.ProfilerLog.GetFullLogAsString());
-        }
+        // The profiler logs the resolved managed-agent calling strategy at startup. Core now honors
+        // NEW_RELIC_DISABLE_APPDOMAIN_CACHING like .NET Framework: default (unset) => AppDomain Fallback Cache,
+        // opt-out (true) => Reflection.
+        Assert.Contains($"Calls to the managed agent will use the calling strategy - {_expectedCallingStrategy}", _fixture.ProfilerLog.GetFullLogAsString());
+    }
+
+    [Fact]
+    public void AgentApiCallTakesEffectUnderConfiguredStrategy()
+    {
+        // SetTransactionName is a direct public-API call, so it reaches the agent through the API path
+        // rather than through wrapper instrumentation. If that path failed to resolve its target under
+        // either calling strategy, the rename would not happen and the metric below would not exist.
+        var actualMetrics = _fixture.AgentLog.GetMetrics();
+
+        Assert.Contains(actualMetrics, x => x.MetricSpec.Name == $"OtherTransaction/{TransactionCategory}/{RenamedTransactionName}");
+        Assert.DoesNotContain(actualMetrics, x => x.MetricSpec.Name == $"OtherTransaction/{TransactionCategory}/{OriginalTransactionName}");
     }
 
     [Fact]
@@ -81,7 +102,7 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
 public class AppDomainCachingEnabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AppDomainCachingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-        : base(fixture, output, false)
+        : base(fixture, output, false, "AppDomain Fallback Cache")
     {
     }
 }
@@ -89,7 +110,7 @@ public class AppDomainCachingEnabledTestsFWLatestTests : AppDomainCachingTestsBa
 public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AppDomainCachingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-        : base(fixture, output, false)
+        : base(fixture, output, false, "AppDomain Fallback Cache")
     {
     }
 }
@@ -99,7 +120,7 @@ public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTe
 public class AppDomainCachingDisabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AppDomainCachingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-        : base(fixture, output, true)
+        : base(fixture, output, true, "Reflection")
     {
     }
 }
@@ -107,7 +128,7 @@ public class AppDomainCachingDisabledTestsFWLatestTests : AppDomainCachingTestsB
 public class AppDomainCachingDisabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AppDomainCachingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-        : base(fixture, output, true)
+        : base(fixture, output, true, "Reflection")
     {
     }
 }
