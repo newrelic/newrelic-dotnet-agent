@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="PublicApiGenerator" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" VersionOverride="5.0.1" />
     <PackageReference Include="Verify.NUnit" />
     <PackageReference Include="coverlet.collector">
       <PrivateAssets>all</PrivateAssets>
