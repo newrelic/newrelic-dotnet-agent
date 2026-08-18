@@ -62,7 +62,12 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
                 _fixture.Post("api/HttpTrigger_SendServiceBusMessage", "test message");
 
                 _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
-                _fixture.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+
+                // The Service Bus trigger function runs asynchronously, after the message has made a round trip
+                // through the Service Bus. Waiting for the first metric harvest is not enough: that harvest can
+                // complete while only the HTTP send side has been recorded. Wait for the receive-side supportability
+                // metric instead, which proves the trigger function ran and its metrics reached the log.
+                _fixture.AgentLog.WaitForMetricAggregateCallCount("Supportability/Dotnet/AzureFunction/Trigger/ServiceBus", 1, TimeSpan.FromMinutes(2));
             }
         );
 
