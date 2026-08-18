@@ -26,8 +26,12 @@ public abstract class LinuxContainerTest<T> : NewRelicIntegrationTest<T> where T
             {
                 _fixture.ExerciseApplication();
 
-                _fixture.Delay(11); // wait long enough to ensure a metric harvest occurs after we exercise the app
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(11));
+                // On loaded CI runners container startup can exceed 10s, causing the first
+                // harvest to fire before the HTTP request completes. Wait for the transaction
+                // to be confirmed processed, then wait for a second metric harvest so we are
+                // guaranteed at least one harvest that includes the WeatherForecast metric.
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1), 2);
 
                 // shut down the container and wait for the agent log to see it
                 _fixture.ShutdownRemoteApplication();

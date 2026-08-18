@@ -379,7 +379,9 @@
                 <xs:element name="securityPoliciesToken" minOccurs="0" maxOccurs="1" type="xs:string">
                     <xs:annotation>
                         <xs:documentation>
-                            Optional security policies token.
+                            Deprecated: Language Agent Security Policies (LASP) support has been removed
+                            from the agent. This setting is no longer honored and may be removed from your
+                            configuration.
                         </xs:documentation>
                     </xs:annotation>
                 </xs:element>
@@ -1178,6 +1180,15 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="sqlMetadataCommentsEnabled" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    When true, a SQL metadata comment containing the service entity GUID is prepended to each executed SQL statement.
+                                    Can also be set via the NEW_RELIC_TRANSACTION_TRACER_SQL_METADATA_COMMENTS_ENABLED environment variable.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
                     </xs:complexType>
                 </xs:element>
 
@@ -1219,7 +1230,7 @@
                                             <xs:documentation>
                                                 WARNING: Enabling this setting has the potential of collecting sensitive data or personally identifiable information within your queries.
 
-                                                This setting controls whether or not database query parameters are reported for slow SQL queries. The transactionTracer.recordSql setting must be set to 'raw'. This setting is ignored when configurable security policies have been applied or High Security Mode is enabled.
+                                                This setting controls whether or not database query parameters are reported for slow SQL queries. The transactionTracer.recordSql setting must be set to 'raw'. This setting is ignored when High Security Mode is enabled.
                                             </xs:documentation>
                                         </xs:annotation>
                                     </xs:attribute>

@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using NewRelic.Agent.Core.JsonConverters;
+using NewRelic.Agent.Core.Utilities;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.WireModels;
@@ -23,7 +24,7 @@ public class LoadedModuleWireModelCollection
         LoadedModules = new List<LoadedModuleWireModel>();
     }
 
-    public static LoadedModuleWireModelCollection Build(IList<Assembly> assemblies)
+    public static LoadedModuleWireModelCollection Build(IList<Assembly> assemblies, IFileWrapper fileWrapper)
     {
         var loadedModulesCollection = new LoadedModuleWireModelCollection();
         foreach (var assembly in assemblies)
@@ -44,7 +45,7 @@ public class LoadedModuleWireModelCollection
                 loadedModule.Data.Add("publicKeyToken", publicKey);
             }
 
-            if (TryGetShaFileHashes(assembly, out var sha1FileHash, out var sha512FileHash))
+            if (TryGetShaFileHashes(assembly, fileWrapper, out var sha1FileHash, out var sha512FileHash))
             {
                 loadedModule.Data.Add("sha1Checksum", sha1FileHash);
                 loadedModule.Data.Add("sha512Checksum", sha512FileHash);
@@ -58,9 +59,11 @@ public class LoadedModuleWireModelCollection
             {
                 loadedModule.Data.Add("Implementation-Vendor", companyName);
             }
-            if (TryGetCopyright(assembly, out var copyright))
+
+            // Added to provide an alternative way to identify assemblies that only provide major version in the assembly version.
+            if (TryGetAssemblyFileVersion(assembly, fileWrapper, out var fileVersion))
             {
-                loadedModule.Data.Add("copyright", copyright);
+                loadedModule.Data.Add("fileVersion", fileVersion);
             }
 
             // Use the .Name here and in GetLoadedModules
@@ -112,26 +115,19 @@ public class LoadedModuleWireModelCollection
         }
     }
 
-    private static bool TryGetShaFileHashes(Assembly assembly, out string sha1FileHash, out string sha512FileHash)
+    private static bool TryGetShaFileHashes(Assembly assembly, IFileWrapper fileWrapper, out string sha1FileHash, out string sha512FileHash)
     {
         try
         {
             var location = assembly.Location;
-            if (string.IsNullOrEmpty(location))
+            if (!fileWrapper.Exists(location))
             {
                 sha1FileHash = null;
                 sha512FileHash = null;
                 return false;
             }
 
-            if (!File.Exists(location))
-            {
-                sha1FileHash = null;
-                sha512FileHash = null;
-                return false;
-            }
-
-            using (var fs = new FileStream(location, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var fs = fileWrapper.Open(location, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 var sha1 = SHA1.Create();
                 var sha512 = SHA512.Create();
@@ -196,23 +192,23 @@ public class LoadedModuleWireModelCollection
         }
     }
 
-    private static bool TryGetCopyright(Assembly assembly, out string copyright)
+    private static bool TryGetAssemblyFileVersion(Assembly assembly, IFileWrapper fileWrapper, out string version)
     {
         try
         {
-            var attributes = assembly.GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true);
-            if (attributes.Length < 1)
+            var location = assembly.Location;
+            if (!fileWrapper.Exists(location))
             {
-                copyright = null;
+                version = null;
                 return false;
             }
 
-            copyright = ((AssemblyCopyrightAttribute)attributes[0]).Copyright;
-            return !string.IsNullOrWhiteSpace(copyright);
+            version = fileWrapper.GetFileVersion(location);
+            return !string.IsNullOrWhiteSpace(version);
         }
         catch
         {
-            copyright = null;
+            version = null;
             return false;
         }
     }

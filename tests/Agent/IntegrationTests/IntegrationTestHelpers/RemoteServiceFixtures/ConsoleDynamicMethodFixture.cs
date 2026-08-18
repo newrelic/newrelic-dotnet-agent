@@ -37,17 +37,6 @@ public class ConsoleDynamicMethodFixtureFWLatestHSM : ConsoleDynamicMethodFixtur
     }
 }
 
-/// <summary>
-/// Use this fixture for Configurable Security Policy tests
-/// </summary>
-public class ConsoleDynamicMethodFixtureFWLatestCSP : ConsoleDynamicMethodFixtureFW481
-{
-    public override string TestSettingCategory { get { return "CSP"; } }
-    public ConsoleDynamicMethodFixtureFWLatestCSP()
-    {
-    }
-}
-
 public class ConsoleDynamicMethodFixtureFW481 : ConsoleDynamicMethodFixtureFWSpecificVersion
 {
     public ConsoleDynamicMethodFixtureFW481() : base("net481")
@@ -131,18 +120,6 @@ public class ConsoleDynamicMethodFixtureCoreLatestHSM : ConsoleDynamicMethodFixt
 {
     public override string TestSettingCategory { get { return "HSM"; } }
     public ConsoleDynamicMethodFixtureCoreLatestHSM()
-    {
-    }
-
-}
-
-/// <summary>
-/// Use this fixture for Configurable Security Policy tests
-/// </summary>
-public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCoreLatest
-{
-    public override string TestSettingCategory { get { return "CSP"; } }
-    public ConsoleDynamicMethodFixtureCoreLatestCSP()
     {
     }
 

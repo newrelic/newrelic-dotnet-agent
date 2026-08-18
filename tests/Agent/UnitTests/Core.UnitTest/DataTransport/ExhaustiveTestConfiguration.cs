@@ -350,6 +350,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
 
     public int TransactionTracerMaxStackTraces => 4321;
 
+    public bool TransactionTracerSqlMetadataCommentsEnabled => false;
+
     public IEnumerable<long> TrustedAccountIds => new long[] { 1, 2, 3 };
 
     public bool ServerSideConfigurationEnabled => true;
@@ -411,6 +413,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
 
     public bool EventListenerSamplersEnabled { get => true; set { /* nothx */ } }
 
+    public bool KafkaInternalMetricsEnabled => true;
+
     public int? SamplingTarget => 1234;
 
     public int SpanEventsMaxSamplesStored => 4321;
@@ -424,6 +428,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
     public int DatabaseStatementCacheCapacity => 1234;
 
     public bool ForceSynchronousTimingCalculationHttpClient => true;
+
+    public bool UseHeaderBasedRequestQueueTimeForClassicAspNet => true;
 
     public bool EnableAspNetCore6PlusBrowserInjection => true;
 

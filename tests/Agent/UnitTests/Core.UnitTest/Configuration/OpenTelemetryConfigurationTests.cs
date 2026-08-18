@@ -22,7 +22,6 @@ public class OpenTelemetryConfigurationTests
     private configuration _localConfig;
     private ServerConfiguration _serverConfig;
     private RunTimeConfiguration _runTimeConfig;
-    private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
     private IBootstrapConfiguration _bootstrapConfiguration;
     private TestableDefaultConfiguration _configuration;
     private IDnsStatic _dnsStatic;
@@ -37,11 +36,10 @@ public class OpenTelemetryConfigurationTests
         _localConfig = new configuration();
         _serverConfig = new ServerConfiguration();
         _runTimeConfig = new RunTimeConfiguration();
-        _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
         _dnsStatic = Mock.Create<IDnsStatic>();
 
-        _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
     }
 
     [Test]
@@ -68,7 +66,7 @@ public class OpenTelemetryConfigurationTests
             }
         };
 
-        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Act & Assert
         NrAssert.Multiple(
@@ -90,7 +88,7 @@ public class OpenTelemetryConfigurationTests
             }
         };
 
-        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Act & Assert
         NrAssert.Multiple(
@@ -109,7 +107,7 @@ public class OpenTelemetryConfigurationTests
             // metrics element not specified, should use default (true)
         };
 
-        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Act & Assert
         NrAssert.Multiple(
@@ -132,7 +130,7 @@ public class OpenTelemetryConfigurationTests
             }
         };
 
-        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Act
         var includeFilters = configuration.OpenTelemetryMetricsIncludeFilters.ToList();
@@ -160,7 +158,7 @@ public class OpenTelemetryConfigurationTests
             }
         };
 
-        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Act
         var excludeFilters = configuration.OpenTelemetryMetricsExcludeFilters.ToList();
@@ -188,7 +186,7 @@ public class OpenTelemetryConfigurationTests
             }
         };
 
-        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Act & Assert
         NrAssert.Multiple(
@@ -212,7 +210,7 @@ public class OpenTelemetryConfigurationTests
             }
         };
 
-        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Act & Assert
         NrAssert.Multiple(
@@ -234,7 +232,7 @@ public class OpenTelemetryConfigurationTests
             }
         };
 
-        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Act & Assert
         NrAssert.Multiple(
@@ -248,7 +246,7 @@ public class OpenTelemetryConfigurationTests
     {
         _localConfig.openTelemetry.traces.include = "  Foo , ,Bar,,  baz , Foo  ";
 
-        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         var result = configuration.OpenTelemetryTracingIncludedActivitySources;
 
         Assert.That(result, Is.EqualTo(new List<string> { "Foo", "Bar", "baz" }));
@@ -261,7 +259,7 @@ public class OpenTelemetryConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_TRACES_INCLUDE"))
             .Returns(" A , , B , C , A ");
 
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         var result = cfg.OpenTelemetryTracingIncludedActivitySources;
 
         Assert.That(result, Is.EqualTo(new List<string> { "A", "B", "C" }));
@@ -271,7 +269,7 @@ public class OpenTelemetryConfigurationTests
     public void OpenTelemetryTracingIncludedActivitySources_EmptyOrWhitespaceTokens_AreIgnored()
     {
         _localConfig.openTelemetry.traces.include = " , ,   , ";
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(cfg.OpenTelemetryTracingIncludedActivitySources, Is.Empty);
     }
@@ -281,7 +279,7 @@ public class OpenTelemetryConfigurationTests
     {
         _localConfig.openTelemetry.traces.exclude = "  Ex1 , , Ex2,,  Ex3 , Ex1  ";
 
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         var result = cfg.OpenTelemetryTracingExcludedActivitySources;
 
         Assert.That(result, Is.EqualTo(new List<string> { "Ex1", "Ex2", "Ex3" }));
@@ -294,7 +292,7 @@ public class OpenTelemetryConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_TRACES_EXCLUDE"))
             .Returns(" X , , Y , Z , X ");
 
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         var result = cfg.OpenTelemetryTracingExcludedActivitySources;
 
         Assert.That(result, Is.EqualTo(new List<string> { "X", "Y", "Z" }));
@@ -304,7 +302,7 @@ public class OpenTelemetryConfigurationTests
     public void OpenTelemetryTracingExcludedActivitySources_EmptyOrWhitespaceTokens_AreIgnored()
     {
         _localConfig.openTelemetry.traces.exclude = " , ,   , ";
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(cfg.OpenTelemetryTracingExcludedActivitySources, Is.Empty);
     }
@@ -326,7 +324,7 @@ public class OpenTelemetryConfigurationTests
             .Returns("70000");
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
             .Returns("20000");
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(70000));
         Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(20000));
     }
@@ -339,22 +337,22 @@ public class OpenTelemetryConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
             .Returns("10000");
 
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(60000));
         Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(10000));
     }
 
     [Test]
-    public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_EqualValues_ShouldBeValid()
+    public void OpenTelemetryMetricsExportInterval_And_ExportTimeout_EqualValues_ShouldRevertToDefaults()
     {
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_INTERVAL"))
             .Returns("30000");
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
             .Returns("30000");
 
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-        Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(30000));
-        Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(30000));
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(60000));
+        Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(10000));
     }
 
     [Test]
@@ -371,7 +369,7 @@ public class OpenTelemetryConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
             .Returns("30000");
 
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(90000));
         Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(30000));
     }
@@ -385,7 +383,7 @@ public class OpenTelemetryConfigurationTests
             new configurationAdd { key = "OpenTelemetryMetricsExportTimeout", value = "15000" }
         };
 
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(75000));
         Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(15000));
     }
@@ -398,7 +396,7 @@ public class OpenTelemetryConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
             .Returns("notanumber");
 
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(60000));
         Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(10000));
     }
@@ -411,7 +409,7 @@ public class OpenTelemetryConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
             .Returns("5000");
 
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(60000));
         Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(10000));
     }
@@ -424,7 +422,7 @@ public class OpenTelemetryConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_METRICS_EXPORT_TIMEOUT"))
             .Returns("1000");
 
-        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var cfg = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(cfg.OpenTelemetryMetricsExportIntervalMs, Is.EqualTo(60000));
         Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(10000));
     }

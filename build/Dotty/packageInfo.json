@@ -81,6 +81,10 @@
         "packageName": "hangfire"
     },
     {
+        "packageName": "hangfire.sqlserver",
+        "ignoreReason": "Not used directly; referenced with ExcludeAssets so it must be bumped in lockstep with hangfire, which requires it at an exact version."
+    },
+    {
         "packageName": "log4net"
     },
     {
@@ -159,6 +163,11 @@
     },
     {
         "packageName": "nlog.extensions.logging"
+    },
+    {
+        "packageName": "npgsql",
+        "ignoreTFMs": "net481",
+        "ignoreReason": "net481 (.NET Framework) is capped at npgsql 8.x; npgsql 9+ dropped .NET Framework support."
     },
     {
         "packageName": "nservicebus",

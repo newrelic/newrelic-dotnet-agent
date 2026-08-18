@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Threading;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -20,6 +21,13 @@ public abstract class RemoteApplicationFixture : IDisposable
     public virtual string TestSettingCategory { get { return "Default"; } }
 
     public int? BaselinePayloadBytes { get; set; }
+
+    /// <summary>
+    /// When true (the default), the fixture asserts after the application exits that every payload
+    /// the agent sent to the collector is well-formed JSON. Override and return false for tests
+    /// that intentionally produce malformed payloads.
+    /// </summary>
+    protected virtual bool ValidateCollectorPayloadJson => true;
 
     private Action _setupConfiguration;
     private Action _exerciseApplication;
@@ -191,11 +199,6 @@ public abstract class RemoteApplicationFixture : IDisposable
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "licenseKey", TestConfiguration.LicenseKey);
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "host", TestConfiguration.CollectorUrl);
-        if (TestSettingCategory == "CSP")
-        {
-            var securityPoliciesToken = "ffff-ffff-ffff-ffff";
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(destinationNewRelicConfigFilePath, new[] { "configuration" }, "securityPoliciesToken", securityPoliciesToken);
-        }
     }
 
     public RemoteApplicationFixture SetAdditionalEnvironmentVariables(IDictionary<string, string> envVars)
@@ -282,21 +285,22 @@ public abstract class RemoteApplicationFixture : IDisposable
                     var captureStandardOutput = RemoteApplication.CaptureStandardOutput;
 
                     var timer = new ExecutionTimer();
-                    timer.Aggregate(() =>
-                    {
-                        RemoteApplication.DeleteWorkingSpace();
-
-                        RemoteApplication.CopyToRemote();
-
-                        SetupConfiguration();
-
-                        RemoteApplication.Start(CommandLineArguments, EnvironmentVariables, captureStandardOutput);
-                    });
-
-                    TestLogger?.WriteLine($"Remote application build/startup time: {timer.Total:N4} seconds");
 
                     try
                     {
+                        timer.Aggregate(() =>
+                        {
+                            RemoteApplication.DeleteWorkingSpace();
+
+                            RemoteApplication.CopyToRemote();
+
+                            SetupConfiguration();
+
+                            RemoteApplication.Start(CommandLineArguments, EnvironmentVariables, captureStandardOutput);
+                        });
+
+                        TestLogger?.WriteLine($"Remote application build/startup time: {timer.Total:N4} seconds");
+
                         timer = new ExecutionTimer();
                         timer.Aggregate(ExerciseApplication);
                         TestLogger?.WriteLine($"ExerciseApplication execution time: {timer.Total:N4} seconds");
@@ -326,7 +330,19 @@ public abstract class RemoteApplicationFixture : IDisposable
                                 // hosted tests, unfortunately, we just punt that.
                                 if (RemoteApplication.ValidateHostedWebCoreOutput)
                                 {
-                                    SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
+                                    try
+                                    {
+                                        SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
+                                    }
+                                    catch (Exception hwcEx)
+                                    {
+                                        // If the HWC process hung on shutdown, WaitForOutput() times out and
+                                        // StandardOutput is empty, causing spurious "file ended early" failures.
+                                        // Convert to a retryable condition instead of an immediate test failure.
+                                        TestLogger?.WriteLine($"HostedWebCore log validation failed: {hwcEx.Message}. Will retry if attempts remain.");
+                                        retryTest = true;
+                                        retryMessage = "HostedWebCore log validation failed.";
+                                    }
                                 }
                                 else
                                 {
@@ -336,6 +352,14 @@ public abstract class RemoteApplicationFixture : IDisposable
                             else
                             {
                                 TestLogger?.WriteLine("Note: child process application does not redirect output because _remoteApplication.CaptureStandardOutput = false. HostedWebCore validation cannot take place without the standard output. This is common for non-web and self-hosted applications.");
+                            }
+
+                            // If the process is still running (e.g. hung on graceful shutdown), force-kill it
+                            // so that WaitForExit() returns promptly and the port is free for any retry.
+                            if (RemoteApplication.IsRunning)
+                            {
+                                TestLogger?.WriteLine("Remote application is still running after output capture; force killing.");
+                                RemoteApplication.Shutdown(force: true);
                             }
 
                             RemoteApplication.WaitForExit();
@@ -411,6 +435,11 @@ public abstract class RemoteApplicationFixture : IDisposable
                     if (!applicationHadNonZeroExitCode)
                     {
                         TestForKnownProblems();
+
+                        if (ValidateCollectorPayloadJson)
+                        {
+                            ValidateAllCollectorPayloadsAreValidJson();
+                        }
                     }
                 }
 
@@ -693,5 +722,86 @@ public abstract class RemoteApplicationFixture : IDisposable
         }
 
         TestLogger?.WriteLine("Finished known problems check.");
+    }
+
+    /// <summary>
+    /// Asserts that every payload the agent sent to the collector is well-formed JSON. Runs
+    /// automatically for every integration test via the Initialize() teardown path, so a
+    /// regression that corrupts any outgoing payload (see GitHub issue #3641, where an
+    /// unserializable log context value produced invalid log_event_data) fails the test that
+    /// produced it - no per-test assertion required.
+    /// </summary>
+    private void ValidateAllCollectorPayloadsAreValidJson()
+    {
+        // Using AgentLog when the file doesn't exist results in a 3 minute wait - manually checking is faster.
+        if (!Directory.Exists(DestinationNewRelicLogFileDirectoryPath) ||
+            !File.Exists(AgentLog.FilePath))
+        {
+            return;
+        }
+
+        var invalidPayloads = new List<string>();
+
+        foreach (var payload in AgentLog.GetCollectorPayloads())
+        {
+            try
+            {
+                // JToken rather than JObject: several payloads (e.g. metric_data and
+                // analytic_event_data) are top-level JSON arrays, not objects.
+                //
+                // A hand-built JsonTextReader rather than JToken.Parse: JToken.Parse uses Newtonsoft's
+                // default MaxDepth of 64, which rejects legitimately deep payloads. profile_data is a
+                // recursive thread-profile call tree that nests one array level per stack frame and
+                // routinely exceeds 64 levels - that is valid JSON, not a corrupt payload. MaxDepth =
+                // null removes the limit; the trailing Read() loop preserves JToken.Parse's rejection
+                // of additional content after the root token.
+                using (var jsonReader = new JsonTextReader(new StringReader(payload.Value)) { MaxDepth = null })
+                {
+                    JToken.ReadFrom(jsonReader);
+                    while (jsonReader.Read()) { }
+                }
+            }
+            catch (Exception ex)
+            {
+                invalidPayloads.Add($"  {payload.Key} ({payload.Value.Length} chars): {ex.Message}{Environment.NewLine}    Payload: {BuildPayloadPreview(payload.Value, ex)}");
+            }
+        }
+
+        if (invalidPayloads.Count > 0)
+        {
+            TestLogger?.WriteLine("WARNING: Found one or more collector payloads that are not valid JSON!");
+            Assert.Fail($"{invalidPayloads.Count} collector payload(s) were not valid JSON:{Environment.NewLine}" + string.Join(Environment.NewLine, invalidPayloads));
+        }
+
+        TestLogger?.WriteLine("Finished collector payload JSON validation.");
+    }
+
+    /// <summary>
+    /// Builds a bounded preview of a payload that failed JSON validation. For payloads larger than
+    /// the window, the preview is centered on the parse failure position so the offending region is
+    /// visible rather than truncated away; the head of the payload is used when no position is known.
+    /// </summary>
+    private static string BuildPayloadPreview(string payload, Exception parseException)
+    {
+        const int windowRadius = 250;
+
+        if (payload.Length <= 2 * windowRadius)
+        {
+            return payload;
+        }
+
+        // For single-line JSON payloads the reader's LinePosition is effectively the character
+        // offset of the failure, so center the window there. Defaults to 0 (head of payload) for a
+        // non-reader exception or when no position is available.
+        var errorPosition = (parseException as JsonReaderException)?.LinePosition ?? 0;
+        errorPosition = Math.Max(0, Math.Min(errorPosition, payload.Length));
+
+        var start = Math.Max(0, errorPosition - windowRadius);
+        var length = Math.Min(2 * windowRadius, payload.Length - start);
+
+        var prefix = start > 0 ? "..." : "";
+        var suffix = start + length < payload.Length ? "..." : "";
+
+        return $"{prefix}{payload.Substring(start, length)}{suffix}";
     }
 }

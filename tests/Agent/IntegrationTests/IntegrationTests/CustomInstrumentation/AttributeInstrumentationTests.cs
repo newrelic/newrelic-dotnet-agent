@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -64,6 +65,17 @@ public abstract class AttributeInstrumentationTests<TFixture> : NewRelicIntegrat
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces();
+                configModifier.SetLogLevel("finest");
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+            }
+        );
+
+        Fixture.AddActions
+        (
+            exerciseApplication: () =>
+            {
+                Fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                Fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
 
@@ -82,37 +94,37 @@ public abstract class AttributeInstrumentationTests<TFixture> : NewRelicIntegrat
             new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWorkAsync", CallCountAllHarvests = 2},
             new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeMoreWorkAsync", CallCountAllHarvests = 2},
 
-            new Assertions.ExpectedMetric {metricName = $"WebTransaction/Custom/{LibraryClassName}/MakeWebTransaction", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeWebTransaction", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeWebTransaction", metricScope = $"WebTransaction/Custom/{LibraryClassName}/MakeWebTransaction", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWork", metricScope = $"WebTransaction/Custom/{LibraryClassName}/MakeWebTransaction", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = $"WebTransaction/Custom/{LibraryClassName}/MakeWebTransaction", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeWebTransaction", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeWebTransaction", metricScope = $"WebTransaction/Custom/{LibraryClassName}/MakeWebTransaction", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWork", metricScope = $"WebTransaction/Custom/{LibraryClassName}/MakeWebTransaction", CallCountAllHarvests = 1},
 
-            new Assertions.ExpectedMetric {metricName = $"WebTransaction/Uri/fizz/buzz", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeWebTransactionWithCustomUri", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeWebTransactionWithCustomUri", metricScope = "WebTransaction/Uri/fizz/buzz", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWork", metricScope = "WebTransaction/Uri/fizz/buzz", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = $"WebTransaction/Uri/fizz/buzz", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeWebTransactionWithCustomUri", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeWebTransactionWithCustomUri", metricScope = "WebTransaction/Uri/fizz/buzz", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWork", metricScope = "WebTransaction/Uri/fizz/buzz", CallCountAllHarvests = 1},
 
-            new Assertions.ExpectedMetric {metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransaction", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransaction", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransaction", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransaction", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWork", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransaction", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransaction", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransaction", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransaction", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransaction", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWork", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransaction", CallCountAllHarvests = 1},
 
-            new Assertions.ExpectedMetric {metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWorkAsync", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeMoreWorkAsync", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWorkAsync", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeMoreWorkAsync", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionThenCallAsyncMethod", CallCountAllHarvests = 1},
 
-            new Assertions.ExpectedMetric {metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionAsync", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionAsync", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionAsync", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionAsync", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWorkAsync", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionAsync", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeMoreWorkAsync", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionAsync", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionAsync", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionAsync", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionAsync", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionAsync", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeWorkAsync", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionAsync", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/DoSomeMoreWorkAsync", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionAsync", CallCountAllHarvests = 1},
 
-            new Assertions.ExpectedMetric {metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionWithCallToNetStandardMethod", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionWithCallToNetStandardMethod", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionWithCallToNetStandardMethod", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionWithCallToNetStandardMethod", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = $"DotNet/NetStandardTestLibrary.MyClass/MyMethodToBeInstrumented", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionWithCallToNetStandardMethod", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionWithCallToNetStandardMethod", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionWithCallToNetStandardMethod", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionWithCallToNetStandardMethod", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionWithCallToNetStandardMethod", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = $"DotNet/NetStandardTestLibrary.MyClass/MyMethodToBeInstrumented", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionWithCallToNetStandardMethod", CallCountAllHarvests = 1},
         };
 
         var expectedTransactionEventAgentAttributes = new Dictionary<string, string>

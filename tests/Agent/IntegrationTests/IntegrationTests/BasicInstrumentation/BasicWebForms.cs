@@ -55,22 +55,22 @@ public class BasicWebForms : NewRelicIntegrationTest<RemoteServiceFixtures.Basic
         {
             var endpointMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"WebTransactionTotalTime/ASP/{webFormName}", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"WebTransaction/ASP/{webFormName}", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = $"WebTransactionTotalTime/ASP/{webFormName}", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = $"WebTransaction/ASP/{webFormName}", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = $"WebTransaction/ASP/{webFormName}", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = $"WebTransaction/ASP/{webFormName}", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = $"WebTransaction/ASP/{webFormName}", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = $"WebTransaction/ASP/{webFormName}", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = $"WebTransaction/ASP/{webFormName}", CallCountAllHarvests = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = $"WebTransaction/ASP/{webFormName}", CallCountAllHarvests = 1 },
             };
             expectedMetrics.AddRange(endpointMetrics);
             if (webFormName == "webformslow.aspx")
             {
                 // These metrics don't appear when `webform1.aspx` is the requested endpoint because of the invalid query string
-                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 });
-                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = $"WebTransaction/ASP/{webFormName}", CallCountAllHarvests = 1 });
+                expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = $"WebTransaction/ASP/{webFormName}", CallCountAllHarvests = 1 });
             }
         }
         expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"WebTransaction/StatusCode/404" });

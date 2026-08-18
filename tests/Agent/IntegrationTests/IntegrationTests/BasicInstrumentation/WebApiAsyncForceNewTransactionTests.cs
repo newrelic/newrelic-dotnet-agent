@@ -69,40 +69,40 @@ public class WebApiAsyncForceNewTransactionTests_Instrumented : WebApiAsyncForce
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Async_AwaitedAsync = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/AA-AA", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/AA-AA", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/FireAndForgetTests/AA-AM-AM", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/FireAndForgetTests/AA-AM-AM", CallCountAllHarvests = 1 },
     };
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Async_FireAndForget = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/AF-AF", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/AF-AF", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/FireAndForgetTests/AF-AM-AM", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/FireAndForgetTests/AF-AM-AM", CallCountAllHarvests = 1 },
     };
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Async_Sync = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/AS-AS", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/AS-AS", CallCountAllHarvests = 1 },
     };
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Sync_AwaitedAsync = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/SA-SA", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/SA-SA", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/FireAndForgetTests/SA-AM-AM", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/FireAndForgetTests/SA-AM-AM", CallCountAllHarvests = 1 },
     };
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Sync_FireAndForget = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/SF-SF", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/SF-SF", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/FireAndForgetTests/SF-AM-AM", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/FireAndForgetTests/SF-AM-AM", CallCountAllHarvests = 1 },
     };
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Sync_Sync = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/SS-SS", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/SS-SS", CallCountAllHarvests = 1 },
     };
 
 }
@@ -136,22 +136,22 @@ public class WebApiAsyncForceNewTransactionTests_NotInstrumented : WebApiAsyncFo
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Async_AwaitedAsync = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/AA-AA", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/AA-AA", CallCountAllHarvests = 1 },
     };
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Async_Sync = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/AS-AS", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/AS-AS", CallCountAllHarvests = 1 },
     };
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Sync_AwaitedAsync = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/SA-SA", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/SA-SA", CallCountAllHarvests = 1 },
     };
 
     private readonly List<Assertions.ExpectedMetric> _expectedMetrics_Sync_Sync = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/SS-SS", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"WebTransaction/FireAndForgetTests/SS-SS", CallCountAllHarvests = 1 },
     };
 
 

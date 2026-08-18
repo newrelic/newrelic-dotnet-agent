@@ -178,6 +178,18 @@ public class NewRelicConfigModifier
             "explainThreshold", "1");
     }
 
+    public void SetTransactionTracerExplainEnabled(bool enabled)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "transactionTracer" },
+            "explainEnabled", enabled.ToString().ToLower());
+    }
+
+    public void SetTransactionTracerSqlMetadataCommentsEnabled(bool enabled)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "transactionTracer" },
+            "sqlMetadataCommentsEnabled", enabled.ToString().ToLower());
+    }
+
     public NewRelicConfigModifier SetLogLevel(string level)
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "level",
@@ -490,6 +502,26 @@ public class NewRelicConfigModifier
     public NewRelicConfigModifier EnableAiMonitoring(bool enabled = true)
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "aiMonitoring" }, "enabled", enabled.ToString().ToLower());
+        return this;
+    }
+
+    public NewRelicConfigModifier EnableAiMonitoringStreaming(bool enabled = true)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(
+            _configFilePath,
+            new[] { "configuration", "aiMonitoring", "streaming" },
+            "enabled",
+            enabled.ToString().ToLower());
+        return this;
+    }
+
+    public NewRelicConfigModifier EnableAiMonitoringRecordContent(bool enabled = true)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(
+            _configFilePath,
+            new[] { "configuration", "aiMonitoring", "recordContent" },
+            "enabled",
+            enabled.ToString().ToLower());
         return this;
     }
 

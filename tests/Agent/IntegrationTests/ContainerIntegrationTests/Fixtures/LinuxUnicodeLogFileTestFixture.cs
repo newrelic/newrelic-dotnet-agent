@@ -12,5 +12,8 @@ public class LinuxUnicodeLogFileTestFixture : ContainerTestFixtureBase
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "noble";
 
-    public LinuxUnicodeLogFileTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    public LinuxUnicodeLogFileTestFixture() : base(DistroTag, Architecture, Dockerfile)
+    {
+        ProfilerLogExpected = true;
+    }
 }

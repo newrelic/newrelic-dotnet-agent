@@ -315,7 +315,7 @@ public class Agent : IAgent // any changes to api, update the interface in exten
         return script == null ? null : new BrowserMonitoringStreamInjector(() => script, stream, encoding);
     }
 
-    public async Task TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream)
+    public async Task<bool> TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream)
     {
         var transaction = _transactionService.GetCurrentInternalTransaction();
 
@@ -333,9 +333,11 @@ public class Agent : IAgent // any changes to api, update the interface in exten
             {
                 transaction?.LogFinest("Skipping RUM Injection: Base stream was disposed.");
             }
+
+            return false;
         }
-        else
-            await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, baseStream, rumBytes, transaction);
+
+        return await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, baseStream, rumBytes, transaction);
     }
 
     private string TryGetRUMScriptInternal(string contentType, string requestPath)
@@ -512,6 +514,11 @@ public class Agent : IAgent // any changes to api, update the interface in exten
     public void RecordCountMetric(string metricName, long count = 1)
     {
         _agentHealthReporter.ReportCountMetric(metricName, count);
+    }
+
+    public void RecordGaugeMetric(string metricName, float value)
+    {
+        _agentHealthReporter.ReportGaugeMetric(metricName, value);
     }
 
     public void RecordByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null)

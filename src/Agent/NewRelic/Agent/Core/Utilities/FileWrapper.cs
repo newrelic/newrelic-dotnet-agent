@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace NewRelic.Agent.Core.Utilities;
@@ -18,6 +19,7 @@ public interface IFileWrapper
     string[] ReadAllLines(string path);
     DateTime GetLastWriteTimeUtc(string path);
     FileStream Open(string path, FileMode mode, FileAccess access, FileShare share);
+    string GetFileVersion(string path);
 }
 
 [NrExcludeFromCodeCoverage]
@@ -70,5 +72,11 @@ public class FileWrapper : IFileWrapper
     public FileStream Open(string path, FileMode mode, FileAccess access, FileShare share)
     {
         return File.Open(path, mode, access, share);
+    }
+
+    public string GetFileVersion(string path)
+    {
+        var fvi = FileVersionInfo.GetVersionInfo(path);
+        return fvi.FileVersion;
     }
 }

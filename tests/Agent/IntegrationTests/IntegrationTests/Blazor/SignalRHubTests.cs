@@ -44,8 +44,8 @@ public class SignalRHubTests : NewRelicIntegrationTest<RemoteServiceFixtures.Bla
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new() { metricName = @"OtherTransaction/Custom/BlazorSignalRApplication.Hubs.EchoHub/SendEcho", callCount = 1 },
-            new() { metricName = @"DotNet/BlazorSignalRApplication.Hubs.EchoHub/SendEcho", callCount = 1 },
+            new() { metricName = @"OtherTransaction/Custom/BlazorSignalRApplication.Hubs.EchoHub/SendEcho", CallCountAllHarvests = 1 },
+            new() { metricName = @"DotNet/BlazorSignalRApplication.Hubs.EchoHub/SendEcho", CallCountAllHarvests = 1 },
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();

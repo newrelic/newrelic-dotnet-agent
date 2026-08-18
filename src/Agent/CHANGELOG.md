@@ -4,6 +4,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.53.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.53.0...v10.53.1) (2026-08-12)
+
+
+### Fixes
+
+* Add on-insert check to SimpleCache to prevent runaway growth. ([#3727](https://github.com/newrelic/newrelic-dotnet-agent/issues/3727)) ([88e667f](https://github.com/newrelic/newrelic-dotnet-agent/commit/88e667f8d4d4c1b6cf82a228e7de67bb1a5d0d4a))
+* Aggregate metrics post rename instead of using old names. ([#3729](https://github.com/newrelic/newrelic-dotnet-agent/issues/3729)) ([67f7fcd](https://github.com/newrelic/newrelic-dotnet-agent/commit/67f7fcdefb67890df70e600936bed537d5b32d1a))
+* Guard null OperationContext in WCF MethodInvokerWrapper ([#3730](https://github.com/newrelic/newrelic-dotnet-agent/issues/3730)) ([4ab79f3](https://github.com/newrelic/newrelic-dotnet-agent/commit/4ab79f32c4fb6a22d92d488920894f0d069e9d28))
+* Instrument new method for local log decoration in Serilog 4.4.0+ ([#3705](https://github.com/newrelic/newrelic-dotnet-agent/issues/3705)) ([426f711](https://github.com/newrelic/newrelic-dotnet-agent/commit/426f7114ced333e508e168179b28837f8d42fbe4))
+* Prevent double RUM script injection in ASP.NET Core 6+ responses ([#3726](https://github.com/newrelic/newrelic-dotnet-agent/issues/3726)) ([498da98](https://github.com/newrelic/newrelic-dotnet-agent/commit/498da9850133d8d16c2a906d6a4e9951ef39e3ac))
+* Report the database a SQL command actually ran against ([#3752](https://github.com/newrelic/newrelic-dotnet-agent/issues/3752)) ([b24ff10](https://github.com/newrelic/newrelic-dotnet-agent/commit/b24ff1062a728ba3809ce02feca8a80b6f12fcda))
+
+## [10.53.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.52.0...v10.53.0) (2026-07-14)
+
+
+### New features
+
+* Report request queue time from X-Request-Start/X-Queue-Start headers across all web hosts ([#3659](https://github.com/newrelic/newrelic-dotnet-agent/issues/3659)) ([05a1d00](https://github.com/newrelic/newrelic-dotnet-agent/commit/05a1d00ced2f479240c49231e6b5fb410086ab08))
+* Support server-side configuration for AI Monitoring settings ([#3664](https://github.com/newrelic/newrelic-dotnet-agent/issues/3664)) ([eacc013](https://github.com/newrelic/newrelic-dotnet-agent/commit/eacc013e649697084c953ab38492d47f8b3867dc))
+
+
+### Fixes
+
+* Update Npgsql instrumentation to support v8.x and newer ([#3667](https://github.com/newrelic/newrelic-dotnet-agent/issues/3667)) ([2890d96](https://github.com/newrelic/newrelic-dotnet-agent/commit/2890d96ac42457ba13588273210ad448a736de0f))
+
+## [10.52.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.51.1...v10.52.0) (2026-06-24)
+
+
+### New features
+
+* Add alternative environment variables for expected and ignored error codes. ([#3626](https://github.com/newrelic/newrelic-dotnet-agent/issues/3626)) ([c29f037](https://github.com/newrelic/newrelic-dotnet-agent/commit/c29f037c08c949a58ec2e8e83471c8025843b048))
+* Add Kafka internal metrics ([#3555](https://github.com/newrelic/newrelic-dotnet-agent/issues/3555)) ([1102c0b](https://github.com/newrelic/newrelic-dotnet-agent/commit/1102c0bed0e263fa044c184f6971e5832cc49a54))
+* Add SQL metadata comments to enable APM to DB Query Performance Monitoring correlation ([#3582](https://github.com/newrelic/newrelic-dotnet-agent/issues/3582)) ([04599b5](https://github.com/newrelic/newrelic-dotnet-agent/commit/04599b54f98e97f97708e9a1f53426a4c644b2ef))
+
+
+### Fixes
+
+* Bedrock Converse no longer drops events when first content block is non-text ([#3649](https://github.com/newrelic/newrelic-dotnet-agent/issues/3649)) ([8813077](https://github.com/newrelic/newrelic-dotnet-agent/commit/8813077600b61712b3d1f09d4fbb4f5310858806))
+* Distributed tracing for HttpWebRequest body and async requests ([#3652](https://github.com/newrelic/newrelic-dotnet-agent/issues/3652)) ([8f8928d](https://github.com/newrelic/newrelic-dotnet-agent/commit/8f8928d85b3bd5071f98c8cf28d2ff7db7fcf773))
+* Prevent malformed log_event_data JSON for non-serializable context values ([#3642](https://github.com/newrelic/newrelic-dotnet-agent/issues/3642)) ([a7108cb](https://github.com/newrelic/newrelic-dotnet-agent/commit/a7108cb193a83ad2c23fbd0de80e05d0be68d617))
+
+## [10.51.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.51.0...v10.51.1) (2026-06-03)
+
+
+### Notice
+
+* Customers using `RecordDatastoreSegment()` with a custom vendor name will see metric names change from `Datastore/*/Other/*` to `Datastore/*/<VendorName>/*`. Update any dashboards, alerts, or queries that reference the old Other-based metric names. ([f6c0e48](https://github.com/newrelic/newrelic-dotnet-agent/commit/f6c0e483e00bbaa17a5b44aa3c8b9d07c5c41e91))
+
+
+### Fixes
+
+* `RecordDatastoreSegment()` API will correctly use the caller-supplied vendor name instead of ignoring it. ([f6c0e48](https://github.com/newrelic/newrelic-dotnet-agent/commit/f6c0e483e00bbaa17a5b44aa3c8b9d07c5c41e91))
+* Ensure all StackExchange.Redis segments are created and added to transaction before it is harvested ([#3574](https://github.com/newrelic/newrelic-dotnet-agent/issues/3574)) ([4152ea2](https://github.com/newrelic/newrelic-dotnet-agent/commit/4152ea25b23318c68d372447c905c622ac5ac868))
+* Update MySql.Data instrumentation to support 9.7.0 signature changes ([#3562](https://github.com/newrelic/newrelic-dotnet-agent/issues/3562)) ([1e40e44](https://github.com/newrelic/newrelic-dotnet-agent/commit/1e40e44e89ab3f5c1af540a9aa30c6e1fa6a30e3))
+
 ## [10.51.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.50.0...v10.51.0) (2026-04-21)
 
 

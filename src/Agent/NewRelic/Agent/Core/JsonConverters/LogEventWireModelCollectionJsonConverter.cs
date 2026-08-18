@@ -120,25 +120,33 @@ public class LogEventWireModelCollectionJsonConverter : JsonConverter<LogEventWi
                 foreach (var item in logEvent.ContextData)
                 {
                     jsonWriter.WritePropertyName(Context + "." + item.Key);
-                    string contextValueJson;
                     try
                     {
-                        contextValueJson = JsonConvert.SerializeObject(item.Value);
+                        // SerializeObject returns valid JSON text (a quoted/escaped string
+                        // for strings, an object/array for complex values), so it is safe to
+                        // write raw into the stream.
+                        var contextValueJson = JsonConvert.SerializeObject(item.Value);
+                        jsonWriter.WriteRawValue(contextValueJson);
                     }
                     catch
                     {
-                        // If JsonConvert can't serialize it, maybe it has a ToString()
+                        // The value's object graph can't be serialized (e.g. a self-referencing
+                        // type such as an ASP.NET Core Endpoint). Fall back to a string
+                        // representation, but write it with WriteValue so it is correctly quoted
+                        // and escaped. Writing it raw would emit an unquoted token and corrupt the
+                        // entire log_event_data payload, causing the whole batch to be rejected.
+                        string fallbackValue;
                         try
                         {
-                            contextValueJson = item.Value.ToString();
+                            fallbackValue = item.Value?.ToString();
                         }
                         catch
                         {
-                            // If that didn't work, just use the type name
-                            contextValueJson = item.Value.GetType().ToString();
+                            // If even ToString() throws, fall back to the type name.
+                            fallbackValue = item.Value?.GetType().ToString();
                         }
+                        jsonWriter.WriteValue(fallbackValue);
                     }
-                    jsonWriter.WriteRawValue(contextValueJson);
                 }
 
                 jsonWriter.WriteEndObject();

@@ -34,7 +34,7 @@ public class BasicWebApplication : NewRelicIntegrationTest<RemoteServiceFixtures
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric {metricName = @"DotNet/default.aspx", metricScope = "WebTransaction/ASP/default.aspx", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/default.aspx", metricScope = "WebTransaction/ASP/default.aspx", CallCountAllHarvests = 1},
         };
 
         var expectedTransactionTraceSegments = new List<string>

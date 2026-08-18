@@ -42,6 +42,7 @@ public class ExpectedErrorTests : NewRelicIntegrationTest<RemoteServiceFixtures.
                 _fixture.ThrowExceptionWithMessage("test exception message");
                 _fixture.ThrowCustomException();
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForMetricAggregateCallCount("Supportability/Events/TransactionError/Sent", 3, TimeSpan.FromMinutes(1));
             }
         );
         _fixture.Initialize();

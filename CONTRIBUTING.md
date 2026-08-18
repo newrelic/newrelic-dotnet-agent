@@ -1,14 +1,14 @@
 # Contributing
 
 Contributions are always welcome. Before contributing please read the
-[code of conduct](https://opensource.newrelic.com/code-of-conduct/) and [search the issue tracker](https://github.com/newrelic/newrelic-dotnet-agent/issues); your issue may have already been discussed or fixed in `master`. To contribute,
+[code of conduct](https://docs.newrelic.com/docs/licenses/open-source/code-of-conduct/) and [search the issue tracker](https://github.com/newrelic/newrelic-dotnet-agent/issues); your issue may have already been discussed or fixed in `master`. To contribute,
 [fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) this repository, commit your changes, and [send a Pull Request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
-Note that our [code of conduct](https://opensource.newrelic.com/code-of-conduct/) applies to all platforms and venues related to this project; please follow it in all yo ur interactions with the project and its participants.
+Note that our [code of conduct](https://docs.newrelic.com/docs/licenses/open-source/code-of-conduct/) applies to all platforms and venues related to this project; please follow it in all your interactions with the project and its participants.
 
 ## Feature Requests
 
-Feature requests should be submitted in the [Issue tracker](https://github.com/newrelic/newrelic-dotnet-agent/issues), with a description of the expected behavior & use case, where they’ll remain closed until sufficient interest, [e.g. :+1: reactions](https://docs.github.com/en/get-started/quickstart/communicating-on-github), has been [shown by the community](https://github.com/newrelic/newrelic-dotnet-agent/issues?q=label%3A%22votes+needed%22+sort%3Areactions-%2B1-desc).
+Feature requests should be submitted in the [Issue tracker](https://github.com/newrelic/newrelic-dotnet-agent/issues), with a description of the expected behavior & use case, where they'll remain closed until sufficient interest, [e.g. :+1: reactions](https://docs.github.com/en/get-started/quickstart/communicating-on-github), has been [shown by the community](https://github.com/newrelic/newrelic-dotnet-agent/issues?q=label%3A%22votes+needed%22+sort%3Areactions-%2B1-desc).
 Before submitting an Issue, please search for similar ones in the
 [closed issues](https://github.com/newrelic/newrelic-dotnet-agent/issues?q=is%3Aissue+is%3Aclosed+label%3Aenhancement).
 
@@ -20,11 +20,11 @@ When contributing, please keep in mind that New Relic customers (that's you!) ar
 
 Be aware that the instrumentation needs to work with a wide range of versions of the instrumented modules, and that code that looks nonsensical or overcomplicated may be that way for compatibility-related reasons. Read all the comments and check the related tests before deciding whether existing code is incorrect.
 
-If you’re planning on contributing a new feature or an otherwise complex contribution, we kindly ask you to start a conversation with the maintainer team by opening up a GitHub issue first.
+If you're planning on contributing a new feature or an otherwise complex contribution, we kindly ask you to start a conversation with the maintainer team by opening up a GitHub issue first.
 
 ### General Guidelines
 
-A primary goal of the agent is to adhere to the Hippocratic oath for the applications it instruments: “first, do no harm”.  The code in the agent will execute inside the process space of our customers’ applications and must not crash them, destabilize them, change their behavior, or significantly degrade their performance.  Another important consideration is that the data the agent gathers must not leak any personally identifying information (PII) from customer apps, e.g. usernames or credit card numbers.
+A primary goal of the agent is to adhere to the Hippocratic oath for the applications it instruments: "first, do no harm".  The code in the agent will execute inside the process space of our customers' applications and must not crash them, destabilize them, change their behavior, or significantly degrade their performance.  Another important consideration is that the data the agent gathers must not leak any personally identifying information (PII) from customer apps, e.g. usernames or credit card numbers.
 
 This project is licensed under the Apache-2.0 license.  Any third party libraries added as dependencies of the project must have a similarly permissive open source license, e.g. MIT.
 
@@ -75,5 +75,5 @@ Integration tests are used to test the functionality of [agent instrumentation](
 
 Keep in mind that when you submit your Pull Request, you'll need to sign the CLA via the click-through using CLA-Assistant. If you'd like to execute our corporate CLA, or if you have any questions, please drop us an email at opensource@newrelic.com.
 
-For more information about CLAs, please check out Alex Russell’s excellent post,
-[“Why Do I Need to Sign This?”](https://infrequently.org/2008/06/why-do-i-need-to-sign-this/).
+For more information about CLAs, please check out Alex Russell's excellent post,
+["Why Do I Need to Sign This?"](https://infrequently.org/2008/06/why-do-i-need-to-sign-this/).

@@ -61,6 +61,7 @@ public abstract class MsSqlQueryParamTestsBase<TFixture> : NewRelicIntegrationTe
             {
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForMetricAggregateCallCount("Datastore/all", 2, TimeSpan.FromMinutes(2));
             }
         );
 
@@ -72,15 +73,15 @@ public abstract class MsSqlQueryParamTestsBase<TFixture> : NewRelicIntegrationTe
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/all", callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)}/default", callCount = 2},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/teammembers/select", callCount = 2 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = _expectedTransactionName},
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = _expectedAsyncTransactionName},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/all", CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/all", CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)}/default", CallCountAllHarvests = 2},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/teammembers/select", CallCountAllHarvests = 2 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/teammembers/select", CallCountAllHarvests = 1, metricScope = _expectedTransactionName},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/teammembers/select", CallCountAllHarvests = 1, metricScope = _expectedAsyncTransactionName},
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {

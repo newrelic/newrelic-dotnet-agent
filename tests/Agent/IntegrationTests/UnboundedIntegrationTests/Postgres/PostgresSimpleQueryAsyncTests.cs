@@ -60,15 +60,15 @@ public abstract class PostgresSqlSimpleQueryAsyncTestsBase<TFixture> : NewRelicI
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/OpenAsync", callCount = 1},
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", callCount = expectedDatastoreCallCount},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = expectedTransactionName},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/OpenAsync", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", CallCountAllHarvests = expectedDatastoreCallCount},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", CallCountAllHarvests = 1, metricScope = expectedTransactionName},
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
@@ -78,7 +78,7 @@ public abstract class PostgresSqlSimpleQueryAsyncTestsBase<TFixture> : NewRelicI
             // Don't double count the Open
             new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open" },
             // The operation metric should not be scoped because the statement metric is scoped instead
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedTransactionName }
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", CallCountAllHarvests = 1, metricScope = expectedTransactionName }
         };
         var expectedTransactionTraceSegments = new List<string>
         {
@@ -125,22 +125,6 @@ public abstract class PostgresSqlSimpleQueryAsyncTestsBase<TFixture> : NewRelicI
 public class PostgresSqlSimpleQueryAsyncTestsFW462 : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlSimpleQueryAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlSimpleQueryAsyncTestsFW471 : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlSimpleQueryAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlSimpleQueryAsyncTestsFW48 : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlSimpleQueryAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
     {
 
     }

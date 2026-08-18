@@ -43,7 +43,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                     }
                     else
                     {
-                        LogDebug(L"Parsing instrumentation file '", instrumentationXml.first);
+                        LogDebug(L"Parsing instrumentation file '", instrumentationXml.first, L"'");
                         GetInstrumentationPoints(instrumentationXml.second);
                     }                    
                 }
@@ -295,7 +295,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             instrumentationPoint->MetricName = GetAttributeOrEmptyString(tracerNode, _X("metricName"));
             instrumentationPoint->MetricType = GetAttributeOrEmptyString(tracerNode, _X("metric"));
             auto levelString = GetAttributeOrEmptyString(tracerNode, _X("level"));
-            auto suppressRecursiveCallsString = GetAttributeOrEmptyString(tracerNode, _X("level"));
+            auto suppressRecursiveCallsString = GetAttributeOrEmptyString(tracerNode, _X("suppressRecursiveCalls"));
             auto transactionTraceSegmentString = GetAttributeOrEmptyString(tracerNode, _X("transactionTraceSegment"));
             auto transactionNamingPriorityString = GetAttributeOrEmptyString(tracerNode, _X("transactionNamingPriority"));
             instrumentationPoint->AssemblyName = GetAttributeOrEmptyString(matchNode, _X("assemblyName"));
@@ -310,9 +310,10 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             // exception helper methods and remove the `mscorlib` lookups.  Right now we try to find a reference
             // to the mscorlib library as we build class tokens, and mscorlib does not reference itself.
             // But the safest thing to do is disallow mscorlib instrumentation and make that very clear to users.
-            if (instrumentationPoint->AssemblyName == _X("mscorlib"))
+            if (instrumentationPoint->AssemblyName == _X("mscorlib") ||
+                instrumentationPoint->AssemblyName == _X("System.Private.CoreLib"))
             {
-                LogWarn(L"Skipping instrumentation targeted at the mscorlib assembly for class ", instrumentationPoint->ClassName);
+                LogWarn(L"Skipping instrumentation targeted at the core library assembly for class ", instrumentationPoint->ClassName);
                 return;
             }
 
@@ -367,7 +368,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 instrumentationPoint->TracerFactoryArgs |= (level << 16);
             }
 
-            // suppress recusive call flag
+            // suppress recursive call flag
             if (!suppressRecursiveCallsString.empty())
             {
                 if (Strings::AreEqualCaseInsensitive(suppressRecursiveCallsString, _X("true"))) 
@@ -426,7 +427,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             }
         }
 
-        // the class name field of an instrumentation point may have multiple clasess listed (comma separated), we have to build instrumentation points for each
+        // the class name field of an instrumentation point may have multiple classes listed (comma separated), we have to build instrumentation points for each
         static std::set<InstrumentationPointPtr> SplitInstrumentationPointsOnClassNames(InstrumentationPointPtr instrumentationPoint)
         {
             std::set<InstrumentationPointPtr> instrumentationPoints;
@@ -462,7 +463,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return instrumentationPoints;
         }
 
-        // given two instrumentationPoint->ClassName iterators (begin and end), return a new copy of insrtumentationPoint containing a ClassName of [begin, end)
+        // given two instrumentationPoint->ClassName iterators (begin and end), return a new copy of instrumentationPoint containing a ClassName of [begin, end)
         static InstrumentationPointPtr GetInstrumentationPointFromClassSplitIterators(InstrumentationPointPtr instrumentationPoint, xstring_t::const_iterator begin, xstring_t::const_iterator end)
         {
             // construct a new class name string from this section of the old class name split

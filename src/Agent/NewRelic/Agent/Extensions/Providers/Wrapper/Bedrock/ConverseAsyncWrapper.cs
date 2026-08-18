@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Helpers;
@@ -85,12 +86,11 @@ public class ConverseAsyncWrapper : IWrapper
 
     private void ProcessConverseResponse(ISegment segment, dynamic converseRequest, dynamic converseResponse, IAgent agent, string requestModelId)
     {
-        // if request message content doesn't have a non-null Text property, we can't support instrumentation
         // last message is the current prompt
         var requestMessage = converseRequest?.Messages?[converseRequest.Messages.Count - 1];
-        if (converseRequest == null || requestMessage == null || requestMessage.Content == null || requestMessage.Content.Count == 0 || requestMessage.Content[0].Text == null)
+        if (converseRequest == null || requestMessage == null || requestMessage.Content == null || requestMessage.Content.Count == 0)
         {
-            agent.Logger.Info($"Unable to process Converse response for model {requestModelId}: request was null or message content was not Text");
+            agent.Logger.Info($"Unable to process Converse response for model {requestModelId}: request was null or had no message content");
             return;
         }
 
@@ -100,19 +100,18 @@ public class ConverseAsyncWrapper : IWrapper
             return;
         }
 
-        // if response message content doesn't have a non-null Text property, we can't support instrumentation
         var responseMessage = converseResponse.Output?.Message;
-        if (responseMessage == null || responseMessage.Content == null || responseMessage.Content.Count == 0 || responseMessage.Content[0].Text == null)
+        if (responseMessage == null || responseMessage.Content == null || responseMessage.Content.Count == 0)
         {
-            agent.Logger.Info($"Unable to process Converse response for model {requestModelId}: response was null or message content was not Text");
+            agent.Logger.Info($"Unable to process Converse response for model {requestModelId}: response message was null or had no content");
             return;
         }
 
         string requestRole = requestMessage.Role?.Value ?? "user";
-        string promptText = requestMessage.Content?[0]?.Text ?? "";
+        string promptText = ExtractTextContent(requestMessage);
 
         string responseRole = responseMessage.Role?.Value ?? "assistant";
-        string responseText = responseMessage.Content?[0]?.Text ?? "";
+        string responseText = ExtractTextContent(responseMessage);
         string stopReason = converseResponse.StopReason?.Value;
 
         string requestId = converseResponse.ResponseMetadata?.RequestId;
@@ -202,7 +201,7 @@ public class ConverseAsyncWrapper : IWrapper
         };
 
         string requestRole = requestMessage.Role?.Value ?? "user";
-        string promptText = requestMessage.Content?[0]?.Text ?? "";
+        string promptText = ExtractTextContent(requestMessage);
         int? requestMaxTokens = converseRequest.InferenceConfig?.MaxTokens;
         float? requestTemperature = converseRequest.InferenceConfig?.Temperature;
 
@@ -237,6 +236,26 @@ public class ConverseAsyncWrapper : IWrapper
                 VendorName);
     }
 
+
+    // Walks all Content[] blocks and concatenates text from Text-type blocks, joined with a newline.
+    // Non-text block types (Image, Document, Video, ReasoningContent, ToolUse, ToolResult) are skipped.
+    private static string ExtractTextContent(dynamic message)
+    {
+        if (message?.Content == null || message.Content.Count == 0)
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        for (int i = 0; i < message.Content.Count; i++)
+        {
+            string text = message.Content[i]?.Text;
+            if (text != null)
+            {
+                if (sb.Length > 0) sb.Append('\n');
+                sb.Append(text);
+            }
+        }
+        return sb.ToString();
+    }
 
     private string GetOrAddLibraryVersion(string assemblyFullName)
     {

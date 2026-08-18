@@ -107,109 +107,109 @@ public class ConsoleAsyncTests : NewRelicIntegrationTest<ConsoleAsyncFixture>
     };
 
     private readonly List<Assertions.ExpectedMetric> _ioBoundNoSpecialAsyncMetrics = new List<Assertions.ExpectedMetric> {
-        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/IoBoundNoSpecialAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/IoBoundNoSpecialAsync", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/IoBoundNoSpecialAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync1", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync2", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync3", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync1", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync2", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync3", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/IoBoundNoSpecialAsync", metricScope = @"OtherTransaction/Custom/IoBoundNoSpecialAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync1", metricScope = @"OtherTransaction/Custom/IoBoundNoSpecialAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync2", metricScope = @"OtherTransaction/Custom/IoBoundNoSpecialAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync3", metricScope = @"OtherTransaction/Custom/IoBoundNoSpecialAsync", callCount = 1 }
+        new Assertions.ExpectedMetric { metricName = @"Custom/IoBoundNoSpecialAsync", metricScope = @"OtherTransaction/Custom/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync1", metricScope = @"OtherTransaction/Custom/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync2", metricScope = @"OtherTransaction/Custom/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync3", metricScope = @"OtherTransaction/Custom/IoBoundNoSpecialAsync", CallCountAllHarvests = 1 }
     };
 
     private readonly List<Assertions.ExpectedMetric> _ioBoundConfigureAwaitFalseAsyncMetrics = new List<Assertions.ExpectedMetric> {
-        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/IoBoundConfigureAwaitFalseAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/IoBoundConfigureAwaitFalseAsync", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/IoBoundConfigureAwaitFalseAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitFalseExampleAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitSubMethodAsync2", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitFalseExampleAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitSubMethodAsync2", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/IoBoundConfigureAwaitFalseAsync", metricScope = @"OtherTransaction/Custom/IoBoundConfigureAwaitFalseAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitFalseExampleAsync", metricScope = @"OtherTransaction/Custom/IoBoundConfigureAwaitFalseAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitSubMethodAsync2", metricScope = @"OtherTransaction/Custom/IoBoundConfigureAwaitFalseAsync", callCount = 1 }
+        new Assertions.ExpectedMetric { metricName = @"Custom/IoBoundConfigureAwaitFalseAsync", metricScope = @"OtherTransaction/Custom/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitFalseExampleAsync", metricScope = @"OtherTransaction/Custom/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/ConfigureAwaitSubMethodAsync2", metricScope = @"OtherTransaction/Custom/IoBoundConfigureAwaitFalseAsync", CallCountAllHarvests = 1 }
     };
 
     private readonly List<Assertions.ExpectedMetric> _cpuBoundTasksAsyncMetrics = new List<Assertions.ExpectedMetric> {
-        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/CpuBoundTasksAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/CpuBoundTasksAsync", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/CpuBoundTasksAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBackgroundMethod", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBackgroundMethod", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBackgroundMethod", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBackgroundMethod", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/CpuBoundTasksAsync", metricScope = @"OtherTransaction/Custom/CpuBoundTasksAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBackgroundMethod", metricScope = @"OtherTransaction/Custom/CpuBoundTasksAsync", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBackgroundMethod", metricScope = @"OtherTransaction/Custom/CpuBoundTasksAsync", callCount = 1 }
+        new Assertions.ExpectedMetric { metricName = @"Custom/CpuBoundTasksAsync", metricScope = @"OtherTransaction/Custom/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBackgroundMethod", metricScope = @"OtherTransaction/Custom/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBackgroundMethod", metricScope = @"OtherTransaction/Custom/CpuBoundTasksAsync", CallCountAllHarvests = 1 }
     };
 
     private readonly List<Assertions.ExpectedMetric> _manualAsyncTaskRunBlockedMetrics = new List<Assertions.ExpectedMetric> {
-        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/TaskRunBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/TaskRunBlocked", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/TaskRunBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/TaskRunBlocked", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskRunBackgroundMethod", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskRunBackgroundSubMethod", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskRunBackgroundMethod", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskRunBackgroundSubMethod", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBlocked", metricScope = @"OtherTransaction/Custom/TaskRunBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskRunBackgroundMethod", metricScope = @"OtherTransaction/Custom/TaskRunBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskRunBackgroundSubMethod", metricScope = @"OtherTransaction/Custom/TaskRunBlocked", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBlocked", metricScope = @"OtherTransaction/Custom/TaskRunBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskRunBackgroundMethod", metricScope = @"OtherTransaction/Custom/TaskRunBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskRunBackgroundSubMethod", metricScope = @"OtherTransaction/Custom/TaskRunBlocked", CallCountAllHarvests = 1 },
     };
 
     private readonly List<Assertions.ExpectedMetric> _manualAsyncTaskFactoryStartNewBlockedMetrics = new List<Assertions.ExpectedMetric> {
-        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/TaskFactoryStartNewBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/TaskFactoryStartNewBlocked", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskFactoryStartNewBackgroundMethod", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskFactoryStartNewBackgroundSubMethod", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskFactoryStartNewBackgroundMethod", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskFactoryStartNewBackgroundSubMethod", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBlocked", metricScope = @"OtherTransaction/Custom/TaskFactoryStartNewBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskFactoryStartNewBackgroundMethod", metricScope = @"OtherTransaction/Custom/TaskFactoryStartNewBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskFactoryStartNewBackgroundSubMethod", metricScope = @"OtherTransaction/Custom/TaskFactoryStartNewBlocked", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBlocked", metricScope = @"OtherTransaction/Custom/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskFactoryStartNewBackgroundMethod", metricScope = @"OtherTransaction/Custom/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/TaskFactoryStartNewBackgroundSubMethod", metricScope = @"OtherTransaction/Custom/TaskFactoryStartNewBlocked", CallCountAllHarvests = 1 },
     };
 
     private readonly List<Assertions.ExpectedMetric> _manualAsyncNewThreadStartBlockedMetrics = new List<Assertions.ExpectedMetric> {
-        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/NewThreadStartBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/NewThreadStartBlocked", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/NewThreadStartBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/NewThreadStartBlocked", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/NewThreadStartBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/ThreadStartBackgroundMethod", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/ThreadStartBackgroundSubMethod", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/NewThreadStartBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/ThreadStartBackgroundMethod", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/ThreadStartBackgroundSubMethod", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/NewThreadStartBlocked", metricScope = @"OtherTransaction/Custom/NewThreadStartBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/ThreadStartBackgroundMethod", metricScope = @"OtherTransaction/Custom/NewThreadStartBlocked", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/ThreadStartBackgroundSubMethod", metricScope = @"OtherTransaction/Custom/NewThreadStartBlocked", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/NewThreadStartBlocked", metricScope = @"OtherTransaction/Custom/NewThreadStartBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/ThreadStartBackgroundMethod", metricScope = @"OtherTransaction/Custom/NewThreadStartBlocked", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/ThreadStartBackgroundSubMethod", metricScope = @"OtherTransaction/Custom/NewThreadStartBlocked", CallCountAllHarvests = 1 },
     };
 
     private readonly List<Assertions.ExpectedMetric> _manualAsyncMultipleThreadSegmentParentingMetrics = new List<Assertions.ExpectedMetric> {
-        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/MultipleThreadSegmentParenting", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/MultipleThreadSegmentParenting", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1SubMethod1", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1SubMethod2", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2SubMethod1", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2SubMethod2", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3SubMethod1", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3SubMethod2", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1SubMethod1", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1SubMethod2", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2SubMethod1", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2SubMethod2", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3SubMethod1", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3SubMethod2", CallCountAllHarvests = 1 },
 
-        new Assertions.ExpectedMetric { metricName = @"Custom/MultipleThreadSegmentParenting", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1SubMethod1", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1SubMethod2", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2SubMethod1", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2SubMethod2", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3SubMethod1", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3SubMethod2", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", callCount = 1 },
+        new Assertions.ExpectedMetric { metricName = @"Custom/MultipleThreadSegmentParenting", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1SubMethod1", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task1SubMethod2", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2SubMethod1", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task2SubMethod2", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3SubMethod1", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ConsoleAsyncApplication.ManualAsyncUseCases/Task3SubMethod2", metricScope = @"OtherTransaction/Custom/MultipleThreadSegmentParenting", CallCountAllHarvests = 1 },
     };
 }

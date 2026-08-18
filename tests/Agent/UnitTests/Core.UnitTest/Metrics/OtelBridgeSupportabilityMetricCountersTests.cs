@@ -56,6 +56,9 @@ public class OtelBridgeSupportabilityMetricCountersTests
     [TestCase(OtelBridgeSupportabilityMetric.MeasurementBridgeFailure, MetricNames.SupportabilityOTelMetricsBridgeMeasurementBridgeFailure)]
     [TestCase(OtelBridgeSupportabilityMetric.EntityGuidChanged, MetricNames.SupportabilityOTelMetricsBridgeEntityGuidChanged)]
     [TestCase(OtelBridgeSupportabilityMetric.MeterProviderRecreated, MetricNames.SupportabilityOTelMetricsBridgeMeterProviderRecreated)]
+    [TestCase(OtelBridgeSupportabilityMetric.ExportSuccess, MetricNames.SupportabilityOTelMetricsBridgeExportSuccess)]
+    [TestCase(OtelBridgeSupportabilityMetric.ExportFailure, MetricNames.SupportabilityOTelMetricsBridgeExportFailure)]
+    [TestCase(OtelBridgeSupportabilityMetric.ExportRetry, MetricNames.SupportabilityOTelMetricsBridgeExportRetry)]
     public void Record_GeneratesCorrectMetric_ForAllEnumValues(OtelBridgeSupportabilityMetric metricType, string expectedMetricName)
     {
         // Arrange - Enable finest logging to ensure all metrics are recorded

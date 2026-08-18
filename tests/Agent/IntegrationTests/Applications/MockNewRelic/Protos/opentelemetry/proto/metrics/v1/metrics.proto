@@ -20,12 +20,14 @@ message Metric {
   string description = 2;
   string unit = 3;
 
+  // Field numbers must match the official OTLP spec and the values emitted by the agent's exporter.
+  // (https://github.com/open-telemetry/opentelemetry-proto/blob/main/opentelemetry/proto/metrics/v1/metrics.proto).
   oneof data {
     Gauge gauge = 5;
-    Sum sum = 6;
-    Histogram histogram = 7;
-    ExponentialHistogram exponential_histogram = 8;
-    Summary summary = 9;
+    Sum sum = 7;
+    Histogram histogram = 9;
+    ExponentialHistogram exponential_histogram = 10;
+    Summary summary = 11;
   }
 }
 

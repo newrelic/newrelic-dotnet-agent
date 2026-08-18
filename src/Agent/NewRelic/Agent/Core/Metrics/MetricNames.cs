@@ -803,6 +803,9 @@ public static class MetricNames
     public const string SupportabilityOTelMetricsBridgeMeasurementBridgeFailure = SupportabilityOTelMetricsBridgePs + "MeasurementBridgeFailure";
     public const string SupportabilityOTelMetricsBridgeEntityGuidChanged = SupportabilityOTelMetricsBridgePs + "EntityGuidChanged";
     public const string SupportabilityOTelMetricsBridgeMeterProviderRecreated = SupportabilityOTelMetricsBridgePs + "MeterProviderRecreated";
+    public const string SupportabilityOTelMetricsBridgeExportSuccess = SupportabilityOTelMetricsBridgePs + "export/success";
+    public const string SupportabilityOTelMetricsBridgeExportFailure = SupportabilityOTelMetricsBridgePs + "export/failure";
+    public const string SupportabilityOTelMetricsBridgeExportRetry = SupportabilityOTelMetricsBridgePs + "export/retry";
     #endregion
 
     // CAT

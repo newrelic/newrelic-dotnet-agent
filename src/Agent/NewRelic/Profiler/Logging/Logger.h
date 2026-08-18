@@ -4,20 +4,29 @@
 */
 #pragma once
 #include <memory>
+// sal.h (vendored coreclr header) defines __valid as an empty macro for SAL
+// annotations. GCC 15's libstdc++ bits/parse_numbers.h uses __valid as an
+// internal template type alias. Push/undef/pop around the includes that
+// transitively pull in parse_numbers.h so the stdlib sees a clean identifier.
+#pragma push_macro("__valid")
+#undef __valid
 #include <mutex>
 #include <fstream> //wofstream
 #include <iostream>
 #include <ostream>
 #include <atomic>
 #include <cassert>
+#pragma pop_macro("__valid")
 #include "../Common/xplat.h"
 
 #ifdef PAL_STDCPP_COMPAT
-// This makes the logging calls work on unix systems by converting 2 byte wide strings into
-// 4 byte wide strings (convert char16_t chars to wchar_t.)
+// This makes the logging calls work on unix systems by converting 2 byte wide
+// strings (char16_t) into 4 byte wide strings (wchar_t).
 std::basic_ostream<wchar_t, std::char_traits<wchar_t>>& operator<<(std::basic_ostream<wchar_t, std::char_traits<wchar_t>>& _Ostr, const xstring_t& str)
 {
-    std::copy(str.cbegin(), str.cend(), std::ostream_iterator<wchar_t, wchar_t>(_Ostr));
+    for (auto c : str) {
+        _Ostr.put(static_cast<wchar_t>(c));
+    }
     return _Ostr;
 }
 #endif

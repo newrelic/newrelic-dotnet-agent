@@ -56,14 +56,14 @@ public abstract class RestSharpInstrumentationAsyncAwaitCATBase<TFixture> : NewR
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             new Assertions.ExpectedMetric { metricName = "External/all", CallCountAllHarvests = 4 },
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/PUT", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/POST", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/DELETE", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Get", metricScope = callerTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Put", metricScope = callerTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Post", metricScope = callerTransactionName, callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Delete", metricScope = callerTransactionName, callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/PUT", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/POST", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/DELETE", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Get", metricScope = callerTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Put", metricScope = callerTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Post", metricScope = callerTransactionName, CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Delete", metricScope = callerTransactionName, CallCountAllHarvests = 1 },
         };
 
         var metrics = _fixture.AgentLog.GetMetrics().ToList();

@@ -36,7 +36,7 @@ public class AgentApiTests : NewRelicIntegrationTest<RemoteServiceFixtures.Agent
     {
         var expectedMetrics = new[]
         {
-            new Assertions.ExpectedMetric{ metricName = "Custom/MyMetric", callCount = 1}
+            new Assertions.ExpectedMetric{ metricName = "Custom/MyMetric", CallCountAllHarvests = 1}
         };
 
         var expectedErrorEventIntrinsicAttributes = new Dictionary<string, string>

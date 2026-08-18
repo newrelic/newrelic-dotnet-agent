@@ -118,7 +118,7 @@ public abstract class MassTransitTestBase<T> : NewRelicIntegrationTest<T> where 
 
 [Collection("MassTransitTests")]
 [Trait("Architecture", "amd64")]
-[Trait("Distro", "Ubuntu")]
+[Trait("TestArea", "Messaging")]
 public class MassTransitDotNetOldestTest : MassTransitTestBase<MassTransitDotNetOldestTestFixture>
 {
     public MassTransitDotNetOldestTest(MassTransitDotNetOldestTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -128,7 +128,7 @@ public class MassTransitDotNetOldestTest : MassTransitTestBase<MassTransitDotNet
 
 [Collection("MassTransitTests")]
 [Trait("Architecture", "amd64")]
-[Trait("Distro", "Ubuntu")]
+[Trait("TestArea", "Messaging")]
 public class MassTransitDotNetLatestTest : MassTransitTestBase<MassTransitDotNetLatestTestFixture>
 {
     public MassTransitDotNetLatestTest(MassTransitDotNetLatestTestFixture fixture, ITestOutputHelper output) : base(fixture, output)

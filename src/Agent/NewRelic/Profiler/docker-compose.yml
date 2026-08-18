@@ -26,3 +26,27 @@ services:
         volumes:
             - .:/profiler
         working_dir: /profiler/linux
+
+    build_musl_x64:
+        platform: linux/amd64
+        build:
+            context: linux/.
+            dockerfile: MuslDockerfile
+        command: bash -c "dos2unix ./build_profiler.sh && chmod 777 build_profiler.sh && ./build_profiler.sh"
+        environment:
+            NR_MUSL_BUILD: "1"
+        volumes:
+            - .:/profiler
+        working_dir: /profiler/linux
+
+    build_musl_arm64:
+        platform: linux/arm64/v8
+        build:
+            context: linux/.
+            dockerfile: MuslDockerfile
+        command: bash -c "dos2unix ./build_profiler.sh && chmod 777 build_profiler.sh && ./build_profiler.sh"
+        environment:
+            NR_MUSL_BUILD: "1"
+        volumes:
+            - .:/profiler
+        working_dir: /profiler/linux

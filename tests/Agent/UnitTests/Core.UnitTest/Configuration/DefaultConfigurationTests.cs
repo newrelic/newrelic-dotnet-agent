@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using NewRelic.Agent.Core.Config;
-using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Testing.Assertions;
@@ -18,8 +17,8 @@ namespace NewRelic.Agent.Core.Configuration;
 
 internal class TestableDefaultConfiguration : DefaultConfiguration
 {
-    public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
-        : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic)
+    public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
+        : base(environment, localConfig, serverConfig, runTimeConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic)
     { }
 }
 
@@ -33,7 +32,6 @@ public class DefaultConfigurationTests
     private configuration _localConfig;
     private ServerConfiguration _serverConfig;
     private RunTimeConfiguration _runTimeConfig;
-    private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
     private IBootstrapConfiguration _bootstrapConfiguration;
     private DefaultConfiguration _defaultConfig;
     private IDnsStatic _dnsStatic;
@@ -48,11 +46,10 @@ public class DefaultConfigurationTests
         _localConfig = new configuration();
         _serverConfig = new ServerConfiguration();
         _runTimeConfig = new RunTimeConfiguration();
-        _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
         _dnsStatic = Mock.Create<IDnsStatic>();
 
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
     }
 
     [TestCase(true, "something", true, "something")]
@@ -87,7 +84,7 @@ public class DefaultConfigurationTests
     [Test]
     public void EveryConfigShouldGetNewVersionNumber()
     {
-        var newConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var newConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(newConfig.ConfigurationVersion - 1, Is.EqualTo(_defaultConfig.ConfigurationVersion));
     }
@@ -122,27 +119,19 @@ public class DefaultConfigurationTests
         Assert.That(_defaultConfig.DatastoreTracerQueryParametersEnabled, Is.False);
     }
 
-    [TestCase(true, false, false, false, configurationTransactionTracerRecordSql.raw, ExpectedResult = true)]
-    [TestCase(true, false, false, false, configurationTransactionTracerRecordSql.obfuscated, ExpectedResult = false)]
-    [TestCase(true, false, false, false, configurationTransactionTracerRecordSql.off, ExpectedResult = false)]
-    [TestCase(true, true, false, false, configurationTransactionTracerRecordSql.raw, ExpectedResult = false)]
-    [TestCase(true, false, true, true, configurationTransactionTracerRecordSql.raw, ExpectedResult = false)]
-    [TestCase(true, false, true, false, configurationTransactionTracerRecordSql.raw, ExpectedResult = false)]
-    [TestCase(false, false, false, false, configurationTransactionTracerRecordSql.raw, ExpectedResult = false)]
-    public bool DatastoreTracerQueryParametersEnabledRespectsHighSecurityModeAndSecurityPolicy(
+    [TestCase(true, false, configurationTransactionTracerRecordSql.raw, ExpectedResult = true)]
+    [TestCase(true, false, configurationTransactionTracerRecordSql.obfuscated, ExpectedResult = false)]
+    [TestCase(true, false, configurationTransactionTracerRecordSql.off, ExpectedResult = false)]
+    [TestCase(true, true, configurationTransactionTracerRecordSql.raw, ExpectedResult = false)]
+    [TestCase(false, false, configurationTransactionTracerRecordSql.raw, ExpectedResult = false)]
+    public bool DatastoreTracerQueryParametersEnabledRespectsHighSecurityMode(
         bool queryParametersEnabled,
         bool highSecurityModeEnabled,
-        bool securityPolicyEnabled,
-        bool recordSqlSecurityPolicyEnabled,
         configurationTransactionTracerRecordSql recordSqlSetting)
     {
         _localConfig.datastoreTracer.queryParameters.enabled = queryParametersEnabled;
         _localConfig.highSecurity.enabled = highSecurityModeEnabled;
         _localConfig.transactionTracer.recordSql = recordSqlSetting;
-        if (securityPolicyEnabled)
-        {
-            SetupNewConfigsWithSecurityPolicy("record_sql", recordSqlSecurityPolicyEnabled);
-        }
         return _defaultConfig.DatastoreTracerQueryParametersEnabled;
     }
 
@@ -629,33 +618,6 @@ public class DefaultConfigurationTests
         return _defaultConfig.TransactionTracerRecordSql;
     }
 
-    [TestCase(configurationTransactionTracerRecordSql.raw, "raw", true, ExpectedResult = "obfuscated")]
-    [TestCase(configurationTransactionTracerRecordSql.raw, "raw", false, ExpectedResult = "off")]
-    [TestCase(configurationTransactionTracerRecordSql.raw, "obfuscated", true, ExpectedResult = "obfuscated")]
-    [TestCase(configurationTransactionTracerRecordSql.raw, "obfuscated", false, ExpectedResult = "off")]
-    [TestCase(configurationTransactionTracerRecordSql.raw, null, true, ExpectedResult = "obfuscated")]
-    [TestCase(configurationTransactionTracerRecordSql.raw, null, false, ExpectedResult = "off")]
-    [TestCase(configurationTransactionTracerRecordSql.obfuscated, "raw", true, ExpectedResult = "obfuscated")]
-    [TestCase(configurationTransactionTracerRecordSql.obfuscated, "raw", false, ExpectedResult = "off")]
-    [TestCase(configurationTransactionTracerRecordSql.obfuscated, "obfuscated", true, ExpectedResult = "obfuscated")]
-    [TestCase(configurationTransactionTracerRecordSql.obfuscated, "obfuscated", false, ExpectedResult = "off")]
-    [TestCase(configurationTransactionTracerRecordSql.obfuscated, null, true, ExpectedResult = "obfuscated")]
-    [TestCase(configurationTransactionTracerRecordSql.obfuscated, null, false, ExpectedResult = "off")]
-    [TestCase(configurationTransactionTracerRecordSql.off, "raw", true, ExpectedResult = "off")]
-    [TestCase(configurationTransactionTracerRecordSql.off, "raw", false, ExpectedResult = "off")]
-    [TestCase(configurationTransactionTracerRecordSql.off, "obfuscated", true, ExpectedResult = "off")]
-    [TestCase(configurationTransactionTracerRecordSql.off, "obfuscated", false, ExpectedResult = "off")]
-    [TestCase(configurationTransactionTracerRecordSql.off, null, true, ExpectedResult = "off")]
-    [TestCase(configurationTransactionTracerRecordSql.off, null, false, ExpectedResult = "off")]
-    public string RecordSqlMostSecureWinsNeverRawWithSecurityPolicies(configurationTransactionTracerRecordSql local, string server, bool securityPolicyEnabled)
-    {
-        SetupNewConfigsWithSecurityPolicy("record_sql", securityPolicyEnabled);
-        _localConfig.transactionTracer.recordSql = local;
-        _serverConfig.RpmConfig.TransactionTracerRecordSql = server;
-
-        return _defaultConfig.TransactionTracerRecordSql;
-    }
-
     [TestCase(true, true, ExpectedResult = true)]
     [TestCase(true, false, ExpectedResult = true)]
     [TestCase(true, null, ExpectedResult = true)]
@@ -713,26 +675,6 @@ public class DefaultConfigurationTests
     }
 
     [TestCase(true, true, ExpectedResult = true)]
-    [TestCase(true, false, ExpectedResult = false)]
-    [TestCase(false, true, ExpectedResult = false)]
-    [TestCase(false, false, ExpectedResult = false)]
-    public bool CustomInstrumentationEditorMostSecureWinsWithSecurityPolicies(bool localEnabled, bool securityPolicyEnabled)
-    {
-        SetupNewConfigsWithSecurityPolicy("custom_instrumentation_editor", securityPolicyEnabled);
-
-        _localConfig.customInstrumentationEditor.enabled = localEnabled;
-
-        return _defaultConfig.CustomInstrumentationEditorEnabled;
-    }
-
-    private void SetupNewConfigsWithSecurityPolicy(string securityPolicyName, bool securityPolicyEnabled)
-    {
-        var securityPolicies = new Dictionary<string, SecurityPolicyState> { { securityPolicyName, new SecurityPolicyState(securityPolicyEnabled, false) } };
-        _securityPoliciesConfiguration = new SecurityPoliciesConfiguration(securityPolicies);
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
-    }
-
-    [TestCase(true, true, ExpectedResult = true)]
     [TestCase(true, false, ExpectedResult = true)]
     [TestCase(false, false, ExpectedResult = false)]
     [TestCase(false, true, ExpectedResult = true)]
@@ -740,18 +682,6 @@ public class DefaultConfigurationTests
     {
         _localConfig.highSecurity.enabled = highSecurity;
         _localConfig.stripExceptionMessages.enabled = stripErrorMessages;
-
-        return _defaultConfig.StripExceptionMessages;
-    }
-
-    [TestCase(true, true, ExpectedResult = true)]
-    [TestCase(true, false, ExpectedResult = true)]
-    [TestCase(false, true, ExpectedResult = false)]
-    [TestCase(false, false, ExpectedResult = true)]
-    public bool StripExceptionMessagesMostSecureWinsWithSecurityPolicies(bool localEnabled, bool securityPolicyEnabled)
-    {
-        SetupNewConfigsWithSecurityPolicy("allow_raw_exception_messages", securityPolicyEnabled);
-        _localConfig.stripExceptionMessages.enabled = localEnabled;
 
         return _defaultConfig.StripExceptionMessages;
     }
@@ -776,20 +706,6 @@ public class DefaultConfigurationTests
 
         return _defaultConfig.CaptureCustomParameters;
     }
-
-    [TestCase(true, true, ExpectedResult = true)]
-    [TestCase(true, false, ExpectedResult = false)]
-    [TestCase(false, true, ExpectedResult = false)]
-    [TestCase(false, false, ExpectedResult = false)]
-    public bool CaptureCustomParametersMostSecureWinsWithSecurityPolicies(bool localEnabled, bool securityPolicyEnabled)
-    {
-        SetupNewConfigsWithSecurityPolicy("custom_parameters", securityPolicyEnabled);
-        _localConfig.customParameters.enabled = localEnabled;
-
-        return _defaultConfig.CaptureCustomParameters;
-    }
-
-
 
     [TestCase("apdex_f", null, 5, ExpectedResult = 20000)]
     [TestCase("1", null, 5, ExpectedResult = 1)]
@@ -932,7 +848,7 @@ public class DefaultConfigurationTests
             localConfiguration = serializer.Deserialize(reader) as configuration;
         }
 
-        _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(new[] { "404", "500" }, Is.EquivalentTo(_defaultConfig.ExpectedErrorStatusCodesForAgentSettings));
 
@@ -1003,7 +919,7 @@ public class DefaultConfigurationTests
     {
         _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
         _localConfig.errorCollector.expectedStatusCodes = (local);
-        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES")).Returns(env);
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ERROR_COLLECTOR_EXPECTED_ERROR_CODES", "NEW_RELIC_ERROR_COLLECTOR_EXPECTED_STATUS_CODES")).Returns(env);
 
         CreateDefaultConfiguration();
 
@@ -1022,7 +938,7 @@ public class DefaultConfigurationTests
     {
         _serverConfig.RpmConfig.ErrorCollectorStatusCodesToIgnore = server;
         _localConfig.errorCollector.ignoreStatusCodes.code = (local.ToList());
-        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES")).Returns(env);
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ERROR_COLLECTOR_IGNORE_ERROR_CODES", "NEW_RELIC_ERROR_COLLECTOR_IGNORE_STATUS_CODES")).Returns(env);
 
         CreateDefaultConfiguration();
 
@@ -1349,7 +1265,7 @@ public class DefaultConfigurationTests
             localConfiguration = serializer.Deserialize(reader) as configuration;
         }
 
-        _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(_defaultConfig.ThreadProfilingIgnoreMethods, Does.Contain("System.Threading.WaitHandle:WaitAny"));
     }
@@ -2166,7 +2082,7 @@ public class DefaultConfigurationTests
         _runTimeConfig.ApplicationNames = new List<string>();
 
         _localConfig.appSettings.Add(new configurationAdd { key = "AzureFunctionModeEnabled", value = functionModeEnabled.ToString() });
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Mock.Arrange(() => _bootstrapConfiguration.AzureFunctionModeDetected).Returns(functionModeEnabled);
 
@@ -2191,7 +2107,7 @@ public class DefaultConfigurationTests
         _runTimeConfig.ApplicationNames = new List<string>();
 
         _localConfig.appSettings.Add(new configurationAdd { key = "AzureFunctionModeEnabled", value = "true" });
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Mock.Arrange(() => _bootstrapConfiguration.AzureFunctionModeDetected).Returns(true);
 
@@ -2232,7 +2148,7 @@ public class DefaultConfigurationTests
             value = "true"
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.UseResourceBasedNamingForWCFEnabled, Is.True);
     }
@@ -2240,7 +2156,7 @@ public class DefaultConfigurationTests
     [Test]
     public void UseResourceBasedNamingIsDisabledByDefault()
     {
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(defaultConfig.UseResourceBasedNamingForWCFEnabled, Is.False);
     }
 
@@ -2309,7 +2225,7 @@ public class DefaultConfigurationTests
         _localConfig.crossApplicationTracer.enabled = true;
         _serverConfig = new ServerConfiguration();
         _serverConfig.CatId = "123#456";
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(_defaultConfig.CrossApplicationTracingEnabled, Is.True);
     }
@@ -2321,7 +2237,7 @@ public class DefaultConfigurationTests
         _localConfig.crossApplicationTracer.enabled = true;
         _serverConfig = ServerConfiguration.GetDefault();
         _serverConfig.CatId = "123#456";
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(_defaultConfig.CrossApplicationTracingEnabled, Is.False);
     }
@@ -2336,7 +2252,7 @@ public class DefaultConfigurationTests
         _localConfig.crossApplicationTracer.enabled = true;
         _serverConfig = new ServerConfiguration();
         _serverConfig.CatId = "123#456";
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(_defaultConfig.CrossApplicationTracingEnabled, Is.False);
     }
@@ -2356,7 +2272,7 @@ public class DefaultConfigurationTests
     [Test]
     public void DistributedTracingEnabledIsFalseByDefault()
     {
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(_defaultConfig.DistributedTracingEnabled, Is.False);
     }
@@ -2408,7 +2324,7 @@ public class DefaultConfigurationTests
         Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
 
         // Act
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Assert
         Assert.That(defaultConfig.SamplingTarget, Is.EqualTo(10));
@@ -2430,7 +2346,7 @@ public class DefaultConfigurationTests
         Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
 
         // Act
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Assert
         Assert.That(defaultConfig.SamplingTargetPeriodInSeconds, Is.EqualTo(60));
@@ -2444,7 +2360,7 @@ public class DefaultConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PRIMARY_APPLICATION_ID")).Returns("PrimaryApplicationIdValue");
 
         // Act
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Assert
         Assert.That(defaultConfig.PrimaryApplicationId, Is.EqualTo("PrimaryApplicationIdValue"));
@@ -2457,7 +2373,7 @@ public class DefaultConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_TRUSTED_ACCOUNT_KEY")).Returns("TrustedAccountKeyValue");
 
         // Act
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Assert
         Assert.That(defaultConfig.TrustedAccountKey, Is.EqualTo("TrustedAccountKeyValue"));
@@ -2470,7 +2386,7 @@ public class DefaultConfigurationTests
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_ACCOUNT_ID")).Returns("AccountIdValue");
 
         // Act
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Assert
         Assert.That(defaultConfig.AccountId, Is.EqualTo("AccountIdValue"));
@@ -2482,7 +2398,7 @@ public class DefaultConfigurationTests
         Mock.Arrange(() => _bootstrapConfiguration.ServerlessModeEnabled).Returns(true);
 
         // Act
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Assert
         Assert.That(defaultConfig.PrimaryApplicationId, Is.EqualTo("Unknown"));
@@ -2495,7 +2411,7 @@ public class DefaultConfigurationTests
         _localConfig.distributedTracing.primary_application_id = "PrimaryApplicationIdValue";
 
         // Act
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Assert
         Assert.That(defaultConfig.PrimaryApplicationId, Is.EqualTo("PrimaryApplicationIdValue"));
@@ -2508,7 +2424,7 @@ public class DefaultConfigurationTests
         _localConfig.distributedTracing.trusted_account_key = "TrustedAccountKeyValue";
 
         // Act
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Assert
         Assert.That(defaultConfig.TrustedAccountKey, Is.EqualTo("TrustedAccountKeyValue"));
@@ -2521,7 +2437,7 @@ public class DefaultConfigurationTests
         _localConfig.distributedTracing.account_id = "AccountIdValue";
 
         // Act
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         // Assert
         Assert.That(defaultConfig.AccountId, Is.EqualTo("AccountIdValue"));
@@ -2546,7 +2462,7 @@ public class DefaultConfigurationTests
         _localConfig.spanEvents.enabled = spanEventsEnabled;
         _localConfig.distributedTracing.enabled = distributedTracingEnabled;
 
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return _defaultConfig.SpanEventsEnabled;
     }
@@ -2604,15 +2520,6 @@ public class DefaultConfigurationTests
         Assert.That(_defaultConfig.SpanEventsAttributesInclude.Count(), Is.EqualTo(expectedResult.Length));
     }
 
-    [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
-    [TestCase(true, new[] { "att1", "att2" }, new[] { "att1", "att2" })]
-    public void SpanEventsAttributesIncludeClearedBySecurityPolicy(bool securityPolicyEnabled, string[] attributes, string[] expectedResult)
-    {
-        SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
-        _localConfig.spanEvents.attributes.include = new List<string>(attributes);
-        Assert.That(_defaultConfig.SpanEventsAttributesInclude.Count(), Is.EqualTo(expectedResult.Length));
-    }
-
     [TestCase(new[] { "att1", "att2" }, new[] { "att1", "att2" })]
     public void SpanEventsAttributesExclude(string[] attributes, string[] expectedResult)
     {
@@ -2641,7 +2548,7 @@ public class DefaultConfigurationTests
             _localConfig.infiniteTracing.span_events.queue_size = localConfigValue.Value;
         }
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.InfiniteTracingQueueSizeSpans;
     }
@@ -2674,7 +2581,7 @@ public class DefaultConfigurationTests
             _localConfig.appSettings.Add(new configurationAdd() { key = "InfiniteTracingTraceObserverSsl", value = localSsl });
         }
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         var expectedHost = envHost != null
             ? envHost
@@ -2711,7 +2618,7 @@ public class DefaultConfigurationTests
         _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingTimeoutSend", value = appSettingsValue });
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_TIMEOUT_SEND")).Returns(envConfigVal);
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.InfiniteTracingTraceTimeoutMsSendData;
     }
@@ -2729,7 +2636,7 @@ public class DefaultConfigurationTests
         _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingTimeoutConnect", value = appSettingsValue });
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT")).Returns(envConfigVal);
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.InfiniteTracingTraceTimeoutMsConnect;
     }
@@ -2751,7 +2658,7 @@ public class DefaultConfigurationTests
         _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsTestFlaky", value = appSettingsValue });
         Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY")).Returns(envConfigVal);
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.InfiniteTracingTraceObserverTestFlaky;
     }
@@ -2774,7 +2681,7 @@ public class DefaultConfigurationTests
         _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsBatchSize", value = appSettingVal });
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_BATCH_SIZE")).Returns(envConfigVal);
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.InfiniteTracingBatchSizeSpans;
     }
@@ -2797,7 +2704,7 @@ public class DefaultConfigurationTests
         _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsPartitionCount", value = appSettingVal });
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_PARTITION_COUNT")).Returns(envConfigVal);
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.InfiniteTracingPartitionCountSpans;
     }
@@ -2816,7 +2723,7 @@ public class DefaultConfigurationTests
         _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsTestDelay", value = appSettingsValue });
         Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_DELAY")).Returns(envConfigVal);
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.InfiniteTracingTraceObserverTestDelayMs;
     }
@@ -2841,7 +2748,7 @@ public class DefaultConfigurationTests
         _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsStreamsCount", value = appSettingsValue });
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_STREAMS_COUNT")).Returns(envConfigVal);
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.InfiniteTracingTraceCountConsumers, Is.EqualTo(expectedResult));
     }
@@ -2860,7 +2767,7 @@ public class DefaultConfigurationTests
             _localConfig.infiniteTracing.compression = localConfigVal.Value;
         }
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.InfiniteTracingCompression;
     }
@@ -3300,16 +3207,6 @@ public class DefaultConfigurationTests
         Assert.That(_defaultConfig.CaptureAttributesIncludes.Count(), Is.EqualTo(expectedResult.Length));
     }
 
-    [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
-    [TestCase(true, new[] { "att1", "att2" }, new[] { "att1", "att2" })]
-    public void CaptureAttributuesIncludesClearedBySecurityPolicy(bool securityPolicyEnabled, string[] attributes, string[] expectedResult)
-    {
-        SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
-        _localConfig.attributes.include = new List<string>(attributes);
-
-        Assert.That(_defaultConfig.CaptureAttributesIncludes.Count(), Is.EqualTo(expectedResult.Length));
-    }
-
     [TestCase(false, false, false)]
     [TestCase(false, true, false)]
     [TestCase(true, true, true)]
@@ -3330,16 +3227,6 @@ public class DefaultConfigurationTests
     {
         _localConfig.highSecurity.enabled = highSecurity;
         _localConfig.transactionEvents.attributes.enabled = localAttributesEnabled;
-        _localConfig.transactionEvents.attributes.include = new List<string>(attributes);
-
-        Assert.That(_defaultConfig.TransactionEventsAttributesInclude.Count(), Is.EqualTo(expectedResult.Length));
-    }
-
-    [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
-    [TestCase(true, new[] { "att1", "att2" }, new[] { "att1", "att2" })]
-    public void CaptureTransactionEventAttributesIncludesClearedBySecurityPolicy(bool securityPolicyEnabled, string[] attributes, string[] expectedResult)
-    {
-        SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
         _localConfig.transactionEvents.attributes.include = new List<string>(attributes);
 
         Assert.That(_defaultConfig.TransactionEventsAttributesInclude.Count(), Is.EqualTo(expectedResult.Length));
@@ -3370,16 +3257,6 @@ public class DefaultConfigurationTests
         Assert.That(_defaultConfig.CaptureTransactionTraceAttributesIncludes.Count(), Is.EqualTo(expectedResult.Length));
     }
 
-    [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
-    [TestCase(true, new[] { "att1", "att2" }, new[] { "att1", "att2" })]
-    public void CaptureTransactionTraceAttributesIncludesClearedBySecurityPolicy(bool securityPolicyEnabled, string[] attributes, string[] expectedResult)
-    {
-        SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
-        _localConfig.transactionTracer.attributes.include = new List<string>(attributes);
-
-        Assert.That(_defaultConfig.CaptureTransactionTraceAttributesIncludes.Count(), Is.EqualTo(expectedResult.Length));
-    }
-
     [TestCase(false, false, false)]
     [TestCase(false, true, false)]
     [TestCase(true, true, true)]
@@ -3400,16 +3277,6 @@ public class DefaultConfigurationTests
     {
         _localConfig.highSecurity.enabled = highSecurity;
         _localConfig.errorCollector.attributes.enabled = localAttributesEnabled;
-        _localConfig.errorCollector.attributes.include = new List<string>(attributes);
-
-        Assert.That(_defaultConfig.CaptureErrorCollectorAttributesIncludes.Count(), Is.EqualTo(expectedResult.Length));
-    }
-
-    [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
-    [TestCase(true, new[] { "att1", "att2" }, new[] { "att1", "att2" })]
-    public void CaptureErrorCollectorAttributesIncludesClearedBySecurityPolicy(bool securityPolicyEnabled, string[] attributes, string[] expectedResult)
-    {
-        SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
         _localConfig.errorCollector.attributes.include = new List<string>(attributes);
 
         Assert.That(_defaultConfig.CaptureErrorCollectorAttributesIncludes.Count(), Is.EqualTo(expectedResult.Length));
@@ -3439,17 +3306,6 @@ public class DefaultConfigurationTests
         Assert.That(_defaultConfig.CaptureBrowserMonitoringAttributesIncludes.Count(), Is.EqualTo(expectedResult.Length));
     }
 
-    [TestCase(false, new[] { "att1", "att2" }, new string[] { })]
-    [TestCase(true, new[] { "att1", "att2" }, new[] { "att1", "att2" })]
-    public void CaptureBrowserMonitoringAttributesIncludesClearedBySecurityPolicy(bool securityPolicyEnabled, string[] attributes, string[] expectedResult)
-    {
-        SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
-        _localConfig.browserMonitoring.attributes.enabled = true;
-        _localConfig.browserMonitoring.attributes.include = new List<string>(attributes);
-
-        Assert.That(_defaultConfig.CaptureBrowserMonitoringAttributesIncludes.Count(), Is.EqualTo(expectedResult.Length));
-    }
-
     [TestCase(true, true, true, ExpectedResult = false)]
     [TestCase(true, true, false, ExpectedResult = false)]
     [TestCase(true, true, null, ExpectedResult = false)]
@@ -3467,27 +3323,6 @@ public class DefaultConfigurationTests
         _localConfig.customEvents.enabled = localConfigValue;
         _localConfig.highSecurity.enabled = isHighSecurity;
         _serverConfig.CustomEventCollectionEnabled = serverConfigValue;
-
-        return _defaultConfig.CustomEventsEnabled;
-    }
-
-    [TestCase(true, true, true, ExpectedResult = true)]
-    [TestCase(true, true, false, ExpectedResult = false)]
-    [TestCase(true, false, true, ExpectedResult = false)]
-    [TestCase(true, false, false, ExpectedResult = false)]
-    [TestCase(false, true, true, ExpectedResult = false)]
-    [TestCase(false, true, false, ExpectedResult = false)]
-    [TestCase(false, false, true, ExpectedResult = false)]
-    [TestCase(false, false, false, ExpectedResult = false)]
-    [TestCase(true, null, true, ExpectedResult = true)]
-    [TestCase(true, null, false, ExpectedResult = false)]
-    [TestCase(false, null, true, ExpectedResult = false)]
-    [TestCase(false, null, false, ExpectedResult = false)]
-    public bool CustomEventsEnabledMostSecureWinsWithSecurityPolicies(bool localEnabled, bool? serverEnabled, bool securityPoliciesEnabled)
-    {
-        SetupNewConfigsWithSecurityPolicy("custom_events", securityPoliciesEnabled);
-        _localConfig.customEvents.enabled = localEnabled;
-        _serverConfig.CustomEventCollectionEnabled = serverEnabled;
 
         return _defaultConfig.CustomEventsEnabled;
     }
@@ -3599,7 +3434,7 @@ public class DefaultConfigurationTests
         _localConfig.securityPoliciesToken = localConfigValue;
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_SECURITY_POLICIES_TOKEN"))
             .Returns(environmentValue);
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return _defaultConfig.SecurityPoliciesTokenExists;
     }
@@ -3613,9 +3448,25 @@ public class DefaultConfigurationTests
     public bool AsyncHttpClientSegmentsDoNotCountTowardsParentExclusiveTimeTests(string localConfigValue)
     {
         _localConfig.appSettings.Add(new configurationAdd { key = "ForceSynchronousTimingCalculation.HttpClient", value = localConfigValue });
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.ForceSynchronousTimingCalculationHttpClient;
+    }
+
+    [TestCase(null, ExpectedResult = true)]
+    [TestCase("not a bool", ExpectedResult = true)]
+    [TestCase("false", ExpectedResult = false)]
+    [TestCase("true", ExpectedResult = true)]
+    public bool UseHeaderBasedRequestQueueTimeForClassicAspNetTests(string localConfigValue)
+    {
+        if (localConfigValue != null)
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "UseHeaderBasedRequestQueueTimeForClassicAspNet", value = localConfigValue });
+        }
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        return defaultConfig.UseHeaderBasedRequestQueueTimeForClassicAspNet;
     }
 
     [TestCase(null, ExpectedResult = true)]
@@ -3625,7 +3476,7 @@ public class DefaultConfigurationTests
     public bool AspNetCore6PlusBrowserInjectionTests(string localConfigValue)
     {
         _localConfig.appSettings.Add(new configurationAdd { key = "EnableAspNetCore6PlusBrowserInjection", value = localConfigValue });
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.EnableAspNetCore6PlusBrowserInjection;
     }
@@ -3652,7 +3503,7 @@ public class DefaultConfigurationTests
             _localConfig.appSettings.Add(new configurationAdd { key = "EnableAspNetCore6PlusBrowserInjection", value = localConfigValue });
         }
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.EnableAspNetCore6PlusBrowserInjection;
     }
@@ -3673,7 +3524,7 @@ public class DefaultConfigurationTests
 
         _localConfig.browserMonitoring.autoInstrument = localConfigValue;
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         return defaultConfig.BrowserMonitoringAutoInstrument;
     }
@@ -3743,7 +3594,7 @@ public class DefaultConfigurationTests
     [Test]
     public void HarvestCycleOverride_DefaultOrNotSet()
     {
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.Multiple(() =>
         {
@@ -3770,7 +3621,7 @@ public class DefaultConfigurationTests
             value = value
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.MetricsHarvestCycle.TotalSeconds, Is.EqualTo(60));
     }
@@ -3788,7 +3639,7 @@ public class DefaultConfigurationTests
             value = value
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.TransactionTracesHarvestCycle.TotalSeconds, Is.EqualTo(60));
     }
@@ -3806,7 +3657,7 @@ public class DefaultConfigurationTests
             value = value
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.ErrorTracesHarvestCycle.TotalSeconds, Is.EqualTo(60));
     }
@@ -3824,7 +3675,7 @@ public class DefaultConfigurationTests
             value = value
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.SpanEventsHarvestCycle.TotalSeconds, Is.EqualTo(60));
     }
@@ -3842,7 +3693,7 @@ public class DefaultConfigurationTests
             value = value
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.GetAgentCommandsCycle.TotalSeconds, Is.EqualTo(60));
     }
@@ -3860,7 +3711,7 @@ public class DefaultConfigurationTests
             value = value
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.SqlTracesHarvestCycle.TotalSeconds, Is.EqualTo(60));
     }
@@ -3878,7 +3729,7 @@ public class DefaultConfigurationTests
             value = value
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds, Is.EqualTo(60));
     }
@@ -3893,7 +3744,7 @@ public class DefaultConfigurationTests
             value = expectedSeconds
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.MetricsHarvestCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -3917,7 +3768,7 @@ public class DefaultConfigurationTests
             value = expectedSeconds
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.TransactionTracesHarvestCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -3941,7 +3792,7 @@ public class DefaultConfigurationTests
             value = expectedSeconds
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.ErrorTracesHarvestCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -3965,7 +3816,7 @@ public class DefaultConfigurationTests
             value = expectedSeconds
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.SpanEventsHarvestCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -3989,7 +3840,7 @@ public class DefaultConfigurationTests
             value = expectedSeconds
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.GetAgentCommandsCycle.Seconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -4013,7 +3864,7 @@ public class DefaultConfigurationTests
             value = expectedSeconds
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.SqlTracesHarvestCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -4037,7 +3888,7 @@ public class DefaultConfigurationTests
             value = expectedSeconds
         });
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds, Is.EqualTo(Convert.ToInt32(expectedSeconds)));
 
@@ -4198,9 +4049,79 @@ public class DefaultConfigurationTests
     public void LlmTokenCountingCallbackComesFromRuntimeConfig()
     {
         var runtimeConfig = new RunTimeConfiguration(Enumerable.Empty<string>(), null, (s1, s2) => 42);
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, runtimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, runtimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(defaultConfig.LlmTokenCountingCallback("foo", "bar"), Is.EqualTo(42));
     }
+    #endregion
+
+    #region AI Monitoring server-side config (NR-538711)
+
+    // ai_monitoring.enabled: local x collect_ai x agent_config x HSM
+    [TestCase(false, null, null, false, ExpectedResult = false)] // 1: default baseline
+    [TestCase(true, null, null, false, ExpectedResult = true)]   // 2: local enables
+    [TestCase(false, null, true, false, ExpectedResult = true)]  // 4: SSC enables over local-disabled
+    [TestCase(true, null, false, false, ExpectedResult = false)] // 5: SSC disables over local-enabled
+    [TestCase(true, false, null, false, ExpectedResult = false)] // collect_ai disables (no agent_config)
+    [TestCase(true, false, true, false, ExpectedResult = true)]  // agent_config overrides collect_ai=false
+    [TestCase(true, null, true, true, ExpectedResult = false)]   // 7: HSM ignores SSC
+    public bool AiMonitoringEnabled_resolves_with_correct_precedence(bool local, bool? collectAi, bool? agentConfig, bool hsm)
+    {
+        _localConfig.aiMonitoring.enabled = local;
+        _serverConfig.AICollectionEnabled = collectAi;
+        _serverConfig.RpmConfig.AiMonitoringEnabled = agentConfig;
+        _localConfig.highSecurity.enabled = hsm;
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        return _defaultConfig.AiMonitoringEnabled;
+    }
+
+    [Test]
+    public void AiMonitoringEnabled_server_overrides_env_var()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_AI_MONITORING_ENABLED")).Returns("true");
+        _localConfig.aiMonitoring.enabled = true;
+        _serverConfig.RpmConfig.AiMonitoringEnabled = false; // server disables despite env+local true
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.AiMonitoringEnabled, Is.False);
+    }
+
+    // streaming.enabled: gated behind master; agent_config overrides local both directions
+    [TestCase(true, true, null, ExpectedResult = true)]   // master on, local true, no SSC
+    [TestCase(true, true, false, ExpectedResult = false)] // 5: SSC disables sub over local-true
+    [TestCase(true, false, true, ExpectedResult = true)]  // 4: SSC enables sub over local-false
+    [TestCase(false, true, true, ExpectedResult = false)] // master off -> sub off regardless
+    public bool AiMonitoringStreamingEnabled_resolves_with_correct_precedence(bool master, bool localStreaming, bool? agentConfigStreaming)
+    {
+        _localConfig.aiMonitoring.enabled = master;
+        _serverConfig.RpmConfig.AiMonitoringEnabled = master; // ensure resolved master matches intent
+        _localConfig.aiMonitoring.streaming.enabled = localStreaming;
+        _serverConfig.RpmConfig.AiMonitoringStreamingEnabled = agentConfigStreaming;
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        return _defaultConfig.AiMonitoringStreamingEnabled;
+    }
+
+    // record_content.enabled: gated behind master; agent_config overrides local both directions
+    [TestCase(true, true, null, ExpectedResult = true)]
+    [TestCase(true, true, false, ExpectedResult = false)] // SSC disables content over local-true
+    [TestCase(true, false, true, ExpectedResult = true)]  // SSC enables content over local-false
+    [TestCase(false, true, true, ExpectedResult = false)] // master off -> content off regardless
+    public bool AiMonitoringRecordContentEnabled_resolves_with_correct_precedence(bool master, bool localRecord, bool? agentConfigRecord)
+    {
+        _localConfig.aiMonitoring.enabled = master;
+        _serverConfig.RpmConfig.AiMonitoringEnabled = master;
+        _localConfig.aiMonitoring.recordContent.enabled = localRecord;
+        _serverConfig.RpmConfig.AiMonitoringRecordContentEnabled = agentConfigRecord;
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        return _defaultConfig.AiMonitoringRecordContentEnabled;
+    }
+
     #endregion
 
     #region Agent Logs
@@ -4615,17 +4536,17 @@ public class DefaultConfigurationTests
             localConfiguration = serializer.Deserialize(reader) as configuration;
         }
 
-        return new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        return new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
     }
 
     private void CreateDefaultConfiguration()
     {
-        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
     }
     [Test]
     public void HybridHttpContextStorageEnabled_DefaultsToFalse()
     {
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Assert.That(defaultConfig.HybridHttpContextStorageEnabled, Is.False);
     }
 
@@ -4647,7 +4568,7 @@ public class DefaultConfigurationTests
             Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED")).Returns(environmentValue);
         }
 
-        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         return defaultConfig.HybridHttpContextStorageEnabled;
     }
 

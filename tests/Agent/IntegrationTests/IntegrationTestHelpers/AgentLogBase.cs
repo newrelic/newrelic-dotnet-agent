@@ -40,6 +40,7 @@ public abstract class AgentLogBase
     public const string ThreadProfileDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""profile_data"" with : (.*)";
     public const string UpdateLoadedModulesLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""update_loaded_modules"" with : (.*)";
     public const string CustomEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""custom_event_data"" with : (.*)";
+    public const string AgentSettingsLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""agent_settings"" with : (.*)";
 
     // Collector responses
     public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":(.*)";
@@ -88,6 +89,16 @@ public abstract class AgentLogBase
     public const string WrapperExceptionLogLineRegex = ErrorLogLinePrefixRegex + "An exception occurred in a wrapper";
     public const string ApplicationErrorLogLineRegex = DebugLogLinePrefixRegex + "Noticed application error";
 
+    // A wrapper threw out of BeforeWrappedMethod/AfterWrappedMethod. Distinct
+    // from WrapperExceptionLogLineRegex above, which matches a different message.
+    public const string TracerInvocationErrorLogLineRegex = ErrorLogLinePrefixRegex + "Tracer invocation error";
+
+    // The agent gave up on a wrapper after WrapperExceptionLimit consecutive
+    // failures and swapped in the NoOp wrapper for that functionId. Capture group
+    // 1 is the wrapper type, group 2 is the method it was disabled for.
+    public const string WrapperDisabledLogLineRegex = ErrorLogLinePrefixRegex +
+        @"Wrapper (\S+) is being disabled for (\S+) due to too many consecutive exceptions";
+
     // explain plan failure
     public const string ExplainPlainFailureLogLineRegex = DebugLogLinePrefixRegex + "Unable to execute explain plan for query: (.*)";
 
@@ -105,36 +116,26 @@ public abstract class AgentLogBase
 
     public string GetAccountId()
     {
-        var reportingAppLink = GetReportingAppLink();
-        var reportingAppUri = new Uri(reportingAppLink);
-        var accountId = reportingAppUri.Segments[2];
-        if (accountId == null)
-            throw new Exception("Could not find account ID in second segment of reporting app link: " + reportingAppLink);
-        return accountId.TrimEnd('/');
+        var connectResponse = GetConnectResponseData();
+        if (connectResponse?.AccountId == null)
+            throw new Exception("Could not find account_id in connect response.");
+        return connectResponse.AccountId;
     }
 
     public string GetApplicationId()
     {
-        var reportingAppLink = GetReportingAppLink();
-        var reportingAppUri = new Uri(reportingAppLink);
-        var applicationId = reportingAppUri.Segments[4];
-        if (applicationId == null)
-            throw new Exception("Could not find application ID in second segment of reporting app link: " + reportingAppLink);
-        return applicationId.TrimEnd('/');
+        var connectResponse = GetConnectResponseData();
+        if (connectResponse?.ApplicationId == null)
+            throw new Exception("Could not find application_id in connect response.");
+        return connectResponse.ApplicationId;
     }
 
     public string GetCrossProcessId()
     {
-        return $@"{GetAccountId()}#{GetApplicationId()}";
-    }
-
-    private string GetReportingAppLink()
-    {
-        var match = TryGetLogLine(AgentReportingToLogLineRegex);
-        if (!match.Success || match.Groups.Count < 2)
-            throw new Exception("Could not find reporting app link in log file.");
-
-        return match.Groups[1].Value;
+        var connectResponse = GetConnectResponseData();
+        if (connectResponse?.CrossProcessId == null)
+            throw new Exception("Could not find cross_process_id in connect response.");
+        return connectResponse.CrossProcessId;
     }
 
     public void WaitForConnect(TimeSpan? timeoutOrZero = null)
@@ -169,6 +170,29 @@ public abstract class AgentLogBase
 
         var message = $"Log line with an int capture group did not reach a minimum of {minimumCapturedCount} times within {timeout.TotalSeconds} seconds.  Expected line expression: {regularExpression}";
         throw new Exception(message);
+    }
+
+    public IEnumerable<Metric> WaitForMetricAggregateCallCount(string metricName, int minimumCallCount, TimeSpan timeout)
+    {
+        var deadline = DateTime.Now + timeout;
+        while (DateTime.Now < deadline)
+        {
+            var matches = GetMetrics().Where(m => m.MetricSpec.Name == metricName).ToList();
+            decimal totalCallCount = 0;
+            foreach (var match in matches)
+            {
+                totalCallCount += match.Values.CallCount;
+            }
+
+            if (totalCallCount >= minimumCallCount)
+            {
+                return matches;
+            }
+
+            Thread.Sleep(500);
+        }
+
+        throw new Exception($"Metric '{metricName}' did not reach an aggregate CallCount of {minimumCallCount} within {timeout.TotalSeconds:N0} seconds.");
     }
 
     public IEnumerable<Match> WaitForLogLines(string regularExpression, TimeSpan? timeoutOrZero = null)
@@ -502,6 +526,19 @@ public abstract class AgentLogBase
         return GetConnectResponseDatas().FirstOrDefault();
     }
 
+    public bool? GetReportedAiMonitoringSetting(string jsonKey)
+    {
+        var match = TryGetLogLine(AgentSettingsLogLineRegex);
+        if (match == null || !match.Success)
+        {
+            return null;
+        }
+
+        var payload = match.Groups[1].Value;
+        var valueMatch = System.Text.RegularExpressions.Regex.Match(payload, "\"" + System.Text.RegularExpressions.Regex.Escape(jsonKey) + "\":(true|false)");
+        return valueMatch.Success ? bool.Parse(valueMatch.Groups[1].Value) : (bool?)null;
+    }
+
     public IEnumerable<ConnectResponseData> GetConnectResponseDatas()
     {
         var result = new List<ConnectResponseData>();
@@ -566,6 +603,16 @@ public abstract class AgentLogBase
             .SelectMany(x => x.Logs);
     }
 
+    // Returns the raw, unparsed log_event_data payload strings exactly as the agent logged
+    // them. Useful for asserting the payload is well-formed JSON (GetLogEventData parses the
+    // JSON and would throw on a malformed payload before a test could inspect it).
+    public IEnumerable<string> GetLogEventDataPayloads()
+    {
+        return TryGetLogLines(LogDataLogLineRegex)
+            .Select(match => TryExtractJson(match, 1))
+            .Where(json => json != null);
+    }
+
     #endregion LogData
 
     #region UpdateLoadedModules
@@ -626,6 +673,21 @@ public abstract class AgentLogBase
     public int GetApplicationErrorLineCount()
     {
         return TryGetLogLines(ApplicationErrorLogLineRegex).Count();
+    }
+
+    public int GetTracerInvocationErrorLineCount()
+    {
+        return TryGetLogLines(TracerInvocationErrorLogLineRegex).Count();
+    }
+
+    /// <summary>
+    /// Returns the "Wrapper X is being disabled for Y" lines, if any. A non-empty
+    /// result means the agent stopped instrumenting a method for the rest of the
+    /// process lifetime.
+    /// </summary>
+    public IEnumerable<Match> GetWrapperDisabledLines()
+    {
+        return TryGetLogLines(WrapperDisabledLogLineRegex);
     }
 
     #endregion

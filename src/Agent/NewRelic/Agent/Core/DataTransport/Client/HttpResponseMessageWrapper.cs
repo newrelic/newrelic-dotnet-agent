@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 #if !NETFRAMEWORK
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
@@ -22,6 +23,7 @@ public class HttpResponseMessageWrapper : IHttpResponseMessageWrapper
     public IHttpContentWrapper Content => _responseMessage.Content == null ? null : new HttpContentWrapper(_responseMessage.Content);
     public bool IsSuccessStatusCode => _responseMessage.IsSuccessStatusCode;
     public HttpStatusCode StatusCode => _responseMessage.StatusCode;
+    public IEnumerable<KeyValuePair<string, IEnumerable<string>>> Headers => _responseMessage.Headers;
 
     public void Dispose()
     {

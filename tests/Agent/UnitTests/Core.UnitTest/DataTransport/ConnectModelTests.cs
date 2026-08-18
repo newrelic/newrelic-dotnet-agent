@@ -55,7 +55,6 @@ public class ConnectModelTests
                 new Dictionary<string, string> { { "hello", "there" } },
                 new UtilizationSettingsModel(2, 3, "myHost2", "myHost2.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, utilitizationConfig),
                 null,
-                new SecurityPoliciesSettingsModel(fullyPopulatedTestConfiguration),
                 new EventHarvestConfigModel(fullyPopulatedTestConfiguration),
                 agentSettings
             );
@@ -310,6 +309,7 @@ public class ConnectModelTests
                                                     "transaction_tracer.record_sql": "TransactionTracerRecordSql",
                                                     "transaction_tracer.record_sql_source": "TransactionTracerRecordSqlSource",
                                                     "transaction_tracer.max_stack_traces": 4321,
+                                                    "transaction_tracer.sql_metadata_comments_enabled": false,
                                                     "agent.trusted_account_ids": [1, 2, 3],
                                                     "agent.server_side_config_enabled": true,
                                                     "agent.ignore_server_side_config": true,
@@ -372,6 +372,7 @@ public class ConnectModelTests
                                                     "diagnostics.capture_agent_timing_frequency": 1234,
                                                     "agent.use_resource_based_naming_for_wcf_enabled": true,
                                                     "agent.event_listener_samplers_enabled": true,
+                                                    "agent.kafka_internal_metrics_enabled": true,
                                                     "agent.sampling_target": 1234,
                                                     "span_events.max_samples_stored": 4321,
                                                     "agent.sampling_target_period_in_seconds": 1234,
@@ -379,6 +380,7 @@ public class ConnectModelTests
                                                     "agent.process_host_display_name": "ProcessHostDisplayName",
                                                     "transaction_tracer.database_statement_cache_capacity": 1234,
                                                     "agent.force_synchronous_timing_calculation_for_http_client": true,
+                                                    "agent.use_header_based_request_queue_time_for_classic_aspnet": true,
                                                     "agent.enable_asp_net_core_6plus_browser_injection": true,
                                                     "agent.instrument_asp_net_core_6plus_websockets": false,
                                                     "agent.exclude_new_relic_header": true,
@@ -487,26 +489,6 @@ public class ConnectModelTests
                                                         "azureappservice": {
                                                             "cloud.resource_id": "/subscriptions/b808887b-cb91-49e0-b922-c9188372bdba/resourceGroups/testgroup/providers/Microsoft.Web/sites/testwebsitename"
                                                         }
-                                                    }
-                                                },
-                                                "security_policies": {
-                                                    "record_sql": {
-                                                        "enabled": false
-                                                    },
-                                                    "attributes_include": {
-                                                        "enabled": true
-                                                    },
-                                                    "allow_raw_exception_messages": {
-                                                        "enabled": false
-                                                    },
-                                                    "custom_events": {
-                                                        "enabled": true
-                                                    },
-                                                    "custom_parameters": {
-                                                        "enabled": false
-                                                    },
-                                                    "custom_instrumentation_editor": {
-                                                        "enabled": true
                                                     }
                                                 }
                                             }

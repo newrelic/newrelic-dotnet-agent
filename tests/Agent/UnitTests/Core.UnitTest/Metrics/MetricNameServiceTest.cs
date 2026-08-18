@@ -382,7 +382,7 @@ class MetricNameServiceTest
         public string Expected { get; set; }
     }
 
-    private static IEnumerable<RegexRuleTestCase[]> CrossAgentRegexRuleTestCases
+    private static IEnumerable<RegexRuleTestCase> CrossAgentRegexRuleTestCases
     {
         get
         {
@@ -561,12 +561,11 @@ class MetricNameServiceTest
             var testCases = JsonConvert.DeserializeObject<IEnumerable<RegexRuleTestCase>>(json);
             Assert.That(testCases, Is.Not.Null);
             return testCases
-                .Where(testCase => testCase != null)
-                .Select(testCase => new[] { testCase });
+                .Where(testCase => testCase != null);
         }
     }
 
-    private static IEnumerable<WhitelistRuleTestCase[]> CrossAgentWhitelistRuleTestCases
+    private static IEnumerable<WhitelistRuleTestCase> CrossAgentWhitelistRuleTestCases
     {
         get
         {
@@ -951,8 +950,7 @@ class MetricNameServiceTest
             var testCases = JsonConvert.DeserializeObject<IEnumerable<WhitelistRuleTestCase>>(json);
             Assert.That(testCases, Is.Not.Null);
             return testCases
-                .Where(testCase => testCase != null)
-                .Select(testCase => new[] { testCase });
+                .Where(testCase => testCase != null);
         }
     }
 

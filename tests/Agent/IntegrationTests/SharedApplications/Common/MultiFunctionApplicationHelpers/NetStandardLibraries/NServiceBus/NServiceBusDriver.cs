@@ -19,7 +19,24 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus;
 [Library]
 class NServiceBusDriver
 {
+    // A queue this endpoint does not consume. SendCommandInTransaction routes the command here
+    // (instead of SendLocal) so the produce-side instrumentation is exercised without also
+    // producing an incidental no-handler "Consume" transaction on this same endpoint. That
+    // incidental transaction has a variable duration and competes with the Send transaction for
+    // the single slowest-trace slot per harvest window, which made NsbSendTests flaky. The
+    // asserted Produce metric is named from the message type, not the destination queue, so
+    // routing the command elsewhere leaves all NsbSendTests assertions unchanged.
+    private const string UnconsumedDestinationQueue = "NsbSendTestsUnconsumedQueue";
+
+    // NServiceBus 10.2 deprecated the self-hosting API (IEndpointInstance, Endpoint.Start/Stop) in favor
+    // of an IHostApplicationBuilder-based host with IServiceCollection.AddNServiceBusEndpoint. These MFA
+    // console apps have no generic host and only start an endpoint on demand when a test exercises
+    // NServiceBus, so migrating to the hosted model isn't practical here. Suppress the obsolete warnings
+    // (promoted to errors by TreatWarningsAsErrors) at each usage site until self-hosting is removed in
+    // NServiceBus 12. TODO: revisit before upgrading past NServiceBus 11.
+#pragma warning disable CS0618 // Type or member is obsolete
     private IEndpointInstance _endpoint;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 
     private void StartNServiceBusInternal(Type handlerToAllow = null)
@@ -61,7 +78,9 @@ class NServiceBusDriver
                 immediate.NumberOfRetries(0);
             });
 
+#pragma warning disable CS0618 // Type or member is obsolete - self-hosting deprecated in NServiceBus 10.2
         _endpoint = Endpoint.Start(endpointConfiguration).Result;
+#pragma warning restore CS0618 // Type or member is obsolete
     }
 
     [LibraryMethod]
@@ -104,7 +123,9 @@ class NServiceBusDriver
     public void StopNServiceBus()
     {
         ConsoleMFLogger.Info($"Stopping NServiceBus");
+#pragma warning disable CS0618 // Type or member is obsolete - self-hosting deprecated in NServiceBus 10.2
         _endpoint?.Stop().Wait();
+#pragma warning restore CS0618 // Type or member is obsolete
     }
 
     [LibraryMethod]
@@ -128,7 +149,9 @@ class NServiceBusDriver
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task SendCommandInTransaction()
     {
-        await SendCommand();
+        var command = new Command();
+        ConsoleMFLogger.Info($"Sending NServiceBus Command with Id: {command.Id} to {UnconsumedDestinationQueue}");
+        await _endpoint.Send(UnconsumedDestinationQueue, command);
     }
 
     [LibraryMethod]

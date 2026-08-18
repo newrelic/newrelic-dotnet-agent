@@ -50,17 +50,17 @@ public class BasicAspWebServiceTests : NewRelicIntegrationTest<RemoteServiceFixt
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebService/HelloWorld/Greetings", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/System.Web.Script.Services.WebServiceMethodData/CallMethod", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings" ,callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebService/HelloWorld/Greetings", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/System.Web.Script.Services.WebServiceMethodData/CallMethod", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings" ,CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", CallCountAllHarvests = 1},
         };
 
         var expectedTransactionTraceSegments = new List<string>

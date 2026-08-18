@@ -64,12 +64,32 @@ public class AgentLogFile : AgentLogBase
             yield break;
 
         string line;
-        using (var fileStream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        using (var fileStream = OpenLogFileWithRetry())
         using (var streamReader = new StreamReader(fileStream))
             while ((line = streamReader.ReadLine()) != null)
             {
                 yield return line;
             }
+    }
+
+    // The agent writes to this log concurrently. Even though we open for shared read/write, the
+    // writer can momentarily hold the file with an incompatible share mode, causing a transient
+    // IOException on open ("being used by another process"). Retry the open briefly so a read
+    // that races a write doesn't abort the caller (e.g. WaitForLogLines mid-exercise).
+    private FileStream OpenLogFileWithRetry()
+    {
+        const int maxAttempts = 10;
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            }
+            catch (IOException) when (attempt < maxAttempts)
+            {
+                Thread.Sleep(100);
+            }
+        }
     }
 
     public string GetFullLogAsString()
@@ -115,48 +135,49 @@ public class AgentLogFile : AgentLogBase
         } while (timeTaken.Elapsed < timeout);
     }
 
-    public long GetTotalPayloadBytes()
+    // Matches every collector request the agent logs at debug level. Group 1 is the collector
+    // method (e.g. log_event_data, metric_data, analytic_event_data); group 2 is the raw JSON
+    // payload sent for that method.
+    private const string PayloadInvocationRegex = @"Request\(.{36}\): Invoked ""([^""]+)"" with : (.*)";
+
+    /// <summary>
+    /// Returns every payload sent to the collector as (category, json) pairs, where category is
+    /// the collector method name and json is the raw serialized payload, regardless of data type.
+    /// </summary>
+    public IEnumerable<KeyValuePair<string, string>> GetCollectorPayloads()
     {
-        const string payloadInvocationRegex = @"Request\(.{36}\): Invoked ""[^""]+"" with : (.*)";
-        var regex = new Regex(payloadInvocationRegex);
-        long totalBytes = 0;
-
-        foreach (var line in GetFileLines())
-        {
-            var match = regex.Match(line);
-            if (match.Success && match.Groups.Count > 1)
-            {
-                var jsonPayload = match.Groups[1].Value;
-                totalBytes += Encoding.UTF8.GetByteCount(jsonPayload);
-            }
-        }
-
-        return totalBytes;
-    }
-
-    public Dictionary<string, long> GetPayloadBytesByCategory()
-    {
-        const string payloadInvocationRegex = @"Request\(.{36}\): Invoked ""([^""]+)"" with : (.*)";
-        var regex = new Regex(payloadInvocationRegex);
-        var payloadBytesByCategory = new Dictionary<string, long>();
+        var regex = new Regex(PayloadInvocationRegex);
 
         foreach (var line in GetFileLines())
         {
             var match = regex.Match(line);
             if (match.Success && match.Groups.Count > 2)
             {
-                var category = match.Groups[1].Value;
-                var jsonPayload = match.Groups[2].Value;
-                var byteCount = Encoding.UTF8.GetByteCount(jsonPayload);
+                yield return new KeyValuePair<string, string>(match.Groups[1].Value, match.Groups[2].Value);
+            }
+        }
+    }
 
-                if (payloadBytesByCategory.ContainsKey(category))
-                {
-                    payloadBytesByCategory[category] += byteCount;
-                }
-                else
-                {
-                    payloadBytesByCategory[category] = byteCount;
-                }
+    public long GetTotalPayloadBytes()
+    {
+        return GetCollectorPayloads().Sum(payload => (long)Encoding.UTF8.GetByteCount(payload.Value));
+    }
+
+    public Dictionary<string, long> GetPayloadBytesByCategory()
+    {
+        var payloadBytesByCategory = new Dictionary<string, long>();
+
+        foreach (var payload in GetCollectorPayloads())
+        {
+            var byteCount = Encoding.UTF8.GetByteCount(payload.Value);
+
+            if (payloadBytesByCategory.ContainsKey(payload.Key))
+            {
+                payloadBytesByCategory[payload.Key] += byteCount;
+            }
+            else
+            {
+                payloadBytesByCategory[payload.Key] = byteCount;
             }
         }
 

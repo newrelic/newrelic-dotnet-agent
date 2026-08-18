@@ -29,7 +29,14 @@
 #include <codecvt>
 #include <locale>
 
-#if defined(__llvm__)
+// libc++ in C++11 mode does not provide std::make_unique (it was added to
+// the standard in C++14). The glibc build path uses clang-3.9 + libc++ +
+// C++11 and so needs this shim. The musl build path uses clang + libstdc++
+// + C++14 (libstdc++ provides std::make_unique natively at C++14+), so
+// the shim must NOT activate there. Gate on _LIBCPP_VERSION (defined
+// only by libc++ headers, never by libstdc++) so the shim only ever fires
+// on the libc++ side.
+#if defined(_LIBCPP_VERSION)
 namespace std{
 template <class T, class... Args>
 typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T>>::type
@@ -37,14 +44,14 @@ make_unique(Args &&... args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
-/// \brief Constructs a `new T[n]` with the given args and returns a                           
-///        `unique_ptr<T[]>` which owns the object.                                            
-///                                                                                            
-/// \param n size of the new array.                                                            
-///                                                                                            
-/// Example:                                                                                   
-///                                                                                            
-///     auto p = make_unique<int[]>(2); // value-initializes the array with 0's.               
+/// \brief Constructs a `new T[n]` with the given args and returns a
+///        `unique_ptr<T[]>` which owns the object.
+///
+/// \param n size of the new array.
+///
+/// Example:
+///
+///     auto p = make_unique<int[]>(2); // value-initializes the array with 0's.
 template <class T>
 typename std::enable_if<std::is_array<T>::value && std::extent<T>::value == 0,
     std::unique_ptr<T>>::type
@@ -52,7 +59,7 @@ typename std::enable_if<std::is_array<T>::value && std::extent<T>::value == 0,
     return std::unique_ptr<T>(new typename std::remove_extent<T>::type[n]());
 }
 
-/// This function isn't used and is only here to provide better compile errors.                
+/// This function isn't used and is only here to provide better compile errors.
 template <class T, class... Args>
 typename std::enable_if<std::extent<T>::value != 0>::type
 make_unique(Args &&...) = delete;

@@ -135,11 +135,11 @@ The integration tests require round-trip communication with valid New Relic acco
 * The [example](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/example-secrets.json) includes values needed for all Integration Tests and Unbounded Integration Tests.
   * Not all values in the `secrets.json` are required if a user is running a subset of tests, and can be omitted for irrelevant tests.
 
-* Some tests require special New Relic license keys for High Security Mode (HSM) or Configurable Security Policies (CSP). Follow the steps below to set these license keys:
+* Some tests require a special New Relic license key for High Security Mode (HSM). Follow the steps below to set this license key:
 
   1. Create a `secrets.json` file using the template below or copy the [example](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/example-secrets.json).  **Do *not* place the `secrets.json` file within your local repo folder.**
   2. Replace the license key placeholders in the `secrets.json` template with actual license keys.
-      * The `REPLACE_WITH_HIGH_SECURITY_LICENSE_KEY` and `REPLACE_WITH_SECURITY_POLICIES_CONFIGURABLE_LICENSE_KEY` are placeholders for license keys from a [HSM](https://docs.newrelic.com/docs/agents/manage-apm-agents/configuration/high-security-mode)-enabled account and a CSP-enabled account, respectively.
+      * The `REPLACE_WITH_HIGH_SECURITY_LICENSE_KEY` is a placeholder for a license key from a [HSM](https://docs.newrelic.com/docs/agents/manage-apm-agents/configuration/high-security-mode)-enabled account.
       * To find your license keys, visit [this page](https://docs.newrelic.com/docs/accounts/accounts-billing/account-setup/new-relic-license-key/).
 
 * Once placeholder values have been replaced with actual values:
@@ -162,9 +162,6 @@ The integration tests require round-trip communication with valid New Relic acco
     "TestSettingOverrides": {
       "HSM": {
         "LicenseKey": "REPLACE_WITH_HIGH_SECURITY_LICENSE_KEY"
-      },
-      "CSP" : {
-        "LicenseKey": "REPLACE_WITH_SECURITY_POLICIES_CONFIGURABLE_LICENSE_KEY",
       }
     }
   }
@@ -188,11 +185,74 @@ All of these currently use the application name: "IntegrationTestAppName".
 * NewRelic.Agent.IntegrationTests.BasicInstrumentation.BasicMvcApplicationWithAsyncDisabled.Test
 * NewRelic.Agent.IntegrationTests.BasicInstrumentation.MvcRum.Test
 
-#### HSM / CSP tests
+#### HSM tests
 
-High security mode (HSM) tests or Configurable Security Policies (CSP) tests require matching settings on the account they run against. These typically have "HSM" or "CSP" (or the full names) in the test or fixture naming.
+High security mode (HSM) tests require matching settings on the account they run against. These typically have "HSM" (or the full name) in the test or fixture naming.
 
 See the test secrets section above on configuring an appropriate account.
+
+#### LLM / Bedrock tests
+
+The Bedrock tests in the `LLM` namespace call the real AWS Bedrock service. They
+no longer use a static access key.
+
+Before running them:
+
+1. Sign in to AWS however you normally do, and confirm it worked:
+
+   ```
+   aws sts get-caller-identity
+   ```
+
+2. Make sure `AwsRegion` is present under `DefaultSetting` in your
+   `secrets.json`, set to `us-west-2`.
+
+That is all. `AwsTestCredentials` runs at test startup, asks the AWS CLI for your
+current credentials, and passes them to the test application as environment
+variables. You do not need to set `AWS_PROFILE` or `AWS_REGION` yourself, and you
+do not need to export credentials by hand.
+
+Two things are worth knowing if this ever fails:
+
+* The AWS SDK for .NET cannot read an AWS SSO session on its own. SSO credential
+  resolution lives in the `AWSSDK.SSO` and `AWSSDK.SSOOIDC` packages, which the
+  test applications deliberately do not reference. That is why the credentials
+  come via the AWS CLI rather than from the SDK's own profile handling. CI works
+  the same way: `aws-actions/configure-aws-credentials` exports credentials into
+  the job environment, and `AwsTestCredentials` sees they are already present and
+  does nothing.
+* `AWS_REGION` has no effect on these tests. The Bedrock client is constructed
+  with an explicit region taken from `AwsRegion` in your `secrets.json`, so that
+  setting is the one that matters.
+
+Three test classes exercise models Bedrock still offers in us-west-2:
+
+* `BedrockInvokeTests` -- `amazon.titan-embed-text-v1`
+* `BedrockConverseTests` -- `us.amazon.nova-micro-v1:0`
+* `BedrockConverseContentBlockTests` -- `us.anthropic.claude-sonnet-4-5-20250929-v1:0`
+
+`LLMDisabledTests` and `LLMErrorTests` still name `meta.llama2-13b-chat-v1` and
+`meta.llama2-70b-chat-v1`, which Bedrock has retired along with the rest of the
+Llama 2 and Jurassic-2 families. They pass anyway, because neither asserts a
+successful completion: `LLMDisabledTests` runs with AI monitoring disabled and
+checks that no LLM events are produced, and `LLMErrorTests` checks that a failed
+call produces an error event. A retired model and an IAM-denied model produce the
+same error shape, so both satisfy it.
+
+`LLMApiTests` and `LLMAccountDisabledTests` have their `[Fact]` attributes
+commented out for the same deprecation, so they do not run at all. Migrating
+those to current models would need a change to the agent's own model-ID handling
+in `BedrockLlmModelTypeExtensions`, not just the tests, and is tracked
+separately.
+
+`LLM` is excluded from CI via the `INTEGRATION_EXCLUDE_NAMESPACES` repository
+variable, for reasons unrelated to Bedrock.
+
+The CI role grants only `bedrock:InvokeModel`. The Converse API authorizes
+against that action, but `ConverseStream` would need
+`bedrock:InvokeModelWithResponseStream`, which is deliberately not granted
+because nothing in the repo calls it. A new streaming Bedrock call will get a
+403 until the policy is updated.
 
 #### Selenium tests
 

@@ -12,7 +12,7 @@ Optional: sign the .rpm
 
 1. `docker compose run -e GPG_KEY=/keys/private_gpg_key.gpg -e GPG_KEY_PASSPHRASE=passphrase build_rpm`
 
-You can do ad hoc testing inside containers using the `test_debian` and/or `test_centos` services and `bash`.
+You can do ad hoc testing inside containers using the `test_debian` and/or `test_rockylinux` services and `bash`.
 
      docker compose run test_debian bash
-     docker compose run test_centos bash
+     docker compose run test_rockylinux bash

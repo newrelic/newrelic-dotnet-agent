@@ -75,15 +75,15 @@ public class ServiceStackApplicationTests : NewRelicIntegrationTest<ServiceStack
 
     private readonly List<Assertions.ExpectedMetric> _pipelineMetrics = new List<Assertions.ExpectedMetric>
     {
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", callCount = 1 },
-        new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", callCount = 1 }
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", CallCountAllHarvests = 1 },
+        new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", CallCountAllHarvests = 1 }
     };
 
 }

@@ -42,23 +42,23 @@ public class BasicMvcApplicationWithAsyncDisabled : NewRelicIntegrationTest<Remo
     {
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/DisableAsyncSupportController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/DisableAsyncSupportController/Index", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/DisableAsyncSupportController/Index", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
@@ -68,8 +68,8 @@ public class BasicMvcApplicationWithAsyncDisabled : NewRelicIntegrationTest<Remo
             new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
 
             // The .NET agent does not have the information needed to generate this metric
-            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DisableAsyncSupportController/Index", CallCountAllHarvests = 1 },
         };
 
         var expectedTransactionTraceSegments = new List<string>

@@ -200,6 +200,19 @@ public class AgentHealthReporterTests
     }
 
     [Test]
+    public void ReportGaugeMetric()
+    {
+        const string MetricName = "Some/Metric/Name";
+        const float gaugeValue = 42.5f;
+        _agentHealthReporter.ReportGaugeMetric(MetricName, gaugeValue);
+        Assert.That(_publishedMetrics, Has.Count.EqualTo(1));
+        NrAssert.Multiple(
+            () => Assert.That(_publishedMetrics[0].MetricNameModel.Name, Is.EqualTo(MetricName)),
+            () => Assert.That(_publishedMetrics[0].DataModel, Is.EqualTo(MetricDataWireModel.BuildGaugeValue(gaugeValue)))
+        );
+    }
+
+    [Test]
     public void CollectMetrics_ReportsAgentVersion()
     {
         var agentVersion = AgentInstallConfiguration.AgentVersion;

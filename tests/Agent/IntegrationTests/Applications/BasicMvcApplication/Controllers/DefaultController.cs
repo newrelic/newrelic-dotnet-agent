@@ -3,8 +3,10 @@
 
 
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Mvc;
@@ -175,6 +177,61 @@ public class DefaultController : Controller
         return "Worked";
     }
 
+    // Sends a request body (POST/PUT) using the synchronous GetRequestStream path. Before the fix,
+    // the DT headers were serialized during GetRequestStream - before GetResponse created the
+    // external segment - so they were never injected on the outbound request.
+    public string ChainedWebRequestBodySync(string chainedServerName, string chainedPortNumber, string chainedAction, string httpMethod)
+    {
+        var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
+        var body = Encoding.UTF8.GetBytes("chained-request-body");
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
+        var httpWebRequest = (HttpWebRequest)WebRequest.Create(address);
+        httpWebRequest.Method = httpMethod;
+        httpWebRequest.ContentType = "text/plain";
+        using (var requestStream = httpWebRequest.GetRequestStream())
+        {
+            requestStream.Write(body, 0, body.Length);
+        }
+        httpWebRequest.GetResponse();
+#pragma warning restore SYSLIB0014
+
+        return "Worked";
+    }
+
+    // Sends a request body (POST/PUT) using an asynchronous request-stream path. asyncMode "apm"
+    // exercises BeginGetRequestStream/EndGetRequestStream; any other value exercises the TAP
+    // GetRequestStreamAsync.
+    public async Task<string> ChainedWebRequestBodyAsync(string chainedServerName, string chainedPortNumber, string chainedAction, string httpMethod, string asyncMode)
+    {
+        var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
+        var body = Encoding.UTF8.GetBytes("chained-request-body");
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
+        var httpWebRequest = (HttpWebRequest)WebRequest.Create(address);
+        httpWebRequest.Method = httpMethod;
+        httpWebRequest.ContentType = "text/plain";
+
+        Stream requestStream;
+        if (asyncMode == "apm")
+        {
+            requestStream = await Task.Factory.FromAsync(httpWebRequest.BeginGetRequestStream, httpWebRequest.EndGetRequestStream, null);
+        }
+        else
+        {
+            requestStream = await httpWebRequest.GetRequestStreamAsync();
+        }
+
+        using (requestStream)
+        {
+            await requestStream.WriteAsync(body, 0, body.Length);
+        }
+        using (await httpWebRequest.GetResponseAsync())
+        {
+        }
+#pragma warning restore SYSLIB0014
+
+        return "Worked";
+    }
+
     public async Task<string> ChainedHttpClient(string chainedServerName, string chainedPortNumber, string chainedAction)
     {
         var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
@@ -184,5 +241,59 @@ public class DefaultController : Controller
         }
 
         return "Worked";
+    }
+
+    // Bodyless asynchronous GET via GetResponseAsync. On .NET Framework GetResponseAsync is
+    // implemented on the base WebRequest as BeginGetResponse/EndGetResponse, and there is no
+    // request stream - so there is no request-stream handoff for the response wrapper to reuse.
+    public async Task<string> ChainedWebRequestAsync(string chainedServerName, string chainedPortNumber, string chainedAction)
+    {
+        var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
+        var httpWebRequest = (HttpWebRequest)WebRequest.Create(address);
+        using (await httpWebRequest.GetResponseAsync())
+        {
+        }
+#pragma warning restore SYSLIB0014
+
+        return "Worked";
+    }
+
+    // Sends a POST body to an endpoint that returns 500. HttpWebRequest throws WebException on a
+    // 4xx/5xx response, which exercises the external segment's onFailure path (HTTP-status capture
+    // and inbound-response processing from WebException.Response). The request still carries the
+    // distributed-trace headers, so the receiver records the trace.
+    public string ChainedWebRequestBodyErrorSync(string chainedServerName, string chainedPortNumber, string chainedAction)
+    {
+        var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
+        var body = Encoding.UTF8.GetBytes("chained-request-body");
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
+        var httpWebRequest = (HttpWebRequest)WebRequest.Create(address);
+        httpWebRequest.Method = "POST";
+        httpWebRequest.ContentType = "text/plain";
+        using (var requestStream = httpWebRequest.GetRequestStream())
+        {
+            requestStream.Write(body, 0, body.Length);
+        }
+
+        try
+        {
+            httpWebRequest.GetResponse();
+        }
+        catch (WebException)
+        {
+            // Expected: the receiver returns 500, so GetResponse throws. The onFailure delegate runs.
+        }
+#pragma warning restore SYSLIB0014
+
+        return "Worked";
+    }
+
+    // Receiver endpoint that returns HTTP 500 (used by the failure-path test above). The agent
+    // still starts a transaction and accepts the inbound distributed-trace headers.
+    public ActionResult ReturnServerError()
+    {
+        Response.StatusCode = 500;
+        return Content("server error");
     }
 }

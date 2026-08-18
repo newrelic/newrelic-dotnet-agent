@@ -49,12 +49,12 @@ public class ErrorTraceWebApi : NewRelicIntegrationTest<RemoteServiceFixtures.Ow
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             // error metrics
-            new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", callCount = 1},
-            new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/WebAPI/Values/ThrowException", callCount = 1 },
+            new Assertions.ExpectedMetric {metricName = @"Errors/all", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", CallCountAllHarvests = 1},
+            new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/WebAPI/Values/ThrowException", CallCountAllHarvests = 1 },
 
             // other
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction", CallCountAllHarvests = 1 }
         };
 
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>

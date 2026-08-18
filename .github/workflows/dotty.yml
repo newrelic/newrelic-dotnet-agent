@@ -13,6 +13,10 @@ on:
         description: "If checked, no notification message will be sent to the team channel, nor will any Github issues be created."
         type: boolean
         default: false
+      generateCompatDoc:
+        description: "If checked, regenerate docs/net-agent-compatibility.md and include it in the PR so it stays in sync with the updated package versions."
+        type: boolean
+        default: true
 
 env:
   DOTNET_NOLOGO: true
@@ -35,18 +39,18 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit # Leave it audit mode
 
       - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
   
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           filter: blob:none
@@ -78,6 +82,8 @@ jobs:
           NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
           DOTTY_LAST_RUN_TIMESTAMP: ${{ env.LAST_RUN_TIMESTAMP }}
           DOTTY_SEARCH_ROOT_PATH: ${{ github.workspace }}
+          # Defaults to true on scheduled runs (input is empty); honors the checkbox on manual runs.
+          DOTTY_GENERATE_COMPAT_DOC: ${{ github.event.inputs.generateCompatDoc || 'true' }}
 
         run: |
           if [ ${{ inputs.daysToSearch }} != "" ]; then

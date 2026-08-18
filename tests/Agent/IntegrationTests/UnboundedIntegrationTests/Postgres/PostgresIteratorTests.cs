@@ -67,18 +67,18 @@ public abstract class PostgresSqlIteratorTestsBase<TFixture> : NewRelicIntegrati
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", callCount = expectedDatastoreCallCount},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = expectedTransactionName},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", CallCountAllHarvests = expectedDatastoreCallCount},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", CallCountAllHarvests = 1, metricScope = expectedTransactionName},
 
             // NpgsqlDataReader methods Read/ReadAsync and NextResult/NextResultAsync result in Iterate metrics.
-            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterationCount },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterationCount, metricScope = expectedTransactionName}
+            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", CallCountAllHarvests = expectedIterationCount },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", CallCountAllHarvests = expectedIterationCount, metricScope = expectedTransactionName}
         };
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
@@ -101,22 +101,6 @@ public abstract class PostgresSqlIteratorTestsBase<TFixture> : NewRelicIntegrati
 public class PostgresSqlIteratorTestsFW462 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlIteratorTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlIteratorTestsFW471 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW471>
-{
-    public PostgresSqlIteratorTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
-    {
-
-    }
-}
-
-public class PostgresSqlIteratorTestsFW48 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW48>
-{
-    public PostgresSqlIteratorTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
     {
 
     }

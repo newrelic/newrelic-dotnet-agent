@@ -22,6 +22,5 @@ public enum ConfigurationUpdateSource
     Unknown,
     Server,
     Local,
-    RunTime,
-    SecurityPolicies
+    RunTime
 }

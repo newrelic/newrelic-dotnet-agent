@@ -28,7 +28,7 @@ public class RemoteWebApplication : RemoteApplication
 
     private string DestinationHostedWebCoreExecutablePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, HostedWebCoreProcessName); } }
 
-    private string DestinationApplicationHostConfigFilePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, "applicationHost.config"); } }
+    protected string DestinationApplicationHostConfigFilePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, "applicationHost.config"); } }
 
     private string DestinationApplicationWebConfigFilePath { get { return Path.Combine(DestinationApplicationDirectoryPath, "Web.config"); } }
 
@@ -117,7 +117,7 @@ public class RemoteWebApplication : RemoteApplication
         XmlUtils.ModifyOrCreateXmlAttributes(DestinationApplicationWebConfigFilePath, string.Empty, nodes, attributes);
     }
 
-    private void SetUpApplicationHostConfig()
+    protected virtual void SetUpApplicationHostConfig()
     {
         SetSiteVirtualDirectoryInApplicationHostConfig();
         SetSitePortInApplicationHostConfig();

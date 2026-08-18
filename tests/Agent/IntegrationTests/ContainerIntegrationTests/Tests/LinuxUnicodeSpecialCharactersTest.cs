@@ -15,7 +15,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 /// created successfully.
 /// </summary>
 [Trait("Architecture", "amd64")]
-[Trait("Distro", "Ubuntu")]
+[Trait("TestArea", "Core")]
 public class LinuxUnicodeSpecialCharactersTest : NewRelicIntegrationTest<LinuxUnicodeSpecialCharactersTestFixture>
 {
     private readonly LinuxUnicodeSpecialCharactersTestFixture _fixture;

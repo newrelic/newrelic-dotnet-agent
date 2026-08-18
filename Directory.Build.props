@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
+    <ManagePackageVersionsCentrally Condition="'$(ManagePackageVersionsCentrally)' == ''">true</ManagePackageVersionsCentrally>
     <LangVersion>default</LangVersion>
     <RootProjectDirectory>$(MSBuildThisFileDirectory)</RootProjectDirectory>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

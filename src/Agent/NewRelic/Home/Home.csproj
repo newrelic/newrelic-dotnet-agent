@@ -5,6 +5,7 @@
     <RootNamespace>NewRelic.Home</RootNamespace>
     <AssemblyName>NewRelic.Home</AssemblyName>
     <Description>This project is used to run build_home.ps1 to create the home folders.  It is empty on purpose.</Description>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
@@ -13,7 +14,7 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="NewRelic.Agent.Internal.Profiler" Version="10.49.0.24"/>
+    <PackageReference Include="NewRelic.Agent.Internal.Profiler" Version="10.53.0.47"/>
   </ItemGroup>
 
 </Project>

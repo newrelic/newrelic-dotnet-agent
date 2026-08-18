@@ -524,6 +524,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("transaction_tracer.max_stack_traces")]
     public int TransactionTracerMaxStackTraces => _configuration.TransactionTracerMaxStackTraces;
 
+    [JsonProperty("transaction_tracer.sql_metadata_comments_enabled")]
+    public bool TransactionTracerSqlMetadataCommentsEnabled => _configuration.TransactionTracerSqlMetadataCommentsEnabled;
+
     [JsonProperty("agent.trusted_account_ids")]
     public IEnumerable<long> TrustedAccountIds => _configuration.TrustedAccountIds;
 
@@ -596,6 +599,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("agent.event_listener_samplers_enabled")]
     public bool EventListenerSamplersEnabled { get => _configuration.EventListenerSamplersEnabled; set { /* nothx */ } }
 
+    [JsonProperty("agent.kafka_internal_metrics_enabled")]
+    public bool KafkaInternalMetricsEnabled => _configuration.KafkaInternalMetricsEnabled;
+
     [JsonProperty("agent.sampling_target")]
     public int? SamplingTarget => _configuration.SamplingTarget;
 
@@ -616,6 +622,9 @@ public class ReportedConfiguration : IConfiguration
 
     [JsonProperty("agent.force_synchronous_timing_calculation_for_http_client")]
     public bool ForceSynchronousTimingCalculationHttpClient => _configuration.ForceSynchronousTimingCalculationHttpClient;
+
+    [JsonProperty("agent.use_header_based_request_queue_time_for_classic_aspnet")]
+    public bool UseHeaderBasedRequestQueueTimeForClassicAspNet => _configuration.UseHeaderBasedRequestQueueTimeForClassicAspNet;
 
     [JsonProperty("agent.enable_asp_net_core_6plus_browser_injection")]
     public bool EnableAspNetCore6PlusBrowserInjection => _configuration.EnableAspNetCore6PlusBrowserInjection;

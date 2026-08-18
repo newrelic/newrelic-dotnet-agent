@@ -74,25 +74,25 @@ public class EnterpriseLibraryOracleTests : NewRelicIntegrationTest<RemoteServic
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/Oracle/all", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/Oracle/allWeb", callCount = expectedDatastoreCallCount },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Oracle/{OracleConfiguration.OracleServer}/{OracleConfiguration.OraclePort}", callCount = expectedDatastoreCallCount},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/select", callCount = 2},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1, metricScope = "WebTransaction/MVC/OracleController/EnterpriseLibraryOracle"},
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/select", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/select", callCount = 1, metricScope = "WebTransaction/MVC/OracleController/EnterpriseLibraryOracle"},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/insert", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/insert", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/insert", callCount = 1, metricScope = "WebTransaction/MVC/OracleController/EnterpriseLibraryOracle"},
-            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/delete", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/delete", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/delete", callCount = 1, metricScope = "WebTransaction/MVC/OracleController/EnterpriseLibraryOracle"},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/Oracle/all", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/Oracle/allWeb", CallCountAllHarvests = expectedDatastoreCallCount },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Oracle/{OracleConfiguration.OracleServer}/{OracleConfiguration.OraclePort}", CallCountAllHarvests = expectedDatastoreCallCount},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/select", CallCountAllHarvests = 2},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Oracle/user_tables/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Oracle/user_tables/select", CallCountAllHarvests = 1, metricScope = "WebTransaction/MVC/OracleController/EnterpriseLibraryOracle"},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/select", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/select", CallCountAllHarvests = 1, metricScope = "WebTransaction/MVC/OracleController/EnterpriseLibraryOracle"},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/insert", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/insert", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/insert", CallCountAllHarvests = 1, metricScope = "WebTransaction/MVC/OracleController/EnterpriseLibraryOracle"},
+            new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/delete", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/delete", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/delete", CallCountAllHarvests = 1, metricScope = "WebTransaction/MVC/OracleController/EnterpriseLibraryOracle"},
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = "WebTransaction/MVC/OracleController/EnterpriseLibraryOracle"}
+            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", CallCountAllHarvests = expectedIterateCallCount },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", CallCountAllHarvests = expectedIterateCallCount, metricScope = "WebTransaction/MVC/OracleController/EnterpriseLibraryOracle"}
         };
 
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>

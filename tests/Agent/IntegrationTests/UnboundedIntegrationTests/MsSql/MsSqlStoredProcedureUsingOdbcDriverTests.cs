@@ -75,10 +75,10 @@ public abstract class MsSqlStoredProcedureUsingOdbcDriverTestsBase<TFixture> : N
 
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWith}/ExecuteProcedure", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWith}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName},
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWithout}/ExecuteProcedure", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWithout}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName}
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWith}/ExecuteProcedure", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWith}/ExecuteProcedure", CallCountAllHarvests = 1, metricScope = _expectedTransactionName},
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWithout}/ExecuteProcedure", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{expectedSqlStatementWithout}/ExecuteProcedure", CallCountAllHarvests = 1, metricScope = _expectedTransactionName}
         };
 
         var expectedTransactionTraceSegments = new List<string>

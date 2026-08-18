@@ -36,11 +36,13 @@ public abstract class NServiceBus5ReceiveTestsBase<TFixture> : NewRelicIntegrati
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                 configModifier.ForceTransactionTraces();
                 configModifier.SetLogLevel("finest");
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
             },
             exerciseApplication: () =>
             {
                 // There will be two transactions created by the reciever, one for the valid message and one for the invalid message
-                _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(30), 2);
+                _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2);
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 _fixture.SendCommand("NServiceBusService Stop");
                 _fixture.SendCommand("NServiceBusReceiverHost Stop");
             }

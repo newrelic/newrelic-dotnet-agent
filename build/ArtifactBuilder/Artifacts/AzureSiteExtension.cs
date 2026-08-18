@@ -1,3 +1,6 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,10 +9,6 @@ namespace ArtifactBuilder.Artifacts;
 
 public class AzureSiteExtension : Artifact
 {
-    private const string XmlLibraryName = "Microsoft.Web.XmlTransform.dll";
-    private const string NuGetLibraryName = "NuGet.Core.dll";
-    private const string NuGetHelperLibraryName = "NewRelic.NuGetHelper.dll";
-
     private string _version;
     private string _nuGetPackageName;
 
@@ -23,9 +22,6 @@ public class AzureSiteExtension : Artifact
         _version = ReadVersionFromFile();
         var package = new NugetPackage(StagingDirectory, OutputDirectory);
         package.CopyAll($@"{PackageDirectory}");
-        package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\Release\net462\{NuGetHelperLibraryName}");
-        package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\Release\net462\{NuGetLibraryName}");
-        package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\Release\net462\{XmlLibraryName}");
         package.SetVersion(_version);
         _nuGetPackageName = package.Pack();
     }
@@ -93,9 +89,6 @@ public class AzureSiteExtension : Artifact
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, "applicationHost.xdt");
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, "install.cmd");
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, "install.ps1");
-        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, XmlLibraryName);
-        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, NuGetLibraryName);
-        ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, NuGetHelperLibraryName);
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, "uninstall.cmd");
         ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, contentFolder, "web.config");
 

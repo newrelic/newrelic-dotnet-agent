@@ -5,6 +5,7 @@
 #ifndef _SIGPARSE_AST_TYPE_LIST_H_INCLUDED_
 #define _SIGPARSE_AST_TYPE_LIST_H_INCLUDED_
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 #include <string>

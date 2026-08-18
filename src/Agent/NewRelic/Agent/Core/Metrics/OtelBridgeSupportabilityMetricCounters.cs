@@ -27,7 +27,10 @@ public enum OtelBridgeSupportabilityMetric
     MeasurementRecorded,
     MeasurementBridgeFailure,
     EntityGuidChanged,
-    MeterProviderRecreated
+    MeterProviderRecreated,
+    ExportSuccess,
+    ExportFailure,
+    ExportRetry
 }
 
 public interface IOtelBridgeSupportabilityMetricCounters : IOutOfBandMetricSource
@@ -113,6 +116,9 @@ public class OtelBridgeSupportabilityMetricCounters : IOtelBridgeSupportabilityM
             OtelBridgeSupportabilityMetric.MeasurementBridgeFailure => MetricNames.SupportabilityOTelMetricsBridgeMeasurementBridgeFailure,
             OtelBridgeSupportabilityMetric.EntityGuidChanged => MetricNames.SupportabilityOTelMetricsBridgeEntityGuidChanged,
             OtelBridgeSupportabilityMetric.MeterProviderRecreated => MetricNames.SupportabilityOTelMetricsBridgeMeterProviderRecreated,
+            OtelBridgeSupportabilityMetric.ExportSuccess => MetricNames.SupportabilityOTelMetricsBridgeExportSuccess,
+            OtelBridgeSupportabilityMetric.ExportFailure => MetricNames.SupportabilityOTelMetricsBridgeExportFailure,
+            OtelBridgeSupportabilityMetric.ExportRetry => MetricNames.SupportabilityOTelMetricsBridgeExportRetry,
             _ => throw new ArgumentOutOfRangeException(nameof(metric), metric, "Unknown OtelBridgeSupportabilityMetric")
         };
     }

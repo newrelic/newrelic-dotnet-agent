@@ -161,6 +161,7 @@ public interface IConfiguration
     string TransactionTracerRecordSql { get; }
     string TransactionTracerRecordSqlSource { get; }
     int TransactionTracerMaxStackTraces { get; }
+    bool TransactionTracerSqlMetadataCommentsEnabled { get; }
     IEnumerable<long> TrustedAccountIds { get; }
     bool ServerSideConfigurationEnabled { get; }
     bool IgnoreServerSideConfiguration { get; }
@@ -183,6 +184,7 @@ public interface IConfiguration
     int DiagnosticsCaptureAgentTimingFrequency { get; }
     bool UseResourceBasedNamingForWCFEnabled { get; }
     bool EventListenerSamplersEnabled { get; set; }
+    bool KafkaInternalMetricsEnabled { get; }
     int? SamplingTarget { get; }
     int SpanEventsMaxSamplesStored { get; }
     int? SamplingTargetPeriodInSeconds { get; }
@@ -190,6 +192,9 @@ public interface IConfiguration
     string ProcessHostDisplayName { get; }
     int DatabaseStatementCacheCapacity { get; }
     bool ForceSynchronousTimingCalculationHttpClient { get; }
+
+    bool UseHeaderBasedRequestQueueTimeForClassicAspNet { get; }
+
     bool EnableAspNetCore6PlusBrowserInjection { get; }
 
     bool InstrumentAspNetCore6PlusWebsockets { get; }

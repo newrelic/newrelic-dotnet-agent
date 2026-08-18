@@ -20,8 +20,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport;
 
 internal class TestDefaultConfiguration : DefaultConfiguration
 {
-    public TestDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration _securityPoliciesConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter) :
-        base(environment, localConfig, serverConfig, runTimeConfiguration, _securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
+    public TestDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, IBootstrapConfiguration bootstrapConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic, IAgentHealthReporter agentHealthReporter) :
+        base(environment, localConfig, serverConfig, runTimeConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
 }
 
 [TestFixture]
@@ -42,8 +42,6 @@ public class CollectorHostNameTests
     private RunTimeConfiguration _runTimeConfig;
 
     private DefaultConfiguration _defaultConfig;
-
-    private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
 
     private IBootstrapConfiguration _bootstrapConfiguration;
 
@@ -66,11 +64,10 @@ public class CollectorHostNameTests
         _localConfig = new configuration();
         _serverConfig = new ServerConfiguration();
         _runTimeConfig = new RunTimeConfiguration();
-        _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
         _dnsStatic = Mock.Create<IDnsStatic>();
         _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
-        _defaultConfig = new TestDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
+        _defaultConfig = new TestDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic, _agentHealthReporter);
 
     }
 

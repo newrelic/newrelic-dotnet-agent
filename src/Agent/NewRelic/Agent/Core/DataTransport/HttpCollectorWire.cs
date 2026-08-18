@@ -69,6 +69,9 @@ public class HttpCollectorWire : ICollectorWire
 
             if (!response.IsSuccessStatusCode)
             {
+                if (Log.IsDebugEnabled)
+                    Log.Debug("Request({0}): Invocation of \"{1}\" returned response headers : {2}", requestGuid, method, response.GetHeaders());
+
                 ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);
             }
 
@@ -80,6 +83,8 @@ public class HttpCollectorWire : ICollectorWire
             // Possibly combine these logs? makes parsing harder in tests...
             Log.Debug("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
             Log.Debug("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
+            if (Log.IsDebugEnabled)
+                Log.Debug("Request({0}): Invocation of \"{1}\" returned response headers : {2}", requestGuid, method, response.GetHeaders());
 
             DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Received, DataTransportAuditLogger.AuditLogSource.Collector, responseContent);
 

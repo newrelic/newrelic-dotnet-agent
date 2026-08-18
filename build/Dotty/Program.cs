@@ -1,5 +1,9 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -30,6 +34,8 @@ public class Program
     private static readonly string _githubToken = Environment.GetEnvironmentVariable("DOTTY_TOKEN");
     private static readonly DateTimeOffset _lastRunTimestamp = DateTimeOffset.TryParse(Environment.GetEnvironmentVariable("DOTTY_LAST_RUN_TIMESTAMP"), out var timestamp) ? timestamp : DateTimeOffset.MinValue;
     private static readonly string _searchRootPath = Environment.GetEnvironmentVariable("DOTTY_SEARCH_ROOT_PATH") ?? ".";
+    private static readonly bool _generateCompatDoc = !bool.TryParse(Environment.GetEnvironmentVariable("DOTTY_GENERATE_COMPAT_DOC"), out var gen) || gen; // defaults to true when unset/unparseable
+    private const string CompatDocRelativePath = "docs/net-agent-compatibility.md";
     private const string PackageInfoFilename = "packageInfo.json";
     private const string ProjectsJsonFilename = "projectInfo.json";
     private const string Owner = "newrelic";
@@ -189,6 +195,45 @@ public class Program
         // get the second most recent version of the package (if there is one)
         var previous = metaData.Skip(1).FirstOrDefault();
 
+        // per-TFM major-version ceiling path (mutually exclusive with ignorePatch/Minor/Major)
+        if (package.TfmMaxMajorVersion != null && package.TfmMaxMajorVersion.Count > 0)
+        {
+            var tfmTargets = new Dictionary<string, string>();
+            var anyCappedAdvanced = false;
+
+            foreach (var (tfm, cap) in package.TfmMaxMajorVersion)
+            {
+                var capped = metaData.FirstOrDefault(v => v.Identity.Version.Major <= cap);
+                if (capped != null)
+                {
+                    var cappedVersionStr = capped.Identity.Version.ToNormalizedString();
+                    tfmTargets[tfm] = cappedVersionStr;
+                    Log.Information($"Package {packageName}: TFM {tfm} capped at major {cap}, resolved to {cappedVersionStr}.");
+                    if (capped.Published >= searchTime)
+                        anyCappedAdvanced = true;
+                }
+                else
+                {
+                    Log.Warning($"Package {packageName}: TFM {tfm} capped at major {cap}, but no matching version found. Leaving pinned.");
+                    tfmTargets[tfm] = null;
+                }
+            }
+
+            var globalAdvanced = latest.Published >= searchTime;
+
+            if (!globalAdvanced && !anyCappedAdvanced)
+            {
+                Log.Information($"Package {packageName} has NOT been updated.");
+                return;
+            }
+
+            var previousVersionDescription = previous?.Identity.Version.ToNormalizedString() ?? "Unknown";
+            var latestVersionDescription = latest.Identity.Version.ToNormalizedString();
+            Log.Information($"Package {packageName} global latest is {latestVersionDescription}; per-TFM targets resolved.");
+            _newVersions.Add(new NugetVersionData(packageName, previousVersionDescription, latestVersionDescription, latest.PackageDetailsUrl.ToString(), (latest.Published?.Date ?? DateTime.UtcNow.Date), package.IgnoreTFMs, tfmTargets));
+            return;
+        }
+
         // check publish date
         if (latest.Published >= searchTime)
         {
@@ -305,6 +350,11 @@ public class Program
             var newBranchRef = await ghClient.Git.Reference.Create(Owner, Repo, newBranch);
             Log.Information($"Successfully created {branchName} branch.");
 
+            // Regenerate the compatibility doc so it stays in sync with the .csproj versions just
+            // updated above. Only do this when a PR is actually being created (we're already past
+            // the early-return guards). Controlled by DOTTY_GENERATE_COMPAT_DOC (default true).
+            var includeCompatDoc = _generateCompatDoc && await RegenerateCompatibilityDoc();
+
             // commit changes to the newly created branch
             var latestCommit = await ghClient.Git.Commit.Get(Owner, Repo, newBranchRef.Object.Sha);
             var nt = new NewTree { BaseTree = latestCommit.Tree.Sha };
@@ -319,6 +369,27 @@ public class Program
                     Content = string.Join('\n', await File.ReadAllLinesAsync(Path.Combine(_searchRootPath, projectInfo.ProjectFile)))
                 });
             }
+
+            if (includeCompatDoc)
+            {
+                var compatDocFullPath = Path.Combine(_searchRootPath, CompatDocRelativePath);
+                if (File.Exists(compatDocFullPath))
+                {
+                    nt.Tree.Add(new NewTreeItem
+                    {
+                        Path = CompatDocRelativePath,
+                        Mode = "100644",
+                        Type = TreeType.Blob,
+                        Content = string.Join('\n', await File.ReadAllLinesAsync(compatDocFullPath))
+                    });
+                }
+                else
+                {
+                    Log.Warning($"Compatibility doc was generated but not found at {compatDocFullPath}; it will not be included in the PR.");
+                    includeCompatDoc = false;
+                }
+            }
+
             var commitMessage = "test: Dotty instrumentation library updates for " + DateTime.Now.ToString("yyyy-MMM-dd");
             var newTree = await ghClient.Git.Tree.Create(Owner, Repo, nt);
             var newCommit = new NewCommit(commitMessage, newTree.Sha, newBranchRef.Object.Sha);
@@ -326,15 +397,18 @@ public class Program
             await ghClient.Git.Reference.Update(Owner, Repo, $"heads/{branchName}", new ReferenceUpdate(commit.Sha));
 
             // create PR
+            var compatDocChecklistItem = includeCompatDoc
+                ? $"- [x] Update .NET agent compatibility / requirements documentation to reflect the latest supported versions — `{CompatDocRelativePath}` was auto-regenerated by Dotty (review the diff)"
+                : "- [ ] Update .NET agent compatibility / requirements documentation to reflect the latest supported versions";
             var newPr = new NewPullRequest(commitMessage, branchName, "main");
-            newPr.Body = 
+            newPr.Body =
                 $@"Dotty updated the following for your convenience.
 
 {updateLog}
 
 Developer checklist:
 - [ ] Verify all integration tests complete successfully
-- [ ] Update .NET agent compatibility / requirements documentation to reflect the latest supported versions";
+{compatDocChecklistItem}";
 
             var pullRequest = await ghClient.PullRequest.Create(Owner, Repo, newPr);
             Log.Information($"Successfully created PR for {branchName} at {pullRequest.HtmlUrl}");
@@ -344,6 +418,64 @@ Developer checklist:
 
         Log.Information($"Pull request will not be created: # of new versions={_newVersions.Count}, token available={_webhook != null}, test mode={_testMode}");
         return "";
+    }
+
+    /// <summary>
+    /// Runs the CompatibilityDocs generator, which rescans the (now-updated) test .csproj files
+    /// and rewrites docs/net-agent-compatibility.md so the customer-facing doc stays in sync with
+    /// the version bumps in this PR.
+    /// </summary>
+    /// <returns>true if the doc was regenerated successfully, false otherwise.</returns>
+    static async Task<bool> RegenerateCompatibilityDoc()
+    {
+        try
+        {
+            var projectPath = Path.Combine(_searchRootPath, "build", "CompatibilityDocs");
+            var psi = new ProcessStartInfo
+            {
+                FileName = "dotnet",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            };
+            psi.ArgumentList.Add("run");
+            psi.ArgumentList.Add("--project");
+            psi.ArgumentList.Add(projectPath);
+            psi.ArgumentList.Add("--");
+            psi.ArgumentList.Add("--repo-root");
+            psi.ArgumentList.Add(_searchRootPath);
+            // Don't let the generator child process get attached to the profiler that Dotty runs under.
+            psi.Environment["CORECLR_ENABLE_PROFILING"] = "0";
+
+            Log.Information($"Regenerating compatibility doc: dotnet run --project {projectPath} -- --repo-root {_searchRootPath}");
+            using var process = Process.Start(psi);
+            if (process == null)
+            {
+                Log.Error("Failed to start the compatibility doc generator process.");
+                return false;
+            }
+
+            var stdout = await process.StandardOutput.ReadToEndAsync();
+            var stderr = await process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            if (!string.IsNullOrWhiteSpace(stdout))
+                Log.Information($"CompatibilityDocs output:\n{stdout}");
+
+            if (process.ExitCode != 0)
+            {
+                Log.Error($"Compatibility doc generation failed (exit code {process.ExitCode}). Stderr:\n{stderr}");
+                return false;
+            }
+
+            Log.Information("Compatibility doc regenerated successfully.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Caught exception while running the compatibility doc generator.");
+            return false;
+        }
     }
 
     [Trace]

@@ -28,21 +28,21 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>$(NativeToolset)</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>$(NativeToolset)</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>$(NativeToolset)</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -50,7 +50,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>$(NativeToolset)</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -184,11 +184,13 @@
     <ClInclude Include="MockFunctionHeaderInfo.h" />
     <ClInclude Include="MockSystemCalls.h" />
     <ClInclude Include="MockTokenizer.h" />
+    <ClInclude Include="RecordingTokenizer.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TestTemplates.h" />
     <ClInclude Include="UnreferencedFunctions.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AgentCallStyleTests.cpp" />
     <ClCompile Include="CustomInstrumentationTest.cpp" />
     <ClCompile Include="ExceptionHandlerManipulatorTest.cpp" />
     <ClCompile Include="InstantiatedGenericTypeTest.cpp" />
@@ -201,6 +203,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="FunctionManipulatorTest.cpp" />
+    <ClCompile Include="InstrumentorsTest.cpp" />
     <ClCompile Include="SystemCallsTest.cpp" />
     <ClCompile Include="TestModuleAttributes.cpp" />
   </ItemGroup>

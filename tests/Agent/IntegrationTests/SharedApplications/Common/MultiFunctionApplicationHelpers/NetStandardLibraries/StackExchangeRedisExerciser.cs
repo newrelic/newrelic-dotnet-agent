@@ -133,6 +133,17 @@ public class StackExchangeRedisExerciser
             var connectionString = StackExchangeRedisConfiguration.StackExchangeRedisConnectionString;
             _redisConfigOptions = ConfigurationOptions.Parse(connectionString);
             _redisConfigOptions.Password = StackExchangeRedisConfiguration.StackExchangeRedisPassword;
+
+            // These tests run from GitHub-hosted runners across the public internet to Azure-hosted
+            // Redis. Transient WAN packet-loss stalls can exceed the 5s SE.Redis defaults and surface
+            // as "Timeout performing <cmd>" flakes even when the server is healthy. Raise the timeouts
+            // to ride out brief blips. Command-level retries are deliberately NOT used -- they would
+            // add extra instrumented calls and perturb the metric call counts these tests assert on.
+            // Note: only properties present since SE.Redis 1.x are set here (oldest pinned is 1.x);
+            // AsyncTimeout (2.0+) is intentionally omitted, and in 1.x SyncTimeout governs async waits too.
+            _redisConfigOptions.SyncTimeout = 30000;
+            _redisConfigOptions.ConnectTimeout = 30000;
+            _redisConfigOptions.ConnectRetry = 5;
         }
         return _redisConfigOptions;
     }

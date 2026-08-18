@@ -11,7 +11,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
 [Collection("AwsSdkTests")]
 [Trait("Architecture", "amd64")]
-[Trait("Distro", "Ubuntu")]
+[Trait("TestArea", "Aws")]
 public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMultiServiceTestFixture>
 {
     private readonly AwsSdkContainerMultiServiceTestFixture _fixture;

@@ -18,14 +18,16 @@ public class UpdatedLoadedModulesService : DisposableService
     private readonly IScheduler _scheduler;
     private readonly IDataTransportService _dataTransportService;
     private readonly IConfigurationService _configurationService;
+    private readonly IFileWrapper _fileWrapper;
     private IConfiguration _configuration => _configurationService?.Configuration;
 
-    public UpdatedLoadedModulesService(IScheduler scheduler, IDataTransportService dataTransportService, IConfigurationService configurationService)
+    public UpdatedLoadedModulesService(IScheduler scheduler, IDataTransportService dataTransportService, IConfigurationService configurationService, IFileWrapper fileWrapper)
     {
         _configurationService = configurationService;
         _dataTransportService = dataTransportService;
         _scheduler = scheduler;
         _scheduler.ExecuteEvery(GetLoadedModules, _configuration.UpdateLoadedModulesCycle);
+        _fileWrapper = fileWrapper;
 
         _subscriptions.Add<StopHarvestEvent>(OnStopHarvest);
         _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
@@ -63,7 +65,7 @@ public class UpdatedLoadedModulesService : DisposableService
             return;
         }
 
-        var loadedModulesCollection = LoadedModuleWireModelCollection.Build(assemblies);
+        var loadedModulesCollection = LoadedModuleWireModelCollection.Build(assemblies, _fileWrapper);
 
         SendUpdatedLoadedModules(loadedModulesCollection);
     }

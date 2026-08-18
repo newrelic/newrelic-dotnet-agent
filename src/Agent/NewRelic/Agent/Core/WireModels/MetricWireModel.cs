@@ -65,16 +65,21 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         return new MetricWireModel(metricName, mergedData);
     }
 
-    public static MetricWireModel BuildMetric(IMetricNameService metricNameService, string proposedName, string scope, MetricDataWireModel metricData)
+    /// <summary>
+    /// Builds a metric using <paramref name="name"/> as-is. Metric rename rules are deliberately NOT
+    /// applied here: metrics aggregate under this name and the rules are applied once at harvest time,
+    /// in <see cref="Aggregators.MetricStatsCollection.ConvertToJsonForSending"/>. Renaming here as well
+    /// would apply the rules twice to any metric that is built before it is aggregated.
+    /// </summary>
+    /// <returns>The metric, or null if <paramref name="name"/> is null.</returns>
+    public static MetricWireModel BuildMetric(string name, string scope, MetricDataWireModel metricData)
     {
-        // MetricNameService will return null if the metric needs to be ignored
-        var newName = metricNameService.RenameMetric(proposedName);
-        if (newName == null)
+        if (name == null)
         {
             return null;
         }
 
-        var metricName = new MetricNameWireModel(newName, scope);
+        var metricName = new MetricNameWireModel(name, scope);
         return new MetricWireModel(metricName, metricData);
     }
 
@@ -120,13 +125,6 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
 
     public class MetricBuilder : IMetricBuilder
     {
-        private readonly IMetricNameService _metricNameService;
-
-        public MetricBuilder(IMetricNameService metricNameService)
-        {
-            _metricNameService = metricNameService;
-        }
-
         #region Transaction builders
 
         public static void TryBuildTransactionMetrics(bool isWebTransaction, TimeSpan responseTimeOrDuration,
@@ -161,37 +159,37 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         public MetricWireModel TryBuildMemoryPhysicalMetric(long memoryPhysical)
         {
             var data = MetricDataWireModel.BuildByteData(memoryPhysical);
-            return BuildMetric(_metricNameService, MetricNames.MemoryPhysical, null, data);
+            return BuildMetric(MetricNames.MemoryPhysical, null, data);
         }
 
         public MetricWireModel TryBuildMemoryWorkingSetMetric(long memoryWorkingSet)
         {
             var data = MetricDataWireModel.BuildByteData(memoryWorkingSet);
-            return BuildMetric(_metricNameService, MetricNames.MemoryWorkingSet, null, data);
+            return BuildMetric(MetricNames.MemoryWorkingSet, null, data);
         }
 
         public MetricWireModel TryBuildThreadpoolUsageStatsMetric(ThreadType type, ThreadStatus status, int countThreadpoolThreads)
         {
             var data = MetricDataWireModel.BuildGaugeValue(countThreadpoolThreads);
-            return BuildMetric(_metricNameService, MetricNames.GetThreadpoolUsageStatsName(type, status), null, data);
+            return BuildMetric(MetricNames.GetThreadpoolUsageStatsName(type, status), null, data);
         }
 
         public MetricWireModel TryBuildThreadpoolThroughputStatsMetric(ThreadpoolThroughputStatsType type, int statsVal)
         {
             var data = MetricDataWireModel.BuildGaugeValue(statsVal);
-            return BuildMetric(_metricNameService, MetricNames.GetThreadpoolThroughputStatsName(type), null, data);
+            return BuildMetric(MetricNames.GetThreadpoolThroughputStatsName(type), null, data);
         }
 
         public MetricWireModel TryBuildCpuUserTimeMetric(TimeSpan cpuTime)
         {
             var data = MetricDataWireModel.BuildTimingData(cpuTime, cpuTime);
-            return BuildMetric(_metricNameService, MetricNames.CpuUserTime, null, data);
+            return BuildMetric(MetricNames.CpuUserTime, null, data);
         }
 
         public MetricWireModel TryBuildCpuUserUtilizationMetric(float cpuUtilization)
         {
             var data = MetricDataWireModel.BuildPercentageData(cpuUtilization);
-            return BuildMetric(_metricNameService, MetricNames.CpuUserUtilization, null, data);
+            return BuildMetric(MetricNames.CpuUserUtilization, null, data);
         }
 
         public MetricWireModel TryBuildCpuTimeRollupMetric(bool isWebTransaction, TimeSpan cpuTime)
@@ -200,14 +198,14 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
                 ? MetricNames.WebTransactionCpuTimeAll
                 : MetricNames.OtherTransactionCpuTimeAll;
             var data = MetricDataWireModel.BuildTimingData(cpuTime, TimeSpan.Zero);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildCpuTimeMetric(TransactionMetricName transactionMetricName, TimeSpan cpuTime)
         {
             var proposedName = MetricNames.TransactionCpuTime(transactionMetricName);
             var data = MetricDataWireModel.BuildTimingData(cpuTime, TimeSpan.Zero);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public static void TryBuildQueueTimeMetric(TimeSpan queueTime, TransactionMetricStatsCollection txStats)
@@ -219,25 +217,25 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         public MetricWireModel TryBuildGCBytesMetric(GCSampleType sampleType, long value)
         {
             var data = MetricDataWireModel.BuildByteData(value);
-            return BuildMetric(_metricNameService, MetricNames.GetGCMetricName(sampleType), null, data);
+            return BuildMetric(MetricNames.GetGCMetricName(sampleType), null, data);
         }
 
         public MetricWireModel TryBuildGCCountMetric(GCSampleType sampleType, int value)
         {
             var data = MetricDataWireModel.BuildCountData(value);
-            return BuildMetric(_metricNameService, MetricNames.GetGCMetricName(sampleType), null, data);
+            return BuildMetric(MetricNames.GetGCMetricName(sampleType), null, data);
         }
 
         public MetricWireModel TryBuildGCPercentMetric(GCSampleType sampleType, float value)
         {
             var data = MetricDataWireModel.BuildPercentageData(value);
-            return BuildMetric(_metricNameService, MetricNames.GetGCMetricName(sampleType), null, data);
+            return BuildMetric(MetricNames.GetGCMetricName(sampleType), null, data);
         }
 
         public MetricWireModel TryBuildGCGaugeMetric(GCSampleType sampleType, float value)
         {
             var data = MetricDataWireModel.BuildGaugeValue(value);
-            return BuildMetric(_metricNameService, MetricNames.GetGCMetricName(sampleType), null, data);
+            return BuildMetric(MetricNames.GetGCMetricName(sampleType), null, data);
         }
 
         #region Transaction apdex builders
@@ -512,87 +510,87 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         {
             var proposedName = MetricNames.GetSupportabilityName(metricName);
             var data = MetricDataWireModel.BuildCountData(count);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildSupportabilityDataUsageMetric(string metricName, long callCount, float dataSent, float dataReceived)
         {
             var data = MetricDataWireModel.BuildDataUsageValue(callCount, dataSent, dataReceived);
-            return BuildMetric(_metricNameService, metricName, null, data);
+            return BuildMetric(metricName, null, data);
         }
 
         public MetricWireModel TryBuildSupportabilitySummaryMetric(string metricName, float totalValue, int countSamples, float minValue, float maxValue)
         {
             var proposedName = MetricNames.GetSupportabilityName(metricName);
             var data = MetricDataWireModel.BuildSummaryValue(countSamples, totalValue, minValue, maxValue);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildSupportabilityGaugeMetric(string metricName, float value)
         {
             var proposedName = MetricNames.GetSupportabilityName(metricName);
             var data = MetricDataWireModel.BuildGaugeValue(value);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildDotnetFrameworkVersionMetric(DotnetFrameworkVersion version)
         {
             var proposedName = MetricNames.GetSupportabilityDotnetFrameworkVersion(version);
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildDotnetCoreVersionMetric(DotnetCoreVersion version)
         {
             var proposedName = MetricNames.GetSupportabilityDotnetCoreVersion(version);
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildCATSupportabilityCountMetric(CATSupportabilityCondition conditionType, int count)
         {
             var proposedName = MetricNames.GetSupportabilityCATConditionMetricName(conditionType);
             var data = MetricDataWireModel.BuildCountData(count);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildAgentVersionMetric(string agentVersion)
         {
             var proposedName = MetricNames.GetSupportabilityAgentVersion(agentVersion);
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildAgentVersionByHostMetric(string hostName, string agentVersion)
         {
             var proposedName = MetricNames.GetSupportabilityAgentVersionByHost(hostName, agentVersion);
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
         public MetricWireModel TryBuildLibraryVersionMetric(string assemblyName, string assemblyVersion)
         {
             var proposedName = MetricNames.GetSupportabilityLibraryVersion(assemblyName, assemblyVersion);
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
         public MetricWireModel TryBuildCustomInstrumentationMetric(string assemblyName, string className, string method)
         {
             var proposedName = MetricNames.GetSupportabilityCustomInstrumentation(assemblyName, className, method);
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
         public MetricWireModel TryBuildMetricHarvestAttemptMetric()
         {
             const string proposedName = MetricNames.SupportabilityMetricHarvestTransmit;
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildInstallTypeMetric(string installType)
         {
             var proposedName = MetricNames.GetSupportabilityInstallType(installType);
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         #region TransactionEvents
@@ -601,21 +599,21 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         {
             const string proposedName = MetricNames.SupportabilityTransactionEventsReservoirResize;
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildTransactionEventsCollectedMetric()
         {
             const string proposedName = MetricNames.SupportabilityTransactionEventsCollected;
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildTransactionEventsRecollectedMetric(int eventsRecollected)
         {
             const string proposedName = MetricNames.SupportabilityTransactionEventsRecollected;
             var data = MetricDataWireModel.BuildCountData(eventsRecollected);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildTransactionEventsSentMetric(int eventCount)
@@ -623,7 +621,7 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
             // Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
             const string proposedName = MetricNames.SupportabilityTransactionEventsSent;
             var data = MetricDataWireModel.BuildCountData(eventCount);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildTransactionEventsSeenMetric()
@@ -631,7 +629,7 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
             // Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
             const string proposedName = MetricNames.SupportabilityTransactionEventsSeen;
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         #endregion TransactionEvents
@@ -642,35 +640,35 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         {
             const string proposedName = MetricNames.SupportabilityCustomEventsReservoirResize;
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildCustomEventsCollectedMetric()
         {
             const string proposedName = MetricNames.SupportabilityCustomEventsCollected;
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildCustomEventsRecollectedMetric(int eventsRecollected)
         {
             const string proposedName = MetricNames.SupportabilityCustomEventsRecollected;
             var data = MetricDataWireModel.BuildCountData(eventsRecollected);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildCustomEventsSentMetric(int eventCount)
         {
             const string proposedName = MetricNames.SupportabilityCustomEventsSent;
             var data = MetricDataWireModel.BuildCountData(eventCount);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildCustomEventsSeenMetric()
         {
             const string proposedName = MetricNames.SupportabilityCustomEventsSeen;
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         #endregion CustomEvents
@@ -681,21 +679,21 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         {
             const string proposedName = MetricNames.SupportabilityErrorTracesCollected;
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildErrorTracesRecollectedMetric(int errorTracesRecollected)
         {
             const string proposedName = MetricNames.SupportabilityErrorTracesRecollected;
             var data = MetricDataWireModel.BuildCountData(errorTracesRecollected);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildErrorTracesSentMetric(int errorTraceCount)
         {
             const string proposedName = MetricNames.SupportabilityErrorTracesSent;
             var data = MetricDataWireModel.BuildCountData(errorTraceCount);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         #endregion ErrorTraces
@@ -706,14 +704,14 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         {
             const string proposedName = MetricNames.SupportabilityErrorEventsSent;
             var data = MetricDataWireModel.BuildCountData(eventCount);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildErrorEventsSeenMetric()
         {
             const string proposedName = MetricNames.SupportabilityErrorEventsSeen;
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         #endregion ErrorEvents
@@ -730,14 +728,14 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         {
             const string proposedName = MetricNames.SupportabilitySqlTracesRecollected;
             var data = MetricDataWireModel.BuildCountData(sqlTracesRecollected);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildSqlTracesSentMetric(int sqlTraceCount)
         {
             const string proposedName = MetricNames.SupportabilitySqlTracesSent;
             var data = MetricDataWireModel.BuildCountData(sqlTraceCount);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         #endregion SqlTraces
@@ -747,7 +745,7 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         {
             var proposedName = MetricNames.GetSupportabilityAgentHealthEvent(agentHealthEvent, additionalData);
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildAgentHealthEventMetric(AgentHealthEvent agentHealthEvent, string wrapperName,
@@ -756,14 +754,14 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
             var proposedName =
                 MetricNames.GetSupportabilityAgentHealthEvent(agentHealthEvent, $"{wrapperName}/{typeName}.{methodName}");
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildFeatureEnabledMetric(string featureName)
         {
             var proposedName = MetricNames.GetSupportabilityFeatureEnabled(featureName);
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
 
@@ -771,14 +769,14 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         {
             var proposedName = MetricNames.GetSupportabilityAgentApi(methodName);
             var data = MetricDataWireModel.BuildCountData(count);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildCustomTimingMetric(string suffix, TimeSpan time)
         {
             var proposedName = MetricNames.GetCustom(suffix);
             var data = MetricDataWireModel.BuildTimingData(time, time);
-            return BuildMetric(_metricNameService, proposedName.ToString(), null, data);
+            return BuildMetric(proposedName.ToString(), null, data);
         }
 
         public MetricWireModel TryBuildCustomCountMetric(string metricName, int count = 1)
@@ -787,68 +785,68 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
             // This is probably a historical blunder -- it's not a good thing that we allow users to use whatever text they want for the first segment.
             // However, that is what the API currently allows and it would be difficult to take that feature away.
             var data = MetricDataWireModel.BuildCountData(count);
-            return BuildMetric(_metricNameService, metricName, null, data);
+            return BuildMetric(metricName, null, data);
         }
 
         public MetricWireModel TryBuildLinuxOsMetric(bool isLinux)
         {
             var proposedName = MetricNames.GetSupportabilityLinuxOs();
             var data = MetricDataWireModel.BuildIfLinuxData(isLinux);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildBootIdError()
         {
             var proposedName = MetricNames.GetSupportabilityBootIdError();
             var data = MetricDataWireModel.BuildBootIdError();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildKubernetesUsabilityError()
         {
             var proposedName = MetricNames.GetSupportabilityKubernetesUsabilityError();
             var data = MetricDataWireModel.BuildKubernetesUsabilityError();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildAwsUsabilityError()
         {
             var proposedName = MetricNames.GetSupportabilityAwsUsabilityError();
             var data = MetricDataWireModel.BuildAwsUsabilityError();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildAzureUsabilityError()
         {
             var proposedName = MetricNames.GetSupportabilityAzureUsabilityError();
             var data = MetricDataWireModel.BuildAzureUsabilityError();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildPcfUsabilityError()
         {
             var proposedName = MetricNames.GetSupportabilityPcfUsabilityError();
             var data = MetricDataWireModel.BuildPcfUsabilityError();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildGcpUsabilityError()
         {
             var proposedName = MetricNames.GetSupportabilityGcpUsabilityError();
             var data = MetricDataWireModel.BuildGcpUsabilityError();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildAgentTimingMetric(string suffix, TimeSpan time)
         {
             var proposedName = MetricNames.GetSupportabilityAgentTimingMetric(suffix);
             var data = MetricDataWireModel.BuildTimingData(time, time);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
 
         private MetricWireModel TryBuildSupportabilityDistributedTraceMetric(string proposedName, int count = 1) =>
-            BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
+            BuildMetric(proposedName, null, MetricDataWireModel.BuildCountData(count));
 
         // New Relic Payload (Legacy DT) sup. metrics: https://source.datanerd.us/agents/agent-specs/blob/master/distributed_tracing/New-Relic-Payload.md
 
@@ -931,25 +929,25 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         {
             var proposedName = MetricNames.GetSupportabilityErrorHttpStatusCodeFromCollector(statusCode);
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildSupportabilityEndpointMethodErrorAttempts(string endpointMethod)
         {
             var proposedName = MetricNames.GetSupportabilityEndpointMethodErrorAttempts(endpointMethod);
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildSupportabilityEndpointMethodErrorDuration(string endpointMethod, TimeSpan responseDuration)
         {
             var proposedName = MetricNames.GetSupportabilityEndpointMethodErrorDuration(endpointMethod);
             var data = MetricDataWireModel.BuildTimingData(responseDuration, responseDuration);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         private MetricWireModel TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimitMetric(string proposedName, int count) =>
-            BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
+            BuildMetric(proposedName, null, MetricDataWireModel.BuildCountData(count));
 
         public MetricWireModel TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(string endpoint, int count = 1) =>
             TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimitMetric(MetricNames.GetSupportabilityPayloadsDroppedDueToMaxPayloadLimit(endpoint), count);
@@ -1007,58 +1005,64 @@ public class MetricWireModel : IAllMetricStatsCollection, IWireModel
         public MetricWireModel TryBuildLoggingMetricsLinesCountBySeverityMetric(string logLevel, int count)
         {
             var proposedName = MetricNames.GetLoggingMetricsLinesBySeverityName(logLevel);
-            return BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
+            return BuildMetric(proposedName, null, MetricDataWireModel.BuildCountData(count));
         }
 
         public MetricWireModel TryBuildLoggingMetricsLinesCountMetric(int count)
         {
             var proposedName = MetricNames.GetLoggingMetricsLinesName();
-            return BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
+            return BuildMetric(proposedName, null, MetricDataWireModel.BuildCountData(count));
         }
 
         public MetricWireModel TryBuildLoggingMetricsDeniedCountBySeverityMetric(string logLevel, int count)
         {
             var proposedName = MetricNames.GetLoggingMetricsDeniedBySeverityName(logLevel);
-            return BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
+            return BuildMetric(proposedName, null, MetricDataWireModel.BuildCountData(count));
         }
 
         public MetricWireModel TryBuildLoggingMetricsDeniedCountMetric(int count)
         {
             var proposedName = MetricNames.GetLoggingMetricsDeniedName();
-            return BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
+            return BuildMetric(proposedName, null, MetricDataWireModel.BuildCountData(count));
         }
 
         public MetricWireModel TryBuildSupportabilityLoggingEventsCollectedMetric()
         {
             const string proposedName = MetricNames.SupportabilityLoggingEventsCollected;
             var data = MetricDataWireModel.BuildCountData();
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildSupportabilityLoggingEventsSentMetric(int loggingEventCount)
         {
             const string proposedName = MetricNames.SupportabilityLoggingEventsSent;
             var data = MetricDataWireModel.BuildCountData(loggingEventCount);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildSupportabilityLoggingEventsDroppedMetric(int droppedCount)
         {
             const string proposedName = MetricNames.SupportabilityLoggingEventsDropped;
             var data = MetricDataWireModel.BuildCountData(droppedCount);
-            return BuildMetric(_metricNameService, proposedName, null, data);
+            return BuildMetric(proposedName, null, data);
         }
 
         public MetricWireModel TryBuildCountMetric(string metricName, long count)
         {
             var data = MetricDataWireModel.BuildCountData(count);
-            return BuildMetric(_metricNameService, metricName, null, data);
+            return BuildMetric(metricName, null, data);
         }
 
         public MetricWireModel TryBuildByteMetric(string metricName, long totalBytes, long? exclusiveBytes)
         {
             var data = MetricDataWireModel.BuildByteData(totalBytes, exclusiveBytes);
-            return BuildMetric(_metricNameService, metricName, null, data);
+            return BuildMetric(metricName, null, data);
+        }
+
+        public MetricWireModel TryBuildGaugeMetric(string metricName, float value)
+        {
+            var data = MetricDataWireModel.BuildGaugeValue(value);
+            return BuildMetric(metricName, null, data);
         }
 
         #endregion

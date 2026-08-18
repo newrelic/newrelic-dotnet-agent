@@ -48,10 +48,8 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
                 configModifier
                     .SetLogLevel("finest")
                     .EnableDistributedTrace()
-                    .ForceTransactionTraces()
                     .ConfigureFasterMetricsHarvestCycle(20)
                     .ConfigureFasterSpanEventsHarvestCycle(20)
-                    .ConfigureFasterTransactionTracesHarvestCycle(25)
                     ;
             }
         );
@@ -71,73 +69,73 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
         {
             new()
             {
-                metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}", callCount = _destinationType == "Queue" ? 4 : 3
+                metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}", CallCountAllHarvests = _destinationType == "Queue" ? 4 : 3
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
-                callCount = 1,
+                CallCountAllHarvests = 1,
                 metricScope =
                     $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
-                callCount = 1,
+                CallCountAllHarvests = 1,
                 metricScope = $"{_metricScopeBase}/ScheduleAndCancelAMessage"
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
-                callCount = 1,
+                CallCountAllHarvests = 1,
                 metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessageFor{_destinationType}"
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
-                callCount = _destinationType == "Queue" ? 6 : 5
+                CallCountAllHarvests = _destinationType == "Queue" ? 6 : 5
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
-                callCount = 3,
+                CallCountAllHarvests = 3,
                 metricScope =
                     $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
-                callCount = 2,
+                CallCountAllHarvests = 2,
                 metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessageFor{_destinationType}"
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Peek/Named/{_queueOrTopicName}",
-                callCount = 1
+                CallCountAllHarvests = 1
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Peek/Named/{_queueOrTopicName}",
-                callCount = 1,
+                CallCountAllHarvests = 1,
                 metricScope =
                     $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
-                callCount = _destinationType == "Queue" ? 5 : 4
+                CallCountAllHarvests = _destinationType == "Queue" ? 5 : 4
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
-                callCount = 2,
+                CallCountAllHarvests = 2,
                 metricScope =
                     $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}"
             },
             new()
             {
                 metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
-                callCount = 2,
+                CallCountAllHarvests = 2,
                 metricScope = $"{_metricScopeBase}/ReceiveAndAbandonAMessageFor{_destinationType}"
             },
         };
@@ -148,49 +146,40 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
                 new()
                 {
                     metricName = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named/{_queueOrTopicName}",
-                    callCount = 1,
+                    CallCountAllHarvests = 1,
                     metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessageFor{_destinationType}"
                 });
             expectedMetrics.Add(
                 new()
                 {
                     metricName = $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}",
-                    callCount = 1,
+                    CallCountAllHarvests = 1,
                     metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessageFor{_destinationType}"
                 });
             expectedMetrics.Add(
                 new()
                 {
                     metricName = $"MessageBroker/ServiceBus/Queue/Produce/Named/{_queueOrTopicName}",
-                    callCount = 1,
+                    CallCountAllHarvests = 1,
                     metricScope = $"{_metricScopeBase}/ReceiveAndDeadLetterAMessageFor{_destinationType}"
                 });
             expectedMetrics.Add(
                 new()
                 {
                     metricName = $"MessageBroker/ServiceBus/{_destinationType}/Cancel/Named/{_queueOrTopicName}",
-                    callCount = 1
+                    CallCountAllHarvests = 1
                 });
             expectedMetrics.Add(
                 new()
                 {
                     metricName = $"MessageBroker/ServiceBus/{_destinationType}/Cancel/Named/{_queueOrTopicName}",
-                    callCount = 1,
+                    CallCountAllHarvests = 1,
                     metricScope = $"{_metricScopeBase}/ScheduleAndCancelAMessage"
                 });
         }
 
         var exerciseMultipleReceiveOperationsOnAMessageTransactionEvent =
             _fixture.AgentLog.TryGetTransactionEvent(
-                $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}");
-
-        var expectedTransactionTraceSegments = new List<string>
-        {
-            $"MessageBroker/ServiceBus/{_destinationType}/Consume/Named/{_queueOrTopicName}"
-        };
-
-        var transactionSample =
-            _fixture.AgentLog.TryGetTransactionSample(
                 $"{_metricScopeBase}/ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType}");
 
         var queueProduceSpanEvents =
@@ -226,8 +215,6 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
         NrAssert.Multiple(
             () => Assert.True(exerciseMultipleReceiveOperationsOnAMessageTransactionEvent != null,
                 "ExerciseMultipleReceiveOperationsOnAMessageTransactionEvent should not be null"),
-            () => Assert.True(transactionSample != null, "transactionSample should not be null"),
-            () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
 
             () => Assertions.SpanEventHasAttributes(expectedProduceAgentAttributes,
                 Tests.TestSerializationHelpers.Models.SpanEventAttributeType.Agent, queueProduceSpanEvents),

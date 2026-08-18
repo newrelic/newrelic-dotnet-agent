@@ -4,7 +4,6 @@
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using Telerik.JustMock;
 using realWireModels = NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.WireModels;
@@ -17,10 +16,7 @@ public class MetricBuilderTests
     [SetUp]
     public void SetUp()
     {
-        var metricNameService = Mock.Create<IMetricNameService>();
-        Mock.Arrange(() => metricNameService.RenameMetric(Arg.IsAny<string>()))
-            .Returns(metricName => metricName);
-        _metricBuilder = new MetricWireModel.MetricBuilder(metricNameService);
+        _metricBuilder = new MetricWireModel.MetricBuilder();
     }
 
     [Test]
@@ -114,6 +110,18 @@ public class MetricBuilderTests
         var actualMetric = _metricBuilder.TryBuildGCGaugeMetric(gcSampleType, RawValue);
         NrAssert.Multiple(
             () => Assert.That(actualMetric.MetricNameModel.Name, Is.EqualTo(MetricNames.GetGCMetricName(gcSampleType))),
+            () => Assert.That(actualMetric.DataModel, Is.EqualTo(MetricDataWireModel.BuildGaugeValue(RawValue)))
+        );
+    }
+
+    [Test]
+    public void BuildGaugeMetric()
+    {
+        const string MetricName = "Custom/MyApp/GaugeMetric";
+        const float RawValue = 31872f;
+        var actualMetric = _metricBuilder.TryBuildGaugeMetric(MetricName, RawValue);
+        NrAssert.Multiple(
+            () => Assert.That(actualMetric.MetricNameModel.Name, Is.EqualTo(MetricName)),
             () => Assert.That(actualMetric.DataModel, Is.EqualTo(MetricDataWireModel.BuildGaugeValue(RawValue)))
         );
     }

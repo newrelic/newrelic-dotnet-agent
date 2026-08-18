@@ -34,10 +34,10 @@ public class ConvertMetricDataToJsonTests
         _connectionHandler = new ConnectionHandler(new JsonSerializer(), Mock.Create<ICollectorWireFactory>(), Mock.Create<IProcessStatic>(), Mock.Create<IDnsStatic>(),
             Mock.Create<ILabelsService>(), Mock.Create<Environment>(), Mock.Create<ISystemInfo>(), Mock.Create<IAgentHealthReporter>(), Mock.Create<IEnvironment>(), fileWrapper);
 
-        var validScopedMetric = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "WebTransaction/DotNet/name",
+        var validScopedMetric = MetricWireModel.BuildMetric("DotNet/name", "WebTransaction/DotNet/name",
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3.0), TimeSpan.FromSeconds(2.0)));
 
-        var validUnscopedMetric = MetricWireModel.BuildMetric(_metricNameService, "Custom/name", string.Empty,
+        var validUnscopedMetric = MetricWireModel.BuildMetric("Custom/name", string.Empty,
             MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(4.0), TimeSpan.FromSeconds(3.0)));
 
         var validMetricWireModels = new List<MetricWireModel> { validScopedMetric, validUnscopedMetric };

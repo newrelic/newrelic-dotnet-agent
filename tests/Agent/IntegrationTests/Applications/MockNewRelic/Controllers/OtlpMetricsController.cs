@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NewRelic.IntegrationTests.Models;
@@ -22,9 +23,22 @@ public class OtlpMetricsController : ControllerBase
     private const int MaxStoredSummaries = 100;
     private static readonly ConcurrentQueue<MetricsSummaryDto> _summaries = new ConcurrentQueue<MetricsSummaryDto>();
 
+    // -1 = infinite failures, 0 = no failures, N = fail next N requests
+    private static int _failuresRemaining;
+    private static int _failureStatusCode;
+
     [HttpPost]
     public async Task<IActionResult> Post()
     {
+        // Simulate failure if configured
+        var remaining = Volatile.Read(ref _failuresRemaining);
+        if (remaining != 0)
+        {
+            if (remaining > 0)
+                Interlocked.Decrement(ref _failuresRemaining);
+            return StatusCode(_failureStatusCode, "{}");
+        }
+
         // Expect application/x-protobuf
         var contentType = Request.ContentType?.ToLowerInvariant();
         if (contentType == null || !contentType.Contains("application/x-protobuf"))
@@ -93,6 +107,22 @@ public class OtlpMetricsController : ControllerBase
     public IActionResult Clear()
     {
         while (_summaries.TryDequeue(out _)) { }
+        Interlocked.Exchange(ref _failuresRemaining, 0);
+        Interlocked.Exchange(ref _failureStatusCode, 0);
+        return Ok("{}");
+    }
+
+    public class FailureModeRequest
+    {
+        public int StatusCode { get; set; }
+        public int Count { get; set; }
+    }
+
+    [HttpPost("configure-failures")]
+    public IActionResult ConfigureFailures([FromBody] FailureModeRequest body)
+    {
+        Interlocked.Exchange(ref _failureStatusCode, body.StatusCode);
+        Interlocked.Exchange(ref _failuresRemaining, body.Count);
         return Ok("{}");
     }
 

@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": ".NET agent compatibility schema",
+  "type": "object",
+  "required": ["categories"],
+  "properties": {
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "title", "tabs", "libraries"],
+        "properties": {
+          "key": { "type": "string" },
+          "title": { "type": "string" },
+          "tabs": { "$ref": "#/$defs/tabs" },
+          "intro": { "type": "string" },
+          "footnotes": { "type": "array", "items": { "type": "string" } },
+          "libraries": { "type": "array", "items": { "$ref": "#/$defs/library" } }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "tabs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "enum": ["core", "framework"] }
+    },
+    "versionSpec": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "core": { "type": "string" },
+            "framework": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "note": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["addedInAgent", "maxSupportedVersion", "knownIncompatibleVersions", "requiresHybridAgent", "freeform"] },
+        "sinceVersion": { "type": "string" },
+        "agentVersion": { "type": "string" },
+        "version": { "type": "string" },
+        "aboveVersion": { "type": "string" },
+        "text": { "type": "string" },
+        "versions": { "type": "array", "items": { "type": "string" } },
+        "tabs": { "$ref": "#/$defs/tabs" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "addedInAgent" } } },
+          "then": { "required": ["sinceVersion", "agentVersion"] } },
+        { "if": { "properties": { "type": { "const": "maxSupportedVersion" } } },
+          "then": { "required": ["version"] } },
+        { "if": { "properties": { "type": { "const": "freeform" } } },
+          "then": { "required": ["text"] } }
+      ]
+    },
+    "package": {
+      "type": "object",
+      "required": ["id", "tabs", "minVersion"],
+      "properties": {
+        "id": { "type": "string" },
+        "nugetUrl": { "type": "string" },
+        "tabs": { "$ref": "#/$defs/tabs" },
+        "versionSource": { "enum": ["derived", "manual"] },
+        "minVersion": { "$ref": "#/$defs/versionSpec" },
+        "latestVersion": { "$ref": "#/$defs/versionSpec" },
+        "minAgentVersion": { "$ref": "#/$defs/versionSpec" },
+        "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } }
+      },
+      "additionalProperties": false,
+      "if": { "properties": { "versionSource": { "const": "manual" } }, "required": ["versionSource"] },
+      "then": { "required": ["latestVersion"] }
+    },
+    "library": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "tabs": { "$ref": "#/$defs/tabs" },
+        "packages": { "type": "array", "items": { "$ref": "#/$defs/package" } },
+        "supportedVersions": { "type": "array", "items": { "type": "string" } },
+        "minAgentVersion": { "$ref": "#/$defs/versionSpec" },
+        "methods": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } }
+      },
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["packages"] },
+        { "required": ["supportedVersions"] },
+        { "required": ["methods"] },
+        { "required": ["notes"] }
+      ]
+    }
+  }
+}

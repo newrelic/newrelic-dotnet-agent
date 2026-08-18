@@ -10,6 +10,7 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Logging;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -32,6 +33,7 @@ public class ConnectionHandlerTests
     private ConnectionHandler _connectionHandler;
     private ICollectorWire _dataRequestWire;
     private IFileWrapper _fileWrapper;
+    private ILogger _nrLogger;
 
     [SetUp]
     public void SetUp()
@@ -48,6 +50,9 @@ public class ConnectionHandlerTests
         _configuration = Mock.Create<IConfiguration>();
         _dataRequestWire = Mock.Create<ICollectorWire>();
         _fileWrapper = Mock.Create<IFileWrapper>();
+
+        _nrLogger = Mock.Create<ILogger>();
+        Log.Initialize(_nrLogger);
 
         Mock.Arrange(() => _configuration.SecurityPoliciesTokenExists).Returns(false);
         Mock.Arrange(() => _configuration.ApplicationNames).Returns(new List<string> { "TestApp" });
@@ -77,6 +82,7 @@ public class ConnectionHandlerTests
     {
         _connectionHandler.Dispose();
         _labelsService.Dispose();
+        Log.Initialize(new NoOpLogger());
     }
 
     [Test]
@@ -107,6 +113,68 @@ public class ConnectionHandlerTests
 
         // Assert
         Mock.Assert(() => _agentHealthReporter.SetAgentControlStatus(HealthCodes.Healthy), Occurs.Once());
+    }
+
+    [Test]
+    public void Connect_ShouldLogDeprecationMessage_WhenSecurityPoliciesTokenExists()
+    {
+        // Arrange
+        Mock.Arrange(() => _configuration.SecurityPoliciesTokenExists).Returns(true);
+
+        var preconnectResult = new PreconnectResult { RedirectHost = "redirectHost" };
+
+        var serverConfiguration = new ServerConfiguration
+        {
+            AgentRunId = "12345",
+        };
+
+        var collectorWire = Mock.Create<ICollectorWire>();
+        Mock.Arrange(() => _collectorWireFactory.GetCollectorWire(Arg.IsAny<IConfiguration>(), Arg.IsAny<IAgentHealthReporter>()))
+            .Returns(collectorWire);
+
+        Mock.Arrange(() => _serializer.Serialize(Arg.IsAny<object[]>())).Returns("serializedData");
+        Mock.Arrange(() => _serializer.Deserialize<CollectorResponseEnvelope<PreconnectResult>>(Arg.IsAny<string>())).Returns(new CollectorResponseEnvelope<PreconnectResult>(preconnectResult));
+        Mock.Arrange(() => _serializer.Deserialize<CollectorResponseEnvelope<Dictionary<string, object>>>(Arg.IsAny<string>()))
+            .Returns(new CollectorResponseEnvelope<Dictionary<string, object>>(
+                JsonConvert.DeserializeObject<Dictionary<string, object>>(
+                    JsonConvert.SerializeObject(serverConfiguration))));
+
+        // Act
+        _connectionHandler.Connect();
+
+        // Assert
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("securityPoliciesToken")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Connect_ShouldNotLogDeprecationMessage_WhenSecurityPoliciesTokenDoesNotExist()
+    {
+        // Arrange
+        Mock.Arrange(() => _configuration.SecurityPoliciesTokenExists).Returns(false);
+
+        var preconnectResult = new PreconnectResult { RedirectHost = "redirectHost" };
+
+        var serverConfiguration = new ServerConfiguration
+        {
+            AgentRunId = "12345",
+        };
+
+        var collectorWire = Mock.Create<ICollectorWire>();
+        Mock.Arrange(() => _collectorWireFactory.GetCollectorWire(Arg.IsAny<IConfiguration>(), Arg.IsAny<IAgentHealthReporter>()))
+            .Returns(collectorWire);
+
+        Mock.Arrange(() => _serializer.Serialize(Arg.IsAny<object[]>())).Returns("serializedData");
+        Mock.Arrange(() => _serializer.Deserialize<CollectorResponseEnvelope<PreconnectResult>>(Arg.IsAny<string>())).Returns(new CollectorResponseEnvelope<PreconnectResult>(preconnectResult));
+        Mock.Arrange(() => _serializer.Deserialize<CollectorResponseEnvelope<Dictionary<string, object>>>(Arg.IsAny<string>()))
+            .Returns(new CollectorResponseEnvelope<Dictionary<string, object>>(
+                JsonConvert.DeserializeObject<Dictionary<string, object>>(
+                    JsonConvert.SerializeObject(serverConfiguration))));
+
+        // Act
+        _connectionHandler.Connect();
+
+        // Assert
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("securityPoliciesToken")), Arg.IsAny<object[]>()), Occurs.Never());
     }
 
     [Test]

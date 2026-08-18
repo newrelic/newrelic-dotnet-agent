@@ -51,7 +51,6 @@ public class TransactionAttributeMakerTests
     private configuration _localConfig;
     private ServerConfiguration _serverConfig;
     private RunTimeConfiguration _runTimeConfiguration;
-    private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
     private IBootstrapConfiguration _bootstrapConfiguration;
 
     private IEnvironment _environment;
@@ -65,7 +64,7 @@ public class TransactionAttributeMakerTests
 
     private void UpdateConfiguration()
     {
-        _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
         EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
     }
@@ -78,7 +77,6 @@ public class TransactionAttributeMakerTests
         _httpRuntimeStatic = Mock.Create<IHttpRuntimeStatic>();
         _configurationManagerStatic = Mock.Create<IConfigurationManagerStatic>();
         _dnsStatic = Mock.Create<IDnsStatic>();
-        _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         _configurationService = Mock.Create<IConfigurationService>();
         _bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
         _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
@@ -1669,12 +1667,11 @@ public class TransactionAttributeMakerTests
         var localConfig = new configuration();
         var serverConfig = new ServerConfiguration();
         var runTimeConfig = new RunTimeConfiguration();
-        var securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         var dnsStatic = Mock.Create<IDnsStatic>();
         var bootstrapConfiguration = Mock.Create<IBootstrapConfiguration>();
         var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
-        _configuration = new TestableDefaultConfiguration(environment, localConfig, serverConfig, runTimeConfig, securityPoliciesConfiguration, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic);
+        _configuration = new TestableDefaultConfiguration(environment, localConfig, serverConfig, runTimeConfig, bootstrapConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic);
         Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 
         Mock.Arrange(() => dnsStatic.GetHostName()).Returns("coconut");

@@ -18,7 +18,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 /// created successfully.
 /// </summary>
 [Trait("Architecture", "amd64")]
-[Trait("Distro", "Ubuntu")]
+[Trait("TestArea", "Core")]
 public class LinuxUnicodeByteOrderMarkTest : NewRelicIntegrationTest<LinuxUnicodeByteOrderMarkTestFixture>
 {
     private readonly LinuxUnicodeByteOrderMarkTestFixture _fixture;

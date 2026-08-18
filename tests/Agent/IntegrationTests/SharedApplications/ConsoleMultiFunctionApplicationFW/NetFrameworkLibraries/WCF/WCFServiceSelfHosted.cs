@@ -77,6 +77,53 @@ public class WCFServiceSelfHosted
     }
 
     /// <summary>
+    /// Hosts the minimal INullOperationContextEchoService/NullOperationContextEchoService
+    /// contract (see NullOperationContextEcho.cs) with an IOperationInvoker that
+    /// dispatches the instrumented SyncMethodInvoker.Invoke onto a fresh thread,
+    /// so it runs with no ambient OperationContext.
+    ///
+    /// Regression coverage for the Wcf3 MethodInvokerWrapper null-dereference in
+    /// CaptureHttpRequestHeadersAndMethod.
+    ///
+    /// This does not delegate to StartService: that method hosts the shared
+    /// IWcfService/WcfService contract, whose SyncGetData implementation makes a
+    /// real external call to https://www.google.com/ on every invocation. A
+    /// tight loop of off-thread calls trips Google's rate limiter after the
+    /// first call, which truncates the run with a FaultException unrelated to
+    /// the null-OperationContext defect. NetTcp is the only binding this test
+    /// uses (see WCFService_Self_NullOperationContext's comment on why), so only
+    /// that binding is implemented here.
+    /// </summary>
+    [LibraryMethod]
+    public void StartServiceWithOffThreadInvoker(string bindingType, int port, string relativePath)
+    {
+        relativePath = relativePath.TrimStart('/');
+
+        if (_wcfService_SelfHosted != null)
+        {
+            StopService();
+        }
+
+        WCFLibraryHelpers.StartAgentWithExternalCall();
+        var bindingTypeEnum = (WCFBindingType)Enum.Parse(typeof(WCFBindingType), bindingType, true);
+        var baseAddress = WCFLibraryHelpers.GetEndpointAddress(bindingTypeEnum, port, relativePath);
+        ConsoleMFLogger.Info($"Starting off-thread-invoker WCF Service using {bindingTypeEnum} binding at endpoint {baseAddress}");
+        _wcfService_SelfHosted = new ServiceHost(typeof(NullOperationContextEchoService), baseAddress);
+        _wcfService_SelfHosted.Description.Behaviors.Add(new OffThreadInvokerBehavior());
+
+        switch (bindingTypeEnum)
+        {
+            case WCFBindingType.NetTcp:
+                _wcfService_SelfHosted.AddServiceEndpoint(typeof(INullOperationContextEchoService), new NetTcpBinding(), baseAddress);
+                break;
+            default:
+                throw new NotImplementedException($"Binding Type {bindingTypeEnum} is not supported by StartServiceWithOffThreadInvoker");
+        }
+
+        _wcfService_SelfHosted.Open();
+    }
+
+    /// <summary>
     /// Stops the WCF Service
     /// </summary>
     [LibraryMethod]

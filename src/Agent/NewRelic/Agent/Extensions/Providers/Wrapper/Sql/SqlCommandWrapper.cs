@@ -82,9 +82,34 @@ public abstract class SqlCommandWrapperBase : IWrapper
             return Delegates.NoOp;
 
         var sql = sqlCommand.CommandText ?? string.Empty;
+
+        if (agent.Configuration.TransactionTracerSqlMetadataCommentsEnabled &&
+            !SqlMetadataCommentBuilder.ShouldSkipCommentForCommandType(sqlCommand.CommandType))
+        {
+            var comment = SqlMetadataCommentBuilder.BuildComment(agent.Configuration.EntityGuid);
+            var commentedSql = SqlMetadataCommentBuilder.PrependCommentToSql(sql, comment);
+            if (commentedSql != sql)
+            {
+                sqlCommand.CommandText = commentedSql;
+                sql = commentedSql;
+            }
+        }
+
         var vendor = SqlWrapperHelper.GetVendorName(sqlCommand);
-        object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString, agent.Configuration.UtilizationHostName);
-        var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);
+
+        // Read the connection string once and reuse it. The getter rebuilds the string
+        // with security info removed, so every read allocates. Using one local for both
+        // the cache key and the parser call also stops the two from ever disagreeing.
+        var connection = sqlCommand.Connection;
+        var connectionString = connection.ConnectionString;
+
+        object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, connectionString, agent.Configuration.UtilizationHostName);
+        var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(connectionString, GetConnectionInfo);
+
+        // The active database can be changed on an open connection (ChangeDatabase,
+        // ChangeDatabaseAsync, or a USE statement) without the connection string
+        // changing, so trust the live value over the parsed one when they disagree.
+        connectionInfo = ConnectionInfoResolver.ResolveWithLiveDatabase(connectionInfo, connection.Database);
 
         var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, sqlCommand.CommandType, sql);
 
