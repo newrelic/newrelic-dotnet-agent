@@ -6,6 +6,8 @@ This test suite can be run on both [Windows](#testing-on-windows-with-visual-stu
 
 These tests execute against valid New Relic accounts and test a variety of features.
 
+There is also a separate `ContainerIntegrationTests.sln` solution that runs instrumented Linux test applications inside Docker containers, requiring Docker Desktop. See [ContainerIntegrationTests/README.md](../tests/Agent/IntegrationTests/ContainerIntegrationTests/README.md) for how to add a new container test.
+
 ## Testing on Windows with Visual Studio
 
 Visual Studio 2022 or greater required.
