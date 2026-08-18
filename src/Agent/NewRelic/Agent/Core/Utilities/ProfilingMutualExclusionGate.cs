@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Core.ThreadProfiling;
+namespace NewRelic.Agent.Core.Utilities;
 
 // Process-wide lock serializing the ThreadProfilingService/ContinuousProfilingService start-guard
 // check-and-arm sequences, so at most one profiler can decide "the other isn't active" and arm
