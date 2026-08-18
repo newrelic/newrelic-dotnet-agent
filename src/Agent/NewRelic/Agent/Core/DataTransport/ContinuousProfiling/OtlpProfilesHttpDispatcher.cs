@@ -7,18 +7,17 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 
-namespace NewRelic.Agent.Core.ContinuousProfiling;
+namespace NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 
 /// <summary>
 /// The real OTLP/HTTP protobuf dispatch for continuous-profiling. Builds and POSTs a serialized
 /// <see cref="OpenTelemetry.Proto.Collector.Profiles.V1Development.ExportProfilesServiceRequest"/>
 /// to the resolved profiles endpoint with <c>Content-Type: application/x-protobuf</c> and the
 /// <c>api-key</c> (license key) header. Entity association (service.name / resource attributes) is
-/// already stamped on the request body by <see cref="OtlpProfileBuilder"/>.
+/// already stamped on the request body by <see cref="NewRelic.Agent.Core.ContinuousProfiling.OtlpProfileBuilder"/>.
 ///
 /// It is wired as the <c>httpPost</c> delegate of <see cref="ProfilesTransport"/>, whose no-send guard
 /// has been removed, so this dispatch is invoked on every drain. The semantics are best-effort: the real

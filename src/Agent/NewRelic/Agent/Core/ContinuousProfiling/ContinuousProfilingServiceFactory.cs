@@ -4,6 +4,7 @@
 using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Extensions.Logging;

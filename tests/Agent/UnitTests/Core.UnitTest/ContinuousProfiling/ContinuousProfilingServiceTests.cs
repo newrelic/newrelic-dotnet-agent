@@ -11,6 +11,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Time;

@@ -1,12 +1,12 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.UnitTest.ContinuousProfiling;
+namespace NewRelic.Agent.Core.UnitTest.DataTransport.ContinuousProfiling;
 
 [TestFixture]
 public class ProfilesEndpointResolverTests

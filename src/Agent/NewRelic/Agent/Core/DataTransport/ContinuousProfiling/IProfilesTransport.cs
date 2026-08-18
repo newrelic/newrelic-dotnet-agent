@@ -3,7 +3,7 @@
 
 using OpenTelemetry.Proto.Collector.Profiles.V1Development;
 
-namespace NewRelic.Agent.Core.ContinuousProfiling;
+namespace NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 
 /// <summary>
 /// Dispatches a built <see cref="ExportProfilesServiceRequest"/> to the collector.

@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using NewRelic.Agent.Core.DataTransport;
 
-namespace NewRelic.Agent.Core.ContinuousProfiling;
+namespace NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 
 /// <summary>
 /// Resolves the OTLP/HTTP endpoint that continuous-profiling data is posted to. The endpoint is

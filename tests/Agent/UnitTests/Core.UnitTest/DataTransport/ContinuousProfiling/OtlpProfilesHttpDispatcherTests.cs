@@ -6,11 +6,11 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.ContinuousProfiling;
+using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.UnitTest.ContinuousProfiling;
+namespace NewRelic.Agent.Core.UnitTest.DataTransport.ContinuousProfiling;
 
 [TestFixture]
 public class OtlpProfilesHttpDispatcherTests

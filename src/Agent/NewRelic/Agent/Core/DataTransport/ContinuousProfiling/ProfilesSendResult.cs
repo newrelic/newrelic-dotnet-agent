@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Core.ContinuousProfiling;
+namespace NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 
 /// <summary>
 /// Outcome of an OTLP profiles POST: whether ingest accepted it, the HTTP status code, and the response

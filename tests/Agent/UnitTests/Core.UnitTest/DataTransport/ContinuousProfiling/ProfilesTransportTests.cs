@@ -3,7 +3,7 @@
 
 using Google.Protobuf;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.ContinuousProfiling;
+using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using OpenTelemetry.Proto.Collector.Profiles.V1Development;
@@ -12,7 +12,7 @@ using OpenTelemetry.Proto.Profiles.V1Development;
 using OpenTelemetry.Proto.Resource.V1;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.UnitTest.ContinuousProfiling;
+namespace NewRelic.Agent.Core.UnitTest.DataTransport.ContinuousProfiling;
 
 [TestFixture]
 public class ProfilesTransportTests

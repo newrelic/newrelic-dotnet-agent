@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenTelemetry.Proto.Collector.Profiles.V1Development;
 
-namespace NewRelic.Agent.Core.ContinuousProfiling;
+namespace NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 
 /// <summary>
 /// Serializes an <see cref="ExportProfilesServiceRequest"/> and dispatches it to the collector
