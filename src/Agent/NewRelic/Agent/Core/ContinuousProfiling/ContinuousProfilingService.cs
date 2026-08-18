@@ -745,8 +745,8 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
                 // Surface the native BatchStats for CP overhead/fidelity analysis (and OTel FinalStats parity):
                 // microsSuspended = the stop-the-world window this sweep; skipped = threads/frames the walk missed.
-                // onCpu/total is the live signal that the native on-CPU classification is working, since NR CP
-                // is no-send-guarded and has no other observation path for it.
+                // onCpu/total is the live on-CPU classification signal, cheap to read at finest without
+                // needing to inspect an actual sent OTLP payload.
                 if (batchStats != null && Log.IsFinestEnabled)
                     Log.Finest("[ContinuousProfiling] batch stats: microsSuspended={0} threads={1} frames={2} skipped={3} onCpu={4}/{5}",
                         batchStats.MicrosSuspended, batchStats.Threads, batchStats.Frames, batchStats.Skipped, CountOnCpu(samples), samples.Count);

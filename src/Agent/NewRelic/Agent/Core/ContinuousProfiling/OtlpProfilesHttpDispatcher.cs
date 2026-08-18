@@ -95,8 +95,10 @@ public class OtlpProfilesHttpDispatcher
         }
         catch (Exception ex)
         {
-            // Best-effort: log and drop. A transport failure must never surface into the host, and we
-            // deliberately do not retry -- a drained batch is disposable.
+            // Best-effort: log and drop. A transport failure must never surface into the host. Transient
+            // failures already got a bounded retry via CustomRetryHandler (see the class doc); once that
+            // budget is exhausted, or for a non-retryable outcome, the batch is disposable -- there is no
+            // held-over-cycle recovery like a harvest, so give up and let the next drain try fresh.
             Log.Debug(ex, "[ContinuousProfiling] Profiles POST to {0} failed; dropping the batch.", endpoint);
             return new ProfilesSendResult(false, 0, string.Empty);
         }
