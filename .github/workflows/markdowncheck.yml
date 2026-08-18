@@ -44,7 +44,6 @@ jobs:
           fail: false
           args: >-
             --cache
-            --cache-exclude-status '403,429,500..599'
             --max-cache-age 1d
             --max-retries 3
             --retry-wait-time 5
@@ -68,41 +67,144 @@ jobs:
           script: |
             const exitCode = '${{ steps.lychee.outputs.exit_code }}';
             const fs = require('fs');
-            const label = 'linkcheck';
-            const title = 'Broken links detected in documentation';
 
-            const { data: issues } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: label,
-              state: 'open'
-            });
+            const TITLE = 'Broken links detected in documentation';
+            const LABEL_CONFIRMED = 'linkcheck';
+            const LABEL_PENDING = 'linkcheck-pending';
+            const CLEAN_MARKER = 'Clean run on';
+            const FAIL_MARKER = 'Failing run on';
+            const MAX_BODY = 60000; // GitHub issue body/comment limit is 65536
+            const REOPEN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-            if (exitCode !== '0') {
-              const body = fs.readFileSync('lychee/out.md', 'utf8');
-              if (issues.length > 0) {
-                await github.rest.issues.update({
+            function truncate(body) {
+              if (body.length <= MAX_BODY) {
+                return body;
+              }
+              return body.slice(0, MAX_BODY) + '\n\n... (truncated, see workflow run for full report)';
+            }
+
+            function hasLabel(issue, label) {
+              return issue.labels.some(l => (typeof l === 'string' ? l : l.name) === label);
+            }
+
+            function withLinkcheckLabel(issue, label) {
+              const others = issue.labels
+                .map(l => (typeof l === 'string' ? l : l.name))
+                .filter(name => name !== LABEL_CONFIRMED && name !== LABEL_PENDING);
+              return [...others, label];
+            }
+
+            async function lastCommentIsCleanMarker(issueNumber) {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                per_page: 1,
+                sort: 'created',
+                direction: 'desc'
+              });
+              return comments.length > 0 && comments[0].body.startsWith(CLEAN_MARKER);
+            }
+
+            async function findTrackingIssue() {
+              for (const label of [LABEL_CONFIRMED, LABEL_PENDING]) {
+                const { data: issues } = await github.rest.issues.listForRepo({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  issue_number: issues[0].number,
-                  body
+                  labels: label,
+                  state: 'all',
+                  sort: 'created',
+                  direction: 'desc',
+                  per_page: 5
                 });
-              } else {
+                // listForRepo returns pull requests too; they share the issues API.
+                const found = issues.find(issue => !issue.pull_request && issue.title === TITLE);
+                if (found) {
+                  return found;
+                }
+              }
+              return null;
+            }
+
+            if (exitCode !== '0') {
+              const body = truncate(fs.readFileSync('lychee/out.md', 'utf8'));
+              const issue = await findTrackingIssue();
+              const closedTooLongAgo = issue
+                && issue.state === 'closed'
+                && (Date.now() - new Date(issue.closed_at).getTime()) > REOPEN_WINDOW_MS;
+
+              if (!issue || closedTooLongAgo) {
                 await github.rest.issues.create({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  title,
+                  title: TITLE,
                   body,
-                  labels: [label]
+                  labels: [LABEL_PENDING]
                 });
-              }
-            } else if (issues.length > 0) {
-              for (const issue of issues) {
+              } else if (issue.state === 'closed') {
                 await github.rest.issues.update({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issue.number,
-                  state: 'closed'
+                  state: 'open',
+                  labels: withLinkcheckLabel(issue, LABEL_PENDING),
+                  body
                 });
+              } else if (hasLabel(issue, LABEL_CONFIRMED)) {
+                // A failing night must invalidate a stale clean marker, or the
+                // next clean night reads it as the second consecutive one.
+                const mustInvalidateCleanMarker = await lastCommentIsCleanMarker(issue.number);
+
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body
+                });
+
+                if (mustInvalidateCleanMarker) {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    body: `${FAIL_MARKER} ${new Date().toISOString().slice(0, 10)}. Clean-run streak reset.`
+                  });
+                }
+              } else {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  labels: withLinkcheckLabel(issue, LABEL_CONFIRMED),
+                  body
+                });
+              }
+            } else {
+              const issue = await findTrackingIssue();
+              if (issue && issue.state === 'open') {
+                if (hasLabel(issue, LABEL_PENDING)) {
+                  await github.rest.issues.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    state: 'closed'
+                  });
+                } else {
+                  if (await lastCommentIsCleanMarker(issue.number)) {
+                    await github.rest.issues.update({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issue.number,
+                      state: 'closed'
+                    });
+                  } else {
+                    await github.rest.issues.createComment({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issue.number,
+                      body: `${CLEAN_MARKER} ${new Date().toISOString().slice(0, 10)}. Closing automatically if tomorrow's run is also clean.`
+                    });
+                  }
+                }
               }
             }
