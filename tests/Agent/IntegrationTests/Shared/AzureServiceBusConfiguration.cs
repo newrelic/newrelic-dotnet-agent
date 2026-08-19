@@ -8,6 +8,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared;
 public class AzureServiceBusConfiguration
 {
     public const string FuncTestQueueName = "azure_func_test_queue";
+    // The exerciser and the fixture-owned scope must agree on the topic subscription name.
+    public const string SubscriptionName = "test";
     private static string _connectionString;
 
     public static string ConnectionString

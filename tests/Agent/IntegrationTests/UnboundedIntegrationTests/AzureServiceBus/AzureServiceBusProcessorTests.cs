@@ -6,16 +6,18 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures;
 using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus;
 
-public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>, IDisposable
     where TFixture : ConsoleDynamicMethodFixture
 {
     private readonly TFixture _fixture;
     private readonly string _queueOrTopicName;
     private readonly string _destinationType;
+    private ServiceBusEntityScope _entityScope;
 
     private readonly string _processMetricNameBase;
     private readonly string _settleMetricNameBase;
@@ -29,8 +31,8 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
         _fixture.SetTimeout(TimeSpan.FromMinutes(1));
         _fixture.TestLogger = output;
 
-        _queueOrTopicName = $"test-queue-{Guid.NewGuid()}";
         _destinationType = destinationType;
+        _queueOrTopicName = $"test-{_destinationType.ToLowerInvariant()}-{Guid.NewGuid()}";
 
         _topicScopeSuffix = null;
         if (_destinationType == "Topic")
@@ -43,15 +45,18 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
         _settleMetricNameBase = $"MessageBroker/ServiceBus/{_destinationType}/Settle/Named";
         _transactionNameBase = $"OtherTransaction/Message/ServiceBus/{_destinationType}/Named";
 
-        _fixture.AddCommand($"AzureServiceBusExerciser Initialize{_destinationType} {_queueOrTopicName}");
         _fixture.AddCommand($"AzureServiceBusExerciser ExerciseServiceBusProcessor_SendMessagesFor{_destinationType} {_queueOrTopicName}");
         _fixture.AddCommand($"AzureServiceBusExerciser ExerciseServiceBusProcessor_ReceiveMessagesFor{_destinationType} {_queueOrTopicName}");
-        _fixture.AddCommand($"AzureServiceBusExerciser Delete{_destinationType} {_queueOrTopicName}");
 
         _fixture.AddActions
         (
             setupConfiguration: () =>
             {
+                // The fixture owns the entity, not the application under test. Recreating it per attempt
+                // keeps a retry from seeing messages the previous attempt left behind.
+                _entityScope?.Dispose();
+                _entityScope = ServiceBusEntityScope.Create(_destinationType, _queueOrTopicName);
+
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
                 configModifier
@@ -69,6 +74,11 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
         );
 
         _fixture.Initialize();
+    }
+
+    public void Dispose()
+    {
+        _entityScope?.Dispose();
     }
 
     [Fact]
