@@ -2,7 +2,6 @@
     "IsEncrypted": false,
     "Values": {
         "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-        "FuncTestFailureQueueName": "azure_func_test_failure_queue"
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
     }
 }

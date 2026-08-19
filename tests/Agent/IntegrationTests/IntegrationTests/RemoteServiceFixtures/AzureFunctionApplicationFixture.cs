@@ -1,10 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections.Generic;
+using System.Net;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using NewRelic.Agent.IntegrationTests.Shared;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
@@ -49,26 +48,16 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
     public void Get(string endpoint)
     {
         var address = $"http://{DestinationServerName}:{Port}/{endpoint}";
-        var headers = new List<KeyValuePair<string, string>>
-        {
-            new KeyValuePair<string, string> ("traceparent", $"00-{TestTraceId}-{TestTraceParent}-00"),
-            new KeyValuePair<string, string> ("tracestate", $"{AccountId}@nr={Version}-{ParentType}-{AccountId}-{AppId}-{SpanId}-{TransactionId}-{Sampled}-" + Priority + $"-{Timestamp},{TestOtherVendorEntries}")
-        };
 
-        GetStringAndIgnoreResult(address, headers);
+        GetStringAndIgnoreResult(address, BuildDistributedTracingHeaders());
     }
 
     public void Post(string endpoint, string payload)
     {
         var address = $"http://{DestinationServerName}:{Port}/{endpoint}";
         var inputPayload = $$"""{"input":"{{payload}}"}""";
-        var headers = new List<KeyValuePair<string, string>>
-        {
-            new KeyValuePair<string, string> ("traceparent", $"00-{TestTraceId}-{TestTraceParent}-00"),
-            new KeyValuePair<string, string> ("tracestate", $"{AccountId}@nr={Version}-{ParentType}-{AccountId}-{AppId}-{SpanId}-{TransactionId}-{Sampled}-" + Priority + $"-{Timestamp},{TestOtherVendorEntries}")
-        };
 
-        PostJson(address, inputPayload, headers);
+        PostJson(address, inputPayload, BuildDistributedTracingHeaders());
     }
 
     public void PostToAzureFuncTool(string triggerName, string payload)
@@ -79,9 +68,23 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
         PostJson(address, inputPayload);
     }
 
+    public void GetAndAssertStatusCode(string endpoint, HttpStatusCode expectedStatusCode)
+    {
+        var address = $"http://{DestinationServerName}:{Port}/{endpoint}";
+
+        GetAndAssertStatusCode(address, expectedStatusCode, BuildDistributedTracingHeaders());
+    }
+
     public bool AzureFunctionModeEnabled { get; }
 
-    public string FunctionHostOutput => ((AzureFuncTool)RemoteApplication).StandardOutput;
+    private List<KeyValuePair<string, string>> BuildDistributedTracingHeaders()
+    {
+        return new List<KeyValuePair<string, string>>
+        {
+            new KeyValuePair<string, string> ("traceparent", $"00-{TestTraceId}-{TestTraceParent}-00"),
+            new KeyValuePair<string, string> ("tracestate", $"{AccountId}@nr={Version}-{ParentType}-{AccountId}-{AppId}-{SpanId}-{TransactionId}-{Sampled}-" + Priority + $"-{Timestamp},{TestOtherVendorEntries}")
+        };
+    }
 }
 
 #region Isolated model fixtures
@@ -108,6 +111,14 @@ public class AzureFunctionApplicationFixtureHttpTriggerFWLatest : AzureFunctionA
     }
 }
 
+public class AzureFunctionApplicationFixtureHttpTriggerThrowsCoreLatest : AzureFunctionApplicationFixture
+{
+    public AzureFunctionApplicationFixtureHttpTriggerThrowsCoreLatest()
+        : base("httpTriggerFunctionThatThrows httpTriggerFunctionUsingSimpleInvocation", "net10.0", true)
+    {
+    }
+}
+
 public class AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest : AzureFunctionApplicationFixture
 {
     public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net10.0", false)
@@ -129,65 +140,6 @@ public class AzureFunctionApplicationFixtureQueueTriggerCoreLatest : AzureFuncti
     }
 }
 
-/// <summary>
-/// Base for the Service Bus failure-path fixtures. Each run gets its own queue. The timeout function
-/// never completes its message, so on a shared queue the service hands that message to the next test
-/// that listens, which then records an extra transaction.
-/// </summary>
-public abstract class AzureFunctionServiceBusFailureFixture : AzureFunctionApplicationFixture
-{
-    private readonly string _queueName;
-
-    private ServiceBusQueueScope _queueScope;
-
-    protected AzureFunctionServiceBusFailureFixture(string functionNames)
-        : base(functionNames, "net10.0", true)
-    {
-        _queueName = $"azure-func-test-failure-queue-{Guid.NewGuid()}";
-
-        SetAdditionalEnvironmentVariable("ServiceBus", AzureServiceBusConfiguration.ConnectionString);
-        SetAdditionalEnvironmentVariable(AzureServiceBusConfiguration.FuncTestFailureQueueNameSetting, _queueName);
-    }
-
-    public override void Initialize()
-    {
-        // xUnit constructs the test class once per test method, and each construction calls Initialize on
-        // this shared fixture. The base call ignores every call after the first, so create the queue once.
-        // Create it before the host starts: a listener that binds to a missing entity retries.
-        _queueScope ??= ServiceBusQueueScope.Create(_queueName);
-
-        base.Initialize();
-    }
-
-    public override void Dispose()
-    {
-        // Stop the app first. A listener that shuts down against a deleted queue logs errors.
-        base.Dispose();
-
-        _queueScope?.Dispose();
-    }
-}
-
-public class AzureFunctionApplicationFixtureServiceBusTriggerThrowsCoreLatest : AzureFunctionServiceBusFailureFixture
-{
-    public AzureFunctionApplicationFixtureServiceBusTriggerThrowsCoreLatest()
-        : base("ServiceBusTriggerFunction_Throws HttpTrigger_SendServiceBusMessage")
-    {
-    }
-}
-
-public class AzureFunctionApplicationFixtureServiceBusTriggerTimeoutCoreLatest : AzureFunctionServiceBusFailureFixture
-{
-    public static readonly TimeSpan FunctionTimeout = TimeSpan.FromSeconds(30);
-
-    public AzureFunctionApplicationFixtureServiceBusTriggerTimeoutCoreLatest()
-        : base("ServiceBusTriggerFunction_Timeout HttpTrigger_SendServiceBusMessage")
-    {
-        // The Functions host reads AzureFunctionsJobHost__<path> app settings as host.json overrides,
-        // so this sets functionTimeout for this fixture only and leaves host.json alone.
-        SetAdditionalEnvironmentVariable("AzureFunctionsJobHost__functionTimeout", FunctionTimeout.ToString(@"hh\:mm\:ss"));
-    }
-}
 #endregion
 
 #region InProc model fixtures

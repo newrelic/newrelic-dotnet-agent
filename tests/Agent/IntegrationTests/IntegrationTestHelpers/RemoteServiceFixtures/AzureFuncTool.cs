@@ -29,10 +29,6 @@ public class AzureFuncTool : RemoteService
         CaptureStandardOutput = false; // we implement our own output capture here, so don't use the base class implementation
     }
 
-    // The Functions host relays worker log output and its own diagnostics (function timeouts, for
-    // example) to stdout. Tests that assert on host behavior read it here.
-    public string StandardOutput => _stdOutStringBuilder.ToString();
-
     public override void CopyToRemote()
     {
         base.CopyToRemote();
