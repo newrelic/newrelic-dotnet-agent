@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
-using Azure.Messaging.ServiceBus.Administration;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
@@ -17,32 +16,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus;
 [Library]
 internal class AzureServiceBusExerciser
 {
-    private const string Subscription = "test";
+    private const string Subscription = AzureServiceBusConfiguration.SubscriptionName;
 
     #region Queue
-
-    [LibraryMethod]
-    public static async Task InitializeQueue(string queueName)
-    {
-        var adminClient = new ServiceBusAdministrationClient(AzureServiceBusConfiguration.ConnectionString);
-        // if the queue exists, delete it and re-create it
-        if (await adminClient.QueueExistsAsync(queueName))
-        {
-            await adminClient.DeleteQueueAsync(queueName);
-        }
-
-        await adminClient.CreateQueueAsync(queueName);
-    }
-
-    [LibraryMethod]
-    public static async Task DeleteQueue(string queueName)
-    {
-        var adminClient = new ServiceBusAdministrationClient(AzureServiceBusConfiguration.ConnectionString);
-        if (await adminClient.QueueExistsAsync(queueName))
-        {
-            await adminClient.DeleteQueueAsync(queueName);
-        }
-    }
 
     [LibraryMethod]
     [Transaction]
@@ -212,30 +188,6 @@ internal class AzureServiceBusExerciser
     #endregion Queue
 
     #region Topic
-
-    [LibraryMethod]
-    public static async Task InitializeTopic(string topicName)
-    {
-        var adminClient = new ServiceBusAdministrationClient(AzureServiceBusConfiguration.ConnectionString);
-        // if the topic exists, delete it and re-create it
-        if (await adminClient.TopicExistsAsync(topicName))
-        {
-            await adminClient.DeleteTopicAsync(topicName);
-        }
-
-        await adminClient.CreateTopicAsync(topicName);
-        await adminClient.CreateSubscriptionAsync(topicName, Subscription);
-    }
-
-    [LibraryMethod]
-    public static async Task DeleteTopic(string topicName)
-    {
-        var adminClient = new ServiceBusAdministrationClient(AzureServiceBusConfiguration.ConnectionString);
-        if (await adminClient.TopicExistsAsync(topicName))
-        {
-            await adminClient.DeleteTopicAsync(topicName);
-        }
-    }
 
     [LibraryMethod]
     [Transaction]
