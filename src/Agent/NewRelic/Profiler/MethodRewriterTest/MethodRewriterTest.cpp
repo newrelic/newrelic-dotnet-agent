@@ -133,17 +133,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X("SetThreadLocalBoolean")));
         }
 
-        TEST_METHOD(ShouldInstrumentFunction_GetMethodFromAppDomainStorageOrReflectionOrThrow_returns_true)
-        {
-            auto rewriter = MakeRewriter();
-            Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X("GetMethodFromAppDomainStorageOrReflectionOrThrow")));
-        }
 
-        TEST_METHOD(ShouldInstrumentFunction_GetMethodFromAppDomainStorage_returns_true)
-        {
-            auto rewriter = MakeRewriter();
-            Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X("GetMethodFromAppDomainStorage")));
-        }
 
         TEST_METHOD(ShouldInstrumentFunction_GetMethodViaReflectionOrThrow_returns_true)
         {

@@ -31,9 +31,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Initialize();
         }
 
-        void CallLoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda)
+        void CallLoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, std::function<void()> argumentTypesLambda)
         {
-            LoadMethodInfo(assemblyPath, className, methodName, functionId, argumentTypesLambda);
+            LoadMethodInfo(assemblyPath, className, methodName, argumentTypesLambda);
         }
 
         void CallLoadMethodInfoFromType(xstring_t methodName, std::function<void()> argumentTypesLambda)
@@ -220,25 +220,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             // expected IL size: 23 bytes; first IL byte: CEE_LDARG_0 (0x02)
             Assert::AreEqual((size_t)24, capturedBytes.size());
             Assert::AreEqual((uint8_t)0x02, capturedBytes[1]);
-        }
-
-        TEST_METHOD(helper_method_GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow)
-        {
-            auto function = std::make_shared<MockFunction>();
-            function->_functionName = _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow");
-
-            ByteVector capturedBytes;
-            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
-                capturedBytes = bytes;
-            };
-
-            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
-            manipulator.InstrumentHelper();
-
-            // capturedBytes = 1-byte tiny header + IL body
-            // expected IL size: 30 bytes; first IL byte: CEE_LDSFLD (0x7E)
-            Assert::AreEqual((size_t)31, capturedBytes.size());
-            Assert::AreEqual((uint8_t)0x7E, capturedBytes[1]);
         }
 
         TEST_METHOD(helper_method_EnsureInitialized)
@@ -446,9 +427,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 _X("GetTypeViaReflectionOrThrow"),
                 _X("GetMethodViaReflectionOrThrow"),
                 _X("StoreMethodInAppDomainStorageOrThrow"),
-                _X("GetMethodFromAppDomainStorage"),
-                _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"),
-                _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"),
                 _X("GetAgentShimFinishTracerDelegateFunc"),
                 _X("StoreAgentShimFinishTracerDelegateFunc"),
                 _X("InvokeAgentShimFinishTracerDelegateFunc"),
@@ -519,34 +497,29 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsTrue(tokenizer->Tokenized(_X("Invoke")), L"should dispatch through MethodBase.Invoke(object, object[])");
         }
 
-        // Under AppDomainFallbackCache, LoadMethodInfo special-cases the AgentShim class name to
-        // use a dedicated cache helper; every other caller falls through to the generic
-        // app-domain-cache lookup helper. No current production caller passes a non-AgentShim
-        // class name with this strategy, so this branch needs a direct, synthetic call.
-        TEST_METHOD(load_method_info_uses_generic_app_domain_cache_lookup_for_non_agent_shim_callers)
+        // LoadMethodInfo now serves Reflection only, so AppDomainFallbackCache must take the
+        // error branch rather than emit an injected cache helper.
+        TEST_METHOD(load_method_info_throws_for_app_domain_fallback_cache)
         {
             auto function = std::make_shared<MockFunction>();
-            auto tokenizer = std::make_shared<RecordingTokenizer>();
-            function->_tokenizer = tokenizer;
-
             TestableFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
 
-            manipulator.CallLoadMethodInfo(_X("C:\\corepath"), _X("NewRelic.Agent.Core.SomeOtherCaller"), _X("SomeMethod"), 1, std::function<void()>());
+            std::function<void(void)> func = [&manipulator]() {
+                manipulator.CallLoadMethodInfo(_X("C:\\corepath"), _X("NewRelic.Agent.Core.AgentShim"), _X("SomeMethod"), std::function<void()>());
+                };
 
-            Assert::IsTrue(tokenizer->Tokenized(_X("GetMethodFromAppDomainStorageOrReflectionOrThrow")), L"non-AgentShim callers should use the generic app-domain cache lookup helper");
-            Assert::IsFalse(tokenizer->Tokenized(_X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow")), L"the AgentShim-specific helper should not be used for a non-AgentShim caller");
+            Assert::ExpectException<FunctionManipulatorException>(func, L"AppDomainFallbackCache dispatches through cached delegates and must not resolve a MethodInfo.");
         }
 
-        // AgentCallStyle::Strategy has exactly two legitimate values, both handled by
-        // LoadMethodInfo. The else branch is otherwise unreachable, so this forces an
-        // out-of-range strategy through the constructor to exercise it.
+        // The remaining strategy value is out of range. Forcing it through the constructor
+        // exercises the same error branch from the other direction.
         TEST_METHOD(load_method_info_throws_for_an_unsupported_agent_call_strategy)
         {
             auto function = std::make_shared<MockFunction>();
             TestableFunctionManipulator manipulator(function, false, static_cast<AgentCallStyle::Strategy>(-1));
 
             std::function<void(void)> func = [&manipulator]() {
-                manipulator.CallLoadMethodInfo(_X("C:\\corepath"), _X("NewRelic.Agent.Core.AgentApi"), _X("SomeMethod"), 1, std::function<void()>());
+                manipulator.CallLoadMethodInfo(_X("C:\\corepath"), _X("NewRelic.Agent.Core.AgentApi"), _X("SomeMethod"), std::function<void()>());
                 };
 
             Assert::ExpectException<FunctionManipulatorException>(func, L"an unsupported AgentCallStyle::Strategy should not be usable to load method info.");

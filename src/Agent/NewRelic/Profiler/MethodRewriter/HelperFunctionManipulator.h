@@ -38,18 +38,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             {
                 BuildStoreMethodInAppDomainStorageOrThrow();
             }
-            else if (_function->GetFunctionName() == _X("GetMethodFromAppDomainStorage"))
-            {
-                BuildGetMethodFromAppDomainStorage();
-            }
-            else if (_function->GetFunctionName() == _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"))
-            {
-                BuildGetMethodFromAppDomainStorageOrReflectionOrThrow();
-            }
-            else if (_function->GetFunctionName() == _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"))
-            {
-                BuildGetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow();
-            }
             else if (_function->GetFunctionName() == _X("GetAgentShimFinishTracerDelegateFunc"))
             {
                 BuildGetAgentShimFinishTracerDelegateFunc();
@@ -150,39 +138,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_RET);
         }
 
-        // MethodInfo GetMethodFromAppDomainStorage(String storageKey)
-        void BuildGetMethodFromAppDomainStorage()
-        {
-            _instructions->Append(CEE_CALL, _X("class System.AppDomain System.AppDomain::get_CurrentDomain()"));
-            ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true);
-            _instructions->Append(CEE_LDARG_0);
-            _instructions->Append(CEE_CALLVIRT, _X("instance object System.AppDomain::GetData(string)"));
-            _instructions->Append(CEE_CASTCLASS, _X("class System.Reflection.MethodInfo"));
-            _instructions->Append(CEE_RET);
-        }
 
-        // MethodInfo GetMethodFromAppDomainStorageOrReflectionOrThrow(String storageKey, String assemblyPath, String typeName, String methodName, Type[] methodParameters)
-        void BuildGetMethodFromAppDomainStorageOrReflectionOrThrow()
-        {
-            _instructions->Append(CEE_LDARG_0);
-            _instructions->Append(CEE_CALL, _X("class System.Reflection.MethodInfo System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorage(string)"));
-
-            _instructions->Append(CEE_DUP);
-            auto methodEnd = _instructions->AppendJump(CEE_BRTRUE);
-
-            _instructions->Append(CEE_POP);
-            _instructions->Append(CEE_LDARG_1);
-            _instructions->Append(CEE_LDARG_2);
-            _instructions->Append(CEE_LDARG_3);
-            _instructions->Append(CEE_LDARG_S, (uint8_t)4);
-            _instructions->Append(CEE_CALL, _X("class System.Reflection.MethodInfo System.CannotUnloadAppDomainException::GetMethodViaReflectionOrThrow(string,string,string,class System.Type[])"));
-            _instructions->Append(CEE_DUP);
-            _instructions->Append(CEE_LDARG_0);
-            _instructions->Append(CEE_CALL, _X("void System.CannotUnloadAppDomainException::StoreMethodInAppDomainStorageOrThrow(object,string)"));
-
-            _instructions->AppendLabel(methodEnd);
-            _instructions->Append(CEE_RET);
-        }
 
         // object GetAgentShimFinishTracerDelegateFunc()
         // Fast-path: reads _agentShimFunc static field; falls back to AppDomain.GetData if null.
@@ -248,30 +204,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_RET);
         }
 
-        // MethodInfo GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow(String storageKey, String assemblyPath, String typeName, String methodName, Type[] methodParameters)
-        // Fast-path: reads _agentShimMethodInfo static field; falls back to GetMethodFromAppDomainStorageOrReflectionOrThrow if null.
-        void BuildGetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow()
-        {
-            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_agentShimMethodInfo"));
-
-            _instructions->Append(CEE_DUP);
-            auto afterFallback = _instructions->AppendJump(CEE_BRTRUE);
-
-            _instructions->Append(CEE_POP);
-            _instructions->Append(CEE_LDARG_0);
-            _instructions->Append(CEE_LDARG_1);
-            _instructions->Append(CEE_LDARG_2);
-            _instructions->Append(CEE_LDARG_3);
-            _instructions->Append(CEE_LDARG_S, (uint8_t)4);
-            _instructions->Append(CEE_CALL, _X("class System.Reflection.MethodInfo System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class System.Type[])"));
-
-            _instructions->Append(CEE_DUP);
-            _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_agentShimMethodInfo"));
-
-            _instructions->AppendLabel(afterFallback);
-
-            _instructions->Append(CEE_RET);
-        }
 
         // object GetAgentMethodInvokerObject()
         // Fast-path: reads _agentMethodFunc static field; falls back to AppDomain.GetData if null.

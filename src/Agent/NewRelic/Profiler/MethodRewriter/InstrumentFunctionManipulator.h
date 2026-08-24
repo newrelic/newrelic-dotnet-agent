@@ -162,7 +162,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             }
             else
             {
-                LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentShim"), _X("GetFinishTracerDelegate"), 0, nullptr);
+                LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentShim"), _X("GetFinishTracerDelegate"), nullptr);
                 _instructions->Append(_X("ldnull"));
             }
         }

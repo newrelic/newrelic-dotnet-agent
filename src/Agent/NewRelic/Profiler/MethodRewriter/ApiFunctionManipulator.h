@@ -123,7 +123,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // library helper injection fails, so it must never call an injected helper.
         void BuildReflectionCall()
         {
-            LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentApi"), _function->GetFunctionName(), _function->GetFunctionId(), GetArrayOfTypeParametersLamdba());
+            LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentApi"), _function->GetFunctionName(), GetArrayOfTypeParametersLamdba());
 
             _instructions->Append(_X("ldnull"));
             BuildObjectArrayOfParameters();
