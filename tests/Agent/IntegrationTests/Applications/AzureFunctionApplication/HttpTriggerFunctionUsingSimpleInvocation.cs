@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using NewRelic.Agent.IntegrationTests.Shared;
 
 namespace AzureFunctionApplication;
 
@@ -25,7 +26,7 @@ public class HttpTriggerFunctionUsingSimpleInvocation
     [Function("HttpTriggerFunctionUsingSimpleInvocation")]
     public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData reqData)
     {
-        _logger.LogInformation("HttpTriggerFunctionUsingSimpleInvocation processed a request.");
+        _logger.LogInformation(AzureFunctionConfiguration.FuncTestControlLogMessage);
 
         if (_firstTime)
         {
