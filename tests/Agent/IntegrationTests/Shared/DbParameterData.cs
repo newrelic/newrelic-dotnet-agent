@@ -15,7 +15,9 @@ public static class DbParameterData
     public static DbParameter[] MsSqlParameters =
     {
         new DbParameter("bigint", "@typeBigInt", (long) 123),
-        new DbParameter("decimal (30,0)", "@typeDecimal", (decimal) 123.4567),
+        // Note that casting a double literal to decimal, e.g. "(decimal) 123.4567" is broken in .NET 11, hence the switch to supplying a decimal literal
+        // with the "m" suffix. See https://github.com/dotnet/sdk/issues/55909
+        new DbParameter("decimal (30,0)", "@typeDecimal", 123.4567m),
         new DbParameter("float", "@typeFloat", (float) 123.4567),
         new DbParameter("int", "@typeInt", (int) 123),
         new DbParameter("real", "@typeReal", (double) 123.4567),
@@ -44,7 +46,7 @@ public static class DbParameterData
         new DbParameter("tinyint unsigned", "typeTinyIntUnsigned", (byte) 123),
         new DbParameter("binary(3)", "typeBinary", new byte[]{ 0, 1, 3 }) { ExpectedValue = new byte[]{ 0, 1, 3 }.ToString() },
         new DbParameter("datetime", "typeDatetime", new DateTime(1988, 3, 4)) { ExpectedValue = new DateTime(1988, 3, 4).ToString(CultureInfo.InvariantCulture) },
-        new DbParameter("decimal", "typeDecimal", (decimal) 123.4567),
+        new DbParameter("decimal", "typeDecimal", 123.4567m),
         new DbParameter("double", "typeDouble", (double) 123.4567),
         new DbParameter("char(36)", "typeGuid", Guid.Empty) { ExpectedValue = Guid.Empty.ToString()},
         new DbParameter("smallint", "typeSmallInt", (short) 123),
@@ -61,7 +63,7 @@ public static class DbParameterData
     public static DbParameter[] PostgresParameters =
     {
         new DbParameter("bigint", "typeBigInt", (long) 123),
-        new DbParameter("numeric", "typeNumeric", (decimal) 123.4567),
+        new DbParameter("numeric", "typeNumeric", 123.4567m),
         new DbParameter("real", "typeReal", (float) 123.4567),
         new DbParameter("integer", "typeInt", (int) 123),
         new DbParameter("double precision", "typeDouble", (double) 123.4567),
@@ -81,10 +83,10 @@ public static class DbParameterData
     public static DbParameter[] OracleParameters =
     {
         new DbParameter("number", "typeNumber", (byte) 123),
-        new DbParameter("binary_integer", "typeBinaryInteger", (decimal) 123.4567),
+        new DbParameter("binary_integer", "typeBinaryInteger", 123.4567m),
         new DbParameter("raw", "typeRaw", new byte[]{ 0, 1 }) { ExpectedValue = new byte[]{ 0, 1 }.ToString() },
         new DbParameter("date", "typeDate", new DateTime(1988, 3, 4)) { ExpectedValue = new DateTime(1988, 3, 4).ToString(CultureInfo.InvariantCulture) },
-        new DbParameter("decimal", "typeDecimal", (decimal) 123.4567),
+        new DbParameter("decimal", "typeDecimal", 123.4567m),
         new DbParameter("double precision", "typeDouble", (double) 123.4567),
         new DbParameter("number", "typeSmallInt", (short) 123),
         new DbParameter("number", "typeInt", (int) 123),
@@ -100,7 +102,7 @@ public static class DbParameterData
     {
         new DbParameter("char(3) for bit data", "typeBinary", new byte[]{ 0, 1 }) { ExpectedValue = new byte[]{ 0, 1 }.ToString() },
         new DbParameter("date", "typeDate", new DateTime(1988, 3, 4)) { ExpectedValue = new DateTime(1988, 3, 4).ToString(CultureInfo.InvariantCulture) },
-        new DbParameter("decimal", "typeDecimal", (decimal) 123.4567),
+        new DbParameter("decimal", "typeDecimal", 123.4567m),
         new DbParameter("double precision", "typeDouble", (double) 123.4567),
         new DbParameter("smallint", "typeSmallInt", (short) 123),
         new DbParameter("int", "typeInt", (int) 123),
@@ -115,7 +117,7 @@ public static class DbParameterData
     public static DbParameter[] OdbcMsSqlParameters =
     {
         new DbParameter("bigint", "@typeBigInt", (long) 123),
-        new DbParameter("decimal (30,0)", "@typeDecimal", (decimal) 123.4567),
+        new DbParameter("decimal (30,0)", "@typeDecimal", 123.4567m),
         new DbParameter("float", "@typeFloat", (float) 123.4567),
         new DbParameter("int", "@typeInt", (int) 123),
         new DbParameter("real", "@typeReal", (double) 123.4567),
@@ -138,7 +140,7 @@ public static class DbParameterData
     public static DbParameter[] OleDbMsSqlParameters =
     {
         new DbParameter("bigint", "@typeBigInt", (long) 123),
-        new DbParameter("decimal (30,0)", "@typeDecimal", (decimal) 123.4567),
+        new DbParameter("decimal (30,0)", "@typeDecimal", 123.4567m),
         new DbParameter("float", "@typeFloat", (float) 123.4567),
         new DbParameter("int", "@typeInt", (int) 123),
         new DbParameter("real", "@typeReal", (double) 123.4567),
