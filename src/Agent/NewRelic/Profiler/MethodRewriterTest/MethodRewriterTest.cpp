@@ -169,6 +169,15 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X("StoreMethodInAppDomainStorageOrThrow")));
         }
 
+        // This gate is not compile-checked. If the name is missing from the instrumented set
+        // the helper keeps its injected stub body, gets no real IL, and the hot path silently
+        // stops tracing.
+        TEST_METHOD(ShouldInstrumentFunction_InvokeAgentShimFinishTracerDelegateFunc_returns_true)
+        {
+            auto rewriter = MakeRewriter();
+            Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X("InvokeAgentShimFinishTracerDelegateFunc")));
+        }
+
         TEST_METHOD(ShouldInstrumentFunction_cctor_returns_false)
         {
             // .cctor is no longer an instrumented helper function name, so it must not

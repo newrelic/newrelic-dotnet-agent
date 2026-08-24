@@ -492,6 +492,15 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::AreEqual((uint64_t)1, instr.GetHelperFireCount());
         }
 
+        TEST_METHOD(helper_InvokeAgentShimFinishTracerDelegateFunc_fires_and_returns_false)
+        {
+            HelperInstrumentor instr;
+            auto func = MakeHelperFunc(L"InvokeAgentShimFinishTracerDelegateFunc");
+            bool result = instr.Instrument(func, nullptr, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsFalse(result);
+            Assert::AreEqual((uint64_t)1, instr.GetHelperFireCount());
+        }
+
         TEST_METHOD(helper_InvokeAgentMethodInvokerFunc_fires_and_returns_false)
         {
             HelperInstrumentor instr;

@@ -58,6 +58,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _instrumentedFunctionNames->emplace(_X("GetAgentMethodInvokerObject"));
             _instrumentedFunctionNames->emplace(_X("GetAgentShimFinishTracerDelegateFunc"));
             _instrumentedFunctionNames->emplace(_X("StoreAgentShimFinishTracerDelegateFunc"));
+            _instrumentedFunctionNames->emplace(_X("InvokeAgentShimFinishTracerDelegateFunc"));
             _instrumentedFunctionNames->emplace(_X("StoreAgentMethodInvokerFunc"));
             _instrumentedFunctionNames->emplace(_X("EnsureInitialized"));
             _instrumentedFunctionNames->emplace(_X("InvokeAgentMethodInvokerFunc"));

@@ -12,6 +12,8 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching;
 public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
     where TFixture : ConsoleDynamicMethodFixture
 {
+    private const string InstrumentedMethodTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.RootCommands/InstrumentedMethodToStartAgent";
+    private const string ShimDelegateHelperName = "System.CannotUnloadAppDomainException.InvokeAgentShimFinishTracerDelegateFunc";
     private const string TransactionCategory = "AppDomainCachingGroup";
     private const string OriginalTransactionName = "OriginalName";
     private const string RenamedTransactionName = "RenamedName";
@@ -69,6 +71,35 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
         // NEW_RELIC_DISABLE_APPDOMAIN_CACHING like .NET Framework: default (unset) => AppDomain Fallback Cache,
         // opt-out (true) => Reflection.
         Assert.Contains($"Calls to the managed agent will use the calling strategy - {_expectedCallingStrategy}", _fixture.ProfilerLog.GetFullLogAsString());
+    }
+
+    [Fact]
+    public void HotPathDispatchesThroughTheStrategySpecificHelper()
+    {
+        // An injected core library helper is only instrumented once the CLR JITs it, and the CLR only
+        // JITs it once something calls it. So the presence of this log line is direct evidence of which
+        // dispatch shape the instrumented-method hot path actually used.
+        var profilerLog = _fixture.ProfilerLog.GetFullLogAsString();
+
+        if (_appDomainCachingDisabled)
+        {
+            Assert.DoesNotContain(ShimDelegateHelperName, profilerLog);
+        }
+        else
+        {
+            Assert.Contains(ShimDelegateHelperName, profilerLog);
+        }
+    }
+
+    [Fact]
+    public void InstrumentedMethodProducesTransactionUnderConfiguredStrategy()
+    {
+        // Covers the instrumented-method hot path on its own. Under AppDomainFallbackCache that path
+        // dispatches GetTracer through an injected core library helper, and a failure there is
+        // swallowed by the try/catch around the call, leaving the method untraced with no log line.
+        var actualMetrics = _fixture.AgentLog.GetMetrics();
+
+        Assert.Contains(actualMetrics, x => x.MetricSpec.Name == InstrumentedMethodTransactionName);
     }
 
     [Fact]

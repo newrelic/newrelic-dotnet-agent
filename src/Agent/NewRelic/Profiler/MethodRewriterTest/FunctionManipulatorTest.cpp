@@ -203,6 +203,25 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::AreEqual((uint8_t)0x02, capturedBytes[1]);
         }
 
+        TEST_METHOD(helper_method_InvokeAgentShimFinishTracerDelegateFunc)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("InvokeAgentShimFinishTracerDelegateFunc");
+
+            ByteVector capturedBytes;
+            function->_writeMethodHandler = [&capturedBytes](const ByteVector& bytes) {
+                capturedBytes = bytes;
+            };
+
+            HelperFunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            manipulator.InstrumentHelper();
+
+            // capturedBytes = 1-byte tiny header + IL body
+            // expected IL size: 23 bytes; first IL byte: CEE_LDARG_0 (0x02)
+            Assert::AreEqual((size_t)24, capturedBytes.size());
+            Assert::AreEqual((uint8_t)0x02, capturedBytes[1]);
+        }
+
         TEST_METHOD(helper_method_GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow)
         {
             auto function = std::make_shared<MockFunction>();
@@ -357,6 +376,38 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsFalse(tokenizer->Tokenized(_X("GetMethodFromAppDomainStorageOrReflectionOrThrow")), L"API path must no longer resolve a MethodInfo per call");
         }
 
+        // Under AppDomainFallbackCache the instrumented-method path must dispatch GetTracer
+        // through the injected shim delegate helper rather than resolving a MethodInfo and
+        // calling MethodBase.Invoke. That is what removes the per-call reflection invoke.
+        TEST_METHOD(instrumented_method_emits_shim_delegate_invoker_under_app_domain_fallback_cache)
+        {
+            auto function = std::make_shared<MockFunction>();
+            auto tokenizer = std::make_shared<RecordingTokenizer>();
+            function->_tokenizer = tokenizer;
+
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("C:\\corepath")), false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            manipulator.InstrumentDefault(CreateInstrumentationPointThatMatchesFunction(function));
+
+            Assert::IsTrue(tokenizer->Tokenized(_X("InvokeAgentShimFinishTracerDelegateFunc")), L"hot path must call the shim delegate helper");
+            Assert::IsFalse(tokenizer->Tokenized(_X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow")), L"hot path must no longer resolve a MethodInfo per call");
+        }
+
+        // Reflection is the graceful-degradation path used when core library helper injection
+        // fails, so it must keep resolving the target itself and must never call an injected
+        // helper. GetMethod comes from LoadMethodInfoFromType.
+        TEST_METHOD(instrumented_method_emits_method_info_invoke_under_reflection)
+        {
+            auto function = std::make_shared<MockFunction>();
+            auto tokenizer = std::make_shared<RecordingTokenizer>();
+            function->_tokenizer = tokenizer;
+
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("C:\\corepath")), false, AgentCallStyle::Strategy::Reflection);
+            manipulator.InstrumentDefault(CreateInstrumentationPointThatMatchesFunction(function));
+
+            Assert::IsTrue(tokenizer->Tokenized(_X("GetMethod")), L"Reflection path must resolve the target itself");
+            Assert::IsFalse(tokenizer->Tokenized(_X("InvokeAgentShimFinishTracerDelegateFunc")), L"Reflection path must not call injected helpers");
+        }
+
         // Covers the non-void return path. The invoker needs a real System.Type for the
         // return type, not the null used for void. A mismatch here would make CreateDelegate
         // throw on the managed side and fall back silently to the original method body,
@@ -400,6 +451,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"),
                 _X("GetAgentShimFinishTracerDelegateFunc"),
                 _X("StoreAgentShimFinishTracerDelegateFunc"),
+                _X("InvokeAgentShimFinishTracerDelegateFunc"),
                 _X("EnsureInitialized"),
                 _X("GetAgentMethodInvokerObject"),
                 _X("InvokeAgentMethodInvokerFunc"),

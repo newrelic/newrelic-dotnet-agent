@@ -58,6 +58,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             {
                 BuildStoreAgentShimFinishTracerDelegateFunc();
             }
+            else if (_function->GetFunctionName() == _X("InvokeAgentShimFinishTracerDelegateFunc"))
+            {
+                BuildInvokeAgentShimFinishTracerDelegateFunc();
+            }
             else if (_function->GetFunctionName() == _X("EnsureInitialized"))
             {
                 BuildEnsureInitializedMethod();
@@ -223,6 +227,24 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_agentShimFunc"));
             _instructions->AppendString(_X("__NRInitializer__::_agentShimFunc"));
             _instructions->Append(CEE_CALL, _X("void System.CannotUnloadAppDomainException::StoreMethodInAppDomainStorageOrThrow(object,string)"));
+            _instructions->Append(CEE_RET);
+        }
+
+        // object InvokeAgentShimFinishTracerDelegateFunc(String assemblyPath, object[] parameters)
+        // Initializes unconditionally: this helper is the only entry point to the shim delegate from
+        // the instrumented-method path, so nothing else can be relied on to have populated the field.
+        // In steady state EnsureInitialized reduces to a static field read plus a branch, with no lock.
+        void BuildInvokeAgentShimFinishTracerDelegateFunc()
+        {
+            _instructions->Append(CEE_LDARG_0);
+            _instructions->Append(_X("call void System.CannotUnloadAppDomainException::EnsureInitialized(string)"));
+
+            _instructions->Append(_X("call object System.CannotUnloadAppDomainException::GetAgentShimFinishTracerDelegateFunc()"));
+
+            _instructions->Append(CEE_CASTCLASS, _X("class System.Func`2<object[], class System.Action`2<object, class System.Exception>>"));
+            _instructions->Append(CEE_LDARG_1);
+            _instructions->Append(CEE_CALLVIRT, _X("instance !1 class System.Func`2<object[], class System.Action`2<object, class System.Exception>>::Invoke(!0)"));
+
             _instructions->Append(CEE_RET);
         }
 

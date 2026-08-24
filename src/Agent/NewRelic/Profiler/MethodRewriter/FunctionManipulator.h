@@ -338,11 +338,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                     argumentTypesLambda();
                 }
 
-                // Retained deliberately. The generic branch below is the emission path for
-                // any future non-AgentShim caller. As of NR-602576 the Agent API path
-                // dispatches through InvokeAgentMethodInvokerFunc instead of resolving a
-                // MethodInfo here, so AgentShim is the only className that reaches this
-                // fork today.
+                // Unreachable as of NR-602569: both callers now reach LoadMethodInfo only
+                // under Reflection. Retained pending the adopt-or-revert decision on the
+                // delegate hot path.
                 if (Strings::AreEqualCaseInsensitive(className, _X("NewRelic.Agent.Core.AgentShim")))
                 {
                     _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
