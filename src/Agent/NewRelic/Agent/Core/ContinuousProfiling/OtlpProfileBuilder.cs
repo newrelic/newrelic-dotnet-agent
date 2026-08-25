@@ -21,6 +21,7 @@ public static class OtlpProfileBuilder
 {
     private const string ScopeName = "newrelic.dotnet";
     private const string ServiceNameKey = "service.name";
+    private const string EntityGuidKey = "entity.guid";
     private const string ThreadIdKey = "thread.id";
     private const string ThreadNameKey = "thread.name";
 
@@ -84,7 +85,7 @@ public static class OtlpProfileBuilder
     // "NewRelic.Agent.Core.") are dropped so the profile carries only the customer application. Defaults to
     // true (no filtering) for callers/tests that don't care; the CP service passes the configured value,
     // which defaults to false.
-    public static ExportProfilesServiceRequest Build(IReadOnlyList<ManagedThreadSample> samples, long startUnixNano, long durationNano, string serviceName, long periodNanos = 0, bool includeAgentCode = true)
+    public static ExportProfilesServiceRequest Build(IReadOnlyList<ManagedThreadSample> samples, long startUnixNano, long durationNano, string serviceName, string entityGuid = null, long periodNanos = 0, bool includeAgentCode = true)
     {
         var dictionary = new ProfilesDictionary();
 
@@ -188,6 +189,17 @@ public static class OtlpProfileBuilder
             Key = ServiceNameKey,
             Value = new AnyValue { StringValue = serviceName ?? string.Empty },
         });
+        // entity.guid is only known once the agent has connected and the collector has assigned an entity;
+        // omit the attribute entirely (rather than sending an empty string) until then, matching the
+        // entity.guid metadata gating in Agent.cs.
+        if (!string.IsNullOrEmpty(entityGuid))
+        {
+            resourceProfiles.Resource.Attributes.Add(new KeyValue
+            {
+                Key = EntityGuidKey,
+                Value = new AnyValue { StringValue = entityGuid },
+            });
+        }
         resourceProfiles.ScopeProfiles.Add(scopeProfiles);
 
         var request = new ExportProfilesServiceRequest { Dictionary = dictionary };

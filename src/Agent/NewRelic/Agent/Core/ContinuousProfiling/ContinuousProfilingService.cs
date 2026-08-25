@@ -766,7 +766,7 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 // The sampling interval (ms) is the profile's period; convert to nanoseconds for period_type=cpu/ns.
                 var periodNanos = (long)_activeIntervalMs * 1_000_000L;
                 // Exclude the agent's own threads/frames unless the undocumented appSettings opt-in is set.
-                var request = OtlpProfileBuilder.Build(samples, startUnixNano, durationNano, ServiceName, periodNanos, _configuration.ContinuousProfilingIncludeAgentCode);
+                var request = OtlpProfileBuilder.Build(samples, startUnixNano, durationNano, ServiceName, _configuration.EntityGuid, periodNanos, _configuration.ContinuousProfilingIncludeAgentCode);
 
                 bool sent;
                 try

@@ -631,6 +631,26 @@ public class OtlpProfileBuilderTests
     }
 
     [Test]
+    public void Build_sets_entity_guid_resource_attribute_when_provided()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1000, 1, "my-service", entityGuid: "abc123");
+        var resourceProfiles = req.ResourceProfiles.Single();
+
+        var entityGuid = resourceProfiles.Resource.Attributes
+            .Single(a => a.Key == "entity.guid").Value.StringValue;
+        Assert.That(entityGuid, Is.EqualTo("abc123"));
+    }
+
+    [Test]
+    public void Build_omits_entity_guid_resource_attribute_when_not_provided()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1000, 1, "my-service");
+        var resourceProfiles = req.ResourceProfiles.Single();
+
+        Assert.That(resourceProfiles.Resource.Attributes.Any(a => a.Key == "entity.guid"), Is.False);
+    }
+
+    [Test]
     public void Build_withPeriod_emitsTwoProfiles_offCpuThenCpu()
     {
         var samples = new[]
