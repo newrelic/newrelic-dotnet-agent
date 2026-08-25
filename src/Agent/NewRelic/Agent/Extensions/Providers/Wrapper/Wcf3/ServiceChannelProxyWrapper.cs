@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.ServiceModel;
+using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
@@ -153,10 +154,20 @@ public class ServiceChannelProxyWrapper : IWrapper
                 segment.RemoveSegmentFromCallStack();
                 transaction.Hold();
                 var originalCallback = GetAsyncCallbackReadAccessor().Invoke(methodReturnMessage.ReturnValue);
+                var released = 0;
                 SetAsyncCallbackWriteAccessor().Invoke(methodReturnMessage.ReturnValue, (AsyncCallback)WrappedAsyncCallback);
 
-                void WrappedAsyncCallback(IAsyncResult asyncResult)
+                // Ends the segment and releases the held transaction exactly once,
+                // whichever caller reaches it first. Only forwards to the original
+                // callback when WCF actually invoked our swapped callback -- this keeps
+                // the original End-then-Invoke-then-Release ordering on that path.
+                void ReleaseOnce(IAsyncResult asyncResult, bool invokeCallback)
                 {
+                    if (Interlocked.Exchange(ref released, 1) != 0)
+                    {
+                        return;
+                    }
+
                     var exception = GetAsyncCallbackException().Invoke(asyncResult);
                     if (exception != null)
                     {
@@ -169,8 +180,21 @@ public class ServiceChannelProxyWrapper : IWrapper
                     }
 
                     TrySendInvocationMetric("APM", agent);
-                    originalCallback?.Invoke(asyncResult);
+                    if (invokeCallback)
+                    {
+                        originalCallback?.Invoke(asyncResult);
+                    }
                     transaction.Release();
+                }
+
+                void WrappedAsyncCallback(IAsyncResult asyncResult) => ReleaseOnce(asyncResult, true);
+
+                // WCF can invoke the original callback via the pre-swap reference before our
+                // swap lands (e.g. BeginXxx faults synchronously). ReleaseOnce's guard makes
+                // this and the swapped callback safe to race.
+                if (methodReturnMessage.ReturnValue is IAsyncResult { IsCompleted: true } beginResult)
+                {
+                    ReleaseOnce(beginResult, false);
                 }
             }
         }
