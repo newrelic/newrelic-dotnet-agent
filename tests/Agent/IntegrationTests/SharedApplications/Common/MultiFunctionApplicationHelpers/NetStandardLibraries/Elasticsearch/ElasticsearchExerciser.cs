@@ -59,6 +59,7 @@ public class ElasticsearchExerciser
 
     [LibraryMethod]
     [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task SearchAsync() => await _client.SearchAsync();
 
     [LibraryMethod]

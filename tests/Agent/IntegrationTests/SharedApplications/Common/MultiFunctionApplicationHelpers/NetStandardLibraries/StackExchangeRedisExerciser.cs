@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
@@ -17,6 +18,7 @@ public class StackExchangeRedisExerciser
 
     [LibraryMethod]
     [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public void DoSomeWork()
     {
         using (var redis = ConnectionMultiplexer.Connect(GetRedisConnectionOptions()))
@@ -73,6 +75,7 @@ public class StackExchangeRedisExerciser
 
     [LibraryMethod]
     [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task DoSomeWorkAsync()
     {
         using (var redis = await ConnectionMultiplexer.ConnectAsync(GetRedisConnectionOptions()))
