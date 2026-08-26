@@ -61,31 +61,28 @@ public abstract class RejitAddFileBase<TFixture> : NewRelicIntegrationTest<TFixt
     [Fact]
     public void Test()
     {
+        var expectedGetAddFileCallCount = _disableFileSystemWatcher ? 2 : 1;
+
         var expectedMetrics = new List<Assertions.ExpectedMetric>
         {
             //transactions
             new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/HomeController/Index", CallCountAllHarvests = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/RejitController/GetAddFile", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/RejitController/GetAddFile", CallCountAllHarvests = expectedGetAddFileCallCount },
 
             // Unscoped
             new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", CallCountAllHarvests = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", CallCountAllHarvests = 2 },
 
             // Scoped
             new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/HomeController/Index", CallCountAllHarvests = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", metricScope = "WebTransaction/MVC/RejitController/GetAddFile", CallCountAllHarvests = 1 }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", metricScope = "WebTransaction/MVC/RejitController/GetAddFile", CallCountAllHarvests = expectedGetAddFileCallCount }
         };
 
-        // Id file system watcher is disabled, these won't exist.
-        if (_disableFileSystemWatcher)
-        {
-            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", CallCountAllHarvests = 1 });
-        }
-        else
+        if (!_disableFileSystemWatcher)
         {
             expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 1 });
             expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", CallCountAllHarvests = 1 });
             expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomAddMetricName", metricScope = "WebTransaction/Custom/MyCustomAddMetricName", CallCountAllHarvests = 1 });
-            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetAddFile", CallCountAllHarvests = 2 });
         }
 
         var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);
