@@ -47,7 +47,11 @@ public abstract class RejitAddFileBase<TFixture> : NewRelicIntegrationTest<TFixt
                 CommonUtils.AddCustomInstrumentation(createFilePath, "RejitMvcApplication", "RejitMvcApplication.Controllers.RejitController", "CustomMethodDefaultWrapperAddFile", "NewRelic.Agent.Core.Wrapper.DefaultWrapper", "MyCustomAddMetricName", 7);
                 var destinationFilePath = _fixture.RemoteApplication.DestinationExtensionsDirectoryPath + @"\Integration.Testing.AddXmlFileTest.xml";
                 CommonUtils.MoveFile(createFilePath, destinationFilePath, TimeSpan.FromSeconds(5));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.InstrumentationRefreshFileWatcherComplete, TimeSpan.FromMinutes(1));
+                if (!_disableFileSystemWatcher)
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.InstrumentationRefreshFileWatcherComplete, TimeSpan.FromMinutes(1));
+                }
+
                 _fixture.TestAddFile();
             });
 
