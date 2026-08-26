@@ -3,6 +3,7 @@
 
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
@@ -37,6 +38,7 @@ public static class PerformanceMetrics
     /// start.
     /// </summary>
     [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     private static void StartAgent()
     {
         ConsoleMFLogger.Info("Instrumented Method to start the Agent");
