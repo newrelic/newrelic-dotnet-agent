@@ -61,6 +61,13 @@ public class MongoDBDriverExerciser
         Client.DropDatabase(databaseName);
     }
 
+    // Tests should call this last so the per-run database does not accumulate on the shared server.
+    [LibraryMethod]
+    public void DropTestDatabase()
+    {
+        Client.DropDatabase(_dbName);
+    }
+
     #endregion Drop
 
     #region Insert

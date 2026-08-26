@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -24,6 +25,8 @@ public class MongoDBLegacyTests : NewRelicIntegrationTest<ConsoleDynamicMethodFi
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
+
+        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
 
         _fixture.AddCommand($"MongoDBLegacyExerciser SetupClient");
         _fixture.AddCommand($"MongoDBLegacyExerciser Insert");

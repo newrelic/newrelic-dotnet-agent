@@ -27,6 +27,8 @@ public abstract class MongoDBDriverDatabaseTestsBase<TFixture> : NewRelicIntegra
         _mongoUrl = mongoUrl;
         _driverVersion = driverVersion;
 
+        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+
         _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
         // Async methods first
         _fixture.AddCommand("MongoDBDriverExerciser CreateCollectionAsync");
@@ -56,6 +58,8 @@ public abstract class MongoDBDriverDatabaseTestsBase<TFixture> : NewRelicIntegra
             _fixture.AddCommand("MongoDBDriverExerciser AggregateDB");
             _fixture.AddCommand("MongoDBDriverExerciser AggregateDBToCollection");
         }
+
+        _fixture.AddCommand("MongoDBDriverExerciser DropTestDatabase");
 
         _fixture.AddActions
         (

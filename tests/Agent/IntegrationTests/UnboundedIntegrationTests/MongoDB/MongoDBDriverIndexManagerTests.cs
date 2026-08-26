@@ -24,6 +24,8 @@ public abstract class MongoDBDriverIndexManagerTestsBase<TFixture> : NewRelicInt
         _fixture.TestLogger = output;
         _mongoUrl = mongoUrl;
 
+        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+
         _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
         // Async methods first
         _fixture.AddCommand("MongoDBDriverExerciser CreateManyAsync");
@@ -37,6 +39,7 @@ public abstract class MongoDBDriverIndexManagerTestsBase<TFixture> : NewRelicInt
         _fixture.AddCommand("MongoDBDriverExerciser DropAll");
         _fixture.AddCommand("MongoDBDriverExerciser DropOne");
         _fixture.AddCommand("MongoDBDriverExerciser List");
+        _fixture.AddCommand("MongoDBDriverExerciser DropTestDatabase");
 
         _fixture.AddActions
         (

@@ -25,9 +25,12 @@ public abstract class MongoDBDriverQueryProviderTestsBase<TFixture> : NewRelicIn
         _fixture.TestLogger = output;
         _mongoUrl = mongoUrl;
 
+        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+
         _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
         _fixture.AddCommand("MongoDBDriverExerciser ExecuteModel");
         _fixture.AddCommand("MongoDBDriverExerciser ExecuteModelAsync");
+        _fixture.AddCommand("MongoDBDriverExerciser DropTestDatabase");
 
         _fixture.AddActions
         (
