@@ -69,11 +69,12 @@ public class ContinuousProfilingServiceTests
         ContinuousProfilingContext.Instance = new ContinuousProfilingContext();
     }
 
-    private void ArrangeEnabled(int intervalMs = 10000)
+    private void ArrangeEnabled(int intervalMs = 10000, bool highSecurityModeEnabled = false)
     {
         Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(true);
         Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(intervalMs);
         Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        Mock.Arrange(() => _config.HighSecurityModeEnabled).Returns(highSecurityModeEnabled);
         _service.OverrideConfigForTesting(_config);
     }
 
@@ -284,6 +285,58 @@ public class ContinuousProfilingServiceTests
         Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
         Assert.That(_service.IsActive, Is.False);
         Assert.That(result.ActiveTypes, Is.Empty);
+    }
+
+    [Test]
+    public void StartFromCommand_with_cpu_under_high_security_mode_reports_not_supported_and_does_not_start_anything()
+    {
+        ArrangeEnabled(10000, highSecurityModeEnabled: true);
+
+        var result = _service.StartFromCommand(new[] { "cpu" }, null, null);
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Assert.Multiple(() =>
+        {
+            Assert.That(_service.IsActive, Is.False);
+            Assert.That(result.Exceptions["cpu"], Is.EqualTo("not supported: high security mode enabled"));
+        });
+    }
+
+    [Test]
+    public void StartFromCommand_with_all_under_high_security_mode_reports_cpu_and_heap_as_not_supported()
+    {
+        ArrangeEnabled(10000, highSecurityModeEnabled: true);
+
+        var result = _service.StartFromCommand(new[] { "all" }, null, null);
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Assert.Multiple(() =>
+        {
+            Assert.That(_service.IsActive, Is.False);
+            Assert.That(result.Exceptions["cpu"], Is.EqualTo("not supported: high security mode enabled"));
+            Assert.That(result.Exceptions["heap"], Is.EqualTo("not supported"));
+        });
+    }
+
+    [Test]
+    public void StartFromCommand_under_high_security_mode_does_not_mark_cpu_command_controlled()
+    {
+        ArrangeEnabled(10000, highSecurityModeEnabled: true);
+        _service.StartFromCommand(new[] { "cpu" }, null, null);
+
+        // HSM lifted: a subsequent config-driven ApplyConfigChange must still be able to start -- the
+        // rejected command start must not have claimed command ownership of cpu with nothing there to
+        // release it.
+        var reconfigured = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => reconfigured.ContinuousProfilingEnabled).Returns(true);
+        Mock.Arrange(() => reconfigured.ContinuousProfilingSamplingIntervalMs).Returns(10000);
+        Mock.Arrange(() => reconfigured.ApplicationNames).Returns(new[] { "MyApp" });
+        Mock.Arrange(() => reconfigured.HighSecurityModeEnabled).Returns(false);
+        _service.OverrideConfigForTesting(reconfigured);
+        _service.ApplyConfigChange();
+
+        Mock.Assert(() => _native.Start(10000), Occurs.Once());
+        Assert.That(_service.IsActive, Is.True);
     }
 
     [Test]

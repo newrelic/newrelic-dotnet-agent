@@ -385,15 +385,29 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
             if (startCpuBundle)
             {
-                _commandControlledTypes.Add(ContinuousProfilingCommandTypes.Cpu);
-
-                if (!_isActive)
+                // HSM disables continuous profiling unconditionally (see ContinuousProfilingEnabled), and
+                // that guard must hold for the command path too, even though the command path otherwise
+                // intentionally bypasses ContinuousProfilingEnabled to let an operator override
+                // config-disabled. Check HighSecurityModeEnabled directly, and check it before touching
+                // _commandControlledTypes -- a rejected start must not claim command ownership of cpu, or a
+                // later legitimate config-driven start would find it locked out with no stop command able
+                // to release it.
+                if (_configuration.HighSecurityModeEnabled)
                 {
-                    var requested = cpuReportIntervalMs ?? sampleIntervalMs ?? _configuration.ContinuousProfilingSamplingIntervalMs;
-                    var clamped = Math.Min(MaxCommandIntervalMs, Math.Max(MinCommandIntervalMs, requested));
-                    StartLocked(clamped);
+                    exceptions[ContinuousProfilingCommandTypes.Cpu] = "not supported: high security mode enabled";
                 }
-                // else: already running -- idempotent no-op per spec; a repeat start does not retune.
+                else
+                {
+                    _commandControlledTypes.Add(ContinuousProfilingCommandTypes.Cpu);
+
+                    if (!_isActive)
+                    {
+                        var requested = cpuReportIntervalMs ?? sampleIntervalMs ?? _configuration.ContinuousProfilingSamplingIntervalMs;
+                        var clamped = Math.Min(MaxCommandIntervalMs, Math.Max(MinCommandIntervalMs, requested));
+                        StartLocked(clamped);
+                    }
+                    // else: already running -- idempotent no-op per spec; a repeat start does not retune.
+                }
             }
 
             return BuildCommandResultLocked(exceptions);
