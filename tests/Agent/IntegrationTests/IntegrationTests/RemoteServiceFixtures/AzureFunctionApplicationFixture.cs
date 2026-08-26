@@ -130,14 +130,14 @@ public class AzureFunctionApplicationFixtureQueueTriggerCoreLatest : AzureFuncti
 #region InProc model fixtures
 public class AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest() : base("HttpTriggerFunction", Tfm.NetOldest, true, inProc: true)
+    public AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest() : base("HttpTriggerFunction", Tfm.Net8, true, inProc: true)
     {
     }
 }
 
 public class AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest() : base("ServiceBusTriggerFunction HttpTrigger_SendServiceBusMessage", Tfm.NetOldest, true, inProc: true)
+    public AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest() : base("ServiceBusTriggerFunction HttpTrigger_SendServiceBusMessage", Tfm.Net8, true, inProc: true)
     {
     }
 }
