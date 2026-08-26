@@ -651,6 +651,30 @@ public class OtlpProfileBuilderTests
     }
 
     [Test]
+    public void Build_sets_host_resource_attribute_when_provided()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1000, 1, "my-service", host: "my-host");
+        var resourceProfiles = req.ResourceProfiles.Single();
+
+        var host = resourceProfiles.Resource.Attributes
+            .Single(a => a.Key == "host").Value.StringValue;
+        Assert.That(host, Is.EqualTo("my-host"));
+    }
+
+    [Test]
+    public void Build_sets_host_resource_attribute_to_empty_string_when_not_provided()
+    {
+        // Unlike entity.guid, host mirrors the connect payload's "host" field, which is always present --
+        // so the attribute is always emitted, falling back to empty rather than being omitted.
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1000, 1, "my-service");
+        var resourceProfiles = req.ResourceProfiles.Single();
+
+        var host = resourceProfiles.Resource.Attributes
+            .Single(a => a.Key == "host").Value.StringValue;
+        Assert.That(host, Is.EqualTo(string.Empty));
+    }
+
+    [Test]
     public void Build_withPeriod_emitsTwoProfiles_offCpuThenCpu()
     {
         var samples = new[]
