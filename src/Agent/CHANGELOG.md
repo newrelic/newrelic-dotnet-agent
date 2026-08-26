@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.54.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.53.1...v10.54.0) (2026-08-25)
+
+
+### New features
+
+* The code that the profiler injects into your application now caches its lookups into the agent with a lock-free cache, instead of resolving each call by reflection, resulting in lower agent overhead for .NET applications. ([#3709](https://github.com/newrelic/newrelic-dotnet-agent/issues/3709)) ([4c7797c](https://github.com/newrelic/newrelic-dotnet-agent/commit/4c7797c45b98cbdd1e8c4652edffabc259a04106))
+
+
+### Fixes
+
+* Prevent transaction cross-contamination in HybridHttpContextStorage ([#3754](https://github.com/newrelic/newrelic-dotnet-agent/issues/3754)) ([2d04565](https://github.com/newrelic/newrelic-dotnet-agent/commit/2d045657d8114ff5c4888a7cef5f369f99b82f82))
+* Release held WCF client transaction when async result completes before callback swap ([#3772](https://github.com/newrelic/newrelic-dotnet-agent/issues/3772)) ([3ef02f3](https://github.com/newrelic/newrelic-dotnet-agent/commit/3ef02f376163fe74c81b1c97e5cf39cfb016dfd5))
+* Skip SQL metadata comment injection for CommandType.StoredProcedure ([#3756](https://github.com/newrelic/newrelic-dotnet-agent/issues/3756)) ([59b92ea](https://github.com/newrelic/newrelic-dotnet-agent/commit/59b92ea2ef9d787d99a5151d6cb8df6df1a86298))
+
 ## [10.53.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.53.0...v10.53.1) (2026-08-12)
 
 

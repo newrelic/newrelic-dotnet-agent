@@ -936,7 +936,7 @@ jobs:
 
       - name: Install HostableWebCore Feature
         if: | # only install for the required namespaces
-          matrix.namespace == 'MongoDB' || matrix.namespace == 'MsSql' || matrix.namespace == 'Oracle'
+          matrix.namespace == 'MongoDB' || matrix.namespace == 'Oracle'
         run: |
           Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
         shell: powershell
@@ -954,8 +954,24 @@ jobs:
         if: matrix.namespace == 'MsSql'
         run: |
           Write-Host "Installing MSSQL CLI"
-          msiexec /i "${{ github.workspace }}\build\Tools\sqlncli.msi" IACCEPTSQLNCLILICENSETERMS=YES /quiet /qn /norestart
-          Start-Sleep 20 # Need to wait for install to finish -- takes only a few seconds, but we need to be sure.
+          $msi = "${{ github.workspace }}\build\Tools\sqlncli.msi"
+
+          # Wait on the installer itself instead of sleeping a fixed interval.
+          $proc = Start-Process msiexec.exe -Wait -PassThru -ArgumentList @(
+            '/i', "`"$msi`"", 'IACCEPTSQLNCLILICENSETERMS=YES', '/quiet', '/qn', '/norestart'
+          )
+          if ($proc.ExitCode -ne 0) {
+            throw "msiexec failed with exit code $($proc.ExitCode)."
+          }
+
+          # Assert the provider registered. Without this the job goes green and the failure
+          # resurfaces far away from its cause, inside an OleDb test connection.
+          $providers = (New-Object System.Data.OleDb.OleDbEnumerator).GetElements() | ForEach-Object { $_.SOURCES_NAME }
+          Write-Host "Registered OLE DB providers:"
+          $providers | ForEach-Object { Write-Host "  $_" }
+          if ($providers -notcontains 'SQLNCLI11') {
+            throw "SQLNCLI11 did not register. The OleDb tests connect with PROVIDER=SQLNCLI11."
+          }
         shell: powershell
 
       # SQL Server Native Client 11.0 (installed above) is still needed by the OleDb tests,
@@ -1056,10 +1072,10 @@ jobs:
 
           # Most unbounded tests can run in parallel with pre-built test apps.
           # Some namespaces must remain serial because they use shared external infrastructure
-          # with hard-coded object names (e.g., MsSql tests all query NewRelic.dbo.TeamMembers
-          # with constant values, NServiceBus5 tests share MSMQ queues). To parallelize these,
-          # each test fixture would need isolated resources (per-test databases/tables/queues).
-          $noParallelNamespaces = @("MsSql", "NServiceBus", "NServiceBus5")
+          # with hard-coded object names (e.g., NServiceBus5 tests share MSMQ queues). To
+          # parallelize these, each test fixture would need isolated resources
+          # (per-test databases/tables/queues).
+          $noParallelNamespaces = @("NServiceBus", "NServiceBus5")
           $parallelize = $noParallelNamespaces -notcontains "${{ matrix.namespace }}"
           $json = Get-Content "${{ env.unbounded_tests_path }}/xunit.runner.json" | ConvertFrom-Json
           $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty

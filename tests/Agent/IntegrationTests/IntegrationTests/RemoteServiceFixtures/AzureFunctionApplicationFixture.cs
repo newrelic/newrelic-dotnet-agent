@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
+using System.Net;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
 
@@ -48,26 +49,16 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
     public void Get(string endpoint)
     {
         var address = $"http://{DestinationServerName}:{Port}/{endpoint}";
-        var headers = new List<KeyValuePair<string, string>>
-        {
-            new KeyValuePair<string, string> ("traceparent", $"00-{TestTraceId}-{TestTraceParent}-00"),
-            new KeyValuePair<string, string> ("tracestate", $"{AccountId}@nr={Version}-{ParentType}-{AccountId}-{AppId}-{SpanId}-{TransactionId}-{Sampled}-" + Priority + $"-{Timestamp},{TestOtherVendorEntries}")
-        };
 
-        GetStringAndIgnoreResult(address, headers);
+        GetStringAndIgnoreResult(address, BuildDistributedTracingHeaders());
     }
 
     public void Post(string endpoint, string payload)
     {
         var address = $"http://{DestinationServerName}:{Port}/{endpoint}";
         var inputPayload = $$"""{"input":"{{payload}}"}""";
-        var headers = new List<KeyValuePair<string, string>>
-        {
-            new KeyValuePair<string, string> ("traceparent", $"00-{TestTraceId}-{TestTraceParent}-00"),
-            new KeyValuePair<string, string> ("tracestate", $"{AccountId}@nr={Version}-{ParentType}-{AccountId}-{AppId}-{SpanId}-{TransactionId}-{Sampled}-" + Priority + $"-{Timestamp},{TestOtherVendorEntries}")
-        };
 
-        PostJson(address, inputPayload, headers);
+        PostJson(address, inputPayload, BuildDistributedTracingHeaders());
     }
 
     public void PostToAzureFuncTool(string triggerName, string payload)
@@ -78,7 +69,23 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
         PostJson(address, inputPayload);
     }
 
+    public void GetAndAssertStatusCode(string endpoint, HttpStatusCode expectedStatusCode)
+    {
+        var address = $"http://{DestinationServerName}:{Port}/{endpoint}";
+
+        GetAndAssertStatusCode(address, expectedStatusCode, BuildDistributedTracingHeaders());
+    }
+
     public bool AzureFunctionModeEnabled { get; }
+
+    private List<KeyValuePair<string, string>> BuildDistributedTracingHeaders()
+    {
+        return new List<KeyValuePair<string, string>>
+        {
+            new KeyValuePair<string, string> ("traceparent", $"00-{TestTraceId}-{TestTraceParent}-00"),
+            new KeyValuePair<string, string> ("tracestate", $"{AccountId}@nr={Version}-{ParentType}-{AccountId}-{AppId}-{SpanId}-{TransactionId}-{Sampled}-" + Priority + $"-{Timestamp},{TestOtherVendorEntries}")
+        };
+    }
 }
 
 #region Isolated model fixtures
@@ -105,6 +112,14 @@ public class AzureFunctionApplicationFixtureHttpTriggerFWLatest : AzureFunctionA
     }
 }
 
+public class AzureFunctionApplicationFixtureHttpTriggerThrowsCoreLatest : AzureFunctionApplicationFixture
+{
+    public AzureFunctionApplicationFixtureHttpTriggerThrowsCoreLatest()
+        : base("httpTriggerFunctionThatThrows httpTriggerFunctionUsingSimpleInvocation", "net10.0", true)
+    {
+    }
+}
+
 public class AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest : AzureFunctionApplicationFixture
 {
     public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", Tfm.NetLatest, false)
@@ -125,6 +140,7 @@ public class AzureFunctionApplicationFixtureQueueTriggerCoreLatest : AzureFuncti
     {
     }
 }
+
 #endregion
 
 #region InProc model fixtures
