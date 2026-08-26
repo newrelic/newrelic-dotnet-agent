@@ -35,12 +35,9 @@ public abstract class MongoDBDriverQueryProviderTestsBase<TFixture> : NewRelicIn
             {
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
-                configModifier.ConfigureFasterMetricsHarvestCycle(10);
-            },
-            exerciseApplication: () =>
-            {
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
-                _fixture.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1), 2);
+                configModifier
+                    .SetLogLevel("FINEST")
+                    .ConfigureFasterMetricsHarvestCycle(10);
             }
         );
 
