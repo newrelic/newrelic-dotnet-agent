@@ -404,13 +404,37 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                     {
                         var requested = cpuReportIntervalMs ?? sampleIntervalMs ?? _configuration.ContinuousProfilingSamplingIntervalMs;
                         var clamped = Math.Min(MaxCommandIntervalMs, Math.Max(MinCommandIntervalMs, requested));
-                        StartLocked(clamped);
+                        StartLocked(clamped, () => RetryCommandStartLocked(clamped));
                     }
                     // else: already running -- idempotent no-op per spec; a repeat start does not retune.
                 }
             }
 
             return BuildCommandResultLocked(exceptions);
+        }
+    }
+
+    // Deferred-start retry for a command-driven start (see the StartLocked overload comment). Re-enters
+    // StartLocked directly instead of going through ApplyConfigChange, since ApplyConfigChange would
+    // just return immediately on the _commandControlledTypes ownership check this call is exempt from.
+    // Re-checks ownership and _disposed itself because this runs on the scheduler's own callback,
+    // asynchronously from whatever StopFromCommand/Dispose may have done while the retry was pending.
+    private void RetryCommandStartLocked(int intervalMs)
+    {
+        lock (_lifecycleLock)
+        {
+            if (_disposed)
+                return;
+
+            // A matching stop command released ownership while this retry was pending -- the operator
+            // no longer wants cpu profiling running, so don't resurrect it.
+            if (!_commandControlledTypes.Contains(ContinuousProfilingCommandTypes.Cpu))
+                return;
+
+            if (_isActive)
+                return;
+
+            StartLocked(intervalMs, () => RetryCommandStartLocked(intervalMs));
         }
     }
 
@@ -465,7 +489,17 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         return new ContinuousProfilingCommandResult(activeTypes, intervalMs, intervalMs, exceptions);
     }
 
-    private void StartLocked(int intervalMs)
+    private void StartLocked(int intervalMs) => StartLocked(intervalMs, ApplyConfigChange);
+
+    // deferredRetryAction is what gets scheduled if a thread-profiling session is in-flight and the
+    // start has to be deferred (see the reverse-guard below). Config-driven callers (StartIfEnabled,
+    // ApplyConfigChange itself on a retune) want a re-check of the live config on retry, so they get
+    // the default ApplyConfigChange overload above. StartFromCommand does NOT: it has already claimed
+    // _commandControlledTypes before calling in, so a deferred retry that goes through ApplyConfigChange
+    // hits that same ownership guard and returns immediately -- a permanent no-op, since nothing else
+    // ever retries a command-driven start. It passes RetryCommandStartLocked instead, which re-enters
+    // here without touching ApplyConfigChange's ownership check.
+    private void StartLocked(int intervalMs, Action deferredRetryAction)
     {
         // Never (re)start a session on a disposed service. Reachable without any deferred callback: StopLocked
         // transiently drops _lifecycleLock during its bounded drain wait, so a retune's
@@ -514,7 +548,7 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             if (ThreadProfilingStatus?.IsThreadProfilingActive == true)
             {
                 Log.Info("[ContinuousProfiling] Start deferred: a thread-profiling session is active; retrying in {0} ms.", (int)DeferredStartRetryInterval.TotalMilliseconds);
-                _scheduler.ExecuteOnce(ApplyConfigChange, DeferredStartRetryInterval);
+                _scheduler.ExecuteOnce(deferredRetryAction, DeferredStartRetryInterval);
                 return;
             }
 
@@ -903,7 +937,7 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
     /// <summary>
     /// Re-checks <see cref="_isActive"/> and resumes native sampling under <see cref="_lifecycleLock"/> --
-    /// the same lock <see cref="StartLocked"/>/<see cref="StopLocked"/> use, so a config-driven disable (or
+    /// the same lock <see cref="StartLocked(int)"/>/<see cref="StopLocked"/> use, so a config-driven disable (or
     /// <see cref="Dispose"/>) racing a pending probe can no longer resurrect sampling with a stale/zeroed
     /// <see cref="_activeIntervalMs"/> after teardown. Also resets <see cref="_lastDrainTimestamp"/> so the
     /// first post-resume profile's duration doesn't span the whole paused window. Returns whether it

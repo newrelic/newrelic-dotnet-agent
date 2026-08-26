@@ -340,6 +340,62 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void StartFromCommand_deferred_behind_thread_profiling_actually_starts_once_it_finishes()
+    {
+        ArrangeEnabled(10000);
+
+        var tpStatus = Mock.Create<IThreadProfilingStatus>();
+        Mock.Arrange(() => tpStatus.IsThreadProfilingActive).Returns(true);
+        _service.ThreadProfilingStatus = tpStatus;
+
+        Action retry = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => retry = action);
+
+        var result = _service.StartFromCommand(new[] { "cpu" }, sampleIntervalMs: null, cpuReportIntervalMs: 5000);
+
+        // Deferred: no native start yet, but a retry was scheduled and command ownership was still claimed.
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Assert.That(_service.IsActive, Is.False);
+        Assert.That(result.Exceptions, Is.Empty);
+        Assert.That(retry, Is.Not.Null);
+
+        // Thread profiling finishes; firing the ACTUAL scheduled retry (not re-issuing the command) must
+        // start CP -- going through ApplyConfigChange instead would no-op here because
+        // _commandControlledTypes still holds "cpu" from the StartFromCommand call above (see H2).
+        Mock.Arrange(() => tpStatus.IsThreadProfilingActive).Returns(false);
+        retry.Invoke();
+
+        Mock.Assert(() => _native.Start(5000), Occurs.Once());
+        Assert.That(_service.IsActive, Is.True);
+    }
+
+    [Test]
+    public void StartFromCommand_deferred_retry_is_a_noop_if_stop_command_released_ownership_first()
+    {
+        ArrangeEnabled(10000);
+
+        var tpStatus = Mock.Create<IThreadProfilingStatus>();
+        Mock.Arrange(() => tpStatus.IsThreadProfilingActive).Returns(true);
+        _service.ThreadProfilingStatus = tpStatus;
+
+        Action retry = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => retry = action);
+
+        _service.StartFromCommand(new[] { "cpu" }, null, null);
+
+        // Operator changes their mind and stops before the deferred retry ever fires.
+        _service.StopFromCommand(new[] { "cpu" });
+
+        Mock.Arrange(() => tpStatus.IsThreadProfilingActive).Returns(false);
+        retry.Invoke();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Assert.That(_service.IsActive, Is.False);
+    }
+
+    [Test]
     public void StopFromCommand_with_cpu_stops_an_active_session()
     {
         ArrangeEnabled(10000);
