@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using Google.Protobuf;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport.Client;
@@ -32,6 +34,11 @@ public class ProfilesTransport : IProfilesTransport
     private const string DataUsageApi = "OTLP";
     private const string DataUsageArea = "Profiles";
 
+    // A 401/403 (bad/expired license key) fails identically every drain (every 1-60s) until an operator
+    // fixes the key -- logging it at Warn on every drain would flood the log for as long as the key stays
+    // bad. Rate-limit to once per window; every occurrence in between still logs at Debug (line below).
+    private static readonly long AuthFailureWarnIntervalStopwatchTicks = (long)(TimeSpan.FromMinutes(5).TotalSeconds * Stopwatch.Frequency);
+
     // Compact, single-line protobuf-JSON (proto3 rules: bytes -> base64, enums -> names; default values emitted
     // so the shape matches the OTel dump). No indentation -- like every other collector payload we log.
     private static readonly JsonFormatter DiagnosticJsonFormatter =
@@ -43,6 +50,12 @@ public class ProfilesTransport : IProfilesTransport
     // volatile: swapped by UpdateEndpoint (e.g. on AgentConnectedEvent) on a different thread than the
     // scheduler thread that reads it in Send; a plain field would risk a stale read across cores.
     private volatile string _endpoint;
+
+    // Stopwatch ticks of the last auth-failure Warn; long.MinValue = never warned yet. Interlocked, not a
+    // plain field, in case a future caller sends concurrently -- matches ContinuousProfilingService's own
+    // Interlocked.Read/CompareExchange convention for cross-thread timestamp fields (avoids a torn 64-bit
+    // read on 32-bit hosts).
+    private long _lastAuthFailureWarnTicks = long.MinValue;
 
     public ProfilesTransport(Func<byte[], string, ProfilesSendResult> httpPost, string endpoint, IAgentHealthReporter agentHealthReporter)
     {
@@ -85,7 +98,12 @@ public class ProfilesTransport : IProfilesTransport
         Log.Debug("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, ProfilesMethodName, payloadJson);
         Log.Debug("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, ProfilesMethodName, result.ResponseContent);
         if (!result.Accepted)
+        {
             Log.Debug("Request({0}): Invocation of \"{1}\" was not accepted (status {2}).", requestGuid, ProfilesMethodName, result.StatusCode);
+
+            if (result.StatusCode == 401 || result.StatusCode == 403)
+                WarnOnAuthFailureRateLimited(result.StatusCode);
+        }
 
         DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Received, DataTransportAuditLogger.AuditLogSource.Collector, result.ResponseContent);
 
@@ -107,6 +125,23 @@ public class ProfilesTransport : IProfilesTransport
         }
 
         return result.Accepted;
+    }
+
+    // Rate-limited so a permanently bad license key produces one Warn per window, not one per drain
+    // (drains run every 1-60s). CompareExchange, not a plain read-then-write, so two callers racing on the
+    // boundary can't both pass the staleness check and double-log -- exactly one wins the swap and warns.
+    private void WarnOnAuthFailureRateLimited(int statusCode)
+    {
+        var now = Stopwatch.GetTimestamp();
+        var last = Interlocked.Read(ref _lastAuthFailureWarnTicks);
+
+        if (last != long.MinValue && now - last < AuthFailureWarnIntervalStopwatchTicks)
+            return;
+
+        if (Interlocked.CompareExchange(ref _lastAuthFailureWarnTicks, now, last) != last)
+            return;
+
+        Log.Warn("[ContinuousProfiling] Profile send rejected with status {0} -- check that the configured license key is valid. This warning is rate-limited; subsequent occurrences are logged at Debug.", statusCode);
     }
 
     // Compact single-line protobuf-JSON for the payload log line + audit log. Public + static so it can be

@@ -113,6 +113,50 @@ public class ProfilesTransportTests
         Assert.That(() => transport.Send(BuildNonEmptyRequest()), Throws.Nothing);
     }
 
+    [TestCase(401)]
+    [TestCase(403)]
+    public void Send_warns_on_the_first_auth_failure(int statusCode)
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, statusCode, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("license key")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_does_not_repeat_the_auth_failure_warn_within_the_rate_limit_window()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 401, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+        transport.Send(BuildNonEmptyRequest());
+        transport.Send(BuildNonEmptyRequest());
+
+        // Three consecutive failures within the same rate-limit window must warn exactly once.
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("license key")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_does_not_warn_on_a_non_auth_failure_status()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 500, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.IsAny<string>(), Arg.IsAny<object[]>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Send_does_not_warn_when_accepted()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.IsAny<string>(), Arg.IsAny<object[]>()), Occurs.Never());
+    }
+
     [Test]
     public void Send_returns_true_when_the_dispatch_reports_accepted()
     {
