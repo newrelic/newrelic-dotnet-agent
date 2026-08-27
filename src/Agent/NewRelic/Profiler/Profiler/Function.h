@@ -348,6 +348,21 @@ namespace NewRelic { namespace Profiler
             const BYTE *pVal = NULL;
             ULONG cbVal = 0;
 
+            // This is the ONLY place TracerFlags::AsyncMethod is set, and it must stay gated on
+            // AsyncStateMachineAttribute alone. A .NET 11 runtime-async method does not carry that
+            // attribute, so it correctly does NOT get the flag -- and must not be made to.
+            //
+            // The flag reaches InstrumentedMethodInfo.IsAsync, which selects DefaultWrapperAsync
+            // over DefaultWrapper and returns Delegates.GetAsyncDelegateFor<Task>, i.e. it attaches
+            // a continuation to a Task the method returned. A runtime-async method's IL body has no
+            // Task to hand over: for Task the result is null (segment popped but never ended) and
+            // for Task<T> it is an unwrapped T that fails the `result is Task` check (segment
+            // neither popped nor ended). Both leak segments and leave the transaction unfinished --
+            // a crash traded for silent data corruption.
+            //
+            // Synchronous finish semantics are the correct ones here: under runtime-async the
+            // instrumented method IS the async body, so the injected FinishTracer call after the
+            // body already runs at async completion. See NR-610232 and RuntimeAsyncReturnType.h.
             HRESULT attributeResult = _metaDataImport->GetCustomAttributeByName(_metaDataToken, _X("System.Runtime.CompilerServices.AsyncStateMachineAttribute"), (const void**)&pVal, &cbVal);
             // It is not safe for us to use the SUCCEEDED macro on the result returned from GetCustomAttributeByName
             if (attributeResult == S_OK)

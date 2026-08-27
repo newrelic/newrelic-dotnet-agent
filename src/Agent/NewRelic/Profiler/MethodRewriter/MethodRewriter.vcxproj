@@ -167,6 +167,7 @@
     <ClInclude Include="InstrumentFunctionManipulator.h" />
     <ClInclude Include="Instrumentors.h" />
     <ClInclude Include="MethodRewriter.h" />
+    <ClInclude Include="RuntimeAsyncReturnType.h" />
     <ClInclude Include="ISystemCalls.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
