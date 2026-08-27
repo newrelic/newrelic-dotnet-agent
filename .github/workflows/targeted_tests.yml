@@ -1,0 +1,91 @@
+name: Targeted Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      integration_namespaces:
+        description: 'Integration test namespaces, comma-separated (e.g. "Errors, Api"). Leave empty to run none.'
+        type: string
+        required: false
+        default: ''
+      unbounded_namespaces:
+        description: 'Unbounded test namespaces, comma-separated (e.g. "MsSql, Redis"). Leave empty to run none.'
+        type: string
+        required: false
+        default: ''
+      container_groups:
+        description: 'Container groups as name/arch, comma-separated (e.g. "Ubuntu/amd64, Core/amd64"). Leave empty to run none.'
+        type: string
+        required: false
+        default: ''
+      parallelize_integration_tests:
+        description: 'Enable parallel integration test execution'
+        type: boolean
+        required: false
+        default: true
+
+permissions: {}
+
+jobs:
+  resolve:
+    name: Resolve Test Selection
+    uses: ./.github/workflows/test_selection.yml
+    permissions: {}
+    with:
+      mode: requested
+      integration_request: ${{ inputs.integration_namespaces }}
+      unbounded_request: ${{ inputs.unbounded_namespaces }}
+      container_request: ${{ inputs.container_groups }}
+
+  build-agent:
+    name: Build Agent
+    needs: resolve
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Build agent
+        uses: ./.github/actions/build-agent
+
+  integration:
+    name: Run IntegrationTests
+    needs: [resolve, build-agent]
+    if: needs.resolve.outputs.integration-namespaces != '[]'
+    uses: ./.github/workflows/integration_tests.yml
+    permissions:
+      contents: read
+      id-token: write
+    secrets: inherit
+    with:
+      namespaces: ${{ needs.resolve.outputs.integration-namespaces }}
+      parallelize: ${{ inputs.parallelize_integration_tests }}
+
+  unbounded:
+    name: Run Unbounded Tests
+    needs: [resolve, build-agent]
+    if: needs.resolve.outputs.unbounded-namespaces != '[]'
+    uses: ./.github/workflows/unbounded_tests.yml
+    permissions:
+      contents: read
+    secrets: inherit
+    with:
+      namespaces: ${{ needs.resolve.outputs.unbounded-namespaces }}
+
+  container:
+    name: Run Linux Container Tests
+    needs: [resolve, build-agent]
+    if: needs.resolve.outputs.container-groups != ''
+    uses: ./.github/workflows/linux_container_tests.yml
+    permissions:
+      actions: write
+      contents: read
+    secrets: inherit
+    with:
+      external_call: true
+      groups: ${{ needs.resolve.outputs.container-groups }}

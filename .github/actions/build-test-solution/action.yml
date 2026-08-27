@@ -1,0 +1,123 @@
+name: Build Test Solution
+description: >
+  Restores and builds an integration test solution in Release, pre-publishes its
+  .NET Core test applications so fixtures can copy pre-built output, and uploads
+  the result as a named artifact. The caller must check out the repository first.
+
+inputs:
+  solution-path:
+    description: 'Full path to the .sln to build, e.g. ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln'
+    required: true
+  search-paths:
+    description: 'Space-separated directory names under tests/Agent/IntegrationTests to scan for test apps, e.g. "Applications SharedApplications"'
+    required: true
+  skip-projects:
+    description: 'Space-separated project base names to skip during pre-publish. Empty means skip nothing.'
+    required: false
+    default: ''
+  artifact-name:
+    description: 'Name of the uploaded artifact, e.g. "integrationtests"'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Cache NuGet packages
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+        restore-keys: ${{ runner.os }}-nuget-
+
+    - name: Install latest .NET 10 SDK
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      with:
+        dotnet-version: '10.0.x'
+        dotnet-quality: 'ga'
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
+      # if needed for future .NET preview builds:
+      #with:
+      #  vs-prerelease: true
+
+    - name: List SDKS
+      run: dotnet --list-sdks
+      shell: powershell
+
+    - name: Build test solution
+      run: |
+        Write-Host "List NuGet Sources"
+        dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+        Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ inputs.solution-path }}"
+        MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ inputs.solution-path }}
+      shell: powershell
+
+    - name: Pre-publish .NET Core test apps
+      run: |
+        # Pre-publish .NET Core test apps so test fixtures can copy pre-built output
+        # instead of invoking dotnet publish at runtime. This eliminates file-lock
+        # collisions on shared dependency obj/ directories during parallel test execution.
+        # We skip class libraries and Azure Function apps (func.exe requires the original
+        # build output structure, not RID-specific publish output).
+        $runtime = "win-x64"
+        $searchPaths = @("${{ inputs.search-paths }}" -split ' ' | Where-Object { $_ })
+        $basePath = "${{ github.workspace }}\tests\Agent\IntegrationTests"
+        # Azure Function apps are incompatible with pre-publish: func.exe start --no-build
+        # expects framework-dependent build output, not RID-specific publish output
+        $skipProjects = @("${{ inputs.skip-projects }}" -split ' ' | Where-Object { $_ })
+        $published = 0; $skipped = 0; $failed = 0
+        foreach ($searchPath in $searchPaths) {
+          $fullPath = Join-Path $basePath $searchPath
+          if (-not (Test-Path $fullPath)) { continue }
+          $projects = Get-ChildItem -Path $fullPath -Filter "*.csproj" -Recurse
+          foreach ($project in $projects) {
+            $content = Get-Content $project.FullName -Raw
+            # Skip explicit class libraries and excluded projects
+            if ($content -match '<OutputType>\s*Library\s*</OutputType>') { $skipped++; continue }
+            if ($skipProjects -contains $project.BaseName) { $skipped++; continue }
+            if ($content -match '<TargetFrameworks?>(.*?)</TargetFrameworks?>') {
+              $tfms = $Matches[1] -split ';'
+              foreach ($tfm in $tfms) {
+                if ($tfm -match '^net\d+\.\d+$') {
+                  Write-Host "Pre-publishing $($project.Name) for $tfm/$runtime"
+                  $output = dotnet publish --configuration Release --runtime $runtime --framework $tfm $project.FullName 2>&1
+                  if ($LASTEXITCODE -ne 0) {
+                    Write-Warning "Failed to pre-publish $($project.Name) for $tfm/$runtime"
+                    $output | Where-Object { $_ -match "error" } | ForEach-Object { Write-Host "  $_" }
+                    $failed++
+                  } else {
+                    $published++
+                  }
+                }
+              }
+            }
+          }
+        }
+        Write-Host "Pre-publish complete: $published succeeded, $skipped skipped (libraries), $failed failed"
+
+        # Clean up intermediate RID-specific build artifacts to reduce artifact size.
+        # dotnet publish --runtime creates large intermediate files alongside the publish/
+        # subdirectory (including self-contained runtime copies). Only publish/ is needed.
+        $cleaned = 0
+        foreach ($searchPath in $searchPaths) {
+          $fullPath = Join-Path $basePath $searchPath
+          if (-not (Test-Path $fullPath)) { continue }
+          Get-ChildItem -Path $fullPath -Directory -Recurse -Filter $runtime | ForEach-Object {
+            Get-ChildItem -Path $_.FullName -Exclude "publish" | Remove-Item -Recurse -Force
+            $cleaned++
+          }
+        }
+        Write-Host "Cleaned intermediate build artifacts from $cleaned RID directories"
+      shell: powershell
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: |
+          ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
+          ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
+          ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
+          !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
+        if-no-files-found: error

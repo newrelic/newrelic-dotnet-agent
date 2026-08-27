@@ -1,0 +1,32 @@
+name: Workflow Lint
+
+on:
+  pull_request:
+    paths:
+      - '.github/**'
+
+permissions: {}
+
+jobs:
+  check-workflows:
+    name: Check Workflows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+        shell: bash
+
+      - name: Run workflow checks
+        run: python3 .github/scripts/check-workflows.py
+        shell: bash
