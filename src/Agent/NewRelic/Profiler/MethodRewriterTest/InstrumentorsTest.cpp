@@ -157,11 +157,34 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         }
 
         // .NET 11 runtime-async methods (MethodImplAttributes.Async, 0x2000 in ImplFlags -- note
-        // that mdPinvokeImpl above is also 0x2000, but in methodAttributes, a different field) must
-        // be declined: their IL returns the unwrapped type rather than the declared task type, so
-        // instrumenting them yields an InvalidProgramException at JIT time. See NR-610232.
-        TEST_METHOD(default_runtime_async_returns_false)
+        // that mdPinvokeImpl above is also 0x2000, but in methodAttributes, a different field) do
+        // not follow the return convention their signature declares: the body pushes nothing for
+        // Task/ValueTask and an unwrapped T for Task<T>/ValueTask<T>. See NR-610232.
+        //
+        // The rewriter handles those four shapes (RuntimeAsyncReturnType.h). Anything else is
+        // declined, because the Async flag can be set but inert and rewriting a method that really
+        // uses the synchronous convention would inject the InvalidProgramException we are
+        // preventing. These tests cover both sides of that split.
+
+        // Makes MockFunction look like a method returning a task type: a 0-parameter signature whose
+        // return type is ELEMENT_TYPE_CLASS with a token the resolver answers with typeName.
+        static void MakeTaskReturning(std::shared_ptr<MockFunction> func, const wchar_t* typeName)
         {
+            auto resolver = std::make_shared<MockTokenResolver>();
+            resolver->_typeString = typeName;
+            func->_tokenResolver = resolver;
+
+            func->_signature = std::make_shared<ByteVector>();
+            func->_signature->push_back(0x00);  // default calling convention
+            func->_signature->push_back(0x00);  // 0 parameters
+            func->_signature->push_back(0x12);  // return type: ELEMENT_TYPE_CLASS
+            func->_signature->push_back(0x49);  // class token (compressed 0x01000012)
+        }
+
+        TEST_METHOD(default_runtime_async_unrecognized_return_type_returns_false)
+        {
+            // MockFunction's stock signature returns void, which no runtime-async method can --
+            // exactly the inert-flag shape that must be declined rather than rewritten
             auto func = std::make_shared<MockFunction>();
             func->_isRuntimeAsync = true;
             auto settings = MakeMatchingSettings(func);
@@ -170,7 +193,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsFalse(result);
         }
 
-        TEST_METHOD(default_runtime_async_does_not_call_write_method)
+        TEST_METHOD(default_runtime_async_unrecognized_return_type_does_not_call_write_method)
         {
             // the return value only says we declined; this proves no IL was actually rewritten
             auto func = std::make_shared<MockFunction>();
@@ -182,10 +205,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             };
             DefaultInstrumentor instr;
             instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
-            Assert::IsFalse(writeMethodCalled, L"runtime-async methods must not be rewritten");
+            Assert::IsFalse(writeMethodCalled, L"an unrecognized runtime-async shape must not be rewritten");
         }
 
-        TEST_METHOD(default_runtime_async_skipped_even_when_should_trace)
+        TEST_METHOD(default_runtime_async_unrecognized_return_type_skipped_even_when_should_trace)
         {
             // no matching instrumentation point, so this takes the ShouldTrace branch that
             // synthesizes one -- the [Transaction]/[Trace] attribute path, most exposed today
@@ -196,6 +219,57 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             DefaultInstrumentor instr;
             bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
             Assert::IsFalse(result);
+        }
+
+        TEST_METHOD(default_runtime_async_task_is_instrumented)
+        {
+            // the shape the attached repro hits: async Task, whose body pushes nothing
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            MakeTaskReturning(func, L"System.Threading.Tasks.Task");
+            auto settings = MakeMatchingSettings(func);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsTrue(result, L"a runtime-async Task method is a shape the rewriter understands");
+        }
+
+        TEST_METHOD(default_runtime_async_task_calls_write_method)
+        {
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            MakeTaskReturning(func, L"System.Threading.Tasks.Task");
+            auto settings = MakeMatchingSettings(func);
+            bool writeMethodCalled = false;
+            func->_writeMethodHandler = [&writeMethodCalled](const ByteVector&) {
+                writeMethodCalled = true;
+            };
+            DefaultInstrumentor instr;
+            instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsTrue(writeMethodCalled, L"a runtime-async Task method must actually be rewritten");
+        }
+
+        TEST_METHOD(default_runtime_async_value_task_is_instrumented)
+        {
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            MakeTaskReturning(func, L"System.Threading.Tasks.ValueTask");
+            auto settings = MakeMatchingSettings(func);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsTrue(result, L"a runtime-async ValueTask method is a shape the rewriter understands");
+        }
+
+        TEST_METHOD(default_task_returning_method_without_the_flag_is_instrumented)
+        {
+            // the same signature without the Async impl flag is an ordinary Task-returning method
+            // and must keep going down the unchanged synchronous path
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = false;
+            MakeTaskReturning(func, L"System.Threading.Tasks.Task");
+            auto settings = MakeMatchingSettings(func);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsTrue(result);
         }
 
         TEST_METHOD(default_not_runtime_async_still_instruments)

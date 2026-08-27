@@ -12,6 +12,7 @@
 #include "ApiFunctionManipulator.h"
 #include "HelperFunctionManipulator.h"
 #include "InstrumentFunctionManipulator.h"
+#include "RuntimeAsyncReturnType.h"
 #include "../Configuration/InstrumentationPoint.h"
 #include "../Configuration/InstrumentationConfiguration.h"
 #include "../Common/CorStandIn.h"
@@ -65,13 +66,21 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 return false;
             }
             // A .NET 11 runtime-async method returns its unwrapped type rather than the task type
-            // its signature declares, so the default instrumentation below would emit unverifiable
-            // IL and the JIT would reject the method with InvalidProgramException. Decline it until
-            // the rewriter understands the async2 return convention. Must stay above the
-            // ShouldInjectMethodInstrumentation() call so we don't request a rejit we won't honor.
-            // See NR-610232.
-            if (function->IsRuntimeAsync()) {
-                LogInfo(L"Skipping runtime-async method (not yet supported): ", function->ToString());
+            // its signature declares. The rewriter handles that for the four return types the spec
+            // permits (Task, ValueTask, Task<T>, ValueTask<T>) by substituting an effective return
+            // type; see RuntimeAsyncReturnType.h.
+            //
+            // Any other shape is declined. MethodImplAttributes.Async can be set but inert -- the
+            // spec says it "only has effect" on Task/ValueTask returns -- and applying the async
+            // return convention to a method that actually uses the synchronous one would inject the
+            // very InvalidProgramException this code prevents. Losing telemetry on an unknown shape
+            // is the safe trade; the warning tells us if it ever actually happens.
+            //
+            // Must stay above the ShouldInjectMethodInstrumentation() call so we don't request a
+            // rejit we won't honor. See NR-610232.
+            if (function->IsRuntimeAsync() &&
+                    RuntimeAsync::GetEffectiveReturnTypeFromSignature(function->GetSignature(), function->GetTokenResolver()) == nullptr) {
+                LogWarn(L"Skipping runtime-async method with an unrecognized return type: ", function->ToString());
                 return false;
             }
 

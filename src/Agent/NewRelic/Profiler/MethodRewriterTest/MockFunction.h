@@ -253,8 +253,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
         // get a token for a given signature
         uint32_t _signatureToken;
-        virtual uint32_t GetTokenFromSignature(const ByteVector& /*signature*/) override
+        // The manipulator hands the rewritten locals signature here on its way to the method header,
+        // which makes this the one place a test can see the result local's type. Used to prove a
+        // runtime-async method's result local is sized to the type its body returns rather than the
+        // task type its signature declares. See NR-610232.
+        std::function<void(const ByteVector&)> _tokenFromSignatureHandler;
+        virtual uint32_t GetTokenFromSignature(const ByteVector& signature) override
         {
+            if (_tokenFromSignatureHandler) _tokenFromSignatureHandler(signature);
             return _signatureToken;
         }
 

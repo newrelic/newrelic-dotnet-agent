@@ -21,6 +21,7 @@
 #include "../Sicily/codegen/ByteCodeGenerator.h"
 #include "../SignatureParser/SignatureParser.h"
 #include "IFunctionHeaderInfo.h"
+#include "RuntimeAsyncReturnType.h"
 
 namespace NewRelic { namespace Profiler { namespace MethodRewriter
 {
@@ -44,6 +45,16 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         ByteVector _oldCodeBytes;
         ByteVector _newLocalVariablesSignature;
         SignatureParser::MethodSignaturePtr _methodSignature;
+        // The return type the method's IL body actually leaves on the stack, which differs from
+        // _methodSignature->_returnType only for a .NET 11 runtime-async method: void for
+        // Task/ValueTask, T for Task<T>/ValueTask<T>. For every other method this IS
+        // _methodSignature->_returnType, so substituting it changes nothing.
+        //
+        // nullptr means the method is runtime-async in a shape we do not understand. The
+        // instrumentors decline such methods before constructing a manipulator, so this is a
+        // guard against that check and this one disagreeing, not an expected state. See
+        // NR-610232 and RuntimeAsyncReturnType.h.
+        SignatureParser::ReturnTypePtr _effectiveReturnType;
         bool _isCoreClr;
         const AgentCallStyle::Strategy _agentCallStrategy;
 
@@ -52,12 +63,28 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _function(function),
             _newHeader(sizeof(COR_ILMETHOD_FAT)),
             _methodSignature(SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end())),
+            _effectiveReturnType(function->IsRuntimeAsync()
+                ? RuntimeAsync::GetEffectiveReturnType(_methodSignature->_returnType, function->GetTokenResolver())
+                : _methodSignature->_returnType),
             _isCoreClr(isCoreClr),
             _agentCallStrategy(agentCallStrategy)
         {
         }
 
     protected:
+        // Call before emitting any return-value handling. Keeps the constructor non-throwing while
+        // making an unrecognized runtime-async shape a loud, contained failure: the exception is
+        // caught in the profiler callback and the method is simply left uninstrumented, rather than
+        // being rewritten against a convention we guessed at.
+        void ThrowIfEffectiveReturnTypeIsUnknown()
+        {
+            if (_effectiveReturnType == nullptr)
+            {
+                LogError(_function->ToString(), L": Cannot determine the effective return type of this runtime-async method; refusing to instrument it.");
+                throw FunctionManipulatorException(_X("Unrecognized runtime-async return type"));
+            }
+        }
+
         void Initialize() {
             ExtractHeaderBodyAndExtra();
             ExtractLocalVariablesSignature();
@@ -450,7 +477,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // append the return type of this function to the locals signature and return the index to it
         static uint16_t AppendReturnTypeLocal(ByteVector& localsSignature, SignatureParser::MethodSignaturePtr signature)
         {
-            return AppendToLocalsSignature(*signature->_returnType->ToBytes(), localsSignature);
+            return AppendReturnTypeLocal(localsSignature, signature->_returnType);
+        }
+
+        // as above, but for the type the body actually returns rather than the one the signature
+        // declares -- the two differ for a runtime-async method (see _effectiveReturnType)
+        static uint16_t AppendReturnTypeLocal(ByteVector& localsSignature, SignatureParser::ReturnTypePtr returnType)
+        {
+            return AppendToLocalsSignature(*returnType->ToBytes(), localsSignature);
         }
 
         // appends the given token to the new locals signature and returns the index to it

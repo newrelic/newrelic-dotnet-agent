@@ -204,6 +204,7 @@
     </ClCompile>
     <ClCompile Include="FunctionManipulatorTest.cpp" />
     <ClCompile Include="InstrumentorsTest.cpp" />
+    <ClCompile Include="RuntimeAsyncReturnTypeTest.cpp" />
     <ClCompile Include="SystemCallsTest.cpp" />
     <ClCompile Include="TestModuleAttributes.cpp" />
   </ItemGroup>
