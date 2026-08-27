@@ -680,6 +680,16 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // is an optimization now, not what makes the wait below safe -- the Monitor.Exit/Enter drop is.
             _stopSignaled = true;
 
+            // Full fence: without this, the plain read of _lastDrainTask just below and the volatile
+            // write above form a Dekker/StoreLoad pair with DrainOnce's own _stopSignaled recheck after
+            // it publishes _lastDrainTask (see DrainOnce) -- a volatile store's release semantics alone
+            // don't stop a later plain load from reordering ahead of it (permitted even on x86 via store
+            // buffering, more so on arm64). Without the barrier, "this thread reads a stale _lastDrainTask
+            // AND DrainOnce reads _stopSignaled == false" can both be true at once, and the bounded wait
+            // below has nothing to wait on while a late drain still runs. The barrier makes this the
+            // fenced side of that pair; DrainOnce's side is already fenced via Interlocked.Exchange.
+            Thread.MemoryBarrier();
+
             // StopExecuting only guarantees the SCHEDULER considers the action finished -- since
             // _drainAction just dispatches DrainOnce via Task.Run and returns immediately, that happens
             // almost instantly regardless of whether the real drain (including a retried send) is still
@@ -739,8 +749,10 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         // _lifecycleLock -- OnSendResult below DOES take it (once a real send has happened), guarded by its
         // own _stopSignaled fast exit; see the locking-posture note above. Dispose has joined the native
         // worker thread, so a drain landing after this check would P/Invoke into a dead sampler and ship a
-        // profile through an already-disposed reporter.
-        if (_disposed)
+        // profile through an already-disposed reporter. _stopSignaled catches the bare stop/retune case too
+        // (no Dispose involved, so _disposed alone never trips): StopLocked sets it, fenced by its own
+        // Thread.MemoryBarrier(), before capturing _lastDrainTask -- see StopLocked for the paired fence.
+        if (_disposed || _stopSignaled)
             return;
 
         if (Interlocked.CompareExchange(ref _drainInFlight, 1, 0) != 0)
@@ -756,6 +768,14 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         {
             try
             {
+                // Narrows (does not close -- see StopLocked's Thread.MemoryBarrier() comment) the same
+                // race the top-of-method gate guards: if _stopSignaled flipped true between that gate and
+                // this publish, bail before ReadBatch rather than P/Invoke into a native sampler that
+                // StopLocked may already be tearing down. The outer finally still completes
+                // drainCompletion so StopLocked's wait (if it captured THIS task) unblocks immediately.
+                if (_disposed || _stopSignaled)
+                    return;
+
                 // Nowhere to send yet: skip read/parse/build entirely rather than doing the work and
                 // dropping the result. Native sampling still runs (StartLocked already started it,
                 // decoupled from connect); only the managed drain is deferred.
