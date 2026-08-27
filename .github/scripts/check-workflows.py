@@ -232,6 +232,35 @@ def check_v1h(docs):
             )
 
 
+def check_v1i():
+    """No expression in an action.yml's metadata.
+
+    The github context is available inside `runs:` but not in the metadata block,
+    so an example path in a description makes the runner refuse to load the action
+    with "Unrecognized named-value: 'github'". PyYAML parses it happily.
+    """
+    for path in sorted((ROOT / ".github" / "actions").glob("*/action.yml")):
+        try:
+            doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except Exception as exc:  # noqa: BLE001 - an unparseable action is a failure
+            fail("V1i", "%s does not parse: %s" % (path.name, exc))
+            continue
+        fields = [(k, doc.get(k)) for k in ("name", "description", "author")]
+        for section in ("inputs", "outputs"):
+            for item, spec in (doc.get(section) or {}).items():
+                if isinstance(spec, dict):
+                    for key in ("description", "default"):
+                        fields.append(("%s.%s.%s" % (section, item, key), spec.get(key)))
+        for where, text in fields:
+            if isinstance(text, str) and "${{" in text:
+                fail(
+                    "V1i",
+                    "%s %s contains an expression; no context is available in action "
+                    "metadata, so the runner fails to load the action"
+                    % (path.parent.name + "/action.yml", where),
+                )
+
+
 def main():
     docs = {}
     for name in TOUCHED:
@@ -246,13 +275,14 @@ def main():
     check_v1e(docs)
     check_v1g(docs)
     check_v1h(docs)
+    check_v1i()
 
     if FAILURES:
         print("check-workflows: %d failure(s)" % len(FAILURES))
         for line in FAILURES:
             print("  " + line)
         return 1
-    print("check-workflows: all checks passed (V1a, V1d, V1e, V1g, V1h)")
+    print("check-workflows: all checks passed (V1a, V1d, V1e, V1g, V1h, V1i)")
     return 0
 
 

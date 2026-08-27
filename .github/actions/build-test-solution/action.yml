@@ -6,7 +6,7 @@ description: >
 
 inputs:
   solution-path:
-    description: 'Full path to the .sln to build, e.g. ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln'
+    description: 'Absolute path to the .sln to build, e.g. <workspace>\tests\Agent\IntegrationTests\IntegrationTests.sln'
     required: true
   search-paths:
     description: 'Space-separated directory names under tests/Agent/IntegrationTests to scan for test apps, e.g. "Applications SharedApplications"'
