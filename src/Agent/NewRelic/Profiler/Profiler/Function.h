@@ -19,6 +19,14 @@ namespace NewRelic { namespace Profiler
 {
     using NewRelic::Profiler::MethodRewriter::FunctionHeaderInfoPtr;
 
+    // MethodImplAttributes.Async -- set by the C# compiler on methods built with .NET 11
+    // runtime-async. Not yet present in the vendored coreclr headers (CorMethodImpl in
+    // externals/coreclr-headers/src/inc/corhdr.h stops at miInternalCall = 0x1000), so it
+    // is defined here. Replace with miAsync once those headers are updated; the name is
+    // deliberately different so a header bump cannot collide with this declaration.
+    // Spec: dotnet/runtime docs/design/specs/runtime-async.md, II.23.1.11.
+    constexpr DWORD CorMethodImplAsync = 0x2000;
+
 #ifdef DEBUG
 //#define DEBUG_PREPROCESSOR 1 // when enabled the profiler will instrument tons of methods to help identify issues with method manipulation
 //#define WRITE_BYTES_TO_DISK 1
@@ -51,6 +59,7 @@ namespace NewRelic { namespace Profiler
         mdTypeDef _typeDefinitionToken;
         DWORD _classAttributes;
         DWORD _methodAttributes;
+        DWORD _methodImplFlags;
         FunctionHeaderInfoPtr _functionHeaderInfo;
         bool _shouldTrace;
         bool _valid;
@@ -155,7 +164,9 @@ namespace NewRelic { namespace Profiler
             StaticThrowOnError(metaDataImport->GetMethodProps(metaDataToken, nullptr, nullptr, 0, &functionNameLength, &methodAttributes, nullptr, nullptr, nullptr, nullptr));
             
             std::unique_ptr<WCHAR[]> functionName(new WCHAR[functionNameLength]);
-            StaticThrowOnError(metaDataImport->GetMethodProps(metaDataToken, &typeDefinitionToken, functionName.get(), functionNameLength, nullptr, nullptr, &signature, &signatureSize, nullptr, nullptr));
+            // the final out-param is pdwImplFlags; we read it to detect runtime-async methods
+            DWORD methodImplFlags = 0;
+            StaticThrowOnError(metaDataImport->GetMethodProps(metaDataToken, &typeDefinitionToken, functionName.get(), functionNameLength, nullptr, nullptr, &signature, &signatureSize, nullptr, &methodImplFlags));
 
             if (!skipShouldInstrumentChecks && !methodRewriter.get()->ShouldInstrumentFunction(ToStdWString(functionName.get()))) {
                 LogTrace(ToStdWString(functionName.get()), L" is not an instrumented function");
@@ -198,7 +209,7 @@ namespace NewRelic { namespace Profiler
 
             return std::make_shared<Function>(profilerInfo, functionId, metaDataImport, metaDataAssemblyImport, methodRewriter,
                 appDomainId, signatureSize, signature, moduleId, classId, metaDataToken, typeDefinitionToken, ToStdWString(assemblyName.get()), 
-                typeName, ToStdWString(functionName.get()), classAttributes, methodAttributes, tracerFlags, 
+                typeName, ToStdWString(functionName.get()), classAttributes, methodAttributes, methodImplFlags, tracerFlags,
                 hasTransactionOrTraceAttribute, injectMethodInstrumentation, setILFunctionBodyOrRejit, rejitFunction);
         }
 
@@ -259,6 +270,7 @@ namespace NewRelic { namespace Profiler
             xstring_t functionName,
             DWORD classAttributes,
             DWORD methodAttributes,
+            DWORD methodImplFlags,
             uint32_t tracerFlags,
             bool shouldTrace,
             bool injectMethodInstrumentation,
@@ -279,6 +291,7 @@ namespace NewRelic { namespace Profiler
             _typeDefinitionToken(typeDefinitionToken),
             _classAttributes(classAttributes),
             _methodAttributes(methodAttributes),
+            _methodImplFlags(methodImplFlags),
             _shouldTrace(shouldTrace),
             _valid(true),
             _isCoreClr(false),
@@ -402,6 +415,16 @@ namespace NewRelic { namespace Profiler
         virtual bool IsCoreClr() override
         {
             return _isCoreClr;
+        }
+
+        // A .NET 11 runtime-async method carries no AsyncStateMachineAttribute -- the compiler
+        // emits the body directly on the method and flags it here instead. Such a method returns
+        // its unwrapped type (nothing for Task/ValueTask, T for Task<T>/ValueTask<T>) even though
+        // its signature declares the task type, so the default instrumentation's signature-derived
+        // return handling would produce unverifiable IL. See NR-610232.
+        virtual bool IsRuntimeAsync() override
+        {
+            return (_methodImplFlags & CorMethodImplAsync) != 0;
         }
 
         virtual bool ShouldTrace() override

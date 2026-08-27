@@ -64,6 +64,16 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 LogError(L"Skipping interop method: ", function->ToString());
                 return false;
             }
+            // A .NET 11 runtime-async method returns its unwrapped type rather than the task type
+            // its signature declares, so the default instrumentation below would emit unverifiable
+            // IL and the JIT would reject the method with InvalidProgramException. Decline it until
+            // the rewriter understands the async2 return convention. Must stay above the
+            // ShouldInjectMethodInstrumentation() call so we don't request a rejit we won't honor.
+            // See NR-610232.
+            if (function->IsRuntimeAsync()) {
+                LogInfo(L"Skipping runtime-async method (not yet supported): ", function->ToString());
+                return false;
+            }
 
             // this call will have the side effect of triggering a rejit if this is the initial JIT in a rejit enabled environment
             if (function->ShouldInjectMethodInstrumentation())
