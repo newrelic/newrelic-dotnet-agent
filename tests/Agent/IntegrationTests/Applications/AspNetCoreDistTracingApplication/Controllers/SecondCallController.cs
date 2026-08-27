@@ -27,6 +27,8 @@ public class SecondCallController : Controller
 
                 //var result = await httpClient.GetStringAsync(nextUrl);
                 var response = await httpClient.SendAsync(requestMessage);
+                // GetStringAsync used to supply this; SendAsync does not throw on a failure status.
+                response.EnsureSuccessStatusCode();
                 var result = await response.Content.ReadAsStringAsync();
 
                 return result;

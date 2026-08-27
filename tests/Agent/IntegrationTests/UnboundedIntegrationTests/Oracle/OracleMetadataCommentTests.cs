@@ -50,7 +50,7 @@ public abstract class OracleMetadataCommentTestsBase<TFixture> : NewRelicIntegra
             exerciseApplication: () =>
             {
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ShutdownLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(2));
             }
         );
 

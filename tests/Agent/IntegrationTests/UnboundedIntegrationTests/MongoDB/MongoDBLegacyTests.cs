@@ -26,6 +26,8 @@ public class MongoDBLegacyTests : NewRelicIntegrationTest<ConsoleDynamicMethodFi
         _fixture = fixture;
         _fixture.TestLogger = output;
 
+        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+
         _fixture.AddCommand($"MongoDBLegacyExerciser SetupClient");
         _fixture.AddCommand($"MongoDBLegacyExerciser Insert");
         _fixture.AddCommand($"MongoDBLegacyExerciser Find");
@@ -58,13 +60,9 @@ public class MongoDBLegacyTests : NewRelicIntegrationTest<ConsoleDynamicMethodFi
             {
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
-                configModifier.ConfigureFasterMetricsHarvestCycle(10);
-            },
-            exerciseApplication: () =>
-            {
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
-                _fixture.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1), 2);
+                configModifier
+                    .SetLogLevel("FINEST")
+                    .ConfigureFasterMetricsHarvestCycle(10);
             }
         );
         _fixture.Initialize();

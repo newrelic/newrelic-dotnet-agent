@@ -154,6 +154,10 @@ generated file. Exact command and caveats in
 Full build: open `FullAgent.sln` in the latest Visual Studio or run its
 MSBuild equivalent.
 
+**`IntegrationTests.sln` and `UnboundedIntegrationTests.sln` need VS MSBuild**
+with publish flags; the `dotnet` SDK cannot build their legacy ASP.NET FW web
+apps. Invocation: [tests/CLAUDE.md](tests/CLAUDE.md#building-the-solution).
+
 **Core.UnitTest** (and any project depending on `Core.csproj`) fails from
 the CLI with `AssemblyModifier.exe` / `*Undefined*` errors unless
 `SolutionDir` is passed explicitly — VS sets it, plain `dotnet` does not:
