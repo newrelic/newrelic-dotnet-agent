@@ -4,6 +4,7 @@
 using Google.Protobuf;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
+using NewRelic.Agent.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using OpenTelemetry.Proto.Collector.Profiles.V1Development;
@@ -17,6 +18,61 @@ namespace NewRelic.Agent.Core.UnitTest.DataTransport.ContinuousProfiling;
 [TestFixture]
 public class ProfilesTransportTests
 {
+    private ILogger _nrLogger;
+
+    [SetUp]
+    public void SetUp()
+    {
+        // The agent's Log facade is independent of Serilog's static logger; initialize it so calls are mockable.
+        _nrLogger = Mock.Create<ILogger>();
+        Log.Initialize(_nrLogger);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        Log.Initialize(new NoOpLogger());
+    }
+
+    [Test]
+    public void Send_logs_partial_success_at_finest_when_rejected_profiles_reported()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty, 3, "schema drift"),
+            "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        // Log.Finest(message, args) keeps the format template and args separate -- match the template
+        // and assert the substituted values landed in args, not in the (still-unformatted) message string.
+        Mock.Assert(() => _nrLogger.Finest(
+                Arg.Matches<string>(m => m.Contains("partial success")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Contains(a, (object)3L) && System.Linq.Enumerable.Contains(a, (object)"schema drift"))),
+            Occurs.Once());
+    }
+
+    [Test]
+    public void Send_does_not_log_partial_success_when_none_reported()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty),
+            "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Finest(Arg.Matches<string>(m => m.Contains("partial success")), Arg.IsAny<object[]>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Send_does_not_flip_accepted_when_partial_success_reports_rejections()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty, 3, "schema drift"),
+            "http://unused", null);
+
+        Assert.That(transport.Send(BuildNonEmptyRequest()), Is.True, "Partial success is diagnostics only; Accepted stays HTTP-status-only.");
+    }
+
     [Test]
     public void Send_invokes_http_dispatch_with_the_serialized_request_bytes_and_endpoint()
     {

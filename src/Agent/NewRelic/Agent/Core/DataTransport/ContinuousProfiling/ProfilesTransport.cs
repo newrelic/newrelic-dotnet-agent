@@ -89,6 +89,15 @@ public class ProfilesTransport : IProfilesTransport
 
         DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Received, DataTransportAuditLogger.AuditLogSource.Collector, result.ResponseContent);
 
+        // Diagnostics only -- an OTLP partial_success does not change Accepted (see ProfilesSendResult's
+        // type doc). Finest, not Debug/Warn: this is best-effort visibility into a signal the agent already
+        // treats as non-fatal, not an operator-facing warning.
+        if (result.RejectedProfiles > 0 || !string.IsNullOrEmpty(result.PartialSuccessErrorMessage))
+        {
+            Log.Finest("Request({0}): Invocation of \"{1}\" reported a partial success: {2} rejected profile(s); {3}",
+                requestGuid, ProfilesMethodName, result.RejectedProfiles, result.PartialSuccessErrorMessage);
+        }
+
         // Data-usage supportability metric, same as every other OTLP/collector send (HttpCollectorWire.
         // SendData, OtlpAuditHandler) -- reported on acceptance only, matching both of those.
         if (result.Accepted)

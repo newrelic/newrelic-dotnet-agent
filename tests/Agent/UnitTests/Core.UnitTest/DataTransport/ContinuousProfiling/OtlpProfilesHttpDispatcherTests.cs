@@ -5,9 +5,12 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using Google.Protobuf;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 using NUnit.Framework;
+using OpenTelemetry.Proto.Collector.Profiles.V1Development;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.UnitTest.DataTransport.ContinuousProfiling;
@@ -184,6 +187,81 @@ public class OtlpProfilesHttpDispatcherTests
             Assert.That(captured.Content.Headers.ContentType.MediaType, Is.EqualTo("application/x-protobuf"));
             Assert.That(captured.Headers.GetValues("api-key").Single(), Is.EqualTo(LicenseKey));
         });
+    }
+
+    [Test]
+    public void Post_parses_partial_success_from_a_protobuf_response()
+    {
+        var protobufResponse = new ExportProfilesServiceResponse
+        {
+            PartialSuccess = new ExportProfilesPartialSuccess { RejectedProfiles = 3, ErrorMessage = "schema drift" }
+        };
+        using var response = BuildProtobufResponse(HttpStatusCode.OK, protobufResponse.ToByteArray());
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
+
+        var result = dispatcher.Post(new byte[] { 1, 2, 3 }, Endpoint);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Accepted, Is.True, "Partial success must not flip Accepted -- it is diagnostics only.");
+            Assert.That(result.RejectedProfiles, Is.EqualTo(3));
+            Assert.That(result.PartialSuccessErrorMessage, Is.EqualTo("schema drift"));
+        });
+    }
+
+    [Test]
+    public void Post_reports_no_partial_success_for_an_empty_response_body()
+    {
+        var protobufResponse = new ExportProfilesServiceResponse();
+        using var response = BuildProtobufResponse(HttpStatusCode.OK, protobufResponse.ToByteArray());
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
+
+        var result = dispatcher.Post(new byte[] { 1, 2, 3 }, Endpoint);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.RejectedProfiles, Is.EqualTo(0));
+            Assert.That(result.PartialSuccessErrorMessage, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void Post_does_not_attempt_to_parse_a_non_protobuf_response_body()
+    {
+        // A proxy/error page (plain text here) is not OTLP -- must not be fed to the protobuf parser.
+        using var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("ok") };
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
+
+        var result = dispatcher.Post(new byte[] { 1, 2, 3 }, Endpoint);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.RejectedProfiles, Is.EqualTo(0));
+            Assert.That(result.PartialSuccessErrorMessage, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void Post_does_not_throw_when_a_protobuf_content_typed_body_is_not_actually_valid_protobuf()
+    {
+        using var response = BuildProtobufResponse(HttpStatusCode.OK, new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF });
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
+
+        var result = default(ProfilesSendResult);
+        Assert.That(() => result = dispatcher.Post(new byte[] { 1, 2, 3 }, Endpoint), Throws.Nothing);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(result.RejectedProfiles, Is.EqualTo(0));
+        });
+    }
+
+    private static HttpResponseMessage BuildProtobufResponse(HttpStatusCode statusCode, byte[] bodyBytes)
+    {
+        var response = new HttpResponseMessage(statusCode) { Content = new ByteArrayContent(bodyBytes) };
+        response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-protobuf");
+        return response;
     }
 
     [Test]

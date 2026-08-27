@@ -6,9 +6,12 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Text;
+using Google.Protobuf;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
+using OpenTelemetry.Proto.Collector.Profiles.V1Development;
 
 namespace NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 
@@ -89,8 +92,12 @@ public class OtlpProfilesHttpDispatcher
             if (response == null)
                 return new ProfilesSendResult(false, 0, string.Empty);
 
-            var content = response.Content?.ReadAsStringAsync().ConfigureAwait(false).GetAwaiter().GetResult() ?? string.Empty;
-            return new ProfilesSendResult(response.IsSuccessStatusCode, (int)response.StatusCode, content);
+            var contentBytes = response.Content?.ReadAsByteArrayAsync().ConfigureAwait(false).GetAwaiter().GetResult() ?? Array.Empty<byte>();
+            var content = Encoding.UTF8.GetString(contentBytes);
+
+            var (rejectedProfiles, partialSuccessErrorMessage) = TryParsePartialSuccess(response, contentBytes);
+
+            return new ProfilesSendResult(response.IsSuccessStatusCode, (int)response.StatusCode, content, rejectedProfiles, partialSuccessErrorMessage);
         }
         catch (Exception ex)
         {
@@ -100,6 +107,33 @@ public class OtlpProfilesHttpDispatcher
             // held-over-cycle recovery like a harvest, so give up and let the next drain try fresh.
             Log.Debug(ex, "[ContinuousProfiling] Profiles POST to {0} failed; dropping the batch.", endpoint);
             return new ProfilesSendResult(false, 0, string.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Diagnostics only -- never affects <see cref="ProfilesSendResult.Accepted"/> (see the type doc: the
+    /// OTLP spec treats partial success as informational, not a delivery failure, so acceptance stays
+    /// HTTP-status-only, matching every other send path). Only attempts the protobuf parse when the
+    /// response declares protobuf content; a proxy/error page (HTML, plain text) is not OTLP and parsing
+    /// it as one would risk misreading garbage bytes as a rejection count. Never throws: a malformed body
+    /// on a declared-protobuf response just yields no partial-success info.
+    /// </summary>
+    private static (long rejectedProfiles, string errorMessage) TryParsePartialSuccess(HttpResponseMessage response, byte[] contentBytes)
+    {
+        var mediaType = response.Content?.Headers?.ContentType?.MediaType;
+        if (contentBytes.Length == 0 || !string.Equals(mediaType, ContentType, StringComparison.OrdinalIgnoreCase))
+            return (0, string.Empty);
+
+        try
+        {
+            var parsed = ExportProfilesServiceResponse.Parser.ParseFrom(contentBytes);
+            var partialSuccess = parsed.PartialSuccess;
+            return partialSuccess == null ? (0, string.Empty) : (partialSuccess.RejectedProfiles, partialSuccess.ErrorMessage ?? string.Empty);
+        }
+        catch (InvalidProtocolBufferException ex)
+        {
+            Log.Finest(ex, "[ContinuousProfiling] Could not parse ExportProfilesServiceResponse; skipping partial-success diagnostics.");
+            return (0, string.Empty);
         }
     }
 
