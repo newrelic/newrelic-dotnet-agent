@@ -53,6 +53,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             _shouldTrace(false),
             _classAttributes(0),
             _methodAttributes(0),
+            _isRuntimeAsync(false),
             _isValid(true)
         {
             if (version.empty())
@@ -201,6 +202,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         virtual bool IsCoreClr() override
         {
             return _isCoreClr;
+        }
+
+        bool _isRuntimeAsync;
+        virtual bool IsRuntimeAsync() override
+        {
+            return _isRuntimeAsync;
         }
 
         uint32_t _typeToken;

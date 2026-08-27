@@ -156,6 +156,59 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsFalse(result);
         }
 
+        // .NET 11 runtime-async methods (MethodImplAttributes.Async, 0x2000 in ImplFlags -- note
+        // that mdPinvokeImpl above is also 0x2000, but in methodAttributes, a different field) must
+        // be declined: their IL returns the unwrapped type rather than the declared task type, so
+        // instrumenting them yields an InvalidProgramException at JIT time. See NR-610232.
+        TEST_METHOD(default_runtime_async_returns_false)
+        {
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            auto settings = MakeMatchingSettings(func);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsFalse(result);
+        }
+
+        TEST_METHOD(default_runtime_async_does_not_call_write_method)
+        {
+            // the return value only says we declined; this proves no IL was actually rewritten
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            auto settings = MakeMatchingSettings(func);
+            bool writeMethodCalled = false;
+            func->_writeMethodHandler = [&writeMethodCalled](const ByteVector&) {
+                writeMethodCalled = true;
+            };
+            DefaultInstrumentor instr;
+            instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsFalse(writeMethodCalled, L"runtime-async methods must not be rewritten");
+        }
+
+        TEST_METHOD(default_runtime_async_skipped_even_when_should_trace)
+        {
+            // no matching instrumentation point, so this takes the ShouldTrace branch that
+            // synthesizes one -- the [Transaction]/[Trace] attribute path, most exposed today
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            func->_shouldTrace = true;
+            auto settings = MakeSettings(false);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsFalse(result);
+        }
+
+        TEST_METHOD(default_not_runtime_async_still_instruments)
+        {
+            // guards against the runtime-async check being inverted
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = false;
+            auto settings = MakeMatchingSettings(func);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsTrue(result);
+        }
+
         TEST_METHOD(default_no_write_method_when_no_match_no_trace)
         {
             auto func = std::make_shared<MockFunction>();
