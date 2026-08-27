@@ -40,6 +40,7 @@ public interface IBootstrapConfiguration
 /// </summary>
 public class BootstrapConfiguration : IBootstrapConfiguration
 {
+    private readonly bool _openTelemetryEnabled;
     IConfigurationManagerStatic _configurationManagerStatic;
     Func<string, ValueWithProvenance<string>> _getWebConfigSettingWithProvenance;
     ValueWithProvenance<bool> _agentEnabledWithProvenance;
@@ -51,7 +52,8 @@ public class BootstrapConfiguration : IBootstrapConfiguration
     private BootstrapConfiguration()
     {
         _agentEnabledWithProvenance = new ValueWithProvenance<bool>(true, "Default value");
-        LogConfig = new BootstrapLogConfig(new configurationLog(), new ProcessStatic(), Directory.Exists, Path.GetFullPath);
+        _openTelemetryEnabled = false;
+        LogConfig = new BootstrapLogConfig(new configurationLog(), new ProcessStatic(), Directory.Exists, Path.GetFullPath, _openTelemetryEnabled);
     }
 
     /// <summary>
@@ -79,7 +81,8 @@ public class BootstrapConfiguration : IBootstrapConfiguration
         GCSamplerV2Enabled = CheckGCSamplerV2Enabled(TryGetAppSettingAsBoolWithDefault(localConfiguration, "GCSamplerV2Enabled", false));
         DebugStartupDelaySeconds = localConfiguration.debugStartupDelaySeconds;
         ConfigurationFileName = configurationFileName;
-        LogConfig = new BootstrapLogConfig(localConfiguration.log, processStatic, checkDirectoryExists, getFullPath);
+        _openTelemetryEnabled = ConfigLoaderHelpers.GetOpenTelemetryEnabledValue(localConfiguration.openTelemetry);
+        LogConfig = new BootstrapLogConfig(localConfiguration.log, processStatic, checkDirectoryExists, getFullPath, _openTelemetryEnabled);
 
         // The AgentEnabled properties are lazy loaded so that logging will be available before they are initialized and we can capture the errors.
         _configurationManagerStatic = configurationManagerStatic;
@@ -187,6 +190,12 @@ public class BootstrapConfiguration : IBootstrapConfiguration
 
     private void SetAgentEnabledValues()
     {
+        _agentEnabledWithProvenance = TryGetAgentEnabledFromEnvironment();
+        if (_agentEnabledWithProvenance != null)
+        {
+            return;
+        }
+
         _agentEnabledWithProvenance = TryGetAgentEnabledFromWebConfig();
         if (_agentEnabledWithProvenance != null)
         {
@@ -200,6 +209,23 @@ public class BootstrapConfiguration : IBootstrapConfiguration
         }
 
         _agentEnabledWithProvenance = new ValueWithProvenance<bool>(_agentEnabledValueFromLocalConfig, ConfigurationFileName);
+    }
+
+    private ValueWithProvenance<bool> TryGetAgentEnabledFromEnvironment()
+    {
+        if (ConfigLoaderHelpers.GetEnvironmentVar("NEW_RELIC_AGENT_ENABLED").TryToBoolean(out var agentEnabled))
+        {
+            return new ValueWithProvenance<bool>(agentEnabled, "Environment Variable (NEW_RELIC_AGENT_ENABLED)");
+        }
+
+        // OTEL_SDK_DISABLED inverts: true disables the agent.
+        if (_openTelemetryEnabled
+            && ConfigLoaderHelpers.GetEnvironmentVar(OpenTelemetryEnvironmentVariables.SdkDisabled).TryToBoolean(out var sdkDisabled))
+        {
+            return new ValueWithProvenance<bool>(!sdkDisabled, "Environment Variable (OTEL_SDK_DISABLED)");
+        }
+
+        return null;
     }
 
     private ValueWithProvenance<bool> TryGetAgentEnabledFromWebConfig()
@@ -268,7 +294,7 @@ public class BootstrapConfiguration : IBootstrapConfiguration
         private readonly Predicate<string> _checkDirectoryExists;
         private readonly Func<string, string> _getFullPath;
 
-        public BootstrapLogConfig(configurationLog localLogConfiguration, IProcessStatic processStatic, Predicate<string> checkDirectoryExists, Func<string, string> getFullPath)
+        public BootstrapLogConfig(configurationLog localLogConfiguration, IProcessStatic processStatic, Predicate<string> checkDirectoryExists, Func<string, string> getFullPath, bool openTelemetryEnabled)
         {
             _processStatic = processStatic;
             _checkDirectoryExists = checkDirectoryExists;
@@ -285,7 +311,7 @@ public class BootstrapConfiguration : IBootstrapConfiguration
             MaxLogFiles = ConfigLoaderHelpers.GetOverride("NEW_RELIC_LOG_MAX_FILES", localLogConfiguration.maxLogFiles);
 
             // The log level needs to be initialized after the Enabled property is initialized because it depends on that value
-            LogLevel = ConfigLoaderHelpers.GetLoggingLevelValue(localLogConfiguration, Enabled);
+            LogLevel = ConfigLoaderHelpers.GetLoggingLevelValue(localLogConfiguration, Enabled, openTelemetryEnabled);
 
             _checkDirectoryExists = checkDirectoryExists;
             _getFullPath = getFullPath;

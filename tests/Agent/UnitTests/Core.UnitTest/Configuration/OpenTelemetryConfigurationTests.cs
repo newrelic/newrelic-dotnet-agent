@@ -427,4 +427,130 @@ public class OpenTelemetryConfigurationTests
         Assert.That(cfg.OpenTelemetryMetricsExportTimeoutMs, Is.EqualTo(10000));
     }
     #endregion
+
+    [Test]
+    public void GetOpenTelemetryEnabledValue_ReturnsFalse_WhenLocalConfigIsNull()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_ENABLED")).Returns((string)null);
+
+        Assert.That(DefaultConfiguration.GetOpenTelemetryEnabledValue(_environment, null), Is.False);
+    }
+
+    [TestCase(false, null, ExpectedResult = false)]
+    [TestCase(true, null, ExpectedResult = true)]
+    [TestCase(false, "true", ExpectedResult = true)]
+    [TestCase(true, "false", ExpectedResult = false)]
+    [TestCase(false, "1", ExpectedResult = true)]
+    [TestCase(true, "0", ExpectedResult = false)]
+    [TestCase(true, "notabool", ExpectedResult = true)]
+    public bool GetOpenTelemetryEnabledValue_PrefersEnvironmentVariableOverLocalConfig(bool localConfigValue, string environmentValue)
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_OPENTELEMETRY_ENABLED")).Returns(environmentValue);
+
+        var localOpenTelemetryConfig = new configurationOpenTelemetry { enabled = localConfigValue };
+
+        return DefaultConfiguration.GetOpenTelemetryEnabledValue(_environment, localOpenTelemetryConfig);
+    }
+
+    [Test]
+    public void OpenTelemetryEnabled_DelegatesToTheStaticGate()
+    {
+        _localConfig.openTelemetry = new configurationOpenTelemetry { enabled = true };
+
+        Assert.That(_configuration.OpenTelemetryEnabled, Is.True);
+    }
+
+    [Test]
+    public void ApplicationNames_UsesOtelServiceName_WhenOpenTelemetryEnabledAndNoNewRelicAppName()
+    {
+        _localConfig.openTelemetry = new configurationOpenTelemetry { enabled = true };
+        Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("OTEL_SERVICE_NAME")).Returns("MyOtelService");
+
+        Assert.That(_configuration.ApplicationNames, Is.EqualTo(new[] { "MyOtelService" }));
+    }
+
+    [Test]
+    public void ApplicationNames_PrefersNewRelicAppName_OverOtelServiceName()
+    {
+        _localConfig.openTelemetry = new configurationOpenTelemetry { enabled = true };
+        Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME")).Returns("MyNewRelicApp");
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("OTEL_SERVICE_NAME")).Returns("MyOtelService");
+
+        Assert.That(_configuration.ApplicationNames, Is.EqualTo(new[] { "MyNewRelicApp" }));
+    }
+
+    [Test]
+    public void ApplicationNames_IgnoresOtelServiceName_WhenOpenTelemetryDisabled()
+    {
+        _localConfig.openTelemetry = new configurationOpenTelemetry { enabled = false };
+        _localConfig.application.name.Add("NameFromConfigFile");
+        Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("OTEL_SERVICE_NAME")).Returns("MyOtelService");
+
+        Assert.That(_configuration.ApplicationNames, Is.EqualTo(new[] { "NameFromConfigFile" }));
+    }
+
+    [Test]
+    public void ApplicationNames_DoesNotSplitOtelServiceNameOnCommas()
+    {
+        _localConfig.openTelemetry = new configurationOpenTelemetry { enabled = true };
+        Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("OTEL_SERVICE_NAME")).Returns("One,Two");
+
+        Assert.That(_configuration.ApplicationNames, Is.EqualTo(new[] { "One,Two" }));
+    }
+
+    [Test]
+    public void LoggingLevel_UsesOtelLogLevel_WhenOpenTelemetryEnabled()
+    {
+        _localConfig.openTelemetry = new configurationOpenTelemetry { enabled = true };
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_ENABLED")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_LEVEL", "NEWRELIC_LOG_LEVEL")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("OTEL_LOG_LEVEL")).Returns("debug");
+
+        Assert.That(_configuration.LoggingLevel, Is.EqualTo("DEBUG"));
+    }
+
+    [Test]
+    public void LoggingLevel_MapsOtelNoneToOff()
+    {
+        _localConfig.openTelemetry = new configurationOpenTelemetry { enabled = true };
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_ENABLED")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_LEVEL", "NEWRELIC_LOG_LEVEL")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("OTEL_LOG_LEVEL")).Returns("none");
+
+        Assert.That(_configuration.LoggingLevel, Is.EqualTo("OFF"));
+    }
+
+    [Test]
+    public void LoggingLevel_PrefersNewRelicLogLevel_OverOtelLogLevel()
+    {
+        _localConfig.openTelemetry = new configurationOpenTelemetry { enabled = true };
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_ENABLED")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_LEVEL", "NEWRELIC_LOG_LEVEL")).Returns("finest");
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("OTEL_LOG_LEVEL")).Returns("warn");
+
+        Assert.That(_configuration.LoggingLevel, Is.EqualTo("FINEST"));
+    }
+
+    [Test]
+    public void LoggingLevel_DoesNotReadOtelLogLevel_WhenOpenTelemetryDisabled()
+    {
+        _localConfig.openTelemetry = new configurationOpenTelemetry { enabled = false };
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_ENABLED")).Returns((string)null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_LEVEL", "NEWRELIC_LOG_LEVEL")).Returns((string)null);
+
+        Assert.That(_configuration.LoggingLevel, Is.EqualTo("INFO"));
+        Mock.Assert(() => _environment.GetEnvironmentVariable("OTEL_LOG_LEVEL"), Occurs.Never());
+    }
 }

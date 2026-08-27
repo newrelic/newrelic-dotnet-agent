@@ -355,6 +355,92 @@ public class BootstrapLogConfigurationTests
         }
     }
 
+    [TestCase("none", "OFF")]
+    [TestCase("error", "ERROR")]
+    [TestCase("warn", "WARN")]
+    [TestCase("info", "INFO")]
+    [TestCase("debug", "DEBUG")]
+    public void TestLogLevelFromOtelLogLevel_WhenOpenTelemetryEnabled(string otelLogLevel, string expected)
+    {
+        _localConfiguration.openTelemetry.enabled = true;
+        SetEnvironmentVar("OTEL_LOG_LEVEL", otelLogLevel);
+
+        var config = CreateLogConfig();
+
+        Assert.That(config.LogLevel, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void TestLogLevelPrefersNewRelicLogLevelOverOtelLogLevel()
+    {
+        _localConfiguration.openTelemetry.enabled = true;
+        SetEnvironmentVar("NEW_RELIC_LOG_LEVEL", "finest");
+        SetEnvironmentVar("OTEL_LOG_LEVEL", "warn");
+
+        var config = CreateLogConfig();
+
+        Assert.That(config.LogLevel, Is.EqualTo("FINEST"));
+    }
+
+    [Test]
+    public void TestLogLevelPrefersDeprecatedNewRelicLogLevelOverOtelLogLevel()
+    {
+        _localConfiguration.openTelemetry.enabled = true;
+        SetEnvironmentVar("NEWRELIC_LOG_LEVEL", "finest");
+        SetEnvironmentVar("OTEL_LOG_LEVEL", "warn");
+
+        var config = CreateLogConfig();
+
+        Assert.That(config.LogLevel, Is.EqualTo("FINEST"));
+    }
+
+    [Test]
+    public void TestLogLevelIgnoresOtelLogLevel_WhenOpenTelemetryDisabled()
+    {
+        _localConfiguration.openTelemetry.enabled = false;
+        SetEnvironmentVar("OTEL_LOG_LEVEL", "debug");
+
+        var config = CreateLogConfig();
+
+        Assert.That(config.LogLevel, Is.EqualTo("INFO"));
+    }
+
+    [Test]
+    public void TestLogLevelIgnoresOtelLogLevel_WhenLoggingDisabled()
+    {
+        _localConfiguration.openTelemetry.enabled = true;
+        _localConfiguration.log.enabled = false;
+        SetEnvironmentVar("OTEL_LOG_LEVEL", "debug");
+
+        var config = CreateLogConfig();
+
+        Assert.That(config.LogLevel, Is.EqualTo("off"));
+    }
+
+    [Test]
+    public void TestLogLevelFallsBackToLocalConfig_WhenOtelLogLevelIsUnsupported()
+    {
+        _localConfiguration.openTelemetry.enabled = true;
+        _localConfiguration.log.level = "warn";
+        SetEnvironmentVar("OTEL_LOG_LEVEL", "notalevel");
+
+        var config = CreateLogConfig();
+
+        Assert.That(config.LogLevel, Is.EqualTo("WARN"));
+    }
+
+    [Test]
+    public void TestLogLevelUsesOtelLogLevel_WhenOpenTelemetryEnabledByEnvironmentVariable()
+    {
+        _localConfiguration.openTelemetry.enabled = false;
+        SetEnvironmentVar("NEW_RELIC_OPENTELEMETRY_ENABLED", "true");
+        SetEnvironmentVar("OTEL_LOG_LEVEL", "debug");
+
+        var config = CreateLogConfig();
+
+        Assert.That(config.LogLevel, Is.EqualTo("DEBUG"));
+    }
+
     private ILogConfig CreateLogConfig()
     {
         return CreateLogConfig(new ProcessStatic());

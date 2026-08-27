@@ -14,9 +14,29 @@ namespace NewRelic.Agent.Core.Config;
 [TestFixture]
 public class BootstrapConfigurationTests
 {
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
+    {
+        _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
+    }
+
+    [OneTimeTearDown]
+    public void OneTimeTearDown()
+    {
+        ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironment;
+    }
+
     [SetUp]
     public void SetUp()
     {
+        // A new environment mock is created per test to work around a problem where the mock
+        // does not behave as expected when all of the tests run together.
+        var environmentMock = Mock.Create<IEnvironment>();
+        Mock.Arrange(() => environmentMock.GetEnvironmentVariable(Arg.IsAny<string>())).Returns(MockGetEnvironmentVar);
+        Mock.Arrange(() => environmentMock.GetEnvironmentVariableFromList(Arg.IsAny<string[]>())).Returns(MockGetEnvironmentVarFromList);
+        ConfigLoaderHelpers.EnvironmentVariableProxy = environmentMock;
+
+        ClearEnvironmentVars();
         _localConfiguration = new configuration();
         _webConfigValueWithProvenance = null;
         _configurationManagerStatic = Mock.Create<IConfigurationManagerStatic>();
@@ -179,7 +199,7 @@ public class BootstrapConfigurationTests
     [Test]
     public void GCSamplerV2_EnabledViaEnvironmentVariable()
     {
-        _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
+        var originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
         try
         {
 
@@ -201,14 +221,14 @@ public class BootstrapConfigurationTests
         }
         finally
         {
-            ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironment;
+            ConfigLoaderHelpers.EnvironmentVariableProxy = originalEnvironment;
         }
     }
 
     [Test]
     public void TestAgentControlEnabled_EnabledViaEnvironmentVariable()
     {
-        _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
+        var originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
         try
         {
             var environmentMock = Mock.Create<IEnvironment>();
@@ -223,14 +243,14 @@ public class BootstrapConfigurationTests
         }
         finally
         {
-            ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironment;
+            ConfigLoaderHelpers.EnvironmentVariableProxy = originalEnvironment;
         }
     }
 
     [Test]
     public void TestHealthDeliveryLocation_SetViaEnvironmentVariable()
     {
-        _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
+        var originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
         try
         {
             var environmentMock = Mock.Create<IEnvironment>();
@@ -245,14 +265,14 @@ public class BootstrapConfigurationTests
         }
         finally
         {
-            ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironment;
+            ConfigLoaderHelpers.EnvironmentVariableProxy = originalEnvironment;
         }
     }
 
     [Test]
     public void TestHealthFrequency_SetViaEnvironmentVariable()
     {
-        _originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
+        var originalEnvironment = ConfigLoaderHelpers.EnvironmentVariableProxy;
         try
         {
             var environmentMock = Mock.Create<IEnvironment>();
@@ -267,8 +287,154 @@ public class BootstrapConfigurationTests
         }
         finally
         {
-            ConfigLoaderHelpers.EnvironmentVariableProxy = _originalEnvironment;
+            ConfigLoaderHelpers.EnvironmentVariableProxy = originalEnvironment;
         }
+    }
+
+    [TestCase("true", false, ExpectedResult = true)]
+    [TestCase("false", true, ExpectedResult = false)]
+    [TestCase("1", false, ExpectedResult = true)]
+    [TestCase("0", true, ExpectedResult = false)]
+    public bool TestAgentEnabledFromEnvironmentVariable(string environmentValue, bool localConfigValue)
+    {
+        SetEnvironmentVar("NEW_RELIC_AGENT_ENABLED", environmentValue);
+        _localConfiguration.agentEnabled = localConfigValue;
+
+        return CreateBootstrapConfiguration().AgentEnabled;
+    }
+
+    [Test]
+    public void TestAgentEnabledProvenanceFromEnvironmentVariable()
+    {
+        SetEnvironmentVar("NEW_RELIC_AGENT_ENABLED", "false");
+
+        Assert.That(CreateBootstrapConfiguration().AgentEnabledAt, Is.EqualTo("Environment Variable (NEW_RELIC_AGENT_ENABLED)"));
+    }
+
+    [Test]
+    public void TestAgentEnabledEnvironmentVariableBeatsWebConfig()
+    {
+        SetEnvironmentVar("NEW_RELIC_AGENT_ENABLED", "false");
+        _webConfigValueWithProvenance = new ValueWithProvenance<string>("true", TestWebConfigProvenance);
+
+        var config = CreateBootstrapConfiguration();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(config.AgentEnabled, Is.False);
+            Assert.That(config.AgentEnabledAt, Is.EqualTo("Environment Variable (NEW_RELIC_AGENT_ENABLED)"));
+        });
+    }
+
+    [Test]
+    public void TestAgentEnabledIgnoresUnparseableEnvironmentVariable()
+    {
+        SetEnvironmentVar("NEW_RELIC_AGENT_ENABLED", "notabool");
+        _localConfiguration.agentEnabled = false;
+
+        var config = CreateBootstrapConfiguration();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(config.AgentEnabled, Is.False);
+            Assert.That(config.AgentEnabledAt, Is.EqualTo(TestFileName));
+        });
+    }
+
+    [TestCase("true", true, ExpectedResult = false)]
+    [TestCase("false", false, ExpectedResult = true)]
+    [TestCase("1", true, ExpectedResult = false)]
+    [TestCase("0", false, ExpectedResult = true)]
+    public bool TestAgentEnabledInvertsOtelSdkDisabled(string otelSdkDisabled, bool localConfigAgentEnabled)
+    {
+        _localConfiguration.openTelemetry.enabled = true;
+        _localConfiguration.agentEnabled = localConfigAgentEnabled;
+        SetEnvironmentVar("OTEL_SDK_DISABLED", otelSdkDisabled);
+
+        return CreateBootstrapConfiguration().AgentEnabled;
+    }
+
+    [Test]
+    public void TestAgentEnabledProvenanceFromOtelSdkDisabled()
+    {
+        _localConfiguration.openTelemetry.enabled = true;
+        SetEnvironmentVar("OTEL_SDK_DISABLED", "true");
+
+        Assert.That(CreateBootstrapConfiguration().AgentEnabledAt, Is.EqualTo("Environment Variable (OTEL_SDK_DISABLED)"));
+    }
+
+    [Test]
+    public void TestAgentEnabledPrefersNewRelicVariableOverOtelSdkDisabled()
+    {
+        _localConfiguration.openTelemetry.enabled = true;
+        SetEnvironmentVar("NEW_RELIC_AGENT_ENABLED", "true");
+        SetEnvironmentVar("OTEL_SDK_DISABLED", "true");
+
+        var config = CreateBootstrapConfiguration();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(config.AgentEnabled, Is.True);
+            Assert.That(config.AgentEnabledAt, Is.EqualTo("Environment Variable (NEW_RELIC_AGENT_ENABLED)"));
+        });
+    }
+
+    [Test]
+    public void TestAgentEnabledIgnoresOtelSdkDisabled_WhenOpenTelemetryDisabled()
+    {
+        _localConfiguration.openTelemetry.enabled = false;
+        _localConfiguration.agentEnabled = true;
+        SetEnvironmentVar("OTEL_SDK_DISABLED", "true");
+
+        var config = CreateBootstrapConfiguration();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(config.AgentEnabled, Is.True);
+            Assert.That(config.AgentEnabledAt, Is.EqualTo(TestFileName));
+        });
+    }
+
+    [Test]
+    public void TestAgentEnabledUsesOtelSdkDisabled_WhenOpenTelemetryEnabledByEnvironmentVariable()
+    {
+        _localConfiguration.openTelemetry.enabled = false;
+        SetEnvironmentVar("NEW_RELIC_OPENTELEMETRY_ENABLED", "true");
+        SetEnvironmentVar("OTEL_SDK_DISABLED", "true");
+
+        Assert.That(CreateBootstrapConfiguration().AgentEnabled, Is.False);
+    }
+
+    [Test]
+    public void TestAgentEnabledIgnoresUnparseableOtelSdkDisabled()
+    {
+        _localConfiguration.openTelemetry.enabled = true;
+        _localConfiguration.agentEnabled = true;
+        SetEnvironmentVar("OTEL_SDK_DISABLED", "notabool");
+
+        var config = CreateBootstrapConfiguration();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(config.AgentEnabled, Is.True);
+            Assert.That(config.AgentEnabledAt, Is.EqualTo(TestFileName));
+        });
+    }
+
+    [Test]
+    public void TestAgentEnabledUsesOtelSdkDisabled_WhenNewRelicVariableUnparseable()
+    {
+        _localConfiguration.openTelemetry.enabled = true;
+        SetEnvironmentVar("NEW_RELIC_AGENT_ENABLED", "notabool");
+        SetEnvironmentVar("OTEL_SDK_DISABLED", "true");
+
+        var config = CreateBootstrapConfiguration();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(config.AgentEnabled, Is.False);
+            Assert.That(config.AgentEnabledAt, Is.EqualTo("Environment Variable (OTEL_SDK_DISABLED)"));
+        });
     }
 
     private BootstrapConfiguration CreateBootstrapConfiguration()
@@ -295,6 +461,15 @@ public class BootstrapConfigurationTests
     private string MockGetEnvironmentVar(string name)
     {
         if (_envVars.TryGetValue(name, out var value)) return value;
+        return null;
+    }
+
+    private string MockGetEnvironmentVarFromList(string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (_envVars.TryGetValue(name, out var value)) return value;
+        }
         return null;
     }
 

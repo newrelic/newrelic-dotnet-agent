@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
+using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
@@ -310,6 +311,19 @@ public class DefaultConfiguration : IConfiguration
             _applicationNamesSource = "Environment Variable (NEW_RELIC_APP_NAME)";
             names = appName.Split(StringSeparators.Comma);
             return true;
+        }
+
+        // 4b. OTEL_SERVICE_NAME - only when the OpenTelemetry bridge is enabled
+        if (OpenTelemetryEnabled)
+        {
+            appName = _environment.GetEnvironmentVariable(OpenTelemetryEnvironmentVariables.ServiceName);
+            if (appName != null)
+            {
+                Log.Info("Application name from OTEL_SERVICE_NAME Environment Variable.");
+                _applicationNamesSource = "Environment Variable (OTEL_SERVICE_NAME)";
+                names = [appName];
+                return true;
+            }
         }
 
         // 5. Azure Function site name (when detected & enabled)
@@ -2724,7 +2738,12 @@ public class DefaultConfiguration : IConfiguration
 
     #region OpenTelemetry Configuration
 
-    public bool OpenTelemetryEnabled => EnvironmentOverrides(_localConfiguration.openTelemetry.enabled, "NEW_RELIC_OPENTELEMETRY_ENABLED");
+    public static bool GetOpenTelemetryEnabledValue(IEnvironment environment, configurationOpenTelemetry localOpenTelemetryConfiguration)
+    {
+        return EnvironmentOverrides(environment, localOpenTelemetryConfiguration?.enabled ?? false, "NEW_RELIC_OPENTELEMETRY_ENABLED");
+    }
+
+    public bool OpenTelemetryEnabled => GetOpenTelemetryEnabledValue(_environment, _localConfiguration.openTelemetry);
 
     public bool OpenTelemetryTracingEnabled => OpenTelemetryEnabled && EnvironmentOverrides(_localConfiguration.openTelemetry.traces.enabled, "NEW_RELIC_OPENTELEMETRY_TRACES_ENABLED");
 
@@ -2967,19 +2986,34 @@ public class DefaultConfiguration : IConfiguration
     private bool? _loggingEnabled;
     public bool LoggingEnabled => _loggingEnabled ??= GetLoggingEnabledValue(_environment, _localConfiguration.log);
 
-    public static string GetLoggingLevelValue(IEnvironment environment, configurationLog localLogConfiguration, bool isLoggingEnabled)
+    public static string GetLoggingLevelValue(IEnvironment environment, configurationLog localLogConfiguration, bool isLoggingEnabled, bool openTelemetryEnabled)
     {
-        var logLevel = "off";
-        if (isLoggingEnabled)
+        if (!isLoggingEnabled)
         {
-            logLevel = EnvironmentOverrides(environment, localLogConfiguration.level, "NEW_RELIC_LOG_LEVEL", "NEWRELIC_LOG_LEVEL").ToUpper();
+            return "off";
         }
 
-        return logLevel;
+        // The New Relic names win outright over OTEL_LOG_LEVEL, per the OTel bridge configuration spec.
+        var newRelicLogLevel = environment.GetEnvironmentVariableFromList("NEW_RELIC_LOG_LEVEL", "NEWRELIC_LOG_LEVEL");
+        if (!string.IsNullOrWhiteSpace(newRelicLogLevel))
+        {
+            return newRelicLogLevel.Trim().ToUpper();
+        }
+
+        if (openTelemetryEnabled)
+        {
+            var otelLogLevel = environment.GetEnvironmentVariable(OpenTelemetryEnvironmentVariables.LogLevel);
+            if (OpenTelemetryLogLevelMapper.TryMapToAgentLogLevel(otelLogLevel, out var mappedLogLevel))
+            {
+                return mappedLogLevel;
+            }
+        }
+
+        return localLogConfiguration.level.ToUpper();
     }
 
     private string _loggingLevel;
-    public string LoggingLevel => _loggingLevel ??= GetLoggingLevelValue(_environment, _localConfiguration.log, LoggingEnabled);
+    public string LoggingLevel => _loggingLevel ??= GetLoggingLevelValue(_environment, _localConfiguration.log, LoggingEnabled, OpenTelemetryEnabled);
 
     private const bool CaptureTransactionTraceAttributesDefault = true;
     private const bool CaptureErrorCollectorAttributesDefault = true;

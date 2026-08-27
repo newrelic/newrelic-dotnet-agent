@@ -629,8 +629,13 @@ public static class ConfigLoaderHelpers
         return DefaultConfiguration.GetLoggingEnabledValue(EnvironmentVariableProxy, localLogConfiguration);
     }
 
-    public static string GetLoggingLevelValue(configurationLog localLogConfiguration, bool isLoggingEnabled)
+    public static string GetLoggingLevelValue(configurationLog localLogConfiguration, bool isLoggingEnabled, bool openTelemetryEnabled)
     {
-        return DefaultConfiguration.GetLoggingLevelValue(EnvironmentVariableProxy, localLogConfiguration, isLoggingEnabled);
+        return DefaultConfiguration.GetLoggingLevelValue(EnvironmentVariableProxy, localLogConfiguration, isLoggingEnabled, openTelemetryEnabled);
+    }
+
+    public static bool GetOpenTelemetryEnabledValue(configurationOpenTelemetry localOpenTelemetryConfiguration)
+    {
+        return DefaultConfiguration.GetOpenTelemetryEnabledValue(EnvironmentVariableProxy, localOpenTelemetryConfiguration);
     }
 }
