@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-"""Static checks over the .github workflows the test refactor depends on.
+"""Static checks over the .github workflows that drive the test solutions.
 
 Exits 0 when every check passes, 1 otherwise, printing one line per failure.
-Checks V1b, V1c, and V1f are deliberately absent: they compare against
-pre-change text and can only run once, before the refactor lands.
 """
 
 import json
@@ -48,13 +46,13 @@ def load(name):
     """Parse a workflow. PyYAML turns the unquoted key `on` into True."""
     try:
         return yaml.safe_load((WORKFLOWS / name).read_text(encoding="utf-8"))
-    except Exception as exc:  # noqa: BLE001 - any parse error is a V1a failure
-        fail("V1a", "%s does not parse: %s" % (name, exc))
+    except Exception as exc:  # noqa: BLE001 - any parse error is a workflow-parse failure
+        fail("workflow-parse", "%s does not parse: %s" % (name, exc))
         return None
 
 
 def load_external(name):
-    """Load a workflow outside TOUCHED, on demand, for the V1e ceiling check only.
+    """Load a workflow outside TOUCHED, on demand, for the permissions ceiling check only.
 
     Not added to `docs` and not run through the explicit-permissions checks,
     which stay scoped to TOUCHED.
@@ -88,7 +86,7 @@ def perm_map(value, where, check):
     return {k: str(v) for k, v in value.items()}
 
 
-def check_v1a(docs):
+def check_needs_resolve(docs):
     doc = docs.get("all_solutions.yml")
     if doc is None:
         return
@@ -99,10 +97,10 @@ def check_v1a(docs):
             needs = [needs]
         for dep in needs:
             if dep not in ids:
-                fail("V1a", "job '%s' needs '%s', which is not a job id in all_solutions.yml" % (jid, dep))
+                fail("needs-resolution", "job '%s' needs '%s', which is not a job id in all_solutions.yml" % (jid, dep))
 
 
-def check_v1d(docs):
+def check_required_checks_are_bare_jobs(docs):
     doc = docs.get("all_solutions.yml")
     if doc is None:
         return
@@ -113,27 +111,27 @@ def check_v1d(docs):
     for context in REQUIRED_CONTEXTS:
         if context not in bare:
             fail(
-                "V1d",
+                "required-checks",
                 "required status check '%s' is not a bare top-level job name in all_solutions.yml; "
                 "a caller job reports as '<caller> / <called>' and would detach the check in "
                 "ruleset 'main branch' (id 4599184)" % context,
             )
 
 
-def check_v1e(docs):
+def check_permission_ceilings(docs):
     for name, doc in docs.items():
         if doc is None:
             continue
-        top = perm_map(doc.get("permissions"), "%s top-level" % name, "V1e")
+        top = perm_map(doc.get("permissions"), "%s top-level" % name, "permissions")
         if top:
             writes = sorted(k for k, v in top.items() if RANK.get(v, 0) >= 2)
             if writes:
-                fail("V1e", "%s top-level permissions grant write scopes %s; move them to the jobs that need them" % (name, writes))
+                fail("permissions", "%s top-level permissions grant write scopes %s; move them to the jobs that need them" % (name, writes))
         for jid, job in jobs_of(doc).items():
             if "permissions" not in job:
-                fail("V1e", "%s job '%s' has no explicit permissions block" % (name, jid))
+                fail("permissions", "%s job '%s' has no explicit permissions block" % (name, jid))
             else:
-                perm_map(job["permissions"], "%s job '%s'" % (name, jid), "V1e")
+                perm_map(job["permissions"], "%s job '%s'" % (name, jid), "permissions")
 
     for name, doc in docs.items():
         if doc is None:
@@ -147,14 +145,14 @@ def check_v1e(docs):
             if called_doc is None:
                 called_doc = load_external(called)
                 if called_doc is None:
-                    fail("V1e", "%s job '%s' calls %s, which does not exist or does not parse" % (name, jid, called))
+                    fail("permissions", "%s job '%s' calls %s, which does not exist or does not parse" % (name, jid, called))
                     continue
             needed = {}
             for cjob in jobs_of(called_doc).values():
-                for scope, level in (perm_map(cjob.get("permissions"), called, "V1e") or {}).items():
+                for scope, level in (perm_map(cjob.get("permissions"), called, "permissions") or {}).items():
                     if RANK.get(level, 0) > RANK.get(needed.get(scope, "none"), 0):
                         needed[scope] = level
-            granted = perm_map(job.get("permissions"), "%s job '%s'" % (name, jid), "V1e") or {}
+            granted = perm_map(job.get("permissions"), "%s job '%s'" % (name, jid), "permissions") or {}
             short = {
                 scope: level
                 for scope, level in needed.items()
@@ -162,7 +160,7 @@ def check_v1e(docs):
             }
             if short:
                 fail(
-                    "V1e",
+                    "permissions",
                     "%s job '%s' grants %s but %s needs at least %s; an under-granted ceiling "
                     "fails at run time as a 403, not at parse time" % (name, jid, granted or {}, called, short),
                 )
@@ -172,12 +170,12 @@ def extract_pairs_test_selection():
     text = (WORKFLOWS / "test_selection.yml").read_text(encoding="utf-8")
     match = re.search(r"container_all='(\[[^']*\])'", text)
     if not match:
-        fail("V1g", "could not extract container_all='[...]' from test_selection.yml; the anchor changed")
+        fail("container-lists", "could not extract container_all='[...]' from test_selection.yml; the anchor changed")
         return None
     try:
         return [tuple(p.split("/", 1)) for p in json.loads(match.group(1))]
     except (ValueError, json.JSONDecodeError) as exc:
-        fail("V1g", "container_all in test_selection.yml is not valid JSON: %s" % exc)
+        fail("container-lists", "container_all in test_selection.yml is not valid JSON: %s" % exc)
         return None
 
 
@@ -187,7 +185,7 @@ def extract_pairs_container_matrix(docs):
         return None
     job = jobs_of(doc).get("select-matrix")
     if not job:
-        fail("V1g", "linux_container_tests.yml has no select-matrix job")
+        fail("container-lists", "linux_container_tests.yml has no select-matrix job")
         return None
     bodies = [s.get("run", "") for s in job.get("steps") or []]
     for body in bodies:
@@ -196,14 +194,14 @@ def extract_pairs_container_matrix(docs):
             try:
                 entries = json.loads(match.group(1))
             except (ValueError, json.JSONDecodeError) as exc:
-                fail("V1g", "the select-matrix JSON literal is not valid JSON: %s" % exc)
+                fail("container-lists", "the select-matrix JSON literal is not valid JSON: %s" % exc)
                 return None
             return [(e["name"], e["arch"]) for e in entries]
-    fail("V1g", "could not extract all='[...]' from the select-matrix job; the anchor changed")
+    fail("container-lists", "could not extract all='[...]' from the select-matrix job; the anchor changed")
     return None
 
 
-def check_v1g(docs):
+def check_container_lists_match(docs):
     left = extract_pairs_test_selection()
     right = extract_pairs_container_matrix(docs)
     if left is None or right is None:
@@ -212,27 +210,27 @@ def check_v1g(docs):
         only_left = sorted(set(left) - set(right))
         only_right = sorted(set(right) - set(left))
         fail(
-            "V1g",
+            "container-lists",
             "container group lists have drifted. Only in test_selection.yml: %s. "
             "Only in linux_container_tests.yml: %s" % (only_left, only_right),
         )
 
 
-def check_v1h(docs):
+def check_no_concurrency_in_called_workflows(docs):
     for name in NO_CONCURRENCY:
         doc = docs.get(name)
         if doc is None:
             continue
         if "concurrency" in doc:
             fail(
-                "V1h",
+                "called-workflow-concurrency",
                 "%s declares concurrency. github.workflow in a called workflow resolves to the "
                 "caller's name, so integration_tests and unbounded_tests would share a group and "
                 "cancel each other inside one run" % name,
             )
 
 
-def check_v1i():
+def check_no_expressions_in_action_metadata():
     """No expression in an action.yml's metadata.
 
     The github context is available inside `runs:` but not in the metadata block,
@@ -243,7 +241,7 @@ def check_v1i():
         try:
             doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         except Exception as exc:  # noqa: BLE001 - an unparseable action is a failure
-            fail("V1i", "%s does not parse: %s" % (path.name, exc))
+            fail("action-metadata", "%s does not parse: %s" % (path.name, exc))
             continue
         fields = [(k, doc.get(k)) for k in ("name", "description", "author")]
         for section in ("inputs", "outputs"):
@@ -254,7 +252,7 @@ def check_v1i():
         for where, text in fields:
             if isinstance(text, str) and "${{" in text:
                 fail(
-                    "V1i",
+                    "action-metadata",
                     "%s %s contains an expression; no context is available in action "
                     "metadata, so the runner fails to load the action"
                     % (path.parent.name + "/action.yml", where),
@@ -266,23 +264,26 @@ def main():
     for name in TOUCHED:
         path = WORKFLOWS / name
         if not path.exists():
-            fail("V1a", "%s does not exist" % name)
+            fail("workflow-parse", "%s does not exist" % name)
             continue
         docs[name] = load(name)
 
-    check_v1a(docs)
-    check_v1d(docs)
-    check_v1e(docs)
-    check_v1g(docs)
-    check_v1h(docs)
-    check_v1i()
+    check_needs_resolve(docs)
+    check_required_checks_are_bare_jobs(docs)
+    check_permission_ceilings(docs)
+    check_container_lists_match(docs)
+    check_no_concurrency_in_called_workflows(docs)
+    check_no_expressions_in_action_metadata()
 
     if FAILURES:
         print("check-workflows: %d failure(s)" % len(FAILURES))
         for line in FAILURES:
             print("  " + line)
         return 1
-    print("check-workflows: all checks passed (V1a, V1d, V1e, V1g, V1h, V1i)")
+    print(
+        "check-workflows: all checks passed (needs-resolution, required-checks, "
+        "permissions, container-lists, called-workflow-concurrency, action-metadata)"
+    )
     return 0
 
 

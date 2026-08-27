@@ -67,7 +67,7 @@ jobs:
         run: |
           # Single source of truth for runner and filter. test_selection.yml holds
           # only the name/arch pairs, for early validation; .github/scripts/check-workflows.py
-          # check V1g asserts the two lists match.
+          # asserts the two lists match.
           all='[
             {"arch":"amd64","name":"Ubuntu","runner":"ubuntu-latest","filter":"Architecture=amd64&Distro=Ubuntu"},
             {"arch":"amd64","name":"Alpine","runner":"ubuntu-latest","filter":"Architecture=amd64&Distro=Alpine"},
@@ -99,7 +99,7 @@ jobs:
           jq -r '.[] | "  " + .name + "/" + .arch + "  " + .filter' <<< "$matrix"
 
           if [ "$count" -eq 0 ]; then
-            echo "::error::No container group matched. Validation happens in test_selection.yml, so reaching this means the two lists have drifted; check V1g should have caught it."
+            echo "::error::No container group matched. Validation happens in test_selection.yml, so reaching this means the two lists have drifted; check-workflows.py should have caught it."
             exit 1
           fi
 

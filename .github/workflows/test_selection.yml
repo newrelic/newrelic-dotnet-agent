@@ -152,7 +152,7 @@ jobs:
           ]'
 
           # Container groups, as name/arch. This list is validated against the
-          # select-matrix list in linux_container_tests.yml by .github/scripts/check-workflows.py (V1g).
+          # select-matrix list in linux_container_tests.yml by .github/scripts/check-workflows.py.
           container_all='[
             "Ubuntu/amd64",
             "Alpine/amd64",
