@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using Google.Protobuf;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Utilities;
@@ -47,13 +49,27 @@ public class OtlpProfilesHttpDispatcher
     // TotalSendTimeoutWithRetries for the budget that covers the full CustomRetryHandler sequence.
     public static readonly TimeSpan AttemptConnectTimeout = TimeSpan.FromSeconds(15);
 
-    // HttpClient.Timeout bounds the ENTIRE SendAsync call, including every retry attempt and every
-    // inter-attempt backoff delay CustomRetryHandler injects -- not just one attempt. Sized for
-    // CustomRetryHandler's MaxRetries=3 * AttemptConnectTimeout worst case, plus its own backoff/jitter
-    // (~1s + ~2s across the two inter-attempt gaps, capped well below 30s each in practice), rounded up
-    // with margin. Kept comfortably under ContinuousProfilingService.DrainShutdownWaitTimeout (60s) so
-    // that bounded wait always covers a send that is legitimately still retrying, not just one that's hung.
+    // HttpClient.Timeout bounds every retry attempt and every inter-attempt backoff delay
+    // CustomRetryHandler injects -- not just one attempt. Sized for CustomRetryHandler's MaxRetries=3 *
+    // AttemptConnectTimeout worst case, plus its own backoff/jitter (~1s + ~2s across the two
+    // inter-attempt gaps, capped well below 30s each in practice), rounded up with margin.
+    // CreateRealSend uses HttpCompletionOption.ResponseHeadersRead, so this bounds attempts + backoff +
+    // headers only -- NOT the body read, which HttpClient.Timeout stops covering once headers-only
+    // completion is requested. The body read has its own deadline, BodyReadTimeout. Kept comfortably
+    // under ContinuousProfilingService.DrainShutdownWaitTimeout (60s), with BodyReadTimeout added on
+    // top, so the combined bounded wait always covers a send that is legitimately still working, not
+    // just one that's hung.
     public static readonly TimeSpan TotalSendTimeoutWithRetries = TimeSpan.FromSeconds(45);
+
+    // Deadline for reading the response body once headers have arrived (see ReadResponseBodyBounded).
+    // TotalSendTimeoutWithRetries (45s, headers-only) + BodyReadTimeout (10s) = 55s, comfortably under
+    // ContinuousProfilingService.DrainShutdownWaitTimeout (60s).
+    public static readonly TimeSpan BodyReadTimeout = TimeSpan.FromSeconds(10);
+
+    // Cap on how much of the response body is ever read into memory. Diagnostics-only data (a real OTLP
+    // partial-success ack is a few hundred bytes; a proxy/collector error page is at most a few KB) --
+    // this is generous headroom for that, not a real budget for an adversarial/misbehaving response.
+    public const int MaxResponseBodyBytes = 64 * 1024;
 
     private readonly IConfiguration _configuration;
     private readonly Func<HttpRequestMessage, HttpResponseMessage> _send;
@@ -92,10 +108,16 @@ public class OtlpProfilesHttpDispatcher
             if (response == null)
                 return new ProfilesSendResult(false, 0, string.Empty);
 
-            var contentBytes = response.Content?.ReadAsByteArrayAsync().ConfigureAwait(false).GetAwaiter().GetResult() ?? Array.Empty<byte>();
+            var (contentBytes, truncated) = ReadResponseBodyBounded(response.Content);
             var content = Encoding.UTF8.GetString(contentBytes);
+            if (truncated)
+                Log.Debug("[ContinuousProfiling] Response body from {0} exceeded {1} bytes; truncated for logging.", endpoint, MaxResponseBodyBytes);
 
-            var (rejectedProfiles, partialSuccessErrorMessage) = TryParsePartialSuccess(response, contentBytes);
+            // A truncated body can decode a protobuf message at a byte boundary that happens to look
+            // valid, so a bogus RejectedProfiles/error message could surface -- skip the parse entirely.
+            var (rejectedProfiles, partialSuccessErrorMessage) = truncated
+                ? (0, string.Empty)
+                : TryParsePartialSuccess(response, contentBytes);
 
             return new ProfilesSendResult(response.IsSuccessStatusCode, (int)response.StatusCode, content, rejectedProfiles, partialSuccessErrorMessage);
         }
@@ -138,6 +160,41 @@ public class OtlpProfilesHttpDispatcher
     }
 
     /// <summary>
+    /// Reads the response body into memory, capped at <see cref="MaxResponseBodyBytes"/> regardless of
+    /// what (if anything) <c>Content-Length</c> claims -- covers chunked/absent-length responses the
+    /// same as a declared-oversized one. Bounded by <see cref="BodyReadTimeout"/>; a stalled/slow-drip
+    /// body throws <see cref="OperationCanceledException"/>, which the caller's existing catch already
+    /// logs and drops like any other transport failure.
+    /// </summary>
+    private static (byte[] bytes, bool truncated) ReadResponseBodyBounded(HttpContent content)
+    {
+        if (content == null)
+            return (Array.Empty<byte>(), false);
+
+        var declaredLength = content.Headers?.ContentLength;
+        if (declaredLength.HasValue && declaredLength.Value > MaxResponseBodyBytes)
+            return (Array.Empty<byte>(), true);
+
+        using var cts = new CancellationTokenSource(BodyReadTimeout);
+        using var stream = content.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        using var buffered = new MemoryStream();
+
+        var buffer = new byte[8192];
+        int read;
+        while ((read = stream.ReadAsync(buffer, 0, buffer.Length, cts.Token).ConfigureAwait(false).GetAwaiter().GetResult()) > 0)
+        {
+            var remaining = MaxResponseBodyBytes - (int)buffered.Length;
+            var toCopy = Math.Min(read, remaining);
+            buffered.Write(buffer, 0, toCopy);
+
+            if (toCopy < read || buffered.Length >= MaxResponseBodyBytes)
+                return (buffered.ToArray(), true);
+        }
+
+        return (buffered.ToArray(), false);
+    }
+
+    /// <summary>
     /// Builds the OTLP/HTTP request message (absolute endpoint URI, protobuf content type, api-key
     /// header, serialized body). Factored out so the request shape is unit-testable without a socket.
     /// </summary>
@@ -169,7 +226,10 @@ public class OtlpProfilesHttpDispatcher
         var retryHandler = new CustomRetryHandler { InnerHandler = innerHandler };
         var httpClient = new HttpClient(retryHandler, true) { Timeout = TotalSendTimeoutWithRetries };
 
-        return request => httpClient.SendAsync(request).ConfigureAwait(false).GetAwaiter().GetResult();
+        // ResponseHeadersRead: HttpClient must not implicitly buffer the whole body into memory before
+        // returning -- ReadResponseBodyBounded reads (and caps) it explicitly instead. See
+        // TotalSendTimeoutWithRetries/BodyReadTimeout for why this changes what HttpClient.Timeout covers.
+        return request => httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
     // Mirrors NRHttpClient.GetHttpHandler. This client lives for the process lifetime, and

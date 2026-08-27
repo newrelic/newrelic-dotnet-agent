@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using Google.Protobuf;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
@@ -262,6 +263,67 @@ public class OtlpProfilesHttpDispatcherTests
         var response = new HttpResponseMessage(statusCode) { Content = new ByteArrayContent(bodyBytes) };
         response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-protobuf");
         return response;
+    }
+
+    [Test]
+    public void Post_truncates_a_response_body_larger_than_the_cap()
+    {
+        var hugeBody = new byte[OtlpProfilesHttpDispatcher.MaxResponseBodyBytes + 1024];
+        using var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(hugeBody) };
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
+
+        var result = default(ProfilesSendResult);
+        Assert.That(() => result = dispatcher.Post(new byte[] { 1 }, Endpoint), Throws.Nothing);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(Encoding.UTF8.GetBytes(result.ResponseContent).Length, Is.LessThanOrEqualTo(OtlpProfilesHttpDispatcher.MaxResponseBodyBytes));
+        });
+    }
+
+    [Test]
+    public void Post_skips_reading_the_body_when_content_length_declares_it_oversized()
+    {
+        // A huge declared Content-Length must short-circuit before the body stream is even opened --
+        // ByteArrayContent here is small, so if the dispatcher actually tried to read it fully this test
+        // would still pass; the real assertion is that ResponseContent stays empty despite a 200.
+        using var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(new byte[] { 1, 2, 3 }) };
+        response.Content.Headers.ContentLength = OtlpProfilesHttpDispatcher.MaxResponseBodyBytes + 1;
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
+
+        var result = dispatcher.Post(new byte[] { 1 }, Endpoint);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Accepted, Is.True, "An oversized-but-accepted response must not be misreported as a dropped batch.");
+            Assert.That(result.StatusCode, Is.EqualTo(200));
+            Assert.That(result.ResponseContent, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void Post_does_not_parse_partial_success_from_a_truncated_protobuf_body()
+    {
+        // The body is a fully valid, parseable protobuf message with a non-zero RejectedProfiles --
+        // proving the parser would otherwise happily decode it -- but Content-Length declares it
+        // oversized, forcing truncation. Partial-success fields must stay at their zero defaults.
+        var protobufResponse = new ExportProfilesServiceResponse
+        {
+            PartialSuccess = new ExportProfilesPartialSuccess { RejectedProfiles = 3, ErrorMessage = "schema drift" }
+        };
+        var bodyBytes = protobufResponse.ToByteArray();
+        using var response = BuildProtobufResponse(HttpStatusCode.OK, bodyBytes);
+        response.Content.Headers.ContentLength = OtlpProfilesHttpDispatcher.MaxResponseBodyBytes + 1;
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
+
+        var result = dispatcher.Post(new byte[] { 1, 2, 3 }, Endpoint);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.RejectedProfiles, Is.EqualTo(0));
+            Assert.That(result.PartialSuccessErrorMessage, Is.Empty);
+        });
     }
 
     [Test]
