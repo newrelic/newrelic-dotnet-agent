@@ -29,6 +29,8 @@ public abstract class MongoDBDriverCollectionTestsBase<TFixture> : NewRelicInteg
         _mongoUrl = mongoUrl;
         _driverVersion = driverVersion;
 
+        _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+
         _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
         // Async methods first
         _fixture.AddCommand("MongoDbDriverExerciser AggregateAsync");
@@ -83,18 +85,17 @@ public abstract class MongoDBDriverCollectionTestsBase<TFixture> : NewRelicInteg
             _fixture.AddCommand("MongoDbDriverExerciser AggregateToCollection");
         }
 
+        _fixture.AddCommand("MongoDbDriverExerciser DropTestDatabase");
+
         _fixture.AddActions
         (
             setupConfiguration: () =>
             {
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
-                configModifier.ConfigureFasterMetricsHarvestCycle(10);
-            },
-            exerciseApplication: () =>
-            {
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
-                _fixture.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1), 2);
+                configModifier
+                    .SetLogLevel("FINEST")
+                    .ConfigureFasterMetricsHarvestCycle(10);
             }
         );
 

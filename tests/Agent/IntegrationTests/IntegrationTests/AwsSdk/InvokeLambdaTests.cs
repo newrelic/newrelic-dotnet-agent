@@ -39,7 +39,7 @@ public abstract class InvokeLambdaTestBase<TFixture> : NewRelicIntegrationTest<T
             },
             exerciseApplication: () =>
             {
-                _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2),2);
+                _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), useAsync ? 2 : 1);
             }
         );
 

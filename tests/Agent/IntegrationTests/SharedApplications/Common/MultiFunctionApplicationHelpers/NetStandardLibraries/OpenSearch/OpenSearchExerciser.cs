@@ -23,6 +23,7 @@ public class OpenSearchExerciser
 
     [LibraryMethod]
     [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task SearchAsync() => await _client.SearchAsync();
 
     [LibraryMethod]

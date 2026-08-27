@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System.Runtime.CompilerServices;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
@@ -22,6 +23,7 @@ public static class FasterEventHarvest
     /// start.
     /// </summary>
     [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     private static void StartAgent()
     {
         ConsoleMFLogger.Info("Instrumented Method to start the Agent");

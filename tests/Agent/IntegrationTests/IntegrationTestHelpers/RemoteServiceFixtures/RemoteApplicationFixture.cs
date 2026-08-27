@@ -310,6 +310,7 @@ public abstract class RemoteApplicationFixture : IDisposable
                     {
                         TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.ToString());
                         retryMessage = "Exception thrown.";
+                        retryTest = true;
                     }
                     finally
                     {

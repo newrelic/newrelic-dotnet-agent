@@ -83,7 +83,11 @@ public abstract class RecordDatastoreSegmentTests<TFixture> : NewRelicIntegratio
         (
             exerciseApplication: () =>
             {
-                _fixture.AgentLog.WaitForLogLine(AgentLogFile.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                if (_allOptions)
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                }
+
                 _fixture.AgentLog.WaitForLogLine(AgentLogFile.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );

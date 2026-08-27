@@ -28,11 +28,13 @@ public abstract class LlmDisabledTestsBase<TFixture> : NewRelicIntegrationTest<T
                 new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
                     .ForceTransactionTraces()
                     .EnableAiMonitoring(false)
+                    .ConfigureFasterMetricsHarvestCycle(15)
                     .SetLogLevel("finest");
             },
             exerciseApplication: () =>
             {
-                _fixture.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2), 2);
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForMetricAggregateCallCount("OtherTransaction/all", 1, TimeSpan.FromMinutes(1));
             }
         );
 

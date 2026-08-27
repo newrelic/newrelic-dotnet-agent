@@ -89,7 +89,7 @@ jobs:
 
       - name: Install HostableWebCore Feature
         if: | # only install for the required namespaces
-          matrix.namespace == 'MongoDB' || matrix.namespace == 'Oracle'
+          matrix.namespace == 'Oracle'
         run: |
           Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
         shell: powershell
