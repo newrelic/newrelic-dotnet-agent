@@ -452,9 +452,9 @@ public class CustomRetryHandlerTests
     }
 
     [Test]
-    public async Task SendAsync_AllRetriesExhausted_ThrowsException()
+    public async Task SendAsync_RetryableExceptionExhaustsRetries_RethrowsLastException()
     {
-        // Arrange - Use exceptions which DO throw after retries exhausted
+        // Arrange - retryable exception on every attempt; final attempt rethrows instead of retrying
         _innerHandler.SetException(new HttpRequestException("Network failure"));
 
         // Act & Assert

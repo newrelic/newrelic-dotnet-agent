@@ -132,7 +132,9 @@ public class CustomRetryHandler : DelegatingHandler
             }
         }
 
-        return HandleRetriesExhausted(lastException);
+        // Every iteration above either returns or throws once attempt reaches MaxRetries, so the loop
+        // never falls out the bottom -- this satisfies the compiler's control-flow requirement only.
+        throw new InvalidOperationException("Unreachable: CustomRetryHandler retry loop always returns or throws before exhausting its iterations.");
     }
 
     private async Task<HttpResponseMessage> SendSingleAttempt(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -225,13 +227,6 @@ public class CustomRetryHandler : DelegatingHandler
         var source = honoredRetryAfterDelay.HasValue ? "server Retry-After" : "exponential backoff";
         Log.Debug($"Waiting {delay.TotalMilliseconds}ms ({source}) before retry attempt {attempt + 1}");
         await _delayFunc(delay, cancellationToken);
-    }
-
-    private static HttpResponseMessage HandleRetriesExhausted(Exception lastException)
-    {
-        var errorMessage = $"OTLP export failed after {MaxRetries} attempts";
-        Log.Error(lastException, errorMessage);
-        throw lastException ?? new HttpRequestException(errorMessage);
     }
 
     /// <summary>
