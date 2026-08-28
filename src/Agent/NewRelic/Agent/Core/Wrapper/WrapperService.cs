@@ -245,6 +245,13 @@ public class WrapperService : IWrapperService
         if (!context.IsEnabled)
             return;
 
+        // The exit-path caller passes _agent.CurrentTransaction, which is null when the transaction already
+        // ended before this continuation ran (async/ending-transaction cases). Transaction.End already resets
+        // this thread's native trace context on the completing thread; other threads self-heal on their next
+        // push. Nothing to do here -- just avoid the NRE below.
+        if (transaction == null)
+            return;
+
         try
         {
             // TraceId lives on the internal transaction; the public wrapper surface (ITransaction) doesn't expose it.

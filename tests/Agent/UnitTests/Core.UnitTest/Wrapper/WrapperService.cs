@@ -441,6 +441,45 @@ public class Class_WrapperService
     }
 
     [Test]
+    public void AfterWrappedMethod_does_not_throw_or_push_when_CurrentTransaction_is_null_and_enabled()
+    {
+        // Simulates the exit-path re-push racing a transaction that already ended (e.g. an async
+        // continuation running after Transaction.End). _agent.CurrentTransaction is null at that point.
+        var wrapper = Mock.Create<IWrapper>();
+        Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).Returns((_, __) => { });
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
+
+        var transaction = Mock.Create<IInternalTransaction>();
+        var segment = Mock.Create<ISegment>();
+        Mock.Arrange(() => transaction.IsValid).Returns(true);
+        Mock.Arrange(() => transaction.IsFinished).Returns(false);
+        Mock.Arrange(() => transaction.TraceId).Returns("0123456789abcdeffedcba9876543210");
+        Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+        Mock.Arrange(() => segment.SpanId).Returns("1122334455667788");
+        Mock.Arrange(() => segment.IsLeaf).Returns(false);
+        Mock.Arrange(() => segment.IsValid).Returns(true);
+
+        // Enter path still sees a valid transaction (the entry-point lookup is unaffected); only the
+        // exit-path's separate _agent.CurrentTransaction lookup returns null.
+        Mock.Arrange(() => _agent.CurrentTransaction).Returns(transaction);
+
+        var context = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => context.IsEnabled).Returns(true);
+        ContinuousProfilingContext.Instance = context;
+
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
+
+        // Now flip CurrentTransaction to null so the exit path's independent lookup sees the ended transaction.
+        Mock.Arrange(() => _agent.CurrentTransaction).Returns((IInternalTransaction)null);
+
+        Assert.DoesNotThrow(() => afterWrappedMethod(null, null));
+
+        // One call total: the entry path pushed with the still-valid transaction; the exit path's null
+        // CurrentTransaction must not add a second call (and must not throw).
+        Mock.Assert(() => context.PushTraceContext(Arg.AnyString, Arg.AnyString), Occurs.Once());
+    }
+
+    [Test]
     public void BeforeWrappedMethod_pushing_trace_context_never_throws_into_the_app()
     {
         var wrapper = Mock.Create<IWrapper>();
