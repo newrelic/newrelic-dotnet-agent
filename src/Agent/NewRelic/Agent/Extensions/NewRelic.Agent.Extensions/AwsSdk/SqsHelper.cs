@@ -27,8 +27,13 @@ public static class SqsHelper
         public string ServerAddress { get; }
 
         // https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue
-        public SqsAttributes(string url)
+        // The region is not always the second label of the host: AWS legacy endpoints are shaped
+        // https://us-east-2.queue.amazonaws.com/... and https://queue.amazonaws.com/... instead.
+        // Anything that is not region-shaped falls back to the region from the client config.
+        public SqsAttributes(string url, string fallbackRegion)
         {
+            Region = AwsRegionValidator.LooksLikeARegion(fallbackRegion) ? fallbackRegion : null;
+
             if (string.IsNullOrEmpty(url))
             {
                 return;
@@ -49,16 +54,18 @@ public static class SqsHelper
                 return;
             }
 
-            // subdomain[0] should always be "sqs"
-            Region = subdomain[1];
+            if (AwsRegionValidator.LooksLikeARegion(subdomain[1]))
+            {
+                Region = subdomain[1];
+            }
 
             ServerAddress = new Uri(url).Host;
         }
     }
 
-    public static ISegment GenerateSegment(ITransaction transaction, MethodCall methodCall, string url, MessageBrokerAction action)
+    public static ISegment GenerateSegment(ITransaction transaction, MethodCall methodCall, string url, MessageBrokerAction action, string fallbackRegion)
     {
-        var attr = new SqsAttributes(url);
+        var attr = new SqsAttributes(url, fallbackRegion);
 
         var segment = transaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, action, MessageBrokerVendorConstants.SQS, destinationName: attr.QueueName, messagingSystemName: MessagingSystemName, cloudAccountId: attr.CloudId, cloudRegion: attr.Region);
         segment.GetExperimentalApi().MakeLeaf();

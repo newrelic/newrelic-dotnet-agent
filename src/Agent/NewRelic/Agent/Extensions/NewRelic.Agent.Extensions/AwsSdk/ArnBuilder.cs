@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace NewRelic.Agent.Extensions.AwsSdk;
 
@@ -136,8 +135,7 @@ public class ArnBuilder
         return $"Partition: {Partition}, Region: {Region}, AccountId: {idPresent}";
     }
 
-    private static Regex RegionRegex = new Regex(@"^[a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}$", RegexOptions.Compiled);
-    private static bool LooksLikeARegion(string text) => RegionRegex.IsMatch(text);
+    private static bool LooksLikeARegion(string text) => AwsRegionValidator.LooksLikeARegion(text);
     private static bool LooksLikeAnAccountId(string text) => (text.Length == 12) && text.All(c => c >= '0' && c <= '9');
 
     private string ConstructArn(string partition, string service, string region, string accountId, string resource)

@@ -41,6 +41,16 @@ public class AwsSdkPipelineWrapper : IWrapper
                 systemName = regionEndpoint.SystemName;
                 partition = regionEndpoint.PartitionName;
             }
+            else
+            {
+                // A client pointed at a custom endpoint (ServiceURL) has no RegionEndpoint; the
+                // region it signs with lives in AuthenticationRegion instead.
+                string authenticationRegion = clientConfig.AuthenticationRegion;
+                if (AwsRegionValidator.LooksLikeARegion(authenticationRegion))
+                {
+                    systemName = authenticationRegion;
+                }
+            }
         }
         catch (Exception e)
         {
@@ -107,7 +117,7 @@ public class AwsSdkPipelineWrapper : IWrapper
 
         if (requestType.StartsWith("Amazon.SQS"))
         {
-            return SQSRequestHandler.HandleSQSRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext);
+            return SQSRequestHandler.HandleSQSRequest(instrumentedMethodCall, agent, transaction, request, isAsync, executionContext, builder);
         }
 
         if (requestType == "Amazon.Lambda.Model.InvokeRequest")

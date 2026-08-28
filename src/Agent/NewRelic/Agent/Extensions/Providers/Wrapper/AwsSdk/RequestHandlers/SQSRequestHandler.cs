@@ -18,7 +18,7 @@ internal static class SQSRequestHandler
     private static readonly ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new();
     private static readonly ConcurrentHashSet<string> _unsupportedSQSRequestTypes = [];
 
-    public static AfterWrappedMethodDelegate HandleSQSRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext)
+    public static AfterWrappedMethodDelegate HandleSQSRequest(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction, dynamic request, bool isAsync, dynamic executionContext, ArnBuilder builder)
     {
         var requestType = request.GetType().Name;
 
@@ -48,7 +48,7 @@ internal static class SQSRequestHandler
         var dtHeaders = agent.GetConfiguredDTHeaders();
 
         string requestQueueUrl = request.QueueUrl;
-        var segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action);
+        var segment = SqsHelper.GenerateSegment(transaction, instrumentedMethodCall.MethodCall, requestQueueUrl, action, builder?.Region);
         switch (action)
         {
             case MessageBrokerAction.Produce when requestType == "SendMessageRequest":
