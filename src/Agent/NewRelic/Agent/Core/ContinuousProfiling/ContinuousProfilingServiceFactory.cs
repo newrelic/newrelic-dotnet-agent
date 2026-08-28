@@ -6,6 +6,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 using NewRelic.Agent.Core.DependencyInjection;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Extensions.Logging;
 
@@ -35,7 +36,8 @@ public static class ContinuousProfilingServiceFactory
             // isn't known yet; it's resolved from the collector connection once the agent connects, and
             // drains before that point are dropped without doing any work (see DrainOnce).
             var nativeMethods = container.Resolve<INativeMethods>();
-            var profilesDispatcher = new OtlpProfilesHttpDispatcher(configuration);
+            var supportabilityMetricCounters = container.Resolve<IOtelBridgeSupportabilityMetricCounters>();
+            var profilesDispatcher = new OtlpProfilesHttpDispatcher(configuration, supportabilityMetricCounters);
             var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, null, agentHealthReporter);
             var sampleSource = new NativeContinuousProfilerSampleSource(nativeMethods);
 

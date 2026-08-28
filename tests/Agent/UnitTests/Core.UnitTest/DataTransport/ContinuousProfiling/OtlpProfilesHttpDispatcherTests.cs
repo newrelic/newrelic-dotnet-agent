@@ -2,14 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Google.Protobuf;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
+using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NUnit.Framework;
 using OpenTelemetry.Proto.Collector.Profiles.V1Development;
 using Telerik.JustMock;
@@ -327,16 +332,107 @@ public class OtlpProfilesHttpDispatcherTests
     }
 
     [Test]
-    public void Post_using_the_real_send_pipeline_does_not_throw_when_constructed_without_an_injected_send()
+    public void Post_using_the_real_send_pipeline_does_not_throw_for_a_malformed_endpoint()
     {
-        // Exercises CreateRealSend/CreateHandler end-to-end (the CustomRetryHandler wiring included) via the
-        // public single-arg constructor, without making a real network call -- BuildRequestMessage validation
-        // short-circuits before any socket work for a malformed endpoint, same guard Post_returns_false_and_
-        // does_not_throw_when_the_endpoint_is_not_a_valid_uri already relies on.
+        // Only exercises CreateHandler/CreateRealSend construction via the public single-arg
+        // constructor; BuildRequestMessage validation short-circuits before any socket work for a
+        // malformed endpoint, same guard Post_returns_false_and_does_not_throw_when_the_endpoint_is_
+        // not_a_valid_uri already relies on -- CreateRealSend's CustomRetryHandler/HttpClient chain is
+        // never actually invoked here. See the "real pipeline" tests below for wiring coverage.
         var dispatcher = new OtlpProfilesHttpDispatcher(_configuration);
 
         var result = default(ProfilesSendResult);
         Assert.That(() => result = dispatcher.Post(new byte[] { 1 }, "not a uri"), Throws.Nothing);
         Assert.That(result.Accepted, Is.False);
     }
+
+    #region Real pipeline wiring tests (M10/M12)
+
+    // These exercise the actual CustomRetryHandler + HttpClient chain (OtlpProfilesHttpDispatcher's
+    // internal BuildSend) over a stub inner HttpMessageHandler, so retries, exhaustion, and
+    // supportability-metric wiring are verified for real rather than through the injected _send
+    // delegate (which bypasses CustomRetryHandler entirely).
+
+    [Test]
+    public void Post_via_real_pipeline_retries_transient_failures_and_records_supportability_metrics()
+    {
+        // Real CustomRetryHandler backoff delay runs for real here (no injected delay seam reaches
+        // this far down) -- ~1s for the single retry below. Bounded and consistent with the existing
+        // CustomRetryHandlerTests real-delay coverage.
+        var innerHandler = new SequencedHttpMessageHandler(
+            new HttpResponseMessage(HttpStatusCode.InternalServerError),
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("ok") });
+        var counters = new FakeMetricCounters();
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, innerHandler, counters);
+
+        var result = dispatcher.Post(new byte[] { 1, 2, 3 }, Endpoint);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(innerHandler.RequestCount, Is.EqualTo(2));
+            Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportRetry));
+            Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportSuccess));
+        });
+    }
+
+    [Test]
+    public void Post_via_real_pipeline_gives_up_after_max_retries_and_records_export_failure()
+    {
+        // ~1s + ~2s of real backoff delay across the two retries before exhaustion.
+        var innerHandler = new SequencedHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        var counters = new FakeMetricCounters();
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, innerHandler, counters);
+
+        var result = dispatcher.Post(new byte[] { 1, 2, 3 }, Endpoint);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Accepted, Is.False);
+            Assert.That(innerHandler.RequestCount, Is.EqualTo(3));
+            Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
+        });
+    }
+
+    private class FakeMetricCounters : IOtelBridgeSupportabilityMetricCounters
+    {
+        public List<OtelBridgeSupportabilityMetric> Recorded { get; } = new();
+
+        public void Record(OtelBridgeSupportabilityMetric metric) => Recorded.Add(metric);
+        public void CollectMetrics() { }
+        public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate) { }
+    }
+
+    // Minimal stub transport: replays a fixed response sequence, repeating the last entry once
+    // exhausted (matches CustomRetryHandlerTests.TestHttpMessageHandler's SetSequence behavior).
+    // Builds a fresh HttpResponseMessage/StringContent per call -- CustomRetryHandler disposes each
+    // response it retries past, so reusing one HttpContent instance across calls would throw
+    // ObjectDisposedException on repeat.
+    private class SequencedHttpMessageHandler : HttpMessageHandler
+    {
+        private readonly (HttpStatusCode StatusCode, string Body, HttpResponseHeaders Headers)[] _responses;
+        private int _index;
+        public int RequestCount { get; private set; }
+
+        public SequencedHttpMessageHandler(params HttpResponseMessage[] responses)
+        {
+            _responses = responses.Select(r => (r.StatusCode, r.Content?.ReadAsStringAsync().ConfigureAwait(false).GetAwaiter().GetResult() ?? string.Empty, r.Headers)).ToArray();
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            RequestCount++;
+            var configured = _responses[_index];
+            if (_index < _responses.Length - 1)
+                _index++;
+
+            var rebuilt = new HttpResponseMessage(configured.StatusCode) { Content = new StringContent(configured.Body) };
+            foreach (var header in configured.Headers)
+                rebuilt.Headers.TryAddWithoutValidation(header.Key, header.Value);
+
+            return Task.FromResult(rebuilt);
+        }
+    }
+
+    #endregion
 }

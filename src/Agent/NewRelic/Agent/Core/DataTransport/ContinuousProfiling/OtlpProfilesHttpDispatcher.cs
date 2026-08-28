@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using Google.Protobuf;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 using OpenTelemetry.Proto.Collector.Profiles.V1Development;
@@ -63,8 +64,8 @@ public class OtlpProfilesHttpDispatcher
     private readonly IConfiguration _configuration;
     private readonly Func<HttpRequestMessage, HttpResponseMessage> _send;
 
-    public OtlpProfilesHttpDispatcher(IConfiguration configuration)
-        : this(configuration, null)
+    public OtlpProfilesHttpDispatcher(IConfiguration configuration, IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters = null)
+        : this(configuration, (Func<HttpRequestMessage, HttpResponseMessage>)null, supportabilityMetricCounters)
     {
     }
 
@@ -72,9 +73,22 @@ public class OtlpProfilesHttpDispatcher
     // agent's proxy configuration performs the real network send (the one branch we do not exercise
     // in unit tests -- see CreateRealSend).
     public OtlpProfilesHttpDispatcher(IConfiguration configuration, Func<HttpRequestMessage, HttpResponseMessage> send)
+        : this(configuration, send, null)
+    {
+    }
+
+    // Test seam: builds the real CustomRetryHandler + HttpClient pipeline (the same code
+    // CreateRealSend uses) over a caller-supplied inner handler, so unit tests can exercise
+    // retry/Retry-After/counters wiring end to end without a socket.
+    public OtlpProfilesHttpDispatcher(IConfiguration configuration, HttpMessageHandler innerHandler, IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters = null)
+        : this(configuration, BuildSend(innerHandler, supportabilityMetricCounters), null)
+    {
+    }
+
+    private OtlpProfilesHttpDispatcher(IConfiguration configuration, Func<HttpRequestMessage, HttpResponseMessage> send, IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters)
     {
         _configuration = configuration;
-        _send = send ?? CreateRealSend(configuration);
+        _send = send ?? CreateRealSend(configuration, supportabilityMetricCounters);
     }
 
     /// <summary>
@@ -199,19 +213,26 @@ public class OtlpProfilesHttpDispatcher
         return request;
     }
 
-    // Not exercised by unit tests: this constructs a live HttpClient and performs a real network send.
-    // The transport-failure and response-handling logic is tested via an injected send delegate.
+    // Not exercised by unit tests: this constructs a live HttpClient over a real socket handler. The
+    // retry/timeout/counters wiring it builds on top of (BuildSend) is exercised directly -- see the
+    // HttpMessageHandler-injecting ctor above.
     [NrExcludeFromCodeCoverage]
-    private static Func<HttpRequestMessage, HttpResponseMessage> CreateRealSend(IConfiguration configuration)
+    private static Func<HttpRequestMessage, HttpResponseMessage> CreateRealSend(IConfiguration configuration, IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters)
     {
         var connectionInfo = new ConnectionInfo(configuration);
-
         var innerHandler = CreateHandler(connectionInfo.Proxy);
+        return BuildSend(innerHandler, supportabilityMetricCounters);
+    }
+
+    // Builds the retry-handler + HttpClient chain over the given inner transport handler. Shared by
+    // the real network path (CreateRealSend) and the test seam ctor, so both exercise identical wiring.
+    private static Func<HttpRequestMessage, HttpResponseMessage> BuildSend(HttpMessageHandler innerHandler, IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters)
+    {
         // 5s keeps any single honored Retry-After small against both the TotalSendTimeoutWithRetries
         // budget this client is given and the 1-60s drain cadence of the service driving it; a longer
         // server-requested wait is declined so the send doesn't hold its threadpool thread through a
         // DrainBufferBoundary or extend the bounded drain-wait on shutdown.
-        var retryHandler = new CustomRetryHandler(retryAfterBailCeiling: TimeSpan.FromSeconds(5)) { InnerHandler = innerHandler };
+        var retryHandler = new CustomRetryHandler(supportabilityMetricCounters, retryAfterBailCeiling: TimeSpan.FromSeconds(5)) { InnerHandler = innerHandler };
         var httpClient = new HttpClient(retryHandler, true) { Timeout = TotalSendTimeoutWithRetries };
 
         // ResponseHeadersRead: HttpClient must not implicitly buffer the whole body into memory before
