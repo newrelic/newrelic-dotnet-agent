@@ -1,0 +1,275 @@
+name: Test Selection
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: 'all = canonical lists minus repo exclusion variables. requested = validate and intersect the three request inputs.'
+        type: string
+        required: false
+        default: 'all'
+      integration_request:
+        description: 'Comma-separated integration test namespace names. Read in requested mode only.'
+        type: string
+        required: false
+        default: ''
+      unbounded_request:
+        description: 'Comma-separated unbounded test namespace names. Read in requested mode only.'
+        type: string
+        required: false
+        default: ''
+      container_request:
+        description: 'Comma-separated container groups as name/arch, e.g. "Ubuntu/amd64,Core/amd64". Read in requested mode only.'
+        type: string
+        required: false
+        default: ''
+    outputs:
+      integration-namespaces:
+        description: 'JSON array of integration test namespaces to run.'
+        value: ${{ jobs.compute.outputs.integration }}
+      unbounded-namespaces:
+        description: 'JSON array of unbounded test namespaces to run.'
+        value: ${{ jobs.compute.outputs.unbounded }}
+      container-groups:
+        description: 'Comma-separated container groups to run. Empty means all of them.'
+        value: ${{ jobs.compute.outputs.containers }}
+
+permissions: {}
+
+jobs:
+  compute:
+    name: Compute Test Selection
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      integration: ${{ steps.compute.outputs.integration }}
+      unbounded: ${{ steps.compute.outputs.unbounded }}
+      containers: ${{ steps.compute.outputs.containers }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Compute namespace lists
+        id: compute
+        env:
+          INTEGRATION_EXCLUDE: ${{ vars.INTEGRATION_EXCLUDE_NAMESPACES }}
+          UNBOUNDED_EXCLUDE: ${{ vars.UNBOUNDED_EXCLUDE_NAMESPACES }}
+          MODE: ${{ inputs.mode }}
+          INTEGRATION_REQUEST: ${{ inputs.integration_request }}
+          UNBOUNDED_REQUEST: ${{ inputs.unbounded_request }}
+          CONTAINER_REQUEST: ${{ inputs.container_request }}
+        run: |
+          # ── Canonical namespace lists ──────────────────────────────────
+          # maintain alphabetical order, please!
+          integration_all='[
+            "AgentFeatures",
+            "AgentLogs",
+            "AgentMetrics",
+            "Api",
+            "AppDomainCaching",
+            "AspNetCore",
+            "AwsLambda.AutoInstrumentation",
+            "AwsLambda.CloudWatch",
+            "AwsLambda.Custom",
+            "AwsLambda.DynamoDb",
+            "AwsLambda.General",
+            "AwsLambda.Kinesis",
+            "AwsLambda.S3",
+            "AwsLambda.Ses",
+            "AwsLambda.Sns",
+            "AwsLambda.Sqs",
+            "AwsLambda.WebRequest",
+            "AwsSdk",
+            "AzureFunction",
+            "BasicInstrumentation",
+            "Blazor",
+            "CatInbound",
+            "CatOutbound",
+            "CodeLevelMetrics",
+            "Configuration",
+            "CustomAttributes",
+            "CustomInstrumentation",
+            "DataTransmission",
+            "DistributedTracing",
+            "Errors",
+            "Grpc",
+            "Hangfire",
+            "HSM",
+            "HttpClientInstrumentation",
+            "HybridHttpContextStorage",
+            "InfiniteTracing",
+            "LLM",
+            "Logging.AuditLog",
+            "Logging.ContextData",
+            "Logging.Hsm",
+            "Logging.Labels",
+            "Logging.LocalDecoration",
+            "Logging.LogLevelDetection",
+            "Logging.MaxSamplesStored",
+            "Logging.MetricsAndForwarding",
+            "Logging.StructuredLogArgContextData",
+            "Logging.ZeroMaxSamplesStored",
+            "MassTransit",
+            "MultiAppDomain",
+            "OpenTelemetry",
+            "Owin",
+            "ReJit.NetCore",
+            "ReJit.NetFramework",
+            "RequestHandling",
+            "RequestHeadersCapture.AspNet",
+            "RequestHeadersCapture.AspNetCore",
+            "RequestHeadersCapture.EnvironmentVariables",
+            "RequestHeadersCapture.Owin",
+            "RequestHeadersCapture.WCF",
+            "RestSharp",
+            "WCF.Client.IIS.ASPDisabled",
+            "WCF.Client.IIS.ASPEnabled",
+            "WCF.Client.Self",
+            "WCF.Service.IIS.ASPDisabled",
+            "WCF.Service.IIS.ASPEnabled",
+            "WCF.Service.Self"
+          ]'
+
+          unbounded_all='[
+            "AzureServiceBus",
+            "CosmosDB",
+            "Couchbase",
+            "Elasticsearch",
+            "MongoDB",
+            "Msmq",
+            "MsSql",
+            "MySql",
+            "NServiceBus",
+            "NServiceBus5",
+            "OpenSearch",
+            "Oracle",
+            "Postgres",
+            "RabbitMq",
+            "Redis"
+          ]'
+
+          # Container groups, as name/arch. This list is validated against the
+          # select-matrix list in linux_container_tests.yml by .github/scripts/check-workflows.py.
+          container_all='[
+            "Ubuntu/amd64",
+            "Alpine/amd64",
+            "Centos/amd64",
+            "Amazon/amd64",
+            "Fedora/amd64",
+            "Ubuntu/arm64",
+            "Amazon/arm64",
+            "Fedora/arm64",
+            "Core/amd64",
+            "Messaging/amd64",
+            "Aws/amd64",
+            "Datastore/amd64"
+          ]'
+
+          if [ "$MODE" = "all" ]; then
+            # ── Read exclusion variables (default to empty array) ─────────
+            integration_exclude="${INTEGRATION_EXCLUDE:-[]}"
+            unbounded_exclude="${UNBOUNDED_EXCLUDE:-[]}"
+  
+            # ── Apply exclusions ──────────────────────────────────────────
+            integration=$(jq -c '. - $ex' --argjson ex "$integration_exclude" <<< "$integration_all")
+            unbounded=$(jq -c '. - $ex' --argjson ex "$unbounded_exclude" <<< "$unbounded_all")
+  
+            # ── Log what was excluded ─────────────────────────────────────
+            int_removed=$(jq -c '. as $all | $all - ($all - $ex)' --argjson ex "$integration_exclude" <<< "$integration_all")
+            unb_removed=$(jq -c '. as $all | $all - ($all - $ex)' --argjson ex "$unbounded_exclude" <<< "$unbounded_all")
+  
+            echo "::group::Integration test namespaces"
+            echo "Excluded: $int_removed"
+            echo "Running:  $integration"
+            echo "::endgroup::"
+  
+            echo "::group::Unbounded test namespaces"
+            echo "Excluded: $unb_removed"
+            echo "Running:  $unbounded"
+            echo "::endgroup::"
+  
+            echo "integration=$integration" >> "$GITHUB_OUTPUT"
+            echo "unbounded=$unbounded" >> "$GITHUB_OUTPUT"
+            containers=""
+            echo "containers=$containers" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$MODE" != "requested" ]; then
+            echo "::error::Unknown mode '$MODE'. Valid values: all, requested."
+            exit 1
+          fi
+
+          # ---- requested mode ----------------------------------------------
+          # Exclusion variables do NOT apply here. Targeted mode is how an
+          # excluded namespace gets re-tested, so an explicit request wins.
+
+          split_request() {
+            jq -Rc 'split(",") | map(gsub("^[ \t]+|[ \t]+$"; "")) | map(select(length > 0))' <<< "$1"
+          }
+
+          report_unknown() {
+            local label="$1" all="$2" unknown="$3" name suggestion
+            echo "::error::Unknown $label: $(jq -r 'join(", ")' <<< "$unknown")"
+            while IFS= read -r name; do
+              suggestion=$(jq -r --arg n "$name" \
+                'map(select(ascii_downcase | startswith(($n | ascii_downcase)[0:2]))) | join(", ")' <<< "$all")
+              if [ -n "$suggestion" ]; then
+                echo "::error::  $name - nearest match: $suggestion"
+              else
+                echo "::error::  $name - no near match. Valid values: $(jq -r 'join(", ")' <<< "$all")"
+              fi
+            done < <(jq -r '.[]' <<< "$unknown")
+          }
+
+          errors=0
+
+          integration_req=$(split_request "$INTEGRATION_REQUEST")
+          unbounded_req=$(split_request "$UNBOUNDED_REQUEST")
+          container_req=$(split_request "$CONTAINER_REQUEST")
+
+          integration_unknown=$(jq -c --argjson all "$integration_all" '. - $all' <<< "$integration_req")
+          unbounded_unknown=$(jq -c --argjson all "$unbounded_all" '. - $all' <<< "$unbounded_req")
+          container_unknown=$(jq -c --argjson all "$container_all" '. - $all' <<< "$container_req")
+
+          if [ "$integration_unknown" != "[]" ]; then
+            report_unknown "integration namespace(s)" "$integration_all" "$integration_unknown"
+            errors=1
+          fi
+          if [ "$unbounded_unknown" != "[]" ]; then
+            report_unknown "unbounded namespace(s)" "$unbounded_all" "$unbounded_unknown"
+            errors=1
+          fi
+          if [ "$container_unknown" != "[]" ]; then
+            report_unknown "container group(s)" "$container_all" "$container_unknown"
+            errors=1
+          fi
+
+          if [ "$errors" -ne 0 ]; then
+            echo "::error::Selection failed. Fix the names above and dispatch again."
+            exit 1
+          fi
+
+          # Intersect in canonical order, so the matrix leg order is stable.
+          integration=$(jq -c --argjson req "$integration_req" '. - (. - $req)' <<< "$integration_all")
+          unbounded=$(jq -c --argjson req "$unbounded_req" '. - (. - $req)' <<< "$unbounded_all")
+          containers=$(jq -r --argjson req "$container_req" '. - (. - $req) | join(",")' <<< "$container_all")
+
+          if [ "$integration" = "[]" ] && [ "$unbounded" = "[]" ] && [ -z "$containers" ]; then
+            echo "::error::No tests requested. Set at least one of integration_namespaces, unbounded_namespaces, or container_groups."
+            exit 1
+          fi
+
+          echo "::group::Requested test selection"
+          echo "Integration: $integration"
+          echo "Unbounded:   $unbounded"
+          echo "Containers:  $containers"
+          echo "::endgroup::"
+
+          echo "integration=$integration" >> "$GITHUB_OUTPUT"
+          echo "unbounded=$unbounded" >> "$GITHUB_OUTPUT"
+          echo "containers=$containers" >> "$GITHUB_OUTPUT"
+        shell: bash
