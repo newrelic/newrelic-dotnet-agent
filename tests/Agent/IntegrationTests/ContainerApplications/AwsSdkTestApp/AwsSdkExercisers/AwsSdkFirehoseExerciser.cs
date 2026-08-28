@@ -27,12 +27,12 @@ public class AwsSdkFirehoseExerciser : IDisposable
 
     private AmazonKinesisFirehoseClient GetKinesisFirehoseClient()
     {
-        // configure the client to use LocalStack
+        // configure the client to use floci
         // use plausible (but fake) access key and fake secret key so account id parsing can be tested
         var creds = new BasicAWSCredentials("FOOIHSHSDNNAEXAMPLE", "MOREGIBBERISH");
         var config = new AmazonKinesisFirehoseConfig
         {
-            ServiceURL = "http://localstack:4566",
+            ServiceURL = "http://floci:4566",
             AuthenticationRegion = "us-west-2"
         };
 
@@ -41,12 +41,12 @@ public class AwsSdkFirehoseExerciser : IDisposable
     }
     private AmazonS3Client GetS3Client()
     {
-        // configure the client to use LocalStack
+        // configure the client to use floci
         // use plausible (but fake) access key and fake secret key so account id parsing can be tested
         var creds = new BasicAWSCredentials("FOOIHSHSDNNAEXAMPLE", "MOREGIBBERISH");
         var config = new AmazonS3Config
         {
-            ServiceURL = "http://localstack:4566",
+            ServiceURL = "http://floci:4566",
             AuthenticationRegion = "us-west-2",
             ForcePathStyle = true
         };
@@ -70,7 +70,7 @@ public class AwsSdkFirehoseExerciser : IDisposable
             var s3DestinationConfiguration = new ExtendedS3DestinationConfiguration
             {
                 BucketARN = "arn:aws:s3:::" + bucketName,
-                RoleARN = "arn:aws:iam::000000000000:role/Firehose-Reader-Role" // per Localstack docs: https://docs.localstack.cloud/user-guide/aws/firehose/
+                RoleARN = "arn:aws:iam::000000000000:role/Firehose-Reader-Role" // emulator default account id
             };
             var response = await _amazonKinesisFirehoseClient.CreateDeliveryStreamAsync(new CreateDeliveryStreamRequest
             {

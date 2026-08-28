@@ -85,7 +85,7 @@ public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehos
 
         };
 
-        // working with Kinesis in LocalStack, some ARNs match one pattern (region unknown but a real account id) and
+        // against the local emulator, some ARNs match one pattern (region unknown but a real account id) and
         // others match another pattern (region is us-west-2 but account ID is all zeros) so we have to resort to regex matching
         string expectedArnRegex = "arn:aws:firehose:(.+?):([0-9]{12}):deliverystream/" + _streamName;
         var expectedAwsAgentAttributes = new string[]
