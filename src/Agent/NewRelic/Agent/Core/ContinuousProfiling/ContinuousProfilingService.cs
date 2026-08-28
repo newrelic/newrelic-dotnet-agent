@@ -186,6 +186,30 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// </summary>
     public IThreadProfilingStatus ThreadProfilingStatus { get; set; }
 
+    // Test-only observation seams. Null (a no-op) in production; never set outside unit tests. They make
+    // three otherwise-invisible internal timing moments awaitable so the concurrency/dispose tests can
+    // position a racy interleaving against a DETERMINISTIC barrier instead of a wall-clock Thread.Sleep --
+    // a too-short sleep on a constrained runner would silently skip the intended race and still pass green
+    // (lost regression coverage, not a visible flake). Same spirit as the drainShutdownWaitTimeout
+    // constructor seam above: observation only, no production behavior change. Public (not internal +
+    // InternalsVisibleTo, which this repo bans) and nullable so the null-conditional invoke is a cheap
+    // null check on these paths.
+
+    // Invoked by DrainOnce the instant a tick loses the _drainInFlight guard and is about to return as a
+    // no-op. Lets a test await "all N guard-losing ticks have actually run and returned" rather than
+    // sleeping and hoping.
+    public Action DrainTickLostGuardForTesting { get; set; }
+
+    // Invoked by StopLocked the instant a thread has dropped _lifecycleLock to enter its PRIMARY bounded
+    // drain wait. Lets a test await "this stopper is now in the bounded wait (lock released)" before it
+    // unblocks a racing drain that must reacquire the lock.
+    public Action EnteredPrimaryDrainWaitForTesting { get; set; }
+
+    // Invoked by StopLocked the instant a SECOND concurrent caller has dropped _lifecycleLock to park on
+    // the _stopInProgress wait. Lets a test await "the second stopper is parked on the in-progress stop"
+    // before it lets the first stop complete.
+    public Action EnteredStopInProgressWaitForTesting { get; set; }
+
     public ContinuousProfilingService(ISampleSource sampleSource, INativeContinuousProfiler native, IProfilesTransport transport, IScheduler scheduler, IAgentHealthReporter agentHealthReporter, TimeSpan? drainShutdownWaitTimeout = null)
     {
         _sampleSource = sampleSource;
@@ -515,6 +539,10 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             bool completed;
             try
             {
+                // Test-only observation point: this second caller has dropped the lock and is about to
+                // park on the in-progress stop. Inside the try so the finally still reacquires the lock
+                // even if a test hook were to throw.
+                EnteredStopInProgressWaitForTesting?.Invoke();
                 completed = inProgress.Task.Wait(_drainShutdownWaitTimeout);
             }
             finally
@@ -575,6 +603,10 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 Monitor.Exit(_lifecycleLock);
                 try
                 {
+                    // Test-only observation point: the lock is dropped and this thread is about to enter
+                    // the bounded wait. Inside the try so the finally still reacquires the lock even if a
+                    // test hook were to throw.
+                    EnteredPrimaryDrainWaitForTesting?.Invoke();
                     if (!drainTask.Wait(_drainShutdownWaitTimeout))
                     {
                         Log.Warn("[ContinuousProfiling] Timed out after {0} waiting for an in-flight drain to finish before stopping native sampling.", _drainShutdownWaitTimeout);
@@ -616,7 +648,11 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             return;
 
         if (Interlocked.CompareExchange(ref _drainInFlight, 1, 0) != 0)
+        {
+            // Test-only observation point: this tick lost the guard and is about to return as a no-op.
+            DrainTickLostGuardForTesting?.Invoke();
             return; // another drain is already in flight (retune overlap) -- skip this tick rather than race the shared buffer
+        }
 
         // Publish a task tracking THIS drain only now that the guard above is actually won.
         var drainCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);

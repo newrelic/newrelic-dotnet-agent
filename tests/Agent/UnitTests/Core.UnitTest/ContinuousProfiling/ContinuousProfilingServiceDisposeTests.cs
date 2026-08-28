@@ -246,12 +246,21 @@ public class ContinuousProfilingServiceDisposeTests
 
         // Simulate the recurring timer firing several more times while the real drain is still blocked in
         // ReadBatch -- every one of these loses the _drainInFlight guard inside DrainOnce and must return
-        // without touching _lastDrainTask. Give each a moment to actually run and return on the thread pool.
+        // without touching _lastDrainTask. A CountdownEvent driven by the guard-lost observation seam
+        // replaces a wall-clock Thread.Sleep: it lets us wait until all 10 dispatched ticks have ACTUALLY
+        // run and returned as no-ops, rather than sleeping a fixed 200ms and hoping the thread pool got to
+        // all of them (a too-short sleep on a constrained runner would leave some ticks unrun -- the
+        // clobber this test guards against would then be untested and the test would still pass green).
+        // Exactly 10 signals are expected: the real drain won the guard and is parked in ReadBatch, so
+        // every one of these 10 ticks loses the guard and hits the seam exactly once.
+        var skippedTicks = new CountdownEvent(10);
+        shortTimeoutService.DrainTickLostGuardForTesting = () => skippedTicks.Signal();
+
         for (var i = 0; i < 10; i++)
         {
             drainAction();
         }
-        Thread.Sleep(TimeSpan.FromMilliseconds(200));
+        Assert.That(skippedTicks.Wait(TimeSpan.FromSeconds(5)), Is.True, "all 10 guard-losing ticks must have run and returned as no-ops");
 
         shortTimeoutService.Dispose();
 
@@ -290,6 +299,38 @@ public class ContinuousProfilingServiceDisposeTests
         }
     }
 
+    /// <summary>
+    /// A real (non-mock) <see cref="IProfilesTransport"/> whose Send signals that the drain has reached the
+    /// send step and then blocks until released, returning true (accepted). Deliberately not a JustMock mock
+    /// for the same reason as <see cref="BlockingSampleSource"/>: JustMock Lite serializes calls into
+    /// DIFFERENT mocks across threads for the whole duration of a blocked DoInstead, so a drain held inside a
+    /// mocked Send would stall Dispose's OWN pre-wait _scheduler.StopExecuting mock call behind it -- Dispose
+    /// could then never reach StopLocked's bounded drain wait while the send is held, and the deterministic
+    /// barrier that positions the send/OnSendResult race against that wait could never be satisfied. Blocking
+    /// inside a plain object holds no JustMock lock, so StopExecuting proceeds and Dispose genuinely enters
+    /// the bounded wait with the drain still in flight.
+    /// </summary>
+    private sealed class BlockingTransport : IProfilesTransport
+    {
+        private readonly ManualResetEventSlim _sendStarted;
+        private readonly ManualResetEventSlim _releaseSend;
+
+        public BlockingTransport(ManualResetEventSlim sendStarted, ManualResetEventSlim releaseSend)
+        {
+            _sendStarted = sendStarted;
+            _releaseSend = releaseSend;
+        }
+
+        public bool Send(ExportProfilesRequest request)
+        {
+            _sendStarted.Set();
+            _releaseSend.Wait(TimeSpan.FromSeconds(10));
+            return true;
+        }
+
+        public void UpdateEndpoint(string endpoint) { }
+    }
+
     [Test]
     public void Dispose_does_not_stall_for_the_full_bounded_wait_when_a_real_drain_races_it_at_the_send_step()
     {
@@ -300,15 +341,36 @@ public class ContinuousProfilingServiceDisposeTests
         // point of a bounded wait entirely. Every other test in this file/ContinuousProfilingServiceTests
         // arranges ReadBatch to return 0, which makes DrainOnce return before ever reaching OnSendResult --
         // exactly why the existing suite stayed green despite the bug. This test arranges a REAL batch and
-        // a slow Send so the drain actually reaches OnSendResult while Dispose is concurrently blocked in
-        // StopLocked's wait, and proves Dispose returns promptly rather than burning the full timeout.
-        ArrangeEnabled(10000);
+        // a blocking Send so the drain actually reaches OnSendResult while Dispose is concurrently in
+        // StopLocked's bounded wait, and proves Dispose returns promptly rather than burning the full timeout.
+        //
+        // The blocking Send is a REAL (non-mock) BlockingTransport, NOT a mocked Send: a drain held inside a
+        // mocked Send's DoInstead would serialize Dispose's own pre-wait _scheduler.StopExecuting mock call
+        // behind it (JustMock's cross-thread DoInstead lock -- see BlockingTransport/BlockingSampleSource),
+        // so Dispose could never reach the bounded wait while the send was held and the barrier below could
+        // never be satisfied. Blocking in a plain object holds no JustMock lock, so Dispose genuinely enters
+        // the bounded wait with the drain still in Send -- the exact interleaving under test.
+        var sendStarted = new ManualResetEventSlim(false);
+        var releaseSend = new ManualResetEventSlim(false);
+        var blockingTransport = new BlockingTransport(sendStarted, releaseSend);
+        var service = new ContinuousProfilingService(_source, _native, blockingTransport, _scheduler, _health);
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(true);
+        Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(10000);
+        Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        service.OverrideConfigForTesting(_config);
 
         Action drainAction = null;
         Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()))
             .DoInstead((Action action, TimeSpan interval, TimeSpan? initialDelay, bool trackAsAgentWork) => drainAction = action);
 
-        _service.StartIfEnabled();
+        service.StartIfEnabled();
         Assert.That(drainAction, Is.Not.Null);
 
         var batch = OneSampleBatch("worker-1", 1, 0, 0, 0, new[] { "F()" });
@@ -318,32 +380,29 @@ public class ContinuousProfilingServiceDisposeTests
             return batch.Length;
         });
 
-        var sendStarted = new ManualResetEventSlim(false);
-        var releaseSend = new ManualResetEventSlim(false);
-        Mock.Arrange(() => _transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(() =>
-        {
-            sendStarted.Set();
-            releaseSend.Wait(TimeSpan.FromSeconds(5));
-            return true;
-        });
-
         drainAction(); // dispatches the real drain onto the thread pool
         Assert.That(sendStarted.Wait(TimeSpan.FromSeconds(5)), Is.True, "the dispatched drain must actually reach Send");
 
         // Dispose on its own thread: it will enter StopLocked, take _lifecycleLock, and block in
-        // drainTask.Wait(...) since the drain above hasn't returned from Send yet. A dedicated thread rather than
-        // Task.Run because it begins executing immediately: a queued thread-pool item may not start within the
-        // 200ms positioning window below on a constrained runner, in which case the drain's OnSendResult would run
-        // to completion before Dispose ever entered StopLocked -- the interleaving under test never happens and the
-        // pre-fix production code would pass too, making this a silent false negative that still shows green.
+        // drainTask.Wait(...) since the drain above hasn't returned from Send yet. A dedicated thread rather
+        // than Task.Run because it begins executing immediately, and because it genuinely blocks in the
+        // bounded wait -- a pool thread would tie up a worker.
+        //
+        // EnteredPrimaryDrainWaitForTesting is signalled the instant Dispose's StopLocked has dropped
+        // _lifecycleLock and is about to enter the bounded wait; waiting on it (rather than sleeping a fixed
+        // 200ms) is what deterministically positions the drain's later OnSendResult call to race StopLocked's
+        // wait rather than run to completion beforehand -- the exact interleaving the fix targets. A too-short
+        // sleep on a constrained runner would let OnSendResult finish first, the race would never happen, and
+        // the pre-fix production code would pass too (a silent false negative that still shows green).
+        var disposeEnteredBoundedWait = new ManualResetEventSlim(false);
+        service.EnteredPrimaryDrainWaitForTesting = () => disposeEnteredBoundedWait.Set();
+
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        var dispose = new Thread(() => _service.Dispose()) { IsBackground = true };
+        var dispose = new Thread(() => service.Dispose()) { IsBackground = true };
         dispose.Start();
 
-        // Give Dispose time to actually enter the bounded wait before releasing Send -- this is what
-        // positions the drain's later OnSendResult call to race StopLocked's wait rather than run to
-        // completion beforehand, i.e. the exact interleaving the fix targets.
-        Thread.Sleep(TimeSpan.FromMilliseconds(200));
+        Assert.That(disposeEnteredBoundedWait.Wait(TimeSpan.FromSeconds(5)), Is.True,
+            "Dispose must have entered StopLocked's bounded drain wait (lock dropped) before Send is released");
         releaseSend.Set();
 
         Assert.That(dispose.Join(TimeSpan.FromSeconds(5)), Is.True, "Dispose must complete promptly once the racing drain's send finishes");
@@ -421,14 +480,21 @@ public class ContinuousProfilingServiceDisposeTests
 
         // Second stopper: acquires _lifecycleLock the moment the first drops it at its wait, enters
         // StopLocked, sees _stopInProgress != null, and waits for the first stop to genuinely finish.
+        // EnteredStopInProgressWaitForTesting fires only from a SECOND caller that has parked on the
+        // in-progress stop -- the first stopper breaks out of that loop immediately (_stopInProgress null on
+        // entry) and never hits it -- so it uniquely marks "the second stopper is parked."
+        var secondStopperParked = new ManualResetEventSlim(false);
+        service.EnteredStopInProgressWaitForTesting = () => secondStopperParked.Set();
+
         var secondStop = new Thread(() => service.Dispose()) { IsBackground = true };
         secondStop.Start();
 
-        // Give the second stopper time to enter its _stopInProgress wait BEFORE the first stop completes --
-        // release too early and the first stop would clear _stopInProgress before the second observed it,
-        // sending the second down the ordinary path and calling _native.Stop() twice. Same 200ms positioning
-        // heuristic the send-step test uses.
-        Thread.Sleep(TimeSpan.FromMilliseconds(200));
+        // Wait until the second stopper has genuinely entered its _stopInProgress wait BEFORE releasing the
+        // drain (which lets the first stop complete). Releasing too early would let the first stop clear
+        // _stopInProgress before the second observed it, sending the second down the ordinary path and
+        // calling _native.Stop() twice. This deterministic barrier replaces a fixed 200ms sleep that would
+        // only probably be long enough on a constrained runner.
+        Assert.That(secondStopperParked.Wait(TimeSpan.FromSeconds(5)), Is.True, "the second stopper must have parked on the _stopInProgress wait");
         releaseReadBatch.Set();
 
         Assert.That(firstStop.Join(TimeSpan.FromSeconds(10)) && secondStop.Join(TimeSpan.FromSeconds(10)), Is.True,
@@ -509,14 +575,21 @@ public class ContinuousProfilingServiceDisposeTests
         retune.Start();
         Assert.That(retuneReachedStopLocked.Wait(TimeSpan.FromSeconds(5)), Is.True, "the retune must reach StopLocked");
 
+        // EnteredStopInProgressWaitForTesting fires only from the second caller parking on the retune's
+        // in-progress stop -- here that is Dispose. Waiting on it deterministically positions Dispose as
+        // having set _disposed and parked on _stopInProgress before we let the retune's stop complete.
+        var disposeParked = new ManualResetEventSlim(false);
+        service.EnteredStopInProgressWaitForTesting = () => disposeParked.Set();
+
         var dispose = new Thread(() => service.Dispose()) { IsBackground = true };
         dispose.Start();
 
-        // Let Dispose acquire the lock the retune dropped at its bounded wait, set _disposed, and park on
-        // _stopInProgress BEFORE the retune's stop can complete. Releasing earlier would let the retune finish
-        // its stop and its StartLocked before Dispose ever ran, which is not the interleaving under test. Same
-        // 200ms positioning heuristic the two tests above use.
-        Thread.Sleep(TimeSpan.FromMilliseconds(200));
+        // Wait until Dispose has acquired the lock the retune dropped at its bounded wait, set _disposed, and
+        // parked on _stopInProgress BEFORE releasing the drain (which lets the retune's stop complete).
+        // Releasing earlier would let the retune finish its stop and its StartLocked before Dispose ever ran,
+        // which is not the interleaving under test. This deterministic barrier replaces a fixed 200ms sleep
+        // that would only probably be long enough on a constrained runner.
+        Assert.That(disposeParked.Wait(TimeSpan.FromSeconds(5)), Is.True, "Dispose must have parked on the retune's in-progress stop");
         releaseReadBatch.Set();
 
         Assert.That(retune.Join(TimeSpan.FromSeconds(10)) && dispose.Join(TimeSpan.FromSeconds(10)), Is.True,
@@ -572,11 +645,21 @@ public class ContinuousProfilingServiceDisposeTests
         Assert.That(retuneReachedStopLocked.Wait(TimeSpan.FromSeconds(5)), Is.True, "the retune must reach StopLocked");
 
         // Second caller with its own genuine stop intent, landing in the retune's dropped-lock window: it sees
-        // _stopInProgress != null and waits for the retune's stop to finish.
+        // _stopInProgress != null and waits for the retune's stop to finish. EnteredStopInProgressWaitForTesting
+        // fires only from that parked second caller -- here the command stop -- so it marks exactly when it has
+        // entered the wait. Note it fires once even though the command stop's wait loop iterates a second time
+        // after the retune's StartLocked flips _isActive back true: by then _stopInProgress is null again, so
+        // the loop breaks without re-entering the wait.
+        var commandStopParked = new ManualResetEventSlim(false);
+        service.EnteredStopInProgressWaitForTesting = () => commandStopParked.Set();
+
         var commandStop = new Thread(() => service.StopFromCommand(new[] { ContinuousProfilingCommandTypes.Cpu })) { IsBackground = true };
         commandStop.Start();
 
-        Thread.Sleep(TimeSpan.FromMilliseconds(200));
+        // Wait until the command stop has genuinely parked on the retune's in-progress stop before releasing
+        // the drain (which lets the retune's stop-then-start complete). Deterministic barrier in place of a
+        // fixed 200ms sleep that would only probably be long enough on a constrained runner.
+        Assert.That(commandStopParked.Wait(TimeSpan.FromSeconds(5)), Is.True, "the command stop must have parked on the retune's in-progress stop");
         releaseReadBatch.Set();
 
         Assert.That(retune.Join(TimeSpan.FromSeconds(10)) && commandStop.Join(TimeSpan.FromSeconds(10)), Is.True,
