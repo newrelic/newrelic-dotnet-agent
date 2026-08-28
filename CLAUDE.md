@@ -35,15 +35,6 @@ Integration, unbounded, and container tests all read from them — so before
 running any of those test solutions, (re)build `FullAgent.sln` first so the
 test runs pick up your latest changes.
 
-| Framework | OS    | Arch  | Directory                         |
-|-----------|-------|-------|-----------------------------------|
-| .NET FW   | Win   | x64   | `newrelichome_x64`                |
-| .NET FW   | Win   | x86   | `newrelichome_x86`                |
-| .NET Core | Win   | x64   | `newrelichome_x64_coreclr`        |
-| .NET Core | Win   | x86   | `newrelichome_x86_coreclr`        |
-| .NET Core | Linux | x64   | `newrelichome_x64_coreclr_linux`  |
-| .NET Core | Linux | arm64 | `newrelichome_arm64_coreclr_linux`|
-
 ## Attaching the agent locally
 
 .NET Framework:
@@ -132,17 +123,9 @@ the .NET Core wrappers). The agent watches this directory and picks up
 new or modified XML without a process restart — if new instrumentation
 isn't taking effect, verify the files are actually present there.
 
-### instrumentation.xml version ranges
-
-`maxVersion` is **exclusive** (strictly less than). To cover all versions up
-to but not including 9.7.0, write `maxVersion="9.7.0"` — not `"9.6.9999"`.
-
 ## Configuration
 
 Precedence: env vars > `newrelic.config` > server-side config > defaults.
-
-- Models: `src/Agent/NewRelic/Agent/Core/Configuration/`
-- Loader: `src/Agent/NewRelic/Agent/Core/Config/`
 
 **Editing `Configuration.xsd`** requires regenerating `Configuration.cs`
 via `xsd2code` and restoring the license header — never hand-edit the
@@ -151,31 +134,13 @@ generated file. Exact command and caveats in
 
 ## Building and testing from the CLI
 
-Full build: open `FullAgent.sln` in the latest Visual Studio or run its
-MSBuild equivalent.
+Build commands and traps: see the **build-dotnet-agent** skill.
+Test commands per layer and infra state: see the
+**run-integration-tests** skill.
 
 **`IntegrationTests.sln` and `UnboundedIntegrationTests.sln` need VS MSBuild**
 with publish flags; the `dotnet` SDK cannot build their legacy ASP.NET FW web
 apps. Invocation: [tests/CLAUDE.md](tests/CLAUDE.md#building-the-solution).
-
-**Core.UnitTest** (and any project depending on `Core.csproj`) fails from
-the CLI with `AssemblyModifier.exe` / `*Undefined*` errors unless
-`SolutionDir` is passed explicitly — VS sets it, plain `dotnet` does not:
-
-Run from the repo root so `$PWD` resolves correctly; the trailing backslash
-on `SolutionDir` is required by MSBuild:
-
-```powershell
-$sln = "$((Resolve-Path .).Path)\"
-dotnet build tests/Agent/UnitTests/Core.UnitTest/Core.UnitTest.csproj `
-  -f net10.0 -p:SolutionDir="$sln"
-dotnet test  tests/Agent/UnitTests/Core.UnitTest/Core.UnitTest.csproj `
-  -f net10.0 -p:SolutionDir="$sln" `
-  --filter "FullyQualifiedName~SomeTest"
-```
-
-Root cause: `Core.csproj` has a post-build ILRepack + AssemblyModifier step
-that references `$(SolutionDir)`.
 
 **Extensions tests** (`NewRelic.Agent.Extensions.Tests`) build fine with
 plain `dotnet build`, but `dotnet test` against the `.csproj` silently fails
@@ -186,12 +151,16 @@ dotnet test tests/Agent/UnitTests/NewRelic.Agent.Extensions.Tests/bin/Debug/net1
   --filter "FullyQualifiedName~SomeTest"
 ```
 
-**Unbounded integration tests** need infrastructure containers first:
+**Unbounded integration tests** run against long-lived infrastructure
+containers (`restart: unless-stopped`), so they normally stay up. Verify the
+required service(s) are running before blaming the agent:
 
 ```
 cd tests/Agent/IntegrationTests/UnboundedServices
-docker compose up -d
+docker compose ps
 ```
+
+Start a missing one with `docker compose up -d <service>`.
 
 ## Analyzing agent and integration-test logs
 

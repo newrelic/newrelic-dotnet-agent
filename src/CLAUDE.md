@@ -282,6 +282,11 @@ to a wrapper, lift it into a helper in `NewRelic.Agent.Extensions` so it
 can be unit tested -- keep the wrapper itself thin. The same rule is
 covered in the [root claude.md](../CLAUDE.md) testing conventions.
 
+### instrumentation.xml version ranges
+
+`maxVersion` is **exclusive** (strictly less than). To cover all versions up
+to but not including 9.7.0, write `maxVersion="9.7.0"` — not `"9.6.9999"`.
+
 ## Public API (`NewRelic.Api.Agent/`)
 
 Customer-facing surface:
