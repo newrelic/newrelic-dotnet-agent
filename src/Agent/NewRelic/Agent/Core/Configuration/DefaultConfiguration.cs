@@ -2966,8 +2966,8 @@ public class DefaultConfiguration : IConfiguration
     // Precedence, matching AiMonitoringEnabled's shape: HSM kills it unconditionally (defense-in-depth,
     // same as AI monitoring -- there is no server-side "strip the key" backstop for this setting the way
     // there is for AIM, so the local guard here is the only enforcement). Below that, agent_config
-    // continuous_profiling.enabled (full override, in either direction) > env var > newrelic.config
-    // <appSettings> key > local <continuousProfiling enabled> element.
+    // continuous_profiling.enabled (full override, in either direction) > env var. No newrelic.config
+    // XML surface for this setting.
     //
     // NOTE: this is deliberately separate from ContinuousProfilingService._commandControlledTypes -- a
     // start_continuous_profiler/stop_continuous_profiler agent command overrides this property's effect
@@ -2976,7 +2976,7 @@ public class DefaultConfiguration : IConfiguration
     public bool ContinuousProfilingEnabled => _continuousProfilingEnabled ??=
         !HighSecurityModeEnabled &&
         ServerOverrides(_serverConfiguration.RpmConfig.ContinuousProfilingEnabled,
-            EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingEnabled", _localConfiguration.continuousProfiling.enabled), "NEW_RELIC_CONTINUOUS_PROFILING_ENABLED"));
+            EnvironmentOverrides(false, "NEW_RELIC_CONTINUOUS_PROFILING_ENABLED"));
 
     private int? _continuousProfilingSamplingIntervalMs;
     public int ContinuousProfilingSamplingIntervalMs
@@ -2986,10 +2986,8 @@ public class DefaultConfiguration : IConfiguration
             if (_continuousProfilingSamplingIntervalMs.HasValue)
                 return _continuousProfilingSamplingIntervalMs.Value;
 
-            // Same env > appSettings > element precedence as ContinuousProfilingEnabled; the clamp is applied
-            // last. EnvironmentOverrides falls back to the (non-null) appSettings-or-element value, so the
-            // result is never null -- GetValueOrDefault() just unwraps it.
-            var configured = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("NewRelic.ContinuousProfilingSamplingIntervalMs", _localConfiguration.continuousProfiling.samplingIntervalMs), "NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")
+            // Env var only; no appSettings/XML surface for this setting. The clamp is applied last.
+            var configured = EnvironmentOverrides(10000, "NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")
                 .GetValueOrDefault();
 
             var clamped = Math.Min(MaxContinuousProfilingSamplingIntervalMs, Math.Max(MinContinuousProfilingSamplingIntervalMs, configured));

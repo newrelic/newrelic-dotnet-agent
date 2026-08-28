@@ -4597,17 +4597,7 @@ public class DefaultConfigurationTests
     public void ContinuousProfilingDisabledWhenHighSecurityModeEnabled()
     {
         _localConfig.highSecurity.enabled = true;
-        _localConfig.continuousProfiling.enabled = true;
-
-        Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
-    }
-
-    [Test]
-    public void ContinuousProfilingEnabled_server_overrides_local_and_env()
-    {
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ENABLED")).Returns("true");
-        _localConfig.continuousProfiling.enabled = true;
-        _serverConfig.RpmConfig.ContinuousProfilingEnabled = false; // server disables despite env+local true
 
         _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
@@ -4615,9 +4605,19 @@ public class DefaultConfigurationTests
     }
 
     [Test]
-    public void ContinuousProfilingEnabled_server_can_enable_when_local_disabled()
+    public void ContinuousProfilingEnabled_server_overrides_env()
     {
-        _localConfig.continuousProfiling.enabled = false;
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ENABLED")).Returns("true");
+        _serverConfig.RpmConfig.ContinuousProfilingEnabled = false; // server disables despite env true
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
+    }
+
+    [Test]
+    public void ContinuousProfilingEnabled_server_can_enable_when_env_disabled()
+    {
         _serverConfig.RpmConfig.ContinuousProfilingEnabled = true;
 
         _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
@@ -4636,51 +4636,27 @@ public class DefaultConfigurationTests
         Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
     }
 
-    [TestCase(null, 10000)]   // unset -> default
-    [TestCase(500, 1000)]     // below floor -> clamp up
-    [TestCase(99999, 60000)]  // above ceiling -> clamp down
-    [TestCase(2500, 2500)]    // in range -> verbatim
-    public void ContinuousProfilingSamplingIntervalMs_clamps(int? configured, int expected)
+    // No newrelic.config XML / appSettings surface for this setting: env var is the only local override, below server config.
+    [TestCase(null, ExpectedResult = false)]  // unset -> default false
+    [TestCase("true", ExpectedResult = true)]
+    [TestCase("false", ExpectedResult = false)]
+    [TestCase("xyz", ExpectedResult = false)] // unparseable -> falls back to default false
+    public bool ContinuousProfilingEnabled_env_var(string envValue)
     {
-        if (configured.HasValue)
-            _localConfig.continuousProfiling.samplingIntervalMs = configured.Value;
-        Assert.That(_defaultConfig.ContinuousProfilingSamplingIntervalMs, Is.EqualTo(expected));
-    }
-
-    // Precedence: env var > newrelic.config <appSettings> key > local <continuousProfiling> element.
-    // Mirrors how sibling settings (e.g. Infinite Tracing) layer the appSettings surface.
-    [TestCase("true", "false", false, ExpectedResult = true)]   // env wins over appSettings + element
-    [TestCase("false", "true", true, ExpectedResult = false)]   // env wins over appSettings + element
-    [TestCase(null, "true", false, ExpectedResult = true)]      // appSettings over element
-    [TestCase(null, "false", true, ExpectedResult = false)]     // appSettings over element
-    [TestCase(null, null, true, ExpectedResult = true)]         // element when no env/appSettings
-    [TestCase(null, null, false, ExpectedResult = false)]       // default
-    [TestCase("xyz", "true", false, ExpectedResult = true)]     // unparseable env -> appSettings
-    [TestCase(null, "xyz", true, ExpectedResult = true)]        // unparseable appSettings -> element
-    public bool ContinuousProfilingEnabled_precedence(string envValue, string appSettingsValue, bool localElement)
-    {
-        _localConfig.continuousProfiling.enabled = localElement;
-        if (appSettingsValue != null)
-            _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingEnabled", value = appSettingsValue });
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ENABLED")).Returns(envValue);
 
         var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         return defaultConfig.ContinuousProfilingEnabled;
     }
 
-    // Same precedence layering for the interval, plus the existing [1000, 60000] clamp applied last.
-    [TestCase("2500", "5000", 3000, ExpectedResult = 2500)]   // env wins, in range
-    [TestCase(null, "5000", 3000, ExpectedResult = 5000)]     // appSettings over element
-    [TestCase(null, null, 3000, ExpectedResult = 3000)]       // element when no env/appSettings
-    [TestCase(null, "500", 3000, ExpectedResult = 1000)]      // appSettings below floor -> clamp up
-    [TestCase("99999", null, 3000, ExpectedResult = 60000)]   // env above ceiling -> clamp down
-    [TestCase("xyz", "2000", 3000, ExpectedResult = 2000)]    // unparseable env -> appSettings
-    [TestCase(null, "xyz", 3000, ExpectedResult = 3000)]      // unparseable appSettings -> element
-    public int ContinuousProfilingSamplingIntervalMs_precedence(string envValue, string appSettingsValue, int localElement)
+    // No newrelic.config XML / appSettings surface for this setting: env var only, clamp to [1000, 60000] applied last.
+    [TestCase(null, ExpectedResult = 10000)]   // unset -> default
+    [TestCase("500", ExpectedResult = 1000)]   // below floor -> clamp up
+    [TestCase("99999", ExpectedResult = 60000)] // above ceiling -> clamp down
+    [TestCase("2500", ExpectedResult = 2500)]  // in range -> verbatim
+    [TestCase("xyz", ExpectedResult = 10000)]  // unparseable -> falls back to default
+    public int ContinuousProfilingSamplingIntervalMs_env_var(string envValue)
     {
-        _localConfig.continuousProfiling.samplingIntervalMs = localElement;
-        if (appSettingsValue != null)
-            _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingSamplingIntervalMs", value = appSettingsValue });
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")).Returns(envValue);
 
         var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
