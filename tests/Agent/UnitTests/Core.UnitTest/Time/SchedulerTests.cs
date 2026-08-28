@@ -151,6 +151,20 @@ public class SchedulerTests
     }
 
     [Test]
+    public void ExecuteOnce_DoesNotTrackAgentWork_WhenTrackAsAgentWorkIsFalse()
+    {
+        var mockContext = Mock.Create<IContinuousProfilingContext>();
+        ContinuousProfilingContext.Instance = mockContext;
+        var wasExecuted = false;
+
+        _scheduler.ExecuteOnce(() => wasExecuted = true, TimeSpan.FromMilliseconds(1), trackAsAgentWork: false);
+
+        AssertEventuallyTrue(() => wasExecuted);
+        Mock.Assert(() => mockContext.SetAgentWork(), Occurs.Never());
+        Mock.Assert(() => mockContext.ResetAgentWork(), Occurs.Never());
+    }
+
+    [Test]
     public void ExecuteEvery_SetsAndResetsAgentWorkAroundEachExecution()
     {
         var mockContext = Mock.Create<IContinuousProfilingContext>();
@@ -177,6 +191,20 @@ public class SchedulerTests
         }
 
         Mock.Assert(() => mockContext.ResetAgentWork(), Occurs.AtLeastOnce());
+    }
+
+    [Test]
+    public void ExecuteEvery_DoesNotTrackAgentWork_WhenTrackAsAgentWorkIsFalse()
+    {
+        var mockContext = Mock.Create<IContinuousProfilingContext>();
+        ContinuousProfilingContext.Instance = mockContext;
+        var wasExecuted = false;
+
+        _scheduler.ExecuteEvery(() => wasExecuted = true, TimeSpan.FromMilliseconds(1), trackAsAgentWork: false);
+
+        AssertEventuallyTrue(() => wasExecuted);
+        Mock.Assert(() => mockContext.SetAgentWork(), Occurs.Never());
+        Mock.Assert(() => mockContext.ResetAgentWork(), Occurs.Never());
     }
 
     private static void AssertEventuallyTrue(Func<bool> wasExecutedFunc)
