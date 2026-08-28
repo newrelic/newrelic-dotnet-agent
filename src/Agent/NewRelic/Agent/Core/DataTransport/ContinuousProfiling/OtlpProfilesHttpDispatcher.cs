@@ -223,7 +223,11 @@ public class OtlpProfilesHttpDispatcher
         var connectionInfo = new ConnectionInfo(configuration);
 
         var innerHandler = CreateHandler(connectionInfo.Proxy);
-        var retryHandler = new CustomRetryHandler { InnerHandler = innerHandler };
+        // 5s keeps any single honored Retry-After small against both the TotalSendTimeoutWithRetries
+        // budget this client is given and the 1-60s drain cadence of the service driving it; a longer
+        // server-requested wait is declined so the send doesn't hold its threadpool thread through a
+        // DrainBufferBoundary or extend the bounded drain-wait on shutdown.
+        var retryHandler = new CustomRetryHandler(retryAfterBailCeiling: TimeSpan.FromSeconds(5)) { InnerHandler = innerHandler };
         var httpClient = new HttpClient(retryHandler, true) { Timeout = TotalSendTimeoutWithRetries };
 
         // ResponseHeadersRead: HttpClient must not implicitly buffer the whole body into memory before
